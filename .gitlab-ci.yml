@@ -1,0 +1,139 @@
+stages:
+  - test
+  - build
+  - deploy
+
+variables:
+  GITLAB_PROJECT_ID: 71011306
+
+test-backend:
+  variables:
+    # Postgres variables for Gitlab CI postgres service
+    POSTGRES_DB: playbymail
+    POSTGRES_USER: user
+    POSTGRES_PASSWORD: pass
+    # Database URL for backend scripts and Go servers
+    DATABASE_URL: "postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@postgres:5432/$POSTGRES_DB?sslmode=disable"
+
+    # Database variables for backend Go servers
+    DATABASE_VERSION: 17.5
+    DATABASE_MAX_OPEN_CONNECTIONS: "180"
+    DATABASE_MAX_IDLE_CONNECTIONS: "45"
+    DATABASE_MAX_IDLE_TIME_MINS: "15"
+
+    # Environment variables for backend Go servers
+    APP_ENV: develop
+    PORT: 8080
+    LOG_LEVEL: debug
+    GO_VERSION: 1.23.5
+    APP_EMAILER_FAKE: "true"
+    APP_SMTP_HOST: "localhost:2525"
+    JOBCLIENT_MAX_WORKERS: "10"
+  image: golang:1.23.5-alpine
+  stage: test
+  services:
+    - name: postgres:17.5-alpine
+      alias: postgres
+  before_script:
+    - apk add build-base
+    - apk add git
+    - apk add bash
+    - apk add postgresql-client
+  script:
+    - ./tools/test-backend-ci
+  cache:
+    key:
+      files:
+        - backend/go.sum
+    paths:
+      - /go/pkg/mod/
+  rules:
+    - changes:
+        - backend/**/*
+        - tools/**/*
+
+test-frontend:
+  image: node:18-alpine
+  stage: test
+  script:
+    - ./tools/test-frontend
+  rules:
+    - changes:
+        - frontend/**/*
+
+build-frontend:
+  image: node:18-alpine
+  stage: build
+  script:
+    - cd frontend
+    - npm install
+    - npm run build
+  artifacts:
+    paths:
+      - frontend/dist
+
+# Heroku Deployment Branch Workflow
+#
+# 1. Create a Deployment Branch from Backend Directory
+#    - Use git subtree split to create a new branch (heroku-deploy) that
+#      contains only the contents of the backend directory. This isolates the
+#      backend code for deployment.
+# 2. Switch to the Deployment Branch
+#    - Move into the newly created heroku-deploy branch, which now acts as a
+#      standalone copy of the backend codebase.
+# 3. Add Frontend Build Artifacts
+#    - Copy the necessary frontend build files (such as compiled JavaScript,
+#      CSS, and other assets) into the heroku-deploy branch. This ensures the
+#      backend deployment includes the latest frontend assets.
+# 4. Build Required Binaries
+#    - In the heroku-deploy branch, build any required binaries (such as
+#      migrate and river). These binaries are needed for database migrations or
+#      other backend tasks during deployment.
+# 5. Push to Heroku
+#    - Push the heroku-deploy branch to the Heroku remote repository. This
+#      triggers the deployment process on Heroku, using only the prepared
+#      backend (and included frontend assets).
+# 6. Clean Up
+#    - After deployment, delete the heroku-deploy branch to keep the repository
+#      clean and avoid clutter from temporary deployment branches.
+
+deploy-backend:
+  stage: deploy
+  image: golang:1.23.5-alpine
+  dependencies:
+    - build-frontend
+  before_script:
+    - apk add --no-cache git bash
+    - apk add --no-cache git-subtree
+    - cp -r frontend/dist /tmp/frontend-dist
+    - echo "==== ENVIRONMENT ===="
+    - printenv | sort
+    - echo "==== GIT LOG ===="
+    - git log --oneline -5
+  script:
+    - echo "==== SUBTREE SPLIT ===="
+    - git config --global user.email "alienspaces@gmail.com"
+    - git config --global user.name "Alien Spaces"
+    - git subtree split --prefix backend -b heroku-deploy
+    - git checkout heroku-deploy
+    # Add frontend build artifacts to the deploy branch
+    - cp -r /tmp/frontend-dist public
+    - git add public
+    - git commit -m "Add frontend build artifacts" || echo "No changes to commit"
+    # Build migrate and river binaries in the deploy branch only
+    - go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@v4.17.1
+    - go install github.com/riverqueue/river/cmd/river@latest
+    - mkdir -p bin
+    - cp /go/bin/migrate bin/
+    - cp /go/bin/river bin/
+    - chmod +x bin/migrate bin/river
+    - git add bin/migrate bin/river
+    - git commit -m "Add migrate and river binaries for Heroku release phase" || echo "No changes to commit"
+    - git checkout -
+    - echo "==== PUSH TO HEROKU ===="
+    - git push https://heroku:$HEROKU_API_KEY@git.heroku.com/$HEROKU_APP_NAME.git heroku-deploy:main --force
+  only:
+    - main
+  environment:
+    name: production
+    url: https://$HEROKU_APP_NAME.herokuapp.com
