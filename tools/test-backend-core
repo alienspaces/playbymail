@@ -1,0 +1,16 @@
+#!/usr/bin/env sh
+
+echo
+echo "=> Test backend core"
+echo
+
+# Save current directory
+orig_dir=$(pwd)
+
+cd backend || exit 1
+
+echo "=> Test backend core - Running tests"
+go test -v -failfast ./core/... || exit $?
+
+# Return to original directory
+cd "$orig_dir" || exit 1

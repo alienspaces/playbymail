@@ -1,0 +1,53 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "http://vet.com/jsonschema/data.schema.json",
+    "title": "Test Data",
+    "description": "Payload data for testing",
+    "type": "object",
+    "additionalProperties": true,
+    "required": [],
+    "properties": {
+        "id": {
+            "description": "Resource ID",
+            "type": "string",
+            "format": "uuid",
+            "example": "a87feca8-d6f0-4794-98c7-037b30219520"
+        },
+        "str": {
+            "description": "Resource name",
+            "minLength": 1,
+            "type": "string"
+        },
+        "num": {
+            "description": "Resource name",
+            "minimum": 1,
+            "maximum": 250,
+            "type": "number"
+        },
+        "bool": {
+            "description": "Resource name",
+            "type": "boolean"
+        },
+        "str_arr": {
+            "description": "Resource name",
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
+        },
+        "num_arr": {
+            "description": "Resource name",
+            "type": "array",
+            "items": {
+                "type": "number"
+            }
+        },
+        "bool_arr": {
+            "description": "Resource name",
+            "type": "array",
+            "items": {
+                "type": "boolean"
+            }
+        }
+    }
+}

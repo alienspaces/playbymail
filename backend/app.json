@@ -1,0 +1,32 @@
+{
+    "name": "playbymail-backend",
+    "description": "Playbymail game backend API",
+    "repository": "https://gitlab.com/alienspaces/playbymail",
+    "keywords": [
+        "go",
+        "game",
+        "api"
+    ],
+    "env": {
+        "PORT": {
+            "description": "Port for the web server",
+            "value": "8080"
+        }
+    },
+    "formation": {
+        "web": {
+            "quantity": 1,
+            "size": "basic"
+        }
+    },
+    "addons": [
+        {
+            "plan": "heroku-postgresql:mini"
+        }
+    ],
+    "buildpacks": [
+        {
+            "url": "heroku/go"
+        }
+    ]
+}

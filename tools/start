@@ -1,0 +1,64 @@
+#!/usr/bin/env sh
+
+# Usage: ./tools/start
+#
+# Starts both backend API server and frontend development server
+# Backend live reload is enabled by default; to disable add APP_SERVER_RELOAD_ENABLED=false to .env.private
+# May have to increase max number of files that can be opened on your system: ulimit -n 2000
+
+echo "🚀 Starting Playbymail application..."
+
+# Colors for output
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+print_status() {
+    echo -e "${GREEN}✅ $1${NC}"
+}
+
+print_info() {
+    echo -e "${BLUE}ℹ️  $1${NC}"
+}
+
+# Check if we're in the right directory
+if [ ! -f "backend/go.mod" ] || [ ! -f "frontend/package.json" ]; then
+    echo "❌ Must be run from playbymail root directory"
+    exit 1
+fi
+
+# Copy environment file if it exists
+if [ -f ".env.develop" ]; then
+    cp .env.develop .env
+    print_status "Environment file copied"
+fi
+
+# Load environment
+if [ -f "tools/environment" ]; then
+    . tools/environment || exit $?
+    print_status "Environment loaded"
+fi
+
+# Stop any existing processes
+print_info "Stopping any existing processes..."
+./tools/stop || true
+
+# Setup database
+print_info "Setting up database..."
+./tools/db-setup || exit $?
+
+# Start backend
+print_info "Starting backend API server..."
+./tools/start-backend || exit $?
+
+# Start frontend
+print_info "Starting frontend development server..."
+./tools/start-frontend || exit $?
+
+echo ""
+print_status "🎉 Playbymail application started successfully!"
+print_info "Backend API: http://localhost:8080"
+print_info "Frontend: http://localhost:3000"
+print_info "Health check: http://localhost:8080/healthz"
+print_info ""
+print_info "To stop the application, run: ./tools/stop"

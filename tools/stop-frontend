@@ -1,0 +1,45 @@
+#!/usr/bin/env sh
+
+echo "🛑 Stopping frontend development server..."
+
+# Colors for output
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+print_status() {
+    echo -e "${GREEN}✅ $1${NC}"
+}
+
+print_warning() {
+    echo -e "${YELLOW}⚠️  $1${NC}"
+}
+
+# Check if we're in the right directory
+if [ ! -f "frontend/package.json" ]; then
+    echo "❌ Must be run from playbymail root directory"
+    exit 1
+fi
+
+# Only stop frontend process using PID file
+PID_FILE="frontend/.frontend.pid"
+if [ -f "$PID_FILE" ]; then
+    FRONTEND_PID=$(cat "$PID_FILE")
+    if kill -0 "$FRONTEND_PID" 2>/dev/null; then
+        echo "Stopping frontend process $FRONTEND_PID..."
+        kill "$FRONTEND_PID"
+        sleep 2
+        if kill -0 "$FRONTEND_PID" 2>/dev/null; then
+            echo "Force killing frontend process $FRONTEND_PID..."
+            kill -9 "$FRONTEND_PID"
+        fi
+        echo "Frontend process $FRONTEND_PID stopped."
+    else
+        echo "No running frontend process found for PID $FRONTEND_PID."
+    fi
+    rm "$PID_FILE"
+    print_status "Removed PID file"
+else
+    echo "No frontend PID file found; nothing to stop."
+fi
+print_status "Frontend stopped" 

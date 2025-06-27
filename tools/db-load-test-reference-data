@@ -1,0 +1,53 @@
+#!/usr/bin/env sh
+
+echo
+echo "** Loading backend test reference data"
+echo
+
+# Get script directory (POSIX compatible)
+script_dir=$(dirname "$0")
+
+# environment
+. "$script_dir/environment" || exit $?
+
+# TODO: CLI processes do not require server addresses or ports
+APP_SERVER_PORT="0000"
+
+# Save current directory
+orig_dir=$(pwd)
+
+# Check if we're already in the backend directory
+if [ "$(basename "$PWD")" = "backend" ]; then
+    # Already in backend directory, no need to cd
+    backend_dir="."
+    env_path="../tools/environment"
+else
+    # Need to cd to backend directory
+    cd backend || exit 1
+    backend_dir="."
+    env_path="../tools/environment"
+fi
+
+# NOTE: we shift into the backend directory before sourcing
+# the environment so $PWD is correct for APP_SERVER_HOME
+
+echo
+echo "** Loading $PROJECT_NAME backend reference data"
+echo
+
+# load backend specific environment
+. "$env_path" || exit $?
+
+# Check if the CLI command exists
+if [ -f "./cmd/cli/main.go" ]; then
+    go run ./cmd/cli db-load-main-test-reference-data || exit $?
+else
+    echo "=> No CLI command found for loading test reference data"
+    echo "=> Skipping test reference data loading"
+fi
+
+# Return to original directory
+cd "$orig_dir" || exit 1
+
+echo "** All done ** "
+

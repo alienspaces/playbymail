@@ -1,0 +1,60 @@
+#!/bin/sh
+
+if [ "${CI:-}" != "" ]; then
+    echo "This script is not meant to be run in CI"
+    exit 1
+fi
+
+# environment
+SCRIPT_DIR=$(dirname "$0")
+. "$SCRIPT_DIR/environment" || exit $?
+
+# retry
+. "$SCRIPT_DIR/retry" || exit $?
+
+# stop database
+. "$SCRIPT_DIR/db-stop" || exit $?
+
+# start database
+echo "=> (db-start) Start database - docker service"
+
+# Check for required PROJECT_NAME variable
+if [ -z "$PROJECT_NAME" ]; then
+    echo "PROJECT_NAME is not set. Please set it to a valid project name."
+    exit 1
+fi
+
+# Check for required Docker image variable
+if [ -z "$DOCKER_IMAGE_POSTGRES" ]; then
+    echo "DOCKER_IMAGE_POSTGRES is not set. Please set it to a valid Docker image (e.g., postgres:15)."
+    exit 1
+fi
+
+# Check for required DATABASE_URL variable
+if [ -z "$DATABASE_URL" ]; then
+    echo "DATABASE_URL is not set. Please set it to a valid database connection string."
+    exit 1
+fi
+
+# Parse DATABASE_URL to get connection details for Docker container
+db_user=$(echo "$DATABASE_URL" | awk -F '[:/@?]' '{print $4}')
+db_pass=$(echo "$DATABASE_URL" | awk -F '[:/@?]' '{print $5}')
+db_host=$(echo "$DATABASE_URL" | awk -F '[:/@?]' '{print $6}')
+db_port=$(echo "$DATABASE_URL" | awk -F '[:/@?]' '{print $7}')
+db_name=$(echo "$DATABASE_URL" | awk -F '[:/@?]' '{print $8}')
+
+docker run --hostname postgres --name "$PROJECT_NAME"-shared \
+    --platform linux/amd64 \
+    -e POSTGRES_USER="$db_user" \
+    -e POSTGRES_PASSWORD="$db_pass" \
+    -e POSTGRES_DB="$db_name" \
+    -p "${db_port}":5432 -d \
+    "$DOCKER_IMAGE_POSTGRES" postgres -c log_statement=all -N 1000 || exit $?
+
+# pgcrypto for uuids
+retry_cmd psql "$DATABASE_URL" --command="CREATE EXTENSION pgcrypto;"
+
+# hstore for numeric values stored in multiple currencies
+retry_cmd psql "$DATABASE_URL" --command="CREATE EXTENSION hstore;"
+
+echo "=> (db-start) Running on ${db_host}:${db_port}"

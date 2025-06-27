@@ -1,0 +1,107 @@
+#!/usr/bin/env sh
+
+echo "🚀 Starting backend API server..."
+
+# Colors for output
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+print_status() {
+    echo -e "${GREEN}✅ $1${NC}"
+}
+
+print_warning() {
+    echo -e "${YELLOW}⚠️  $1${NC}"
+}
+
+# Check if we're in the right directory
+if [ ! -f "backend/go.mod" ]; then
+    echo "❌ Must be run from playbymail root directory"
+    exit 1
+fi
+
+# Copy environment file if it exists
+if [ -f ".env.develop" ]; then
+    cp .env.develop .env
+    print_status "Environment file copied"
+fi
+
+# Load environment
+if [ -f "tools/environment" ]; then
+    . tools/environment || exit $?
+    print_status "Environment loaded"
+fi
+
+# Check if backend is already running
+if pgrep -f "cmd/server" > /dev/null; then
+    print_warning "Backend is already running"
+    echo "Stopping existing backend..."
+    ./tools/stop-backend
+fi
+
+# Stop any process using port 8080
+if lsof -i :8080 -t >/dev/null; then
+    echo "Stopping process using port 8080..."
+    lsof -i :8080 -t | xargs kill -9
+    sleep 1
+fi
+
+# Save current directory
+orig_dir=$(pwd)
+
+# Check if database Docker container is running
+if [ -z "$PROJECT_NAME" ]; then
+    echo "❌ PROJECT_NAME environment variable is not set."
+    exit 1
+fi
+
+DB_CONTAINER_NAME="${PROJECT_NAME}-shared"
+if ! docker ps --format '{{.Names}}' | grep -q "^${DB_CONTAINER_NAME}$"; then
+    print_warning "Database container '${DB_CONTAINER_NAME}' is not running. Running db-setup to start and initialize the database..."
+    if ! ./tools/db-setup; then
+        echo "❌ Failed to start and initialize the database with db-setup."
+        exit 1
+    fi
+    # Check again if the container is running
+    if ! docker ps --format '{{.Names}}' | grep -q "^${DB_CONTAINER_NAME}$"; then
+        echo "❌ Database container '${DB_CONTAINER_NAME}' is still not running after db-setup."
+        exit 1
+    fi
+    print_status "Database container '${DB_CONTAINER_NAME}' started and initialized."
+fi
+
+# Build backend binary in backend directory
+cd backend
+print_status "Building Go backend..."
+go build -o ../playbymail-server ./cmd/server
+cd ..
+
+# Verify binary exists
+if [ ! -f "playbymail-server" ]; then
+    echo "❌ Backend build failed - binary not found"
+    exit 1
+fi
+
+print_status "Starting backend (no live reload)"
+print_status "API will be available at http://localhost:${APP_SERVER_PORT:-8080}"
+
+# Start backend from project root
+./playbymail-server &
+
+BACKEND_PID=$!
+echo $BACKEND_PID > backend/.backend.pid
+
+# Wait a moment for startup
+sleep 2
+
+# Check if backend started successfully
+if kill -0 $BACKEND_PID 2>/dev/null; then
+    print_status "Backend started successfully (PID: $BACKEND_PID)"
+    print_status "API server running on port ${APP_SERVER_PORT:-8080}"
+else
+    echo "❌ Backend failed to start"
+    exit 1
+fi
+
+print_status "Backend startup complete!" 

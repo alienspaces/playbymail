@@ -1,0 +1,78 @@
+#!/bin/sh
+
+# Establish and validate minimum required environment for all processes
+# USAGE: environment [optional path to .env]
+
+verify_env() {
+    # required for all environments
+    env_vars="\
+        APP_ENV \
+        PORT \
+        LOG_LEVEL \
+        DATABASE_URL"
+    
+    missing=0
+    for env_var_name in $env_vars; do
+        eval env_var_value=\"\${$env_var_name}\"
+        if [ -z "$env_var_value" ]; then
+            echo "=> (env) Variable $env_var_name undefined"
+            missing=1
+            continue
+        fi
+
+        # masked
+        if [ "${APP_SERVER_ENV_DEBUG_ENABLED}" = "true" ]; then
+            case "$env_var_name" in
+                *PASSWORD*|*KEY*|*SECRET*)
+                    echo "=> (env) $env_var_name => ********"
+                    ;;
+                *)
+                    echo "=> (env) $env_var_name => $env_var_value"
+                    ;;
+            esac
+        fi
+    done
+
+    if [ "$missing" = "1" ]; then
+        echo "=> (env) Variables missing, cannot continue"
+        exit 1
+    fi
+}
+
+# environment
+dotfile_path="."
+if [ -n "$1" ]; then
+    dotfile_path="$1"
+fi
+
+if [ -f "$dotfile_path/.env" ]; then
+    . "$dotfile_path/.env"
+fi
+
+if [ -f "$dotfile_path/.env.private" ]; then
+    . "$dotfile_path/.env.private"
+fi
+
+# go present?
+if command -v go >/dev/null 2>&1; then
+    version=$(go version)
+    case "$version" in
+        *"go${APP_SERVER_GO_VERSION}"*)
+            # correct version
+            ;;
+        *)
+            go_version=go$APP_SERVER_GO_VERSION
+            if command -v gvm >/dev/null 2>&1; then
+                . ~/.gvm/scripts/gvm
+                echo "=> (env) Using Go version ${go_version}"
+                gvm use "$go_version" || exit 1
+            else
+                echo "=> (env) Go version ${APP_SERVER_GO_VERSION} is required, please check your Go version and try again"
+                exit 1
+            fi
+            ;;
+    esac
+fi
+
+# verify environment
+verify_env

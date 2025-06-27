@@ -1,0 +1,56 @@
+#!/usr/bin/env sh
+
+# environment
+if [ "$APP_ENV" = "develop" ] || [ "$APP_ENV" = "ci" ] || [ "$APP_ENV" = "qa" ] || [ -z "$APP_ENV" ]; then
+    . "$(dirname "$0")"/environment || exit $?
+fi
+
+# golang migrate
+# https://github.com/golang-migrate/migrate/releases
+migrate_tool_path=$(command -v migrate)
+go_version=go$GO_VERSION
+echo "=> (db-migrate-down) Migrate tool path ${migrate_tool_path}"
+case "$migrate_tool_path" in
+    *"$go_version"*) ;;
+    *)
+        echo "=> (db-migrate-down) Installing migrate"
+        . "$(dirname "$0")"/db-install-migrate || exit $?
+        ;;
+esac
+
+# river migrate
+# https://riverqueue.com/docs/migrations
+river_migrate_tool_path=$(command -v river)
+echo "=> (db-migrate-down) River migrate tool path ${river_migrate_tool_path}"
+case "$river_migrate_tool_path" in
+    *"$go_version"*) ;;
+    *)
+        echo "=> (db-migrate-down) Installing river migrate"
+        . "$(dirname "$0")"/db-install-river-migrate || exit $?
+        ;;
+esac
+
+# Check if backend/db directory exists
+if [ ! -d "./backend/db" ]; then
+    echo "=> (db-migrate-down) No backend/db directory found, skipping migrations"
+    exit 0
+fi
+
+# Run migrations for backend/db
+migration_database="$DATABASE_URL"
+migration_path="./backend/db"
+
+# shellcheck disable=SC2012
+migration_count=$(ls ./backend/db/*down.sql 2>/dev/null | wc -l | xargs)
+
+echo "=> (db-migrate-down) Migration DATABASE: postgres://****:****@$DATABASE_HOST:$DATABASE_PORT/$DATABASE_NAME?sslmode=disable"
+echo "=> (db-migrate-down) Migration     PATH: $migration_path"
+echo "=> (db-migrate-down) Migration    COUNT: $migration_count"
+
+# backend migrate
+migrate -verbose -path "$migration_path" -database "$migration_database" down "$migration_count" || exit $?
+
+echo "=> (db-migrate-down) Migrate down river queue"
+
+# river migrate
+river migrate-down --database-url "$migration_database" --max-steps 10

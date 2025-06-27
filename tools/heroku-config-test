@@ -1,0 +1,231 @@
+#!/usr/bin/env sh
+
+set -e
+
+echo "🔧 Testing Heroku configuration..."
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Function to print colored output
+print_status() {
+    echo -e "${GREEN}✅ $1${NC}"
+}
+
+print_warning() {
+    echo -e "${YELLOW}⚠️  $1${NC}"
+}
+
+print_error() {
+    echo -e "${RED}❌ $1${NC}"
+}
+
+print_info() {
+    echo -e "${BLUE}ℹ️  $1${NC}"
+}
+
+# Check if we're in the right directory
+if [ ! -f "backend/go.mod" ]; then
+    print_error "Must be run from playbymail root directory"
+    exit 1
+fi
+
+print_status "Heroku configuration test started"
+
+# Test 1: Heroku CLI
+echo ""
+echo "🔧 Testing Heroku CLI..."
+if ! command -v heroku >/dev/null 2>&1; then
+    print_error "Heroku CLI not found. Install with: curl https://cli-assets.heroku.com/install.sh | sh"
+    exit 1
+fi
+
+HEROKU_VERSION=$(heroku --version)
+print_status "Heroku CLI version: $HEROKU_VERSION"
+
+# Test 2: Authentication
+print_status "Checking authentication..."
+if ! heroku auth:whoami >/dev/null 2>&1; then
+    print_error "Not authenticated with Heroku. Run: heroku login"
+    exit 1
+fi
+
+USER=$(heroku auth:whoami)
+print_status "Authenticated as: $USER"
+
+# Test 3: App access
+echo ""
+echo "📱 Testing app access..."
+APP_NAME=${HEROKU_APP_NAME:-"playbymail"}
+
+if ! heroku apps:info --app "$APP_NAME" >/dev/null 2>&1; then
+    print_error "Cannot access app '$APP_NAME'. Check app name and permissions."
+    exit 1
+fi
+
+print_status "App '$APP_NAME' is accessible"
+
+# Test 4: App information
+print_status "Getting app information..."
+APP_INFO=$(heroku apps:info --app "$APP_NAME" --json)
+
+# Extract key information
+STACK=$(echo "$APP_INFO" | jq -r '.stack.name')
+REGION=$(echo "$APP_INFO" | jq -r '.region.name')
+CREATED_AT=$(echo "$APP_INFO" | jq -r '.created_at')
+UPDATED_AT=$(echo "$APP_INFO" | jq -r '.updated_at')
+
+print_status "Stack: $STACK"
+print_status "Region: $REGION"
+print_status "Created: $CREATED_AT"
+print_status "Updated: $UPDATED_AT"
+
+# Test 5: Stack compatibility
+echo ""
+echo "🏗️  Testing stack compatibility..."
+print_status "Stack compatibility check skipped (not required for current configuration)"
+
+# Test 6: Environment variables
+echo ""
+echo "🔐 Testing environment variables..."
+CONFIG=$(heroku config --app "$APP_NAME" --json)
+
+# Check for required variables
+REQUIRED_VARS="DATABASE_URL"
+OPTIONAL_VARS="PORT APP_DOMAIN"
+
+print_status "Checking required variables..."
+for var in $REQUIRED_VARS; do
+    if echo "$CONFIG" | jq -e ".$var" >/dev/null 2>&1; then
+        VALUE=$(echo "$CONFIG" | jq -r ".$var")
+        # Mask sensitive values
+        case "$var" in
+            *URL*|*KEY*|*SECRET*)
+                MASKED_VALUE=$(echo "$VALUE" | sed 's/\([^:]*\):\([^@]*\)@/\1:***@/')
+                print_status "$var: $MASKED_VALUE"
+                ;;
+            *)
+                print_status "$var: $VALUE"
+                ;;
+        esac
+    else
+        print_error "$var not set"
+    fi
+done
+
+print_status "Checking optional variables..."
+for var in $OPTIONAL_VARS; do
+    if echo "$CONFIG" | jq -e ".$var" >/dev/null 2>&1; then
+        VALUE=$(echo "$CONFIG" | jq -r ".$var")
+        print_status "$var: $VALUE"
+    else
+        print_warning "$var not set (optional)"
+    fi
+done
+
+# Test 7: Add-ons
+echo ""
+echo "🔌 Testing add-ons..."
+ADDONS=$(heroku addons --app "$APP_NAME" --json)
+
+if echo "$ADDONS" | jq -e '.[] | select(.addon_service.name == "heroku-postgresql")' >/dev/null 2>&1; then
+    DB_ADDON=$(echo "$ADDONS" | jq -r '.[] | select(.addon_service.name == "heroku-postgresql") | .plan.name')
+    print_status "PostgreSQL add-on found: $DB_ADDON"
+else
+    print_warning "PostgreSQL add-on not found"
+    print_info "Add with: heroku addons:create heroku-postgresql:mini --app $APP_NAME"
+fi
+
+# Test 8: Buildpacks (if not container)
+echo ""
+echo "📦 Testing buildpacks..."
+if [ "$STACK" != "container" ]; then
+    BUILDPACKS=$(heroku buildpacks --app "$APP_NAME")
+    print_status "Current buildpacks:"
+    echo "$BUILDPACKS" | tail -n +2 | while read -r line; do
+        print_info "$line"
+    done
+else
+    print_status "Container stack - no buildpacks needed"
+fi
+
+# Test 9: Domain configuration
+echo ""
+echo "🌐 Testing domain configuration..."
+DOMAINS=$(heroku domains --app "$APP_NAME" --json 2>/dev/null || echo "[]")
+
+if echo "$DOMAINS" | jq -e '.[]' >/dev/null 2>&1; then
+    print_status "Custom domains configured:"
+    echo "$DOMAINS" | jq -r '.[] | .hostname'
+else
+    print_info "No custom domains configured"
+    print_info "Default domain: https://$APP_NAME.herokuapp.com"
+fi
+
+# Test 10: Dyno configuration
+echo ""
+echo "⚡ Testing dyno configuration..."
+DYNOS=$(heroku ps --app "$APP_NAME" --json 2>/dev/null || echo "[]")
+
+if echo "$DYNOS" | jq -e '.[]' >/dev/null 2>&1; then
+    print_status "Current dynos:"
+    echo "$DYNOS" | jq -r '.[] | "\(.type): \(.state) (\(.size))"'
+else
+    print_info "No dynos currently running"
+fi
+
+# Test 11: Logs access
+echo ""
+echo "📋 Testing logs access..."
+if heroku logs --app "$APP_NAME" --num 1 >/dev/null 2>&1; then
+    print_status "Logs are accessible"
+else
+    print_warning "Cannot access logs (might be normal for new apps)"
+fi
+
+# Test 12: Container registry access
+echo ""
+echo "🐳 Testing container registry access..."
+if heroku container:login >/dev/null 2>&1; then
+    print_status "Container registry login successful"
+else
+    print_error "Container registry login failed"
+    exit 1
+fi
+
+# Summary
+echo ""
+echo "📋 Heroku Configuration Summary:"
+echo "================================"
+
+if [ "$STACK" = "container" ]; then
+    print_status "✓ Container stack configured"
+else
+    print_status "Stack check skipped (not required)"
+fi
+
+if echo "$CONFIG" | jq -e '.DATABASE_URL' >/dev/null 2>&1; then
+    print_status "✓ Database configured"
+else
+    print_error "✗ Database not configured"
+fi
+
+if echo "$ADDONS" | jq -e '.[] | select(.addon_service.name == "heroku-postgresql")' >/dev/null 2>&1; then
+    print_status "✓ PostgreSQL add-on installed"
+else
+    print_warning "⚠ PostgreSQL add-on needed"
+fi
+
+print_status "✓ Heroku CLI authenticated"
+print_status "✓ App accessible"
+print_status "✓ Container registry accessible"
+
+echo ""
+print_status "Heroku configuration test completed! 🎉"
+print_info "App: $APP_NAME"
+print_info "Region: $REGION"
+print_info "Stack: $STACK" 

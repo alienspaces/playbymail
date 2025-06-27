@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+
+# https://github.com/golang-migrate/migrate/releases
+go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@v4.17.1

@@ -1,0 +1,48 @@
+#!/usr/bin/env sh
+
+# Usage: ./tools/stop
+#
+# Stops both backend API server and frontend development server
+
+echo "🛑 Stopping Playbymail application..."
+
+# Colors for output
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+print_status() {
+    echo -e "${GREEN}✅ $1${NC}"
+}
+
+print_info() {
+    echo -e "${BLUE}ℹ️  $1${NC}"
+}
+
+# Check if we're in the right directory
+if [ ! -f "backend/go.mod" ] || [ ! -f "frontend/package.json" ]; then
+    echo "❌ Must be run from playbymail root directory"
+    exit 1
+fi
+
+# Copy environment file if it exists
+if [ -f ".env.develop" ]; then
+    cp .env.develop .env
+fi
+
+# Stop frontend
+print_info "Stopping frontend development server..."
+./tools/stop-frontend || true
+
+# Stop backend
+print_info "Stopping backend API server..."
+./tools/stop-backend || true
+
+# Stop database
+print_info "Stopping database..."
+./tools/db-stop || true
+
+echo ""
+print_status "🎉 Playbymail application stopped successfully!"
+print_info "All processes and ports have been cleaned up."
+

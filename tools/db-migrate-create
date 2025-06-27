@@ -1,0 +1,41 @@
+#!/usr/bin/env sh
+
+example="Example: ./tools/db-migrate-create create_template_objects [branch]"
+
+description=$1
+if [ -z "$description" ]; then
+    echo "ERROR: missing description"
+    echo "$example"
+    exit 1
+fi
+shift
+
+branch_name=$1
+if [ -z "$branch_name" ]; then
+    branch_name=$(git rev-parse --abbrev-ref HEAD)
+fi
+
+# copy develop env
+cp .env.develop .env
+
+# environment
+if [ "$APP_ENV" = "develop" ] || [ "$APP_ENV" = "ci" ] || [ "$APP_ENV" = "qa" ] || [ -z "$APP_ENV" ]; then
+    . "$(dirname "$0")"/environment || exit $?
+fi
+
+# golang migrate
+migrate_tool_path=$(command -v migrate)
+go_version=go$GO_VERSION
+echo "=> (db-migrate-create) Migrate tool path ${migrate_tool_path}"
+case "$migrate_tool_path" in
+    *"$go_version"*) ;;
+    *)
+        echo "=> (db-migrate-create) Installing migrate"
+        . "$(dirname "$0")"/db-install-migrate || exit $?
+        ;;
+esac
+
+# Ensure backend/db directory exists
+mkdir -p ./backend/db
+
+migrate create -ext sql -dir ./backend/db "${branch_name}_${description}"

@@ -1,0 +1,13 @@
+#!/bin/sh
+
+# environment
+SCRIPT_DIR=$(dirname "$0")
+. "$SCRIPT_DIR/environment" || exit $?
+
+# retry
+. "$SCRIPT_DIR/retry" || exit $?
+
+# stop database
+echo "=> (db-stop) Stopping database (docker service)"
+
+docker ps -a | grep "${PROJECT_NAME}-shared" | awk '{print $1}' | xargs sh -c 'for arg do docker stop $arg; docker rm $arg; done' _

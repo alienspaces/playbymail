@@ -1,0 +1,23 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "http://playbymail.dev/schema/game.collection.response.schema.json",
+    "title": "Game collection response data",
+    "description": "Response payload data for a game collection",
+    "type": "array",
+    "items": {
+        "allOf": [
+            {
+                "required": [
+                    "id",
+                    "name",
+                    "created_at"
+                ]
+            },
+            {
+                "$ref": "../common/game.schema.json#/$defs/resource"
+            }
+        ],
+        "minItems": 0,
+        "readOnly": true
+    }
+}

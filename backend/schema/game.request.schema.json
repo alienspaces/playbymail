@@ -1,0 +1,16 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "http://api.disputeservice.trevipay.app/schema/disputeservice/api/client.request.schema.json",
+    "title": "Client request data",
+    "description": "Request payload data for a client",
+    "type": "object",
+    "additionalProperties": true,
+    "required": [
+        "name"
+    ],
+    "properties": {
+        "name": {
+            "$ref": "../common/client.schema.json#/$defs/name"
+        }
+    }
+}

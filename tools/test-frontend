@@ -1,0 +1,37 @@
+#!/usr/bin/env sh
+
+set -e
+
+orig_dir="$(pwd)"
+
+echo "▶️  Running frontend tests..."
+
+# Ensure we are in the project root
+if [ ! -f "frontend/package.json" ]; then
+    echo "❌ Error: This script must be run from the 'playbymail' project root directory."
+    exit 1
+fi
+
+# Navigate to the frontend directory
+cd frontend
+
+# Install dependencies if node_modules doesn't exist
+if [ ! -d "node_modules" ]; then
+    echo "📦 node_modules not found, running 'npm ci'..."
+    npm ci
+else
+    echo "📦 Dependencies already installed."
+fi
+
+# Run linter
+echo "🔍 Running linter..."
+npm run lint
+
+# Run build
+echo "🏗️  Running build..."
+npm run build
+
+echo "✅ Frontend tests completed successfully."
+
+# Return to the original directory
+cd "$orig_dir"

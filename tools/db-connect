@@ -1,0 +1,16 @@
+#!/usr/bin/env sh
+
+# Opens a psql session to the database specified in current APP environment
+# \l                 - list schemas
+# \c dispute-develop   - connect to schema
+# \conninfo          - who am i
+
+cp .env.develop .env
+. "$(dirname "$0")"/environment || exit $?
+
+if [ -z "$DATABASE_URL" ]; then
+    echo "DATABASE_URL must be set"
+    exit 1
+fi
+
+psql "$DATABASE_URL"
