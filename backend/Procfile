@@ -1,0 +1,2 @@
+web: ls -l /app/public && ./bin/server
+release: echo "=== DEBUG: PATH ===" && echo $PATH && echo "=== DEBUG: /app/bin ===" && ls -l /app/bin && echo "=== DEBUG: which migrate ===" && which migrate && echo "=== DEBUG: which river ===" && which river && /app/bin/migrate -verbose -path ./db -database "$DATABASE_URL" up && /app/bin/river migrate-up --database-url "$DATABASE_URL" up 
