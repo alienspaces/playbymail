@@ -75,13 +75,7 @@ func (rnr *Runner) gameHandlerConfig(l logger.Logger) (map[string]server.Handler
 		DocumentationConfig: server.DocumentationConfig{
 			Document:   true,
 			Collection: true,
-			Summary:    "Get client collection",
-			TagGroup: server.TagGroupEndpoint{
-				ResourceName: tagGroupGame,
-				Tags: []server.Tag{
-					TagGame,
-				},
-			},
+			Title:      "Get client collection",
 		},
 	}
 
@@ -97,13 +91,7 @@ func (rnr *Runner) gameHandlerConfig(l logger.Logger) (map[string]server.Handler
 		},
 		DocumentationConfig: server.DocumentationConfig{
 			Document: true,
-			Summary:  "Get game",
-			TagGroup: server.TagGroupEndpoint{
-				ResourceName: tagGroupGame,
-				Tags: []server.Tag{
-					TagGame,
-				},
-			},
+			Title:    "Get game",
 		},
 	}
 
@@ -120,13 +108,7 @@ func (rnr *Runner) gameHandlerConfig(l logger.Logger) (map[string]server.Handler
 		},
 		DocumentationConfig: server.DocumentationConfig{
 			Document: true,
-			Summary:  "Create game",
-			TagGroup: server.TagGroupEndpoint{
-				ResourceName: tagGroupGame,
-				Tags: []server.Tag{
-					TagGame,
-				},
-			},
+			Title:    "Create game",
 		},
 	}
 
@@ -143,13 +125,7 @@ func (rnr *Runner) gameHandlerConfig(l logger.Logger) (map[string]server.Handler
 		},
 		DocumentationConfig: server.DocumentationConfig{
 			Document: true,
-			Summary:  "Create game with ID",
-			TagGroup: server.TagGroupEndpoint{
-				ResourceName: tagGroupGame,
-				Tags: []server.Tag{
-					TagGame,
-				},
-			},
+			Title:    "Create game with ID",
 		},
 	}
 
@@ -166,13 +142,7 @@ func (rnr *Runner) gameHandlerConfig(l logger.Logger) (map[string]server.Handler
 		},
 		DocumentationConfig: server.DocumentationConfig{
 			Document: true,
-			Summary:  "Update game",
-			TagGroup: server.TagGroupEndpoint{
-				ResourceName: tagGroupGame,
-				Tags: []server.Tag{
-					TagGame,
-				},
-			},
+			Title:    "Update game",
 		},
 	}
 
@@ -187,13 +157,7 @@ func (rnr *Runner) gameHandlerConfig(l logger.Logger) (map[string]server.Handler
 		},
 		DocumentationConfig: server.DocumentationConfig{
 			Document: true,
-			Summary:  "Delete game",
-			TagGroup: server.TagGroupEndpoint{
-				ResourceName: tagGroupGame,
-				Tags: []server.Tag{
-					TagGame,
-				},
-			},
+			Title:    "Delete game",
 		},
 	}
 

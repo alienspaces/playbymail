@@ -16,7 +16,6 @@ import (
 	"github.com/riverqueue/river"
 
 	"gitlab.com/alienspaces/playbymail/core/config"
-	coreerror "gitlab.com/alienspaces/playbymail/core/error"
 	"gitlab.com/alienspaces/playbymail/core/jsonschema"
 	"gitlab.com/alienspaces/playbymail/core/queryparam"
 	"gitlab.com/alienspaces/playbymail/core/type/domainer"
@@ -52,7 +51,6 @@ type Runner struct {
 
 	// Handler and message configuration
 	HandlerConfig map[string]HandlerConfig
-	MessageConfig map[string]MessageConfig
 
 	// HTTP server
 	httpServer *http.Server
@@ -213,14 +211,10 @@ type QueryParams interface {
 
 // DocumentationConfig - Configuration describing how to document a route
 type DocumentationConfig struct {
-	Document                     bool
-	Collection                   bool
-	Summary                      string // used for API doc endpoint title
-	Description                  string // used for API doc endpoint description
-	ErrorRegistry                coreerror.Registry
-	ErrorRegistryExcludeDefaults bool
-	TagGroup                     TagGroupEndpoint
-
+	Document        bool
+	Collection      bool
+	Title           string // used for API doc endpoint title
+	Description     string // used for API doc endpoint description
 	RequestHeaders  []Header
 	ResponseHeaders []Header
 }
@@ -229,48 +223,6 @@ type Header struct {
 	Name     string
 	Required bool
 	Schema   jsonschema.SchemaWithReferences
-}
-
-type MessageAttribute struct {
-	Name  string `json:"name"`
-	Type  string `json:"type"`
-	Value string `json:"value"`
-}
-
-type MessageConfig struct {
-	Summary           string
-	Name              string
-	Source            string
-	Topic             string
-	Subject           string
-	Event             string
-	attributesMapping map[string]MessageAttribute
-	Attributes        []MessageAttribute
-	ValidateSchema    jsonschema.SchemaWithReferences
-	TagGroup          TagGroupSchemaDomain
-}
-
-func (m MessageConfig) AttributesMap() map[string]MessageAttribute {
-	if m.attributesMapping != nil {
-		return m.attributesMapping
-	}
-
-	attributes := map[string]MessageAttribute{}
-
-	for _, a := range m.Attributes {
-		attributes[a.Name] = a
-	}
-
-	m.attributesMapping = attributes
-
-	return m.attributesMapping
-}
-
-// TagGroupSchemaDomain is used to group schema domains related to the same resource
-type TagGroupSchemaDomain struct {
-	ResourceName TagGroup `json:"name"`
-	Description  string   `json:"description"`
-	Tag          Tag      `json:"tag"`
 }
 
 // ensure we comply with the Runnerer interface
@@ -287,7 +239,6 @@ func NewRunnerWithConfig(l logger.Logger, s storer.Storer, j *river.Client[pgx.T
 		JobClient:              j,
 		config:                 cfg,
 		HandlerConfig:          make(map[string]HandlerConfig),
-		MessageConfig:          make(map[string]MessageConfig),
 		HandlerMiddlewareFuncs: nil,
 	}
 
@@ -558,26 +509,10 @@ func (rnr *Runner) resolveHandlerSchemaLocationRoot(hc HandlerConfig) (HandlerCo
 	return hc, nil
 }
 
-func ResolveMessageSchemaLocation(messageConfig map[string]MessageConfig, location string) map[string]MessageConfig {
-	for message, cfg := range messageConfig {
-		cfg.ValidateSchema = jsonschema.ResolveSchemaLocation(cfg.ValidateSchema, location)
-		messageConfig[message] = cfg
-	}
-	return messageConfig
-}
-
-func ResolveMessageSchemaLocationRoot(messageConfig map[string]MessageConfig, root string) (map[string]MessageConfig, error) {
-	for messsage, cfg := range messageConfig {
-		cfg.ValidateSchema = jsonschema.ResolveSchemaLocationRoot(cfg.ValidateSchema, root)
-		messageConfig[messsage] = cfg
-	}
-	return messageConfig, nil
-}
-
-func ResolveDocumentationSummary(handlerConfig map[string]HandlerConfig) map[string]HandlerConfig {
+func ResolveDocumentationTitle(handlerConfig map[string]HandlerConfig) map[string]HandlerConfig {
 	for name, cfg := range handlerConfig {
-		if cfg.DocumentationConfig.Summary == "" {
-			cfg.DocumentationConfig.Summary = cfg.DocumentationConfig.Description
+		if cfg.DocumentationConfig.Title == "" {
+			cfg.DocumentationConfig.Title = cfg.DocumentationConfig.Description
 		}
 		handlerConfig[name] = cfg
 	}
