@@ -12,6 +12,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
 
 	"gitlab.com/alienspaces/playbymail/internal/record"
+	"gitlab.com/alienspaces/playbymail/internal/repository/account"
 	"gitlab.com/alienspaces/playbymail/internal/repository/game"
 )
 
@@ -35,6 +36,7 @@ func NewDomain(l logger.Logger, j *river.Client[pgx.Tx]) (*Domain, error) {
 		Domain: domain.Domain{
 			Log: l.WithPackageContext("domain"),
 			RepositoryConstructors: []domain.RepositoryConstructor{
+				account.NewRepository,
 				game.NewRepository,
 			},
 		},
@@ -45,6 +47,11 @@ func NewDomain(l logger.Logger, j *river.Client[pgx.Tx]) (*Domain, error) {
 	l.Info("returning domain %+v", m)
 
 	return m, nil
+}
+
+// AccountRepository -
+func (m *Domain) AccountRepository() *repository.Generic[record.Account, *record.Account] {
+	return m.Repositories[account.TableName].(*repository.Generic[record.Account, *record.Account])
 }
 
 // GameRepository -

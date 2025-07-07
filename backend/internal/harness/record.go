@@ -19,12 +19,60 @@ func UniqueName(name string) string {
 	return fmt.Sprintf("%s (%s)", name, corerecord.NewRecordID())
 }
 
-// removes the unique UUID4 from the end of the name to make it normal for
+// NormalName removes the unique UUID4 from the end of the name to make it normal for
 // test harness functions that return a record based on its non unique name.
 func NormalName(name string) string {
 	return name[:len(name)-39]
 }
 
+// Account
+func (t *Testing) createAccountRec(accountConfig AccountConfig) (*record.Account, error) {
+	l := t.Logger("createAccountRec")
+
+	// Create a new record instance to avoid reusing the same record across tests
+	var rec *record.Account
+	if accountConfig.Record != nil {
+		// Copy the record to avoid modifying the original
+		recCopy := *accountConfig.Record
+		rec = &recCopy
+	} else {
+		rec = &record.Account{}
+	}
+
+	rec = t.applyAccountRecDefaultValues(rec)
+
+	l.Info("Creating account record >%#v<", rec)
+
+	rec, err := t.Domain.(*domain.Domain).CreateAccountRec(rec)
+	if err != nil {
+		l.Warn("failed creating account record >%v<", err)
+		return nil, err
+	}
+
+	if accountConfig.Reference != "" {
+		t.Data.Refs.AccountRefs[accountConfig.Reference] = rec.ID
+	}
+
+	return rec, nil
+}
+
+func (t *Testing) applyAccountRecDefaultValues(rec *record.Account) *record.Account {
+	if rec == nil {
+		rec = &record.Account{}
+	}
+
+	if rec.Email == "" {
+		rec.Email = UniqueName(rec.Email)
+	}
+
+	if rec.Name == "" {
+		rec.Name = UniqueName(rec.Name)
+	}
+
+	return rec
+}
+
+// Game
 func (t *Testing) createGameRec(gameConfig GameConfig) (*record.Game, error) {
 	l := t.Logger("createGameRec")
 

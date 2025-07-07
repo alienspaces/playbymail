@@ -127,6 +127,9 @@ func (r *Generic[Rec, RecPtr]) CreateOne(rec *Rec) (*Rec, error) {
 	RecPtr(rec).ResolveID()
 	RecPtr(rec).SetCreatedAt(record.NewRecordTimestamp())
 
+	// Debug: print NamedArgs before insert
+	fmt.Printf("[DEBUG] CreateOne NamedArgs: %+v\n", RecPtr(rec).ToNamedArgs())
+
 	rows, err := r.tx.Query(context.Background(), r.CreateOneSQL(), RecPtr(rec).ToNamedArgs())
 	if err != nil {
 		return nil, err

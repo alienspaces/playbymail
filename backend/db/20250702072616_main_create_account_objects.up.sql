@@ -1,0 +1,10 @@
+CREATE TABLE IF NOT EXISTS public.account (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    email VARCHAR(255) NOT NULL UNIQUE,
+    name VARCHAR(255) NOT NULL DEFAULT '',
+	token VARCHAR(255) UNIQUE,
+	token_expires_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+    updated_at TIMESTAMP WITH TIME ZONE,
+	deleted_at TIMESTAMP WITH TIME ZONE
+);

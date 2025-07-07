@@ -2,12 +2,11 @@ package runner
 
 import (
 	"fmt"
+	"maps"
 	"net/http"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/riverqueue/river"
-
-	"maps"
 
 	"gitlab.com/alienspaces/playbymail/core/server"
 	"gitlab.com/alienspaces/playbymail/core/type/domainer"
@@ -68,6 +67,12 @@ func NewRunner(l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], cfg co
 
 	// Add handler configs using mergeHandlerConfigs for proper configuration merging
 	r.HandlerConfig = mergeHandlerConfigs(r.HandlerConfig, gameConfig)
+
+	accountConfig, err := r.accountHandlerConfig(l)
+	if err != nil {
+		return nil, err
+	}
+	r.HandlerConfig = mergeHandlerConfigs(r.HandlerConfig, accountConfig)
 
 	return &r, nil
 }

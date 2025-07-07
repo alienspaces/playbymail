@@ -80,6 +80,18 @@ func (t *Testing) CreateData() error {
 
 	l.Info("creating test data")
 
+	for _, accountConfig := range t.DataConfig.AccountConfig {
+		accountRec, err := t.createAccountRec(accountConfig)
+		if err != nil {
+			l.Warn("failed creating account record >%v<", err)
+			return err
+		}
+		l.Debug("created account record ID >%s< Email >%s<", accountRec.ID, accountRec.Email)
+		t.Data.AddAccountRec(accountRec)
+		t.teardownData.AddAccountRec(accountRec)
+		// Optionally add to teardownData if you want to support account cleanup
+	}
+
 	for _, gameConfig := range t.DataConfig.GameConfig {
 		gameRec, err := t.createGameRec(gameConfig)
 		if err != nil {
@@ -97,7 +109,8 @@ func (t *Testing) CreateData() error {
 }
 
 type teardownData struct {
-	GameRecs []*record.Game
+	GameRecs    []*record.Game
+	AccountRecs []*record.Account
 }
 
 func (t *teardownData) AddGameRec(rec *record.Game) {
@@ -108,6 +121,16 @@ func (t *teardownData) AddGameRec(rec *record.Game) {
 		}
 	}
 	t.GameRecs = append(t.GameRecs, rec)
+}
+
+func (t *teardownData) AddAccountRec(rec *record.Account) {
+	for idx := range t.AccountRecs {
+		if t.AccountRecs[idx].ID == rec.ID {
+			t.AccountRecs[idx] = rec
+			return
+		}
+	}
+	t.AccountRecs = append(t.AccountRecs, rec)
 }
 
 // RemoveData -
@@ -134,6 +157,19 @@ func (t *Testing) RemoveData() error {
 		err := t.Domain.(*domain.Domain).RemoveGameRec(rec.ID)
 		if err != nil {
 			l.Warn("failed removing game record >%v<", err)
+			return err
+		}
+		seen[rec.ID] = true
+	}
+
+	l.Debug("Removing >%d< account records", len(t.teardownData.AccountRecs))
+	for _, rec := range t.teardownData.AccountRecs {
+		if seen[rec.ID] {
+			continue
+		}
+		err := t.Domain.(*domain.Domain).RemoveAccountRec(rec.ID)
+		if err != nil {
+			l.Warn("failed removing account record >%v<", err)
 			return err
 		}
 		seen[rec.ID] = true

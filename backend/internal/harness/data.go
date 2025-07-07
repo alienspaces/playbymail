@@ -8,7 +8,8 @@ import (
 
 // Data -
 type Data struct {
-	GameRecs []*record.Game
+	AccountRecs []*record.Account
+	GameRecs    []*record.Game
 	// Data references
 	Refs DataRefs
 }
@@ -18,18 +19,48 @@ type Data struct {
 // When adding new reference maps make sure to also initialise the map
 // in the initialiseDataStores() function further below.
 type DataRefs struct {
-	GameRefs map[string]string // Map of game refs to game records
+	AccountRefs map[string]string // Map of account refs to account records
+	GameRefs    map[string]string // Map of game refs to game records
 }
 
 func initialiseDataStores() Data {
 	return Data{
 		Refs: DataRefs{
-			GameRefs: map[string]string{},
+			AccountRefs: map[string]string{},
+			GameRefs:    map[string]string{},
 		},
 	}
 }
 
-// Example
+// Account
+func (d *Data) AddAccountRec(rec *record.Account) {
+	for idx := range d.AccountRecs {
+		if d.AccountRecs[idx].ID == rec.ID {
+			d.AccountRecs[idx] = rec
+			return
+		}
+	}
+	d.AccountRecs = append(d.AccountRecs, rec)
+}
+
+func (d *Data) GetAccountRecByID(accountID string) (*record.Account, error) {
+	for _, rec := range d.AccountRecs {
+		if rec.ID == accountID {
+			return rec, nil
+		}
+	}
+	return nil, fmt.Errorf("failed getting account with ID >%s<", accountID)
+}
+
+func (d *Data) GetAccountRecByRef(ref string) (*record.Account, error) {
+	accountID, ok := d.Refs.AccountRefs[ref]
+	if !ok {
+		return nil, fmt.Errorf("failed getting account with ref >%s<", ref)
+	}
+	return d.GetAccountRecByID(accountID)
+}
+
+// Game
 func (d *Data) AddGameRec(rec *record.Game) {
 	for idx := range d.GameRecs {
 		if d.GameRecs[idx].ID == rec.ID {

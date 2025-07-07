@@ -1,4 +1,4 @@
-package game
+package account
 
 import (
 	"github.com/jackc/pgx/v5"
@@ -10,16 +10,16 @@ import (
 )
 
 const (
-	TableName string = record.TableGame
+	TableName string = record.TableAccount
 )
 
 // NewRepository -
 func NewRepository(l logger.Logger, tx pgx.Tx) (repositor.Repositor, error) {
-	return repository.NewGeneric[record.Game](
+	return repository.NewGeneric[record.Account](
 		repository.NewArgs{
 			Tx:        tx,
 			TableName: TableName,
-			Record:    record.Game{},
+			Record:    record.Account{},
 		},
 	)
 }

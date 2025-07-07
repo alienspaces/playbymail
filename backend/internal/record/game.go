@@ -5,6 +5,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/record"
 )
 
+// Game
 const (
 	TableGame string = "game"
 )

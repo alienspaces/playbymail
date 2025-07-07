@@ -1,0 +1,33 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Account",
+    "type": "object",
+    "properties": {
+        "id": {
+            "type": "string",
+            "format": "uuid"
+        },
+        "email": {
+            "type": "string",
+            "format": "email"
+        },
+        "name": {
+            "type": "string"
+        },
+        "created_at": {
+            "type": "string",
+            "format": "date-time"
+        },
+        "updated_at": {
+            "type": "string",
+            "format": "date-time"
+        }
+    },
+    "required": [
+        "id",
+        "email",
+        "name",
+        "created_at",
+        "updated_at"
+    ]
+}

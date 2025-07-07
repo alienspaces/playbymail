@@ -206,13 +206,17 @@ func (rnr *Runner) getGameHandler(w http.ResponseWriter, r *http.Request, pp htt
 
 	rec, err := mm.GetGameRec(recID, coresql.ForUpdateNoWait)
 	if err != nil {
+		l.Warn("failed getting game record >%v<", err)
 		return err
 	}
 
 	data, err := mapper.GameRecordToResponseData(l, rec)
 	if err != nil {
+		l.Warn("failed mapping game record to response data >%v<", err)
 		return err
 	}
+
+	l.Info("responding with game record id >%s<", rec.ID)
 
 	res := schema.GameResponse{
 		GameResponseData: &data,
@@ -253,8 +257,10 @@ func (rnr *Runner) createGameHandler(w http.ResponseWriter, r *http.Request, pp 
 	res := schema.GameResponse{
 		GameResponseData: &respData,
 	}
-	err = server.WriteResponse(l, w, http.StatusCreated, res)
-	if err != nil {
+
+	l.Info("responding with created game record id >%s<", rec.ID)
+
+	if err = server.WriteResponse(l, w, http.StatusCreated, res); err != nil {
 		l.Warn("failed writing response >%v<", err)
 		return err
 	}
@@ -295,8 +301,9 @@ func (rnr *Runner) updateGameHandler(w http.ResponseWriter, r *http.Request, pp 
 		GameResponseData: &data,
 	}
 
-	err = server.WriteResponse(l, w, http.StatusOK, res)
-	if err != nil {
+	l.Info("responding with updated game record id >%s<", rec.ID)
+
+	if err = server.WriteResponse(l, w, http.StatusOK, res); err != nil {
 		l.Warn("failed writing response >%v<", err)
 		return err
 	}
