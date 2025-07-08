@@ -1,0 +1,149 @@
+package runner
+
+import (
+	"net/http"
+	"testing"
+
+	"github.com/stretchr/testify/require"
+
+	"gitlab.com/alienspaces/playbymail/core/server"
+	"gitlab.com/alienspaces/playbymail/internal/harness"
+	"gitlab.com/alienspaces/playbymail/schema"
+)
+
+func Test_locationLinkHandler(t *testing.T) {
+	t.Parallel()
+
+	th := newTestHarness(t)
+	require.NotNil(t, th, "newTestHarness returns without error")
+
+	_, err := th.Setup()
+	require.NoError(t, err, "Test data setup returns without error")
+	defer func() {
+		err = th.Teardown()
+		require.NoError(t, err, "Test data teardown returns without error")
+	}()
+
+	// Setup: get a location link and locations for reference
+	linkRec, err := th.Data.GetLocationLinkRecByRef("link-one-two")
+	require.NoError(t, err, "GetLocationLinkRecByRef returns without error")
+	fromLoc, err := th.Data.GetLocationRecByID(linkRec.FromLocationID)
+	require.NoError(t, err, "GetLocationRecByID returns without error")
+	toLoc, err := th.Data.GetLocationRecByID(linkRec.ToLocationID)
+	require.NoError(t, err, "GetLocationRecByID returns without error")
+
+	testCaseCollectionResponseDecoder := testCaseResponseDecoderGeneric[schema.LocationLinkCollectionResponse]
+	testCaseResponseDecoder := testCaseResponseDecoderGeneric[schema.LocationLinkResponse]
+
+	testCases := []struct {
+		TestCase
+		collectionRequest     bool
+		collectionRecordCount int
+	}{
+		{
+			TestCase: TestCase{
+				Name: "API key with open access \\ get many location links \\ returns expected links",
+				HandlerConfig: func(rnr *Runner) server.HandlerConfig {
+					return rnr.HandlerConfig[getManyLocationLinks]
+				},
+				RequestQueryParams: func(d harness.Data) map[string]any {
+					return map[string]any{
+						"from_location_id": fromLoc.ID,
+						"page_size":        10,
+						"page_number":      1,
+					}
+				},
+				ResponseDecoder: testCaseCollectionResponseDecoder,
+				ResponseCode:    http.StatusOK,
+			},
+			collectionRequest:     true,
+			collectionRecordCount: 1,
+		},
+		{
+			TestCase: TestCase{
+				Name: "API key with open access \\ get one location link with valid ID \\ returns expected link",
+				HandlerConfig: func(rnr *Runner) server.HandlerConfig {
+					return rnr.HandlerConfig[getOneLocationLink]
+				},
+				RequestPathParams: func(d harness.Data) map[string]string {
+					return map[string]string{
+						":location_link_id": linkRec.ID,
+					}
+				},
+				ResponseDecoder: testCaseResponseDecoder,
+				ResponseCode:    http.StatusOK,
+			},
+			collectionRequest: false,
+		},
+		{
+			TestCase: TestCase{
+				Name: "API key with open access \\ create location link with valid properties \\ returns created link",
+				HandlerConfig: func(rnr *Runner) server.HandlerConfig {
+					return rnr.HandlerConfig[createLocationLink]
+				},
+				RequestBody: func(d harness.Data) interface{} {
+					return schema.LocationLinkRequest{
+						FromLocationID: toLoc.ID,   // Use toLoc as from to avoid unique constraint violation
+						ToLocationID:   fromLoc.ID, // Use fromLoc as to
+						Description:    "Test Link",
+						Name:           "Test Link Name",
+					}
+				},
+				ResponseDecoder: testCaseResponseDecoder,
+				ResponseCode:    http.StatusCreated,
+			},
+			collectionRequest: false,
+		},
+		{
+			TestCase: TestCase{
+				Name: "API key with open access \\ delete location link with valid ID \\ returns no content",
+				HandlerConfig: func(rnr *Runner) server.HandlerConfig {
+					return rnr.HandlerConfig[deleteLocationLink]
+				},
+				RequestPathParams: func(d harness.Data) map[string]string {
+					return map[string]string{
+						":location_link_id": linkRec.ID,
+					}
+				},
+				ResponseCode: http.StatusNoContent,
+			},
+			collectionRequest: false,
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Logf("Running test >%s<", testCase.Name)
+
+		t.Run(testCase.Name, func(t *testing.T) {
+			testFunc := func(method string, body interface{}) {
+				if testCase.TestResponseCode() == http.StatusNoContent {
+					// No content expected
+					return
+				}
+
+				require.NotNil(t, body, "Response body is not nil")
+
+				if testCase.collectionRequest {
+					responses := body.(schema.LocationLinkCollectionResponse)
+					require.Equal(t, testCase.collectionRecordCount, len(responses), "Response record count length equals expected")
+					for _, d := range responses {
+						require.NotEmpty(t, d.ID, "LocationLink ID is not empty")
+						require.NotEmpty(t, d.FromLocationID, "FromLocationID is not empty")
+						require.NotEmpty(t, d.ToLocationID, "ToLocationID is not empty")
+						require.NotEmpty(t, d.Description, "Description is not empty")
+					}
+				} else {
+					resp := body.(schema.LocationLinkResponse)
+					lResp := resp.LocationLinkResponseData
+					require.NotNil(t, lResp, "LocationLinkResponseData is not nil")
+					require.NotEmpty(t, lResp.ID, "LocationLink ID is not empty")
+					require.NotEmpty(t, lResp.FromLocationID, "FromLocationID is not empty")
+					require.NotEmpty(t, lResp.ToLocationID, "ToLocationID is not empty")
+					require.NotEmpty(t, lResp.Description, "Description is not empty")
+				}
+			}
+
+			RunTestCase(t, th, &testCase.TestCase, testFunc)
+		})
+	}
+}

@@ -18,9 +18,10 @@ type DataConfig struct {
 }
 
 type GameConfig struct {
-	Reference       string // Reference to the game record
-	Record          *record.Game
-	LocationConfigs []LocationConfig // Locations associated with this game
+	Reference           string // Reference to the game record
+	Record              *record.Game
+	LocationConfigs     []LocationConfig     // Locations associated with this game
+	LocationLinkConfigs []LocationLinkConfig // Links associated with this game
 }
 
 type AccountConfig struct {
@@ -31,6 +32,13 @@ type AccountConfig struct {
 type LocationConfig struct {
 	Reference string // Reference to the location record
 	Record    *record.Location
+}
+
+type LocationLinkConfig struct {
+	Reference       string // Reference to the location link record
+	FromLocationRef string // Reference to the from location
+	ToLocationRef   string // Reference to the to location
+	Record          *record.LocationLink
 }
 
 // DefaultDataConfig -
@@ -47,15 +55,26 @@ func DefaultDataConfig() DataConfig {
 					{
 						Reference: LocationOneRef,
 						Record: &record.Location{
-							Name:        UniqueName("Default Location One"),
+							Name:        "Default Location One",
 							Description: "Default location one for handler tests",
 						},
 					},
 					{
 						Reference: LocationTwoRef,
 						Record: &record.Location{
-							Name:        UniqueName("Default Location Two"),
+							Name:        "Default Location Two",
 							Description: "Default location two for handler tests",
+						},
+					},
+				},
+				LocationLinkConfigs: []LocationLinkConfig{
+					{
+						Reference:       "link-one-two",
+						FromLocationRef: LocationOneRef,
+						ToLocationRef:   LocationTwoRef,
+						Record: &record.LocationLink{
+							Description: "Travel by boat to the swamp of the long forgotten Frog God",
+							Name:        "The Red Door",
 						},
 					},
 				},

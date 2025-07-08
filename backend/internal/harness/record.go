@@ -205,3 +205,71 @@ func (t *Testing) applyLocationRecDefaultValues(rec *record.Location) *record.Lo
 	}
 	return rec
 }
+
+// LocationLink
+func (t *Testing) createLocationLinkRec(linkConfig LocationLinkConfig) (*record.LocationLink, error) {
+	l := t.Logger("createLocationLinkRec")
+
+	var rec *record.LocationLink
+	if linkConfig.Record != nil {
+		recCopy := *linkConfig.Record
+		rec = &recCopy
+	} else {
+		rec = &record.LocationLink{}
+	}
+
+	rec = t.applyLocationLinkRecDefaultValues(rec)
+
+	// Resolve location references to IDs
+	if linkConfig.FromLocationRef != "" {
+		fromLoc, err := t.Data.GetLocationRecByRef(linkConfig.FromLocationRef)
+		if err != nil || fromLoc == nil || fromLoc.ID == "" {
+			l.Error("could not resolve FromLocationRef >%s< to a valid location ID", linkConfig.FromLocationRef)
+			return nil, fmt.Errorf("could not resolve FromLocationRef >%s< to a valid location ID", linkConfig.FromLocationRef)
+		}
+		rec.FromLocationID = fromLoc.ID
+	}
+	if linkConfig.ToLocationRef != "" {
+		toLoc, err := t.Data.GetLocationRecByRef(linkConfig.ToLocationRef)
+		if err != nil || toLoc == nil || toLoc.ID == "" {
+			l.Error("could not resolve ToLocationRef >%s< to a valid location ID", linkConfig.ToLocationRef)
+			return nil, fmt.Errorf("could not resolve ToLocationRef >%s< to a valid location ID", linkConfig.ToLocationRef)
+		}
+		rec.ToLocationID = toLoc.ID
+	}
+
+	if rec.FromLocationID == "" || rec.ToLocationID == "" {
+		l.Error("location link must have both FromLocationID and ToLocationID set, got from: >%s< to: >%s<", rec.FromLocationID, rec.ToLocationID)
+		return nil, fmt.Errorf("location link must have both FromLocationID and ToLocationID set, got from: >%s< to: >%s<", rec.FromLocationID, rec.ToLocationID)
+	}
+
+	l.Info("creating location link record >%#v<", rec)
+
+	rec, err := t.Domain.(*domain.Domain).CreateLocationLinkRec(rec)
+	if err != nil {
+		l.Warn("failed creating location link record >%v<", err)
+		return nil, err
+	}
+
+	t.Data.AddLocationLinkRec(rec)
+	t.teardownData.AddLocationLinkRec(rec)
+
+	if linkConfig.Reference != "" {
+		t.Data.Refs.LocationLinkRefs[linkConfig.Reference] = rec.ID
+	}
+
+	return rec, nil
+}
+
+func (t *Testing) applyLocationLinkRecDefaultValues(rec *record.LocationLink) *record.LocationLink {
+	if rec == nil {
+		rec = &record.LocationLink{}
+	}
+	if rec.Description == "" {
+		rec.Description = gofakeit.Sentence(5)
+	}
+	if rec.Name == "" {
+		rec.Name = "Link " + gofakeit.Word()
+	}
+	return rec
+}

@@ -8,9 +8,10 @@ import (
 
 // Data -
 type Data struct {
-	AccountRecs  []*record.Account
-	GameRecs     []*record.Game
-	LocationRecs []*record.Location
+	AccountRecs      []*record.Account
+	GameRecs         []*record.Game
+	LocationRecs     []*record.Location
+	LocationLinkRecs []*record.LocationLink
 	// Data references
 	Refs DataRefs
 }
@@ -20,9 +21,10 @@ type Data struct {
 // When adding new reference maps make sure to also initialise the map
 // in the initialiseDataStores() function further below.
 type DataRefs struct {
-	AccountRefs  map[string]string // Map of account refs to account records
-	GameRefs     map[string]string // Map of game refs to game records
-	LocationRefs map[string]string // Map of location refs to location records
+	AccountRefs      map[string]string // Map of account refs to account records
+	GameRefs         map[string]string // Map of game refs to game records
+	LocationRefs     map[string]string // Map of location refs to location records
+	LocationLinkRefs map[string]string // Map of location link refs to location link records
 }
 
 // initialiseDataStores - Data is required to maintain data references and
@@ -31,9 +33,10 @@ type DataRefs struct {
 func initialiseDataStores() Data {
 	return Data{
 		Refs: DataRefs{
-			AccountRefs:  map[string]string{},
-			GameRefs:     map[string]string{},
-			LocationRefs: map[string]string{},
+			AccountRefs:      map[string]string{},
+			GameRefs:         map[string]string{},
+			LocationRefs:     map[string]string{},
+			LocationLinkRefs: map[string]string{},
 		},
 	}
 }
@@ -131,4 +134,32 @@ func (d *Data) GetLocationRecByRef(ref string) (*record.Location, error) {
 		}
 	}
 	return nil, fmt.Errorf("no location with id >%s< for ref >%s<", id, ref)
+}
+
+// LocationLink
+func (d *Data) AddLocationLinkRec(rec *record.LocationLink) {
+	for idx := range d.LocationLinkRecs {
+		if d.LocationLinkRecs[idx].ID == rec.ID {
+			d.LocationLinkRecs[idx] = rec
+			return
+		}
+	}
+	d.LocationLinkRecs = append(d.LocationLinkRecs, rec)
+}
+
+func (d *Data) GetLocationLinkRecByID(linkID string) (*record.LocationLink, error) {
+	for _, rec := range d.LocationLinkRecs {
+		if rec.ID == linkID {
+			return rec, nil
+		}
+	}
+	return nil, fmt.Errorf("failed getting location link with ID >%s<", linkID)
+}
+
+func (d *Data) GetLocationLinkRecByRef(ref string) (*record.LocationLink, error) {
+	linkID, ok := d.Refs.LocationLinkRefs[ref]
+	if !ok {
+		return nil, fmt.Errorf("failed getting location link with ref >%s<", ref)
+	}
+	return d.GetLocationLinkRecByID(linkID)
 }

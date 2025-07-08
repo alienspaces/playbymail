@@ -34,6 +34,7 @@ func TestHarnessSetupTeardown_DefaultDataConfig(t *testing.T) {
 	require.NotEmpty(t, h.Data.AccountRecs, "Account records should be created")
 	require.NotEmpty(t, h.Data.GameRecs, "Game records should be created")
 	require.NotEmpty(t, h.Data.LocationRecs, "Location records should be created")
+	require.NotEmpty(t, h.Data.LocationLinkRecs, "Location link records should be created")
 
 	// Check that references are set
 	for ref, id := range h.Data.Refs.AccountRefs {
