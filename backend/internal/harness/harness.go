@@ -113,6 +113,16 @@ func (t *Testing) CreateData() error {
 			}
 			l.Info("created location link record for game >%s<", gameRec.ID)
 		}
+
+		// Create game_character records for this game
+		for _, charConfig := range gameConfig.GameCharacterConfigs {
+			_, err = t.createGameCharacterRec(charConfig, gameRec)
+			if err != nil {
+				l.Warn("failed creating game_character record >%v<", err)
+				return err
+			}
+			l.Info("created game_character record for game >%s<", gameRec.ID)
+		}
 	}
 
 	l.Info("created test data")
@@ -134,12 +144,11 @@ func (t *Testing) RemoveData() error {
 			l.Warn("[teardown] skipping location link with empty ID")
 			continue
 		}
-		// If you have a RemoveLocationLinkRec method, use it here
-		// err := t.Domain.(*domain.Domain).RemoveLocationLinkRec(linkRec.ID)
-		// if err != nil {
-		// 	l.Warn("failed removing location link record >%v<", err)
-		// 	return err
-		// }
+		err := t.Domain.(*domain.Domain).RemoveLocationLinkRec(linkRec.ID)
+		if err != nil {
+			l.Warn("failed removing location link record >%v<", err)
+			return err
+		}
 	}
 
 	// Remove locations first to avoid foreign key constraint errors
@@ -155,6 +164,21 @@ func (t *Testing) RemoveData() error {
 		err := t.Domain.(*domain.Domain).RemoveLocationRec(locationRec.ID)
 		if err != nil {
 			l.Warn("failed removing location record >%v<", err)
+			return err
+		}
+	}
+
+	// Remove game characters
+	l.Info("removing >%d< game character records", len(t.teardownData.GameCharacterRecs))
+	for _, charRec := range t.teardownData.GameCharacterRecs {
+		l.Info("[teardown] game character ID: >%s<", charRec.ID)
+		if charRec.ID == "" {
+			l.Warn("[teardown] skipping game character with empty ID")
+			continue
+		}
+		err := t.Domain.(*domain.Domain).RemoveGameCharacterRec(charRec.ID)
+		if err != nil {
+			l.Warn("failed removing game character record >%v<", err)
 			return err
 		}
 	}

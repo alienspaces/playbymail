@@ -13,15 +13,23 @@ const (
 
 // DataConfig -
 type DataConfig struct {
-	GameConfigs    []GameConfig
-	AccountConfigs []AccountConfig
+	GameConfigs          []GameConfig
+	AccountConfigs       []AccountConfig
+	GameCharacterConfigs []GameCharacterConfig // Add this line
 }
 
 type GameConfig struct {
-	Reference           string // Reference to the game record
-	Record              *record.Game
-	LocationConfigs     []LocationConfig     // Locations associated with this game
-	LocationLinkConfigs []LocationLinkConfig // Links associated with this game
+	Reference            string // Reference to the game record
+	Record               *record.Game
+	LocationConfigs      []LocationConfig      // Locations associated with this game
+	LocationLinkConfigs  []LocationLinkConfig  // Links associated with this game
+	GameCharacterConfigs []GameCharacterConfig // Add this line
+}
+
+type GameCharacterConfig struct {
+	Reference  string // Reference to the game_character record
+	AccountRef string // Reference to the account
+	Record     *record.GameCharacter
 }
 
 type AccountConfig struct {
@@ -78,6 +86,15 @@ func DefaultDataConfig() DataConfig {
 						},
 					},
 				},
+				GameCharacterConfigs: []GameCharacterConfig{
+					{
+						Reference:  "character-one",
+						AccountRef: AccountOneRef,
+						Record: &record.GameCharacter{
+							Name: "Default Character One",
+						},
+					},
+				},
 			},
 		},
 		AccountConfigs: []AccountConfig{
@@ -94,5 +111,6 @@ func DefaultDataConfig() DataConfig {
 				},
 			},
 		},
+		GameCharacterConfigs: []GameCharacterConfig{}, // No global characters by default
 	}
 }

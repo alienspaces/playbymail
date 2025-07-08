@@ -86,6 +86,12 @@ func NewRunner(l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], cfg co
 	}
 	r.HandlerConfig = mergeHandlerConfigs(r.HandlerConfig, locationLinkConfig)
 
+	gameCharacterConfig, err := r.gameCharacterHandlerConfig(l)
+	if err != nil {
+		return nil, err
+	}
+	r.HandlerConfig = mergeHandlerConfigs(r.HandlerConfig, gameCharacterConfig)
+
 	return &r, nil
 }
 

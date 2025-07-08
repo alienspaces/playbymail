@@ -1,0 +1,13 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "GameCharacterResponse",
+    "type": "object",
+    "properties": {
+        "game_character": {
+            "$ref": "game_character.schema.json"
+        }
+    },
+    "required": [
+        "game_character"
+    ]
+}

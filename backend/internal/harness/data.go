@@ -8,10 +8,11 @@ import (
 
 // Data -
 type Data struct {
-	AccountRecs      []*record.Account
-	GameRecs         []*record.Game
-	LocationRecs     []*record.Location
-	LocationLinkRecs []*record.LocationLink
+	AccountRecs       []*record.Account
+	GameRecs          []*record.Game
+	LocationRecs      []*record.Location
+	LocationLinkRecs  []*record.LocationLink
+	GameCharacterRecs []*record.GameCharacter // Add this line
 	// Data references
 	Refs DataRefs
 }
@@ -21,10 +22,11 @@ type Data struct {
 // When adding new reference maps make sure to also initialise the map
 // in the initialiseDataStores() function further below.
 type DataRefs struct {
-	AccountRefs      map[string]string // Map of account refs to account records
-	GameRefs         map[string]string // Map of game refs to game records
-	LocationRefs     map[string]string // Map of location refs to location records
-	LocationLinkRefs map[string]string // Map of location link refs to location link records
+	AccountRefs       map[string]string // Map of account refs to account records
+	GameRefs          map[string]string // Map of game refs to game records
+	LocationRefs      map[string]string // Map of location refs to location records
+	LocationLinkRefs  map[string]string // Map of location link refs to location link records
+	GameCharacterRefs map[string]string // Map of game_character refs to records
 }
 
 // initialiseDataStores - Data is required to maintain data references and
@@ -33,10 +35,11 @@ type DataRefs struct {
 func initialiseDataStores() Data {
 	return Data{
 		Refs: DataRefs{
-			AccountRefs:      map[string]string{},
-			GameRefs:         map[string]string{},
-			LocationRefs:     map[string]string{},
-			LocationLinkRefs: map[string]string{},
+			AccountRefs:       map[string]string{},
+			GameRefs:          map[string]string{},
+			LocationRefs:      map[string]string{},
+			LocationLinkRefs:  map[string]string{},
+			GameCharacterRefs: map[string]string{}, // Add this line
 		},
 	}
 }
@@ -162,4 +165,32 @@ func (d *Data) GetLocationLinkRecByRef(ref string) (*record.LocationLink, error)
 		return nil, fmt.Errorf("failed getting location link with ref >%s<", ref)
 	}
 	return d.GetLocationLinkRecByID(linkID)
+}
+
+// GameCharacter
+func (d *Data) AddGameCharacterRec(rec *record.GameCharacter) {
+	for idx := range d.GameCharacterRecs {
+		if d.GameCharacterRecs[idx].ID == rec.ID {
+			d.GameCharacterRecs[idx] = rec
+			return
+		}
+	}
+	d.GameCharacterRecs = append(d.GameCharacterRecs, rec)
+}
+
+func (d *Data) GetGameCharacterRecByID(id string) (*record.GameCharacter, error) {
+	for _, rec := range d.GameCharacterRecs {
+		if rec.ID == id {
+			return rec, nil
+		}
+	}
+	return nil, fmt.Errorf("failed getting game_character with ID >%s<", id)
+}
+
+func (d *Data) GetGameCharacterRecByRef(ref string) (*record.GameCharacter, error) {
+	id, ok := d.Refs.GameCharacterRefs[ref]
+	if !ok {
+		return nil, fmt.Errorf("failed getting game_character with ref >%s<", ref)
+	}
+	return d.GetGameCharacterRecByID(id)
 }

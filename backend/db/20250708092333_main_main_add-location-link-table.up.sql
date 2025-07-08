@@ -1,7 +1,7 @@
 CREATE TABLE public.location_link (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    from_location_id UUID NOT NULL REFERENCES public.location(id) ON DELETE CASCADE,
-    to_location_id UUID NOT NULL REFERENCES public.location(id) ON DELETE CASCADE,
+    from_location_id UUID NOT NULL REFERENCES public.location(id),
+    to_location_id UUID NOT NULL REFERENCES public.location(id),
     description VARCHAR(255) NOT NULL,
     name VARCHAR(64) NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),

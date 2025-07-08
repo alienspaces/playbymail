@@ -14,6 +14,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/record"
 	"gitlab.com/alienspaces/playbymail/internal/repository/account"
 	"gitlab.com/alienspaces/playbymail/internal/repository/game"
+	"gitlab.com/alienspaces/playbymail/internal/repository/gamecharacter"
 	"gitlab.com/alienspaces/playbymail/internal/repository/location"
 	"gitlab.com/alienspaces/playbymail/internal/repository/locationlink"
 )
@@ -42,6 +43,7 @@ func NewDomain(l logger.Logger, j *river.Client[pgx.Tx]) (*Domain, error) {
 				game.NewRepository,
 				location.NewRepository,
 				locationlink.NewRepository,
+				gamecharacter.NewRepository,
 			},
 		},
 	}
@@ -71,6 +73,11 @@ func (m *Domain) LocationRepository() *repository.Generic[record.Location, *reco
 // LocationLinkRepository -
 func (m *Domain) LocationLinkRepository() *repository.Generic[record.LocationLink, *record.LocationLink] {
 	return m.Repositories["location_link"].(*repository.Generic[record.LocationLink, *record.LocationLink])
+}
+
+// GameCharacterRepository -
+func (m *Domain) GameCharacterRepository() *repository.Generic[record.GameCharacter, *record.GameCharacter] {
+	return m.Repositories[gamecharacter.TableName].(*repository.Generic[record.GameCharacter, *record.GameCharacter])
 }
 
 // SetRLS -

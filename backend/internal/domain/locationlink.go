@@ -76,3 +76,25 @@ func (m *Domain) DeleteLocationLinkRec(recID string) error {
 	}
 	return nil
 }
+
+// RemoveLocationLinkRec -
+func (m *Domain) RemoveLocationLinkRec(recID string) error {
+	l := m.Logger("RemoveLocationLinkRec")
+
+	l.Debug("removing location link record ID >%s<", recID)
+
+	_, err := m.GetLocationLinkRec(recID, sql.ForUpdateNoWait)
+	if err != nil {
+		return err
+	}
+
+	r := m.LocationLinkRepository()
+
+	// Add validation here if needed
+
+	if err := r.RemoveOne(recID); err != nil {
+		return databaseError(err)
+	}
+
+	return nil
+}
