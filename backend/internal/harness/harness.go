@@ -12,15 +12,14 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/type/storer"
 
 	"gitlab.com/alienspaces/playbymail/internal/domain"
-	"gitlab.com/alienspaces/playbymail/internal/record"
 )
 
 // Testing -
 type Testing struct {
 	harness.Testing
 	Data         Data
+	teardownData Data
 	DataConfig   DataConfig
-	teardownData teardownData
 }
 
 // NewTesting -
@@ -48,7 +47,7 @@ func NewTesting(l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], confi
 
 	t.DataConfig = config
 	t.Data = Data{}
-	t.teardownData = teardownData{}
+	t.teardownData = Data{}
 
 	err = t.Init()
 	if err != nil {
@@ -76,31 +75,36 @@ func (t *Testing) CreateData() error {
 	l := t.Logger("CreateData")
 
 	t.Data = initialiseDataStores()
-	t.teardownData = teardownData{}
+	t.teardownData = initialiseTeardownDataStores()
 
 	l.Info("creating test data")
 
-	for _, accountConfig := range t.DataConfig.AccountConfig {
+	for _, accountConfig := range t.DataConfig.AccountConfigs {
 		accountRec, err := t.createAccountRec(accountConfig)
 		if err != nil {
 			l.Warn("failed creating account record >%v<", err)
 			return err
 		}
-		l.Debug("created account record ID >%s< Email >%s<", accountRec.ID, accountRec.Email)
-		t.Data.AddAccountRec(accountRec)
-		t.teardownData.AddAccountRec(accountRec)
-		// Optionally add to teardownData if you want to support account cleanup
+		l.Info("created account record ID >%s< Email >%s<", accountRec.ID, accountRec.Email)
 	}
 
-	for _, gameConfig := range t.DataConfig.GameConfig {
+	for _, gameConfig := range t.DataConfig.GameConfigs {
 		gameRec, err := t.createGameRec(gameConfig)
 		if err != nil {
 			l.Warn("failed creating game record >%v<", err)
 			return err
 		}
-		l.Debug("created game record ID >%s< Name >%s<", gameRec.ID, gameRec.Name)
-		t.Data.AddGameRec(gameRec)
-		t.teardownData.AddGameRec(gameRec)
+		l.Info("created game record ID >%s< Name >%s<", gameRec.ID, gameRec.Name)
+
+		// Create associated locations for this game
+		for _, locationConfig := range gameConfig.LocationConfigs {
+			locationRec, err := t.createLocationRec(locationConfig, gameRec)
+			if err != nil {
+				l.Warn("failed creating location record >%v<", err)
+				return err
+			}
+			l.Info("created location record ID >%s< Name >%s<", locationRec.ID, locationRec.Name)
+		}
 	}
 
 	l.Info("created test data")
@@ -108,63 +112,53 @@ func (t *Testing) CreateData() error {
 	return nil
 }
 
-type teardownData struct {
-	GameRecs    []*record.Game
-	AccountRecs []*record.Account
-}
-
-func (t *teardownData) AddGameRec(rec *record.Game) {
-	for idx := range t.GameRecs {
-		if t.GameRecs[idx].ID == rec.ID {
-			t.GameRecs[idx] = rec
-			return
-		}
-	}
-	t.GameRecs = append(t.GameRecs, rec)
-}
-
-func (t *teardownData) AddAccountRec(rec *record.Account) {
-	for idx := range t.AccountRecs {
-		if t.AccountRecs[idx].ID == rec.ID {
-			t.AccountRecs[idx] = rec
-			return
-		}
-	}
-	t.AccountRecs = append(t.AccountRecs, rec)
-}
-
-// RemoveData -
+// RemoveData - Uses the domain remove methods to physically remove data
+// from the database as opposed to the delete methods which only mark the
+// record as deleted.
 func (t *Testing) RemoveData() error {
 	l := t.Logger("RemoveData")
 
-	// Quick cleanup when data is not committed
-	if !t.ShouldCommitData {
-		t.Data = Data{}
-		t.teardownData = teardownData{}
-		return nil
-	}
+	// Remove locations first to avoid foreign key constraint errors
+	l.Info("removing >%d< location records", len(t.teardownData.LocationRecs))
 
-	l.Info("Removing test data")
-
-	seen := map[string]bool{}
-
-	l.Debug("Removing >%d< game records", len(t.teardownData.GameRecs))
-
-	for _, rec := range t.teardownData.GameRecs {
-		if seen[rec.ID] {
+	for _, locationRec := range t.teardownData.LocationRecs {
+		l.Info("[teardown] location ID: >%s<", locationRec.ID)
+		if locationRec.ID == "" {
+			l.Warn("[teardown] skipping location with empty ID")
 			continue
 		}
-		err := t.Domain.(*domain.Domain).RemoveGameRec(rec.ID)
+		l.Info("removing location record ID >%s<", locationRec.ID)
+		err := t.Domain.(*domain.Domain).RemoveLocationRec(locationRec.ID)
+		if err != nil {
+			l.Warn("failed removing location record >%v<", err)
+			return err
+		}
+	}
+
+	// Remove games
+	l.Info("removing >%d< game records", len(t.teardownData.GameRecs))
+
+	for _, gameRec := range t.teardownData.GameRecs {
+		l.Info("[teardown] game ID: >%s<", gameRec.ID)
+		if gameRec.ID == "" {
+			l.Warn("[teardown] skipping game with empty ID")
+			continue
+		}
+		l.Info("removing game record ID >%s<", gameRec.ID)
+		err := t.Domain.(*domain.Domain).RemoveGameRec(gameRec.ID)
 		if err != nil {
 			l.Warn("failed removing game record >%v<", err)
 			return err
 		}
-		seen[rec.ID] = true
 	}
 
-	l.Debug("Removing >%d< account records", len(t.teardownData.AccountRecs))
+	// Remove accounts
+	l.Info("removing >%d< account records", len(t.teardownData.AccountRecs))
+
 	for _, rec := range t.teardownData.AccountRecs {
-		if seen[rec.ID] {
+		l.Info("[teardown] account ID: >%s<", rec.ID)
+		if rec.ID == "" {
+			l.Warn("[teardown] skipping account with empty ID")
 			continue
 		}
 		err := t.Domain.(*domain.Domain).RemoveAccountRec(rec.ID)
@@ -172,15 +166,7 @@ func (t *Testing) RemoveData() error {
 			l.Warn("failed removing account record >%v<", err)
 			return err
 		}
-		seen[rec.ID] = true
 	}
-
-	l.Debug("Removing >%d< game records", len(t.teardownData.GameRecs))
-
-	t.Data = Data{}
-
-	l.Info("Removed test data")
-
 	return nil
 }
 

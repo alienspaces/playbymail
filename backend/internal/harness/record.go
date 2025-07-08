@@ -25,6 +25,12 @@ func NormalName(name string) string {
 	return name[:len(name)-39]
 }
 
+// UniqueEmail appends a UUID4 to the end of the email to make it unique
+// for parallel test execution.
+func UniqueEmail(email string) string {
+	return fmt.Sprintf("%s-%s", email, corerecord.NewRecordID())
+}
+
 // Account
 func (t *Testing) createAccountRec(accountConfig AccountConfig) (*record.Account, error) {
 	l := t.Logger("createAccountRec")
@@ -41,7 +47,7 @@ func (t *Testing) createAccountRec(accountConfig AccountConfig) (*record.Account
 
 	rec = t.applyAccountRecDefaultValues(rec)
 
-	l.Info("Creating account record >%#v<", rec)
+	l.Info("creating account record >%#v<", rec)
 
 	rec, err := t.Domain.(*domain.Domain).CreateAccountRec(rec)
 	if err != nil {
@@ -49,6 +55,13 @@ func (t *Testing) createAccountRec(accountConfig AccountConfig) (*record.Account
 		return nil, err
 	}
 
+	// Add the account record to the data store
+	t.Data.AddAccountRec(rec)
+
+	// Add the account record to the teardown data store
+	t.teardownData.AddAccountRec(rec)
+
+	// Add the account record to the data store refs
 	if accountConfig.Reference != "" {
 		t.Data.Refs.AccountRefs[accountConfig.Reference] = rec.ID
 	}
@@ -62,11 +75,11 @@ func (t *Testing) applyAccountRecDefaultValues(rec *record.Account) *record.Acco
 	}
 
 	if rec.Email == "" {
-		rec.Email = UniqueName(rec.Email)
+		rec.Email = UniqueEmail(gofakeit.Email())
 	}
 
 	if rec.Name == "" {
-		rec.Name = UniqueName(rec.Name)
+		rec.Name = UniqueName(gofakeit.Name())
 	}
 
 	return rec
@@ -88,7 +101,7 @@ func (t *Testing) createGameRec(gameConfig GameConfig) (*record.Game, error) {
 
 	rec = t.applyGameRecDefaultValues(rec)
 
-	l.Info("Creating game record >%#v<", rec)
+	l.Info("creating game record >%#v<", rec)
 
 	rec, err := t.Domain.(*domain.Domain).CreateGameRec(rec)
 	if err != nil {
@@ -96,8 +109,24 @@ func (t *Testing) createGameRec(gameConfig GameConfig) (*record.Game, error) {
 		return nil, err
 	}
 
+	// Add the game record to the data store
+	t.Data.AddGameRec(rec)
+
+	// Add the game record to the teardown data store
+	t.teardownData.AddGameRec(rec)
+
+	// Add the game record to the data store refs
 	if gameConfig.Reference != "" {
 		t.Data.Refs.GameRefs[gameConfig.Reference] = rec.ID
+	}
+
+	// Create associated locations for this game
+	for _, locationConfig := range gameConfig.LocationConfigs {
+		_, err := t.createLocationRec(locationConfig, rec)
+		if err != nil {
+			l.Warn("failed creating location record >%v<", err)
+			return nil, err
+		}
 	}
 
 	return rec, nil
@@ -109,8 +138,66 @@ func (t *Testing) applyGameRecDefaultValues(rec *record.Game) *record.Game {
 	}
 
 	if rec.Name == "" {
-		rec.Name = UniqueName(rec.Name)
+		rec.Name = UniqueName(gofakeit.Name())
 	}
 
+	return rec
+}
+
+// Location
+func (t *Testing) createLocationRec(locationConfig LocationConfig, gameRec *record.Game) (*record.Location, error) {
+	l := t.Logger("createLocationRec")
+
+	if gameRec == nil {
+		return nil, fmt.Errorf("game record is nil for location record >%#v<", locationConfig)
+	}
+
+	// Create a new record instance to avoid reusing the same record across tests
+	var rec *record.Location
+	if locationConfig.Record != nil {
+		// Copy the record to avoid modifying the original
+		recCopy := *locationConfig.Record
+		rec = &recCopy
+	} else {
+		rec = &record.Location{}
+	}
+
+	rec = t.applyLocationRecDefaultValues(rec)
+
+	// Set the game ID if it is provided
+	rec.GameID = gameRec.ID
+
+	l.Info("creating location record >%#v<", rec)
+
+	rec, err := t.Domain.(*domain.Domain).CreateLocationRec(rec)
+	if err != nil {
+		l.Warn("failed creating location record >%v<", err)
+		return nil, err
+	}
+
+	// Add the location record to the data store
+	t.Data.AddLocationRec(rec)
+
+	// Add the location record to the teardown data store
+	t.teardownData.AddLocationRec(rec)
+
+	// Add the location record to the data store refs
+	if locationConfig.Reference != "" {
+		t.Data.Refs.LocationRefs[locationConfig.Reference] = rec.ID
+	}
+
+	return rec, nil
+}
+
+func (t *Testing) applyLocationRecDefaultValues(rec *record.Location) *record.Location {
+	if rec == nil {
+		rec = &record.Location{}
+	}
+	if rec.Name == "" {
+		rec.Name = UniqueName(gofakeit.Name())
+	}
+	if rec.Description == "" {
+		rec.Description = gofakeit.Sentence(10)
+	}
 	return rec
 }

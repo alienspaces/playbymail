@@ -59,7 +59,7 @@ pwd
 
 # Run Backend Tests
 print_header "Running Backend Tests"
-if ./tools/test-backend-local; then
+if ./tools/test-backend; then
     print_status "Backend tests passed"
     TESTS_PASSED=$((TESTS_PASSED+1))
 else

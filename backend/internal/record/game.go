@@ -22,6 +22,6 @@ type Game struct {
 
 func (r *Game) ToNamedArgs() pgx.NamedArgs {
 	args := r.Record.ToNamedArgs()
-	args["name"] = r.Name
+	args[FieldGameName] = r.Name
 	return args
 }

@@ -14,6 +14,15 @@
                 "name": {
                     "$ref": "#/$defs/name"
                 },
+                "type": {
+                    "description": "The type of the game.",
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 50,
+                    "examples": [
+                        "adventure"
+                    ]
+                },
                 "created_at": {
                     "$ref": "../common/common.schema.json#/$defs/created_at"
                 },

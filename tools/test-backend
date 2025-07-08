@@ -1,5 +1,7 @@
 #!/usr/bin/env sh
 
+# Use this script to set up the environment and run all backend tests.
+
 # Local development only.
 # Usage: ./tools/test
 

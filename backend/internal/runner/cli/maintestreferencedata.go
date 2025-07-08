@@ -4,7 +4,6 @@ import (
 	"github.com/urfave/cli/v2"
 
 	"gitlab.com/alienspaces/playbymail/internal/harness"
-	"gitlab.com/alienspaces/playbymail/internal/runner/cli/maintestreferencedata"
 )
 
 // loadMainTestReferenceData loads the supported set of test reference data for CI and QA test environments
@@ -38,7 +37,5 @@ func (rnr *Runner) loadMainTestReferenceData(c *cli.Context) error {
 }
 
 func (rnr *Runner) MainTestReferenceDataConfig() harness.DataConfig {
-	return harness.DataConfig{
-		GameConfig: maintestreferencedata.GameConfig(),
-	}
+	return harness.DataConfig{}
 }

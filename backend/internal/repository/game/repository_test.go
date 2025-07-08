@@ -1,4 +1,4 @@
-package test
+package game_test
 
 // NOTE: repository tests are run is the public space so we are
 // able to use common setup and teardown tooling for all repositories
@@ -22,14 +22,10 @@ func TestCreateOne(t *testing.T) {
 
 	// harness
 	dcfg := harness.DataConfig{
-		GameConfig: []harness.GameConfig{
+		GameConfigs: []harness.GameConfig{
 			{
-				Record: &record.Game{},
-			},
-		},
-		AccountConfig: []harness.AccountConfig{
-			{
-				Record: &record.Account{},
+				Reference: harness.GameOneRef,
+				Record:    &record.Game{},
 			},
 		},
 	}
@@ -45,23 +41,23 @@ func TestCreateOne(t *testing.T) {
 
 	tests := []struct {
 		name string
-		rec  func() *record.Account
+		rec  func(d harness.Data, t *testing.T) *record.Game
 		err  bool
 	}{
 		{
 			name: "Without ID",
-			rec: func() *record.Account {
-				return &record.Account{
-					Email: fmt.Sprintf("%s@example.com", gofakeit.Name()),
+			rec: func(d harness.Data, t *testing.T) *record.Game {
+				return &record.Game{
+					Name: fmt.Sprintf("%s %s", gofakeit.Name(), gofakeit.Name()),
 				}
 			},
 			err: false,
 		},
 		{
 			name: "With ID",
-			rec: func() *record.Account {
-				rec := &record.Account{
-					Email: fmt.Sprintf("%s@example.com", gofakeit.Name()),
+			rec: func(d harness.Data, t *testing.T) *record.Game {
+				rec := &record.Game{
+					Name: fmt.Sprintf("%s %s", gofakeit.Name(), gofakeit.Name()),
 				}
 				id, _ := uuid.NewRandom()
 				rec.ID = id.String()
@@ -86,10 +82,10 @@ func TestCreateOne(t *testing.T) {
 			}()
 
 			// repository
-			r := h.Domain.(*domain.Domain).AccountRepository()
+			r := h.Domain.(*domain.Domain).GameRepository()
 			require.NotNil(t, r, "Repository is not nil")
 
-			rec := tc.rec()
+			rec := tc.rec(h.Data, t)
 
 			_, err = r.CreateOne(rec)
 			if tc.err == true {
@@ -106,14 +102,10 @@ func TestGetOne(t *testing.T) {
 
 	// harness
 	dcfg := harness.DataConfig{
-		GameConfig: []harness.GameConfig{
+		GameConfigs: []harness.GameConfig{
 			{
-				Record: &record.Game{},
-			},
-		},
-		AccountConfig: []harness.AccountConfig{
-			{
-				Record: &record.Account{},
+				Reference: harness.GameOneRef,
+				Record:    &record.Game{},
 			},
 		},
 	}
@@ -129,19 +121,21 @@ func TestGetOne(t *testing.T) {
 
 	tests := []struct {
 		name string
-		id   func() string
+		id   func(d harness.Data, t *testing.T) string
 		err  bool
 	}{
 		{
 			name: "With ID",
-			id: func() string {
-				return h.Data.AccountRecs[0].ID
+			id: func(d harness.Data, t *testing.T) string {
+				gameRec, err := d.GetGameRecByRef(harness.GameOneRef)
+				require.NoError(t, err, "GetGameRecByRef returns without error")
+				return gameRec.ID
 			},
 			err: false,
 		},
 		{
 			name: "Without ID",
-			id: func() string {
+			id: func(d harness.Data, t *testing.T) string {
 				return ""
 			},
 			err: true,
@@ -163,10 +157,10 @@ func TestGetOne(t *testing.T) {
 			}()
 
 			// repository
-			r := h.Domain.(*domain.Domain).AccountRepository()
+			r := h.Domain.(*domain.Domain).GameRepository()
 			require.NotNil(t, r, "Repository is not nil")
 
-			rec, err := r.GetOne(tc.id(), nil)
+			rec, err := r.GetOne(tc.id(h.Data, t), nil)
 			if tc.err == true {
 				require.Error(t, err, "GetOne returns error")
 				return
@@ -182,14 +176,10 @@ func TestUpdateOne(t *testing.T) {
 
 	// harness
 	dcfg := harness.DataConfig{
-		GameConfig: []harness.GameConfig{
+		GameConfigs: []harness.GameConfig{
 			{
-				Record: &record.Game{},
-			},
-		},
-		AccountConfig: []harness.AccountConfig{
-			{
-				Record: &record.Account{},
+				Reference: harness.GameOneRef,
+				Record:    &record.Game{},
 			},
 		},
 	}
@@ -207,20 +197,24 @@ func TestUpdateOne(t *testing.T) {
 
 	tests := []struct {
 		name string
-		rec  func() *record.Account
+		rec  func(d harness.Data, t *testing.T) *record.Game
 		err  bool
 	}{
 		{
 			name: "With ID",
-			rec: func() *record.Account {
-				return h.Data.AccountRecs[0]
+			rec: func(d harness.Data, t *testing.T) *record.Game {
+				gameRec, err := d.GetGameRecByRef(harness.GameOneRef)
+				require.NoError(t, err, "GetGameRecByRef returns without error")
+				return gameRec
 			},
 			err: false,
 		},
 		{
 			name: "Without ID",
-			rec: func() *record.Account {
-				rec := h.Data.AccountRecs[0]
+			rec: func(d harness.Data, t *testing.T) *record.Game {
+				gameRec, err := d.GetGameRecByRef(harness.GameOneRef)
+				require.NoError(t, err, "GetGameRecByRef returns without error")
+				rec := gameRec
 				rec.ID = ""
 				return rec
 			},
@@ -243,12 +237,12 @@ func TestUpdateOne(t *testing.T) {
 			}()
 
 			// repository
-			r := h.Domain.(*domain.Domain).AccountRepository()
+			r := h.Domain.(*domain.Domain).GameRepository()
 			require.NotNil(t, r, "Repository is not nil")
 
-			rec := tc.rec()
+			rec := tc.rec(h.Data, t)
 
-			_, err := r.UpdateOne(rec)
+			_, err = r.UpdateOne(rec)
 			if tc.err == true {
 				require.Error(t, err, "UpdateOne returns error")
 				return
@@ -263,14 +257,10 @@ func TestDeleteOne(t *testing.T) {
 
 	// harness
 	dcfg := harness.DataConfig{
-		GameConfig: []harness.GameConfig{
+		GameConfigs: []harness.GameConfig{
 			{
-				Record: &record.Game{},
-			},
-		},
-		AccountConfig: []harness.AccountConfig{
-			{
-				Record: &record.Account{},
+				Reference: harness.GameOneRef,
+				Record:    &record.Game{},
 			},
 		},
 	}
@@ -286,19 +276,21 @@ func TestDeleteOne(t *testing.T) {
 
 	tests := []struct {
 		name string
-		id   func() string
+		id   func(d harness.Data, t *testing.T) string
 		err  bool
 	}{
 		{
 			name: "With ID",
-			id: func() string {
-				return h.Data.AccountRecs[0].ID
+			id: func(d harness.Data, t *testing.T) string {
+				gameRec, err := d.GetGameRecByRef(harness.GameOneRef)
+				require.NoError(t, err, "GetGameRecByRef returns without error")
+				return gameRec.ID
 			},
 			err: false,
 		},
 		{
 			name: "Without ID",
-			id: func() string {
+			id: func(d harness.Data, t *testing.T) string {
 				return ""
 			},
 			err: true,
@@ -320,17 +312,17 @@ func TestDeleteOne(t *testing.T) {
 			}()
 
 			// repository
-			r := h.Domain.(*domain.Domain).AccountRepository()
+			r := h.Domain.(*domain.Domain).GameRepository()
 			require.NotNil(t, r, "Repository is not nil")
 
-			err = r.DeleteOne(tc.id())
+			err = r.DeleteOne(tc.id(h.Data, t))
 			if tc.err == true {
 				require.Error(t, err, "DeleteOne returns error")
 				return
 			}
 			require.NoError(t, err, "DeleteOne returns without error")
 
-			rec, err := r.GetOne(tc.id(), nil)
+			rec, err := r.GetOne(tc.id(h.Data, t), nil)
 			require.Error(t, err, "GetOne returns error")
 			require.Nil(t, rec, "GetOne does not return record")
 		})

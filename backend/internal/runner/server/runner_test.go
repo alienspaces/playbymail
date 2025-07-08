@@ -34,7 +34,7 @@ func newDefaultDependencies(t *testing.T) (*log.Log, *store.Store, *river.Client
 func newTestHarness(t *testing.T) *harness.Testing {
 
 	// Default test harness data configuration
-	config := harness.DefaultDataConfig
+	config := harness.DefaultDataConfig()
 
 	// Default dependencies
 	l, s, j := newDefaultDependencies(t)
@@ -44,7 +44,7 @@ func newTestHarness(t *testing.T) *harness.Testing {
 	require.NoError(t, err, "NewTesting returns without error")
 
 	// For handler tests the test harness needs to commit data as the handler
-	// creates a new database transaction.
+	// creates a new database transaction with each new request.
 	h.ShouldCommitData = true
 
 	// Ensure proper cleanup before creating new data

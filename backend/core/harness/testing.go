@@ -190,6 +190,17 @@ func (t *Testing) Setup() (pgx.Tx, error) {
 func (t *Testing) Teardown() error {
 	l := t.Log.WithFunctionContext("Teardown")
 
+	// If we are not committing data, we need to rollback the tx.
+	if !t.ShouldCommitData {
+		l.Info("Rolling back Tx")
+		err := t.RollbackTx()
+		if err != nil {
+			l.Warn("failed rolling back data >%v<", err)
+			return err
+		}
+		return nil
+	}
+
 	_, err := t.InitTx()
 	if err != nil {
 		l.Warn("failed init >%v<", err)

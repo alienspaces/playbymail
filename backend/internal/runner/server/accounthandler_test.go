@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/brianvoe/gofakeit"
 	"github.com/stretchr/testify/require"
 
 	"gitlab.com/alienspaces/playbymail/core/server"
@@ -33,6 +34,10 @@ func Test_getAccountHandler(t *testing.T) {
 	testCaseCollectionResponseDecoder := testCaseResponseDecoderGeneric[schema.AccountCollectionResponse]
 	testCaseResponseDecoder := testCaseResponseDecoderGeneric[schema.AccountResponse]
 
+	// Setup: get an account for reference
+	accountRec, err := th.Data.GetAccountRecByRef(harness.AccountOneRef)
+	require.NoError(t, err, "GetAccountRecByRef returns without error")
+
 	testCases := []testCase{
 		{
 			TestCase: TestCase{
@@ -41,29 +46,6 @@ func Test_getAccountHandler(t *testing.T) {
 					return rnr.HandlerConfig[getManyAccounts]
 				},
 				RequestQueryParams: func(d harness.Data) map[string]any {
-					accountRec, err := d.GetAccountRecByRef(harness.AccountOneRef)
-					require.NoError(t, err, "GetAccountRecByRef returns without error")
-					return map[string]any{
-						"id":          accountRec.ID,
-						"page_size":   10,
-						"page_number": 1,
-					}
-				},
-				ResponseDecoder: testCaseCollectionResponseDecoder,
-				ResponseCode:    http.StatusOK,
-			},
-			collectionRequest:     true,
-			collectionRecordCount: 1,
-		},
-		{
-			TestCase: TestCase{
-				Name: "API key with open access \\ get many accounts with id param \\ returns expected account",
-				HandlerConfig: func(rnr *Runner) server.HandlerConfig {
-					return rnr.HandlerConfig[getManyAccounts]
-				},
-				RequestQueryParams: func(d harness.Data) map[string]any {
-					accountRec, err := d.GetAccountRecByRef(harness.AccountOneRef)
-					require.NoError(t, err, "GetAccountRecByRef returns without error")
 					return map[string]any{
 						"id":          accountRec.ID,
 						"page_size":   10,
@@ -164,10 +146,10 @@ func Test_createUpdateDeleteAccountHandler(t *testing.T) {
 				HandlerConfig: func(rnr *Runner) server.HandlerConfig {
 					return rnr.HandlerConfig[createAccount]
 				},
-				RequestBody: func(d harness.Data) interface{} {
+				RequestBody: func(d harness.Data) any {
 					return schema.AccountRequest{
-						Email: "test@example.com",
-						Name:  "Test User",
+						Email: gofakeit.Email(),
+						Name:  gofakeit.Name(),
 					}
 				},
 				ResponseDecoder: testCaseResponseDecoder,
@@ -196,10 +178,10 @@ func Test_createUpdateDeleteAccountHandler(t *testing.T) {
 					}
 					return params
 				},
-				RequestBody: func(d harness.Data) interface{} {
+				RequestBody: func(d harness.Data) any {
 					return schema.AccountRequest{
-						Email: "updated@example.com",
-						Name:  "Updated User",
+						Email: harness.UniqueEmail(gofakeit.Email()),
+						Name:  gofakeit.Name(),
 					}
 				},
 				ResponseDecoder: testCaseResponseDecoder,

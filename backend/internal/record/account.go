@@ -15,6 +15,7 @@ const (
 const (
 	FieldAccountID             string = "id"
 	FieldAccountEmail          string = "email"
+	FieldAccountName           string = "name"
 	FieldAccountToken          string = "token"
 	FieldAccountTokenExpiresAt string = "token_expires_at"
 )
@@ -29,9 +30,9 @@ type Account struct {
 
 func (r *Account) ToNamedArgs() pgx.NamedArgs {
 	args := r.Record.ToNamedArgs()
-	args["email"] = r.Email
-	args["name"] = r.Name
-	args["token"] = r.Token
-	args["token_expires_at"] = r.TokenExpiresAt
+	args[FieldAccountEmail] = r.Email
+	args[FieldAccountName] = r.Name
+	args[FieldAccountToken] = r.Token
+	args[FieldAccountTokenExpiresAt] = r.TokenExpiresAt
 	return args
 }

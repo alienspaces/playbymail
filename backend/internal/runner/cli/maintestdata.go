@@ -14,7 +14,7 @@ func (rnr *Runner) loadMainTestData(c *cli.Context) error {
 	l.Info("** Load Main Test Data **")
 
 	// harness
-	config := rnr.MainTestDataConfig()
+	config := maintestdata.MainTestDataConfig()
 
 	err := rnr.InitDomain()
 	if err != nil {
@@ -35,10 +35,4 @@ func (rnr *Runner) loadMainTestData(c *cli.Context) error {
 	}
 
 	return nil
-}
-
-func (rnr *Runner) MainTestDataConfig() harness.DataConfig {
-	return harness.DataConfig{
-		GameConfig: maintestdata.GameConfig(),
-	}
 }

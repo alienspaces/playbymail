@@ -33,6 +33,10 @@ func Test_getGameHandler(t *testing.T) {
 	testCaseCollectionResponseDecoder := testCaseResponseDecoderGeneric[schema.GameCollectionResponse]
 	testCaseResponseDecoder := testCaseResponseDecoderGeneric[schema.GameResponse]
 
+	// Setup: get a game for reference
+	gameRec, err := th.Data.GetGameRecByRef(harness.GameOneRef)
+	require.NoError(t, err, "GetGameRecByRef returns without error")
+
 	testCases := []testCase{
 		{
 			TestCase: TestCase{
@@ -41,12 +45,10 @@ func Test_getGameHandler(t *testing.T) {
 					return rnr.HandlerConfig[getManyGames]
 				},
 				RequestQueryParams: func(d harness.Data) map[string]any {
-					gameRec, err := d.GetGameRecByRef(harness.GameOneRef)
-					require.NoError(t, err, "GetGameRecByRef returns without error")
 					return map[string]any{
+						"id":          gameRec.ID,
 						"page_size":   10,
 						"page_number": 1,
-						"id":          gameRec.ID,
 					}
 				},
 				ResponseDecoder: testCaseCollectionResponseDecoder,
