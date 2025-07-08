@@ -1,0 +1,25 @@
+#!/usr/bin/env sh
+
+# Connect to the Heroku database using psql
+# Usage: ./tools/db-connect-heroku [heroku-app-name]
+
+APP_NAME=${1:-playbymail}
+
+if ! command -v heroku >/dev/null 2>&1; then
+    echo "❌ Heroku CLI not found. Install with: curl https://cli-assets.heroku.com/install.sh | sh"
+    exit 1
+fi
+
+if ! command -v psql >/dev/null 2>&1; then
+    echo "❌ psql not found. Please install PostgreSQL client tools."
+    exit 1
+fi
+
+DATABASE_URL=$(heroku config:get DATABASE_URL --app "$APP_NAME")
+if [ -z "$DATABASE_URL" ]; then
+    echo "❌ Could not retrieve DATABASE_URL from Heroku for app '$APP_NAME'"
+    exit 1
+fi
+
+echo "ℹ️  Connecting to Heroku database for app '$APP_NAME'..."
+psql "$DATABASE_URL" 
