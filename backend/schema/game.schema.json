@@ -14,9 +14,12 @@
                 "name": {
                     "$ref": "#/$defs/name"
                 },
-                "type": {
+                "game_type": {
                     "description": "The type of the game.",
                     "type": "string",
+                    "enum": [
+                        "adventure"
+                    ],
                     "minLength": 1,
                     "maxLength": 50,
                     "examples": [
@@ -29,7 +32,14 @@
                 "updated_at": {
                     "$ref": "../common/common.schema.json#/$defs/updated_at"
                 }
-            }
+            },
+            "required": [
+                "id",
+                "name",
+                "game_type",
+                "created_at",
+                "updated_at"
+            ]
         },
         "game_id": {
             "description": "Unique game resource ID.",

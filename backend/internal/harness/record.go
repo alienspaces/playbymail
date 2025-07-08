@@ -141,6 +141,10 @@ func (t *Testing) applyGameRecDefaultValues(rec *record.Game) *record.Game {
 		rec.Name = UniqueName(gofakeit.Name())
 	}
 
+	if rec.GameType == "" {
+		rec.GameType = record.GameTypeAdventure
+	}
+
 	return rec
 }
 

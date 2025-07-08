@@ -15,7 +15,8 @@ func GameRequestToRecord(l logger.Logger, r *http.Request, rec *record.Game) (*r
 
 	l.Debug("mapping game request to record")
 
-	data, err := server.ReadRequest(l, r, &schema.GameRequest{})
+	var data schema.GameRequest
+	_, err := server.ReadRequest(l, r, &data)
 	if err != nil {
 		return nil, err
 	}
@@ -23,8 +24,10 @@ func GameRequestToRecord(l logger.Logger, r *http.Request, rec *record.Game) (*r
 	switch server.HttpMethod(r.Method) {
 	case server.HttpMethodPost:
 		rec.Name = data.Name
+		rec.GameType = data.GameType
 	case server.HttpMethodPut, server.HttpMethodPatch:
 		rec.Name = data.Name
+		rec.GameType = data.GameType
 	default:
 		return nil, fmt.Errorf("unsupported HTTP method")
 	}

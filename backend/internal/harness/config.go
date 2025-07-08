@@ -40,7 +40,8 @@ func DefaultDataConfig() DataConfig {
 			{
 				Reference: GameOneRef,
 				Record: &record.Game{
-					Name: "Default Game One",
+					Name:     "Default Game One",
+					GameType: record.GameTypeAdventure,
 				},
 				LocationConfigs: []LocationConfig{
 					{

@@ -57,6 +57,10 @@ func validateGameRec(args *validateGameArgs) error {
 		return err
 	}
 
+	if rec.GameType != record.GameTypeAdventure {
+		return InvalidFieldValue("game_type")
+	}
+
 	return nil
 }
 

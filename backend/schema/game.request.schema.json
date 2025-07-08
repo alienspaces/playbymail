@@ -6,11 +6,19 @@
     "type": "object",
     "additionalProperties": true,
     "required": [
-        "name"
+        "name",
+        "game_type"
     ],
     "properties": {
         "name": {
             "$ref": "../common/client.schema.json#/$defs/name"
+        },
+        "game_type": {
+            "type": "string",
+            "enum": [
+                "adventure"
+            ],
+            "description": "The type of the game. Only 'adventure' is supported."
         }
     }
 }

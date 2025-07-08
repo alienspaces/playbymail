@@ -8,7 +8,7 @@ import (
 type GameResponseData struct {
 	ID                 string     `json:"id"`
 	Name               string     `json:"name"`
-	Type               string     `json:"type"`
+	GameType           string     `json:"game_type"`
 	ProcessedMessageAt *time.Time `json:"processed_message_at,omitempty"`
 	CreatedAt          time.Time  `json:"created_at"`
 	UpdatedAt          *time.Time `json:"updated_at,omitempty"`
@@ -23,8 +23,8 @@ type GameCollectionResponse = []*GameResponseData
 
 type GameRequest struct {
 	Request
-	Name string `json:"name"`
-	Type string `json:"type"`
+	Name     string `json:"name"`
+	GameType string `json:"game_type"`
 }
 
 type GameQueryParams struct {
