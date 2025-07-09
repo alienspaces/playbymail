@@ -1,4 +1,4 @@
-package location_test
+package gamelocation_test
 
 import (
 	"fmt"
@@ -36,15 +36,15 @@ func TestCreateOne(t *testing.T) {
 
 	tests := []struct {
 		name string
-		rec  func(d harness.Data, t *testing.T) *record.Location
+		rec  func(d harness.Data, t *testing.T) *record.GameLocation
 		err  bool
 	}{
 		{
 			name: "Without ID",
-			rec: func(d harness.Data, t *testing.T) *record.Location {
+			rec: func(d harness.Data, t *testing.T) *record.GameLocation {
 				gameRec, err := d.GetGameRecByRef(harness.GameOneRef)
 				require.NoError(t, err, "GetGameRecByRef returns without error")
-				return &record.Location{
+				return &record.GameLocation{
 					GameID:      gameRec.ID,
 					Name:        fmt.Sprintf("%s %s", gofakeit.Name(), gofakeit.Name()),
 					Description: gofakeit.Sentence(5),
@@ -54,10 +54,10 @@ func TestCreateOne(t *testing.T) {
 		},
 		{
 			name: "With ID",
-			rec: func(d harness.Data, t *testing.T) *record.Location {
+			rec: func(d harness.Data, t *testing.T) *record.GameLocation {
 				gameRec, err := d.GetGameRecByRef(harness.GameOneRef)
 				require.NoError(t, err, "GetGameRecByRef returns without error")
-				rec := &record.Location{
+				rec := &record.GameLocation{
 					GameID:      gameRec.ID,
 					Name:        fmt.Sprintf("%s %s", gofakeit.Name(), gofakeit.Name()),
 					Description: gofakeit.Sentence(5),
@@ -81,7 +81,7 @@ func TestCreateOne(t *testing.T) {
 				require.NoError(t, err, "Teardown returns without error")
 			}()
 
-			r := h.Domain.(*domain.Domain).LocationRepository()
+			r := h.Domain.(*domain.Domain).GameLocationRepository()
 			require.NotNil(t, r, "Repository is not nil")
 
 			rec := tc.rec(h.Data, t)
@@ -103,10 +103,10 @@ func TestGetOne(t *testing.T) {
 			{
 				Reference: harness.GameOneRef,
 				Record:    &record.Game{},
-				LocationConfigs: []harness.LocationConfig{
+				GameLocationConfigs: []harness.GameLocationConfig{
 					{
-						Reference: harness.LocationOneRef,
-						Record: &record.Location{
+						Reference: harness.GameLocationOneRef,
+						Record: &record.GameLocation{
 							Name:        "Test Location",
 							Description: "Test Description",
 						},
@@ -133,9 +133,9 @@ func TestGetOne(t *testing.T) {
 		{
 			name: "With ID",
 			id: func(d harness.Data, t *testing.T) string {
-				locRec, err := d.GetLocationRecByRef(harness.LocationOneRef)
-				require.NoError(t, err, "GetLocationRecByRef returns without error")
-				return locRec.ID
+				gameLocationRec, err := d.GetGameLocationRecByRef(harness.GameLocationOneRef)
+				require.NoError(t, err, "GetGameLocationRecByRef returns without error")
+				return gameLocationRec.ID
 			},
 			err: false,
 		},
@@ -159,7 +159,7 @@ func TestGetOne(t *testing.T) {
 				require.NoError(t, err, "Teardown returns without error")
 			}()
 
-			r := h.Domain.(*domain.Domain).LocationRepository()
+			r := h.Domain.(*domain.Domain).GameLocationRepository()
 			require.NotNil(t, r, "Repository is not nil")
 
 			rec, err := r.GetOne(tc.id(h.Data, t), nil)
@@ -180,10 +180,10 @@ func TestUpdateOne(t *testing.T) {
 			{
 				Reference: harness.GameOneRef,
 				Record:    &record.Game{},
-				LocationConfigs: []harness.LocationConfig{
+				GameLocationConfigs: []harness.GameLocationConfig{
 					{
-						Reference: harness.LocationOneRef,
-						Record: &record.Location{
+						Reference: harness.GameLocationOneRef,
+						Record: &record.GameLocation{
 							Name:        "Test Location",
 							Description: "Test Description",
 						},
@@ -204,22 +204,22 @@ func TestUpdateOne(t *testing.T) {
 
 	tests := []struct {
 		name string
-		rec  func(d harness.Data, t *testing.T) *record.Location
+		rec  func(d harness.Data, t *testing.T) *record.GameLocation
 		err  bool
 	}{
 		{
 			name: "With ID",
-			rec: func(d harness.Data, t *testing.T) *record.Location {
-				locRec, err := d.GetLocationRecByRef(harness.LocationOneRef)
-				require.NoError(t, err, "GetLocationRecByRef returns without error")
-				return locRec
+			rec: func(d harness.Data, t *testing.T) *record.GameLocation {
+				gameLocationRec, err := d.GetGameLocationRecByRef(harness.GameLocationOneRef)
+				require.NoError(t, err, "GetGameLocationRecByRef returns without error")
+				return gameLocationRec
 			},
 			err: false,
 		},
 		{
 			name: "Without ID",
-			rec: func(d harness.Data, t *testing.T) *record.Location {
-				return &record.Location{}
+			rec: func(d harness.Data, t *testing.T) *record.GameLocation {
+				return &record.GameLocation{}
 			},
 			err: true,
 		},
@@ -236,7 +236,7 @@ func TestUpdateOne(t *testing.T) {
 				require.NoError(t, err, "Teardown returns without error")
 			}()
 
-			r := h.Domain.(*domain.Domain).LocationRepository()
+			r := h.Domain.(*domain.Domain).GameLocationRepository()
 			require.NotNil(t, r, "Repository is not nil")
 
 			rec := tc.rec(h.Data, t)
@@ -258,10 +258,10 @@ func TestDeleteOne(t *testing.T) {
 			{
 				Reference: harness.GameOneRef,
 				Record:    &record.Game{},
-				LocationConfigs: []harness.LocationConfig{
+				GameLocationConfigs: []harness.GameLocationConfig{
 					{
-						Reference: harness.LocationOneRef,
-						Record: &record.Location{
+						Reference: harness.GameLocationOneRef,
+						Record: &record.GameLocation{
 							Name:        "Test Location",
 							Description: "Test Description",
 						},
@@ -288,9 +288,9 @@ func TestDeleteOne(t *testing.T) {
 		{
 			name: "With ID",
 			id: func(d harness.Data, t *testing.T) string {
-				locRec, err := d.GetLocationRecByRef(harness.LocationOneRef)
-				require.NoError(t, err, "GetLocationRecByRef returns without error")
-				return locRec.ID
+				gameLocationRec, err := d.GetGameLocationRecByRef(harness.GameLocationOneRef)
+				require.NoError(t, err, "GetGameLocationRecByRef returns without error")
+				return gameLocationRec.ID
 			},
 			err: false,
 		},
@@ -314,7 +314,7 @@ func TestDeleteOne(t *testing.T) {
 				require.NoError(t, err, "Teardown returns without error")
 			}()
 
-			r := h.Domain.(*domain.Domain).LocationRepository()
+			r := h.Domain.(*domain.Domain).GameLocationRepository()
 			require.NotNil(t, r, "Repository is not nil")
 
 			err = r.DeleteOne(tc.id(h.Data, t))

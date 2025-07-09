@@ -27,10 +27,10 @@ func Test_locationLinkHandler(t *testing.T) {
 	// Setup: get a location link and locations for reference
 	linkRec, err := th.Data.GetLocationLinkRecByRef("link-one-two")
 	require.NoError(t, err, "GetLocationLinkRecByRef returns without error")
-	fromLoc, err := th.Data.GetLocationRecByID(linkRec.FromLocationID)
-	require.NoError(t, err, "GetLocationRecByID returns without error")
-	toLoc, err := th.Data.GetLocationRecByID(linkRec.ToLocationID)
-	require.NoError(t, err, "GetLocationRecByID returns without error")
+	fromLoc, err := th.Data.GetGameLocationRecByID(linkRec.FromGameLocationID)
+	require.NoError(t, err, "GetGameLocationRecByID returns without error")
+	toLoc, err := th.Data.GetGameLocationRecByID(linkRec.ToGameLocationID)
+	require.NoError(t, err, "GetGameLocationRecByID returns without error")
 
 	testCaseCollectionResponseDecoder := testCaseResponseDecoderGeneric[schema.LocationLinkCollectionResponse]
 	testCaseResponseDecoder := testCaseResponseDecoderGeneric[schema.LocationLinkResponse]
@@ -48,9 +48,9 @@ func Test_locationLinkHandler(t *testing.T) {
 				},
 				RequestQueryParams: func(d harness.Data) map[string]any {
 					return map[string]any{
-						"from_location_id": fromLoc.ID,
-						"page_size":        10,
-						"page_number":      1,
+						"from_game_location_id": fromLoc.ID,
+						"page_size":             10,
+						"page_number":           1,
 					}
 				},
 				ResponseDecoder: testCaseCollectionResponseDecoder,
@@ -83,10 +83,10 @@ func Test_locationLinkHandler(t *testing.T) {
 				},
 				RequestBody: func(d harness.Data) interface{} {
 					return schema.LocationLinkRequest{
-						FromLocationID: toLoc.ID,   // Use toLoc as from to avoid unique constraint violation
-						ToLocationID:   fromLoc.ID, // Use fromLoc as to
-						Description:    "Test Link",
-						Name:           "Test Link Name",
+						FromGameLocationID: toLoc.ID,
+						ToGameLocationID:   fromLoc.ID,
+						Description:        "Test Link",
+						Name:               "Test Link Name",
 					}
 				},
 				ResponseDecoder: testCaseResponseDecoder,
@@ -128,8 +128,8 @@ func Test_locationLinkHandler(t *testing.T) {
 					require.Equal(t, testCase.collectionRecordCount, len(responses), "Response record count length equals expected")
 					for _, d := range responses {
 						require.NotEmpty(t, d.ID, "LocationLink ID is not empty")
-						require.NotEmpty(t, d.FromLocationID, "FromLocationID is not empty")
-						require.NotEmpty(t, d.ToLocationID, "ToLocationID is not empty")
+						require.NotEmpty(t, d.FromGameLocationID, "FromGameLocationID is not empty")
+						require.NotEmpty(t, d.ToGameLocationID, "ToGameLocationID is not empty")
 						require.NotEmpty(t, d.Description, "Description is not empty")
 					}
 				} else {
@@ -137,8 +137,8 @@ func Test_locationLinkHandler(t *testing.T) {
 					lResp := resp.LocationLinkResponseData
 					require.NotNil(t, lResp, "LocationLinkResponseData is not nil")
 					require.NotEmpty(t, lResp.ID, "LocationLink ID is not empty")
-					require.NotEmpty(t, lResp.FromLocationID, "FromLocationID is not empty")
-					require.NotEmpty(t, lResp.ToLocationID, "ToLocationID is not empty")
+					require.NotEmpty(t, lResp.FromGameLocationID, "FromGameLocationID is not empty")
+					require.NotEmpty(t, lResp.ToGameLocationID, "ToGameLocationID is not empty")
 					require.NotEmpty(t, lResp.Description, "Description is not empty")
 				}
 			}

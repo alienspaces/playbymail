@@ -1,7 +1,7 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
-    "$id": "http://playbymail.dev/schema/location.schema.json",
-    "title": "Location",
+    "$id": "http://playbymail.dev/schema/game_location.schema.json",
+    "title": "GameLocation",
     "type": "object",
     "properties": {
         "id": {

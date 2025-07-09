@@ -1,13 +1,13 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
-    "title": "LocationResponse",
+    "title": "GameLocationResponse",
     "type": "object",
     "properties": {
-        "location": {
-            "$ref": "location.schema.json"
+        "game_location": {
+            "$ref": "game_location.schema.json"
         }
     },
     "required": [
-        "location"
+        "game_location"
     ]
 }

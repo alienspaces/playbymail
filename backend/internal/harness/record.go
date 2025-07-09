@@ -120,15 +120,6 @@ func (t *Testing) createGameRec(gameConfig GameConfig) (*record.Game, error) {
 		t.Data.Refs.GameRefs[gameConfig.Reference] = rec.ID
 	}
 
-	// Create associated locations for this game
-	for _, locationConfig := range gameConfig.LocationConfigs {
-		_, err := t.createLocationRec(locationConfig, rec)
-		if err != nil {
-			l.Warn("failed creating location record >%v<", err)
-			return nil, err
-		}
-	}
-
 	return rec, nil
 }
 
@@ -209,53 +200,53 @@ func (t *Testing) applyGameCharacterRecDefaultValues(rec *record.GameCharacter) 
 }
 
 // Location
-func (t *Testing) createLocationRec(locationConfig LocationConfig, gameRec *record.Game) (*record.Location, error) {
-	l := t.Logger("createLocationRec")
+func (t *Testing) createGameLocationRec(gameLocationConfig GameLocationConfig, gameRec *record.Game) (*record.GameLocation, error) {
+	l := t.Logger("createGameLocationRec")
 
 	if gameRec == nil {
-		return nil, fmt.Errorf("game record is nil for location record >%#v<", locationConfig)
+		return nil, fmt.Errorf("game record is nil for game location record >%#v<", gameLocationConfig)
 	}
 
 	// Create a new record instance to avoid reusing the same record across tests
-	var rec *record.Location
-	if locationConfig.Record != nil {
+	var rec *record.GameLocation
+	if gameLocationConfig.Record != nil {
 		// Copy the record to avoid modifying the original
-		recCopy := *locationConfig.Record
+		recCopy := *gameLocationConfig.Record
 		rec = &recCopy
 	} else {
-		rec = &record.Location{}
+		rec = &record.GameLocation{}
 	}
 
-	rec = t.applyLocationRecDefaultValues(rec)
+	rec = t.applyGameLocationRecDefaultValues(rec)
 
 	// Set the game ID if it is provided
 	rec.GameID = gameRec.ID
 
-	l.Info("creating location record >%#v<", rec)
+	l.Info("creating game location record >%#v<", rec)
 
-	rec, err := t.Domain.(*domain.Domain).CreateLocationRec(rec)
+	rec, err := t.Domain.(*domain.Domain).CreateGameLocationRec(rec)
 	if err != nil {
-		l.Warn("failed creating location record >%v<", err)
+		l.Warn("failed creating game location record >%v<", err)
 		return nil, err
 	}
 
 	// Add the location record to the data store
-	t.Data.AddLocationRec(rec)
+	t.Data.AddGameLocationRec(rec)
 
 	// Add the location record to the teardown data store
-	t.teardownData.AddLocationRec(rec)
+	t.teardownData.AddGameLocationRec(rec)
 
 	// Add the location record to the data store refs
-	if locationConfig.Reference != "" {
-		t.Data.Refs.LocationRefs[locationConfig.Reference] = rec.ID
+	if gameLocationConfig.Reference != "" {
+		t.Data.Refs.GameLocationRefs[gameLocationConfig.Reference] = rec.ID
 	}
 
 	return rec, nil
 }
 
-func (t *Testing) applyLocationRecDefaultValues(rec *record.Location) *record.Location {
+func (t *Testing) applyGameLocationRecDefaultValues(rec *record.GameLocation) *record.GameLocation {
 	if rec == nil {
-		rec = &record.Location{}
+		rec = &record.GameLocation{}
 	}
 	if rec.Name == "" {
 		rec.Name = UniqueName(gofakeit.Name())
@@ -282,25 +273,25 @@ func (t *Testing) createLocationLinkRec(linkConfig LocationLinkConfig) (*record.
 
 	// Resolve location references to IDs
 	if linkConfig.FromLocationRef != "" {
-		fromLoc, err := t.Data.GetLocationRecByRef(linkConfig.FromLocationRef)
+		fromLoc, err := t.Data.GetGameLocationRecByRef(linkConfig.FromLocationRef)
 		if err != nil || fromLoc == nil || fromLoc.ID == "" {
 			l.Error("could not resolve FromLocationRef >%s< to a valid location ID", linkConfig.FromLocationRef)
 			return nil, fmt.Errorf("could not resolve FromLocationRef >%s< to a valid location ID", linkConfig.FromLocationRef)
 		}
-		rec.FromLocationID = fromLoc.ID
+		rec.FromGameLocationID = fromLoc.ID
 	}
 	if linkConfig.ToLocationRef != "" {
-		toLoc, err := t.Data.GetLocationRecByRef(linkConfig.ToLocationRef)
+		toLoc, err := t.Data.GetGameLocationRecByRef(linkConfig.ToLocationRef)
 		if err != nil || toLoc == nil || toLoc.ID == "" {
 			l.Error("could not resolve ToLocationRef >%s< to a valid location ID", linkConfig.ToLocationRef)
 			return nil, fmt.Errorf("could not resolve ToLocationRef >%s< to a valid location ID", linkConfig.ToLocationRef)
 		}
-		rec.ToLocationID = toLoc.ID
+		rec.ToGameLocationID = toLoc.ID
 	}
 
-	if rec.FromLocationID == "" || rec.ToLocationID == "" {
-		l.Error("location link must have both FromLocationID and ToLocationID set, got from: >%s< to: >%s<", rec.FromLocationID, rec.ToLocationID)
-		return nil, fmt.Errorf("location link must have both FromLocationID and ToLocationID set, got from: >%s< to: >%s<", rec.FromLocationID, rec.ToLocationID)
+	if rec.FromGameLocationID == "" || rec.ToGameLocationID == "" {
+		l.Error("location link must have both FromGameLocationID and ToGameLocationID set, got from: >%s< to: >%s<", rec.FromGameLocationID, rec.ToGameLocationID)
+		return nil, fmt.Errorf("location link must have both FromGameLocationID and ToGameLocationID set, got from: >%s< to: >%s<", rec.FromGameLocationID, rec.ToGameLocationID)
 	}
 
 	l.Info("creating location link record >%#v<", rec)

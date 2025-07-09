@@ -3,12 +3,12 @@ package harness
 import "gitlab.com/alienspaces/playbymail/internal/record"
 
 const (
-	GameOneRef     = "game-one"
-	GameTwoRef     = "game-two"
-	AccountOneRef  = "account-one"
-	AccountTwoRef  = "account-two"
-	LocationOneRef = "location-one"
-	LocationTwoRef = "location-two"
+	GameOneRef         = "game-one"
+	GameTwoRef         = "game-two"
+	AccountOneRef      = "account-one"
+	AccountTwoRef      = "account-two"
+	GameLocationOneRef = "game-location-one"
+	GameLocationTwoRef = "game-location-two"
 )
 
 // DataConfig -
@@ -21,7 +21,7 @@ type DataConfig struct {
 type GameConfig struct {
 	Reference            string // Reference to the game record
 	Record               *record.Game
-	LocationConfigs      []LocationConfig      // Locations associated with this game
+	GameLocationConfigs  []GameLocationConfig  // Locations associated with this game
 	LocationLinkConfigs  []LocationLinkConfig  // Links associated with this game
 	GameCharacterConfigs []GameCharacterConfig // Add this line
 }
@@ -37,9 +37,9 @@ type AccountConfig struct {
 	Record    *record.Account
 }
 
-type LocationConfig struct {
-	Reference string // Reference to the location record
-	Record    *record.Location
+type GameLocationConfig struct {
+	Reference string // Reference to the game_location record
+	Record    *record.GameLocation
 }
 
 type LocationLinkConfig struct {
@@ -59,17 +59,17 @@ func DefaultDataConfig() DataConfig {
 					Name:     "Default Game One",
 					GameType: record.GameTypeAdventure,
 				},
-				LocationConfigs: []LocationConfig{
+				GameLocationConfigs: []GameLocationConfig{
 					{
-						Reference: LocationOneRef,
-						Record: &record.Location{
+						Reference: GameLocationOneRef,
+						Record: &record.GameLocation{
 							Name:        "Default Location One",
 							Description: "Default location one for handler tests",
 						},
 					},
 					{
-						Reference: LocationTwoRef,
-						Record: &record.Location{
+						Reference: GameLocationTwoRef,
+						Record: &record.GameLocation{
 							Name:        "Default Location Two",
 							Description: "Default location two for handler tests",
 						},
@@ -78,8 +78,8 @@ func DefaultDataConfig() DataConfig {
 				LocationLinkConfigs: []LocationLinkConfig{
 					{
 						Reference:       "link-one-two",
-						FromLocationRef: LocationOneRef,
-						ToLocationRef:   LocationTwoRef,
+						FromLocationRef: GameLocationOneRef,
+						ToLocationRef:   GameLocationTwoRef,
 						Record: &record.LocationLink{
 							Description: "Travel by boat to the swamp of the long forgotten Frog God",
 							Name:        "The Red Door",

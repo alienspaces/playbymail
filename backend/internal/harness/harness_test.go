@@ -33,7 +33,7 @@ func TestHarnessSetupTeardown_DefaultDataConfig(t *testing.T) {
 	// Check that the default data config created the expected records
 	require.NotEmpty(t, h.Data.AccountRecs, "Account records should be created")
 	require.NotEmpty(t, h.Data.GameRecs, "Game records should be created")
-	require.NotEmpty(t, h.Data.LocationRecs, "Location records should be created")
+	require.NotEmpty(t, h.Data.GameLocationRecs, "Game location records should be created")
 	require.NotEmpty(t, h.Data.LocationLinkRecs, "Location link records should be created")
 
 	// Check that references are set
@@ -47,9 +47,9 @@ func TestHarnessSetupTeardown_DefaultDataConfig(t *testing.T) {
 		require.NoErrorf(t, err, "Game ref %s should resolve to a record", ref)
 		require.NotNil(t, rec, "Game record for ref %s should not be nil", ref)
 	}
-	for ref, id := range h.Data.Refs.LocationRefs {
-		rec, err := h.Data.GetLocationRecByID(id)
-		require.NoErrorf(t, err, "Location ref %s should resolve to a record", ref)
-		require.NotNil(t, rec, "Location record for ref %s should not be nil", ref)
+	for ref, id := range h.Data.Refs.GameLocationRefs {
+		rec, err := h.Data.GetGameLocationRecByID(id)
+		require.NoErrorf(t, err, "Game location ref %s should resolve to a record", ref)
+		require.NotNil(t, rec, "Game location record for ref %s should not be nil", ref)
 	}
 }

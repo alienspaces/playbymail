@@ -16,50 +16,50 @@ import (
 )
 
 const (
-	tagGroupLocation server.TagGroup = "Locations"
-	TagLocation      server.Tag      = "Locations"
+	tagGroupGameLocation server.TagGroup = "GameLocations"
+	TagGameLocation      server.Tag      = "GameLocations"
 )
 
 const (
-	getManyLocations = "get-locations"
-	getOneLocation   = "get-location"
-	createLocation   = "create-location"
-	updateLocation   = "update-location"
-	deleteLocation   = "delete-location"
+	getManyGameLocations = "get-game-locations"
+	getOneGameLocation   = "get-game-location"
+	createGameLocation   = "create-game-location"
+	updateGameLocation   = "update-game-location"
+	deleteGameLocation   = "delete-game-location"
 )
 
-func (rnr *Runner) locationHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error) {
-	l = loggerWithFunctionContext(l, "locationHandlerConfig")
+func (rnr *Runner) gameLocationHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error) {
+	l = loggerWithFunctionContext(l, "gameLocationHandlerConfig")
 
-	l.Debug("Adding location handler configuration")
+	l.Debug("Adding game_location handler configuration")
 
-	locationConfig := make(map[string]server.HandlerConfig)
+	gameLocationConfig := make(map[string]server.HandlerConfig)
 
 	collectionResponseSchema := jsonschema.SchemaWithReferences{
 		Main: jsonschema.Schema{
-			Name: "location.collection.response.schema.json",
+			Name: "game_location.collection.response.schema.json",
 		},
 		References: referenceSchemas,
 	}
 
 	requestSchema := jsonschema.SchemaWithReferences{
 		Main: jsonschema.Schema{
-			Name: "location.request.schema.json",
+			Name: "game_location.request.schema.json",
 		},
 		References: referenceSchemas,
 	}
 
 	responseSchema := jsonschema.SchemaWithReferences{
 		Main: jsonschema.Schema{
-			Name: "location.response.schema.json",
+			Name: "game_location.response.schema.json",
 		},
 		References: referenceSchemas,
 	}
 
-	locationConfig[getManyLocations] = server.HandlerConfig{
+	gameLocationConfig[getManyGameLocations] = server.HandlerConfig{
 		Method:      http.MethodGet,
-		Path:        "/v1/locations",
-		HandlerFunc: rnr.getManyLocationsHandler,
+		Path:        "/v1/game-locations",
+		HandlerFunc: rnr.getManyGameLocationsHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
 				server.AuthenticationTypeAPIKey,
@@ -69,14 +69,14 @@ func (rnr *Runner) locationHandlerConfig(l logger.Logger) (map[string]server.Han
 		DocumentationConfig: server.DocumentationConfig{
 			Document:   true,
 			Collection: true,
-			Title:      "Get location collection",
+			Title:      "Get game_location collection",
 		},
 	}
 
-	locationConfig[getOneLocation] = server.HandlerConfig{
+	gameLocationConfig[getOneGameLocation] = server.HandlerConfig{
 		Method:      http.MethodGet,
-		Path:        "/v1/locations/:location_id",
-		HandlerFunc: rnr.getLocationHandler,
+		Path:        "/v1/game-locations/:game_location_id",
+		HandlerFunc: rnr.getGameLocationHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
 				server.AuthenticationTypeAPIKey,
@@ -85,14 +85,14 @@ func (rnr *Runner) locationHandlerConfig(l logger.Logger) (map[string]server.Han
 		},
 		DocumentationConfig: server.DocumentationConfig{
 			Document: true,
-			Title:    "Get location",
+			Title:    "Get game_location",
 		},
 	}
 
-	locationConfig[createLocation] = server.HandlerConfig{
+	gameLocationConfig[createGameLocation] = server.HandlerConfig{
 		Method:      http.MethodPost,
-		Path:        "/v1/locations",
-		HandlerFunc: rnr.createLocationHandler,
+		Path:        "/v1/game-locations",
+		HandlerFunc: rnr.createGameLocationHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
 				server.AuthenticationTypeAPIKey,
@@ -102,14 +102,14 @@ func (rnr *Runner) locationHandlerConfig(l logger.Logger) (map[string]server.Han
 		},
 		DocumentationConfig: server.DocumentationConfig{
 			Document: true,
-			Title:    "Create location",
+			Title:    "Create game_location",
 		},
 	}
 
-	locationConfig[updateLocation] = server.HandlerConfig{
+	gameLocationConfig[updateGameLocation] = server.HandlerConfig{
 		Method:      http.MethodPut,
-		Path:        "/v1/locations/:location_id",
-		HandlerFunc: rnr.updateLocationHandler,
+		Path:        "/v1/game-locations/:game_location_id",
+		HandlerFunc: rnr.updateGameLocationHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
 				server.AuthenticationTypeAPIKey,
@@ -119,14 +119,14 @@ func (rnr *Runner) locationHandlerConfig(l logger.Logger) (map[string]server.Han
 		},
 		DocumentationConfig: server.DocumentationConfig{
 			Document: true,
-			Title:    "Update location",
+			Title:    "Update game_location",
 		},
 	}
 
-	locationConfig[deleteLocation] = server.HandlerConfig{
+	gameLocationConfig[deleteGameLocation] = server.HandlerConfig{
 		Method:      http.MethodDelete,
-		Path:        "/v1/locations/:location_id",
-		HandlerFunc: rnr.deleteLocationHandler,
+		Path:        "/v1/game-locations/:game_location_id",
+		HandlerFunc: rnr.deleteGameLocationHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
 				server.AuthenticationTypeAPIKey,
@@ -134,36 +134,36 @@ func (rnr *Runner) locationHandlerConfig(l logger.Logger) (map[string]server.Han
 		},
 		DocumentationConfig: server.DocumentationConfig{
 			Document: true,
-			Title:    "Delete location",
+			Title:    "Delete game_location",
 		},
 	}
 
-	return locationConfig, nil
+	return gameLocationConfig, nil
 }
 
-func (rnr *Runner) getManyLocationsHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
-	l = loggerWithFunctionContext(l, "GetManyLocationsHandler")
+func (rnr *Runner) getManyGameLocationsHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
+	l = loggerWithFunctionContext(l, "GetManyGameLocationsHandler")
 
-	l.Info("querying many location records with params >%#v<", qp)
+	l.Info("querying many game_location records with params >%#v<", qp)
 
 	mm := m.(*domain.Domain)
 
 	opts := queryparam.ToSQLOptionsWithDefaults(qp)
 
-	recs, err := mm.GetManyLocationRecs(opts)
+	recs, err := mm.GetManyGameLocationRecs(opts)
 	if err != nil {
-		l.Warn("failed getting location records >%v<", err)
+		l.Warn("failed getting game_location records >%v<", err)
 		return err
 	}
 
-	data, err := server.Paginate(l, recs, mapper.LocationRecordToResponseData, qp.PageSize)
+	data, err := server.Paginate(l, recs, mapper.GameLocationRecordToResponseData, qp.PageSize)
 	if err != nil {
 		return err
 	}
 
-	l.Info("responding with >%d< location records", len(data))
+	l.Info("responding with >%d< game_location records", len(data))
 
-	res := schema.LocationCollectionResponse(data)
+	res := schema.GameLocationCollectionResponse(data)
 
 	if err = server.WriteResponse(l, w, http.StatusOK, res, server.XPaginationHeader(len(recs), qp.PageSize)); err != nil {
 		l.Warn("failed writing response >%v<", err)
@@ -173,28 +173,28 @@ func (rnr *Runner) getManyLocationsHandler(w http.ResponseWriter, r *http.Reques
 	return nil
 }
 
-func (rnr *Runner) getLocationHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
-	l = loggerWithFunctionContext(l, "GetLocationHandler")
+func (rnr *Runner) getGameLocationHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
+	l = loggerWithFunctionContext(l, "GetGameLocationHandler")
 
-	locationID := pp.ByName("location_id")
+	gameLocationID := pp.ByName("game_location_id")
 	mm := m.(*domain.Domain)
 
-	rec, err := mm.GetLocationRec(locationID, nil)
+	rec, err := mm.GetGameLocationRec(gameLocationID, nil)
 	if err != nil {
-		l.Warn("failed getting location record >%v<", err)
+		l.Warn("failed getting game_location record >%v<", err)
 		return err
 	}
 
-	data, err := mapper.LocationRecordToResponseData(l, rec)
+	data, err := mapper.GameLocationRecordToResponseData(l, rec)
 	if err != nil {
-		l.Warn("failed mapping location record to response data >%v<", err)
+		l.Warn("failed mapping game_location record to response data >%v<", err)
 		return err
 	}
 
-	l.Info("responding with location record id >%s<", rec.ID)
+	l.Info("responding with game_location record id >%s<", rec.ID)
 
-	res := schema.LocationResponse{
-		LocationResponseData: &data,
+	res := schema.GameLocationResponse{
+		GameLocationResponseData: &data,
 	}
 
 	if err = server.WriteResponse(l, w, http.StatusOK, res); err != nil {
@@ -205,40 +205,40 @@ func (rnr *Runner) getLocationHandler(w http.ResponseWriter, r *http.Request, pp
 	return nil
 }
 
-func (rnr *Runner) createLocationHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
-	l = loggerWithFunctionContext(l, "CreateLocationHandler")
+func (rnr *Runner) createGameLocationHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
+	l = loggerWithFunctionContext(l, "CreateGameLocationHandler")
 
-	l.Info("creating location record with path params >%#v<", pp)
+	l.Info("creating game_location record with path params >%#v<", pp)
 
-	var req schema.LocationRequest
+	var req schema.GameLocationRequest
 	if _, err := server.ReadRequest(l, r, &req); err != nil {
 		l.Warn("failed reading request >%v<", err)
 		return err
 	}
 
-	rec, err := mapper.LocationRequestToRecord(l, &req, nil)
+	rec, err := mapper.GameLocationRequestToRecord(l, &req, nil)
 	if err != nil {
 		return err
 	}
 
 	mm := m.(*domain.Domain)
 
-	rec, err = mm.CreateLocationRec(rec)
+	rec, err = mm.CreateGameLocationRec(rec)
 	if err != nil {
-		l.Warn("failed creating location record >%v<", err)
+		l.Warn("failed creating game_location record >%v<", err)
 		return err
 	}
 
-	respData, err := mapper.LocationRecordToResponseData(l, rec)
+	respData, err := mapper.GameLocationRecordToResponseData(l, rec)
 	if err != nil {
 		return err
 	}
 
-	res := schema.LocationResponse{
-		LocationResponseData: &respData,
+	res := schema.GameLocationResponse{
+		GameLocationResponseData: &respData,
 	}
 
-	l.Info("responding with created location record id >%s<", rec.ID)
+	l.Info("responding with created game_location record id >%s<", rec.ID)
 
 	if err = server.WriteResponse(l, w, http.StatusCreated, res); err != nil {
 		l.Warn("failed writing response >%v<", err)
@@ -248,14 +248,14 @@ func (rnr *Runner) createLocationHandler(w http.ResponseWriter, r *http.Request,
 	return nil
 }
 
-func (rnr *Runner) updateLocationHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
-	l = loggerWithFunctionContext(l, "UpdateLocationHandler")
+func (rnr *Runner) updateGameLocationHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
+	l = loggerWithFunctionContext(l, "UpdateGameLocationHandler")
 
-	locationID := pp.ByName("location_id")
+	gameLocationID := pp.ByName("game_location_id")
 
-	l.Info("updating location record with path params >%#v<", pp)
+	l.Info("updating game_location record with path params >%#v<", pp)
 
-	var req schema.LocationRequest
+	var req schema.GameLocationRequest
 	if _, err := server.ReadRequest(l, r, &req); err != nil {
 		l.Warn("failed reading request >%v<", err)
 		return err
@@ -263,32 +263,32 @@ func (rnr *Runner) updateLocationHandler(w http.ResponseWriter, r *http.Request,
 
 	mm := m.(*domain.Domain)
 
-	rec, err := mm.GetLocationRec(locationID, nil)
+	rec, err := mm.GetGameLocationRec(gameLocationID, nil)
 	if err != nil {
 		return err
 	}
 
-	rec, err = mapper.LocationRequestToRecord(l, &req, rec)
+	rec, err = mapper.GameLocationRequestToRecord(l, &req, rec)
 	if err != nil {
 		return err
 	}
 
-	rec, err = mm.UpdateLocationRec(rec)
+	rec, err = mm.UpdateGameLocationRec(rec)
 	if err != nil {
-		l.Warn("failed updating location record >%v<", err)
+		l.Warn("failed updating game_location record >%v<", err)
 		return err
 	}
 
-	data, err := mapper.LocationRecordToResponseData(l, rec)
+	data, err := mapper.GameLocationRecordToResponseData(l, rec)
 	if err != nil {
 		return err
 	}
 
-	res := schema.LocationResponse{
-		LocationResponseData: &data,
+	res := schema.GameLocationResponse{
+		GameLocationResponseData: &data,
 	}
 
-	l.Info("responding with updated location record id >%s<", rec.ID)
+	l.Info("responding with updated game_location record id >%s<", rec.ID)
 
 	if err = server.WriteResponse(l, w, http.StatusOK, res); err != nil {
 		l.Warn("failed writing response >%v<", err)
@@ -298,17 +298,17 @@ func (rnr *Runner) updateLocationHandler(w http.ResponseWriter, r *http.Request,
 	return nil
 }
 
-func (rnr *Runner) deleteLocationHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
-	l = loggerWithFunctionContext(l, "DeleteLocationHandler")
+func (rnr *Runner) deleteGameLocationHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
+	l = loggerWithFunctionContext(l, "DeleteGameLocationHandler")
 
-	locationID := pp.ByName("location_id")
+	gameLocationID := pp.ByName("game_location_id")
 
-	l.Info("deleting location record with path params >%#v<", pp)
+	l.Info("deleting game_location record with path params >%#v<", pp)
 
 	mm := m.(*domain.Domain)
 
-	if err := mm.DeleteLocationRec(locationID); err != nil {
-		l.Warn("failed deleting location record >%v<", err)
+	if err := mm.DeleteGameLocationRec(gameLocationID); err != nil {
+		l.Warn("failed deleting game_location record >%v<", err)
 		return err
 	}
 

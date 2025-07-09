@@ -7,9 +7,9 @@ import (
 	"gitlab.com/alienspaces/playbymail/schema"
 )
 
-func LocationRecordToResponseData(l logger.Logger, rec *record.Location) (schema.LocationResponseData, error) {
-	l.Debug("mapping location record to response data")
-	data := schema.LocationResponseData{
+func GameLocationRecordToResponseData(l logger.Logger, rec *record.GameLocation) (schema.GameLocationResponseData, error) {
+	l.Debug("mapping game_location record to response data")
+	data := schema.GameLocationResponseData{
 		ID:          rec.ID,
 		GameID:      rec.GameID,
 		Name:        rec.Name,
@@ -21,22 +21,22 @@ func LocationRecordToResponseData(l logger.Logger, rec *record.Location) (schema
 	return data, nil
 }
 
-func LocationRecordToResponse(rec *record.Location) *schema.LocationResponse {
-	data, _ := LocationRecordToResponseData(nil, rec)
-	return &schema.LocationResponse{
-		LocationResponseData: &data,
+func GameLocationRecordToResponse(rec *record.GameLocation) *schema.GameLocationResponse {
+	data, _ := GameLocationRecordToResponseData(nil, rec)
+	return &schema.GameLocationResponse{
+		GameLocationResponseData: &data,
 	}
 }
 
-// LocationRequestToRecord maps a LocationRequest to a record.Location
-func LocationRequestToRecord(l logger.Logger, req *schema.LocationRequest, rec *record.Location) (*record.Location, error) {
+// GameLocationRequestToRecord maps a GameLocationRequest to a record.GameLocation
+func GameLocationRequestToRecord(l logger.Logger, req *schema.GameLocationRequest, rec *record.GameLocation) (*record.GameLocation, error) {
 	if rec == nil {
-		rec = &record.Location{}
+		rec = &record.GameLocation{}
 	}
 	if req == nil {
 		return nil, nil
 	}
-	l.Debug("mapping location request to record")
+	l.Debug("mapping game_location request to record")
 	rec.GameID = req.GameID
 	rec.Name = req.Name
 	rec.Description = req.Description

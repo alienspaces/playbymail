@@ -96,13 +96,13 @@ func (t *Testing) CreateData() error {
 		}
 		l.Info("created game record ID >%s< Name >%s<", gameRec.ID, gameRec.Name)
 
-		for _, locationConfig := range gameConfig.LocationConfigs {
-			locationRec, err := t.createLocationRec(locationConfig, gameRec)
+		for _, gameLocationConfig := range gameConfig.GameLocationConfigs {
+			gameLocationRec, err := t.createGameLocationRec(gameLocationConfig, gameRec)
 			if err != nil {
-				l.Warn("failed creating location record >%v<", err)
+				l.Warn("failed creating game location record >%v<", err)
 				return err
 			}
-			l.Info("created location record ID >%s< Name >%s<", locationRec.ID, locationRec.Name)
+			l.Info("created game location record ID >%s< Name >%s<", gameLocationRec.ID, gameLocationRec.Name)
 		}
 
 		for _, linkConfig := range gameConfig.LocationLinkConfigs {
@@ -152,18 +152,18 @@ func (t *Testing) RemoveData() error {
 	}
 
 	// Remove locations first to avoid foreign key constraint errors
-	l.Info("removing >%d< location records", len(t.teardownData.LocationRecs))
+	l.Info("removing >%d< game location records", len(t.teardownData.GameLocationRecs))
 
-	for _, locationRec := range t.teardownData.LocationRecs {
-		l.Info("[teardown] location ID: >%s<", locationRec.ID)
-		if locationRec.ID == "" {
-			l.Warn("[teardown] skipping location with empty ID")
+	for _, gameLocationRec := range t.teardownData.GameLocationRecs {
+		l.Info("[teardown] game location ID: >%s<", gameLocationRec.ID)
+		if gameLocationRec.ID == "" {
+			l.Warn("[teardown] skipping game location with empty ID")
 			continue
 		}
-		l.Info("removing location record ID >%s<", locationRec.ID)
-		err := t.Domain.(*domain.Domain).RemoveLocationRec(locationRec.ID)
+		l.Info("removing game location record ID >%s<", gameLocationRec.ID)
+		err := t.Domain.(*domain.Domain).RemoveGameLocationRec(gameLocationRec.ID)
 		if err != nil {
-			l.Warn("failed removing location record >%v<", err)
+			l.Warn("failed removing game location record >%v<", err)
 			return err
 		}
 	}

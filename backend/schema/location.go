@@ -2,8 +2,8 @@ package schema
 
 import "time"
 
-// LocationResponseData -
-type LocationResponseData struct {
+// GameLocationResponseData -
+type GameLocationResponseData struct {
 	ID          string     `json:"id"`
 	GameID      string     `json:"game_id"`
 	Name        string     `json:"name"`
@@ -13,21 +13,21 @@ type LocationResponseData struct {
 	DeletedAt   *time.Time `json:"deleted_at,omitempty"`
 }
 
-type LocationResponse struct {
+type GameLocationResponse struct {
 	Response
-	*LocationResponseData
+	*GameLocationResponseData
 }
 
-type LocationCollectionResponse = []*LocationResponseData
+type GameLocationCollectionResponse = []*GameLocationResponseData
 
-type LocationRequest struct {
+type GameLocationRequest struct {
 	Request
 	GameID      string `json:"game_id"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
 }
 
-type LocationQueryParams struct {
+type GameLocationQueryParams struct {
 	QueryParamsPagination
-	LocationResponseData
+	GameLocationResponseData
 }

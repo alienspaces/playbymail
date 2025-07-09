@@ -5,29 +5,29 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/record"
 )
 
-// Location
+// GameLocation
 const (
-	TableLocation string = "location"
+	TableGameLocation string = "game_location"
 )
 
 const (
-	FieldLocationID          string = "id"
-	FieldLocationGameID      string = "game_id"
-	FieldLocationName        string = "name"
-	FieldLocationDescription string = "description"
+	FieldGameLocationID          string = "id"
+	FieldGameLocationGameID      string = "game_id"
+	FieldGameLocationName        string = "name"
+	FieldGameLocationDescription string = "description"
 )
 
-type Location struct {
+type GameLocation struct {
 	record.Record
 	GameID      string `db:"game_id"`
 	Name        string `db:"name"`
 	Description string `db:"description"`
 }
 
-func (r *Location) ToNamedArgs() pgx.NamedArgs {
+func (r *GameLocation) ToNamedArgs() pgx.NamedArgs {
 	args := r.Record.ToNamedArgs()
-	args[FieldLocationGameID] = r.GameID
-	args[FieldLocationName] = r.Name
-	args[FieldLocationDescription] = r.Description
+	args[FieldGameLocationGameID] = r.GameID
+	args[FieldGameLocationName] = r.Name
+	args[FieldGameLocationDescription] = r.Description
 	return args
 }

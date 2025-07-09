@@ -31,6 +31,8 @@ const (
 func (rnr *Runner) gameCharacterHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error) {
 	l = loggerWithFunctionContext(l, "gameCharacterHandlerConfig")
 
+	l.Debug("Adding game_character handler configuration")
+
 	gameCharacterConfig := make(map[string]server.HandlerConfig)
 
 	collectionResponseSchema := jsonschema.SchemaWithReferences{

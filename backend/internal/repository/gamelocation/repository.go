@@ -1,4 +1,4 @@
-package location
+package gamelocation
 
 import (
 	"github.com/jackc/pgx/v5"
@@ -10,16 +10,16 @@ import (
 )
 
 const (
-	TableName string = record.TableLocation
+	TableName string = record.TableGameLocation
 )
 
 // NewRepository -
 func NewRepository(l logger.Logger, tx pgx.Tx) (repositor.Repositor, error) {
-	return repository.NewGeneric[record.Location](
+	return repository.NewGeneric[record.GameLocation](
 		repository.NewArgs{
 			Tx:        tx,
 			TableName: TableName,
-			Record:    record.Location{},
+			Record:    record.GameLocation{},
 		},
 	)
 }

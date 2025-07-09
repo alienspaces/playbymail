@@ -1,6 +1,6 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
-    "title": "LocationRequest",
+    "title": "GameLocationRequest",
     "type": "object",
     "properties": {
         "game_id": {

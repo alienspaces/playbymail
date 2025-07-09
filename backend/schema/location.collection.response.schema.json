@@ -1,8 +1,8 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
-    "title": "LocationCollectionResponse",
+    "title": "GameLocationCollectionResponse",
     "type": "array",
     "items": {
-        "$ref": "location.schema.json"
+        "$ref": "game_location.schema.json"
     }
 }

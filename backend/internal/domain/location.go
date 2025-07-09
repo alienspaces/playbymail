@@ -11,13 +11,13 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/record"
 )
 
-// GetManyLocationRecs -
-func (m *Domain) GetManyLocationRecs(opts *coresql.Options) ([]*record.Location, error) {
-	l := m.Logger("GetManyLocationRecs")
+// GetManyGameLocationRecs -
+func (m *Domain) GetManyGameLocationRecs(opts *coresql.Options) ([]*record.GameLocation, error) {
+	l := m.Logger("GetManyGameLocationRecs")
 
-	l.Debug("getting many location records opts >%#v<", opts)
+	l.Debug("getting many game_location records opts >%#v<", opts)
 
-	r := m.LocationRepository()
+	r := m.GameLocationRepository()
 
 	recs, err := r.GetMany(opts)
 	if err != nil {
@@ -27,21 +27,21 @@ func (m *Domain) GetManyLocationRecs(opts *coresql.Options) ([]*record.Location,
 	return recs, nil
 }
 
-// GetLocationRec -
-func (m *Domain) GetLocationRec(recID string, lock *coresql.Lock) (*record.Location, error) {
-	l := m.Logger("GetLocationRec")
+// GetGameLocationRec -
+func (m *Domain) GetGameLocationRec(recID string, lock *coresql.Lock) (*record.GameLocation, error) {
+	l := m.Logger("GetGameLocationRec")
 
-	l.Debug("getting location record ID >%s<", recID)
+	l.Debug("getting game_location record ID >%s<", recID)
 
 	if err := domain.ValidateUUIDField("id", recID); err != nil {
 		return nil, err
 	}
 
-	r := m.LocationRepository()
+	r := m.GameLocationRepository()
 
 	rec, err := r.GetOne(recID, lock)
 	if errors.Is(err, pgx.ErrNoRows) {
-		return nil, coreerror.NewNotFoundError(record.TableLocation, recID)
+		return nil, coreerror.NewNotFoundError(record.TableGameLocation, recID)
 	} else if err != nil {
 		return nil, databaseError(err)
 	}
@@ -49,13 +49,13 @@ func (m *Domain) GetLocationRec(recID string, lock *coresql.Lock) (*record.Locat
 	return rec, nil
 }
 
-// CreateLocationRec -
-func (m *Domain) CreateLocationRec(rec *record.Location) (*record.Location, error) {
-	l := m.Logger("CreateLocationRec")
+// CreateGameLocationRec -
+func (m *Domain) CreateGameLocationRec(rec *record.GameLocation) (*record.GameLocation, error) {
+	l := m.Logger("CreateGameLocationRec")
 
-	l.Debug("creating location record >%#v<", rec)
+	l.Debug("creating game_location record >%#v<", rec)
 
-	r := m.LocationRepository()
+	r := m.GameLocationRepository()
 
 	// Add validation here if needed
 
@@ -68,20 +68,20 @@ func (m *Domain) CreateLocationRec(rec *record.Location) (*record.Location, erro
 	return rec, nil
 }
 
-// UpdateLocationRec -
-func (m *Domain) UpdateLocationRec(next *record.Location) (*record.Location, error) {
-	l := m.Logger("UpdateLocationRec")
+// UpdateGameLocationRec -
+func (m *Domain) UpdateGameLocationRec(next *record.GameLocation) (*record.GameLocation, error) {
+	l := m.Logger("UpdateGameLocationRec")
 
-	_, err := m.GetLocationRec(next.ID, coresql.ForUpdateNoWait)
+	_, err := m.GetGameLocationRec(next.ID, coresql.ForUpdateNoWait)
 	if err != nil {
 		return next, err
 	}
 
-	l.Debug("updating location record >%#v<", next)
+	l.Debug("updating game_location record >%#v<", next)
 
 	// Add validation here if needed
 
-	r := m.LocationRepository()
+	r := m.GameLocationRepository()
 
 	next, err = r.UpdateOne(next)
 	if err != nil {
@@ -91,18 +91,18 @@ func (m *Domain) UpdateLocationRec(next *record.Location) (*record.Location, err
 	return next, nil
 }
 
-// DeleteLocationRec -
-func (m *Domain) DeleteLocationRec(recID string) error {
-	l := m.Logger("DeleteLocationRec")
+// DeleteGameLocationRec -
+func (m *Domain) DeleteGameLocationRec(recID string) error {
+	l := m.Logger("DeleteGameLocationRec")
 
-	l.Debug("deleting location record ID >%s<", recID)
+	l.Debug("deleting game_location record ID >%s<", recID)
 
-	_, err := m.GetLocationRec(recID, coresql.ForUpdateNoWait)
+	_, err := m.GetGameLocationRec(recID, coresql.ForUpdateNoWait)
 	if err != nil {
 		return err
 	}
 
-	r := m.LocationRepository()
+	r := m.GameLocationRepository()
 
 	// Add validation here if needed
 
@@ -113,18 +113,18 @@ func (m *Domain) DeleteLocationRec(recID string) error {
 	return nil
 }
 
-// RemoveLocationRec -
-func (m *Domain) RemoveLocationRec(recID string) error {
-	l := m.Logger("RemoveLocationRec")
+// RemoveGameLocationRec -
+func (m *Domain) RemoveGameLocationRec(recID string) error {
+	l := m.Logger("RemoveGameLocationRec")
 
-	l.Debug("removing location record ID >%s<", recID)
+	l.Debug("removing game_location record ID >%s<", recID)
 
-	_, err := m.GetLocationRec(recID, coresql.ForUpdateNoWait)
+	_, err := m.GetGameLocationRec(recID, coresql.ForUpdateNoWait)
 	if err != nil {
 		return err
 	}
 
-	r := m.LocationRepository()
+	r := m.GameLocationRepository()
 
 	// Add validation here if needed
 

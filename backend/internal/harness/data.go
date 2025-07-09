@@ -10,7 +10,7 @@ import (
 type Data struct {
 	AccountRecs       []*record.Account
 	GameRecs          []*record.Game
-	LocationRecs      []*record.Location
+	GameLocationRecs  []*record.GameLocation
 	LocationLinkRecs  []*record.LocationLink
 	GameCharacterRecs []*record.GameCharacter // Add this line
 	// Data references
@@ -24,7 +24,7 @@ type Data struct {
 type DataRefs struct {
 	AccountRefs       map[string]string // Map of account refs to account records
 	GameRefs          map[string]string // Map of game refs to game records
-	LocationRefs      map[string]string // Map of location refs to location records
+	GameLocationRefs  map[string]string // Map of game location refs to game location records
 	LocationLinkRefs  map[string]string // Map of location link refs to location link records
 	GameCharacterRefs map[string]string // Map of game_character refs to records
 }
@@ -37,7 +37,7 @@ func initialiseDataStores() Data {
 		Refs: DataRefs{
 			AccountRefs:       map[string]string{},
 			GameRefs:          map[string]string{},
-			LocationRefs:      map[string]string{},
+			GameLocationRefs:  map[string]string{},
 			LocationLinkRefs:  map[string]string{},
 			GameCharacterRefs: map[string]string{}, // Add this line
 		},
@@ -107,18 +107,18 @@ func (d *Data) GetGameRecByRef(ref string) (*record.Game, error) {
 }
 
 // Location
-func (d *Data) AddLocationRec(rec *record.Location) {
-	for idx := range d.LocationRecs {
-		if d.LocationRecs[idx].ID == rec.ID {
-			d.LocationRecs[idx] = rec
+func (d *Data) AddGameLocationRec(rec *record.GameLocation) {
+	for idx := range d.GameLocationRecs {
+		if d.GameLocationRecs[idx].ID == rec.ID {
+			d.GameLocationRecs[idx] = rec
 			return
 		}
 	}
-	d.LocationRecs = append(d.LocationRecs, rec)
+	d.GameLocationRecs = append(d.GameLocationRecs, rec)
 }
 
-func (d *Data) GetLocationRecByID(locationID string) (*record.Location, error) {
-	for _, rec := range d.LocationRecs {
+func (d *Data) GetGameLocationRecByID(locationID string) (*record.GameLocation, error) {
+	for _, rec := range d.GameLocationRecs {
 		if rec.ID == locationID {
 			return rec, nil
 		}
@@ -126,12 +126,12 @@ func (d *Data) GetLocationRecByID(locationID string) (*record.Location, error) {
 	return nil, fmt.Errorf("failed getting location with ID >%s<", locationID)
 }
 
-func (d *Data) GetLocationRecByRef(ref string) (*record.Location, error) {
-	id, ok := d.Refs.LocationRefs[ref]
+func (d *Data) GetGameLocationRecByRef(ref string) (*record.GameLocation, error) {
+	id, ok := d.Refs.GameLocationRefs[ref]
 	if !ok {
 		return nil, fmt.Errorf("no location with ref >%s<", ref)
 	}
-	for _, rec := range d.LocationRecs {
+	for _, rec := range d.GameLocationRecs {
 		if rec.ID == id {
 			return rec, nil
 		}

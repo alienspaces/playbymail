@@ -30,19 +30,19 @@ func Test_getLocationHandler(t *testing.T) {
 		collectionRecordCount int
 	}
 
-	testCaseCollectionResponseDecoder := testCaseResponseDecoderGeneric[schema.LocationCollectionResponse]
-	testCaseResponseDecoder := testCaseResponseDecoderGeneric[schema.LocationResponse]
+	testCaseCollectionResponseDecoder := testCaseResponseDecoderGeneric[schema.GameLocationCollectionResponse]
+	testCaseResponseDecoder := testCaseResponseDecoderGeneric[schema.GameLocationResponse]
 
 	// Setup: get a location for reference
-	locationRec, err := th.Data.GetLocationRecByRef("location-one")
-	require.NoError(t, err, "GetLocationRecByRef returns without error")
+	locationRec, err := th.Data.GetGameLocationRecByRef("game-location-one")
+	require.NoError(t, err, "GetGameLocationRecByRef returns without error")
 
 	testCases := []testCase{
 		{
 			TestCase: TestCase{
 				Name: "API key with open access \\ get many locations \\ returns expected locations",
 				HandlerConfig: func(rnr *Runner) server.HandlerConfig {
-					return rnr.HandlerConfig[getManyLocations]
+					return rnr.HandlerConfig[getManyGameLocations]
 				},
 				RequestQueryParams: func(d harness.Data) map[string]any {
 					return map[string]any{
@@ -61,11 +61,11 @@ func Test_getLocationHandler(t *testing.T) {
 			TestCase: TestCase{
 				Name: "API key with open access \\ get one location with valid location ID \\ returns expected location",
 				HandlerConfig: func(rnr *Runner) server.HandlerConfig {
-					return rnr.HandlerConfig[getOneLocation]
+					return rnr.HandlerConfig[getOneGameLocation]
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					params := map[string]string{
-						":location_id": locationRec.ID,
+						":game_location_id": locationRec.ID,
 					}
 					return params
 				},
@@ -87,11 +87,11 @@ func Test_getLocationHandler(t *testing.T) {
 
 				require.NotNil(t, body, "Response body is not nil")
 
-				responses := []*schema.LocationResponseData{}
+				responses := []*schema.GameLocationResponseData{}
 				if testCase.collectionRequest {
-					responses = body.(schema.LocationCollectionResponse)
+					responses = body.(schema.GameLocationCollectionResponse)
 				} else {
-					responses = append(responses, body.(schema.LocationResponse).LocationResponseData)
+					responses = append(responses, body.(schema.GameLocationResponse).GameLocationResponseData)
 				}
 
 				if testCase.collectionRequest {
@@ -131,25 +131,25 @@ func Test_createUpdateDeleteLocationHandler(t *testing.T) {
 
 	type testCase struct {
 		TestCase
-		expectResponse func(d harness.Data, req schema.LocationRequest) schema.LocationResponse
+		expectResponse func(d harness.Data, req schema.GameLocationRequest) schema.GameLocationResponse
 	}
 
-	testCaseResponseDecoder := testCaseResponseDecoderGeneric[schema.LocationResponse]
+	testCaseResponseDecoder := testCaseResponseDecoderGeneric[schema.GameLocationResponse]
 
 	gameRec, err := th.Data.GetGameRecByRef(harness.GameOneRef)
 	require.NoError(t, err, "GetGameRecByRef returns without error")
-	locationRec, err := th.Data.GetLocationRecByRef("location-one")
-	require.NoError(t, err, "GetLocationRecByRef returns without error")
+	locationRec, err := th.Data.GetGameLocationRecByRef("game-location-one")
+	require.NoError(t, err, "GetGameLocationRecByRef returns without error")
 
 	testCases := []testCase{
 		{
 			TestCase: TestCase{
 				Name: "API key with open access \\ create location with valid properties \\ returns created location",
 				HandlerConfig: func(rnr *Runner) server.HandlerConfig {
-					return rnr.HandlerConfig[createLocation]
+					return rnr.HandlerConfig[createGameLocation]
 				},
 				RequestBody: func(d harness.Data) interface{} {
-					return schema.LocationRequest{
+					return schema.GameLocationRequest{
 						GameID:      gameRec.ID,
 						Name:        "Test Location",
 						Description: "Test Description",
@@ -158,9 +158,9 @@ func Test_createUpdateDeleteLocationHandler(t *testing.T) {
 				ResponseDecoder: testCaseResponseDecoder,
 				ResponseCode:    http.StatusCreated,
 			},
-			expectResponse: func(d harness.Data, req schema.LocationRequest) schema.LocationResponse {
-				return schema.LocationResponse{
-					LocationResponseData: &schema.LocationResponseData{
+			expectResponse: func(d harness.Data, req schema.GameLocationRequest) schema.GameLocationResponse {
+				return schema.GameLocationResponse{
+					GameLocationResponseData: &schema.GameLocationResponseData{
 						GameID:      req.GameID,
 						Name:        req.Name,
 						Description: req.Description,
@@ -172,16 +172,16 @@ func Test_createUpdateDeleteLocationHandler(t *testing.T) {
 			TestCase: TestCase{
 				Name: "API key with open access \\ update location with valid properties \\ returns updated location",
 				HandlerConfig: func(rnr *Runner) server.HandlerConfig {
-					return rnr.HandlerConfig[updateLocation]
+					return rnr.HandlerConfig[updateGameLocation]
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					params := map[string]string{
-						":location_id": locationRec.ID,
+						":game_location_id": locationRec.ID,
 					}
 					return params
 				},
 				RequestBody: func(d harness.Data) interface{} {
-					return schema.LocationRequest{
+					return schema.GameLocationRequest{
 						GameID:      gameRec.ID,
 						Name:        "Updated Location",
 						Description: "Updated Description",
@@ -190,9 +190,9 @@ func Test_createUpdateDeleteLocationHandler(t *testing.T) {
 				ResponseDecoder: testCaseResponseDecoder,
 				ResponseCode:    http.StatusOK,
 			},
-			expectResponse: func(d harness.Data, req schema.LocationRequest) schema.LocationResponse {
-				return schema.LocationResponse{
-					LocationResponseData: &schema.LocationResponseData{
+			expectResponse: func(d harness.Data, req schema.GameLocationRequest) schema.GameLocationResponse {
+				return schema.GameLocationResponse{
+					GameLocationResponseData: &schema.GameLocationResponseData{
 						GameID:      req.GameID,
 						Name:        req.Name,
 						Description: req.Description,
@@ -204,11 +204,11 @@ func Test_createUpdateDeleteLocationHandler(t *testing.T) {
 			TestCase: TestCase{
 				Name: "API key with open access \\ delete location with valid location ID \\ returns no content",
 				HandlerConfig: func(rnr *Runner) server.HandlerConfig {
-					return rnr.HandlerConfig[deleteLocation]
+					return rnr.HandlerConfig[deleteGameLocation]
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					params := map[string]string{
-						":location_id": locationRec.ID,
+						":game_location_id": locationRec.ID,
 					}
 					return params
 				},
@@ -230,9 +230,9 @@ func Test_createUpdateDeleteLocationHandler(t *testing.T) {
 				}
 
 				require.NotNil(t, body, "Response body is not nil")
-				resp, ok := body.(schema.LocationResponse)
-				require.True(t, ok, "Response body is of type schema.LocationResponse")
-				lResp := resp.LocationResponseData
+				resp, ok := body.(schema.GameLocationResponse)
+				require.True(t, ok, "Response body is of type schema.GameLocationResponse")
+				lResp := resp.GameLocationResponseData
 				require.NotNil(t, lResp, "LocationResponseData is not nil")
 				require.NotEmpty(t, lResp.ID, "Location ID is not empty")
 				require.NotEmpty(t, lResp.GameID, "Location GameID is not empty")
@@ -240,8 +240,8 @@ func Test_createUpdateDeleteLocationHandler(t *testing.T) {
 				if testCase.expectResponse != nil {
 					xResp := testCase.expectResponse(
 						th.Data,
-						testCase.TestRequestBody(th.Data).(schema.LocationRequest),
-					).LocationResponseData
+						testCase.TestRequestBody(th.Data).(schema.GameLocationRequest),
+					).GameLocationResponseData
 					require.Equal(t, xResp.GameID, lResp.GameID, "Location GameID matches expected")
 					require.Equal(t, xResp.Name, lResp.Name, "Location Name equals expected")
 					require.Equal(t, xResp.Description, lResp.Description, "Location Description equals expected")

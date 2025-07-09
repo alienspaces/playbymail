@@ -22,14 +22,9 @@ func LocationLinkRequestToRecord(l logger.Logger, r *http.Request, rec *record.L
 	}
 
 	switch server.HttpMethod(r.Method) {
-	case server.HttpMethodPost:
-		rec.FromLocationID = req.FromLocationID
-		rec.ToLocationID = req.ToLocationID
-		rec.Description = req.Description
-		rec.Name = req.Name
-	case server.HttpMethodPut, server.HttpMethodPatch:
-		rec.FromLocationID = req.FromLocationID
-		rec.ToLocationID = req.ToLocationID
+	case server.HttpMethodPost, server.HttpMethodPut, server.HttpMethodPatch:
+		rec.FromGameLocationID = req.FromGameLocationID
+		rec.ToGameLocationID = req.ToGameLocationID
 		rec.Description = req.Description
 		rec.Name = req.Name
 	default:
@@ -43,14 +38,14 @@ func LocationLinkRequestToRecord(l logger.Logger, r *http.Request, rec *record.L
 func LocationLinkRecordToResponseData(l logger.Logger, rec *record.LocationLink) (schema.LocationLinkResponseData, error) {
 	l.Debug("mapping location_link record to response data")
 	data := schema.LocationLinkResponseData{
-		ID:             rec.ID,
-		FromLocationID: rec.FromLocationID,
-		ToLocationID:   rec.ToLocationID,
-		Description:    rec.Description,
-		Name:           rec.Name,
-		CreatedAt:      rec.CreatedAt,
-		UpdatedAt:      nulltime.ToTimePtr(rec.UpdatedAt),
-		DeletedAt:      nulltime.ToTimePtr(rec.DeletedAt),
+		ID:                 rec.ID,
+		FromGameLocationID: rec.FromGameLocationID,
+		ToGameLocationID:   rec.ToGameLocationID,
+		Description:        rec.Description,
+		Name:               rec.Name,
+		CreatedAt:          rec.CreatedAt,
+		UpdatedAt:          nulltime.ToTimePtr(rec.UpdatedAt),
+		DeletedAt:          nulltime.ToTimePtr(rec.DeletedAt),
 	}
 	return data, nil
 }

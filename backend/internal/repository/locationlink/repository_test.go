@@ -20,9 +20,9 @@ func TestCreateOne(t *testing.T) {
 			{
 				Reference: harness.GameOneRef,
 				Record:    &record.Game{},
-				LocationConfigs: []harness.LocationConfig{
-					{Reference: harness.LocationOneRef, Record: &record.Location{}},
-					{Reference: harness.LocationTwoRef, Record: &record.Location{}},
+				GameLocationConfigs: []harness.GameLocationConfig{
+					{Reference: harness.GameLocationOneRef, Record: &record.GameLocation{}},
+					{Reference: harness.GameLocationTwoRef, Record: &record.GameLocation{}},
 				},
 			},
 		},
@@ -45,12 +45,12 @@ func TestCreateOne(t *testing.T) {
 		{
 			name: "Without ID",
 			rec: func(d harness.Data, t *testing.T) *record.LocationLink {
-				fromLoc, _ := d.GetLocationRecByRef(harness.LocationOneRef)
-				toLoc, _ := d.GetLocationRecByRef(harness.LocationTwoRef)
+				fromLoc, _ := d.GetGameLocationRecByRef(harness.GameLocationOneRef)
+				toLoc, _ := d.GetGameLocationRecByRef(harness.GameLocationTwoRef)
 				return &record.LocationLink{
-					FromLocationID: fromLoc.ID,
-					ToLocationID:   toLoc.ID,
-					Description:    gofakeit.Sentence(5),
+					FromGameLocationID: fromLoc.ID,
+					ToGameLocationID:   toLoc.ID,
+					Description:        gofakeit.Sentence(5),
 				}
 			},
 			err: false,
@@ -58,12 +58,12 @@ func TestCreateOne(t *testing.T) {
 		{
 			name: "With ID",
 			rec: func(d harness.Data, t *testing.T) *record.LocationLink {
-				fromLoc, _ := d.GetLocationRecByRef(harness.LocationOneRef)
-				toLoc, _ := d.GetLocationRecByRef(harness.LocationTwoRef)
+				fromLoc, _ := d.GetGameLocationRecByRef(harness.GameLocationOneRef)
+				toLoc, _ := d.GetGameLocationRecByRef(harness.GameLocationTwoRef)
 				rec := &record.LocationLink{
-					FromLocationID: fromLoc.ID,
-					ToLocationID:   toLoc.ID,
-					Description:    gofakeit.Sentence(5),
+					FromGameLocationID: fromLoc.ID,
+					ToGameLocationID:   toLoc.ID,
+					Description:        gofakeit.Sentence(5),
 				}
 				id, _ := uuid.NewRandom()
 				rec.ID = id.String()
@@ -106,15 +106,15 @@ func TestGetOne(t *testing.T) {
 			{
 				Reference: harness.GameOneRef,
 				Record:    &record.Game{},
-				LocationConfigs: []harness.LocationConfig{
-					{Reference: harness.LocationOneRef, Record: &record.Location{}},
-					{Reference: harness.LocationTwoRef, Record: &record.Location{}},
+				GameLocationConfigs: []harness.GameLocationConfig{
+					{Reference: harness.GameLocationOneRef, Record: &record.GameLocation{}},
+					{Reference: harness.GameLocationTwoRef, Record: &record.GameLocation{}},
 				},
 				LocationLinkConfigs: []harness.LocationLinkConfig{
 					{
 						Reference:       "link-one-two",
-						FromLocationRef: harness.LocationOneRef,
-						ToLocationRef:   harness.LocationTwoRef,
+						FromLocationRef: harness.GameLocationOneRef,
+						ToLocationRef:   harness.GameLocationTwoRef,
 						Record: &record.LocationLink{
 							Description: "Test link",
 						},
@@ -188,15 +188,15 @@ func TestUpdateOne(t *testing.T) {
 			{
 				Reference: harness.GameOneRef,
 				Record:    &record.Game{},
-				LocationConfigs: []harness.LocationConfig{
-					{Reference: harness.LocationOneRef, Record: &record.Location{}},
-					{Reference: harness.LocationTwoRef, Record: &record.Location{}},
+				GameLocationConfigs: []harness.GameLocationConfig{
+					{Reference: harness.GameLocationOneRef, Record: &record.GameLocation{}},
+					{Reference: harness.GameLocationTwoRef, Record: &record.GameLocation{}},
 				},
 				LocationLinkConfigs: []harness.LocationLinkConfig{
 					{
 						Reference:       "link-one-two",
-						FromLocationRef: harness.LocationOneRef,
-						ToLocationRef:   harness.LocationTwoRef,
+						FromLocationRef: harness.GameLocationOneRef,
+						ToLocationRef:   harness.GameLocationTwoRef,
 						Record: &record.LocationLink{
 							Description: "Test link",
 						},
@@ -272,15 +272,15 @@ func TestDeleteOne(t *testing.T) {
 			{
 				Reference: harness.GameOneRef,
 				Record:    &record.Game{},
-				LocationConfigs: []harness.LocationConfig{
-					{Reference: harness.LocationOneRef, Record: &record.Location{}},
-					{Reference: harness.LocationTwoRef, Record: &record.Location{}},
+				GameLocationConfigs: []harness.GameLocationConfig{
+					{Reference: harness.GameLocationOneRef, Record: &record.GameLocation{}},
+					{Reference: harness.GameLocationTwoRef, Record: &record.GameLocation{}},
 				},
 				LocationLinkConfigs: []harness.LocationLinkConfig{
 					{
 						Reference:       "link-one-two",
-						FromLocationRef: harness.LocationOneRef,
-						ToLocationRef:   harness.LocationTwoRef,
+						FromLocationRef: harness.GameLocationOneRef,
+						ToLocationRef:   harness.GameLocationTwoRef,
 						Record: &record.LocationLink{
 							Description: "Test link",
 						},

@@ -3,11 +3,11 @@
     "title": "LocationLinkRequest",
     "type": "object",
     "properties": {
-        "from_location_id": {
+        "from_game_location_id": {
             "type": "string",
             "format": "uuid"
         },
-        "to_location_id": {
+        "to_game_location_id": {
             "type": "string",
             "format": "uuid"
         },
@@ -23,8 +23,8 @@
         }
     },
     "required": [
-        "from_location_id",
-        "to_location_id",
+        "from_game_location_id",
+        "to_game_location_id",
         "description",
         "name"
     ]
