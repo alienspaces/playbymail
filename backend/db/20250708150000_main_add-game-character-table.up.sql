@@ -2,7 +2,7 @@ CREATE TABLE public.game_character (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     game_id UUID NOT NULL REFERENCES public.game(id),
     account_id UUID NOT NULL REFERENCES public.account(id),
-    name VARCHAR(128) NOT NULL,
+    name VARCHAR(255) NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
     updated_at TIMESTAMP WITH TIME ZONE,
     deleted_at TIMESTAMP WITH TIME ZONE

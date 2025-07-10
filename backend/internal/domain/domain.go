@@ -14,9 +14,9 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/record"
 	"gitlab.com/alienspaces/playbymail/internal/repository/account"
 	"gitlab.com/alienspaces/playbymail/internal/repository/game"
-	"gitlab.com/alienspaces/playbymail/internal/repository/gamecharacter"
-	"gitlab.com/alienspaces/playbymail/internal/repository/gamelocation"
-	"gitlab.com/alienspaces/playbymail/internal/repository/locationlink"
+	"gitlab.com/alienspaces/playbymail/internal/repository/game_character"
+	"gitlab.com/alienspaces/playbymail/internal/repository/game_location"
+	"gitlab.com/alienspaces/playbymail/internal/repository/game_location_link"
 )
 
 // Domain -
@@ -41,9 +41,9 @@ func NewDomain(l logger.Logger, j *river.Client[pgx.Tx]) (*Domain, error) {
 			RepositoryConstructors: []domain.RepositoryConstructor{
 				account.NewRepository,
 				game.NewRepository,
-				gamelocation.NewRepository,
-				locationlink.NewRepository,
-				gamecharacter.NewRepository,
+				game_location.NewRepository,
+				game_location_link.NewRepository,
+				game_character.NewRepository,
 			},
 		},
 	}
@@ -65,19 +65,19 @@ func (m *Domain) GameRepository() *repository.Generic[record.Game, *record.Game]
 	return m.Repositories[game.TableName].(*repository.Generic[record.Game, *record.Game])
 }
 
-// LocationLinkRepository -
-func (m *Domain) LocationLinkRepository() *repository.Generic[record.LocationLink, *record.LocationLink] {
-	return m.Repositories[locationlink.TableName].(*repository.Generic[record.LocationLink, *record.LocationLink])
+// GameLocationLinkRepository -
+func (m *Domain) GameLocationLinkRepository() *repository.Generic[record.GameLocationLink, *record.GameLocationLink] {
+	return m.Repositories[game_location_link.TableName].(*repository.Generic[record.GameLocationLink, *record.GameLocationLink])
 }
 
 // GameCharacterRepository -
 func (m *Domain) GameCharacterRepository() *repository.Generic[record.GameCharacter, *record.GameCharacter] {
-	return m.Repositories[gamecharacter.TableName].(*repository.Generic[record.GameCharacter, *record.GameCharacter])
+	return m.Repositories[game_character.TableName].(*repository.Generic[record.GameCharacter, *record.GameCharacter])
 }
 
 // GameLocationRepository -
 func (m *Domain) GameLocationRepository() *repository.Generic[record.GameLocation, *record.GameLocation] {
-	return m.Repositories[gamelocation.TableName].(*repository.Generic[record.GameLocation, *record.GameLocation])
+	return m.Repositories[game_location.TableName].(*repository.Generic[record.GameLocation, *record.GameLocation])
 }
 
 // SetRLS -

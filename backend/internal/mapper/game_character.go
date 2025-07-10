@@ -62,7 +62,20 @@ func GameCharacterRecordToResponse(l logger.Logger, rec *record.GameCharacter) (
 		return schema.GameCharacterResponse{}, err
 	}
 	return schema.GameCharacterResponse{
-		Response:                  schema.Response{},
-		GameCharacterResponseData: &data,
+		Data: &data,
+	}, nil
+}
+
+func GameCharacterRecordsToCollectionResponse(l logger.Logger, recs []*record.GameCharacter) (schema.GameCharacterCollectionResponse, error) {
+	var data []*schema.GameCharacterResponseData
+	for _, rec := range recs {
+		d, err := GameCharacterRecordToResponseData(l, rec)
+		if err != nil {
+			return schema.GameCharacterCollectionResponse{}, err
+		}
+		data = append(data, &d)
+	}
+	return schema.GameCharacterCollectionResponse{
+		Data: data,
 	}, nil
 }

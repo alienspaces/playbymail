@@ -3,11 +3,17 @@
     "title": "AccountResponse",
     "type": "object",
     "properties": {
-        "account": {
-            "$ref": "account.schema.json"
+        "data": {
+            "$ref": "./account.schema.json"
+        },
+        "error": {
+            "type": [
+                "object",
+                "null"
+            ]
         }
     },
     "required": [
-        "account"
+        "data"
     ]
 }

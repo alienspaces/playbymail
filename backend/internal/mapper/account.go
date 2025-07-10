@@ -47,3 +47,27 @@ func AccountRecordToResponseData(l logger.Logger, rec *record.Account) (schema.A
 
 	return data, nil
 }
+
+func AccountRecordToResponse(l logger.Logger, rec *record.Account) (schema.AccountResponse, error) {
+	data, err := AccountRecordToResponseData(l, rec)
+	if err != nil {
+		return schema.AccountResponse{}, err
+	}
+	return schema.AccountResponse{
+		Data: &data,
+	}, nil
+}
+
+func AccountRecordsToCollectionResponse(l logger.Logger, recs []*record.Account) (schema.AccountCollectionResponse, error) {
+	var data []*schema.AccountResponseData
+	for _, rec := range recs {
+		d, err := AccountRecordToResponseData(l, rec)
+		if err != nil {
+			return schema.AccountCollectionResponse{}, err
+		}
+		data = append(data, &d)
+	}
+	return schema.AccountCollectionResponse{
+		Data: data,
+	}, nil
+}

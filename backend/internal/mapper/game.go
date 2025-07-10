@@ -15,19 +15,19 @@ func GameRequestToRecord(l logger.Logger, r *http.Request, rec *record.Game) (*r
 
 	l.Debug("mapping game request to record")
 
-	var data schema.GameRequest
-	_, err := server.ReadRequest(l, r, &data)
+	var req schema.GameRequest
+	_, err := server.ReadRequest(l, r, &req)
 	if err != nil {
 		return nil, err
 	}
 
 	switch server.HttpMethod(r.Method) {
 	case server.HttpMethodPost:
-		rec.Name = data.Name
-		rec.GameType = data.GameType
+		rec.Name = req.Name
+		rec.GameType = req.GameType
 	case server.HttpMethodPut, server.HttpMethodPatch:
-		rec.Name = data.Name
-		rec.GameType = data.GameType
+		rec.Name = req.Name
+		rec.GameType = req.GameType
 	default:
 		return nil, fmt.Errorf("unsupported HTTP method")
 	}
@@ -47,4 +47,28 @@ func GameRecordToResponseData(l logger.Logger, rec *record.Game) (schema.GameRes
 	}
 
 	return data, nil
+}
+
+func GameRecordToResponse(l logger.Logger, rec *record.Game) (schema.GameResponse, error) {
+	data, err := GameRecordToResponseData(l, rec)
+	if err != nil {
+		return schema.GameResponse{}, err
+	}
+	return schema.GameResponse{
+		Data: &data,
+	}, nil
+}
+
+func GameRecordsToCollectionResponse(l logger.Logger, recs []*record.Game) (schema.GameCollectionResponse, error) {
+	var data []*schema.GameResponseData
+	for _, rec := range recs {
+		d, err := GameRecordToResponseData(l, rec)
+		if err != nil {
+			return schema.GameCollectionResponse{}, err
+		}
+		data = append(data, &d)
+	}
+	return schema.GameCollectionResponse{
+		Data: data,
+	}, nil
 }

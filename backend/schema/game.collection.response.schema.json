@@ -3,21 +3,28 @@
     "$id": "http://playbymail.dev/schema/game.collection.response.schema.json",
     "title": "Game collection response data",
     "description": "Response payload data for a game collection",
-    "type": "array",
-    "items": {
-        "allOf": [
-            {
-                "required": [
-                    "id",
-                    "name",
-                    "created_at"
-                ]
-            },
-            {
-                "$ref": "../common/game.schema.json#/$defs/resource"
+    "type": "object",
+    "properties": {
+        "data": {
+            "type": "array",
+            "items": {
+                "$ref": "./game.schema.json"
             }
-        ],
-        "minItems": 0,
-        "readOnly": true
-    }
+        },
+        "error": {
+            "type": [
+                "object",
+                "null"
+            ]
+        },
+        "pagination": {
+            "type": [
+                "object",
+                "null"
+            ]
+        }
+    },
+    "required": [
+        "data"
+    ]
 }

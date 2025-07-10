@@ -1,18 +1,27 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema",
-    "$id": "http://api.disputeservice.trevipay.app/schema/disputeservice/api/client.response.schema.json",
-    "title": "Client response data",
-    "description": "Response payload data for a client",
-    "allOf": [
-        {
-            "required": [
-                "id",
-                "name",
-                "created_at"
+    "$id": "http://playbymail.dev/schema/game.response.schema.json",
+    "title": "Game response data",
+    "description": "Response payload data for a game",
+    "type": "object",
+    "properties": {
+        "data": {
+            "$ref": "./game.schema.json"
+        },
+        "error": {
+            "type": [
+                "object",
+                "null"
             ]
         },
-        {
-            "$ref": "../common/client.schema.json#/$defs/resource"
+        "pagination": {
+            "type": [
+                "object",
+                "null"
+            ]
         }
+    },
+    "required": [
+        "data"
     ]
 }

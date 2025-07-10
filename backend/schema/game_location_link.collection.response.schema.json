@@ -1,12 +1,12 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
-    "title": "AccountCollectionResponse",
+    "title": "GameLocationLinkCollectionResponse",
     "type": "object",
     "properties": {
         "data": {
             "type": "array",
             "items": {
-                "$ref": "./account.schema.json"
+                "$ref": "./game_location_link.schema.json"
             }
         },
         "error": {

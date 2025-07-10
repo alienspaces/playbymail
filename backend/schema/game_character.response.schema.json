@@ -3,11 +3,17 @@
     "title": "GameCharacterResponse",
     "type": "object",
     "properties": {
-        "game_character": {
-            "$ref": "game_character.schema.json"
+        "data": {
+            "$ref": "./game_character.schema.json"
+        },
+        "error": {
+            "type": [
+                "object",
+                "null"
+            ]
         }
     },
     "required": [
-        "game_character"
+        "data"
     ]
 }

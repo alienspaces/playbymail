@@ -19,11 +19,11 @@ type DataConfig struct {
 }
 
 type GameConfig struct {
-	Reference            string // Reference to the game record
-	Record               *record.Game
-	GameLocationConfigs  []GameLocationConfig  // Locations associated with this game
-	LocationLinkConfigs  []LocationLinkConfig  // Links associated with this game
-	GameCharacterConfigs []GameCharacterConfig // Add this line
+	Reference               string // Reference to the game record
+	Record                  *record.Game
+	GameLocationConfigs     []GameLocationConfig     // Locations associated with this game
+	GameLocationLinkConfigs []GameLocationLinkConfig // Links associated with this game
+	GameCharacterConfigs    []GameCharacterConfig    // Add this line
 }
 
 type GameCharacterConfig struct {
@@ -42,11 +42,11 @@ type GameLocationConfig struct {
 	Record    *record.GameLocation
 }
 
-type LocationLinkConfig struct {
+type GameLocationLinkConfig struct {
 	Reference       string // Reference to the location link record
 	FromLocationRef string // Reference to the from location
 	ToLocationRef   string // Reference to the to location
-	Record          *record.LocationLink
+	Record          *record.GameLocationLink
 }
 
 // DefaultDataConfig -
@@ -75,12 +75,12 @@ func DefaultDataConfig() DataConfig {
 						},
 					},
 				},
-				LocationLinkConfigs: []LocationLinkConfig{
+				GameLocationLinkConfigs: []GameLocationLinkConfig{
 					{
 						Reference:       "link-one-two",
 						FromLocationRef: GameLocationOneRef,
 						ToLocationRef:   GameLocationTwoRef,
-						Record: &record.LocationLink{
+						Record: &record.GameLocationLink{
 							Description: "Travel by boat to the swamp of the long forgotten Frog God",
 							Name:        "The Red Door",
 						},

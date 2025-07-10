@@ -1,8 +1,28 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
     "title": "GameCharacterCollectionResponse",
-    "type": "array",
-    "items": {
-        "$ref": "game_character.schema.json"
-    }
+    "type": "object",
+    "properties": {
+        "data": {
+            "type": "array",
+            "items": {
+                "$ref": "./game_character.schema.json"
+            }
+        },
+        "error": {
+            "type": [
+                "object",
+                "null"
+            ]
+        },
+        "pagination": {
+            "type": [
+                "object",
+                "null"
+            ]
+        }
+    },
+    "required": [
+        "data"
+    ]
 }

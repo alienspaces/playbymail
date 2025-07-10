@@ -1,8 +1,8 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema",
-    "$id": "http://api.disputeservice.trevipay.app/schema/disputeservice/api/client.request.schema.json",
-    "title": "Client request data",
-    "description": "Request payload data for a client",
+    "$id": "http://playbymail.dev/schema/game.request.schema.json",
+    "title": "Game request data",
+    "description": "Request payload data for a game",
     "type": "object",
     "additionalProperties": true,
     "required": [
@@ -11,7 +11,7 @@
     ],
     "properties": {
         "name": {
-            "$ref": "../common/client.schema.json#/$defs/name"
+            "$ref": "./game.schema.json#/$defs/name"
         },
         "game_type": {
             "type": "string",

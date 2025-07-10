@@ -105,8 +105,8 @@ func (t *Testing) CreateData() error {
 			l.Info("created game location record ID >%s< Name >%s<", gameLocationRec.ID, gameLocationRec.Name)
 		}
 
-		for _, linkConfig := range gameConfig.LocationLinkConfigs {
-			_, err := t.createLocationLinkRec(linkConfig)
+		for _, linkConfig := range gameConfig.GameLocationLinkConfigs {
+			_, err := t.createGameLocationLinkRec(linkConfig)
 			if err != nil {
 				l.Warn("failed creating location link record >%v<", err)
 				return err
@@ -137,14 +137,14 @@ func (t *Testing) RemoveData() error {
 	l := t.Logger("RemoveData")
 
 	// Remove location links first to avoid foreign key constraint errors
-	l.Info("removing >%d< location link records", len(t.teardownData.LocationLinkRecs))
-	for _, linkRec := range t.teardownData.LocationLinkRecs {
+	l.Info("removing >%d< location link records", len(t.teardownData.GameLocationLinkRecs))
+	for _, linkRec := range t.teardownData.GameLocationLinkRecs {
 		l.Info("[teardown] location link ID: >%s<", linkRec.ID)
 		if linkRec.ID == "" {
 			l.Warn("[teardown] skipping location link with empty ID")
 			continue
 		}
-		err := t.Domain.(*domain.Domain).RemoveLocationLinkRec(linkRec.ID)
+		err := t.Domain.(*domain.Domain).RemoveGameLocationLinkRec(linkRec.ID)
 		if err != nil {
 			l.Warn("failed removing location link record >%v<", err)
 			return err

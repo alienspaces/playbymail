@@ -14,11 +14,16 @@ type GameCharacterResponseData struct {
 }
 
 type GameCharacterResponse struct {
-	Response
-	*GameCharacterResponseData
+	Data       *GameCharacterResponseData `json:"data"`
+	Error      *ResponseError             `json:"error,omitempty"`
+	Pagination *ResponsePagination        `json:"pagination,omitempty"`
 }
 
-type GameCharacterCollectionResponse = []*GameCharacterResponseData
+type GameCharacterCollectionResponse struct {
+	Data       []*GameCharacterResponseData `json:"data"`
+	Error      *ResponseError               `json:"error,omitempty"`
+	Pagination *ResponsePagination          `json:"pagination,omitempty"`
+}
 
 type GameCharacterRequest struct {
 	Request

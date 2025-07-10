@@ -14,11 +14,16 @@ type AccountResponseData struct {
 }
 
 type AccountResponse struct {
-	Response
-	*AccountResponseData
+	Data       *AccountResponseData `json:"data"`
+	Error      *ResponseError       `json:"error,omitempty"`
+	Pagination *ResponsePagination  `json:"pagination,omitempty"`
 }
 
-type AccountCollectionResponse = []*AccountResponseData
+type AccountCollectionResponse struct {
+	Data       []*AccountResponseData `json:"data"`
+	Error      *ResponseError         `json:"error,omitempty"`
+	Pagination *ResponsePagination    `json:"pagination,omitempty"`
+}
 
 type AccountRequest struct {
 	Request

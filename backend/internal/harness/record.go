@@ -257,19 +257,19 @@ func (t *Testing) applyGameLocationRecDefaultValues(rec *record.GameLocation) *r
 	return rec
 }
 
-// LocationLink
-func (t *Testing) createLocationLinkRec(linkConfig LocationLinkConfig) (*record.LocationLink, error) {
-	l := t.Logger("createLocationLinkRec")
+// GameLocationLink
+func (t *Testing) createGameLocationLinkRec(linkConfig GameLocationLinkConfig) (*record.GameLocationLink, error) {
+	l := t.Logger("createGameLocationLinkRec")
 
-	var rec *record.LocationLink
+	var rec *record.GameLocationLink
 	if linkConfig.Record != nil {
 		recCopy := *linkConfig.Record
 		rec = &recCopy
 	} else {
-		rec = &record.LocationLink{}
+		rec = &record.GameLocationLink{}
 	}
 
-	rec = t.applyLocationLinkRecDefaultValues(rec)
+	rec = t.applyGameLocationLinkRecDefaultValues(rec)
 
 	// Resolve location references to IDs
 	if linkConfig.FromLocationRef != "" {
@@ -296,25 +296,25 @@ func (t *Testing) createLocationLinkRec(linkConfig LocationLinkConfig) (*record.
 
 	l.Info("creating location link record >%#v<", rec)
 
-	rec, err := t.Domain.(*domain.Domain).CreateLocationLinkRec(rec)
+	rec, err := t.Domain.(*domain.Domain).CreateGameLocationLinkRec(rec)
 	if err != nil {
 		l.Warn("failed creating location link record >%v<", err)
 		return nil, err
 	}
 
-	t.Data.AddLocationLinkRec(rec)
-	t.teardownData.AddLocationLinkRec(rec)
+	t.Data.AddGameLocationLinkRec(rec)
+	t.teardownData.AddGameLocationLinkRec(rec)
 
 	if linkConfig.Reference != "" {
-		t.Data.Refs.LocationLinkRefs[linkConfig.Reference] = rec.ID
+		t.Data.Refs.GameLocationLinkRefs[linkConfig.Reference] = rec.ID
 	}
 
 	return rec, nil
 }
 
-func (t *Testing) applyLocationLinkRecDefaultValues(rec *record.LocationLink) *record.LocationLink {
+func (t *Testing) applyGameLocationLinkRecDefaultValues(rec *record.GameLocationLink) *record.GameLocationLink {
 	if rec == nil {
-		rec = &record.LocationLink{}
+		rec = &record.GameLocationLink{}
 	}
 	if rec.Description == "" {
 		rec.Description = gofakeit.Sentence(5)
