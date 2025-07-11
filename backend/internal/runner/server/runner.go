@@ -80,6 +80,12 @@ func NewRunner(l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], cfg co
 	}
 	r.HandlerConfig = mergeHandlerConfigs(r.HandlerConfig, gameLocationConfig)
 
+	gameLocationInstanceConfig, err := r.gameLocationInstanceHandlerConfig(l)
+	if err != nil {
+		return nil, err
+	}
+	r.HandlerConfig = mergeHandlerConfigs(r.HandlerConfig, gameLocationInstanceConfig)
+
 	GameLocationLinkConfig, err := r.GameLocationLinkHandlerConfig(l)
 	if err != nil {
 		return nil, err
@@ -103,6 +109,18 @@ func NewRunner(l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], cfg co
 		return nil, err
 	}
 	r.HandlerConfig = mergeHandlerConfigs(r.HandlerConfig, gameCreatureConfig)
+
+	gameItemInstanceConfig, err := r.gameItemInstanceHandlerConfig(l)
+	if err != nil {
+		return nil, err
+	}
+	r.HandlerConfig = mergeHandlerConfigs(r.HandlerConfig, gameItemInstanceConfig)
+
+	gameLocationLinkRequirementConfig, err := r.gameLocationLinkRequirementHandlerConfig(l)
+	if err != nil {
+		return nil, err
+	}
+	r.HandlerConfig = mergeHandlerConfigs(r.HandlerConfig, gameLocationLinkRequirementConfig)
 
 	return &r, nil
 }

@@ -1,0 +1,25 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "GameLocationLinkRequirementCollectionResponse",
+    "type": "object",
+    "properties": {
+        "data": {
+            "type": "array",
+            "items": {
+                "$ref": "game_location_link_requirement.schema.json"
+            }
+        },
+        "error": {
+            "type": [
+                "object",
+                "null"
+            ]
+        },
+        "pagination": {
+            "$ref": "pagination.schema.json"
+        }
+    },
+    "required": [
+        "data"
+    ]
+}

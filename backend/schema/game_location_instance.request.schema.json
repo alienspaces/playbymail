@@ -1,0 +1,17 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "GameLocationInstanceRequest",
+    "type": "object",
+    "properties": {
+        "game_instance_id": {
+            "$ref": "common.schema.json#/$defs/id"
+        },
+        "game_location_id": {
+            "$ref": "common.schema.json#/$defs/id"
+        }
+    },
+    "required": [
+        "game_instance_id",
+        "game_location_id"
+    ]
+}

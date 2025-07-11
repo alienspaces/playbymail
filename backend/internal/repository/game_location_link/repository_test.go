@@ -112,7 +112,7 @@ func TestGetOne(t *testing.T) {
 				},
 				GameLocationLinkConfigs: []harness.GameLocationLinkConfig{
 					{
-						Reference:       "link-one-two",
+						Reference:       harness.GameLocationLinkOneRef,
 						FromLocationRef: harness.GameLocationOneRef,
 						ToLocationRef:   harness.GameLocationTwoRef,
 						Record: &record.GameLocationLink{
@@ -141,7 +141,7 @@ func TestGetOne(t *testing.T) {
 		{
 			name: "With ID",
 			id: func(d harness.Data, t *testing.T) string {
-				linkRec, err := d.GetGameLocationLinkRecByRef("link-one-two")
+				linkRec, err := d.GetGameLocationLinkRecByRef(harness.GameLocationLinkOneRef)
 				require.NoError(t, err, "GetGameLocationLinkRecByRef returns without error")
 				return linkRec.ID
 			},
@@ -194,7 +194,7 @@ func TestUpdateOne(t *testing.T) {
 				},
 				GameLocationLinkConfigs: []harness.GameLocationLinkConfig{
 					{
-						Reference:       "link-one-two",
+						Reference:       harness.GameLocationLinkOneRef,
 						FromLocationRef: harness.GameLocationOneRef,
 						ToLocationRef:   harness.GameLocationTwoRef,
 						Record: &record.GameLocationLink{
@@ -223,7 +223,7 @@ func TestUpdateOne(t *testing.T) {
 		{
 			name: "With ID",
 			rec: func(d harness.Data, t *testing.T) *record.GameLocationLink {
-				linkRec, err := d.GetGameLocationLinkRecByRef("link-one-two")
+				linkRec, err := d.GetGameLocationLinkRecByRef(harness.GameLocationLinkOneRef)
 				require.NoError(t, err, "GetGameLocationLinkRecByRef returns without error")
 				linkRec.Description = "Updated description"
 				return linkRec
@@ -278,7 +278,7 @@ func TestDeleteOne(t *testing.T) {
 				},
 				GameLocationLinkConfigs: []harness.GameLocationLinkConfig{
 					{
-						Reference:       "link-one-two",
+						Reference:       harness.GameLocationLinkOneRef,
 						FromLocationRef: harness.GameLocationOneRef,
 						ToLocationRef:   harness.GameLocationTwoRef,
 						Record: &record.GameLocationLink{
@@ -307,7 +307,7 @@ func TestDeleteOne(t *testing.T) {
 		{
 			name: "With ID",
 			id: func(d harness.Data, t *testing.T) string {
-				linkRec, err := d.GetGameLocationLinkRecByRef("link-one-two")
+				linkRec, err := d.GetGameLocationLinkRecByRef(harness.GameLocationLinkOneRef)
 				require.NoError(t, err, "GetGameLocationLinkRecByRef returns without error")
 				return linkRec.ID
 			},

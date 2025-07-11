@@ -35,6 +35,14 @@ func TestHarnessSetupTeardown_DefaultDataConfig(t *testing.T) {
 	require.NotEmpty(t, h.Data.GameRecs, "Game records should be created")
 	require.NotEmpty(t, h.Data.GameLocationRecs, "Game location records should be created")
 	require.NotEmpty(t, h.Data.GameLocationLinkRecs, "Location link records should be created")
+	require.NotEmpty(t, h.Data.GameItemInstanceRecs, "Game item instance records should be created")
+	require.NotEmpty(t, h.Data.GameLocationLinkRequirementRecs, "Game location link requirement records should be created")
+	require.NotEmpty(t, h.Data.GameInstanceRecs, "Game instance records should be created")
+	for ref, id := range h.Data.Refs.GameInstanceRefs {
+		rec, err := h.Data.GetGameInstanceRecByID(id)
+		require.NoErrorf(t, err, "Game instance ref %s should resolve to a record", ref)
+		require.NotNil(t, rec, "Game instance record for ref %s should not be nil", ref)
+	}
 
 	// Check that references are set
 	for ref, id := range h.Data.Refs.AccountRefs {
@@ -51,5 +59,15 @@ func TestHarnessSetupTeardown_DefaultDataConfig(t *testing.T) {
 		rec, err := h.Data.GetGameLocationRecByID(id)
 		require.NoErrorf(t, err, "Game location ref %s should resolve to a record", ref)
 		require.NotNil(t, rec, "Game location record for ref %s should not be nil", ref)
+	}
+	for ref, id := range h.Data.Refs.GameItemInstanceRefs {
+		rec, err := h.Data.GetGameItemInstanceRecByID(id)
+		require.NoErrorf(t, err, "Game item instance ref %s should resolve to a record", ref)
+		require.NotNil(t, rec, "Game item instance record for ref %s should not be nil", ref)
+	}
+	for ref, id := range h.Data.Refs.GameLocationLinkRequirementRefs {
+		rec, err := h.Data.GetGameLocationLinkRequirementRecByID(id)
+		require.NoErrorf(t, err, "Game location link requirement ref %s should resolve to a record", ref)
+		require.NotNil(t, rec, "Game location link requirement record for ref %s should not be nil", ref)
 	}
 }

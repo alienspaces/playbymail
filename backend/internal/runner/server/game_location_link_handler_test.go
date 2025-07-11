@@ -25,7 +25,7 @@ func Test_gameGameLocationLinkHandler(t *testing.T) {
 	}()
 
 	// Setup: get a location link and locations for reference
-	linkRec, err := th.Data.GetGameLocationLinkRecByRef("link-one-two")
+	linkRec, err := th.Data.GetGameLocationLinkRecByRef(harness.GameLocationLinkOneRef)
 	require.NoError(t, err, "GetGameLocationLinkRecByRef returns without error")
 	fromLoc, err := th.Data.GetGameLocationRecByID(linkRec.FromGameLocationID)
 	require.NoError(t, err, "GetGameLocationRecByID returns without error")

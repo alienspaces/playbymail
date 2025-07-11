@@ -1,0 +1,66 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "GameItemInstance",
+    "type": "object",
+    "properties": {
+        "id": {
+            "$ref": "common.schema.json#/$defs/id"
+        },
+        "game_id": {
+            "$ref": "common.schema.json#/$defs/id"
+        },
+        "game_item_id": {
+            "$ref": "common.schema.json#/$defs/id"
+        },
+        "location_id": {
+            "type": [
+                "string",
+                "null"
+            ],
+            "format": "uuid"
+        },
+        "character_id": {
+            "type": [
+                "string",
+                "null"
+            ],
+            "format": "uuid"
+        },
+        "creature_id": {
+            "type": [
+                "string",
+                "null"
+            ],
+            "format": "uuid"
+        },
+        "is_equipped": {
+            "type": "boolean"
+        },
+        "is_used": {
+            "type": "boolean"
+        },
+        "uses_remaining": {
+            "type": [
+                "integer",
+                "null"
+            ]
+        },
+        "created_at": {
+            "$ref": "common.schema.json#/$defs/created_at"
+        },
+        "updated_at": {
+            "$ref": "common.schema.json#/$defs/updated_at"
+        },
+        "deleted_at": {
+            "$ref": "common.schema.json#/$defs/updated_at"
+        }
+    },
+    "required": [
+        "id",
+        "game_id",
+        "game_item_id",
+        "is_equipped",
+        "is_used",
+        "created_at"
+    ]
+}
