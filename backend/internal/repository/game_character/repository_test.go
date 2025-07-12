@@ -26,7 +26,7 @@ func TestCreateOne(t *testing.T) {
 			rec: func(d harness.Data, t *testing.T) *record.GameCharacter {
 				gameRec, err := d.GetGameRecByRef(harness.GameOneRef)
 				require.NoError(t, err)
-				accountRec, err := d.GetAccountRecByRef(harness.AccountTwoRef)
+				accountRec, err := d.GetAccountRecByRef(harness.AccountThreeRef)
 				require.NoError(t, err)
 				return &record.GameCharacter{
 					GameID:    gameRec.ID,
@@ -41,7 +41,7 @@ func TestCreateOne(t *testing.T) {
 			rec: func(d harness.Data, t *testing.T) *record.GameCharacter {
 				gameRec, err := d.GetGameRecByRef(harness.GameOneRef)
 				require.NoError(t, err)
-				accountRec, err := d.GetAccountRecByRef(harness.AccountTwoRef)
+				accountRec, err := d.GetAccountRecByRef(harness.AccountThreeRef)
 				require.NoError(t, err)
 				return &record.GameCharacter{
 					GameID:    gameRec.ID,

@@ -20,6 +20,7 @@ type Data struct {
 	GameLocationInstanceRecs        []*record.GameLocationInstance
 	GameItemInstanceRecs            []*record.GameItemInstance
 	GameCreatureInstanceRecs        []*record.GameCreatureInstance
+	GameCharacterInstanceRecs       []*record.GameCharacterInstance
 	// Data references
 	Refs DataRefs
 }
@@ -41,6 +42,7 @@ type DataRefs struct {
 	GameInstanceRefs                map[string]string // Map of refs to game_instance records
 	GameLocationInstanceRefs        map[string]string // Map of refs to game_location_instance records
 	GameCreatureInstanceRefs        map[string]string // Map of refs to game_creature_instance records
+	GameCharacterInstanceRefs       map[string]string // Map of refs to game_character_instance records
 }
 
 // initialiseDataStores - Data is required to maintain data references and
@@ -61,6 +63,7 @@ func initialiseDataStores() Data {
 			GameInstanceRefs:                map[string]string{},
 			GameLocationInstanceRefs:        map[string]string{},
 			GameCreatureInstanceRefs:        map[string]string{},
+			GameCharacterInstanceRefs:       map[string]string{},
 		},
 	}
 }
@@ -471,4 +474,32 @@ func (d *Data) GetGameCreatureInstanceRecByRef(ref string) (*record.GameCreature
 		return nil, fmt.Errorf("failed getting game_creature_instance with ref >%s<", ref)
 	}
 	return d.GetGameCreatureInstanceRecByID(id)
+}
+
+// GameCharacterInstance
+func (d *Data) AddGameCharacterInstanceRec(rec *record.GameCharacterInstance) {
+	for idx := range d.GameCharacterInstanceRecs {
+		if d.GameCharacterInstanceRecs[idx].ID == rec.ID {
+			d.GameCharacterInstanceRecs[idx] = rec
+			return
+		}
+	}
+	d.GameCharacterInstanceRecs = append(d.GameCharacterInstanceRecs, rec)
+}
+
+func (d *Data) GetGameCharacterInstanceRecByID(id string) (*record.GameCharacterInstance, error) {
+	for _, rec := range d.GameCharacterInstanceRecs {
+		if rec.ID == id {
+			return rec, nil
+		}
+	}
+	return nil, fmt.Errorf("failed getting game_character_instance with ID >%s<", id)
+}
+
+func (d *Data) GetGameCharacterInstanceRecByRef(ref string) (*record.GameCharacterInstance, error) {
+	id, ok := d.Refs.GameCharacterInstanceRefs[ref]
+	if !ok {
+		return nil, fmt.Errorf("failed getting game_character_instance with ref >%s<", ref)
+	}
+	return d.GetGameCharacterInstanceRecByID(id)
 }

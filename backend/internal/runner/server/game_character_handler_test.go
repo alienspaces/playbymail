@@ -26,8 +26,8 @@ func Test_gameCharacterHandler(t *testing.T) {
 
 	gameRec, err := th.Data.GetGameRecByRef(harness.GameOneRef)
 	require.NoError(t, err, "GetGameRecByRef returns without error")
-	accountRec2, err := th.Data.GetAccountRecByRef(harness.AccountTwoRef)
-	require.NoError(t, err, "GetAccountRecByRef(AccountTwoRef) returns without error")
+	accountRec, err := th.Data.GetAccountRecByRef(harness.AccountThreeRef)
+	require.NoError(t, err, "GetAccountRecByRef(AccountThreeRef) returns without error")
 	charRec, err := th.Data.GetGameCharacterRecByRef(harness.GameCharacterOneRef)
 	require.NoError(t, err, "GetGameCharacterRecByRef returns without error")
 
@@ -63,7 +63,7 @@ func Test_gameCharacterHandler(t *testing.T) {
 				RequestBody: func(d harness.Data) any {
 					return schema.GameCharacterRequest{
 						GameID:    gameRec.ID,
-						AccountID: accountRec2.ID, // Use AccountTwoRef for uniqueness
+						AccountID: accountRec.ID, // Use AccountTwoRef for uniqueness
 						Name:      "Test Character",
 					}
 				},

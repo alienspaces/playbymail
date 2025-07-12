@@ -26,8 +26,11 @@ CREATE TABLE IF NOT EXISTS public.game_creature_instance (
 -- Create table for game character instances (placement of a character in a game instance)
 CREATE TABLE game_character_instance (
     id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    game_id           UUID NOT NULL REFERENCES game(id), -- The game this character instance belongs to
     game_instance_id  UUID NOT NULL REFERENCES game_instance(id), -- The game instance this character instance belongs to
     game_character_id  UUID NOT NULL REFERENCES game_character(id), -- The base character this instance represents
+    game_location_instance_id UUID REFERENCES game_location_instance(id), -- The location this character instance is at (if applicable)
+    health INTEGER NOT NULL DEFAULT 100, -- The health of the character instance
     created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at        TIMESTAMPTZ,
     deleted_at        TIMESTAMPTZ

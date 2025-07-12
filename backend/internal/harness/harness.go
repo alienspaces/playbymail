@@ -180,6 +180,16 @@ func (t *Testing) CreateData() error {
 				l.Debug("created game_creature_instance record ID >%s<", creatureInstanceRec.ID)
 			}
 
+			// Create character instances for this game instance
+			for _, characterInstanceConfig := range gameInstanceConfig.GameCharacterInstanceConfigs {
+				characterInstanceRec, err := t.createGameCharacterInstanceRec(characterInstanceConfig, gameInstanceRec)
+				if err != nil {
+					l.Warn("failed creating game_character_instance record >%v<", err)
+					return err
+				}
+				l.Debug("created game_character_instance record ID >%s<", characterInstanceRec.ID)
+			}
+
 			// Create item instances for this game instance
 			for _, itemInstanceConfig := range gameInstanceConfig.GameItemInstanceConfigs {
 				itemInstanceRec, err := t.createGameItemInstanceRec(itemInstanceConfig, gameInstanceRec)
@@ -217,6 +227,21 @@ func (t *Testing) RemoveData() error {
 		err := t.Domain.(*domain.Domain).RemoveGameCreatureInstanceRec(creatureInstanceRec.ID)
 		if err != nil {
 			l.Warn("failed removing game creature instance record >%v<", err)
+			return err
+		}
+	}
+
+	// Remove game character instances
+	l.Debug("removing >%d< game character instance records", len(t.teardownData.GameCharacterInstanceRecs))
+	for _, characterInstanceRec := range t.teardownData.GameCharacterInstanceRecs {
+		l.Debug("[teardown] game character instance ID: >%s<", characterInstanceRec.ID)
+		if characterInstanceRec.ID == "" {
+			l.Warn("[teardown] skipping game character instance with empty ID")
+			continue
+		}
+		err := t.Domain.(*domain.Domain).RemoveGameCharacterInstanceRec(characterInstanceRec.ID)
+		if err != nil {
+			l.Warn("failed removing game character instance record >%v<", err)
 			return err
 		}
 	}
