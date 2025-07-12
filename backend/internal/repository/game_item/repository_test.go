@@ -9,41 +9,16 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/harness"
 	"gitlab.com/alienspaces/playbymail/internal/record"
-	"gitlab.com/alienspaces/playbymail/internal/utils/config"
 	"gitlab.com/alienspaces/playbymail/internal/utils/deps"
 )
 
 func TestCreateOne(t *testing.T) {
-	dcfg := harness.DataConfig{
-		GameConfigs: []harness.GameConfig{
-			{
-				Reference: harness.GameOneRef,
-				Record:    &record.Game{},
-				GameItemConfigs: []harness.GameItemConfig{
-					{
-						Reference: harness.GameItemOneRef,
-						Record:    &record.GameItem{},
-					},
-				},
-			},
-		},
-	}
-
-	cfg, err := config.Parse()
-	require.NoError(t, err, "Parse returns without error")
-
-	l, s, j, err := deps.Default(cfg)
-	require.NoError(t, err, "Default dependencies returns without error")
-
-	h, err := harness.NewTesting(l, s, j, dcfg)
-	require.NoError(t, err, "NewTesting returns without error")
-
-	h.ShouldCommitData = false
+	h := deps.NewHarness(t)
 
 	tests := []struct {
-		name string
-		rec  func(d harness.Data, t *testing.T) *record.GameItem
-		err  bool
+		name   string
+		rec    func(d harness.Data, t *testing.T) *record.GameItem
+		hasErr bool
 	}{
 		{
 			name: "Without ID",
@@ -55,7 +30,7 @@ func TestCreateOne(t *testing.T) {
 					GameID: gameRec.ID,
 				}
 			},
-			err: false,
+			hasErr: false,
 		},
 		{
 			name: "With ID",
@@ -70,14 +45,14 @@ func TestCreateOne(t *testing.T) {
 				rec.ID = id.String()
 				return rec
 			},
-			err: false,
+			hasErr: false,
 		},
 	}
 
 	for _, tc := range tests {
 		t.Logf("Run test >%s<", tc.name)
 		t.Run(tc.name, func(t *testing.T) {
-			_, err = h.Setup()
+			_, err := h.Setup()
 			require.NoError(t, err, "Setup returns without error")
 			defer func() {
 				err = h.Teardown()
@@ -90,7 +65,7 @@ func TestCreateOne(t *testing.T) {
 			rec := tc.rec(h.Data, t)
 
 			_, err = r.CreateOne(rec)
-			if tc.err {
+			if tc.hasErr {
 				require.Error(t, err, "CreateOne returns error")
 				return
 			}
@@ -101,34 +76,12 @@ func TestCreateOne(t *testing.T) {
 }
 
 func TestGetOne(t *testing.T) {
-	dcfg := harness.DataConfig{
-		GameConfigs: []harness.GameConfig{
-			{
-				Reference: harness.GameOneRef,
-				Record:    &record.Game{},
-				GameItemConfigs: []harness.GameItemConfig{
-					{
-						Reference: harness.GameItemOneRef,
-						Record:    &record.GameItem{},
-					},
-				},
-			},
-		},
-	}
-
-	cfg, err := config.Parse()
-	require.NoError(t, err, "Parse returns without error")
-
-	l, s, j, err := deps.Default(cfg)
-	require.NoError(t, err, "Default dependencies returns without error")
-
-	h, err := harness.NewTesting(l, s, j, dcfg)
-	require.NoError(t, err, "NewTesting returns without error")
+	h := deps.NewHarness(t)
 
 	tests := []struct {
-		name string
-		id   func(d harness.Data, t *testing.T) string
-		err  bool
+		name   string
+		id     func(d harness.Data, t *testing.T) string
+		hasErr bool
 	}{
 		{
 			name: "With ID",
@@ -137,21 +90,21 @@ func TestGetOne(t *testing.T) {
 				require.NoError(t, err, "GetGameItemRecByRef returns without error")
 				return rec.ID
 			},
-			err: false,
+			hasErr: false,
 		},
 		{
 			name: "Without ID",
 			id: func(d harness.Data, t *testing.T) string {
 				return ""
 			},
-			err: true,
+			hasErr: true,
 		},
 	}
 
 	for _, tc := range tests {
 		t.Logf("Run test >%s<", tc.name)
 		t.Run(tc.name, func(t *testing.T) {
-			_, err = h.Setup()
+			_, err := h.Setup()
 			require.NoError(t, err, "Setup returns without error")
 			defer func() {
 				err = h.Teardown()
@@ -162,7 +115,7 @@ func TestGetOne(t *testing.T) {
 			require.NotNil(t, r, "Repository is not nil")
 
 			rec, err := r.GetOne(tc.id(h.Data, t), nil)
-			if tc.err {
+			if tc.hasErr {
 				require.Error(t, err, "GetOne returns error")
 				require.Nil(t, rec, "GetOne does not return record")
 				return
@@ -175,34 +128,12 @@ func TestGetOne(t *testing.T) {
 }
 
 func TestUpdateOne(t *testing.T) {
-	dcfg := harness.DataConfig{
-		GameConfigs: []harness.GameConfig{
-			{
-				Reference: harness.GameOneRef,
-				Record:    &record.Game{},
-				GameItemConfigs: []harness.GameItemConfig{
-					{
-						Reference: harness.GameItemOneRef,
-						Record:    &record.GameItem{},
-					},
-				},
-			},
-		},
-	}
-
-	cfg, err := config.Parse()
-	require.NoError(t, err, "Parse returns without error")
-
-	l, s, j, err := deps.Default(cfg)
-	require.NoError(t, err, "Default dependencies returns without error")
-
-	h, err := harness.NewTesting(l, s, j, dcfg)
-	require.NoError(t, err, "NewTesting returns without error")
+	h := deps.NewHarness(t)
 
 	tests := []struct {
-		name string
-		rec  func(d harness.Data, t *testing.T) *record.GameItem
-		err  bool
+		name   string
+		rec    func(d harness.Data, t *testing.T) *record.GameItem
+		hasErr bool
 	}{
 		{
 			name: "With ID",
@@ -211,7 +142,7 @@ func TestUpdateOne(t *testing.T) {
 				require.NoError(t, err, "GetGameItemRecByRef returns without error")
 				return rec
 			},
-			err: false,
+			hasErr: false,
 		},
 		{
 			name: "Without ID",
@@ -221,14 +152,14 @@ func TestUpdateOne(t *testing.T) {
 				rec.ID = ""
 				return rec
 			},
-			err: true,
+			hasErr: true,
 		},
 	}
 
 	for _, tc := range tests {
 		t.Logf("Run test >%s<", tc.name)
 		t.Run(tc.name, func(t *testing.T) {
-			_, err = h.Setup()
+			_, err := h.Setup()
 			require.NoError(t, err, "Setup returns without error")
 			defer func() {
 				err = h.Teardown()
@@ -240,8 +171,8 @@ func TestUpdateOne(t *testing.T) {
 
 			rec := tc.rec(h.Data, t)
 
-			_, err := r.UpdateOne(rec)
-			if tc.err {
+			_, err = r.UpdateOne(rec)
+			if tc.hasErr {
 				require.Error(t, err, "UpdateOne returns error")
 				return
 			}
@@ -252,34 +183,12 @@ func TestUpdateOne(t *testing.T) {
 }
 
 func TestDeleteOne(t *testing.T) {
-	dcfg := harness.DataConfig{
-		GameConfigs: []harness.GameConfig{
-			{
-				Reference: harness.GameOneRef,
-				Record:    &record.Game{},
-				GameItemConfigs: []harness.GameItemConfig{
-					{
-						Reference: harness.GameItemOneRef,
-						Record:    &record.GameItem{},
-					},
-				},
-			},
-		},
-	}
-
-	cfg, err := config.Parse()
-	require.NoError(t, err, "Parse returns without error")
-
-	l, s, j, err := deps.Default(cfg)
-	require.NoError(t, err, "Default dependencies returns without error")
-
-	h, err := harness.NewTesting(l, s, j, dcfg)
-	require.NoError(t, err, "NewTesting returns without error")
+	h := deps.NewHarness(t)
 
 	tests := []struct {
-		name string
-		id   func(d harness.Data, t *testing.T) string
-		err  bool
+		name   string
+		id     func(d harness.Data, t *testing.T) string
+		hasErr bool
 	}{
 		{
 			name: "With ID",
@@ -288,21 +197,21 @@ func TestDeleteOne(t *testing.T) {
 				require.NoError(t, err, "GetGameItemRecByRef returns without error")
 				return rec.ID
 			},
-			err: false,
+			hasErr: false,
 		},
 		{
 			name: "Without ID",
 			id: func(d harness.Data, t *testing.T) string {
 				return ""
 			},
-			err: true,
+			hasErr: true,
 		},
 	}
 
 	for _, tc := range tests {
 		t.Logf("Run test >%s<", tc.name)
 		t.Run(tc.name, func(t *testing.T) {
-			_, err = h.Setup()
+			_, err := h.Setup()
 			require.NoError(t, err, "Setup returns without error")
 			defer func() {
 				err = h.Teardown()
@@ -313,7 +222,7 @@ func TestDeleteOne(t *testing.T) {
 			require.NotNil(t, r, "Repository is not nil")
 
 			err = r.DeleteOne(tc.id(h.Data, t))
-			if tc.err {
+			if tc.hasErr {
 				require.Error(t, err, "DeleteOne returns error")
 				return
 			}

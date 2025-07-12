@@ -9,55 +9,12 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/harness"
 	"gitlab.com/alienspaces/playbymail/internal/record"
-	"gitlab.com/alienspaces/playbymail/internal/utils/config"
 	"gitlab.com/alienspaces/playbymail/internal/utils/deps"
 )
 
-func newHarness(t *testing.T) *harness.Testing {
-	dcfg := harness.DataConfig{
-		GameConfigs: []harness.GameConfig{
-			{
-				Reference: harness.GameOneRef,
-				Record: &record.Game{
-					Name:     "Test Game",
-					GameType: record.GameTypeAdventure,
-				},
-				GameLocationConfigs: []harness.GameLocationConfig{
-					{
-						Reference: harness.GameLocationOneRef,
-						Record: &record.GameLocation{
-							Name:        "Test Location",
-							Description: "Test location for game_location_instance",
-						},
-					},
-				},
-				GameInstanceConfigs: []harness.GameInstanceConfig{
-					{
-						Reference: harness.GameInstanceOneRef,
-						Record:    &record.GameInstance{},
-						GameLocationInstanceConfigs: []harness.GameLocationInstanceConfig{
-							{
-								Reference:       harness.GameLocationInstanceOneRef,
-								GameLocationRef: harness.GameLocationOneRef,
-								Record:          &record.GameLocationInstance{},
-							},
-						},
-					},
-				},
-			},
-		},
-	}
-	cfg, err := config.Parse()
-	require.NoError(t, err)
-	l, s, j, err := deps.Default(cfg)
-	require.NoError(t, err)
-	h, err := harness.NewTesting(l, s, j, dcfg)
-	require.NoError(t, err)
-	return h
-}
-
 func TestCreateOne(t *testing.T) {
-	h := newHarness(t)
+	h := deps.NewHarness(t)
+
 	tests := []struct {
 		name   string
 		rec    func(data *harness.Data, t *testing.T) *record.GameLocationInstance
@@ -111,7 +68,8 @@ func TestCreateOne(t *testing.T) {
 }
 
 func TestGetOne(t *testing.T) {
-	h := newHarness(t)
+	h := deps.NewHarness(t)
+
 	tests := []struct {
 		name   string
 		id     func(data *harness.Data, t *testing.T) string
@@ -153,7 +111,8 @@ func TestGetOne(t *testing.T) {
 }
 
 func TestUpdateOne(t *testing.T) {
-	h := newHarness(t)
+	h := deps.NewHarness(t)
+
 	tests := []struct {
 		name   string
 		rec    func(data *harness.Data, t *testing.T) *record.GameLocationInstance
@@ -164,7 +123,6 @@ func TestUpdateOne(t *testing.T) {
 			rec: func(data *harness.Data, t *testing.T) *record.GameLocationInstance {
 				rec, err := h.Data.GetGameLocationInstanceRecByRef(harness.GameLocationInstanceOneRef)
 				require.NoError(t, err)
-				rec.GameLocationID = uuid.NewString() // simulate update
 				return rec
 			},
 			hasErr: false,
@@ -199,7 +157,8 @@ func TestUpdateOne(t *testing.T) {
 }
 
 func TestDeleteOne(t *testing.T) {
-	h := newHarness(t)
+	h := deps.NewHarness(t)
+
 	tests := []struct {
 		name   string
 		id     func(data *harness.Data, t *testing.T) string

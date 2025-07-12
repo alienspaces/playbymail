@@ -142,21 +142,21 @@ func DefaultDataConfig() DataConfig {
 			{
 				Reference: GameOneRef,
 				Record: &record.Game{
-					Name:     "Default Game One",
+					Name:     UniqueName("Default Game One"),
 					GameType: record.GameTypeAdventure,
 				},
 				GameItemConfigs: []GameItemConfig{
 					{
 						Reference: GameItemOneRef,
 						Record: &record.GameItem{
-							Name:        "Default Item One",
+							Name:        UniqueName("Default Item One"),
 							Description: "Default item one for handler tests",
 						},
 					},
 					{
 						Reference: GameItemTwoRef,
 						Record: &record.GameItem{
-							Name:        "Default Item Two",
+							Name:        UniqueName("Default Item Two"),
 							Description: "Default item two for handler tests",
 						},
 					},
@@ -165,14 +165,14 @@ func DefaultDataConfig() DataConfig {
 					{
 						Reference: GameLocationOneRef,
 						Record: &record.GameLocation{
-							Name:        "Default Location One",
+							Name:        UniqueName("Default Location One"),
 							Description: "Default location one for handler tests",
 						},
 					},
 					{
 						Reference: GameLocationTwoRef,
 						Record: &record.GameLocation{
-							Name:        "Default Location Two",
+							Name:        UniqueName("Default Location Two"),
 							Description: "Default location two for handler tests",
 						},
 					},
@@ -183,8 +183,8 @@ func DefaultDataConfig() DataConfig {
 						FromLocationRef: GameLocationOneRef,
 						ToLocationRef:   GameLocationTwoRef,
 						Record: &record.GameLocationLink{
+							Name:        UniqueName("The Red Door"),
 							Description: "Travel by boat to the swamp of the long forgotten Frog God",
-							Name:        "The Red Door",
 						},
 						GameLocationLinkRequirementConfigs: []GameLocationLinkRequirementConfig{
 							{
@@ -201,13 +201,13 @@ func DefaultDataConfig() DataConfig {
 					{
 						Reference: GameCreatureOneRef,
 						Record: &record.GameCreature{
-							Name: "Default Creature One",
+							Name: UniqueName("Default Creature One"),
 						},
 					},
 					{
 						Reference: GameCreatureTwoRef,
 						Record: &record.GameCreature{
-							Name: "Default Creature Two",
+							Name: UniqueName("Default Creature Two"),
 						},
 					},
 				},
@@ -216,7 +216,7 @@ func DefaultDataConfig() DataConfig {
 						Reference:  GameCharacterOneRef,
 						AccountRef: AccountOneRef,
 						Record: &record.GameCharacter{
-							Name: "Default Character One",
+							Name: UniqueName("Default Character One"),
 						},
 					},
 				},
@@ -239,6 +239,7 @@ func DefaultDataConfig() DataConfig {
 						},
 						GameItemInstanceConfigs: []GameItemInstanceConfig{
 							{
+								Reference:       GameItemInstanceOneRef,
 								GameItemRef:     GameItemOneRef,
 								GameLocationRef: GameLocationOneRef, // Assign to location
 								Record:          &record.GameItemInstance{},
@@ -246,6 +247,7 @@ func DefaultDataConfig() DataConfig {
 						},
 						GameCreatureInstanceConfigs: []GameCreatureInstanceConfig{
 							{
+								Reference:       GameCreatureInstanceOneRef,
 								GameCreatureRef: GameCreatureOneRef,
 								GameLocationRef: GameLocationOneRef, // Assign to location
 								Record:          &record.GameCreatureInstance{},

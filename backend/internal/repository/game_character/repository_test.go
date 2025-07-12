@@ -10,38 +10,12 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/harness"
 	"gitlab.com/alienspaces/playbymail/internal/record"
-	"gitlab.com/alienspaces/playbymail/internal/utils/config"
 	"gitlab.com/alienspaces/playbymail/internal/utils/deps"
 )
 
-func newHarness(t *testing.T) *harness.Testing {
-	dcfg := harness.DataConfig{
-		AccountConfigs: []harness.AccountConfig{{
-			Reference: harness.AccountOneRef,
-			Record:    &record.Account{Name: "Test Account", Email: gofakeit.Email()},
-		}},
-		GameConfigs: []harness.GameConfig{{
-			Reference: harness.GameOneRef,
-			Record:    &record.Game{Name: "Test Game"},
-			GameCharacterConfigs: []harness.GameCharacterConfig{{
-				Reference:  harness.GameCharacterOneRef,
-				AccountRef: harness.AccountOneRef,
-				Record:     &record.GameCharacter{Name: "Test Character"},
-			}},
-		}},
-	}
-	cfg, err := config.Parse()
-	require.NoError(t, err)
-	l, s, j, err := deps.Default(cfg)
-	require.NoError(t, err)
-	h, err := harness.NewTesting(l, s, j, dcfg)
-	require.NoError(t, err)
-	return h
-}
-
 func TestCreateOne(t *testing.T) {
-	h := newHarness(t)
-	h.ShouldCommitData = false
+	h := deps.NewHarness(t)
+
 	tests := []struct {
 		name   string
 		rec    func(d harness.Data, t *testing.T) *record.GameCharacter
@@ -52,12 +26,12 @@ func TestCreateOne(t *testing.T) {
 			rec: func(d harness.Data, t *testing.T) *record.GameCharacter {
 				gameRec, err := d.GetGameRecByRef(harness.GameOneRef)
 				require.NoError(t, err)
-				accountRec, err := d.GetAccountRecByRef(harness.AccountOneRef)
+				accountRec, err := d.GetAccountRecByRef(harness.AccountTwoRef)
 				require.NoError(t, err)
 				return &record.GameCharacter{
 					GameID:    gameRec.ID,
 					AccountID: accountRec.ID,
-					Name:      "New Character",
+					Name:      harness.UniqueName(gofakeit.Name()),
 				}
 			},
 			hasErr: false,
@@ -67,12 +41,11 @@ func TestCreateOne(t *testing.T) {
 			rec: func(d harness.Data, t *testing.T) *record.GameCharacter {
 				gameRec, err := d.GetGameRecByRef(harness.GameOneRef)
 				require.NoError(t, err)
-				accountRec, err := d.GetAccountRecByRef(harness.AccountOneRef)
+				accountRec, err := d.GetAccountRecByRef(harness.AccountTwoRef)
 				require.NoError(t, err)
 				return &record.GameCharacter{
 					GameID:    gameRec.ID,
 					AccountID: accountRec.ID,
-					Name:      "",
 				}
 			},
 			hasErr: true,
@@ -97,7 +70,8 @@ func TestCreateOne(t *testing.T) {
 }
 
 func TestGetOne(t *testing.T) {
-	h := newHarness(t)
+	h := deps.NewHarness(t)
+
 	tests := []struct {
 		name   string
 		id     func(d harness.Data, t *testing.T) string
@@ -139,7 +113,8 @@ func TestGetOne(t *testing.T) {
 }
 
 func TestUpdateOne(t *testing.T) {
-	h := newHarness(t)
+	h := deps.NewHarness(t)
+
 	tests := []struct {
 		name   string
 		rec    func(d harness.Data, t *testing.T) *record.GameCharacter
@@ -150,7 +125,7 @@ func TestUpdateOne(t *testing.T) {
 			rec: func(d harness.Data, t *testing.T) *record.GameCharacter {
 				rec, err := d.GetGameCharacterRecByRef(harness.GameCharacterOneRef)
 				require.NoError(t, err)
-				rec.Name = "Updated Name"
+				rec.Name = harness.UniqueName(gofakeit.Name())
 				return rec
 			},
 			hasErr: false,
@@ -185,7 +160,8 @@ func TestUpdateOne(t *testing.T) {
 }
 
 func TestDeleteOne(t *testing.T) {
-	h := newHarness(t)
+	h := deps.NewHarness(t)
+
 	tests := []struct {
 		name   string
 		id     func(d harness.Data, t *testing.T) string

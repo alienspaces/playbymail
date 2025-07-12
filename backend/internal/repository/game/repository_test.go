@@ -14,30 +14,11 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/harness"
 	"gitlab.com/alienspaces/playbymail/internal/record"
-	"gitlab.com/alienspaces/playbymail/internal/utils/config"
 	"gitlab.com/alienspaces/playbymail/internal/utils/deps"
 )
 
 func TestCreateOne(t *testing.T) {
-
-	// harness
-	dcfg := harness.DataConfig{
-		GameConfigs: []harness.GameConfig{
-			{
-				Reference: harness.GameOneRef,
-				Record:    &record.Game{},
-			},
-		},
-	}
-
-	cfg, err := config.Parse()
-	require.NoError(t, err, "Parse returns without error")
-
-	l, s, j, err := deps.Default(cfg)
-	require.NoError(t, err, "Default dependencies returns without error")
-
-	h, err := harness.NewTesting(l, s, j, dcfg)
-	require.NoError(t, err, "NewTesting returns without error")
+	h := deps.NewHarness(t)
 
 	tests := []struct {
 		name string
@@ -76,7 +57,7 @@ func TestCreateOne(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 
 			// Test harness
-			_, err = h.Setup()
+			_, err := h.Setup()
 			require.NoError(t, err, "Setup returns without error")
 			defer func() {
 				err = h.Teardown()
@@ -101,25 +82,7 @@ func TestCreateOne(t *testing.T) {
 }
 
 func TestGetOne(t *testing.T) {
-
-	// harness
-	dcfg := harness.DataConfig{
-		GameConfigs: []harness.GameConfig{
-			{
-				Reference: harness.GameOneRef,
-				Record:    &record.Game{},
-			},
-		},
-	}
-
-	cfg, err := config.Parse()
-	require.NoError(t, err, "Parse returns without error")
-
-	l, s, j, err := deps.Default(cfg)
-	require.NoError(t, err, "Default dependencies returns without error")
-
-	h, err := harness.NewTesting(l, s, j, dcfg)
-	require.NoError(t, err, "NewTesting returns without error")
+	h := deps.NewHarness(t)
 
 	tests := []struct {
 		name string
@@ -151,7 +114,7 @@ func TestGetOne(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 
 			// harness setup
-			_, err = h.Setup()
+			_, err := h.Setup()
 			require.NoError(t, err, "Setup returns without error")
 			defer func() {
 				err = h.Teardown()
@@ -175,27 +138,7 @@ func TestGetOne(t *testing.T) {
 }
 
 func TestUpdateOne(t *testing.T) {
-
-	// harness
-	dcfg := harness.DataConfig{
-		GameConfigs: []harness.GameConfig{
-			{
-				Reference: harness.GameOneRef,
-				Record:    &record.Game{},
-			},
-		},
-	}
-
-	cfg, err := config.Parse()
-	require.NoError(t, err, "Parse returns without error")
-
-	l, s, j, err := deps.Default(cfg)
-	require.NoError(t, err, "Default dependencies returns without error")
-
-	h, err := harness.NewTesting(l, s, j, dcfg)
-	require.NoError(t, err, "NewTesting returns without error")
-
-	require.NoError(t, err, "NewTesting returns without error")
+	h := deps.NewHarness(t)
 
 	tests := []struct {
 		name string
@@ -231,7 +174,7 @@ func TestUpdateOne(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 
 			// harness setup
-			_, err = h.Setup()
+			_, err := h.Setup()
 			require.NoError(t, err, "Setup returns without error")
 			defer func() {
 				err = h.Teardown()
@@ -256,25 +199,7 @@ func TestUpdateOne(t *testing.T) {
 }
 
 func TestDeleteOne(t *testing.T) {
-
-	// harness
-	dcfg := harness.DataConfig{
-		GameConfigs: []harness.GameConfig{
-			{
-				Reference: harness.GameOneRef,
-				Record:    &record.Game{},
-			},
-		},
-	}
-
-	cfg, err := config.Parse()
-	require.NoError(t, err, "Parse returns without error")
-
-	l, s, j, err := deps.Default(cfg)
-	require.NoError(t, err, "Default dependencies returns without error")
-
-	h, err := harness.NewTesting(l, s, j, dcfg)
-	require.NoError(t, err, "NewTesting returns without error")
+	h := deps.NewHarness(t)
 
 	tests := []struct {
 		name string
@@ -306,7 +231,7 @@ func TestDeleteOne(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 
 			// harness setup
-			_, err = h.Setup()
+			_, err := h.Setup()
 			require.NoError(t, err, "Setup returns without error")
 			defer func() {
 				err = h.Teardown()

@@ -414,6 +414,14 @@ func (d *Data) GetGameItemInstanceRecByID(id string) (*record.GameItemInstance, 
 	return nil, fmt.Errorf("failed getting game_item_instance with ID >%s<", id)
 }
 
+func (d *Data) GetGameItemInstanceRecByRef(ref string) (*record.GameItemInstance, error) {
+	id, ok := d.Refs.GameItemInstanceRefs[ref]
+	if !ok {
+		return nil, fmt.Errorf("failed getting game_item_instance with ref >%s<", ref)
+	}
+	return d.GetGameItemInstanceRecByID(id)
+}
+
 func (d *Data) GetGameItemInstanceRecByItemRef(ref string) (*record.GameItemInstance, error) {
 	id, ok := d.Refs.GameItemRefs[ref]
 	if !ok {

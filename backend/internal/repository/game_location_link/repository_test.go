@@ -10,46 +10,25 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/harness"
 	"gitlab.com/alienspaces/playbymail/internal/record"
-	"gitlab.com/alienspaces/playbymail/internal/utils/config"
 	"gitlab.com/alienspaces/playbymail/internal/utils/deps"
 )
 
 func TestCreateOne(t *testing.T) {
-	dcfg := harness.DataConfig{
-		GameConfigs: []harness.GameConfig{
-			{
-				Reference: harness.GameOneRef,
-				Record:    &record.Game{},
-				GameLocationConfigs: []harness.GameLocationConfig{
-					{Reference: harness.GameLocationOneRef, Record: &record.GameLocation{}},
-					{Reference: harness.GameLocationTwoRef, Record: &record.GameLocation{}},
-				},
-			},
-		},
-	}
-
-	cfg, err := config.Parse()
-	require.NoError(t, err, "Parse returns without error")
-
-	l, s, j, err := deps.Default(cfg)
-	require.NoError(t, err, "Default dependencies returns without error")
-
-	h, err := harness.NewTesting(l, s, j, dcfg)
-	require.NoError(t, err, "NewTesting returns without error")
+	h := deps.NewHarness(t)
 
 	tests := []struct {
-		name string
-		rec  func(d harness.Data, t *testing.T) *record.GameLocationLink
-		err  bool
+		name   string
+		rec    func(d harness.Data, t *testing.T) *record.GameLocationLink
+		hasErr bool
 	}{
 		{
 			name: "Without ID",
 			rec: func(d harness.Data, t *testing.T) *record.GameLocationLink {
 				gameRec, err := d.GetGameRecByRef(harness.GameOneRef)
 				require.NoError(t, err, "GetGameRecByRef returns without error")
-				fromLoc, err := d.GetGameLocationRecByRef(harness.GameLocationOneRef)
+				fromLoc, err := d.GetGameLocationRecByRef(harness.GameLocationTwoRef)
 				require.NoError(t, err, "GetGameLocationRecByRef returns without error")
-				toLoc, err := d.GetGameLocationRecByRef(harness.GameLocationTwoRef)
+				toLoc, err := d.GetGameLocationRecByRef(harness.GameLocationOneRef)
 				require.NoError(t, err, "GetGameLocationRecByRef returns without error")
 				return &record.GameLocationLink{
 					GameID:             gameRec.ID,
@@ -58,16 +37,16 @@ func TestCreateOne(t *testing.T) {
 					Description:        gofakeit.Sentence(5),
 				}
 			},
-			err: false,
+			hasErr: false,
 		},
 		{
 			name: "With ID",
 			rec: func(d harness.Data, t *testing.T) *record.GameLocationLink {
 				gameRec, err := d.GetGameRecByRef(harness.GameOneRef)
 				require.NoError(t, err, "GetGameRecByRef returns without error")
-				fromLoc, err := d.GetGameLocationRecByRef(harness.GameLocationOneRef)
+				fromLoc, err := d.GetGameLocationRecByRef(harness.GameLocationTwoRef)
 				require.NoError(t, err, "GetGameLocationRecByRef returns without error")
-				toLoc, err := d.GetGameLocationRecByRef(harness.GameLocationTwoRef)
+				toLoc, err := d.GetGameLocationRecByRef(harness.GameLocationOneRef)
 				require.NoError(t, err, "GetGameLocationRecByRef returns without error")
 				rec := &record.GameLocationLink{
 					GameID:             gameRec.ID,
@@ -79,7 +58,7 @@ func TestCreateOne(t *testing.T) {
 				rec.ID = id.String()
 				return rec
 			},
-			err: false,
+			hasErr: false,
 		},
 	}
 
@@ -87,7 +66,7 @@ func TestCreateOne(t *testing.T) {
 		t.Logf("Run test >%s<", tc.name)
 
 		t.Run(tc.name, func(t *testing.T) {
-			_, err = h.Setup()
+			_, err := h.Setup()
 			require.NoError(t, err, "Setup returns without error")
 			defer func() {
 				err = h.Teardown()
@@ -100,7 +79,7 @@ func TestCreateOne(t *testing.T) {
 			rec := tc.rec(h.Data, t)
 
 			_, err = r.CreateOne(rec)
-			if tc.err == true {
+			if tc.hasErr == true {
 				require.Error(t, err, "CreateOne returns error")
 				return
 			}
@@ -111,42 +90,12 @@ func TestCreateOne(t *testing.T) {
 }
 
 func TestGetOne(t *testing.T) {
-	dcfg := harness.DataConfig{
-		GameConfigs: []harness.GameConfig{
-			{
-				Reference: harness.GameOneRef,
-				Record:    &record.Game{},
-				GameLocationConfigs: []harness.GameLocationConfig{
-					{Reference: harness.GameLocationOneRef, Record: &record.GameLocation{}},
-					{Reference: harness.GameLocationTwoRef, Record: &record.GameLocation{}},
-				},
-				GameLocationLinkConfigs: []harness.GameLocationLinkConfig{
-					{
-						Reference:       harness.GameLocationLinkOneRef,
-						FromLocationRef: harness.GameLocationOneRef,
-						ToLocationRef:   harness.GameLocationTwoRef,
-						Record: &record.GameLocationLink{
-							Description: "Test link",
-						},
-					},
-				},
-			},
-		},
-	}
-
-	cfg, err := config.Parse()
-	require.NoError(t, err, "Parse returns without error")
-
-	l, s, j, err := deps.Default(cfg)
-	require.NoError(t, err, "Default dependencies returns without error")
-
-	h, err := harness.NewTesting(l, s, j, dcfg)
-	require.NoError(t, err, "NewTesting returns without error")
+	h := deps.NewHarness(t)
 
 	tests := []struct {
-		name string
-		id   func(d harness.Data, t *testing.T) string
-		err  bool
+		name   string
+		id     func(d harness.Data, t *testing.T) string
+		hasErr bool
 	}{
 		{
 			name: "With ID",
@@ -155,14 +104,14 @@ func TestGetOne(t *testing.T) {
 				require.NoError(t, err, "GetGameLocationLinkRecByRef returns without error")
 				return linkRec.ID
 			},
-			err: false,
+			hasErr: false,
 		},
 		{
 			name: "Without ID",
 			id: func(d harness.Data, t *testing.T) string {
 				return ""
 			},
-			err: true,
+			hasErr: true,
 		},
 	}
 
@@ -170,7 +119,7 @@ func TestGetOne(t *testing.T) {
 		t.Logf("Run test >%s<", tc.name)
 
 		t.Run(tc.name, func(t *testing.T) {
-			_, err = h.Setup()
+			_, err := h.Setup()
 			require.NoError(t, err, "Setup returns without error")
 			defer func() {
 				err = h.Teardown()
@@ -181,7 +130,7 @@ func TestGetOne(t *testing.T) {
 			require.NotNil(t, r, "Repository is not nil")
 
 			rec, err := r.GetOne(tc.id(h.Data, t), nil)
-			if tc.err == true {
+			if tc.hasErr == true {
 				require.Error(t, err, "GetOne returns error")
 				return
 			}
@@ -193,42 +142,12 @@ func TestGetOne(t *testing.T) {
 }
 
 func TestUpdateOne(t *testing.T) {
-	dcfg := harness.DataConfig{
-		GameConfigs: []harness.GameConfig{
-			{
-				Reference: harness.GameOneRef,
-				Record:    &record.Game{},
-				GameLocationConfigs: []harness.GameLocationConfig{
-					{Reference: harness.GameLocationOneRef, Record: &record.GameLocation{}},
-					{Reference: harness.GameLocationTwoRef, Record: &record.GameLocation{}},
-				},
-				GameLocationLinkConfigs: []harness.GameLocationLinkConfig{
-					{
-						Reference:       harness.GameLocationLinkOneRef,
-						FromLocationRef: harness.GameLocationOneRef,
-						ToLocationRef:   harness.GameLocationTwoRef,
-						Record: &record.GameLocationLink{
-							Description: "Test link",
-						},
-					},
-				},
-			},
-		},
-	}
-
-	cfg, err := config.Parse()
-	require.NoError(t, err, "Parse returns without error")
-
-	l, s, j, err := deps.Default(cfg)
-	require.NoError(t, err, "Default dependencies returns without error")
-
-	h, err := harness.NewTesting(l, s, j, dcfg)
-	require.NoError(t, err, "NewTesting returns without error")
+	h := deps.NewHarness(t)
 
 	tests := []struct {
-		name string
-		rec  func(d harness.Data, t *testing.T) *record.GameLocationLink
-		err  bool
+		name   string
+		rec    func(d harness.Data, t *testing.T) *record.GameLocationLink
+		hasErr bool
 	}{
 		{
 			name: "With ID",
@@ -238,14 +157,14 @@ func TestUpdateOne(t *testing.T) {
 				linkRec.Description = "Updated description"
 				return linkRec
 			},
-			err: false,
+			hasErr: false,
 		},
 		{
 			name: "Without ID",
 			rec: func(d harness.Data, t *testing.T) *record.GameLocationLink {
 				return &record.GameLocationLink{}
 			},
-			err: true,
+			hasErr: true,
 		},
 	}
 
@@ -253,7 +172,7 @@ func TestUpdateOne(t *testing.T) {
 		t.Logf("Run test >%s<", tc.name)
 
 		t.Run(tc.name, func(t *testing.T) {
-			_, err = h.Setup()
+			_, err := h.Setup()
 			require.NoError(t, err, "Setup returns without error")
 			defer func() {
 				err = h.Teardown()
@@ -266,7 +185,7 @@ func TestUpdateOne(t *testing.T) {
 			rec := tc.rec(h.Data, t)
 
 			_, err = r.UpdateOne(rec)
-			if tc.err == true {
+			if tc.hasErr == true {
 				require.Error(t, err, "UpdateOne returns error")
 				return
 			}
@@ -277,42 +196,12 @@ func TestUpdateOne(t *testing.T) {
 }
 
 func TestDeleteOne(t *testing.T) {
-	dcfg := harness.DataConfig{
-		GameConfigs: []harness.GameConfig{
-			{
-				Reference: harness.GameOneRef,
-				Record:    &record.Game{},
-				GameLocationConfigs: []harness.GameLocationConfig{
-					{Reference: harness.GameLocationOneRef, Record: &record.GameLocation{}},
-					{Reference: harness.GameLocationTwoRef, Record: &record.GameLocation{}},
-				},
-				GameLocationLinkConfigs: []harness.GameLocationLinkConfig{
-					{
-						Reference:       harness.GameLocationLinkOneRef,
-						FromLocationRef: harness.GameLocationOneRef,
-						ToLocationRef:   harness.GameLocationTwoRef,
-						Record: &record.GameLocationLink{
-							Description: "Test link",
-						},
-					},
-				},
-			},
-		},
-	}
-
-	cfg, err := config.Parse()
-	require.NoError(t, err, "Parse returns without error")
-
-	l, s, j, err := deps.Default(cfg)
-	require.NoError(t, err, "Default dependencies returns without error")
-
-	h, err := harness.NewTesting(l, s, j, dcfg)
-	require.NoError(t, err, "NewTesting returns without error")
+	h := deps.NewHarness(t)
 
 	tests := []struct {
-		name string
-		id   func(d harness.Data, t *testing.T) string
-		err  bool
+		name   string
+		id     func(d harness.Data, t *testing.T) string
+		hasErr bool
 	}{
 		{
 			name: "With ID",
@@ -321,14 +210,14 @@ func TestDeleteOne(t *testing.T) {
 				require.NoError(t, err, "GetGameLocationLinkRecByRef returns without error")
 				return linkRec.ID
 			},
-			err: false,
+			hasErr: false,
 		},
 		{
 			name: "Without ID",
 			id: func(d harness.Data, t *testing.T) string {
 				return ""
 			},
-			err: true,
+			hasErr: true,
 		},
 	}
 
@@ -336,7 +225,7 @@ func TestDeleteOne(t *testing.T) {
 		t.Logf("Run test >%s<", tc.name)
 
 		t.Run(tc.name, func(t *testing.T) {
-			_, err = h.Setup()
+			_, err := h.Setup()
 			require.NoError(t, err, "Setup returns without error")
 			defer func() {
 				err = h.Teardown()
@@ -347,7 +236,7 @@ func TestDeleteOne(t *testing.T) {
 			require.NotNil(t, r, "Repository is not nil")
 
 			err = r.DeleteOne(tc.id(h.Data, t))
-			if tc.err == true {
+			if tc.hasErr == true {
 				require.Error(t, err, "DeleteOne returns error")
 				return
 			}

@@ -2,16 +2,35 @@ package deps
 
 import (
 	"fmt"
+	"testing"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/riverqueue/river"
+	"github.com/stretchr/testify/require"
 
 	"gitlab.com/alienspaces/playbymail/core/log"
 	"gitlab.com/alienspaces/playbymail/core/store"
+	"gitlab.com/alienspaces/playbymail/internal/harness"
 	"gitlab.com/alienspaces/playbymail/internal/jobclient"
 	"gitlab.com/alienspaces/playbymail/internal/jobqueue"
 	"gitlab.com/alienspaces/playbymail/internal/utils/config"
 )
+
+func NewHarness(t *testing.T) *harness.Testing {
+	dcfg := harness.DefaultDataConfig()
+	cfg, err := config.Parse()
+	require.NoError(t, err)
+	l, s, j, err := Default(cfg)
+	require.NoError(t, err)
+	h, err := harness.NewTesting(l, s, j, dcfg)
+	require.NoError(t, err)
+
+	// We setup and teardown within the context of the test
+	// so we don't need to commit the data to the database.
+	h.ShouldCommitData = false
+
+	return h
+}
 
 func Default(cfg config.Config) (*log.Log, *store.Store, *river.Client[pgx.Tx], error) {
 

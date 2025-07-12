@@ -11,4 +11,6 @@ CREATE TABLE public.game_character (
 CREATE INDEX idx_game_character_game_id ON public.game_character(game_id);
 CREATE INDEX idx_game_character_account_id ON public.game_character(account_id);
 
-ALTER TABLE public.game_character ADD CONSTRAINT game_character_unique UNIQUE (game_id, account_id); 
+ALTER TABLE public.game_character ADD CONSTRAINT game_character_unique UNIQUE (game_id, account_id);
+ALTER TABLE public.game_character ADD CONSTRAINT game_character_name_unique UNIQUE (game_id, name);
+ALTER TABLE public.game_character ADD CONSTRAINT game_character_name_not_empty CHECK (name IS NOT NULL AND name != '');

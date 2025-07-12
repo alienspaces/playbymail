@@ -9,71 +9,12 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/harness"
 	"gitlab.com/alienspaces/playbymail/internal/record"
-	"gitlab.com/alienspaces/playbymail/internal/utils/config"
 	"gitlab.com/alienspaces/playbymail/internal/utils/deps"
 )
 
-func newHarness(t *testing.T) *harness.Testing {
-	dcfg := harness.DataConfig{
-		GameConfigs: []harness.GameConfig{
-			{
-				Reference: harness.GameOneRef,
-				Record: &record.Game{
-					Name:     "Test Game",
-					GameType: record.GameTypeAdventure,
-				},
-				GameItemConfigs: []harness.GameItemConfig{
-					{
-						Reference: harness.GameItemOneRef,
-						Record: &record.GameItem{
-							Name:        "Test Item",
-							Description: "Test item for link requirement",
-						},
-					},
-				},
-				GameLocationConfigs: []harness.GameLocationConfig{
-					{
-						Reference: harness.GameLocationOneRef,
-						Record: &record.GameLocation{
-							Name:        "Test Location",
-							Description: "Test location for link requirement",
-						},
-					},
-				},
-				GameLocationLinkConfigs: []harness.GameLocationLinkConfig{
-					{
-						Reference:       harness.GameLocationLinkOneRef,
-						FromLocationRef: harness.GameLocationOneRef,
-						ToLocationRef:   harness.GameLocationOneRef,
-						Record: &record.GameLocationLink{
-							Description: "Test link",
-							Name:        "Test Link",
-						},
-						GameLocationLinkRequirementConfigs: []harness.GameLocationLinkRequirementConfig{
-							{
-								Reference:   harness.GameLocationLinkRequirementOneRef,
-								GameItemRef: harness.GameItemOneRef,
-								Record: &record.GameLocationLinkRequirement{
-									Quantity: 1,
-								},
-							},
-						},
-					},
-				},
-			},
-		},
-	}
-	cfg, err := config.Parse()
-	require.NoError(t, err)
-	l, s, j, err := deps.Default(cfg)
-	require.NoError(t, err)
-	h, err := harness.NewTesting(l, s, j, dcfg)
-	require.NoError(t, err)
-	return h
-}
-
 func TestCreateOne(t *testing.T) {
-	h := newHarness(t)
+	h := deps.NewHarness(t)
+
 	tests := []struct {
 		name   string
 		rec    func(data *harness.Data, t *testing.T) *record.GameLocationLinkRequirement
@@ -129,7 +70,8 @@ func TestCreateOne(t *testing.T) {
 }
 
 func TestGetOne(t *testing.T) {
-	h := newHarness(t)
+	h := deps.NewHarness(t)
+
 	tests := []struct {
 		name   string
 		id     func(data *harness.Data, t *testing.T) string
@@ -171,7 +113,8 @@ func TestGetOne(t *testing.T) {
 }
 
 func TestUpdateOne(t *testing.T) {
-	h := newHarness(t)
+	h := deps.NewHarness(t)
+
 	tests := []struct {
 		name   string
 		rec    func(data *harness.Data, t *testing.T) *record.GameLocationLinkRequirement
@@ -217,7 +160,8 @@ func TestUpdateOne(t *testing.T) {
 }
 
 func TestDeleteOne(t *testing.T) {
-	h := newHarness(t)
+	h := deps.NewHarness(t)
+
 	tests := []struct {
 		name   string
 		id     func(data *harness.Data, t *testing.T) string
