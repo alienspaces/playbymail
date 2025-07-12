@@ -29,7 +29,11 @@ const (
 	GameItemThreeRef = "game-item-three"
 	GameItemFourRef  = "game-item-four"
 
-	CharacterOneRef = "character-one"
+	GameCreatureOneRef = "game-creature-one"
+	GameCreatureTwoRef = "game-creature-two"
+
+	GameCharacterOneRef = "game-character-one"
+	GameCharacterTwoRef = "game-character-two"
 
 	GameInstanceOneRef = "game-instance-one"
 
@@ -37,6 +41,8 @@ const (
 
 	GameLocationInstanceOneRef = "game-location-instance-one"
 	GameLocationInstanceTwoRef = "game-location-instance-two"
+
+	GameCreatureInstanceOneRef = "game-creature-instance-one"
 )
 
 // DataConfig -
@@ -50,8 +56,9 @@ type GameConfig struct {
 	Record                  *record.Game
 	GameLocationConfigs     []GameLocationConfig     // Locations associated with this game
 	GameLocationLinkConfigs []GameLocationLinkConfig // Links associated with this game
-	GameCharacterConfigs    []GameCharacterConfig
 	GameItemConfigs         []GameItemConfig
+	GameCreatureConfigs     []GameCreatureConfig
+	GameCharacterConfigs    []GameCharacterConfig
 	GameInstanceConfigs     []GameInstanceConfig
 }
 
@@ -64,6 +71,11 @@ type GameCharacterConfig struct {
 type GameItemConfig struct {
 	Reference string // Reference to the game_item record
 	Record    *record.GameItem
+}
+
+type GameCreatureConfig struct {
+	Reference string // Reference to the game_creature record
+	Record    *record.GameCreature
 }
 
 type AccountConfig struct {
@@ -95,12 +107,20 @@ type GameInstanceConfig struct {
 	Record                      *record.GameInstance
 	GameLocationInstanceConfigs []GameLocationInstanceConfig
 	GameItemInstanceConfigs     []GameItemInstanceConfig
+	GameCreatureInstanceConfigs []GameCreatureInstanceConfig
 }
 
 type GameLocationInstanceConfig struct {
 	Reference       string // Reference to the game_location_instance record
 	GameLocationRef string // Reference to the game_location (required)
 	Record          *record.GameLocationInstance
+}
+
+type GameCreatureInstanceConfig struct {
+	Reference       string // Reference to the game_creature_instance record
+	GameCreatureRef string // Reference to the game_creature (required)
+	GameLocationRef string // Reference to the game_location (required)
+	Record          *record.GameCreatureInstance
 }
 
 type GameItemInstanceConfig struct {
@@ -177,9 +197,23 @@ func DefaultDataConfig() DataConfig {
 						},
 					},
 				},
+				GameCreatureConfigs: []GameCreatureConfig{
+					{
+						Reference: GameCreatureOneRef,
+						Record: &record.GameCreature{
+							Name: "Default Creature One",
+						},
+					},
+					{
+						Reference: GameCreatureTwoRef,
+						Record: &record.GameCreature{
+							Name: "Default Creature Two",
+						},
+					},
+				},
 				GameCharacterConfigs: []GameCharacterConfig{
 					{
-						Reference:  CharacterOneRef,
+						Reference:  GameCharacterOneRef,
 						AccountRef: AccountOneRef,
 						Record: &record.GameCharacter{
 							Name: "Default Character One",
@@ -208,6 +242,13 @@ func DefaultDataConfig() DataConfig {
 								GameItemRef:     GameItemOneRef,
 								GameLocationRef: GameLocationOneRef, // Assign to location
 								Record:          &record.GameItemInstance{},
+							},
+						},
+						GameCreatureInstanceConfigs: []GameCreatureInstanceConfig{
+							{
+								GameCreatureRef: GameCreatureOneRef,
+								GameLocationRef: GameLocationOneRef, // Assign to location
+								Record:          &record.GameCreatureInstance{},
 							},
 						},
 					},

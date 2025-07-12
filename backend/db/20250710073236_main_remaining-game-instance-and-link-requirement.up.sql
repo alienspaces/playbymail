@@ -1,20 +1,27 @@
--- Create table for game creature instances (placement of a creature in a game instance)
-CREATE TABLE game_creature_instance (
-    id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    game_instance_id  UUID NOT NULL REFERENCES game_instance(id), -- The game instance this creature instance belongs to
-    game_creature_id  UUID NOT NULL REFERENCES game_creature(id), -- The base creature this instance represents
-    created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at        TIMESTAMPTZ,
-    deleted_at        TIMESTAMPTZ
+-- Add game_creature table
+CREATE TABLE IF NOT EXISTS public.game_creature (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    game_id UUID NOT NULL REFERENCES public.game(id),
+    name TEXT NOT NULL,
+    description TEXT,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+    updated_at TIMESTAMP WITH TIME ZONE,
+    deleted_at TIMESTAMP WITH TIME ZONE
 );
 
-COMMENT ON TABLE game_creature_instance IS 'Tracks a specific instance of a creature within a game instance.';
-COMMENT ON COLUMN game_creature_instance.id IS 'Unique identifier for the creature instance.';
-COMMENT ON COLUMN game_creature_instance.game_instance_id IS 'The game instance this creature instance belongs to.';
-COMMENT ON COLUMN game_creature_instance.game_creature_id IS 'The base creature this instance represents.';
-COMMENT ON COLUMN game_creature_instance.created_at IS 'When this creature instance was created.';
-COMMENT ON COLUMN game_creature_instance.updated_at IS 'When this creature instance was last updated.';
-COMMENT ON COLUMN game_creature_instance.deleted_at IS 'When this creature instance was deleted (soft delete).';
+-- Add game_creature_instance table
+
+CREATE TABLE IF NOT EXISTS public.game_creature_instance (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    game_id UUID NOT NULL REFERENCES public.game(id),
+    game_creature_id UUID NOT NULL REFERENCES public.game_creature(id),
+    game_instance_id UUID NOT NULL REFERENCES public.game_instance(id),
+    game_location_instance_id UUID NOT NULL REFERENCES public.game_location_instance(id),
+    is_alive BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+    updated_at TIMESTAMP WITH TIME ZONE,
+    deleted_at TIMESTAMP WITH TIME ZONE
+); 
 
 -- Create table for game character instances (placement of a character in a game instance)
 CREATE TABLE game_character_instance (

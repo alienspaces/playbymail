@@ -10,7 +10,6 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/type/domainer"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
 	"gitlab.com/alienspaces/playbymail/core/type/storer"
-
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 )
 
@@ -114,6 +113,15 @@ func (t *Testing) CreateData() error {
 			l.Debug("created game location record ID >%s< Name >%s<", gameLocationRec.ID, gameLocationRec.Name)
 		}
 
+		for _, creatureConfig := range gameConfig.GameCreatureConfigs {
+			creatureRec, err := t.createGameCreatureRec(creatureConfig, gameRec)
+			if err != nil {
+				l.Warn("failed creating game creature record >%v<", err)
+				return err
+			}
+			l.Debug("created game creature record ID >%s< Name >%s<", creatureRec.ID, creatureRec.Name)
+		}
+
 		for _, linkConfig := range gameConfig.GameLocationLinkConfigs {
 			gameLocationLinkRec, err := t.createGameLocationLinkRec(linkConfig, gameRec)
 			if err != nil {
@@ -162,6 +170,16 @@ func (t *Testing) CreateData() error {
 				l.Debug("created game_location_instance record ID >%s<", locationInstanceRec.ID)
 			}
 
+			// Create creature instances for this game instance
+			for _, creatureInstanceConfig := range gameInstanceConfig.GameCreatureInstanceConfigs {
+				creatureInstanceRec, err := t.createGameCreatureInstanceRec(creatureInstanceConfig, gameInstanceRec)
+				if err != nil {
+					l.Warn("failed creating game_creature_instance record >%v<", err)
+					return err
+				}
+				l.Debug("created game_creature_instance record ID >%s<", creatureInstanceRec.ID)
+			}
+
 			// Create item instances for this game instance
 			for _, itemInstanceConfig := range gameInstanceConfig.GameItemInstanceConfigs {
 				itemInstanceRec, err := t.createGameItemInstanceRec(itemInstanceConfig, gameInstanceRec)
@@ -187,6 +205,21 @@ func (t *Testing) RemoveData() error {
 	l := t.Logger("RemoveData")
 
 	// Remove instance records
+
+	// Remove game creature instances
+	l.Debug("removing >%d< game creature instance records", len(t.teardownData.GameCreatureInstanceRecs))
+	for _, creatureInstanceRec := range t.teardownData.GameCreatureInstanceRecs {
+		l.Debug("[teardown] game creature instance ID: >%s<", creatureInstanceRec.ID)
+		if creatureInstanceRec.ID == "" {
+			l.Warn("[teardown] skipping game creature instance with empty ID")
+			continue
+		}
+		err := t.Domain.(*domain.Domain).RemoveGameCreatureInstanceRec(creatureInstanceRec.ID)
+		if err != nil {
+			l.Warn("failed removing game creature instance record >%v<", err)
+			return err
+		}
+	}
 
 	// Remove game item instances
 	l.Debug("removing >%d< game item instance records", len(t.teardownData.GameItemInstanceRecs))
@@ -229,6 +262,21 @@ func (t *Testing) RemoveData() error {
 		err := t.Domain.(*domain.Domain).RemoveGameInstanceRec(instanceRec.ID)
 		if err != nil {
 			l.Warn("failed removing game instance record >%v<", err)
+			return err
+		}
+	}
+
+	// Remove game creature records
+	l.Debug("removing >%d< game creature records", len(t.teardownData.GameCreatureRecs))
+	for _, creatureRec := range t.teardownData.GameCreatureRecs {
+		l.Debug("[teardown] game creature ID: >%s<", creatureRec.ID)
+		if creatureRec.ID == "" {
+			l.Warn("[teardown] skipping game creature with empty ID")
+			continue
+		}
+		err := t.Domain.(*domain.Domain).RemoveGameCreatureRec(creatureRec.ID)
+		if err != nil {
+			l.Warn("failed removing game creature record >%v<", err)
 			return err
 		}
 	}

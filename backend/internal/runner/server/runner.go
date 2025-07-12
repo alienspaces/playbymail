@@ -59,68 +59,28 @@ func NewRunner(l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], cfg co
 	// Add mock authentication function for testing
 	r.AuthenticateRequestFunc = r.mockAuthenticateRequest
 
-	// TODO: Additional handler configs can be added here
-	gameConfig, err := r.gameHandlerConfig(l)
-	if err != nil {
-		return nil, err
+	// Additional handler configurations are added here
+	handlerConfigFuncs := []func(logger.Logger) (map[string]server.HandlerConfig, error){
+		r.gameHandlerConfig,
+		r.accountHandlerConfig,
+		r.gameLocationHandlerConfig,
+		r.gameLocationInstanceHandlerConfig,
+		r.gameLocationLinkHandlerConfig,
+		r.gameCharacterHandlerConfig,
+		r.gameItemHandlerConfig,
+		r.gameCreatureHandlerConfig,
+		r.gameItemInstanceHandlerConfig,
+		r.gameLocationLinkRequirementHandlerConfig,
+		r.gameCreatureInstanceHandlerConfig,
 	}
 
-	// Add handler configs using mergeHandlerConfigs for proper configuration merging
-	r.HandlerConfig = mergeHandlerConfigs(r.HandlerConfig, gameConfig)
-
-	accountConfig, err := r.accountHandlerConfig(l)
-	if err != nil {
-		return nil, err
+	for _, fn := range handlerConfigFuncs {
+		cfg, err := fn(l)
+		if err != nil {
+			return nil, err
+		}
+		r.HandlerConfig = mergeHandlerConfigs(r.HandlerConfig, cfg)
 	}
-	r.HandlerConfig = mergeHandlerConfigs(r.HandlerConfig, accountConfig)
-
-	gameLocationConfig, err := r.gameLocationHandlerConfig(l)
-	if err != nil {
-		return nil, err
-	}
-	r.HandlerConfig = mergeHandlerConfigs(r.HandlerConfig, gameLocationConfig)
-
-	gameLocationInstanceConfig, err := r.gameLocationInstanceHandlerConfig(l)
-	if err != nil {
-		return nil, err
-	}
-	r.HandlerConfig = mergeHandlerConfigs(r.HandlerConfig, gameLocationInstanceConfig)
-
-	GameLocationLinkConfig, err := r.GameLocationLinkHandlerConfig(l)
-	if err != nil {
-		return nil, err
-	}
-	r.HandlerConfig = mergeHandlerConfigs(r.HandlerConfig, GameLocationLinkConfig)
-
-	gameCharacterConfig, err := r.gameCharacterHandlerConfig(l)
-	if err != nil {
-		return nil, err
-	}
-	r.HandlerConfig = mergeHandlerConfigs(r.HandlerConfig, gameCharacterConfig)
-
-	gameItemConfig, err := r.gameItemHandlerConfig(l)
-	if err != nil {
-		return nil, err
-	}
-	r.HandlerConfig = mergeHandlerConfigs(r.HandlerConfig, gameItemConfig)
-
-	gameCreatureConfig, err := r.gameCreatureHandlerConfig(l)
-	if err != nil {
-		return nil, err
-	}
-	r.HandlerConfig = mergeHandlerConfigs(r.HandlerConfig, gameCreatureConfig)
-
-	gameItemInstanceConfig, err := r.gameItemInstanceHandlerConfig(l)
-	if err != nil {
-		return nil, err
-	}
-	r.HandlerConfig = mergeHandlerConfigs(r.HandlerConfig, gameItemInstanceConfig)
-
-	gameLocationLinkRequirementConfig, err := r.gameLocationLinkRequirementHandlerConfig(l)
-	if err != nil {
-		return nil, err
-	}
-	r.HandlerConfig = mergeHandlerConfigs(r.HandlerConfig, gameLocationLinkRequirementConfig)
 
 	return &r, nil
 }

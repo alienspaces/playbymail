@@ -13,11 +13,13 @@ type Data struct {
 	GameLocationRecs                []*record.GameLocation
 	GameLocationLinkRecs            []*record.GameLocationLink
 	GameCharacterRecs               []*record.GameCharacter
+	GameCreatureRecs                []*record.GameCreature
 	GameItemRecs                    []*record.GameItem
 	GameLocationLinkRequirementRecs []*record.GameLocationLinkRequirement
 	GameInstanceRecs                []*record.GameInstance
 	GameLocationInstanceRecs        []*record.GameLocationInstance
 	GameItemInstanceRecs            []*record.GameItemInstance
+	GameCreatureInstanceRecs        []*record.GameCreatureInstance
 	// Data references
 	Refs DataRefs
 }
@@ -33,10 +35,12 @@ type DataRefs struct {
 	GameLocationLinkRefs            map[string]string // Map of location link refs to location link records
 	GameLocationLinkRequirementRefs map[string]string // Map of refs to game_location_link_requirement records
 	GameCharacterRefs               map[string]string // Map of game_character refs to records
+	GameCreatureRefs                map[string]string // Map of game_creature refs to records
 	GameItemRefs                    map[string]string // Map of game_item refs to records
 	GameItemInstanceRefs            map[string]string // Map of refs to game_item_instance records
 	GameInstanceRefs                map[string]string // Map of refs to game_instance records
 	GameLocationInstanceRefs        map[string]string // Map of refs to game_location_instance records
+	GameCreatureInstanceRefs        map[string]string // Map of refs to game_creature_instance records
 }
 
 // initialiseDataStores - Data is required to maintain data references and
@@ -51,10 +55,12 @@ func initialiseDataStores() Data {
 			GameLocationLinkRefs:            map[string]string{},
 			GameLocationLinkRequirementRefs: map[string]string{},
 			GameCharacterRefs:               map[string]string{},
+			GameCreatureRefs:                map[string]string{},
 			GameItemRefs:                    map[string]string{},
 			GameItemInstanceRefs:            map[string]string{},
 			GameInstanceRefs:                map[string]string{},
 			GameLocationInstanceRefs:        map[string]string{},
+			GameCreatureInstanceRefs:        map[string]string{},
 		},
 	}
 }
@@ -180,6 +186,39 @@ func (d *Data) GetGameLocationLinkRecByRef(ref string) (*record.GameLocationLink
 		return nil, fmt.Errorf("failed getting location link with ref >%s<", ref)
 	}
 	return d.GetGameLocationLinkRecByID(linkID)
+}
+
+// GameCreature
+func (d *Data) AddGameCreatureRec(rec *record.GameCreature) {
+	for idx := range d.GameCreatureRecs {
+		if d.GameCreatureRecs[idx].ID == rec.ID {
+			d.GameCreatureRecs[idx] = rec
+			return
+		}
+	}
+	d.GameCreatureRecs = append(d.GameCreatureRecs, rec)
+}
+
+func (d *Data) GetGameCreatureRecByID(creatureID string) (*record.GameCreature, error) {
+	for _, rec := range d.GameCreatureRecs {
+		if rec.ID == creatureID {
+			return rec, nil
+		}
+	}
+	return nil, fmt.Errorf("failed getting creature with ID >%s<", creatureID)
+}
+
+func (d *Data) GetGameCreatureRecByRef(ref string) (*record.GameCreature, error) {
+	id, ok := d.Refs.GameCreatureRefs[ref]
+	if !ok {
+		return nil, fmt.Errorf("no creature with ref >%s<", ref)
+	}
+	for _, rec := range d.GameCreatureRecs {
+		if rec.ID == id {
+			return rec, nil
+		}
+	}
+	return nil, fmt.Errorf("no creature with id >%s< for ref >%s<", id, ref)
 }
 
 // GameCharacter
@@ -396,4 +435,32 @@ func (d *Data) GetGameItemInstanceRecByItemID(itemID string) []*record.GameItemI
 		}
 	}
 	return result
+}
+
+// GameCreatureInstance
+func (d *Data) AddGameCreatureInstanceRec(rec *record.GameCreatureInstance) {
+	for idx := range d.GameCreatureInstanceRecs {
+		if d.GameCreatureInstanceRecs[idx].ID == rec.ID {
+			d.GameCreatureInstanceRecs[idx] = rec
+			return
+		}
+	}
+	d.GameCreatureInstanceRecs = append(d.GameCreatureInstanceRecs, rec)
+}
+
+func (d *Data) GetGameCreatureInstanceRecByID(id string) (*record.GameCreatureInstance, error) {
+	for _, rec := range d.GameCreatureInstanceRecs {
+		if rec.ID == id {
+			return rec, nil
+		}
+	}
+	return nil, fmt.Errorf("failed getting game_creature_instance with ID >%s<", id)
+}
+
+func (d *Data) GetGameCreatureInstanceRecByRef(ref string) (*record.GameCreatureInstance, error) {
+	id, ok := d.Refs.GameCreatureInstanceRefs[ref]
+	if !ok {
+		return nil, fmt.Errorf("failed getting game_creature_instance with ref >%s<", ref)
+	}
+	return d.GetGameCreatureInstanceRecByID(id)
 }

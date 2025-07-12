@@ -11,7 +11,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/schema"
 )
 
-func Test_gameCharacterHandler(t *testing.T) {
+func Test_gameCreatureHandler(t *testing.T) {
 	t.Parallel()
 
 	th := newTestHarness(t)
@@ -26,22 +26,20 @@ func Test_gameCharacterHandler(t *testing.T) {
 
 	gameRec, err := th.Data.GetGameRecByRef(harness.GameOneRef)
 	require.NoError(t, err, "GetGameRecByRef returns without error")
-	accountRec2, err := th.Data.GetAccountRecByRef(harness.AccountTwoRef)
-	require.NoError(t, err, "GetAccountRecByRef(AccountTwoRef) returns without error")
-	charRec, err := th.Data.GetGameCharacterRecByRef(harness.GameCharacterOneRef)
-	require.NoError(t, err, "GetGameCharacterRecByRef returns without error")
+	creatureRec, err := th.Data.GetGameCreatureRecByRef(harness.GameCreatureOneRef)
+	require.NoError(t, err, "GetGameCreatureRecByRef returns without error")
 
-	testCaseCollectionResponseDecoder := testCaseResponseDecoderGeneric[schema.GameCharacterCollectionResponse]
-	testCaseResponseDecoder := testCaseResponseDecoderGeneric[schema.GameCharacterResponse]
+	testCaseCollectionResponseDecoder := testCaseResponseDecoderGeneric[schema.GameCreatureCollectionResponse]
+	testCaseResponseDecoder := testCaseResponseDecoderGeneric[schema.GameCreatureResponse]
 
 	testCases := []struct {
 		TestCase
 	}{
 		{
 			TestCase: TestCase{
-				Name: "API key with open access \\ get many game characters \\ returns expected characters",
+				Name: "API key with open access \\ get many game creatures \\ returns expected creatures",
 				HandlerConfig: func(rnr *Runner) server.HandlerConfig {
-					return rnr.HandlerConfig[getManyGameCharacters]
+					return rnr.HandlerConfig[getManyGameCreatures]
 				},
 				RequestQueryParams: func(d harness.Data) map[string]any {
 					return map[string]any{
@@ -56,15 +54,14 @@ func Test_gameCharacterHandler(t *testing.T) {
 		},
 		{
 			TestCase: TestCase{
-				Name: "API key with open access \\ create game character with valid properties \\ returns created character",
+				Name: "API key with open access \\ create game creature with valid properties \\ returns created creature",
 				HandlerConfig: func(rnr *Runner) server.HandlerConfig {
-					return rnr.HandlerConfig[createGameCharacter]
+					return rnr.HandlerConfig[createGameCreature]
 				},
 				RequestBody: func(d harness.Data) any {
-					return schema.GameCharacterRequest{
-						GameID:    gameRec.ID,
-						AccountID: accountRec2.ID, // Use AccountTwoRef for uniqueness
-						Name:      "Test Character",
+					return schema.GameCreatureRequest{
+						GameID: gameRec.ID,
+						Name:   "Test Creature",
 					}
 				},
 				ResponseDecoder: testCaseResponseDecoder,
@@ -73,12 +70,12 @@ func Test_gameCharacterHandler(t *testing.T) {
 		},
 		{
 			TestCase: TestCase{
-				Name: "API key with open access \\ get one game character with valid ID \\ returns expected character",
+				Name: "API key with open access \\ get one game creature with valid ID \\ returns expected creature",
 				HandlerConfig: func(rnr *Runner) server.HandlerConfig {
-					return rnr.HandlerConfig[getOneGameCharacter]
+					return rnr.HandlerConfig[getOneGameCreature]
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
-					return map[string]string{":game_character_id": charRec.ID}
+					return map[string]string{":game_creature_id": creatureRec.ID}
 				},
 				ResponseDecoder: testCaseResponseDecoder,
 				ResponseCode:    http.StatusOK,
@@ -86,12 +83,12 @@ func Test_gameCharacterHandler(t *testing.T) {
 		},
 		{
 			TestCase: TestCase{
-				Name: "API key with open access \\ delete game character with valid ID \\ returns no content",
+				Name: "API key with open access \\ delete game creature with valid ID \\ returns no content",
 				HandlerConfig: func(rnr *Runner) server.HandlerConfig {
-					return rnr.HandlerConfig[deleteGameCharacter]
+					return rnr.HandlerConfig[deleteGameCreature]
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
-					return map[string]string{":game_character_id": charRec.ID}
+					return map[string]string{":game_creature_id": creatureRec.ID}
 				},
 				ResponseCode: http.StatusNoContent,
 			},

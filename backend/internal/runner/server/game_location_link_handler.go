@@ -27,8 +27,8 @@ const (
 	deleteGameLocationLink   = "delete-location-link"
 )
 
-func (rnr *Runner) GameLocationLinkHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error) {
-	l = loggerWithFunctionContext(l, "GameLocationLinkHandlerConfig")
+func (rnr *Runner) gameLocationLinkHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error) {
+	l = loggerWithFunctionContext(l, "gameLocationLinkHandlerConfig")
 
 	l.Debug("Adding location_link handler configuration")
 
