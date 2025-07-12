@@ -24,6 +24,7 @@ func (t *Testing) createGameLocationLinkRequirementRec(cfg GameLocationLinkRequi
 
 	rec = t.applyGameLocationLinkRequirementRecDefaultValues(rec)
 
+	rec.GameID = gameLocationLinkRec.GameID
 	rec.GameLocationLinkID = gameLocationLinkRec.ID
 
 	if cfg.GameItemRef != "" {
@@ -35,21 +36,22 @@ func (t *Testing) createGameLocationLinkRequirementRec(cfg GameLocationLinkRequi
 		rec.GameItemID = gameItemRec.ID
 	}
 
+	// Create record
 	l.Info("creating game_location_link_requirement record >%#v<", rec)
 
-	// Create record
 	rec, err := t.Domain.(*domain.Domain).CreateGameLocationLinkRequirementRec(rec)
 	if err != nil {
 		l.Warn("failed creating game_location_link_requirement record >%v<", err)
 		return nil, err
 	}
 
-	// Add to data
+	// Add to data store
 	t.Data.AddGameLocationLinkRequirementRec(rec)
 
-	// Add to teardown data
+	// Add to teardown data store
 	t.teardownData.AddGameLocationLinkRequirementRec(rec)
 
+	// Add to references store
 	if cfg.Reference != "" {
 		t.Data.Refs.GameLocationLinkRequirementRefs[cfg.Reference] = rec.ID
 	}

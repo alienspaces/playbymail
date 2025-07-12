@@ -115,7 +115,7 @@ func (t *Testing) CreateData() error {
 		}
 
 		for _, linkConfig := range gameConfig.GameLocationLinkConfigs {
-			gameLocationLinkRec, err := t.createGameLocationLinkRec(linkConfig)
+			gameLocationLinkRec, err := t.createGameLocationLinkRec(linkConfig, gameRec)
 			if err != nil {
 				l.Warn("failed creating location link record >%v<", err)
 				return err

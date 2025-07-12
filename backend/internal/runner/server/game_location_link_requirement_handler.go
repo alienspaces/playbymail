@@ -188,6 +188,11 @@ func (rnr *Runner) createGameLocationLinkRequirementHandler(w http.ResponseWrite
 		l.Warn("failed reading request >%v<", err)
 		return err
 	}
+	if req.GameID == "" {
+		res := map[string]interface{}{"error": map[string]interface{}{"code": "missing_game_id", "detail": "game_id is required"}}
+		_ = server.WriteResponse(l, w, http.StatusBadRequest, res)
+		return nil
+	}
 	mm := m.(*domain.Domain)
 	rec, err := mapper.GameLocationLinkRequirementRequestToRecord(l, &req, nil)
 	if err != nil {
@@ -222,6 +227,11 @@ func (rnr *Runner) updateGameLocationLinkRequirementHandler(w http.ResponseWrite
 	if _, err := server.ReadRequest(l, r, &req); err != nil {
 		l.Warn("failed reading request >%v<", err)
 		return err
+	}
+	if req.GameID == "" {
+		res := map[string]interface{}{"error": map[string]interface{}{"code": "missing_game_id", "detail": "game_id is required"}}
+		_ = server.WriteResponse(l, w, http.StatusBadRequest, res)
+		return nil
 	}
 	rec, err := mapper.GameLocationLinkRequirementRequestToRecord(l, &req, existing)
 	if err != nil {

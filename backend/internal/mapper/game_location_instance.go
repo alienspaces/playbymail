@@ -15,6 +15,7 @@ func GameLocationInstanceRequestToRecord(l logger.Logger, req *schema.GameLocati
 		return nil, nil
 	}
 	l.Debug("mapping game_location_instance request to record")
+	rec.GameID = req.GameID
 	rec.GameInstanceID = req.GameInstanceID
 	rec.GameLocationID = req.GameLocationID
 	return rec, nil
@@ -24,6 +25,7 @@ func GameLocationInstanceRecordToResponseData(l logger.Logger, rec *record.GameL
 	l.Debug("mapping game_location_instance record to response data")
 	data := schema.GameLocationInstanceResponseData{
 		ID:             rec.ID,
+		GameID:         rec.GameID,
 		GameInstanceID: rec.GameInstanceID,
 		GameLocationID: rec.GameLocationID,
 		CreatedAt:      rec.CreatedAt,

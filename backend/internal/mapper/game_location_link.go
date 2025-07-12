@@ -23,6 +23,7 @@ func GameLocationLinkRequestToRecord(l logger.Logger, r *http.Request, rec *reco
 
 	switch server.HttpMethod(r.Method) {
 	case server.HttpMethodPost, server.HttpMethodPut, server.HttpMethodPatch:
+		rec.GameID = req.GameID
 		rec.FromGameLocationID = req.FromGameLocationID
 		rec.ToGameLocationID = req.ToGameLocationID
 		rec.Description = req.Description
@@ -39,6 +40,7 @@ func GameLocationLinkRecordToResponseData(l logger.Logger, rec *record.GameLocat
 	l.Debug("mapping location_link record to response data")
 	data := schema.GameLocationLinkResponseData{
 		ID:                 rec.ID,
+		GameID:             rec.GameID,
 		FromGameLocationID: rec.FromGameLocationID,
 		ToGameLocationID:   rec.ToGameLocationID,
 		Description:        rec.Description,

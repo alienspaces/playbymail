@@ -21,6 +21,7 @@ func (t *Testing) createGameRec(gameConfig GameConfig) (*record.Game, error) {
 
 	rec = t.applyGameRecDefaultValues(rec)
 
+	// Create record
 	l.Info("creating game record >%#v<", rec)
 
 	rec, err := t.Domain.(*domain.Domain).CreateGameRec(rec)
@@ -29,13 +30,13 @@ func (t *Testing) createGameRec(gameConfig GameConfig) (*record.Game, error) {
 		return nil, err
 	}
 
-	// Add the game record to the data store
+	// Add to data store
 	t.Data.AddGameRec(rec)
 
-	// Add the game record to the teardown data store
+	// Add to teardown data store
 	t.teardownData.AddGameRec(rec)
 
-	// Add the game record to the data store refs
+	// Add to references store
 	if gameConfig.Reference != "" {
 		t.Data.Refs.GameRefs[gameConfig.Reference] = rec.ID
 	}

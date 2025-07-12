@@ -5,6 +5,7 @@ import "time"
 // GameLocationLinkResponseData -
 type GameLocationLinkResponseData struct {
 	ID                 string     `json:"id"`
+	GameID             string     `json:"game_id"`
 	FromGameLocationID string     `json:"from_game_location_id"`
 	ToGameLocationID   string     `json:"to_game_location_id"`
 	Description        string     `json:"description"`
@@ -28,6 +29,7 @@ type GameLocationLinkCollectionResponse struct {
 
 type GameLocationLinkRequest struct {
 	Request
+	GameID             string `json:"game_id"`
 	FromGameLocationID string `json:"from_game_location_id"`
 	ToGameLocationID   string `json:"to_game_location_id"`
 	Description        string `json:"description"`

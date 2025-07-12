@@ -27,6 +27,7 @@ func (t *Testing) createGameLocationRec(gameLocationConfig GameLocationConfig, g
 
 	rec.GameID = gameRec.ID
 
+	// Create record
 	l.Info("creating game location record >%#v<", rec)
 
 	rec, err := t.Domain.(*domain.Domain).CreateGameLocationRec(rec)
@@ -35,9 +36,13 @@ func (t *Testing) createGameLocationRec(gameLocationConfig GameLocationConfig, g
 		return nil, err
 	}
 
+	// Add to data store
 	t.Data.AddGameLocationRec(rec)
+
+	// Add to teardown data store
 	t.teardownData.AddGameLocationRec(rec)
 
+	// Add to references store
 	if gameLocationConfig.Reference != "" {
 		t.Data.Refs.GameLocationRefs[gameLocationConfig.Reference] = rec.ID
 	}

@@ -9,6 +9,7 @@ const TableGameLocationLink = "game_location_link"
 
 const (
 	FieldGameLocationLinkID                 = "id"
+	FieldGameLocationLinkGameID             = "game_id"
 	FieldGameLocationLinkFromGameLocationID = "from_game_location_id"
 	FieldGameLocationLinkToGameLocationID   = "to_game_location_id"
 	FieldGameLocationLinkDescription        = "description"
@@ -19,6 +20,7 @@ const (
 
 type GameLocationLink struct {
 	record.Record
+	GameID             string `db:"game_id"`
 	FromGameLocationID string `db:"from_game_location_id"`
 	ToGameLocationID   string `db:"to_game_location_id"`
 	Description        string `db:"description"`
@@ -27,6 +29,7 @@ type GameLocationLink struct {
 
 func (r *GameLocationLink) ToNamedArgs() pgx.NamedArgs {
 	args := r.Record.ToNamedArgs()
+	args[FieldGameLocationLinkGameID] = r.GameID
 	args[FieldGameLocationLinkFromGameLocationID] = r.FromGameLocationID
 	args[FieldGameLocationLinkToGameLocationID] = r.ToGameLocationID
 	args[FieldGameLocationLinkDescription] = r.Description

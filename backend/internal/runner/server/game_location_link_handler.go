@@ -177,10 +177,14 @@ func (rnr *Runner) getGameLocationLinkHandler(w http.ResponseWriter, r *http.Req
 func (rnr *Runner) createGameLocationLinkHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
 	l = loggerWithFunctionContext(l, "CreateGameLocationLinkHandler")
 
-	// Remove decoding into req, pass r directly to the mapper
 	rec, err := mapper.GameLocationLinkRequestToRecord(l, r, &record.GameLocationLink{})
 	if err != nil {
 		return err
+	}
+	if rec.GameID == "" {
+		res := map[string]interface{}{"error": map[string]interface{}{"code": "missing_game_id", "detail": "game_id is required"}}
+		_ = server.WriteResponse(l, w, http.StatusBadRequest, res)
+		return nil
 	}
 
 	mm := m.(*domain.Domain)

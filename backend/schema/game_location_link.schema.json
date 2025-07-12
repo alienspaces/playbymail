@@ -7,6 +7,9 @@
             "type": "string",
             "format": "uuid"
         },
+        "game_id": {
+            "$ref": "common.schema.json#/$defs/id"
+        },
         "from_game_location_id": {
             "type": "string",
             "format": "uuid"
@@ -46,6 +49,7 @@
     },
     "required": [
         "id",
+        "game_id",
         "from_game_location_id",
         "to_game_location_id",
         "description",

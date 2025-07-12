@@ -25,6 +25,8 @@ func Test_gameGameLocationLinkHandler(t *testing.T) {
 	}()
 
 	// Setup: get a location link and locations for reference
+	gameRec, err := th.Data.GetGameRecByRef(harness.GameOneRef)
+	require.NoError(t, err, "GetGameRecByRef returns without error")
 	linkRec, err := th.Data.GetGameLocationLinkRecByRef(harness.GameLocationLinkOneRef)
 	require.NoError(t, err, "GetGameLocationLinkRecByRef returns without error")
 	fromLoc, err := th.Data.GetGameLocationRecByID(linkRec.FromGameLocationID)
@@ -83,6 +85,7 @@ func Test_gameGameLocationLinkHandler(t *testing.T) {
 				},
 				RequestBody: func(d harness.Data) interface{} {
 					return schema.GameLocationLinkRequest{
+						GameID:             gameRec.ID,
 						FromGameLocationID: toLoc.ID,
 						ToGameLocationID:   fromLoc.ID,
 						Description:        "Test Link",

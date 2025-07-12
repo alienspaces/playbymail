@@ -13,6 +13,7 @@ func (t *Testing) createGameLocationInstanceRec(cfg GameLocationInstanceConfig, 
 	if gameInstanceRec == nil {
 		return nil, fmt.Errorf("game instance record is nil for game_location_instance record >%#v<", cfg)
 	}
+
 	if cfg.GameLocationRef == "" {
 		return nil, fmt.Errorf("game location reference is required for game_location_instance record >%#v<", cfg)
 	}
@@ -27,6 +28,8 @@ func (t *Testing) createGameLocationInstanceRec(cfg GameLocationInstanceConfig, 
 
 	rec = t.applyGameLocationInstanceRecDefaultValues(rec)
 
+	// Set game_id from parent game instance
+	rec.GameID = gameInstanceRec.GameID
 	rec.GameInstanceID = gameInstanceRec.ID
 
 	// The game location is retrieved by reference
@@ -39,18 +42,20 @@ func (t *Testing) createGameLocationInstanceRec(cfg GameLocationInstanceConfig, 
 
 	// Create record
 	l.Info("creating game_location_instance record >%#v<", rec)
+
 	createdRec, err := t.Domain.(*domain.Domain).CreateGameLocationInstanceRec(rec)
 	if err != nil {
 		l.Warn("failed creating game_location_instance record >%v<", err)
 		return nil, err
 	}
 
-	// Add to data
+	// Add to data store
 	t.Data.AddGameLocationInstanceRec(createdRec)
 
-	// Add to teardown data
+	// Add to teardown data store
 	t.teardownData.AddGameLocationInstanceRec(createdRec)
 
+	// Add to references store
 	if cfg.Reference != "" {
 		t.Data.Refs.GameLocationInstanceRefs[cfg.Reference] = createdRec.ID
 	}

@@ -5,6 +5,7 @@ import "time"
 // GameLocationLinkRequirementResponseData -
 type GameLocationLinkRequirementResponseData struct {
 	ID                 string     `json:"id"`
+	GameID             string     `json:"game_id"`
 	GameLocationLinkID string     `json:"game_location_link_id"`
 	GameItemID         string     `json:"game_item_id"`
 	Quantity           int        `json:"quantity"`
@@ -27,6 +28,7 @@ type GameLocationLinkRequirementCollectionResponse struct {
 
 type GameLocationLinkRequirementRequest struct {
 	Request
+	GameID             string `json:"game_id"`
 	GameLocationLinkID string `json:"game_location_link_id"`
 	GameItemID         string `json:"game_item_id"`
 	Quantity           int    `json:"quantity"`

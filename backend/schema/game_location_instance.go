@@ -5,6 +5,7 @@ import "time"
 // GameLocationInstanceResponseData -
 type GameLocationInstanceResponseData struct {
 	ID             string     `json:"id"`
+	GameID         string     `json:"game_id"`
 	GameInstanceID string     `json:"game_instance_id"`
 	GameLocationID string     `json:"game_location_id"`
 	CreatedAt      time.Time  `json:"created_at"`
@@ -26,6 +27,7 @@ type GameLocationInstanceCollectionResponse struct {
 
 type GameLocationInstanceRequest struct {
 	Request
+	GameID         string `json:"game_id"`
 	GameInstanceID string `json:"game_instance_id"`
 	GameLocationID string `json:"game_location_id"`
 }

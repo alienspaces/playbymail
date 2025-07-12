@@ -50,16 +50,22 @@ func (t *Testing) createGameItemInstanceRec(cfg GameItemInstanceConfig, gameInst
 		rec.GameLocationInstanceID = nullstring.FromString(gameLocationInstanceRec.ID)
 	}
 
+	// Create record
 	l.Info("creating game_item_instance record >%#v<", rec)
+
 	createdRec, err := t.Domain.(*domain.Domain).CreateGameItemInstanceRec(rec)
 	if err != nil {
 		l.Warn("failed creating game_item_instance record >%v<", err)
 		return nil, err
 	}
 
+	// Add to data store
 	t.Data.AddGameItemInstanceRec(createdRec)
+
+	// Add to teardown data store
 	t.teardownData.AddGameItemInstanceRec(createdRec)
 
+	// Add to references store
 	if cfg.Reference != "" {
 		t.Data.Refs.GameItemInstanceRefs[cfg.Reference] = createdRec.ID
 	}

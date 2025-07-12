@@ -45,9 +45,14 @@ func TestCreateOne(t *testing.T) {
 		{
 			name: "Without ID",
 			rec: func(d harness.Data, t *testing.T) *record.GameLocationLink {
-				fromLoc, _ := d.GetGameLocationRecByRef(harness.GameLocationOneRef)
-				toLoc, _ := d.GetGameLocationRecByRef(harness.GameLocationTwoRef)
+				gameRec, err := d.GetGameRecByRef(harness.GameOneRef)
+				require.NoError(t, err, "GetGameRecByRef returns without error")
+				fromLoc, err := d.GetGameLocationRecByRef(harness.GameLocationOneRef)
+				require.NoError(t, err, "GetGameLocationRecByRef returns without error")
+				toLoc, err := d.GetGameLocationRecByRef(harness.GameLocationTwoRef)
+				require.NoError(t, err, "GetGameLocationRecByRef returns without error")
 				return &record.GameLocationLink{
+					GameID:             gameRec.ID,
 					FromGameLocationID: fromLoc.ID,
 					ToGameLocationID:   toLoc.ID,
 					Description:        gofakeit.Sentence(5),
@@ -58,9 +63,14 @@ func TestCreateOne(t *testing.T) {
 		{
 			name: "With ID",
 			rec: func(d harness.Data, t *testing.T) *record.GameLocationLink {
-				fromLoc, _ := d.GetGameLocationRecByRef(harness.GameLocationOneRef)
-				toLoc, _ := d.GetGameLocationRecByRef(harness.GameLocationTwoRef)
+				gameRec, err := d.GetGameRecByRef(harness.GameOneRef)
+				require.NoError(t, err, "GetGameRecByRef returns without error")
+				fromLoc, err := d.GetGameLocationRecByRef(harness.GameLocationOneRef)
+				require.NoError(t, err, "GetGameLocationRecByRef returns without error")
+				toLoc, err := d.GetGameLocationRecByRef(harness.GameLocationTwoRef)
+				require.NoError(t, err, "GetGameLocationRecByRef returns without error")
 				rec := &record.GameLocationLink{
+					GameID:             gameRec.ID,
 					FromGameLocationID: fromLoc.ID,
 					ToGameLocationID:   toLoc.ID,
 					Description:        gofakeit.Sentence(5),

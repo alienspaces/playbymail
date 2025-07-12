@@ -15,10 +15,8 @@ func (t *Testing) createGameCharacterRec(charConfig GameCharacterConfig, gameRec
 		return nil, fmt.Errorf("game record is nil for game_character record >%#v<", charConfig)
 	}
 
-	accountRec, err := t.Data.GetAccountRecByRef(charConfig.AccountRef)
-	if err != nil {
-		l.Warn("failed resolving account ref >%s<: %v", charConfig.AccountRef, err)
-		return nil, err
+	if charConfig.AccountRef == "" {
+		return nil, fmt.Errorf("game_character record >%#v< must have an AccountRef set", charConfig)
 	}
 
 	var rec *record.GameCharacter
@@ -32,8 +30,16 @@ func (t *Testing) createGameCharacterRec(charConfig GameCharacterConfig, gameRec
 	rec = t.applyGameCharacterRecDefaultValues(rec)
 
 	rec.GameID = gameRec.ID
+
+	// Get account record
+	accountRec, err := t.Data.GetAccountRecByRef(charConfig.AccountRef)
+	if err != nil {
+		l.Warn("failed resolving account ref >%s<: %v", charConfig.AccountRef, err)
+		return nil, err
+	}
 	rec.AccountID = accountRec.ID
 
+	// Create record
 	l.Info("creating game_character record >%#v<", rec)
 
 	rec, err = t.Domain.(*domain.Domain).CreateGameCharacterRec(rec)
@@ -42,9 +48,13 @@ func (t *Testing) createGameCharacterRec(charConfig GameCharacterConfig, gameRec
 		return nil, err
 	}
 
+	// Add to data store
 	t.Data.AddGameCharacterRec(rec)
+
+	// Add to teardown data store
 	t.teardownData.AddGameCharacterRec(rec)
 
+	// Add to references store
 	if charConfig.Reference != "" {
 		t.Data.Refs.GameCharacterRefs[charConfig.Reference] = rec.ID
 	}

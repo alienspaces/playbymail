@@ -8,8 +8,16 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/record"
 )
 
-func (t *Testing) createGameLocationLinkRec(linkConfig GameLocationLinkConfig) (*record.GameLocationLink, error) {
+func (t *Testing) createGameLocationLinkRec(linkConfig GameLocationLinkConfig, gameRec *record.Game) (*record.GameLocationLink, error) {
 	l := t.Logger("createGameLocationLinkRec")
+
+	if gameRec == nil {
+		return nil, fmt.Errorf("game record is nil for game_location_link record >%#v<", linkConfig)
+	}
+
+	if linkConfig.FromLocationRef == "" && linkConfig.ToLocationRef == "" {
+		return nil, fmt.Errorf("game_location_link record >%#v< must have either FromLocationRef or ToLocationRef set", linkConfig)
+	}
 
 	var rec *record.GameLocationLink
 	if linkConfig.Record != nil {
@@ -20,6 +28,9 @@ func (t *Testing) createGameLocationLinkRec(linkConfig GameLocationLinkConfig) (
 	}
 
 	rec = t.applyGameLocationLinkRecDefaultValues(rec)
+
+	// Set game_id from parent game
+	rec.GameID = gameRec.ID
 
 	if linkConfig.FromLocationRef != "" {
 		fromLoc, err := t.Data.GetGameLocationRecByRef(linkConfig.FromLocationRef)
@@ -44,9 +55,9 @@ func (t *Testing) createGameLocationLinkRec(linkConfig GameLocationLinkConfig) (
 		return nil, fmt.Errorf("location link must have both FromGameLocationID and ToGameLocationID set, got from: >%s< to: >%s<", rec.FromGameLocationID, rec.ToGameLocationID)
 	}
 
+	// Create record
 	l.Info("creating location link record >%#v<", rec)
 
-	// Create record
 	rec, err := t.Domain.(*domain.Domain).CreateGameLocationLinkRec(rec)
 	if err != nil {
 		l.Warn("failed creating location link record >%v<", err)
@@ -59,6 +70,7 @@ func (t *Testing) createGameLocationLinkRec(linkConfig GameLocationLinkConfig) (
 	// Add to teardown data
 	t.teardownData.AddGameLocationLinkRec(rec)
 
+	// Add to references store
 	if linkConfig.Reference != "" {
 		t.Data.Refs.GameLocationLinkRefs[linkConfig.Reference] = rec.ID
 	}

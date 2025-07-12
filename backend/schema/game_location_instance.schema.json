@@ -6,6 +6,9 @@
         "id": {
             "$ref": "common.schema.json#/$defs/id"
         },
+        "game_id": {
+            "$ref": "common.schema.json#/$defs/id"
+        },
         "game_instance_id": {
             "$ref": "common.schema.json#/$defs/id"
         },
@@ -24,6 +27,7 @@
     },
     "required": [
         "id",
+        "game_id",
         "game_instance_id",
         "game_location_id",
         "created_at"

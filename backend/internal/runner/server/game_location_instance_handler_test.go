@@ -161,6 +161,7 @@ func Test_createUpdateDeleteGameLocationInstanceHandler(t *testing.T) {
 					return schema.GameLocationInstanceRequest{
 						GameInstanceID: gameInstanceRec.ID,
 						GameLocationID: locationRec.ID,
+						GameID:         gameInstanceRec.GameID,
 					}
 				},
 				ResponseDecoder: testCaseResponseDecoder,
@@ -171,6 +172,7 @@ func Test_createUpdateDeleteGameLocationInstanceHandler(t *testing.T) {
 					Data: &schema.GameLocationInstanceResponseData{
 						GameInstanceID: req.GameInstanceID,
 						GameLocationID: req.GameLocationID,
+						GameID:         req.GameID,
 					},
 				}
 			},
@@ -190,6 +192,7 @@ func Test_createUpdateDeleteGameLocationInstanceHandler(t *testing.T) {
 					return schema.GameLocationInstanceRequest{
 						GameInstanceID: gameInstanceRec.ID,
 						GameLocationID: locationRec.ID,
+						GameID:         gameInstanceRec.GameID,
 					}
 				},
 				ResponseDecoder: testCaseResponseDecoder,
@@ -200,6 +203,7 @@ func Test_createUpdateDeleteGameLocationInstanceHandler(t *testing.T) {
 					Data: &schema.GameLocationInstanceResponseData{
 						GameInstanceID: req.GameInstanceID,
 						GameLocationID: req.GameLocationID,
+						GameID:         req.GameID,
 					},
 				}
 			},

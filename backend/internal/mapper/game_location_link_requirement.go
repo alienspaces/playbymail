@@ -15,6 +15,7 @@ func GameLocationLinkRequirementRequestToRecord(l logger.Logger, req *schema.Gam
 		return nil, nil
 	}
 	l.Debug("mapping game_location_link_requirement request to record")
+	rec.GameID = req.GameID
 	rec.GameLocationLinkID = req.GameLocationLinkID
 	rec.GameItemID = req.GameItemID
 	rec.Quantity = req.Quantity
@@ -25,6 +26,7 @@ func GameLocationLinkRequirementRecordToResponseData(l logger.Logger, rec *recor
 	l.Debug("mapping game_location_link_requirement record to response data")
 	data := schema.GameLocationLinkRequirementResponseData{
 		ID:                 rec.ID,
+		GameID:             rec.GameID,
 		GameLocationLinkID: rec.GameLocationLinkID,
 		GameItemID:         rec.GameItemID,
 		Quantity:           rec.Quantity,

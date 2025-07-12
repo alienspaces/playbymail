@@ -27,6 +27,7 @@ func (t *Testing) createGameItemRec(itemConfig GameItemConfig, gameRec *record.G
 
 	rec.GameID = gameRec.ID
 
+	// Create record
 	l.Info("creating game_item record >%#v<", rec)
 
 	rec, err := t.Domain.(*domain.Domain).CreateGameItemRec(rec)
@@ -35,9 +36,13 @@ func (t *Testing) createGameItemRec(itemConfig GameItemConfig, gameRec *record.G
 		return nil, err
 	}
 
+	// Add to data store
 	t.Data.AddGameItemRec(rec)
+
+	// Add to teardown data store
 	t.teardownData.AddGameItemRec(rec)
 
+	// Add to references store
 	if itemConfig.Reference != "" {
 		t.Data.Refs.GameItemRefs[itemConfig.Reference] = rec.ID
 	}
