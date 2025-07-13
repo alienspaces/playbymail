@@ -4,46 +4,39 @@ import { RouterLink, RouterView } from 'vue-router'
 
 <template>
   <div id="app">
-    <header>
-      <nav>
-        <RouterLink to="/">Home</RouterLink> |
-        <RouterLink to="/games">Games</RouterLink>
-      </nav>
-    </header>
-    <main>
-      <RouterView />
-    </main>
+    <nav class="main-nav">
+      <router-link to="/" class="nav-logo">PlayByMail Studio</router-link>
+      <router-link to="/studio" class="nav-link">Studio</router-link>
+    </nav>
+    <router-view />
   </div>
 </template>
 
 <style scoped>
-header {
-  line-height: 1.5;
-  max-height: 100vh;
+.main-nav {
+  display: flex;
+  align-items: center;
+  background: #2c3e50;
+  padding: 1rem 2rem;
+  gap: 2rem;
 }
-
-nav {
-  width: 100%;
-  font-size: 12px;
-  text-align: center;
-  margin-top: 2rem;
+.nav-logo {
+  color: #fff;
+  font-weight: bold;
+  font-size: 1.2rem;
+  text-decoration: none;
+  margin-right: auto;
 }
-
-nav a.router-link-exact-active {
-  color: var(--color-text);
+.nav-link {
+  color: #fff;
+  text-decoration: none;
+  font-weight: 500;
+  padding: 0.5rem 1.2rem;
+  border-radius: 4px;
+  transition: background 0.2s;
 }
-
-nav a.router-link-exact-active:hover {
-  background-color: transparent;
-}
-
-nav a {
-  display: inline-block;
-  padding: 0 1rem;
-  border-left: 1px solid var(--color-border);
-}
-
-nav a:first-of-type {
-  border: 0;
+.nav-link.router-link-exact-active,
+.nav-link:hover {
+  background: #1a232b;
 }
 </style>
