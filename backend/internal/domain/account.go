@@ -2,11 +2,16 @@ package domain
 
 import (
 	"errors"
+	"time"
 
 	"github.com/jackc/pgx/v5"
+	"golang.org/x/crypto/bcrypt"
 
 	"gitlab.com/alienspaces/playbymail/core/domain"
 	coreerror "gitlab.com/alienspaces/playbymail/core/error"
+	"gitlab.com/alienspaces/playbymail/core/nullstring"
+	"gitlab.com/alienspaces/playbymail/core/nulltime"
+	corerecord "gitlab.com/alienspaces/playbymail/core/record"
 	coresql "gitlab.com/alienspaces/playbymail/core/sql"
 	"gitlab.com/alienspaces/playbymail/internal/record"
 )
@@ -145,4 +150,173 @@ func (m *Domain) RemoveAccountRec(recID string) error {
 	}
 
 	return nil
+}
+
+// SendAccountVerificationToken generates, stores, and emails a verification token for the given email address.
+func (m *Domain) SendAccountVerificationToken(emailAddr string) error {
+	l := m.Logger("SendAccountVerificationToken")
+
+	// Look up account by email
+	repo := m.AccountRepository()
+
+	recs, err := repo.GetMany(&coresql.Options{
+		Params: []coresql.Param{
+			{Col: record.FieldAccountEmail, Val: emailAddr},
+		},
+		Limit: 1,
+	})
+	if err != nil {
+		l.Warn("failed to get account by email >%s< >%v<", emailAddr, err)
+		return err
+	}
+
+	var rec *record.Account
+	if len(recs) == 0 {
+		l.Info("no account found for email >%s<, creating account", emailAddr)
+		rec = &record.Account{
+			Email: emailAddr,
+		}
+		rec, err = m.CreateAccountRec(rec)
+		if err != nil {
+			l.Warn("failed to create account >%v<", err)
+			return err
+		}
+	} else {
+		rec = recs[0]
+	}
+
+	// TODO: Register job to send verification token
+	l.Info("registering job to send verification token for account ID >%s<", rec.ID)
+
+	return nil
+}
+
+func (m *Domain) GenerateAccountVerificationToken(rec *record.Account) (string, error) {
+	l := m.Logger("GenerateAccountVerificationToken")
+
+	l.Debug("generating verification token for account ID >%s<", rec.ID)
+
+	// Generate a new UUID for the token
+	token := corerecord.NewRecordID()
+
+	// Hash the token
+	hashedToken, err := bcrypt.GenerateFromPassword([]byte(token), bcrypt.DefaultCost)
+	if err != nil {
+		l.Warn("failed to hash verification token >%v<", err)
+		return "", err
+	}
+
+	rec.VerificationToken = nullstring.FromString(string(hashedToken))
+	rec.VerificationTokenExpiresAt = nulltime.FromTime(corerecord.NewRecordTimestamp().Add(15 * time.Minute))
+
+	_, err = m.UpdateAccountRec(rec)
+	if err != nil {
+		l.Warn("failed to update account >%v<", err)
+		return "", err
+	}
+
+	// TODO: Debug log the token
+	l.Info("generated verification token >%s< for account ID >%s<", token, rec.ID)
+
+	return token, nil
+}
+
+func (m *Domain) VerifyAccountVerificationToken(token string) (string, error) {
+	l := m.Logger("VerifyAccountVerificationToken")
+
+	// TODO: Debug log the token
+	l.Info("verifying verification token >%s<", token)
+
+	// Look up account by email
+	repo := m.AccountRepository()
+
+	recs, err := repo.GetMany(&coresql.Options{
+		Params: []coresql.Param{
+			{Col: record.FieldAccountVerificationToken, Val: token},
+		},
+		Limit: 1,
+	})
+	if err != nil {
+		l.Warn("failed to get account by verification token >%s< >%v<", token, err)
+		return "", err
+	}
+
+	if len(recs) == 0 {
+		l.Info("no account found for verification token >%s<", token)
+		return "", nil
+	}
+
+	rec := recs[0]
+
+	l.Info("account found for verification token >%s<", token)
+
+	// Generate session token
+	sessionToken := corerecord.NewRecordID()
+
+	// Hash the session token
+	hashedSessionToken, err := bcrypt.GenerateFromPassword([]byte(sessionToken), bcrypt.DefaultCost)
+	if err != nil {
+		l.Warn("failed to hash session token >%v<", err)
+		return "", err
+	}
+
+	rec.SessionToken = nullstring.FromString(string(hashedSessionToken))
+	rec.SessionTokenExpiresAt = nulltime.FromTime(corerecord.NewRecordTimestamp().Add(15 * time.Minute))
+
+	_, err = m.UpdateAccountRec(rec)
+	if err != nil {
+		l.Warn("failed to update account >%v<", err)
+		return "", err
+	}
+
+	// TODO: Debug log the session token
+	l.Info("generated session token >%s< for account ID >%s<", sessionToken, rec.ID)
+
+	return sessionToken, nil
+}
+
+func (m *Domain) VerifyAccountSessionToken(token string) (*record.Account, error) {
+	l := m.Logger("VerifyAccountSessionToken")
+
+	l.Info("verifying account session token >%s<", token)
+
+	// Look up account by session token
+	repo := m.AccountRepository()
+
+	recs, err := repo.GetMany(&coresql.Options{
+		Params: []coresql.Param{
+			{Col: record.FieldAccountSessionToken, Val: token},
+		},
+		Limit: 1,
+	})
+	if err != nil {
+		l.Warn("failed to get account by session token >%s< >%v<", token, err)
+		return nil, err
+	}
+
+	if len(recs) == 0 {
+		l.Info("no account found for session token >%s<", token)
+		return nil, nil
+	}
+
+	rec := recs[0]
+
+	// Has the session token expired?
+	if rec.SessionTokenExpiresAt.Time.Before(corerecord.NewRecordTimestamp()) {
+		l.Info("session token >%s< has expired", token)
+		return nil, nil
+	}
+
+	// Extend the expiration time of the session token
+	rec.SessionTokenExpiresAt = nulltime.FromTime(corerecord.NewRecordTimestamp().Add(15 * time.Minute))
+
+	_, err = m.UpdateAccountRec(rec)
+	if err != nil {
+		l.Warn("failed to update account >%v<", err)
+		return nil, err
+	}
+
+	l.Info("account found for session token >%s<", token)
+
+	return rec, nil
 }

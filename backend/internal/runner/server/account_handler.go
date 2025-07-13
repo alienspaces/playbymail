@@ -19,6 +19,7 @@ import (
 const (
 	tagGroupAccount server.TagGroup = "Accounts"
 	TagAccount      server.Tag      = "Accounts"
+	requestAuth                     = "request-auth"
 )
 
 const (
@@ -154,6 +155,17 @@ func (rnr *Runner) accountHandlerConfig(l logger.Logger) (map[string]server.Hand
 		DocumentationConfig: server.DocumentationConfig{
 			Document: true,
 			Title:    "Delete account",
+		},
+	}
+
+	accountConfig[requestAuth] = server.HandlerConfig{
+		Method:           http.MethodPost,
+		Path:             "/request-auth",
+		HandlerFunc:      rnr.requestAuthHandler,
+		MiddlewareConfig: server.MiddlewareConfig{}, // No auth
+		DocumentationConfig: server.DocumentationConfig{
+			Document: true,
+			Title:    "Request authentication token",
 		},
 	}
 
@@ -321,4 +333,27 @@ func (rnr *Runner) deleteAccountHandler(w http.ResponseWriter, r *http.Request, 
 	}
 
 	return nil
+}
+
+// requestAuthHandler handles POST /request-auth
+func (rnr *Runner) requestAuthHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
+	type reqBody struct {
+		Email string `json:"email"`
+	}
+	var req reqBody
+	if _, err := server.ReadRequest(l, r, &req); err != nil {
+		l.Warn("failed reading request >%v<", err)
+		return server.WriteResponse(l, w, http.StatusOK, map[string]string{"status": "ok"})
+	}
+	if req.Email == "" {
+		return server.WriteResponse(l, w, http.StatusOK, map[string]string{"status": "ok"})
+	}
+
+	mm := m.(*domain.Domain)
+	err := mm.SendAccountVerificationToken(req.Email)
+	if err != nil {
+		l.Warn("failed sending account verification email >%v<", err)
+		return server.WriteResponse(l, w, http.StatusOK, map[string]string{"status": "ok"})
+	}
+	return server.WriteResponse(l, w, http.StatusOK, map[string]string{"status": "ok"})
 }

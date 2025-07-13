@@ -32,6 +32,9 @@ type Config struct {
 
 	// Sendgrid
 	SendgridAPIKey string `env:"SENGRID_API_KEY"`
+
+	// Forward Email
+	ForwardEmailAPIKey string `env:"FORWARDEMAIL_API_KEY"`
 }
 
 // Parse parses environment variables into the provided struct using env.Parse.

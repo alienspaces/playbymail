@@ -37,6 +37,7 @@ jobs:
       APP_EMAILER_FAKE: "true"
       APP_SMTP_HOST: "localhost:2525"
       JOBCLIENT_MAX_WORKERS: 10
+      TZ: UTC
     steps:
       - uses: actions/checkout@v4
       - name: Set up Go
