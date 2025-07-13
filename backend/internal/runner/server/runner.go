@@ -45,16 +45,16 @@ func NewRunner(l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], cfg co
 		Runner: cr,
 	}
 
-	l.Warn("(runner) setting handler function")
+	l.Warn("(playbymail) setting handler function")
 	r.HandlerFunc = r.handlerFunc
 
-	l.Warn("(runner) setting run daemon function")
+	l.Warn("(playbymail) setting run daemon function")
 	r.RunDaemonFunc = r.runDaemonFunc
 
-	l.Warn("(runner) setting domain function on runner: %p", &r)
+	l.Warn("(playbymail) setting domain function on runner: %p", &r)
 	r.DomainFunc = r.domainFunc
 
-	l.Warn("(runner) setting authenticate request function")
+	l.Warn("(playbymail) setting authenticate request function")
 
 	// Add mock authentication function for testing
 	r.AuthenticateRequestFunc = r.mockAuthenticateRequest
@@ -87,11 +87,11 @@ func NewRunner(l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], cfg co
 
 // DomainFunc -
 func (rnr *Runner) domainFunc(l logger.Logger) (domainer.Domainer, error) {
-	l.Info("(runner) DomainFunc called on runner: %p", rnr)
-	l.Info("(runner) calling domain.NewDomain")
+	l.Info("(playbymail) DomainFunc called on runner: %p", rnr)
+	l.Info("(playbymail) calling domain.NewDomain")
 	m, err := domain.NewDomain(l, rnr.JobClient)
 	if err != nil {
-		l.Warn("(runner) failed new domain >%v<", err)
+		l.Warn("(playbymail) failed new domain >%v<", err)
 		return nil, err
 	}
 	return m, nil

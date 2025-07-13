@@ -15,7 +15,7 @@ import (
 func (rnr *Runner) handlerFunc(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
 	l = loggerWithFunctionContext(l, "Handler")
 
-	l.Info("(runner) using playbymail handler")
+	l.Info("(playbymail) using playbymail handler")
 
 	fmt.Fprint(w, "Hello from playbymail!\n")
 

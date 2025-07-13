@@ -6,7 +6,20 @@ import "context"
 func (rnr *Runner) runDaemonFunc(ctx context.Context, args map[string]any) error {
 	l := loggerWithFunctionContext(rnr.Log, "RunDaemon")
 
-	l.Info("(runner) running playbymail daemon")
+	if rnr.JobClient == nil {
+		l.Warn("(playbymail) runner does not have a job client, not running")
+		return nil
+	}
+
+	if err := rnr.JobClient.Start(ctx); err != nil {
+		return err
+	}
+
+	l.Info("(playbymail) job client started")
+
+	<-rnr.JobClient.Stopped()
+
+	l.Info("(playbymail) job client stopped")
 
 	return nil
 }
