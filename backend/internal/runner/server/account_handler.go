@@ -22,16 +22,17 @@ import (
 )
 
 const (
-	requestAuth = "request-auth"
-)
-
-const (
 	getManyAccounts     = "get-accounts"
 	getOneAccount       = "get-account"
 	createAccount       = "create-account"
 	createAccountWithID = "create-account-with-id"
 	updateAccount       = "update-account"
 	deleteAccount       = "delete-account"
+)
+
+const (
+	requestAuth = "request-auth"
+	verifyAuth  = "verify-auth"
 )
 
 func (rnr *Runner) accountHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error) {
@@ -169,10 +170,45 @@ func (rnr *Runner) accountHandlerConfig(l logger.Logger) (map[string]server.Hand
 			AuthenTypes: []server.AuthenticationType{
 				server.AuthenticationTypePublic,
 			},
+			ValidateRequestSchema: jsonschema.SchemaWithReferences{
+				Main: jsonschema.Schema{
+					Name: "account.request-auth.request.schema.json",
+				},
+			},
+			ValidateResponseSchema: jsonschema.SchemaWithReferences{
+				Main: jsonschema.Schema{
+					Name: "account.request-auth.response.schema.json",
+				},
+			},
 		},
 		DocumentationConfig: server.DocumentationConfig{
 			Document: true,
 			Title:    "Request authentication token",
+		},
+	}
+
+	accountConfig[verifyAuth] = server.HandlerConfig{
+		Method:      http.MethodPost,
+		Path:        "/verify-auth",
+		HandlerFunc: rnr.verifyAuthHandler,
+		MiddlewareConfig: server.MiddlewareConfig{
+			AuthenTypes: []server.AuthenticationType{
+				server.AuthenticationTypePublic,
+			},
+			ValidateRequestSchema: jsonschema.SchemaWithReferences{
+				Main: jsonschema.Schema{
+					Name: "account.verify-auth.request.schema.json",
+				},
+			},
+			ValidateResponseSchema: jsonschema.SchemaWithReferences{
+				Main: jsonschema.Schema{
+					Name: "account.verify-auth.response.schema.json",
+				},
+			},
+		},
+		DocumentationConfig: server.DocumentationConfig{
+			Document: true,
+			Title:    "Verify authentication token",
 		},
 	}
 
@@ -344,25 +380,44 @@ func (rnr *Runner) deleteAccountHandler(w http.ResponseWriter, r *http.Request, 
 
 // requestAuthHandler handles POST /request-auth
 func (rnr *Runner) requestAuthHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
-	type reqBody struct {
-		Email string `json:"email"`
-	}
-	var req reqBody
+	var req mapper.RequestAuthRequest
 	if _, err := server.ReadRequest(l, r, &req); err != nil {
 		l.Warn("failed reading request >%v<", err)
-		return server.WriteResponse(l, w, http.StatusOK, map[string]string{"status": "ok"})
+		return server.WriteResponse(l, w, http.StatusOK, mapper.MapRequestAuthResponse("ok"))
 	}
 	if req.Email == "" {
-		return server.WriteResponse(l, w, http.StatusOK, map[string]string{"status": "ok"})
+		return server.WriteResponse(l, w, http.StatusOK, mapper.MapRequestAuthResponse("ok"))
 	}
 
 	mm := m.(*domain.Domain)
 	err := sendAccountVerificationEmail(mm, rnr.JobClient, req.Email)
 	if err != nil {
 		l.Warn("failed sending account verification email >%v<", err)
-		return server.WriteResponse(l, w, http.StatusOK, map[string]string{"status": "ok"})
+		return server.WriteResponse(l, w, http.StatusOK, mapper.MapRequestAuthResponse("ok"))
 	}
-	return server.WriteResponse(l, w, http.StatusOK, map[string]string{"status": "ok"})
+	return server.WriteResponse(l, w, http.StatusOK, mapper.MapRequestAuthResponse("ok"))
+}
+
+func (rnr *Runner) verifyAuthHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
+	l = loggerWithFunctionContext(l, "VerifyAuthHandler")
+
+	var req mapper.VerifyAuthRequest
+	if _, err := server.ReadRequest(l, r, &req); err != nil {
+		l.Warn("failed reading request >%v<", err)
+		return err
+	}
+
+	mm := m.(*domain.Domain)
+
+	sessionToken, err := mm.VerifyAccountVerificationToken(req.VerificationToken)
+	if err != nil {
+		l.Warn("failed verifying account verification token >%v<", err)
+		return err
+	}
+
+	l.Info("verified account verification token for email >%s<, session token >%s<", req.Email, sessionToken)
+
+	return server.WriteResponse(l, w, http.StatusOK, mapper.MapVerifyAuthResponse(sessionToken))
 }
 
 // SendAccountVerificationEmail generates, stores, and emails a verification token for the given email address.

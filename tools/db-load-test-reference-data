@@ -1,53 +1,62 @@
 #!/usr/bin/env sh
 
 echo
+print_status() {
+    echo -e "\033[0;32m✅ $1\033[0m"
+}
+print_warning() {
+    echo -e "\033[1;33m⚠️  $1\033[0m"
+}
+
 echo "** Loading backend test reference data"
 echo
 
-# Get script directory (POSIX compatible)
-script_dir=$(dirname "$0")
-
-# environment
-. "$script_dir/environment" || exit $?
-
-# TODO: CLI processes do not require server addresses or ports
-APP_SERVER_PORT="0000"
-
-# Save current directory
-orig_dir=$(pwd)
-
-# Check if we're already in the backend directory
-if [ "$(basename "$PWD")" = "backend" ]; then
-    # Already in backend directory, no need to cd
-    backend_dir="."
-    env_path="../tools/environment"
-else
-    # Need to cd to backend directory
-    cd backend || exit 1
-    backend_dir="."
-    env_path="../tools/environment"
+# Check if we're in the right directory
+if [ ! -f "backend/go.mod" ]; then
+    echo "❌ Must be run from playbymail root directory"
+    exit 1
 fi
 
-# NOTE: we shift into the backend directory before sourcing
-# the environment so $PWD is correct for APP_SERVER_HOME
-
-echo
-echo "** Loading $PROJECT_NAME backend reference data"
-echo
-
-# load backend specific environment
-. "$env_path" || exit $?
-
-# Check if the CLI command exists
-if [ -f "./cmd/cli/main.go" ]; then
-    go run ./cmd/cli db-load-main-test-reference-data || exit $?
-else
-    echo "=> No CLI command found for loading test reference data"
-    echo "=> Skipping test reference data loading"
+# Copy environment file if it exists
+if [ -f ".env.develop" ]; then
+    cp .env.develop .env
+    print_status "Environment file copied"
 fi
 
-# Return to original directory
-cd "$orig_dir" || exit 1
+# Load environment
+if [ -f "tools/environment" ]; then
+    . tools/environment || exit $?
+    print_status "Environment loaded"
+fi
+
+# Remove old CLI binary if it exists
+if [ -f "playbymail-cli" ]; then
+    rm playbymail-cli
+    print_status "Old CLI binary removed"
+fi
+
+# Build CLI binary in backend directory
+cd backend || exit 1
+print_status "Building Go CLI..."
+go build -o ../playbymail-cli ./cmd/cli
+cd ..
+
+# Verify binary exists
+if [ ! -f "playbymail-cli" ]; then
+    echo "❌ CLI build failed - binary not found"
+    exit 1
+fi
+
+print_status "Running CLI to load test reference data"
+
+# Run CLI from project root
+./playbymail-cli db-load-main-test-reference-data || exit $?
+
+print_status "Test reference data loaded successfully"
+
+# Remove CLI binary after use
+rm playbymail-cli
+print_status "CLI binary removed after use"
 
 echo "** All done ** "
 

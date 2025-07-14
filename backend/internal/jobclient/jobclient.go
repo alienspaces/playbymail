@@ -12,16 +12,17 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/type/storer"
 	"gitlab.com/alienspaces/playbymail/internal/jobqueue"
 	"gitlab.com/alienspaces/playbymail/internal/jobworker"
+	"gitlab.com/alienspaces/playbymail/internal/utils/config"
 )
 
 // NewJobClient creates a new job client. When no queue names are specified it provides the
 // ability to queue jobs only. When one or more queue names are specified it will also process
 // jobs for those queues.
-func NewJobClient(l logger.Logger, s storer.Storer, e emailer.Emailer, queueNames []string) (*river.Client[pgx.Tx], error) {
+func NewJobClient(l logger.Logger, cfg config.Config, s storer.Storer, e emailer.Emailer, queueNames []string) (*river.Client[pgx.Tx], error) {
 
 	var err error
 
-	riverConfig, err := getRiverConfig(l, s, e, queueNames)
+	riverConfig, err := getRiverConfig(l, cfg, s, e, queueNames)
 	if err != nil {
 		return nil, err
 	}
@@ -34,7 +35,7 @@ func NewJobClient(l logger.Logger, s storer.Storer, e emailer.Emailer, queueName
 	return riverClient, nil
 }
 
-func getRiverConfig(l logger.Logger, s storer.Storer, e emailer.Emailer, queueNames []string) (*river.Config, error) {
+func getRiverConfig(l logger.Logger, cfg config.Config, s storer.Storer, e emailer.Emailer, queueNames []string) (*river.Config, error) {
 	l = l.WithFunctionContext("getRiverConfig")
 
 	riverConfig := river.Config{}
@@ -42,7 +43,7 @@ func getRiverConfig(l logger.Logger, s storer.Storer, e emailer.Emailer, queueNa
 	// Add all job workers regardless of queues this client is going to process as river will
 	// use the registered job workers to validate registered jobs have an associated worker.
 	// This means that every deployed server requires all configuration required for all workers.
-	w, err := getWorkers(l, s, e)
+	w, err := getWorkers(l, cfg, s, e)
 	if err != nil {
 		return nil, err
 	}
@@ -96,10 +97,10 @@ func addDefaultPeriodicJobs(l logger.Logger, s storer.Storer, p []*river.Periodi
 	return p, nil
 }
 
-func getWorkers(l logger.Logger, s storer.Storer, e emailer.Emailer) (*river.Workers, error) {
+func getWorkers(l logger.Logger, cfg config.Config, s storer.Storer, e emailer.Emailer) (*river.Workers, error) {
 	w := river.NewWorkers()
 
-	SendAccountVerificationEmailWorker, err := jobworker.NewSendAccountVerificationEmailWorker(l, s, e)
+	SendAccountVerificationEmailWorker, err := jobworker.NewSendAccountVerificationEmailWorker(l, cfg, s, e)
 	if err != nil {
 		return nil, fmt.Errorf("failed NewSendAccountVerificationEmailWorker worker: %w", err)
 	}

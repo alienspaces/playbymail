@@ -84,8 +84,11 @@ func (f *ForwardEmail) Send(msg *emailer.Message) error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		l.Warn("forwardemail API returned status %d", resp.StatusCode)
-		return fmt.Errorf("forwardemail API error: %d", resp.StatusCode)
+		// Read and log the response body for more details
+		respBody := new(bytes.Buffer)
+		_, _ = respBody.ReadFrom(resp.Body)
+		l.Warn("forwardemail API returned status %d, body: %s", resp.StatusCode, respBody.String())
+		return fmt.Errorf("forwardemail API error: %d, body: %s", resp.StatusCode, respBody.String())
 	}
 
 	l.Info("successfully sent email via forwardemail")

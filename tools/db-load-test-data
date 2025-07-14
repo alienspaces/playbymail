@@ -4,41 +4,65 @@ echo
 echo "** Loading backend test data"
 echo
 
-# Get script directory (POSIX compatible)
-script_dir=$(dirname "$0")
+# Colors for output
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
 
-# environment
-. "$script_dir/environment" || exit $?
+print_status() {
+    echo -e "${GREEN}✅ $1${NC}"
+}
 
-# TODO: CLI processes do not require server addresses or ports
-APP_SERVER_PORT="0000"
+print_warning() {
+    echo -e "${YELLOW}⚠️  $1${NC}"
+}
 
-# Save current directory
-orig_dir=$(pwd)
-
-# load application backend test data
-cd backend || exit 1
-
-# NOTE: we shift into the backend directory before sourcing
-# the environment so $PWD is correct for APP_SERVER_HOME
-
-echo
-echo "** Loading ${PROJECT_NAME} backend test data"
-echo
-
-# load backend specific environment
-. ../"$script_dir/environment" || exit $?
-
-# Check if the CLI command exists
-if [ -f "./cmd/cli/main.go" ]; then
-    go run ./cmd/cli db-load-main-test-data || exit $?
-else
-    echo "=> No CLI command found for loading test data"
-    echo "=> Skipping test data loading"
+# Check if we're in the right directory
+if [ ! -f "backend/go.mod" ]; then
+    echo "❌ Must be run from playbymail root directory"
+    exit 1
 fi
 
-# Return to original directory
-cd "$orig_dir" || exit 1
+# Copy environment file if it exists
+if [ -f ".env.develop" ]; then
+    cp .env.develop .env
+    print_status "Environment file copied"
+fi
+
+# Load environment
+if [ -f "tools/environment" ]; then
+    . tools/environment || exit $?
+    print_status "Environment loaded"
+fi
+
+# Remove old CLI binary if it exists
+if [ -f "playbymail-cli" ]; then
+    rm playbymail-cli
+    print_status "Old CLI binary removed"
+fi
+
+# Build CLI binary in backend directory
+cd backend || exit 1
+print_status "Building Go CLI..."
+go build -o ../playbymail-cli ./cmd/cli
+cd ..
+
+# Verify binary exists
+if [ ! -f "playbymail-cli" ]; then
+    echo "❌ CLI build failed - binary not found"
+    exit 1
+fi
+
+print_status "Running CLI to load test data"
+
+# Run CLI from project root
+./playbymail-cli db-load-main-test-data || exit $?
+
+print_status "Test data loaded successfully"
+
+# Remove CLI binary after use
+rm playbymail-cli
+print_status "CLI binary removed after use"
 
 echo "** All done ** "
 

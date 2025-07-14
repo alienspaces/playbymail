@@ -2,56 +2,81 @@ import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import GameView from '../views/GameView.vue'
 import StudioLayout from '../components/StudioLayout.vue'
+import LoginView from '../views/LoginView.vue';
+import VerifyView from '../views/VerifyView.vue';
+
+const routes = [
+  {
+    path: '/',
+    name: 'Home',
+    component: () => import('../views/HomeView.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/games',
+    name: 'games',
+    component: GameView
+  },
+  {
+    path: '/studio',
+    redirect: '/studio/games',
+  },
+  {
+    path: '/studio/:gameId',
+    component: StudioLayout,
+    props: true,
+    children: [
+      {
+        path: 'locations',
+        name: 'studio-locations',
+        component: () => import('../views/StudioLocationsView.vue'),
+        props: true
+      },
+      {
+        path: 'items',
+        name: 'studio-items',
+        component: () => import('../views/StudioItemsView.vue'),
+        props: true
+      },
+      {
+        path: 'creatures',
+        name: 'studio-creatures',
+        component: () => import('../views/StudioCreaturesView.vue'),
+        props: true
+      },
+      {
+        path: 'placement',
+        name: 'studio-placement',
+        component: () => import('../views/StudioPlacementView.vue'),
+        props: true
+      }
+    ]
+  },
+  {
+    path: '/login',
+    name: 'Login',
+    component: LoginView,
+  },
+  {
+    path: '/verify',
+    name: 'Verify',
+    component: VerifyView,
+  },
+];
 
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
-  routes: [
-    {
-      path: '/',
-      name: 'home',
-      component: HomeView
-    },
-    {
-      path: '/games',
-      name: 'games',
-      component: GameView
-    },
-    {
-      path: '/studio',
-      redirect: '/studio/games',
-    },
-    {
-      path: '/studio/:gameId',
-      component: StudioLayout,
-      props: true,
-      children: [
-        {
-          path: 'locations',
-          name: 'studio-locations',
-          component: () => import('../views/StudioLocationsView.vue'),
-          props: true
-        },
-        {
-          path: 'items',
-          name: 'studio-items',
-          component: () => import('../views/StudioItemsView.vue'),
-          props: true
-        },
-        {
-          path: 'creatures',
-          name: 'studio-creatures',
-          component: () => import('../views/StudioCreaturesView.vue'),
-          props: true
-        },
-        {
-          path: 'placement',
-          name: 'studio-placement',
-          component: () => import('../views/StudioPlacementView.vue'),
-          props: true
-        }
-      ]
-    }
-  ]
-})
+  history: createWebHistory(),
+  routes,
+});
 
-export default router
+// Navigation guard for auth
+router.beforeEach((to, from, next) => {
+  const sessionToken = localStorage.getItem('session_token');
+  if (to.meta.requiresAuth && !sessionToken) {
+    next({ path: '/login' });
+  } else {
+    next();
+  }
+});
+
+export default router;

@@ -2,6 +2,8 @@ package jobworker
 
 import (
 	"context"
+	"fmt"
+	"os"
 	"strconv"
 
 	"github.com/jackc/pgx/v5"
@@ -17,6 +19,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/type/storer"
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/jobqueue"
+	"gitlab.com/alienspaces/playbymail/internal/utils/config"
 )
 
 type SendAccountVerificationEmailWorkerArgs struct {
@@ -36,14 +39,40 @@ type SendAccountVerificationEmailWorker struct {
 	JobWorker
 }
 
-func NewSendAccountVerificationEmailWorker(l logger.Logger, s storer.Storer, e emailer.Emailer) (*SendAccountVerificationEmailWorker, error) {
+func NewSendAccountVerificationEmailWorker(l logger.Logger, cfg config.Config, s storer.Storer, e emailer.Emailer) (*SendAccountVerificationEmailWorker, error) {
 	l = l.WithPackageContext("SendAccountVerificationEmailWorker")
 
 	l.Info("Instantiation SendAccountVerificationEmailWorker")
 
-	jw, err := NewJobWorker(l, s)
+	jw, err := NewJobWorker(l, cfg, s)
 	if err != nil {
 		return nil, err
+	}
+
+	// We need an email client and we need to know where the templates are stored
+	// otherwise we cannot do our work.
+	if e == nil {
+		return nil, fmt.Errorf("email client is nil")
+	}
+
+	if cfg.TemplatesPath == "" {
+		return nil, fmt.Errorf("templates path is empty")
+	}
+
+	// Get the current working directory
+	wd, err := os.Getwd()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get current working directory >%v<", err)
+	}
+
+	// Check the templates path actually exists
+	l.Info("templates path >%s<", cfg.TemplatesPath)
+	l.Info("current working directory >%s<", wd)
+
+	fullPath := filepath.Join(wd, cfg.TemplatesPath)
+
+	if _, err := os.Stat(fullPath); os.IsNotExist(err) {
+		return nil, fmt.Errorf("templates path does not exist >%s<", fullPath)
 	}
 
 	return &SendAccountVerificationEmailWorker{
@@ -95,12 +124,13 @@ func (w *SendAccountVerificationEmailWorker) DoWork(ctx context.Context, m *doma
 	}
 
 	// Render the HTML email template
-	tmplPath := filepath.Join("internal", "jobworker", "template", "account_verification.email.html")
+	tmplPath := filepath.Join(w.config.TemplatesPath, "account_verification.email.html")
 	tmpl, err := template.ParseFiles(tmplPath)
 	if err != nil {
 		l.Warn("failed to parse email template >%v<", err)
 		return nil, err
 	}
+
 	var body bytes.Buffer
 	tmplData := struct {
 		VerificationCode string
@@ -109,6 +139,7 @@ func (w *SendAccountVerificationEmailWorker) DoWork(ctx context.Context, m *doma
 		VerificationCode: token,
 		SupportEmail:     "support@playbymail.games",
 	}
+
 	if err := tmpl.ExecuteTemplate(&body, "account_verification", tmplData); err != nil {
 		l.Warn("failed to render email template >%v<", err)
 		return nil, err

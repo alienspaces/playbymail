@@ -1,0 +1,13 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "VerifyAuthResponse",
+    "type": "object",
+    "properties": {
+        "session_token": {
+            "type": "string"
+        }
+    },
+    "required": [
+        "session_token"
+    ]
+}

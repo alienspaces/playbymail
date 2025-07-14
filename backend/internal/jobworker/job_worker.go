@@ -10,13 +10,15 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
 	"gitlab.com/alienspaces/playbymail/core/type/storer"
 	"gitlab.com/alienspaces/playbymail/internal/domain"
+	"gitlab.com/alienspaces/playbymail/internal/utils/config"
 )
 
 type JobWorker struct {
 	corejobworker.JobWorker
+	config config.Config
 }
 
-func NewJobWorker(l logger.Logger, s storer.Storer) (*JobWorker, error) {
+func NewJobWorker(l logger.Logger, cfg config.Config, s storer.Storer) (*JobWorker, error) {
 
 	jw, err := corejobworker.NewWorker(l, s)
 	if err != nil {
@@ -25,6 +27,7 @@ func NewJobWorker(l logger.Logger, s storer.Storer) (*JobWorker, error) {
 
 	return &JobWorker{
 		JobWorker: *jw,
+		config:    cfg,
 	}, nil
 }
 

@@ -10,10 +10,22 @@ const (
 )
 
 type Config struct {
-	AppEnv             string   `env:"APP_ENV"`
-	Port               string   `env:"PORT" envDefault:"8080"`
-	AppHome            string   `env:"APP_HOME" envDefault:"./frontend/dist"`
-	AssetsPath         string   `env:"ASSETS_PATH" envDefault:"./frontend/src/assets"`
+	// App environment
+	AppEnv string `env:"APP_ENV"`
+
+	// Backend port (default: 8080)
+	Port string `env:"PORT" envDefault:"8080"`
+
+	// App home (frontend application) (default: ./frontend/dist)
+	AppHome string `env:"APP_HOME" envDefault:"./frontend/dist"`
+
+	// Assets (javascript, css, images, etc.) (default: ./frontend/src/assets)
+	AssetsPath string `env:"ASSETS_PATH" envDefault:"./frontend/src/assets"`
+
+	// Templates (html, email, etc.) (default: ./backend/templates)
+	TemplatesPath string `env:"TEMPLATES_PATH" envDefault:"./backend/templates"`
+
+	// CORS
 	CORSAllowedOrigins []string `env:"CORS_ALLOWED_ORIGINS" envDefault:"*"`
 	CORSAllowedHeaders []string `env:"CORS_ALLOWED_HEADERS" envDefault:"Content-Type,Authorization"`
 

@@ -66,7 +66,7 @@ func Default(cfg config.Config) (*log.Log, *store.Store, *river.Client[pgx.Tx], 
 	}
 
 	// River
-	j, err := jobclient.NewJobClient(l, s, e, []string{jobqueue.QueueDefault})
+	j, err := jobclient.NewJobClient(l, cfg, s, e, []string{jobqueue.QueueDefault})
 	if err != nil {
 		fmt.Printf("failed new job client >%v<", err)
 		return nil, nil, nil, err

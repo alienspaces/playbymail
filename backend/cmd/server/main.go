@@ -11,7 +11,6 @@ import (
 )
 
 func main() {
-
 	// runner config
 	cfg, err := config.Parse()
 	if err != nil {
