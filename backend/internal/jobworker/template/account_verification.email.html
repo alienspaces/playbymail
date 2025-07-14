@@ -1,0 +1,28 @@
+{{define "account_verification"}}
+<!DOCTYPE html>
+<html lang="en">
+
+<body style="font-family: 'Inter', Arial, sans-serif; background: #fff; color: #11181C; width: 100%; max-width: 600px; margin: 0 auto;">
+    <div style="padding: 32px;">
+        <div style="font-weight: 700; font-size: 24px; line-height: 30px; margin-bottom: 24px;">
+            Verify your PlayByMail account
+        </div>
+        <div style="font-size: 16px; line-height: 24px; margin-bottom: 24px;">
+            Hello,
+            <br /><br />
+            To complete your sign-in, please use the verification code below. This code is valid for a limited time only.
+        </div>
+        <div style="font-size: 32px; font-weight: bold; letter-spacing: 2px; background: #F5F7FA; padding: 16px; border-radius: 8px; text-align: center; margin-bottom: 24px;">
+            {{.VerificationCode}}
+        </div>
+        <div style="font-size: 16px; line-height: 24px; margin-bottom: 24px;">
+            If you did not request this code, you can safely ignore this email.
+        </div>
+        <div style="font-size: 14px; color: #4D565C;">
+            For help or questions, contact us at <a href="mailto:{{.SupportEmail}}" style="color: #006ECD;">{{.SupportEmail}}</a>.
+        </div>
+    </div>
+</body>
+
+</html>
+{{end}} 

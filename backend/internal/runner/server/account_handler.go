@@ -1,9 +1,12 @@
 package runner
 
 import (
+	"context"
 	"net/http"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/julienschmidt/httprouter"
+	"github.com/riverqueue/river"
 
 	"gitlab.com/alienspaces/playbymail/core/jsonschema"
 	"gitlab.com/alienspaces/playbymail/core/queryparam"
@@ -12,14 +15,14 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/type/domainer"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
 	"gitlab.com/alienspaces/playbymail/internal/domain"
+	"gitlab.com/alienspaces/playbymail/internal/jobqueue"
+	"gitlab.com/alienspaces/playbymail/internal/jobworker"
 	"gitlab.com/alienspaces/playbymail/internal/mapper"
 	"gitlab.com/alienspaces/playbymail/internal/record"
 )
 
 const (
-	tagGroupAccount server.TagGroup = "Accounts"
-	TagAccount      server.Tag      = "Accounts"
-	requestAuth                     = "request-auth"
+	requestAuth = "request-auth"
 )
 
 const (
@@ -65,7 +68,7 @@ func (rnr *Runner) accountHandlerConfig(l logger.Logger) (map[string]server.Hand
 		HandlerFunc: rnr.getManyAccountsHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
-				server.AuthenticationTypeAPIKey,
+				server.AuthenticationTypeToken,
 			},
 			ValidateResponseSchema: collectionResponseSchema,
 		},
@@ -82,7 +85,7 @@ func (rnr *Runner) accountHandlerConfig(l logger.Logger) (map[string]server.Hand
 		HandlerFunc: rnr.getAccountHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
-				server.AuthenticationTypeAPIKey,
+				server.AuthenticationTypeToken,
 			},
 			ValidateResponseSchema: responseSchema,
 		},
@@ -98,7 +101,7 @@ func (rnr *Runner) accountHandlerConfig(l logger.Logger) (map[string]server.Hand
 		HandlerFunc: rnr.createAccountHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
-				server.AuthenticationTypeAPIKey,
+				server.AuthenticationTypeToken,
 			},
 			ValidateRequestSchema:  requestSchema,
 			ValidateResponseSchema: responseSchema,
@@ -115,7 +118,7 @@ func (rnr *Runner) accountHandlerConfig(l logger.Logger) (map[string]server.Hand
 		HandlerFunc: rnr.createAccountHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
-				server.AuthenticationTypeAPIKey,
+				server.AuthenticationTypeToken,
 			},
 			ValidateRequestSchema:  requestSchema,
 			ValidateResponseSchema: responseSchema,
@@ -132,7 +135,7 @@ func (rnr *Runner) accountHandlerConfig(l logger.Logger) (map[string]server.Hand
 		HandlerFunc: rnr.updateAccountHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
-				server.AuthenticationTypeAPIKey,
+				server.AuthenticationTypeToken,
 			},
 			ValidateRequestSchema:  requestSchema,
 			ValidateResponseSchema: responseSchema,
@@ -149,7 +152,7 @@ func (rnr *Runner) accountHandlerConfig(l logger.Logger) (map[string]server.Hand
 		HandlerFunc: rnr.deleteAccountHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
-				server.AuthenticationTypeAPIKey,
+				server.AuthenticationTypeToken,
 			},
 		},
 		DocumentationConfig: server.DocumentationConfig{
@@ -159,10 +162,14 @@ func (rnr *Runner) accountHandlerConfig(l logger.Logger) (map[string]server.Hand
 	}
 
 	accountConfig[requestAuth] = server.HandlerConfig{
-		Method:           http.MethodPost,
-		Path:             "/request-auth",
-		HandlerFunc:      rnr.requestAuthHandler,
-		MiddlewareConfig: server.MiddlewareConfig{}, // No auth
+		Method:      http.MethodPost,
+		Path:        "/request-auth",
+		HandlerFunc: rnr.requestAuthHandler,
+		MiddlewareConfig: server.MiddlewareConfig{
+			AuthenTypes: []server.AuthenticationType{
+				server.AuthenticationTypePublic,
+			},
+		},
 		DocumentationConfig: server.DocumentationConfig{
 			Document: true,
 			Title:    "Request authentication token",
@@ -350,10 +357,55 @@ func (rnr *Runner) requestAuthHandler(w http.ResponseWriter, r *http.Request, pp
 	}
 
 	mm := m.(*domain.Domain)
-	err := mm.SendAccountVerificationToken(req.Email)
+	err := sendAccountVerificationEmail(mm, rnr.JobClient, req.Email)
 	if err != nil {
 		l.Warn("failed sending account verification email >%v<", err)
 		return server.WriteResponse(l, w, http.StatusOK, map[string]string{"status": "ok"})
 	}
 	return server.WriteResponse(l, w, http.StatusOK, map[string]string{"status": "ok"})
+}
+
+// SendAccountVerificationEmail generates, stores, and emails a verification token for the given email address.
+func sendAccountVerificationEmail(m *domain.Domain, jc *river.Client[pgx.Tx], emailAddr string) error {
+	l := m.Logger("SendAccountVerificationEmail")
+
+	// Look up account by email
+	repo := m.AccountRepository()
+
+	recs, err := repo.GetMany(&coresql.Options{
+		Params: []coresql.Param{
+			{Col: record.FieldAccountEmail, Val: emailAddr},
+		},
+		Limit: 1,
+	})
+	if err != nil {
+		l.Warn("failed to get account by email >%s< >%v<", emailAddr, err)
+		return err
+	}
+
+	var rec *record.Account
+	if len(recs) == 0 {
+		l.Info("no account found for email >%s<, creating account", emailAddr)
+		rec = &record.Account{
+			Email: emailAddr,
+		}
+		rec, err = m.CreateAccountRec(rec)
+		if err != nil {
+			l.Warn("failed to create account >%v<", err)
+			return err
+		}
+	} else {
+		rec = recs[0]
+	}
+
+	// Register job to send verification token
+	l.Info("registering job to send verification token for account ID >%s<", rec.ID)
+
+	jc.Insert(context.Background(), &jobworker.SendAccountVerificationEmailWorkerArgs{
+		AccountID: rec.ID,
+	}, &river.InsertOpts{
+		Queue: jobqueue.QueueDefault,
+	})
+
+	return nil
 }

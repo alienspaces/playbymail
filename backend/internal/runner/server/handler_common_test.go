@@ -21,6 +21,7 @@ import (
 	coreerror "gitlab.com/alienspaces/playbymail/core/error"
 	"gitlab.com/alienspaces/playbymail/core/jsonschema"
 	"gitlab.com/alienspaces/playbymail/core/server"
+	"gitlab.com/alienspaces/playbymail/core/type/domainer"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
 	"gitlab.com/alienspaces/playbymail/core/type/storer"
 	"gitlab.com/alienspaces/playbymail/internal/harness"
@@ -93,6 +94,18 @@ func (t *TestCase) TestNewRunner(l logger.Logger, s storer.Storer, j *river.Clie
 	rnr, err := NewRunner(l, s, j, cfg)
 	if err != nil {
 		return nil, err
+	}
+
+	// For general testing all handlers are authenticated by default
+	rnr.AuthenticateRequestFunc = func(l logger.Logger, m domainer.Domainer, r *http.Request, authType server.AuthenticationType) (server.AuthenticatedRequest, error) {
+		return server.AuthenticatedRequest{
+			Type: server.AuthenticatedTypeToken,
+			Account: server.AuthenticatedAccount{
+				ID:    "test-account-id",
+				Name:  "Test Account",
+				Email: "test@example.com",
+			},
+		}, nil
 	}
 
 	err = rnr.Init(s)

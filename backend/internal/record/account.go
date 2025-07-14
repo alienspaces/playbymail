@@ -4,6 +4,7 @@ import (
 	"database/sql"
 
 	"github.com/jackc/pgx/v5"
+
 	"gitlab.com/alienspaces/playbymail/core/record"
 )
 

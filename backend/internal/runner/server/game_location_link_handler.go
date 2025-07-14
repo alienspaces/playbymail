@@ -16,11 +16,6 @@ import (
 )
 
 const (
-	tagGroupGameLocationLink server.TagGroup = "GameLocationLinks"
-	TagGameLocationLink      server.Tag      = "GameLocationLinks"
-)
-
-const (
 	getManyGameLocationLinks = "get-location-links"
 	getOneGameLocationLink   = "get-location-link"
 	createGameLocationLink   = "create-location-link"
@@ -61,7 +56,7 @@ func (rnr *Runner) gameLocationLinkHandlerConfig(l logger.Logger) (map[string]se
 		HandlerFunc: rnr.getManyGameLocationLinksHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
-				server.AuthenticationTypeAPIKey,
+				server.AuthenticationTypeToken,
 			},
 			ValidateResponseSchema: collectionResponseSchema,
 		},
@@ -78,7 +73,7 @@ func (rnr *Runner) gameLocationLinkHandlerConfig(l logger.Logger) (map[string]se
 		HandlerFunc: rnr.getGameLocationLinkHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
-				server.AuthenticationTypeAPIKey,
+				server.AuthenticationTypeToken,
 			},
 			ValidateResponseSchema: responseSchema,
 		},
@@ -94,7 +89,7 @@ func (rnr *Runner) gameLocationLinkHandlerConfig(l logger.Logger) (map[string]se
 		HandlerFunc: rnr.createGameLocationLinkHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
-				server.AuthenticationTypeAPIKey,
+				server.AuthenticationTypeToken,
 			},
 			ValidateRequestSchema:  requestSchema,
 			ValidateResponseSchema: responseSchema,
@@ -111,7 +106,7 @@ func (rnr *Runner) gameLocationLinkHandlerConfig(l logger.Logger) (map[string]se
 		HandlerFunc: rnr.deleteGameLocationLinkHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
-				server.AuthenticationTypeAPIKey,
+				server.AuthenticationTypeToken,
 			},
 		},
 		DocumentationConfig: server.DocumentationConfig{

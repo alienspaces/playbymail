@@ -16,12 +16,6 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/record"
 )
 
-// The TagGroup and Tag value is used for the menu headings in the generated API documentation.
-const (
-	tagGroupGame server.TagGroup = "Games"
-	TagGame      server.Tag      = "Games"
-)
-
 const (
 	getManyGames     = "get-games"
 	getOneGame       = "get-game"
@@ -67,7 +61,7 @@ func (rnr *Runner) gameHandlerConfig(l logger.Logger) (map[string]server.Handler
 		HandlerFunc: rnr.getManyGamesHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
-				server.AuthenticationTypeAPIKey,
+				server.AuthenticationTypeToken,
 			},
 			ValidateResponseSchema: collectionResponseSchema,
 		},
@@ -84,7 +78,7 @@ func (rnr *Runner) gameHandlerConfig(l logger.Logger) (map[string]server.Handler
 		HandlerFunc: rnr.getGameHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
-				server.AuthenticationTypeAPIKey,
+				server.AuthenticationTypeToken,
 			},
 			ValidateResponseSchema: responseSchema,
 		},
@@ -100,7 +94,7 @@ func (rnr *Runner) gameHandlerConfig(l logger.Logger) (map[string]server.Handler
 		HandlerFunc: rnr.createGameHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
-				server.AuthenticationTypeAPIKey,
+				server.AuthenticationTypeToken,
 			},
 			ValidateRequestSchema:  requestSchema,
 			ValidateResponseSchema: responseSchema,
@@ -117,7 +111,7 @@ func (rnr *Runner) gameHandlerConfig(l logger.Logger) (map[string]server.Handler
 		HandlerFunc: rnr.createGameHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
-				server.AuthenticationTypeAPIKey,
+				server.AuthenticationTypeToken,
 			},
 			ValidateRequestSchema:  requestSchema,
 			ValidateResponseSchema: responseSchema,
@@ -134,7 +128,7 @@ func (rnr *Runner) gameHandlerConfig(l logger.Logger) (map[string]server.Handler
 		HandlerFunc: rnr.updateGameHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
-				server.AuthenticationTypeAPIKey,
+				server.AuthenticationTypeToken,
 			},
 			ValidateRequestSchema:  requestSchema,
 			ValidateResponseSchema: responseSchema,
@@ -151,7 +145,7 @@ func (rnr *Runner) gameHandlerConfig(l logger.Logger) (map[string]server.Handler
 		HandlerFunc: rnr.deleteGameHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
-				server.AuthenticationTypeAPIKey,
+				server.AuthenticationTypeToken,
 			},
 		},
 		DocumentationConfig: server.DocumentationConfig{

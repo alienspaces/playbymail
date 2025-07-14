@@ -57,7 +57,7 @@ func NewRunner(l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], cfg co
 	l.Warn("(playbymail) setting authenticate request function")
 
 	// Add mock authentication function for testing
-	r.AuthenticateRequestFunc = r.mockAuthenticateRequest
+	r.AuthenticateRequestFunc = r.authenticateRequestFunc
 
 	// Additional handler configurations are added here
 	handlerConfigFuncs := []func(logger.Logger) (map[string]server.HandlerConfig, error){
@@ -97,21 +97,41 @@ func (rnr *Runner) domainFunc(l logger.Logger) (domainer.Domainer, error) {
 	return m, nil
 }
 
-// mockAuthenticateRequest provides a mock authentication function for testing
-func (rnr *Runner) mockAuthenticateRequest(l logger.Logger, m domainer.Domainer, r *http.Request, authType server.AuthenticationType) (server.AuthenticatedRequest, error) {
-	// For testing, always return a mock authenticated request with admin permissions
+// authenticateRequestFunc authenticates a request based on the authentication type
+func (rnr *Runner) authenticateRequestFunc(l logger.Logger, m domainer.Domainer, r *http.Request, authType server.AuthenticationType) (server.AuthenticatedRequest, error) {
+
+	switch authType {
+	case server.AuthenticationTypeToken:
+		return rnr.authenticateRequestTokenFunc(l, m, r)
+	default:
+		return server.AuthenticatedRequest{}, nil
+	}
+}
+
+// authenticateRequestTokenFunc authenticates a request based on a session token
+func (rnr *Runner) authenticateRequestTokenFunc(l logger.Logger, m domainer.Domainer, r *http.Request) (server.AuthenticatedRequest, error) {
+
+	l.Info("(playbymail) authenticateRequestTokenFunc called")
+
+	mm := m.(*domain.Domain)
+
+	accountRec, err := mm.VerifyAccountSessionToken(r.Header.Get("Authorization"))
+	if err != nil {
+		l.Warn("(playbymail) failed to verify account session token >%v<", err)
+		return server.AuthenticatedRequest{}, err
+	}
+
+	if accountRec == nil {
+		l.Warn("(playbymail) no account found for session token")
+		return server.AuthenticatedRequest{}, nil
+	}
+
 	return server.AuthenticatedRequest{
-		Type: server.AuthenticatedTypeAPIKey,
-		User: server.AuthenticatedUser{
-			ID:    "test-user-id",
-			Name:  "Test User",
-			Email: "test@example.com",
-		},
-		Permissions: []server.AuthorizedPermission{
-			"admin",
-			"games:read",
-			"games:write",
-			"games:delete",
+		Type: server.AuthenticatedTypeToken,
+		Account: server.AuthenticatedAccount{
+			ID:    accountRec.ID,
+			Name:  accountRec.Name,
+			Email: accountRec.Email,
 		},
 	}, nil
 }

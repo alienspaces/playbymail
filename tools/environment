@@ -45,13 +45,16 @@ if [ -n "$1" ]; then
     dotfile_path="$1"
 fi
 
+if [ -f "$dotfile_path/.env.private" ]; then
+    echo "=> (env) Appending private environment file"
+    cat "$dotfile_path/.env.private" >> "$dotfile_path/.env"
+fi
+
 if [ -f "$dotfile_path/.env" ]; then
+    echo "=> (env) Loading environment file"
     . "$dotfile_path/.env"
 fi
 
-if [ -f "$dotfile_path/.env.private" ]; then
-    . "$dotfile_path/.env.private"
-fi
 
 # go present?
 if command -v go >/dev/null 2>&1; then

@@ -34,6 +34,17 @@ func (rnr *TestRunner) Init(l logger.Logger, s storer.Storer) error {
 	return rnr.InitFunc(l, s)
 }
 
+func (rnr *TestRunner) mockAuthenticateRequestFunc(l logger.Logger, m domainer.Domainer, r *http.Request, authType AuthenticationType) (AuthenticatedRequest, error) {
+	return AuthenticatedRequest{
+		Type: AuthenticatedTypeToken,
+		Account: AuthenticatedAccount{
+			ID:    "test-user-id",
+			Name:  "Test User",
+			Email: "test@example.com",
+		},
+	}, nil
+}
+
 func newTestRunner(l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], cfg config.Config) (*TestRunner, error) {
 	cRnr, err := NewRunnerWithConfig(l, s, j, cfg)
 	if err != nil {
@@ -47,6 +58,8 @@ func newTestRunner(l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], cf
 	tr.DomainFunc = func(l logger.Logger) (domainer.Domainer, error) {
 		return domain.NewDomain(l)
 	}
+
+	tr.AuthenticateRequestFunc = tr.mockAuthenticateRequestFunc
 
 	return &tr, nil
 }

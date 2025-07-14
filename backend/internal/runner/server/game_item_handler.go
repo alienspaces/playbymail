@@ -16,11 +16,6 @@ import (
 )
 
 const (
-	tagGroupGameItem server.TagGroup = "GameItems"
-	TagGameItem      server.Tag      = "GameItems"
-)
-
-const (
 	getManyGameItems = "get-game-items"
 	getOneGameItem   = "get-game-item"
 	createGameItem   = "create-game-item"
@@ -62,7 +57,7 @@ func (rnr *Runner) gameItemHandlerConfig(l logger.Logger) (map[string]server.Han
 		HandlerFunc: rnr.getManyGameItemsHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
-				server.AuthenticationTypeAPIKey,
+				server.AuthenticationTypeToken,
 			},
 			ValidateResponseSchema: collectionResponseSchema,
 		},
@@ -79,7 +74,7 @@ func (rnr *Runner) gameItemHandlerConfig(l logger.Logger) (map[string]server.Han
 		HandlerFunc: rnr.getGameItemHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
-				server.AuthenticationTypeAPIKey,
+				server.AuthenticationTypeToken,
 			},
 			ValidateResponseSchema: responseSchema,
 		},
@@ -95,7 +90,7 @@ func (rnr *Runner) gameItemHandlerConfig(l logger.Logger) (map[string]server.Han
 		HandlerFunc: rnr.createGameItemHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
-				server.AuthenticationTypeAPIKey,
+				server.AuthenticationTypeToken,
 			},
 			ValidateRequestSchema:  requestSchema,
 			ValidateResponseSchema: responseSchema,
@@ -112,7 +107,7 @@ func (rnr *Runner) gameItemHandlerConfig(l logger.Logger) (map[string]server.Han
 		HandlerFunc: rnr.updateGameItemHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
-				server.AuthenticationTypeAPIKey,
+				server.AuthenticationTypeToken,
 			},
 			ValidateRequestSchema:  requestSchema,
 			ValidateResponseSchema: responseSchema,
@@ -129,7 +124,7 @@ func (rnr *Runner) gameItemHandlerConfig(l logger.Logger) (map[string]server.Han
 		HandlerFunc: rnr.deleteGameItemHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
-				server.AuthenticationTypeAPIKey,
+				server.AuthenticationTypeToken,
 			},
 		},
 		DocumentationConfig: server.DocumentationConfig{

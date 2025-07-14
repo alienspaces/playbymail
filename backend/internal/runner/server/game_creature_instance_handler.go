@@ -15,11 +15,6 @@ import (
 )
 
 const (
-	tagGroupGameCreatureInstance server.TagGroup = "GameCreatureInstances"
-	TagGameCreatureInstance      server.Tag      = "GameCreatureInstances"
-)
-
-const (
 	getManyGameCreatureInstances = "get-game-creature-instances"
 	getOneGameCreatureInstance   = "get-game-creature-instance"
 	createGameCreatureInstance   = "create-game-creature-instance"
@@ -61,7 +56,7 @@ func (rnr *Runner) gameCreatureInstanceHandlerConfig(l logger.Logger) (map[strin
 		HandlerFunc: rnr.getManyGameCreatureInstancesHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
-				server.AuthenticationTypeAPIKey,
+				server.AuthenticationTypeToken,
 			},
 			ValidateResponseSchema: collectionResponseSchema,
 		},
@@ -78,7 +73,7 @@ func (rnr *Runner) gameCreatureInstanceHandlerConfig(l logger.Logger) (map[strin
 		HandlerFunc: rnr.getGameCreatureInstanceHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
-				server.AuthenticationTypeAPIKey,
+				server.AuthenticationTypeToken,
 			},
 			ValidateResponseSchema: responseSchema,
 		},
@@ -94,7 +89,7 @@ func (rnr *Runner) gameCreatureInstanceHandlerConfig(l logger.Logger) (map[strin
 		HandlerFunc: rnr.createGameCreatureInstanceHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
-				server.AuthenticationTypeAPIKey,
+				server.AuthenticationTypeToken,
 			},
 			ValidateRequestSchema:  requestSchema,
 			ValidateResponseSchema: responseSchema,
@@ -111,7 +106,7 @@ func (rnr *Runner) gameCreatureInstanceHandlerConfig(l logger.Logger) (map[strin
 		HandlerFunc: rnr.updateGameCreatureInstanceHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
-				server.AuthenticationTypeAPIKey,
+				server.AuthenticationTypeToken,
 			},
 			ValidateRequestSchema:  requestSchema,
 			ValidateResponseSchema: responseSchema,
@@ -128,7 +123,7 @@ func (rnr *Runner) gameCreatureInstanceHandlerConfig(l logger.Logger) (map[strin
 		HandlerFunc: rnr.deleteGameCreatureInstanceHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
-				server.AuthenticationTypeAPIKey,
+				server.AuthenticationTypeToken,
 			},
 		},
 		DocumentationConfig: server.DocumentationConfig{

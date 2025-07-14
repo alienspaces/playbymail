@@ -17,9 +17,8 @@ import (
 // NewJobClient creates a new job client. When no queue names are specified it provides the
 // ability to queue jobs only. When one or more queue names are specified it will also process
 // jobs for those queues.
-func NewJobClient(l logger.Logger, s storer.Storer, queueNames []string) (*river.Client[pgx.Tx], error) {
+func NewJobClient(l logger.Logger, s storer.Storer, e emailer.Emailer, queueNames []string) (*river.Client[pgx.Tx], error) {
 
-	var e emailer.Emailer
 	var err error
 
 	riverConfig, err := getRiverConfig(l, s, e, queueNames)
@@ -100,13 +99,13 @@ func addDefaultPeriodicJobs(l logger.Logger, s storer.Storer, p []*river.Periodi
 func getWorkers(l logger.Logger, s storer.Storer, e emailer.Emailer) (*river.Workers, error) {
 	w := river.NewWorkers()
 
-	exampleWorker, err := jobworker.NewJobWorkerExampleWorker(l, s, e)
+	SendAccountVerificationEmailWorker, err := jobworker.NewSendAccountVerificationEmailWorker(l, s, e)
 	if err != nil {
-		return nil, fmt.Errorf("failed NewJobWorkerExampleWorker worker: %w", err)
+		return nil, fmt.Errorf("failed NewSendAccountVerificationEmailWorker worker: %w", err)
 	}
 
-	if err := river.AddWorkerSafely(w, exampleWorker); err != nil {
-		return nil, fmt.Errorf("failed to add NewJobWorkerExampleWorker worker: %w", err)
+	if err := river.AddWorkerSafely(w, SendAccountVerificationEmailWorker); err != nil {
+		return nil, fmt.Errorf("failed to add NewSendAccountVerificationEmailWorker worker: %w", err)
 	}
 
 	return w, nil

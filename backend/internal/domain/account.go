@@ -152,45 +152,6 @@ func (m *Domain) RemoveAccountRec(recID string) error {
 	return nil
 }
 
-// SendAccountVerificationToken generates, stores, and emails a verification token for the given email address.
-func (m *Domain) SendAccountVerificationToken(emailAddr string) error {
-	l := m.Logger("SendAccountVerificationToken")
-
-	// Look up account by email
-	repo := m.AccountRepository()
-
-	recs, err := repo.GetMany(&coresql.Options{
-		Params: []coresql.Param{
-			{Col: record.FieldAccountEmail, Val: emailAddr},
-		},
-		Limit: 1,
-	})
-	if err != nil {
-		l.Warn("failed to get account by email >%s< >%v<", emailAddr, err)
-		return err
-	}
-
-	var rec *record.Account
-	if len(recs) == 0 {
-		l.Info("no account found for email >%s<, creating account", emailAddr)
-		rec = &record.Account{
-			Email: emailAddr,
-		}
-		rec, err = m.CreateAccountRec(rec)
-		if err != nil {
-			l.Warn("failed to create account >%v<", err)
-			return err
-		}
-	} else {
-		rec = recs[0]
-	}
-
-	// TODO: Register job to send verification token
-	l.Info("registering job to send verification token for account ID >%s<", rec.ID)
-
-	return nil
-}
-
 func (m *Domain) GenerateAccountVerificationToken(rec *record.Account) (string, error) {
 	l := m.Logger("GenerateAccountVerificationToken")
 

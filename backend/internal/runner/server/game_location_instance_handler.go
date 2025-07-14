@@ -15,11 +15,6 @@ import (
 )
 
 const (
-	tagGroupGameLocationInstance server.TagGroup = "GameLocationInstances"
-	TagGameLocationInstance      server.Tag      = "GameLocationInstances"
-)
-
-const (
 	getManyGameLocationInstances = "get-game-location-instances"
 	getOneGameLocationInstance   = "get-game-location-instance"
 	createGameLocationInstance   = "create-game-location-instance"
@@ -61,7 +56,7 @@ func (rnr *Runner) gameLocationInstanceHandlerConfig(l logger.Logger) (map[strin
 		HandlerFunc: rnr.getManyGameLocationInstancesHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
-				server.AuthenticationTypeAPIKey,
+				server.AuthenticationTypeToken,
 			},
 			ValidateResponseSchema: collectionResponseSchema,
 		},
@@ -78,7 +73,7 @@ func (rnr *Runner) gameLocationInstanceHandlerConfig(l logger.Logger) (map[strin
 		HandlerFunc: rnr.getGameLocationInstanceHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
-				server.AuthenticationTypeAPIKey,
+				server.AuthenticationTypeToken,
 			},
 			ValidateResponseSchema: responseSchema,
 		},
@@ -94,7 +89,7 @@ func (rnr *Runner) gameLocationInstanceHandlerConfig(l logger.Logger) (map[strin
 		HandlerFunc: rnr.createGameLocationInstanceHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
-				server.AuthenticationTypeAPIKey,
+				server.AuthenticationTypeToken,
 			},
 			ValidateRequestSchema:  requestSchema,
 			ValidateResponseSchema: responseSchema,
@@ -111,7 +106,7 @@ func (rnr *Runner) gameLocationInstanceHandlerConfig(l logger.Logger) (map[strin
 		HandlerFunc: rnr.updateGameLocationInstanceHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
-				server.AuthenticationTypeAPIKey,
+				server.AuthenticationTypeToken,
 			},
 			ValidateRequestSchema:  requestSchema,
 			ValidateResponseSchema: responseSchema,
@@ -128,7 +123,7 @@ func (rnr *Runner) gameLocationInstanceHandlerConfig(l logger.Logger) (map[strin
 		HandlerFunc: rnr.deleteGameLocationInstanceHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
-				server.AuthenticationTypeAPIKey,
+				server.AuthenticationTypeToken,
 			},
 		},
 		DocumentationConfig: server.DocumentationConfig{

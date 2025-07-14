@@ -35,8 +35,10 @@ const (
 
 // Runner - implements the runnerer interface
 type Runner struct {
-	Log       logger.Logger
-	Store     storer.Storer
+	Log   logger.Logger
+	Store storer.Storer
+
+	// JobClient is the river client for the job queue
 	JobClient *river.Client[pgx.Tx]
 
 	// General configuration
@@ -72,12 +74,11 @@ type Runner struct {
 	// DomainFunc returns the service specific domainer implementation
 	DomainFunc func(l logger.Logger) (domainer.Domainer, error)
 
-	// AuthenticateRequestFunc should not return any error if the entity is
-	// authenticated. Any error other than UnauthenticatedError is treated as a
-	// 500 internal error.
+	// AuthenticateRequestFunc authenticates a request based on the authentication type
 	AuthenticateRequestFunc func(l logger.Logger, m domainer.Domainer, r *http.Request, authType AuthenticationType) (AuthenticatedRequest, error)
 
-	// SetRLSFunc is the service specific RLS configuration implementation
+	// SetRLSFunc is the service specific RLS configuration implementation.
+	// This is used to set the RLS configuration for the domainer.
 	SetRLSFunc func(l logger.Logger, m domainer.Domainer, authedReq AuthenticatedRequest) (RLS, error)
 }
 
@@ -108,40 +109,10 @@ type HandlerConfig struct {
 	DocumentationConfig DocumentationConfig
 }
 
-type Tag string
-
-func (t Tag) ToString() string {
-	return string(t)
-}
-
-type TagGroup string
-
-func (tg TagGroup) ToString() string {
-	return string(tg)
-}
-
-// TagGroupEndpoint is used to group endpoints related to the same resource
-type TagGroupEndpoint struct {
-	ResourceName   TagGroup         `json:"name"`
-	Description    string           `json:"description"`
-	Tags           []Tag            `json:"tags"`
-	TagDisplayName []TagDisplayName `json:"tag_display_names,omitempty"`
-}
-
-// TagDisplayName - https://redocly.com/docs/api-reference-docs/specification-extensions/x-display-name/
-type TagDisplayName struct {
-	Tag         `json:"tag"`
-	DisplayName string `json:"display_name"`
-}
-
-// NOTE: AuthenticatedRequest domainled from the following for possible familliarity.
-// https://gitlab.com/msts-enterprise/rock/caas-customer/-/blob/develop/server/src/core/authentication/schemas/x-authenticated-request.schema.json
 type AuthenticatedRequest struct {
-	Type    AuthenticatedType `json:"type"`
-	RLSType RLSType           `json:"-"`
-
-	// populated from API Key
-	User        AuthenticatedUser      `json:"user"`
+	Type        AuthenticatedType      `json:"type"`
+	RLSType     RLSType                `json:"-"`
+	Account     AuthenticatedAccount   `json:"account"`
 	Permissions []AuthorizedPermission `json:"permissions"`
 }
 
@@ -159,12 +130,13 @@ const (
 type AuthenticatedType string
 
 const (
-	AuthenticatedTypeUser   AuthenticatedType = "User"
-	AuthenticatedTypeAPIKey AuthenticatedType = "APIKey"
+	AuthenticatedTypeJWT   AuthenticatedType = "JWT"   // JSON Web Token
+	AuthenticatedTypeKey   AuthenticatedType = "Key"   // API Key
+	AuthenticatedTypeToken AuthenticatedType = "Token" // Session Token
 )
 
-type AuthenticatedUser struct {
-	ID    any    `json:"id"`
+type AuthenticatedAccount struct {
+	ID    string `json:"id"`
 	Name  string `json:"name"`
 	Email string `json:"email"`
 }
@@ -174,8 +146,9 @@ type AuthorizedPermission string
 
 const (
 	AuthenticationTypePublic AuthenticationType = "Public"
-	AuthenticationTypeAPIKey AuthenticationType = "API Key"
-	AuthenticationTypeJWT    AuthenticationType = "JWT"
+	AuthenticationTypeJWT    AuthenticationType = "JWT"   // JSON Web Token
+	AuthenticationTypeKey    AuthenticationType = "Key"   // API Key
+	AuthenticationTypeToken  AuthenticationType = "Token" // Session Token
 )
 
 // MiddlewareConfig - configuration for global default middleware
@@ -253,7 +226,7 @@ func NewRunnerWithConfig(l logger.Logger, s storer.Storer, j *river.Client[pgx.T
 // Init -
 func (rnr *Runner) Init(s storer.Storer) error {
 
-	rnr.Log.Warn("(core) init")
+	rnr.Log.Info("(core) init")
 
 	rnr.Store = s
 
@@ -507,16 +480,6 @@ func (rnr *Runner) resolveHandlerSchemaLocationRoot(hc HandlerConfig) (HandlerCo
 	}
 
 	return hc, nil
-}
-
-func ResolveDocumentationTitle(handlerConfig map[string]HandlerConfig) map[string]HandlerConfig {
-	for name, cfg := range handlerConfig {
-		if cfg.DocumentationConfig.Title == "" {
-			cfg.DocumentationConfig.Title = cfg.DocumentationConfig.Description
-		}
-		handlerConfig[name] = cfg
-	}
-	return handlerConfig
 }
 
 func validateAuthenticationTypes(handlerConfig map[string]HandlerConfig) error {

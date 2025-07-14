@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"encoding/base64"
 	"net/http"
 
 	"github.com/julienschmidt/httprouter"
@@ -24,7 +23,7 @@ func (rnr *Runner) AuthenMiddleware(hc HandlerConfig, h Handle) (Handle, error) 
 		l = Logger(l, "AuthenMiddleware")
 
 		if _, ok := handlerAuthenTypes[AuthenticationTypePublic]; ok {
-			l.Debug("(core) handler name >%s< is public, not authenticating", hc.Name)
+			l.Debug("(middleware) handler name >%s< is public, not authenticating", hc.Name)
 			return h(w, r, pp, qp, l, m)
 		}
 
@@ -33,8 +32,9 @@ func (rnr *Runner) AuthenMiddleware(hc HandlerConfig, h Handle) (Handle, error) 
 		hasAuthnType := false
 
 		authnTypes := []AuthenticationType{
-			AuthenticationTypeAPIKey,
+			AuthenticationTypeKey,
 			AuthenticationTypeJWT,
+			AuthenticationTypeToken,
 		}
 
 		// A handler may have multiple authentication types. If supported, every
@@ -50,11 +50,11 @@ func (rnr *Runner) AuthenMiddleware(hc HandlerConfig, h Handle) (Handle, error) 
 			// UnauthenticatedError or a 500 error.
 			auth, err = rnr.AuthenticateRequestFunc(l, m, r, authnType)
 			if err != nil && !coreerror.IsUnauthenticatedError(err) {
-				l.Error("(core) failed to authenticate request authnType >%s< err >%v<", authnType, err)
+				l.Error("(middleware) failed to authenticate request authnType >%s< err >%v<", authnType, err)
 				return unauthErr // For security reasons, always respond with ambiguous 401
 			}
 			if err != nil {
-				l.Warn("(core) failed to authenticate request authnType >%s< err >%v<", authnType, err)
+				l.Warn("(middleware) failed to authenticate request authnType >%s< err >%v<", authnType, err)
 			}
 
 			if auth.IsAuthenticated() {
@@ -63,12 +63,12 @@ func (rnr *Runner) AuthenMiddleware(hc HandlerConfig, h Handle) (Handle, error) 
 		}
 
 		if !hasAuthnType {
-			l.Error("(core) handler name >%s< with non-public authentication type has no registered authentication types", hc.Name)
+			l.Error("(middleware) handler name >%s< with non-public authentication type has no registered authentication types", hc.Name)
 			return unauthErr
 		}
 
 		if !auth.IsAuthenticated() {
-			l.Warn("(core) failed to authenticate request >%#v<", err)
+			l.Warn("(middleware) failed to authenticate request >%#v<", err)
 			return unauthErr
 		}
 
@@ -76,17 +76,7 @@ func (rnr *Runner) AuthenMiddleware(hc HandlerConfig, h Handle) (Handle, error) 
 		ctx = context.WithValue(ctx, ctxKeyAuth, auth)
 		r = r.WithContext(ctx)
 
-		switch id := auth.User.ID.(type) {
-		case string:
-			l.Context("user-id", id)
-		case []byte:
-			requesterID := base64.URLEncoding.EncodeToString(id)
-			l.Context("user-id", requesterID)
-		default:
-			err := coreerror.NewInternalError("unknown auth user ID type")
-			l.Warn(err.Error())
-			return err
-		}
+		l.Context("account-id", auth.Account.ID)
 
 		return h(w, r, pp, qp, l, m)
 	}

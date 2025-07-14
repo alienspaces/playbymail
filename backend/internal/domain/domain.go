@@ -29,7 +29,6 @@ import (
 
 // Domain -
 type Domain struct {
-	jobClient *river.Client[pgx.Tx]
 	domain.Domain
 }
 
@@ -43,7 +42,6 @@ func NewDomain(l logger.Logger, j *river.Client[pgx.Tx]) (*Domain, error) {
 	}
 
 	m := &Domain{
-		jobClient: j,
 		Domain: domain.Domain{
 			Log: l.WithPackageContext("domain"),
 			RepositoryConstructors: []domain.RepositoryConstructor{

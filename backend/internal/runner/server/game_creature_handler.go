@@ -16,11 +16,6 @@ import (
 )
 
 const (
-	tagGroupGameCreature server.TagGroup = "GameCreatures"
-	TagGameCreature      server.Tag      = "GameCreatures"
-)
-
-const (
 	getManyGameCreatures = "get-game-creatures"
 	getOneGameCreature   = "get-game-creature"
 	createGameCreature   = "create-game-creature"
@@ -62,7 +57,7 @@ func (rnr *Runner) gameCreatureHandlerConfig(l logger.Logger) (map[string]server
 		HandlerFunc: rnr.getManyGameCreaturesHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
-				server.AuthenticationTypeAPIKey,
+				server.AuthenticationTypeToken,
 			},
 			ValidateResponseSchema: collectionResponseSchema,
 		},
@@ -79,7 +74,7 @@ func (rnr *Runner) gameCreatureHandlerConfig(l logger.Logger) (map[string]server
 		HandlerFunc: rnr.getGameCreatureHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
-				server.AuthenticationTypeAPIKey,
+				server.AuthenticationTypeToken,
 			},
 			ValidateResponseSchema: responseSchema,
 		},
@@ -95,7 +90,7 @@ func (rnr *Runner) gameCreatureHandlerConfig(l logger.Logger) (map[string]server
 		HandlerFunc: rnr.createGameCreatureHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
-				server.AuthenticationTypeAPIKey,
+				server.AuthenticationTypeToken,
 			},
 			ValidateRequestSchema:  requestSchema,
 			ValidateResponseSchema: responseSchema,
@@ -112,7 +107,7 @@ func (rnr *Runner) gameCreatureHandlerConfig(l logger.Logger) (map[string]server
 		HandlerFunc: rnr.updateGameCreatureHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
-				server.AuthenticationTypeAPIKey,
+				server.AuthenticationTypeToken,
 			},
 			ValidateRequestSchema:  requestSchema,
 			ValidateResponseSchema: responseSchema,
@@ -129,7 +124,7 @@ func (rnr *Runner) gameCreatureHandlerConfig(l logger.Logger) (map[string]server
 		HandlerFunc: rnr.deleteGameCreatureHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
-				server.AuthenticationTypeAPIKey,
+				server.AuthenticationTypeToken,
 			},
 		},
 		DocumentationConfig: server.DocumentationConfig{

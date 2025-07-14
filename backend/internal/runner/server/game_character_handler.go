@@ -17,11 +17,6 @@ import (
 )
 
 const (
-	tagGroupGameCharacter server.TagGroup = "GameCharacters"
-	TagGameCharacter      server.Tag      = "GameCharacters"
-)
-
-const (
 	getManyGameCharacters = "get-game-characters"
 	getOneGameCharacter   = "get-game-character"
 	createGameCharacter   = "create-game-character"
@@ -62,7 +57,7 @@ func (rnr *Runner) gameCharacterHandlerConfig(l logger.Logger) (map[string]serve
 		HandlerFunc: rnr.getManyGameCharactersHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
-				server.AuthenticationTypeAPIKey,
+				server.AuthenticationTypeToken,
 			},
 			ValidateResponseSchema: collectionResponseSchema,
 		},
@@ -79,7 +74,7 @@ func (rnr *Runner) gameCharacterHandlerConfig(l logger.Logger) (map[string]serve
 		HandlerFunc: rnr.getGameCharacterHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
-				server.AuthenticationTypeAPIKey,
+				server.AuthenticationTypeToken,
 			},
 			ValidateResponseSchema: responseSchema,
 		},
@@ -95,7 +90,7 @@ func (rnr *Runner) gameCharacterHandlerConfig(l logger.Logger) (map[string]serve
 		HandlerFunc: rnr.createGameCharacterHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
-				server.AuthenticationTypeAPIKey,
+				server.AuthenticationTypeToken,
 			},
 			ValidateRequestSchema:  requestSchema,
 			ValidateResponseSchema: responseSchema,
@@ -112,7 +107,7 @@ func (rnr *Runner) gameCharacterHandlerConfig(l logger.Logger) (map[string]serve
 		HandlerFunc: rnr.deleteGameCharacterHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
-				server.AuthenticationTypeAPIKey,
+				server.AuthenticationTypeToken,
 			},
 		},
 		DocumentationConfig: server.DocumentationConfig{

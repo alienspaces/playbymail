@@ -15,11 +15,6 @@ import (
 )
 
 const (
-	tagGroupGameItemInstance server.TagGroup = "GameItemInstances"
-	TagGameItemInstance      server.Tag      = "GameItemInstances"
-)
-
-const (
 	getManyGameItemInstances = "get-game-item-instances"
 	getOneGameItemInstance   = "get-game-item-instance"
 	createGameItemInstance   = "create-game-item-instance"
@@ -61,7 +56,7 @@ func (rnr *Runner) gameItemInstanceHandlerConfig(l logger.Logger) (map[string]se
 		HandlerFunc: rnr.getManyGameItemInstancesHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
-				server.AuthenticationTypeAPIKey,
+				server.AuthenticationTypeToken,
 			},
 			ValidateResponseSchema: collectionResponseSchema,
 		},
@@ -78,7 +73,7 @@ func (rnr *Runner) gameItemInstanceHandlerConfig(l logger.Logger) (map[string]se
 		HandlerFunc: rnr.getGameItemInstanceHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
-				server.AuthenticationTypeAPIKey,
+				server.AuthenticationTypeToken,
 			},
 			ValidateResponseSchema: responseSchema,
 		},
@@ -94,7 +89,7 @@ func (rnr *Runner) gameItemInstanceHandlerConfig(l logger.Logger) (map[string]se
 		HandlerFunc: rnr.createGameItemInstanceHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
-				server.AuthenticationTypeAPIKey,
+				server.AuthenticationTypeToken,
 			},
 			ValidateRequestSchema:  requestSchema,
 			ValidateResponseSchema: responseSchema,
@@ -111,7 +106,7 @@ func (rnr *Runner) gameItemInstanceHandlerConfig(l logger.Logger) (map[string]se
 		HandlerFunc: rnr.updateGameItemInstanceHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
-				server.AuthenticationTypeAPIKey,
+				server.AuthenticationTypeToken,
 			},
 			ValidateRequestSchema:  requestSchema,
 			ValidateResponseSchema: responseSchema,
@@ -128,7 +123,7 @@ func (rnr *Runner) gameItemInstanceHandlerConfig(l logger.Logger) (map[string]se
 		HandlerFunc: rnr.deleteGameItemInstanceHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
-				server.AuthenticationTypeAPIKey,
+				server.AuthenticationTypeToken,
 			},
 		},
 		DocumentationConfig: server.DocumentationConfig{

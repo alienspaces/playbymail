@@ -8,8 +8,11 @@ import (
 	"github.com/riverqueue/river"
 	"github.com/stretchr/testify/require"
 
+	"gitlab.com/alienspaces/playbymail/core/email/fake"
+	"gitlab.com/alienspaces/playbymail/core/email/forwardemail"
 	"gitlab.com/alienspaces/playbymail/core/log"
 	"gitlab.com/alienspaces/playbymail/core/store"
+	"gitlab.com/alienspaces/playbymail/core/type/emailer"
 	"gitlab.com/alienspaces/playbymail/internal/harness"
 	"gitlab.com/alienspaces/playbymail/internal/jobclient"
 	"gitlab.com/alienspaces/playbymail/internal/jobqueue"
@@ -48,8 +51,22 @@ func Default(cfg config.Config) (*log.Log, *store.Store, *river.Client[pgx.Tx], 
 		return nil, nil, nil, err
 	}
 
+	// Emailer
+	var e emailer.Emailer
+	if cfg.EmailerFaked {
+		fmt.Println("using fake emailer")
+		e, err = fake.New(l, cfg.Config)
+	} else {
+		fmt.Println("using forward emailer")
+		e, err = forwardemail.New(l, cfg.Config)
+	}
+	if err != nil {
+		fmt.Printf("failed new emailer >%v<", err)
+		return nil, nil, nil, err
+	}
+
 	// River
-	j, err := jobclient.NewJobClient(l, s, []string{jobqueue.QueueDefault})
+	j, err := jobclient.NewJobClient(l, s, e, []string{jobqueue.QueueDefault})
 	if err != nil {
 		fmt.Printf("failed new job client >%v<", err)
 		return nil, nil, nil, err

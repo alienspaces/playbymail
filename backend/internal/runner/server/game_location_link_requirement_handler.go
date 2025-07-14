@@ -15,11 +15,6 @@ import (
 )
 
 const (
-	tagGroupGameLocationLinkRequirement server.TagGroup = "GameLocationLinkRequirements"
-	TagGameLocationLinkRequirement      server.Tag      = "GameLocationLinkRequirements"
-)
-
-const (
 	getManyGameLocationLinkRequirements = "get-game-location-link-requirements"
 	getOneGameLocationLinkRequirement   = "get-game-location-link-requirement"
 	createGameLocationLinkRequirement   = "create-game-location-link-requirement"
@@ -61,7 +56,7 @@ func (rnr *Runner) gameLocationLinkRequirementHandlerConfig(l logger.Logger) (ma
 		HandlerFunc: rnr.getManyGameLocationLinkRequirementsHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
-				server.AuthenticationTypeAPIKey,
+				server.AuthenticationTypeToken,
 			},
 			ValidateResponseSchema: collectionResponseSchema,
 		},
@@ -78,7 +73,7 @@ func (rnr *Runner) gameLocationLinkRequirementHandlerConfig(l logger.Logger) (ma
 		HandlerFunc: rnr.getGameLocationLinkRequirementHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
-				server.AuthenticationTypeAPIKey,
+				server.AuthenticationTypeToken,
 			},
 			ValidateResponseSchema: responseSchema,
 		},
@@ -94,7 +89,7 @@ func (rnr *Runner) gameLocationLinkRequirementHandlerConfig(l logger.Logger) (ma
 		HandlerFunc: rnr.createGameLocationLinkRequirementHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
-				server.AuthenticationTypeAPIKey,
+				server.AuthenticationTypeToken,
 			},
 			ValidateRequestSchema:  requestSchema,
 			ValidateResponseSchema: responseSchema,
@@ -111,7 +106,7 @@ func (rnr *Runner) gameLocationLinkRequirementHandlerConfig(l logger.Logger) (ma
 		HandlerFunc: rnr.updateGameLocationLinkRequirementHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
-				server.AuthenticationTypeAPIKey,
+				server.AuthenticationTypeToken,
 			},
 			ValidateRequestSchema:  requestSchema,
 			ValidateResponseSchema: responseSchema,
@@ -128,7 +123,7 @@ func (rnr *Runner) gameLocationLinkRequirementHandlerConfig(l logger.Logger) (ma
 		HandlerFunc: rnr.deleteGameLocationLinkRequirementHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
-				server.AuthenticationTypeAPIKey,
+				server.AuthenticationTypeToken,
 			},
 		},
 		DocumentationConfig: server.DocumentationConfig{
