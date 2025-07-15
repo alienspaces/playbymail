@@ -29,6 +29,7 @@ test-backend:
     EMAILER_FAKED: "true"
     JOBCLIENT_MAX_WORKERS: "10"
     TOKEN_HMAC_KEY: "changeme-super-secret-key"
+    TEMPLATES_PATH: "${CI_PROJECT_DIR}/backend/templates"
   image: golang:1.23.5-alpine
   stage: test
   services:

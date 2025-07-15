@@ -59,20 +59,11 @@ func NewSendAccountVerificationEmailWorker(l logger.Logger, cfg config.Config, s
 		return nil, fmt.Errorf("templates path is empty")
 	}
 
-	// Get the current working directory
-	wd, err := os.Getwd()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get current working directory >%v<", err)
-	}
-
 	// Check the templates path actually exists
 	l.Info("templates path >%s<", cfg.TemplatesPath)
-	l.Info("current working directory >%s<", wd)
 
-	fullPath := filepath.Join(wd, cfg.TemplatesPath)
-
-	if _, err := os.Stat(fullPath); os.IsNotExist(err) {
-		return nil, fmt.Errorf("templates path does not exist >%s<", fullPath)
+	if _, err := os.Stat(cfg.TemplatesPath); os.IsNotExist(err) {
+		return nil, fmt.Errorf("templates path does not exist >%s<", cfg.TemplatesPath)
 	}
 
 	return &SendAccountVerificationEmailWorker{
