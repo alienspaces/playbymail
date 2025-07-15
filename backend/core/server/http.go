@@ -52,7 +52,7 @@ func (rnr *Runner) runHTTP(args map[string]any) error {
 		return err
 	}
 
-	port := rnr.config.Port
+	port := rnr.Config.Port
 	if port == "" {
 		l.Warn("(core) config.Port is empty, using PORT from environment")
 		port = os.Getenv("PORT")
@@ -63,8 +63,8 @@ func (rnr *Runner) runHTTP(args map[string]any) error {
 	}
 
 	allowedOrigins := rnr.HTTPCORSConfig.AllowedOrigins
-	if len(rnr.config.CORSAllowedOrigins) > 0 {
-		allowedOrigins = append(allowedOrigins, rnr.config.CORSAllowedOrigins...)
+	if len(rnr.Config.CORSAllowedOrigins) > 0 {
+		allowedOrigins = append(allowedOrigins, rnr.Config.CORSAllowedOrigins...)
 	}
 	if len(allowedOrigins) == 0 {
 		allowedOrigins = []string{"*"}
@@ -78,8 +78,8 @@ func (rnr *Runner) runHTTP(args map[string]any) error {
 	}
 
 	allowedHeaders = append(allowedHeaders, rnr.HTTPCORSConfig.AllowedHeaders...)
-	if len(rnr.config.CORSAllowedHeaders) > 0 {
-		allowedHeaders = append(allowedHeaders, rnr.config.CORSAllowedHeaders...)
+	if len(rnr.Config.CORSAllowedHeaders) > 0 {
+		allowedHeaders = append(allowedHeaders, rnr.Config.CORSAllowedHeaders...)
 	}
 
 	l.Info("(core) http server allowed headers >%v<", allowedHeaders)
@@ -250,14 +250,14 @@ func (rnr *Runner) defaultRouter(r *httprouter.Router) (*httprouter.Router, erro
 func (rnr *Runner) registerDefaultStaticRoutes(r *httprouter.Router) (*httprouter.Router, error) {
 	l := Logger(rnr.Log, "registerDefaultStaticRoutes")
 
-	if rnr.config.AssetsPath != "" {
-		l.Info("(core) registering assets file server, serving from >%s<", rnr.config.AssetsPath)
-		r.ServeFiles("/assets/*filepath", http.Dir(rnr.config.AssetsPath))
+	if rnr.Config.AssetsPath != "" {
+		l.Info("(core) registering assets file server, serving from >%s<", rnr.Config.AssetsPath)
+		r.ServeFiles("/assets/*filepath", http.Dir(rnr.Config.AssetsPath))
 	}
 
-	if rnr.config.AppHome != "" {
-		l.Info("(core) registering static file server, serving from >%s<", rnr.config.AppHome)
-		r.NotFound = http.FileServer(http.Dir(rnr.config.AppHome))
+	if rnr.Config.AppHome != "" {
+		l.Info("(core) registering static file server, serving from >%s<", rnr.Config.AppHome)
+		r.NotFound = http.FileServer(http.Dir(rnr.Config.AppHome))
 	}
 
 	return r, nil

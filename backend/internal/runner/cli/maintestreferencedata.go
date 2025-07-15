@@ -21,7 +21,7 @@ func (rnr *Runner) loadMainTestReferenceData(c *cli.Context) error {
 		return err
 	}
 
-	testHarness, err := harness.NewTesting(rnr.Log, rnr.Store, rnr.JobClient, config)
+	testHarness, err := harness.NewTesting(rnr.Log, rnr.Store, rnr.JobClient, rnr.Config, config)
 	if err != nil {
 		l.Warn("failed new testing harness >%v<", err)
 		return err

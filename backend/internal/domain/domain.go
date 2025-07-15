@@ -25,16 +25,18 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/repository/game_location_instance"
 	"gitlab.com/alienspaces/playbymail/internal/repository/game_location_link"
 	"gitlab.com/alienspaces/playbymail/internal/repository/game_location_link_requirement"
+	"gitlab.com/alienspaces/playbymail/internal/utils/config"
 )
 
 // Domain -
 type Domain struct {
 	domain.Domain
+	config config.Config
 }
 
 var _ domainer.Domainer = &Domain{}
 
-func NewDomain(l logger.Logger, j *river.Client[pgx.Tx]) (*Domain, error) {
+func NewDomain(l logger.Logger, j *river.Client[pgx.Tx], cfg config.Config) (*Domain, error) {
 
 	l, err := l.NewInstance()
 	if err != nil {
@@ -60,6 +62,7 @@ func NewDomain(l logger.Logger, j *river.Client[pgx.Tx]) (*Domain, error) {
 				game_character_instance.NewRepository,
 			},
 		},
+		config: cfg,
 	}
 
 	m.SetRLSFunc = m.SetRLS

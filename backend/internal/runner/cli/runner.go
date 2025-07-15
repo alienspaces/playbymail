@@ -18,7 +18,7 @@ import (
 // Runner -
 type Runner struct {
 	corecli.Runner
-	config config.Config
+	Config config.Config
 }
 
 const (
@@ -30,7 +30,7 @@ const (
 func NewRunner(l logger.Logger, j *river.Client[pgx.Tx], cfg config.Config) (*Runner, error) {
 	l = l.WithApplicationContext(applicationName)
 
-	cr, err := corecli.NewRunner(l, j, cfg.Config)
+	cr, err := corecli.NewRunnerWithConfig(l, j, cfg.Config)
 	if err != nil {
 		err := fmt.Errorf("failed core runner >%v<", err)
 		l.Warn(err.Error())
@@ -39,7 +39,7 @@ func NewRunner(l logger.Logger, j *river.Client[pgx.Tx], cfg config.Config) (*Ru
 
 	r := Runner{
 		Runner: *cr,
-		config: cfg,
+		Config: cfg,
 	}
 
 	r.DeferDomainInitialisation = true
@@ -72,7 +72,7 @@ Loads static reference data that is expected to exist on any environment.`,
 }
 
 func (rnr *Runner) domainFunc() (domainer.Domainer, error) {
-	m, err := domain.NewDomain(rnr.Log, rnr.JobClient)
+	m, err := domain.NewDomain(rnr.Log, rnr.JobClient, rnr.Config)
 	if err != nil {
 		return nil, err
 	}

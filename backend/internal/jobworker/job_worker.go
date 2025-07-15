@@ -15,7 +15,7 @@ import (
 
 type JobWorker struct {
 	corejobworker.JobWorker
-	config config.Config
+	Config config.Config
 }
 
 func NewJobWorker(l logger.Logger, cfg config.Config, s storer.Storer) (*JobWorker, error) {
@@ -27,7 +27,7 @@ func NewJobWorker(l logger.Logger, cfg config.Config, s storer.Storer) (*JobWork
 
 	return &JobWorker{
 		JobWorker: *jw,
-		config:    cfg,
+		Config:    cfg,
 	}, nil
 }
 
@@ -46,7 +46,7 @@ func (w *JobWorker) beginJob(ctx context.Context) (*river.Client[pgx.Tx], *domai
 		return nil, nil, err
 	}
 
-	m, err := domain.NewDomain(l, c)
+	m, err := domain.NewDomain(l, c, w.Config)
 	if err != nil {
 		return nil, nil, err
 	}

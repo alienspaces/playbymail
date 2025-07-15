@@ -21,14 +21,14 @@ func init() {
 	time.Local = time.UTC
 }
 
-func newDefaultDependencies(t *testing.T) (*log.Log, *store.Store, *river.Client[pgx.Tx]) {
+func newDefaultDependencies(t *testing.T) (*log.Log, *store.Store, *river.Client[pgx.Tx], config.Config) {
 	cfg, err := config.Parse()
 	require.NoError(t, err, "Parse returns without error")
 
 	l, s, j, err := deps.Default(cfg)
 	require.NoError(t, err, "NewDefaultDependencies returns without error")
 
-	return l, s, j
+	return l, s, j, cfg
 }
 
 func newTestHarness(t *testing.T) *harness.Testing {
@@ -37,10 +37,10 @@ func newTestHarness(t *testing.T) *harness.Testing {
 	config := harness.DefaultDataConfig()
 
 	// Default dependencies
-	l, s, j := newDefaultDependencies(t)
+	l, s, j, cfg := newDefaultDependencies(t)
 
 	// Test harness
-	h, err := harness.NewTesting(l, s, j, config)
+	h, err := harness.NewTesting(l, s, j, cfg, config)
 	require.NoError(t, err, "NewTesting returns without error")
 
 	// For handler tests the test harness needs to commit data as the handler

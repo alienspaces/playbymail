@@ -4,6 +4,7 @@ import GameView from '../views/GameView.vue'
 import StudioLayout from '../components/StudioLayout.vue'
 import LoginView from '../views/LoginView.vue';
 import VerifyView from '../views/VerifyView.vue';
+import { useAuthStore } from '../stores/auth';
 
 const routes = [
   {
@@ -71,7 +72,8 @@ const router = createRouter({
 
 // Navigation guard for auth
 router.beforeEach((to, from, next) => {
-  const sessionToken = localStorage.getItem('session_token');
+  const authStore = useAuthStore();
+  const sessionToken = authStore.sessionToken;
   if (to.meta.requiresAuth && !sessionToken) {
     next({ path: '/login' });
   } else {

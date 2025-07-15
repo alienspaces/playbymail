@@ -1,4 +1,4 @@
-import { API_BASE_URL } from './baseUrl';
+import { API_BASE_URL, getAuthHeaders } from './baseUrl';
 
 /**
  * Fetch all creatures for a game.
@@ -6,7 +6,9 @@ import { API_BASE_URL } from './baseUrl';
  * @returns {Promise<GameCreature[]>}
  */
 export async function fetchCreatures(gameId) {
-  const res = await fetch(`${API_BASE_URL}/game-creatures?game_id=${encodeURIComponent(gameId)}`);
+  const res = await fetch(`${API_BASE_URL}/game-creatures?game_id=${encodeURIComponent(gameId)}`, {
+    headers: { ...getAuthHeaders() },
+  });
   if (!res.ok) throw new Error('Failed to fetch creatures');
   const json = await res.json();
   return json.data || [];
@@ -21,7 +23,7 @@ export async function fetchCreatures(gameId) {
 export async function createCreature(gameId, data) {
   const res = await fetch(`${API_BASE_URL}/game-creatures`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
     body: JSON.stringify({ ...data, game_id: gameId })
   });
   if (!res.ok) throw new Error('Failed to create creature');
@@ -38,7 +40,7 @@ export async function createCreature(gameId, data) {
 export async function updateCreature(creatureId, data) {
   const res = await fetch(`${API_BASE_URL}/game-creatures/${encodeURIComponent(creatureId)}`, {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
     body: JSON.stringify(data)
   });
   if (!res.ok) throw new Error('Failed to update creature');
@@ -53,7 +55,8 @@ export async function updateCreature(creatureId, data) {
  */
 export async function deleteCreature(creatureId) {
   const res = await fetch(`${API_BASE_URL}/game-creatures/${encodeURIComponent(creatureId)}`, {
-    method: 'DELETE'
+    method: 'DELETE',
+    headers: { ...getAuthHeaders() },
   });
   if (!res.ok) throw new Error('Failed to delete creature');
 } 

@@ -39,18 +39,18 @@ type Runner struct {
 	DeferDomainInitialisation bool
 
 	// General configuration
-	config config.Config
+	Config config.Config
 }
 
 // ensure we comply with the Runnerer interface
 var _ runnable.Runnable = &Runner{}
 
-func NewRunner(l logger.Logger, j *river.Client[pgx.Tx], cfg config.Config) (*Runner, error) {
+func NewRunnerWithConfig(l logger.Logger, j *river.Client[pgx.Tx], cfg config.Config) (*Runner, error) {
 
 	r := Runner{
 		Log:       l,
 		JobClient: j,
-		config:    cfg,
+		Config:    cfg,
 	}
 
 	return &r, nil

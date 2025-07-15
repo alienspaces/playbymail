@@ -11,6 +11,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
 	"gitlab.com/alienspaces/playbymail/core/type/storer"
 	"gitlab.com/alienspaces/playbymail/internal/domain"
+	"gitlab.com/alienspaces/playbymail/internal/utils/config"
 )
 
 // Testing -
@@ -19,10 +20,11 @@ type Testing struct {
 	Data         Data
 	teardownData Data
 	DataConfig   DataConfig
+	Config       config.Config
 }
 
 // NewTesting -
-func NewTesting(l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], config DataConfig) (t *Testing, err error) {
+func NewTesting(l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], cfg config.Config, config DataConfig) (t *Testing, err error) {
 
 	t = &Testing{
 		Testing: harness.Testing{
@@ -30,6 +32,7 @@ func NewTesting(l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], confi
 			Store:     s,
 			JobClient: j,
 		},
+		Config: cfg,
 	}
 
 	// Require service config, logger and store
@@ -60,7 +63,7 @@ func NewTesting(l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], confi
 func (t *Testing) domainer() (domainer.Domainer, error) {
 	l := t.Logger("domainer")
 
-	m, err := domain.NewDomain(t.Log, t.JobClient)
+	m, err := domain.NewDomain(t.Log, t.JobClient, t.Config)
 	if err != nil {
 		l.Warn("failed new domain >%v<", err)
 		return nil, err

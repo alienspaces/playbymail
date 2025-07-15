@@ -24,6 +24,7 @@ type Runner struct {
 	// Value embedding would copy fields, causing changes to be lost.
 	// Pointer embedding ensures all references use the same data.
 	*server.Runner
+	Config config.Config
 }
 
 // ensure we comply with the Runnerer interface
@@ -43,6 +44,7 @@ func NewRunner(l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], cfg co
 
 	r := Runner{
 		Runner: cr,
+		Config: cfg,
 	}
 
 	l.Warn("(playbymail) setting handler function")
@@ -89,7 +91,7 @@ func NewRunner(l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], cfg co
 func (rnr *Runner) domainFunc(l logger.Logger) (domainer.Domainer, error) {
 	l.Info("(playbymail) DomainFunc called on runner: %p", rnr)
 	l.Info("(playbymail) calling domain.NewDomain")
-	m, err := domain.NewDomain(l, rnr.JobClient)
+	m, err := domain.NewDomain(l, rnr.JobClient, rnr.Config)
 	if err != nil {
 		l.Warn("(playbymail) failed new domain >%v<", err)
 		return nil, err

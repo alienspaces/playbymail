@@ -1,9 +1,9 @@
-import { baseUrl } from './baseUrl';
+import { baseUrl, getAuthHeaders } from './baseUrl';
 
 export async function requestAuth(email) {
   const res = await fetch(`${baseUrl}/request-auth`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
     body: JSON.stringify({ email }),
   });
   return res.ok;
@@ -12,7 +12,7 @@ export async function requestAuth(email) {
 export async function verifyAuth(email, verification_token) {
   const res = await fetch(`${baseUrl}/verify-auth`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
     body: JSON.stringify({ email, verification_token }),
   });
   if (!res.ok) throw new Error('Verification failed');

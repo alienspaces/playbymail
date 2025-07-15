@@ -35,14 +35,17 @@ const (
 
 // Runner - implements the runnerer interface
 type Runner struct {
-	Log   logger.Logger
+	// General configuration
+	Config config.Config
+
+	// Logger
+	Log logger.Logger
+
+	// Store
 	Store storer.Storer
 
 	// JobClient is the river client for the job queue
 	JobClient *river.Client[pgx.Tx]
-
-	// General configuration
-	config config.Config
 
 	// HTTPCORSConfig
 	HTTPCORSConfig HTTPCORSConfig
@@ -210,7 +213,7 @@ func NewRunnerWithConfig(l logger.Logger, s storer.Storer, j *river.Client[pgx.T
 		Log:                    l,
 		Store:                  s,
 		JobClient:              j,
-		config:                 cfg,
+		Config:                 cfg,
 		HandlerConfig:          make(map[string]HandlerConfig),
 		HandlerMiddlewareFuncs: nil,
 	}
@@ -453,7 +456,7 @@ func (rnr *Runner) resolveHandlerSchemaLocation(hc HandlerConfig) (HandlerConfig
 
 func (rnr *Runner) resolveHandlerSchemaLocationRoot(hc HandlerConfig) (HandlerConfig, error) {
 
-	appHome := rnr.config.AppHome
+	appHome := rnr.Config.AppHome
 	if appHome == "" {
 		err := fmt.Errorf("missing configuration AppHome")
 		rnr.Log.Warn(err.Error())

@@ -47,6 +47,9 @@ type Config struct {
 
 	// Forward Email
 	ForwardEmailAPIKey string `env:"FORWARDEMAIL_API_KEY"`
+
+	// HMAC key for generating tokens
+	TokenHMACKey string `env:"TOKEN_HMAC_KEY"`
 }
 
 // Parse parses environment variables into the provided struct using env.Parse.

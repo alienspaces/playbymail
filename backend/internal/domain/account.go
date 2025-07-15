@@ -5,7 +5,10 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
-	"golang.org/x/crypto/bcrypt"
+
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/hex"
 
 	"gitlab.com/alienspaces/playbymail/core/domain"
 	coreerror "gitlab.com/alienspaces/playbymail/core/error"
@@ -15,6 +18,13 @@ import (
 	coresql "gitlab.com/alienspaces/playbymail/core/sql"
 	"gitlab.com/alienspaces/playbymail/internal/record"
 )
+
+// Utility for HMAC-SHA256 hashing
+func hmacSHA256(key, data string) string {
+	h := hmac.New(sha256.New, []byte(key))
+	h.Write([]byte(data))
+	return hex.EncodeToString(h.Sum(nil))
+}
 
 // GetManyAccountRecs -
 func (m *Domain) GetManyAccountRecs(opts *coresql.Options) ([]*record.Account, error) {
@@ -160,23 +170,18 @@ func (m *Domain) GenerateAccountVerificationToken(rec *record.Account) (string, 
 	// Generate a new UUID for the token
 	token := corerecord.NewRecordID()
 
-	// Hash the token
-	hashedToken, err := bcrypt.GenerateFromPassword([]byte(token), bcrypt.DefaultCost)
-	if err != nil {
-		l.Warn("failed to hash verification token >%v<", err)
-		return "", err
-	}
+	// HMAC hash the token
+	hash := hmacSHA256(m.config.TokenHMACKey, token)
 
-	rec.VerificationToken = nullstring.FromString(string(hashedToken))
+	rec.VerificationToken = nullstring.FromString(hash)
 	rec.VerificationTokenExpiresAt = nulltime.FromTime(corerecord.NewRecordTimestamp().Add(15 * time.Minute))
 
-	_, err = m.UpdateAccountRec(rec)
+	_, err := m.UpdateAccountRec(rec)
 	if err != nil {
 		l.Warn("failed to update account >%v<", err)
 		return "", err
 	}
 
-	// TODO: Debug log the token
 	l.Info("generated verification token >%s< for account ID >%s<", token, rec.ID)
 
 	return token, nil
@@ -185,15 +190,16 @@ func (m *Domain) GenerateAccountVerificationToken(rec *record.Account) (string, 
 func (m *Domain) VerifyAccountVerificationToken(token string) (string, error) {
 	l := m.Logger("VerifyAccountVerificationToken")
 
-	// TODO: Debug log the token
 	l.Info("verifying verification token >%s<", token)
 
-	// Look up account by email
+	// HMAC hash the provided token
+	hash := hmacSHA256(m.config.TokenHMACKey, token)
+
 	repo := m.AccountRepository()
 
 	recs, err := repo.GetMany(&coresql.Options{
 		Params: []coresql.Param{
-			{Col: record.FieldAccountVerificationToken, Val: token},
+			{Col: record.FieldAccountVerificationToken, Val: hash},
 		},
 		Limit: 1,
 	})
@@ -214,14 +220,10 @@ func (m *Domain) VerifyAccountVerificationToken(token string) (string, error) {
 	// Generate session token
 	sessionToken := corerecord.NewRecordID()
 
-	// Hash the session token
-	hashedSessionToken, err := bcrypt.GenerateFromPassword([]byte(sessionToken), bcrypt.DefaultCost)
-	if err != nil {
-		l.Warn("failed to hash session token >%v<", err)
-		return "", err
-	}
+	// Hash the session token (keep using bcrypt or switch to HMAC as well if desired)
+	hashedSessionToken := hmacSHA256(m.config.TokenHMACKey, sessionToken)
 
-	rec.SessionToken = nullstring.FromString(string(hashedSessionToken))
+	rec.SessionToken = nullstring.FromString(hashedSessionToken)
 	rec.SessionTokenExpiresAt = nulltime.FromTime(corerecord.NewRecordTimestamp().Add(15 * time.Minute))
 
 	_, err = m.UpdateAccountRec(rec)
@@ -230,7 +232,6 @@ func (m *Domain) VerifyAccountVerificationToken(token string) (string, error) {
 		return "", err
 	}
 
-	// TODO: Debug log the session token
 	l.Info("generated session token >%s< for account ID >%s<", sessionToken, rec.ID)
 
 	return sessionToken, nil
@@ -241,12 +242,15 @@ func (m *Domain) VerifyAccountSessionToken(token string) (*record.Account, error
 
 	l.Info("verifying account session token >%s<", token)
 
+	// HMAC hash the provided token
+	hash := hmacSHA256(m.config.TokenHMACKey, token)
+
 	// Look up account by session token
 	repo := m.AccountRepository()
 
 	recs, err := repo.GetMany(&coresql.Options{
 		Params: []coresql.Param{
-			{Col: record.FieldAccountSessionToken, Val: token},
+			{Col: record.FieldAccountSessionToken, Val: hash},
 		},
 		Limit: 1,
 	})

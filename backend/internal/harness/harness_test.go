@@ -20,7 +20,7 @@ func TestHarnessSetupTeardown_DefaultDataConfig(t *testing.T) {
 	l, s, j, err := deps.Default(cfg)
 	require.NoError(t, err, "Default dependencies returns without error")
 
-	h, err := harness.NewTesting(l, s, j, dcfg)
+	h, err := harness.NewTesting(l, s, j, cfg, dcfg)
 	require.NoError(t, err, "NewTesting returns without error")
 
 	_, err = h.Setup()

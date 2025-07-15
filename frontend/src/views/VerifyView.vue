@@ -12,6 +12,9 @@
 
 <script>
 import { verifyAuth } from '../api/auth';
+import { useAuthStore } from '../stores/auth';
+import { mapActions } from 'pinia';
+
 export default {
   name: 'VerifyView',
   data() {
@@ -27,6 +30,7 @@ export default {
     if (!this.email) {
       this.$router.replace('/login');
     }
+    this.authStore = useAuthStore();
   },
   methods: {
     async onSubmit() {
@@ -34,7 +38,7 @@ export default {
       this.message = '';
       try {
         const sessionToken = await verifyAuth(this.email, this.code);
-        localStorage.setItem('session_token', sessionToken);
+        this.authStore.setSessionToken(sessionToken);
         this.$router.push('/');
       } catch (e) {
         this.message = 'Invalid code or verification failed.';

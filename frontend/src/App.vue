@@ -1,5 +1,15 @@
 <script setup>
 import { RouterLink, RouterView } from 'vue-router'
+import { useAuthStore } from './stores/auth';
+import { storeToRefs } from 'pinia';
+
+const authStore = useAuthStore();
+const { sessionToken } = storeToRefs(authStore);
+
+function logout() {
+  authStore.logout();
+  window.location.href = '/login';
+}
 </script>
 
 <template>
@@ -7,7 +17,7 @@ import { RouterLink, RouterView } from 'vue-router'
     <nav class="navbar">
       <router-link to="/" class="logo">PlayByMail Studio</router-link>
       <div class="nav-actions">
-        <template v-if="isAuthenticated">
+        <template v-if="sessionToken">
           <button @click="logout">Logout</button>
         </template>
         <template v-else>
@@ -18,23 +28,6 @@ import { RouterLink, RouterView } from 'vue-router'
     <router-view />
   </div>
 </template>
-
-<script>
-export default {
-  name: 'App',
-  computed: {
-    isAuthenticated() {
-      return !!localStorage.getItem('session_token');
-    },
-  },
-  methods: {
-    logout() {
-      localStorage.removeItem('session_token');
-      this.$router.push('/login');
-    },
-  },
-};
-</script>
 
 <style>
 body {

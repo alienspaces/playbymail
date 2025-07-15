@@ -55,12 +55,13 @@ func (f *ForwardEmail) Send(msg *emailer.Message) error {
 	l := f.logger("Send")
 	l.Info("sending from >%s< to >%v<", msg.From, msg.To)
 
-	// For now, only support plain text body
+	// For now, support both plain text and HTML body by setting both fields
 	reqBody := forwardEmailRequest{
 		From:    msg.From,
 		To:      msg.To,
 		Subject: msg.Subject,
-		Text:    msg.Body,
+		Text:    msg.Body, // Optionally, provide a plain text version here
+		HTML:    msg.Body, // Use the same body for HTML if that's what you have
 	}
 	body, err := json.Marshal(reqBody)
 	if err != nil {

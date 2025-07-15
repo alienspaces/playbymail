@@ -25,7 +25,7 @@ func NewHarness(t *testing.T) *harness.Testing {
 	require.NoError(t, err)
 	l, s, j, err := Default(cfg)
 	require.NoError(t, err)
-	h, err := harness.NewTesting(l, s, j, dcfg)
+	h, err := harness.NewTesting(l, s, j, cfg, dcfg)
 	require.NoError(t, err)
 
 	// We setup and teardown within the context of the test
