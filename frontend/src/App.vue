@@ -15,7 +15,12 @@ function logout() {
 <template>
   <div id="app">
     <nav class="navbar">
-      <router-link to="/" class="logo">PlayByMail Studio</router-link>
+      <div class="nav-links">
+        <router-link to="/" class="logo" exact-active-class="active">PlayByMail</router-link>
+        <router-link to="/faq" exact-active-class="active">F.A.Q.</router-link>
+        <router-link to="/studio" exact-active-class="active">Game Designer Studio</router-link>
+        <router-link to="/admin" exact-active-class="active">Game Management & Admin</router-link>
+      </div>
       <div class="nav-actions">
         <template v-if="sessionToken">
           <button @click="logout">Logout</button>
@@ -46,9 +51,24 @@ body {
   color: #fff;
   padding: 1rem 2rem;
 }
-.logo {
+.nav-links {
+  display: flex;
+  gap: 2rem;
+  align-items: center;
+}
+.nav-links a {
   color: #fff;
   text-decoration: none;
+  font-weight: 500;
+  padding: 0.25rem 0.5rem;
+  border-radius: 3px;
+  transition: background 0.2s;
+}
+.nav-links a.active {
+  background: #1976d2;
+  color: #fff;
+}
+.logo {
   font-weight: 700;
   font-size: 1.2rem;
 }

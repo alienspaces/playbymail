@@ -3,6 +3,10 @@ import GameView from '../views/GameView.vue'
 import StudioLayout from '../components/StudioLayout.vue'
 import LoginView from '../views/LoginView.vue';
 import VerifyView from '../views/VerifyView.vue';
+import FaqView from '../views/FaqView.vue';
+import AdminView from '../views/AdminView.vue';
+import StudioEntryView from '../views/StudioEntryView.vue';
+import AdminEntryView from '../views/AdminEntryView.vue';
 import { useAuthStore } from '../stores/auth';
 
 const routes = [
@@ -19,38 +23,28 @@ const routes = [
   },
   {
     path: '/studio',
-    redirect: '/studio/games',
-  },
-  {
-    path: '/studio/:gameId',
-    component: StudioLayout,
-    props: true,
+    name: 'StudioEntry',
+    component: StudioEntryView,
     children: [
+      // Existing studio routes (e.g., games, locations, items, creatures, placement)
+      // These will be rendered when logged in
       {
-        path: 'locations',
-        name: 'studio-locations',
+        path: ':gameId/locations',
         component: () => import('../views/StudioLocationsView.vue'),
-        props: true
       },
       {
-        path: 'items',
-        name: 'studio-items',
+        path: ':gameId/items',
         component: () => import('../views/StudioItemsView.vue'),
-        props: true
       },
       {
-        path: 'creatures',
-        name: 'studio-creatures',
+        path: ':gameId/creatures',
         component: () => import('../views/StudioCreaturesView.vue'),
-        props: true
       },
       {
-        path: 'placement',
-        name: 'studio-placement',
+        path: ':gameId/placement',
         component: () => import('../views/StudioPlacementView.vue'),
-        props: true
-      }
-    ]
+      },
+    ],
   },
   {
     path: '/login',
@@ -61,6 +55,17 @@ const routes = [
     path: '/verify',
     name: 'Verify',
     component: VerifyView,
+  },
+  {
+    path: '/faq',
+    name: 'Faq',
+    component: FaqView,
+  },
+  {
+    path: '/admin',
+    name: 'AdminEntry',
+    component: AdminEntryView,
+    // Placeholder: add children for admin features as implemented
   },
 ];
 
