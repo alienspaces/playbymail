@@ -13,7 +13,7 @@
 <script>
 import { verifyAuth } from '../api/auth';
 import { useAuthStore } from '../stores/auth';
-import { mapActions } from 'pinia';
+// import { mapActions } from 'pinia'; // Removed unused import
 
 export default {
   name: 'VerifyView',
@@ -40,7 +40,7 @@ export default {
         const sessionToken = await verifyAuth(this.email, this.code);
         this.authStore.setSessionToken(sessionToken);
         this.$router.push('/');
-      } catch (e) {
+      } catch {
         this.message = 'Invalid code or verification failed.';
       } finally {
         this.loading = false;

@@ -1,4 +1,4 @@
-import { API_BASE_URL, getAuthHeaders } from './baseUrl';
+import { baseUrl, getAuthHeaders } from './baseUrl';
 
 /**
  * Fetch all items for a game.
@@ -6,7 +6,7 @@ import { API_BASE_URL, getAuthHeaders } from './baseUrl';
  * @returns {Promise<GameItem[]>}
  */
 export async function fetchItems(gameId) {
-  const res = await fetch(`${API_BASE_URL}/game-items?game_id=${encodeURIComponent(gameId)}`, {
+  const res = await fetch(`${baseUrl}/game-items?game_id=${encodeURIComponent(gameId)}`, {
     headers: { ...getAuthHeaders() },
   });
   if (!res.ok) throw new Error('Failed to fetch items');
@@ -21,7 +21,7 @@ export async function fetchItems(gameId) {
  * @returns {Promise<GameItem>}
  */
 export async function createItem(gameId, data) {
-  const res = await fetch(`${API_BASE_URL}/game-items`, {
+  const res = await fetch(`${baseUrl}/game-items`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
     body: JSON.stringify({ ...data, game_id: gameId })
@@ -38,7 +38,7 @@ export async function createItem(gameId, data) {
  * @returns {Promise<GameItem>}
  */
 export async function updateItem(itemId, data) {
-  const res = await fetch(`${API_BASE_URL}/game-items/${encodeURIComponent(itemId)}`, {
+  const res = await fetch(`${baseUrl}/game-items/${encodeURIComponent(itemId)}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
     body: JSON.stringify(data)
@@ -54,7 +54,7 @@ export async function updateItem(itemId, data) {
  * @returns {Promise<void>}
  */
 export async function deleteItem(itemId) {
-  const res = await fetch(`${API_BASE_URL}/game-items/${encodeURIComponent(itemId)}`, {
+  const res = await fetch(`${baseUrl}/game-items/${encodeURIComponent(itemId)}`, {
     method: 'DELETE',
     headers: { ...getAuthHeaders() },
   });

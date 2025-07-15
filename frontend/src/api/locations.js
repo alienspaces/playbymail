@@ -1,4 +1,4 @@
-import { API_BASE_URL, getAuthHeaders } from './baseUrl';
+import { baseUrl, getAuthHeaders } from './baseUrl';
 
 /**
  * Fetch all locations for a game.
@@ -6,7 +6,7 @@ import { API_BASE_URL, getAuthHeaders } from './baseUrl';
  * @returns {Promise<GameLocation[]>}
  */
 export async function fetchLocations(gameId) {
-  const res = await fetch(`${API_BASE_URL}/game-locations?game_id=${encodeURIComponent(gameId)}`, {
+  const res = await fetch(`${baseUrl}/game-locations?game_id=${encodeURIComponent(gameId)}`, {
     headers: { ...getAuthHeaders() },
   });
   if (!res.ok) throw new Error('Failed to fetch locations');
@@ -21,7 +21,7 @@ export async function fetchLocations(gameId) {
  * @returns {Promise<GameLocation>}
  */
 export async function createLocation(gameId, data) {
-  const res = await fetch(`${API_BASE_URL}/game-locations`, {
+  const res = await fetch(`${baseUrl}/game-locations`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
     body: JSON.stringify({ ...data, game_id: gameId })
@@ -38,7 +38,7 @@ export async function createLocation(gameId, data) {
  * @returns {Promise<GameLocation>}
  */
 export async function updateLocation(locationId, data) {
-  const res = await fetch(`${API_BASE_URL}/game-locations/${encodeURIComponent(locationId)}`, {
+  const res = await fetch(`${baseUrl}/game-locations/${encodeURIComponent(locationId)}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
     body: JSON.stringify(data)
@@ -54,7 +54,7 @@ export async function updateLocation(locationId, data) {
  * @returns {Promise<void>}
  */
 export async function deleteLocation(locationId) {
-  const res = await fetch(`${API_BASE_URL}/game-locations/${encodeURIComponent(locationId)}`, {
+  const res = await fetch(`${baseUrl}/game-locations/${encodeURIComponent(locationId)}`, {
     method: 'DELETE',
     headers: { ...getAuthHeaders() },
   });

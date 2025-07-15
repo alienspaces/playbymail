@@ -1,10 +1,10 @@
 <template>
   <div class="login-container">
-    <h2>Sign in to PlayByMail Studio</h2>
+    <h2>Sign in with Email</h2>
     <form @submit.prevent="onSubmit">
       <label for="email">Email address</label>
       <input v-model="email" id="email" type="email" required autofocus />
-      <button type="submit" :disabled="loading">Send verification code</button>
+      <button type="submit" :disabled="loading">Send Code</button>
     </form>
     <p v-if="message" class="message">{{ message }}</p>
   </div>
@@ -12,6 +12,7 @@
 
 <script>
 import { requestAuth } from '../api/auth';
+
 export default {
   name: 'LoginView',
   data() {
@@ -26,10 +27,14 @@ export default {
       this.loading = true;
       this.message = '';
       try {
-        await requestAuth(this.email);
-        this.$router.push({ path: '/verify', query: { email: this.email } });
-      } catch (e) {
-        this.message = 'Failed to send verification code.';
+        const ok = await requestAuth(this.email);
+        if (ok) {
+          this.$router.push({ path: '/verify', query: { email: this.email } });
+        } else {
+          this.message = 'Failed to send verification email.';
+        }
+      } catch {
+        this.message = 'Failed to send verification email.';
       } finally {
         this.loading = false;
       }

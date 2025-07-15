@@ -1,5 +1,4 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '../views/HomeView.vue'
 import GameView from '../views/GameView.vue'
 import StudioLayout from '../components/StudioLayout.vue'
 import LoginView from '../views/LoginView.vue';
