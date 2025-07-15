@@ -27,9 +27,10 @@ describe('StudioCreaturesView', () => {
   });
 
   it('renders table headers when creatures are loaded', async () => {
-    const wrapper = shallowMount(StudioCreaturesView, {
-      props: { gameId: 'game1' }
-    });
+    const { useGamesStore } = await import('../stores/games');
+    const gamesStore = useGamesStore();
+    gamesStore.selectedGame = { id: 'game1', name: 'Test Game' };
+    const wrapper = shallowMount(StudioCreaturesView);
     await new Promise(r => setTimeout(r));
     expect(wrapper.text()).toContain('Game Creatures');
     expect(wrapper.text()).toContain('Name');
@@ -41,25 +42,27 @@ describe('StudioCreaturesView', () => {
 
   it('shows loading state', async () => {
     const { useCreaturesStore } = await import('../stores/creatures');
+    const { useGamesStore } = await import('../stores/games');
+    const gamesStore = useGamesStore();
+    gamesStore.selectedGame = { id: 'game1', name: 'Test Game' };
     const store = useCreaturesStore();
     store.loading = true;
     store.error = null;
-    const wrapper = shallowMount(StudioCreaturesView, {
-      props: { gameId: 'game1' }
-    });
+    const wrapper = shallowMount(StudioCreaturesView);
     expect(wrapper.text()).toContain('Loading...');
   });
 
   it('shows error state', async () => {
     const { useCreaturesStore } = await import('../stores/creatures');
+    const { useGamesStore } = await import('../stores/games');
+    const gamesStore = useGamesStore();
+    gamesStore.selectedGame = { id: 'game1', name: 'Test Game' };
     const store = useCreaturesStore();
     // Stub loadCreatures so it doesn't change state
     vi.spyOn(store, 'loadCreatures').mockImplementation(() => {});
     store.loading = false;
     store.error = 'Something went wrong';
-    const wrapper = shallowMount(StudioCreaturesView, {
-      props: { gameId: 'game1' }
-    });
+    const wrapper = shallowMount(StudioCreaturesView);
     expect(wrapper.text()).toContain('Error: Something went wrong');
   });
 }); 
