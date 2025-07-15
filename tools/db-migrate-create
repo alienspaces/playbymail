@@ -20,7 +20,7 @@ cp .env.develop .env
 
 # environment
 if [ "$APP_ENV" = "develop" ] || [ "$APP_ENV" = "ci" ] || [ "$APP_ENV" = "qa" ] || [ -z "$APP_ENV" ]; then
-    . "$(dirname "$0")"/environment || exit $?
+    . ./tools/environment || exit $?
 fi
 
 # golang migrate
@@ -31,7 +31,7 @@ case "$migrate_tool_path" in
     *"$go_version"*) ;;
     *)
         echo "=> (db-migrate-create) Installing migrate"
-        . "$(dirname "$0")"/db-install-migrate || exit $?
+        . ./tools/db-install-migrate || exit $?
         ;;
 esac
 

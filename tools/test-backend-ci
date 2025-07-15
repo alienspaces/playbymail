@@ -10,13 +10,13 @@ fi
 
 # This script is executed during the test CI stage to run backend tests.
 
-. "$(dirname "$0")"/db-migrate-up || exit $?
+. ./tools/db-migrate-up || exit $?
 
-. "$(dirname "$0")"/db-load-test-reference-data || exit $?
+. ./tools/db-load-test-reference-data || exit $?
 
 # test core
-. "$(dirname "$0")"/test-backend-core || exit $?
+. ./tools/test-backend-core || exit $?
 
 # test internal
-. "$(dirname "$0")"/test-backend-internal || exit $?
+. ./tools/test-backend-internal || exit $?
 

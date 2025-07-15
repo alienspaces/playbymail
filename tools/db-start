@@ -5,16 +5,14 @@ if [ "${CI:-}" != "" ]; then
     exit 1
 fi
 
-SCRIPT_DIR=$(dirname "$0")
-
 # environment
-. "$SCRIPT_DIR/environment" || exit $?
+. ./tools/environment || exit $?
 
 # retry
-. "$SCRIPT_DIR/retry" || exit $?
+. ./tools/retry || exit $?
 
 # stop database
-. "$SCRIPT_DIR/db-stop" || exit $?
+. ./tools/db-stop || exit $?
 
 # start database
 echo "=> (db-start) Start database - docker service"

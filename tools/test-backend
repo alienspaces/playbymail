@@ -10,7 +10,7 @@
 cp .env.develop .env
 
 # environment
-. "$(dirname "$0")"/environment || exit $?
+. ./tools/environment || exit $?
 
 echo "DEBUG: APP_SERVER_SMTP_HOST is '$APP_SERVER_SMTP_HOST'"
 
@@ -34,13 +34,13 @@ else
 fi
 
 # start database
-. "$(dirname "$0")"/db-setup-test || exit $?
+. ./tools/db-setup-test || exit $?
 
 # test core
-. "$(dirname "$0")"/test-backend-core || exit $?
+. ./tools/test-backend-core || exit $?
 
 # test service
-. "$(dirname "$0")"/test-backend-internal || exit $?
+. ./tools/test-backend-internal || exit $?
 
 # stop services
-. "$(dirname "$0")"/db-stop || exit $?
+. ./tools/db-stop || exit $?

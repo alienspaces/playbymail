@@ -9,7 +9,7 @@ case "$migrate_tool_path" in
     *"$go_version"*) ;;
     *)
         echo "=> (db-migrate-up) Installing migrate"
-        . "$SCRIPT_DIR/db-install-migrate" || exit $?
+        . ./tools/db-install-migrate || exit $?
         ;;
 esac
 
@@ -21,7 +21,7 @@ case "$river_migrate_tool_path" in
     *"$go_version"*) ;;
     *)
         echo "=> (db-migrate-up) Installing river migrate"
-        . "$SCRIPT_DIR/db-install-river-migrate" || exit $?
+        . ./tools/db-install-river-migrate || exit $?
         ;;
 esac
 

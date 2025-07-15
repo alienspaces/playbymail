@@ -1,11 +1,10 @@
 #!/bin/sh
 
 # environment
-SCRIPT_DIR=$(dirname "$0")
-. "$SCRIPT_DIR/environment" || exit $?
+. ./tools/environment || exit $?
 
 # retry
-. "$SCRIPT_DIR/retry" || exit $?
+. ./tools/retry || exit $?
 
 # stop database
 echo "=> (db-stop) Stopping database (docker service)"
