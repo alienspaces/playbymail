@@ -3,12 +3,16 @@
 # Local development only.
 # Usage: ./tools/db-setup-test
 
-# This is a convenience script to idempotently start the database with all prerequisite data to run tests.
+if [ "${CI:-}" != "" ]; then
+    echo "This script is not meant to be run in CI"
+    exit 1
+fi
 
-cp .env.develop .env
+# This is a convenience script to idempotently start the database with all prerequisite data to run tests.
 
 SCRIPT_DIR=$(dirname "$0")
 
+. "$SCRIPT_DIR/environment" || exit $?
 . "$SCRIPT_DIR/db-start" || exit $?
 . "$SCRIPT_DIR/db-migrate-up" || exit $?
 . "$SCRIPT_DIR/db-load-test-reference-data" || exit $?

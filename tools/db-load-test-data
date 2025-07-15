@@ -23,16 +23,18 @@ if [ ! -f "backend/go.mod" ]; then
     exit 1
 fi
 
-# Copy environment file if it exists
-if [ -f ".env.develop" ]; then
-    cp .env.develop .env
-    print_status "Environment file copied"
-fi
+if [ -z "$CI" ]; then
+    # Copy environment file if it exists
+    if [ -f ".env.develop" ]; then
+        cp .env.develop .env
+        print_status "Environment file copied"
+    fi
 
-# Load environment
-if [ -f "tools/environment" ]; then
-    . tools/environment || exit $?
-    print_status "Environment loaded"
+    # Load environment
+    if [ -f "tools/environment" ]; then
+        . tools/environment || exit $?
+        print_status "Environment loaded"
+    fi
 fi
 
 # Remove old CLI binary if it exists

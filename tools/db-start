@@ -5,8 +5,9 @@ if [ "${CI:-}" != "" ]; then
     exit 1
 fi
 
-# environment
 SCRIPT_DIR=$(dirname "$0")
+
+# environment
 . "$SCRIPT_DIR/environment" || exit $?
 
 # retry

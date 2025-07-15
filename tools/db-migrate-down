@@ -1,10 +1,5 @@
 #!/usr/bin/env sh
 
-# environment
-if [ "$APP_ENV" = "develop" ] || [ "$APP_ENV" = "ci" ] || [ "$APP_ENV" = "qa" ] || [ -z "$APP_ENV" ]; then
-    . "$(dirname "$0")"/environment || exit $?
-fi
-
 # golang migrate
 # https://github.com/golang-migrate/migrate/releases
 migrate_tool_path=$(command -v migrate)
