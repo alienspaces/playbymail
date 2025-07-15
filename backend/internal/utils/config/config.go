@@ -1,9 +1,6 @@
 package config
 
 import (
-	"fmt"
-
-	"github.com/davecgh/go-spew/spew"
 	"gitlab.com/alienspaces/playbymail/core/config"
 )
 
@@ -20,9 +17,5 @@ type Config struct {
 func Parse() (Config, error) {
 	var cfg Config
 	err := config.Parse(&cfg)
-
-	// Debug
-	fmt.Println("cfg", spew.Sdump(cfg))
-
 	return cfg, err
 }

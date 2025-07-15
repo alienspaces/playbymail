@@ -26,7 +26,7 @@ test-backend:
     PORT: 8080
     LOG_LEVEL: debug
     GO_VERSION: 1.23.5
-    EMAILER_FAKE: "true"
+    EMAILER_FAKED: "true"
     JOBCLIENT_MAX_WORKERS: "10"
     TOKEN_HMAC_KEY: "changeme-super-secret-key"
   image: golang:1.23.5-alpine
