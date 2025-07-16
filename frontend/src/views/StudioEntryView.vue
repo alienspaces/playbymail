@@ -14,7 +14,7 @@
       </ul>
       <p><em>Sign in to access the full studio features.</em></p>
     </div>
-    <div v-else class="studio-main">
+    <div v-else class="studio-entry">
       <div class="studio-help">
         <h2>Studio Help</h2>
         <ul>

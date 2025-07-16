@@ -13,7 +13,7 @@
       </ul>
       <p><em>Sign in to access administration tools.</em></p>
     </div>
-    <div v-else class="admin-main">
+    <div v-else class="admin-entry">
       <div class="admin-help">
         <h2>Admin Help</h2>
         <ul>
