@@ -23,16 +23,28 @@
 .admin-view {
   max-width: 700px;
   margin: 2rem auto;
-  padding: 2rem;
+  padding: 2.5rem;
   background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.07);
 }
 .admin-view h1 {
   margin-bottom: 1.5rem;
+  font-size: 2.2rem;
+  text-align: left;
+}
+.admin-view p {
+  margin-bottom: 1.25rem;
+  font-size: 1.1rem;
+  text-align: left;
 }
 .admin-view ul {
   margin: 1.5rem 0 1.5rem 2rem;
-  padding-left: 1.5rem;
+  padding-left: 0.5rem;
+  text-align: left;
+}
+.admin-view li {
+  margin-bottom: 0.75rem;
+  font-size: 1.05rem;
 }
 </style> 

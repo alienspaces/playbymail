@@ -76,9 +76,23 @@ const isLoggedIn = computed(() => !!authStore.sessionToken);
   min-width: 250px;
   background: #f7f7f7;
   border: 1px solid #eee;
-  border-radius: 6px;
-  padding: 1.5rem 1rem;
+  border-radius: 12px;
+  padding: 2.5rem;
   margin: 2rem 0 2rem 2rem;
-  font-size: 0.98em;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+  font-size: 1.05rem;
+  text-align: left;
+}
+.studio-help h2 {
+  font-size: 2.2rem;
+  margin-bottom: 1.5rem;
+  text-align: left;
+}
+.studio-help ul {
+  margin-left: 2rem;
+  padding-left: 0.5rem;
+}
+.studio-help li {
+  margin-bottom: 0.75rem;
 }
 </style> 

@@ -22,21 +22,31 @@
 
 <style scoped>
 .home-view {
-  max-width: 600px;
+  max-width: 700px;
   margin: 2rem auto;
-  padding: 2rem;
+  padding: 2.5rem;
   background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-  text-align: center;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.07);
 }
 .home-view h1 {
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
+  font-size: 2.2rem;
+  text-align: left;
+}
+.home-view p {
+  margin-bottom: 1.25rem;
+  font-size: 1.1rem;
+  text-align: left;
 }
 .home-view ul {
   text-align: left;
-  margin: 2rem auto 2rem 2rem;
-  padding-left: 1.5rem;
+  margin: 2rem 0 2rem 2rem;
+  padding-left: 0.5rem;
+}
+.home-view li {
+  margin-bottom: 0.75rem;
+  font-size: 1.05rem;
 }
 .studio-cta {
   display: inline-block;
@@ -48,6 +58,7 @@
   text-decoration: none;
   font-weight: bold;
   transition: background 0.2s;
+  text-align: center;
 }
 .studio-cta:hover {
   background: #1a232b;
