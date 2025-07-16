@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { shallowMount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
-import { useGamesStore } from '../stores/games'
+import { useGamesStore } from '../../../stores/games'
 import StudioPlacementView from './StudioPlacementView.vue'
 
 describe('StudioPlacementView', () => {

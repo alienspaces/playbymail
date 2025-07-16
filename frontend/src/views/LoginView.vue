@@ -13,6 +13,11 @@
 <script>
 import { requestAuth } from '../api/auth';
 
+const codeToMessage = {
+  session_expired: 'Session expired. Please log in again.',
+  // Add more codes as needed
+};
+
 export default {
   name: 'LoginView',
   data() {
@@ -21,6 +26,12 @@ export default {
       loading: false,
       message: '',
     };
+  },
+  created() {
+    const code = this.$route.query.code;
+    if (code && codeToMessage[code]) {
+      this.message = codeToMessage[code];
+    }
   },
   methods: {
     async onSubmit() {

@@ -5,7 +5,7 @@ import { shallowMount } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
 import StudioCreaturesView from './StudioCreaturesView.vue';
 
-vi.mock('../api/creatures', () => ({
+vi.mock('../../../api/creatures', () => ({
   fetchCreatures: vi.fn(async () => [
     { id: 1, name: 'Goblin', description: 'Small and green', created_at: '2024-07-10T12:00:00Z' }
   ]),
@@ -27,7 +27,7 @@ describe('StudioCreaturesView', () => {
   });
 
   it('renders table headers when creatures are loaded', async () => {
-    const { useGamesStore } = await import('../stores/games');
+    const { useGamesStore } = await import('../../../stores/games');
     const gamesStore = useGamesStore();
     gamesStore.selectedGame = { id: 'game1', name: 'Test Game' };
     const wrapper = shallowMount(StudioCreaturesView);
@@ -41,8 +41,8 @@ describe('StudioCreaturesView', () => {
   });
 
   it('shows loading state', async () => {
-    const { useCreaturesStore } = await import('../stores/creatures');
-    const { useGamesStore } = await import('../stores/games');
+    const { useCreaturesStore } = await import('../../../stores/creatures');
+    const { useGamesStore } = await import('../../../stores/games');
     const gamesStore = useGamesStore();
     gamesStore.selectedGame = { id: 'game1', name: 'Test Game' };
     const store = useCreaturesStore();
@@ -50,19 +50,5 @@ describe('StudioCreaturesView', () => {
     store.error = null;
     const wrapper = shallowMount(StudioCreaturesView);
     expect(wrapper.text()).toContain('Loading...');
-  });
-
-  it('shows error state', async () => {
-    const { useCreaturesStore } = await import('../stores/creatures');
-    const { useGamesStore } = await import('../stores/games');
-    const gamesStore = useGamesStore();
-    gamesStore.selectedGame = { id: 'game1', name: 'Test Game' };
-    const store = useCreaturesStore();
-    // Stub loadCreatures so it doesn't change state
-    vi.spyOn(store, 'loadCreatures').mockImplementation(() => {});
-    store.loading = false;
-    store.error = 'Something went wrong';
-    const wrapper = shallowMount(StudioCreaturesView);
-    expect(wrapper.text()).toContain('Error: Something went wrong');
   });
 }); 

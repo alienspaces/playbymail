@@ -1,18 +1,18 @@
 <!--
-  StudioCreaturesView.vue
-  This component follows the same pattern as StudioLocationsView.vue and StudioItemsView.vue.
+  StudioItemsView.vue
+  This component follows the same pattern as StudioLocationsView.vue and StudioCreaturesView.vue.
 -->
 <template>
   <div>
     <div v-if="!gameId">
-      <p>Select a game to manage creatures.</p>
+      <p>Select a game to manage items.</p>
     </div>
     <div v-else>
-      <h2>Game Creatures</h2>
-      <div v-if="creaturesStore.loading">Loading...</div>
-      <div v-else-if="creaturesStore.error">Error: {{ creaturesStore.error }}</div>
+      <h2>Game Items</h2>
+      <div v-if="itemsStore.loading">Loading...</div>
+      <div v-else-if="itemsStore.error">Error: {{ itemsStore.error }}</div>
       <div v-else>
-        <table v-if="creaturesStore.creatures.length">
+        <table v-if="itemsStore.items.length">
           <thead>
             <tr>
               <th>Name</th>
@@ -22,10 +22,10 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="creature in creaturesStore.creatures" :key="creature.id">
-              <td>{{ creature.name }}</td>
-              <td>{{ creature.description }}</td>
-              <td>{{ creature.created_at }}</td>
+            <tr v-for="item in itemsStore.items" :key="item.id">
+              <td>{{ item.name }}</td>
+              <td>{{ item.description }}</td>
+              <td>{{ item.created_at }}</td>
               <td>
                 <!-- Edit/Delete actions to be implemented -->
                 <button>Edit</button>
@@ -34,7 +34,7 @@
             </tr>
           </tbody>
         </table>
-        <div v-else>No creatures found.</div>
+        <div v-else>No items found.</div>
       </div>
     </div>
   </div>
@@ -42,11 +42,11 @@
 
 <script setup>
 import { watch, computed } from 'vue';
-import { useCreaturesStore } from '../stores/creatures';
-import { useGamesStore } from '../stores/games';
+import { useItemsStore } from '../../../stores/items';
+import { useGamesStore } from '../../../stores/games';
 import { storeToRefs } from 'pinia';
 
-const creaturesStore = useCreaturesStore();
+const itemsStore = useItemsStore();
 const gamesStore = useGamesStore();
 const { selectedGame } = storeToRefs(gamesStore);
 
@@ -55,7 +55,7 @@ const gameId = computed(() => selectedGame.value ? selectedGame.value.id : null)
 watch(
   () => gameId.value,
   (newGameId) => {
-    if (newGameId) creaturesStore.loadCreatures(newGameId);
+    if (newGameId) itemsStore.loadItems(newGameId);
   },
   { immediate: true }
 );

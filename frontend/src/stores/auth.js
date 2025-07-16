@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia';
+import router from '../router';
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
@@ -15,12 +16,14 @@ export const useAuthStore = defineStore('auth', {
         console.log('[auth] Cleared session token');
       }
     },
-    logout() {
+    logout(code) {
       // Always clear the session token on logout
       this.sessionToken = '';
       localStorage.removeItem('session_token');
       console.log('[auth] Cleared session token');
       console.log('[auth] User logged out');
+      // Redirect to login with optional code
+      router.push({ path: '/login', query: code ? { code } : {} });
     },
   },
 }); 

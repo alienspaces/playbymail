@@ -1,18 +1,20 @@
 <template>
   <div class="home-view">
-    <h1>Game Designer Studio</h1>
+    <h1>Welcome to PlayByMail</h1>
     <p>
-      Welcome to the PlayByMail Game Designer Studio! This is your hub for creating, managing, and editing games and all their components.
+      <strong>PlayByMail</strong> is a platform for designing, managing, and running play-by-mail games—games played entirely through physical mail, not online.
     </p>
     <ul>
-      <li>List, create, edit, and delete <strong>Games</strong></li>
-      <li>Manage <strong>Locations</strong> for adventure games</li>
-      <li>Manage <strong>Items</strong> and <strong>Creatures</strong></li>
-      <li>Link locations and define requirements</li>
-      <li>Assign items and creatures to locations</li>
-      <li>All features are designed for game designers (not players)</li>
+      <li><strong>What is Play by Mail?</strong><br>
+        Play by mail is a way to play games through the postal service. Players send in their moves by mail and receive results by mail—no online play.
+      </li>
+      <li><strong>What does playbymail.games provide?</strong><br>
+        Tools for game designers and administrators to create, manage, and run play-by-mail games, including turn processing, printing, and mailing support.
+      </li>
+      <li><strong>Who is this site for?</strong><br>
+        Game designers and administrators who want to run play-by-mail games. Players use the system only to get help, not to play.
+      </li>
     </ul>
-    <router-link to="/studio" class="studio-cta">Enter the Studio</router-link>
   </div>
 </template>
 
@@ -45,7 +47,7 @@
   padding-left: 0.5rem;
 }
 .home-view li {
-  margin-bottom: 0.75rem;
+  margin-bottom: 1.5rem;
   font-size: 1.05rem;
 }
 .studio-cta {

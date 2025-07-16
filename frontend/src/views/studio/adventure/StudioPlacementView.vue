@@ -12,7 +12,7 @@
 </template>
 
 <script setup>
-import { useGamesStore } from '../stores/games';
+import { useGamesStore } from '../../../stores/games';
 import { storeToRefs } from 'pinia';
 
 const gamesStore = useGamesStore();

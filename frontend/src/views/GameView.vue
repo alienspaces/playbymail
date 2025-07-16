@@ -72,9 +72,6 @@ export default {
   name: 'GameView',
   data() {
     return {
-      games: [],
-      loading: false,
-      error: null,
       showModal: false,
       modalMode: 'create', // 'create' or 'edit'
       modalForm: {
@@ -88,29 +85,22 @@ export default {
       deleteError: ''
     }
   },
-  mounted() {
-    this.fetchGames()
+  computed: {
+    games() {
+      return this.gamesStore.games;
+    },
+    loading() {
+      return this.gamesStore.loading;
+    },
+    error() {
+      return this.gamesStore.error;
+    }
+  },
+  created() {
+    this.gamesStore = useGamesStore();
+    this.gamesStore.fetchGames();
   },
   methods: {
-    async fetchGames() {
-      this.loading = true
-      this.error = null
-      try {
-        const res = await fetch('/v1/games', {
-          headers: {
-            'Content-Type': 'application/json',
-            // TODO: Add authentication header if needed
-          }
-        })
-        if (!res.ok) throw new Error('Failed to fetch games')
-        const data = await res.json()
-        this.games = data.data || []
-      } catch (err) {
-        this.error = err.message
-      } finally {
-        this.loading = false
-      }
-    },
     formatDate(dateStr) {
       if (!dateStr) return ''
       const d = new Date(dateStr)
@@ -135,36 +125,22 @@ export default {
     async createGame() {
       this.modalError = ''
       try {
-        const res = await fetch('/v1/games', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name: this.modalForm.name, game_type: this.modalForm.game_type })
-        })
-        if (!res.ok) throw new Error('Failed to create game')
-        const created = await res.json()
-        this.closeModal()
-        await this.fetchGames()
-        // Automatically select and redirect to the new game
-        if (created && created.data && created.data.id) {
-          this.selectGame(created.data)
+        const created = await this.gamesStore.createGame({ name: this.modalForm.name, game_type: this.modalForm.game_type });
+        this.closeModal();
+        if (created && created.id) {
+          this.selectGame(created);
         }
       } catch (err) {
-        this.modalError = err.message
+        this.modalError = err.message;
       }
     },
     async updateGame() {
       this.modalError = ''
       try {
-        const res = await fetch(`/v1/games/${this.modalForm.id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name: this.modalForm.name, game_type: this.modalForm.game_type })
-        })
-        if (!res.ok) throw new Error('Failed to update game')
-        this.closeModal()
-        await this.fetchGames()
+        await this.gamesStore.updateGame(this.modalForm.id, { name: this.modalForm.name, game_type: this.modalForm.game_type });
+        this.closeModal();
       } catch (err) {
-        this.modalError = err.message
+        this.modalError = err.message;
       }
     },
     confirmDelete(game) {
@@ -181,21 +157,14 @@ export default {
       if (!this.deleteTarget) return
       this.deleteError = ''
       try {
-        const res = await fetch(`/v1/games/${this.deleteTarget.id}`, {
-          method: 'DELETE',
-          headers: { 'Content-Type': 'application/json' }
-        })
-        if (!res.ok) throw new Error('Failed to delete game')
-        this.closeDelete()
-        await this.fetchGames()
+        await this.gamesStore.deleteGame(this.deleteTarget.id);
+        this.closeDelete();
       } catch (err) {
-        this.deleteError = err.message
+        this.deleteError = err.message;
       }
     },
     selectGame(game) {
-      // Set selected game in Pinia store and redirect
-      const gamesStore = useGamesStore()
-      gamesStore.setSelectedGame(game)
+      this.gamesStore.setSelectedGame(game)
       this.$router.push(`/studio/${game.id}/locations`)
     }
   }

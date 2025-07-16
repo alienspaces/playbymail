@@ -42,8 +42,8 @@
 
 <script setup>
 import { watch, computed } from 'vue';
-import { useLocationsStore } from '../stores/locations';
-import { useGamesStore } from '../stores/games';
+import { useLocationsStore } from '../../../stores/locations';
+import { useGamesStore } from '../../../stores/games';
 import { storeToRefs } from 'pinia';
 
 const locationsStore = useLocationsStore();
@@ -73,21 +73,9 @@ h1 {
 table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 1rem;
 }
 th, td {
   border: 1px solid #ccc;
-  padding: 0.5rem 1rem;
-  text-align: left;
-}
-th {
-  background: #f8f8f8;
-}
-button {
-  margin-right: 0.5rem;
-}
-.error {
-  color: #b00;
-  margin-top: 1rem;
+  padding: 0.5em;
 }
 </style> 

@@ -11,5 +11,14 @@ export const baseUrl = isLocalhost
 export function getAuthHeaders() {
   const authStore = useAuthStore();
   const token = authStore.sessionToken;
-  return token ? { Authorization: `Bearer ${token}` } : {};
+  return token ? { Authorization: token } : {};
+}
+
+export async function apiFetch(url, options = {}) {
+  const res = await fetch(url, options);
+  if (res.status === 401) {
+    useAuthStore().logout('session_expired');
+    throw new Error('Session expired. Please log in again.');
+  }
+  return res;
 } 

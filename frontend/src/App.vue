@@ -25,7 +25,7 @@ function closeMobileMenu() {
   <div id="app">
     <nav class="navbar">
       <div class="nav-links">
-        <router-link to="/" class="logo" exact-active-class="active" @click="closeMobileMenu">PlayByMail</router-link>
+        <router-link to="/" class="logo">PlayByMail</router-link>
         <router-link to="/faq" exact-active-class="active" @click="closeMobileMenu">F.A.Q.</router-link>
         <router-link to="/studio" exact-active-class="active" @click="closeMobileMenu">Game Designer Studio</router-link>
         <router-link to="/admin" exact-active-class="active" @click="closeMobileMenu">Game Management & Admin</router-link>
