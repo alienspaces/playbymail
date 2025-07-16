@@ -1,10 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import GameView from '../views/GameView.vue'
-import StudioLayout from '../components/StudioLayout.vue'
 import LoginView from '../views/LoginView.vue';
 import VerifyView from '../views/VerifyView.vue';
 import FaqView from '../views/FaqView.vue';
-import AdminView from '../views/AdminView.vue';
 import StudioEntryView from '../views/StudioEntryView.vue';
 import AdminEntryView from '../views/AdminEntryView.vue';
 import { useAuthStore } from '../stores/auth';
