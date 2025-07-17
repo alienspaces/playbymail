@@ -161,7 +161,7 @@ body {
   right: 0;
   background: #11181c;
   padding: 1.5rem 2rem 2rem 2rem;
-  z-index: 1001;
+  z-index: 3000;
   box-shadow: 0 4px 16px rgba(0,0,0,0.15);
   animation: fadeIn 0.2s;
 }
