@@ -5,9 +5,143 @@
   padding: 0;
 }
 
+:root {
+  /* Color palette */
+  --color-primary: #1976d2;
+  --color-primary-dark: #115293;
+  --color-bg: #fff;
+  --color-bg-alt: #f7f7f7;
+  --color-border: #ddd;
+  --color-text: #222;
+  --color-text-light: #fff;
+  --color-accent: #1976d2;
+  --color-error: #d32f2f;
+
+  /* Typography */
+  --font-family-base: 'Inter', Arial, sans-serif;
+  --font-size-base: 16px;
+  --font-size-sm: 0.95rem;
+  --font-size-md: 1.1rem;
+  --font-size-lg: 1.5rem;
+  --font-size-xl: 2.2rem;
+  --font-weight-bold: 700;
+  --font-weight-normal: 400;
+
+  /* Spacing */
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 2rem;
+  --space-xl: 3rem;
+
+  /* Border radius */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+}
+
 body {
-  font-family: sans-serif;
-  font-size: 16px;
-  background: #fff;
-  color: #222;
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-base);
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+/* Typography */
+h1, .h1 {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  margin-bottom: var(--space-md);
+}
+h2, .h2 {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  margin-bottom: var(--space-sm);
+}
+h3, .h3 {
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-bold);
+  margin-bottom: var(--space-xs);
+}
+p {
+  margin-bottom: var(--space-sm);
+}
+a {
+  color: var(--color-primary);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+a:hover, a:focus {
+  color: var(--color-primary-dark);
+  text-decoration: underline;
+}
+
+/* Buttons */
+button, .btn {
+  font-family: inherit;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-bold);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--color-primary);
+  color: var(--color-text-light);
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+button:hover, .btn:hover,
+button:focus, .btn:focus {
+  background: var(--color-primary-dark);
+}
+button:disabled, .btn:disabled {
+  background: var(--color-border);
+  color: #aaa;
+  cursor: not-allowed;
+}
+
+/* Forms */
+input, select, textarea {
+  font-family: inherit;
+  font-size: var(--font-size-base);
+  padding: var(--space-xs) var(--space-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  margin-bottom: var(--space-sm);
+}
+input:focus, select:focus, textarea:focus {
+  outline: 2px solid var(--color-primary);
+}
+
+/* Utility classes (optional, add more as needed) */
+.mt-md { margin-top: var(--space-md); }
+.mb-md { margin-bottom: var(--space-md); }
+.p-md { padding: var(--space-md); }
+.text-center { text-align: center; }
+.bg-alt { background: var(--color-bg-alt); }
+
+/* Responsive typography */
+@media (max-width: 600px) {
+  h1, .h1 { font-size: 1.3rem; }
+  h2, .h2 { font-size: 1.1rem; }
+  h3, .h3 { font-size: 1rem; }
+  body { font-size: 15px; }
+}
+
+/* End design system foundation */
+
+/* Icon-only button (for burger menus, etc.) */
+.icon-btn {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0.2em 0.2em !important;
+  color: inherit !important;
+  min-width: 0;
+  min-height: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.icon-btn:focus {
+  outline: 2px solid var(--color-primary);
 }

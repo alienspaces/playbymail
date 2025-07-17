@@ -174,23 +174,23 @@ export default {
 <style scoped>
 .game-list {
   max-width: 800px;
-  margin: 2rem auto;
+  margin: var(--space-lg) auto;
 }
 table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 1rem;
+  margin-top: var(--space-md);
 }
 th, td {
-  border: 1px solid #ccc;
-  padding: 0.5rem 1rem;
+  border: 1px solid var(--color-border);
+  padding: var(--space-sm) var(--space-md);
   text-align: left;
 }
 th {
-  background: #f8f8f8;
+  background: var(--color-bg-alt);
 }
 button {
-  margin-right: 0.5rem;
+  margin-right: var(--space-sm);
 }
 .modal-overlay {
   position: fixed;
@@ -202,18 +202,18 @@ button {
   z-index: 1000;
 }
 .modal {
-  background: #fff;
-  padding: 2rem;
-  border-radius: 8px;
+  background: var(--color-bg);
+  padding: var(--space-lg);
+  border-radius: var(--radius-md);
   min-width: 300px;
   max-width: 90vw;
   box-shadow: 0 2px 16px rgba(0,0,0,0.2);
 }
 .modal-actions {
-  margin-top: 1rem;
+  margin-top: var(--space-md);
 }
 .error {
-  color: #b00;
-  margin-top: 1rem;
+  color: var(--color-error);
+  margin-top: var(--space-md);
 }
 </style> 

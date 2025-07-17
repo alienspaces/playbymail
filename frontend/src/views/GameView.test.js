@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
+import { createPinia, setActivePinia } from 'pinia'
 import GameView from './GameView.vue'
 
 // Mock fetch
@@ -16,6 +17,7 @@ window.fetch = vi.fn(() =>
 
 describe('GameView', () => {
   beforeEach(() => {
+    setActivePinia(createPinia())
     fetch.mockClear()
   })
 
@@ -23,7 +25,7 @@ describe('GameView', () => {
     const wrapper = mount(GameView)
     // Wait for fetchGames to complete
     await new Promise(r => setTimeout(r, 0))
-    expect(fetch).toHaveBeenCalledWith('/v1/games', expect.any(Object))
+    expect(fetch).toHaveBeenCalledWith('http://localhost:8080/v1/games', expect.any(Object))
     expect(wrapper.text()).toContain('Games')
     expect(wrapper.text()).toContain('Test Game')
     expect(wrapper.find('th').text()).toBe('Name')

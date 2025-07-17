@@ -31,6 +31,10 @@ npm run lint
 echo "🏗️  Running build..."
 npm run build
 
+# Run unit tests
+echo "🧪 Running unit tests..."
+npm run test:unit
+
 echo "✅ Frontend tests completed successfully."
 
 # Return to the original directory

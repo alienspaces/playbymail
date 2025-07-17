@@ -22,29 +22,29 @@
 <style scoped>
 .admin-view {
   max-width: 700px;
-  margin: 2rem auto;
-  padding: 2.5rem;
-  background: #fff;
-  border-radius: 12px;
+  margin: var(--space-lg) auto;
+  padding: var(--space-xl);
+  background: var(--color-bg);
+  border-radius: var(--radius-lg);
   box-shadow: 0 2px 12px rgba(0,0,0,0.07);
 }
 .admin-view h1 {
-  margin-bottom: 1.5rem;
-  font-size: 2.2rem;
+  margin-bottom: var(--space-lg);
+  font-size: var(--font-size-xl);
   text-align: left;
 }
 .admin-view p {
-  margin-bottom: 1.25rem;
-  font-size: 1.1rem;
+  margin-bottom: var(--space-md);
+  font-size: var(--font-size-md);
   text-align: left;
 }
 .admin-view ul {
-  margin: 1.5rem 0 1.5rem 2rem;
-  padding-left: 0.5rem;
+  margin: var(--space-lg) 0 var(--space-lg) var(--space-lg);
+  padding-left: var(--space-sm);
   text-align: left;
 }
 .admin-view li {
-  margin-bottom: 0.75rem;
-  font-size: 1.05rem;
+  margin-bottom: var(--space-sm);
+  font-size: var(--font-size-sm);
 }
 </style> 

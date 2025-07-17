@@ -110,7 +110,8 @@ func (rnr *Runner) authenticateRequestFunc(l logger.Logger, m domainer.Domainer,
 	}
 }
 
-// authenticateRequestTokenFunc authenticates a request based on a session token
+// authenticateRequestTokenFunc authenticates a request based on a session token. Returning anything
+// other than an AuthenticatedRequest{} with a valid Typewill result in a 401 Unauthorized response.
 func (rnr *Runner) authenticateRequestTokenFunc(l logger.Logger, m domainer.Domainer, r *http.Request) (server.AuthenticatedRequest, error) {
 
 	l.Info("(playbymail) authenticateRequestTokenFunc called")

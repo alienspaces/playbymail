@@ -63,19 +63,19 @@ watch(
 
 <style scoped>
 .select-game-warning {
-  color: #b00;
-  margin-top: 2rem;
-  font-size: 1.1em;
+  color: var(--color-error);
+  margin-top: var(--space-lg);
+  font-size: var(--font-size-md);
 }
 h1 {
-  margin-bottom: 1rem;
+  margin-bottom: var(--space-md);
 }
 table {
   width: 100%;
   border-collapse: collapse;
 }
 th, td {
-  border: 1px solid #ccc;
-  padding: 0.5em;
+  border: 1px solid var(--color-border);
+  padding: var(--space-sm);
 }
 </style> 

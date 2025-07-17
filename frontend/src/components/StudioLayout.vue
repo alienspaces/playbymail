@@ -4,7 +4,7 @@
     <div class="studio-header">
       <!-- Studio burger menu (mobile only) -->
       <button
-        class="studio-burger"
+        class="studio-burger icon-btn"
         @click="toggleStudioMenu"
         aria-label="Open studio menu"
         v-if="isMobile"
@@ -17,8 +17,8 @@
     </div>
     <!-- Flex row: sidebar + main content -->
     <div class="studio-body-row">
-      <!-- Sidebar left of screen-->
-      <aside class="sidebar" v-if="!isMobile || studioMenuOpen">
+      <!-- Desktop sidebar -->
+      <aside class="sidebar" v-if="!isMobile">
         <nav>
           <ul>
             <li><router-link to="/studio" active-class="active">Games</router-link></li>
@@ -32,7 +32,7 @@
         </nav>
         <button class="help-btn" @click="showHelp = true">Help</button>
       </aside>
-      <!-- Main content area right of sidebar-->
+      <!-- Main content area -->
       <div class="main-content" @click="closeStudioMenuOnMobile">
         <section class="studio-body">
           <router-view />
@@ -47,23 +47,23 @@
         <p>This is context-sensitive help for the current section. (Stub)</p>
       </div>
     </div>
-    <!-- Studio menu overlay for mobile -->
-    <div v-if="isMobile && studioMenuOpen" class="studio-menu-overlay" @click.self="closeStudioMenu">
-      <aside class="sidebar mobile">
-        <nav>
-          <ul>
-            <li><router-link to="/studio" active-class="active" @click="closeStudioMenu">Games</router-link></li>
-            <template v-if="showAdventureMenu">
-              <li><router-link :to="selectedGame ? `/studio/${selectedGame.id}/locations` : '#'" :class="{disabled: !selectedGame}" active-class="active" @click="closeStudioMenu">Locations</router-link></li>
-              <li><router-link :to="selectedGame ? `/studio/${selectedGame.id}/items` : '#'" :class="{disabled: !selectedGame}" active-class="active" @click="closeStudioMenu">Items</router-link></li>
-              <li><router-link :to="selectedGame ? `/studio/${selectedGame.id}/creatures` : '#'" :class="{disabled: !selectedGame}" active-class="active" @click="closeStudioMenu">Creatures</router-link></li>
-              <li><router-link :to="selectedGame ? `/studio/${selectedGame.id}/placement` : '#'" :class="{disabled: !selectedGame}" active-class="active" @click="closeStudioMenu">Placement</router-link></li>
-            </template>
-          </ul>
-        </nav>
-        <button class="help-btn" @click="showHelp = true; closeStudioMenu()">Help</button>
-      </aside>
-    </div>
+    <!-- Mobile sidebar overlay -->
+    <div v-if="isMobile && studioMenuOpen" class="mobile-overlay" @click="closeStudioMenu"></div>
+    <!-- Mobile sidebar -->
+    <aside v-if="isMobile && studioMenuOpen" class="sidebar mobile">
+      <nav>
+        <ul>
+          <li><router-link to="/studio" active-class="active" @click="closeStudioMenu">Games</router-link></li>
+          <template v-if="showAdventureMenu">
+            <li><router-link :to="selectedGame ? `/studio/${selectedGame.id}/locations` : '#'" :class="{disabled: !selectedGame}" active-class="active" @click="closeStudioMenu">Locations</router-link></li>
+            <li><router-link :to="selectedGame ? `/studio/${selectedGame.id}/items` : '#'" :class="{disabled: !selectedGame}" active-class="active" @click="closeStudioMenu">Items</router-link></li>
+            <li><router-link :to="selectedGame ? `/studio/${selectedGame.id}/creatures` : '#'" :class="{disabled: !selectedGame}" active-class="active" @click="closeStudioMenu">Creatures</router-link></li>
+            <li><router-link :to="selectedGame ? `/studio/${selectedGame.id}/placement` : '#'" :class="{disabled: !selectedGame}" active-class="active" @click="closeStudioMenu">Placement</router-link></li>
+          </template>
+        </ul>
+      </nav>
+      <button class="help-btn" @click="showHelp = true; closeStudioMenu()">Help</button>
+    </aside>
   </div>
 </template>
 
@@ -122,9 +122,9 @@ function closeStudioMenuOnMobile() {
 }
 .studio-header {
   width: 100%;
-  padding: 1.5rem 2rem 1rem 2rem;
-  border-bottom: 1px solid #eee;
-  background: #fff;
+  padding: var(--space-lg) var(--space-lg) var(--space-md) var(--space-lg);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg);
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -132,7 +132,7 @@ function closeStudioMenuOnMobile() {
 }
 .studio-header h1 {
   margin: 0 auto 0 0;
-  font-size: 2rem;
+  /* font-size and font-weight now from global h1 */
 }
 .studio-burger {
   display: none;
@@ -141,10 +141,7 @@ function closeStudioMenuOnMobile() {
   align-items: center;
   width: 40px;
   height: 40px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  margin-right: 1.5rem;
+  margin-right: var(--space-lg);
   z-index: 2100;
 }
 .studio-burger span {
@@ -152,7 +149,7 @@ function closeStudioMenuOnMobile() {
   width: 28px;
   height: 4px;
   margin: 3px 0;
-  background: #1976d2;
+  background: var(--color-primary);
   border-radius: 2px;
   transition: 0.3s;
 }
@@ -163,32 +160,42 @@ function closeStudioMenuOnMobile() {
   .sidebar {
     display: none;
   }
+  .mobile-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.3);
+    z-index: 2999;
+  }
   .sidebar.mobile {
     display: flex;
     position: fixed;
     top: 0;
     left: 0;
     height: 100vh;
-    width: 240px;
-    background: #f7f7f7;
-    border-right: 1px solid #ddd;
-    padding: 2rem 1rem 0 1rem;
+    width: 280px;
+    background: var(--color-bg-alt);
+    border-right: 1px solid var(--color-border);
+    padding: var(--space-lg) var(--space-md) 0 var(--space-md);
     flex-direction: column;
-    z-index: 2200;
+    z-index: 3000;
     box-shadow: 2px 0 16px rgba(0,0,0,0.12);
     animation: slideInLeft 0.2s;
   }
-  .studio-menu-overlay {
-    position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0,0,0,0.18);
-    z-index: 2199;
-    display: flex;
+  /* Prevent main content from being affected by mobile sidebar */
+  .studio-body-row {
+    position: relative;
+  }
+  .main-content {
+    position: relative;
+    z-index: 1;
   }
 }
 @media (max-width: 600px) {
   .studio-header {
-    padding: 1rem 1rem 0.5rem 1rem;
+    padding: var(--space-md) var(--space-md) var(--space-sm) var(--space-md);
   }
   .studio-header h1 {
     font-size: 1.2rem;
@@ -198,7 +205,7 @@ function closeStudioMenuOnMobile() {
   .studio-burger {
     width: 32px;
     height: 32px;
-    margin-right: 1rem;
+    margin-right: var(--space-md);
   }
   .studio-burger span {
     width: 22px;
@@ -206,23 +213,19 @@ function closeStudioMenuOnMobile() {
     margin: 2px 0;
   }
   .studio-body {
-    padding: 1rem 0.5rem;
+    padding: var(--space-md) var(--space-sm);
     font-size: 1rem;
   }
   .sidebar, .sidebar.mobile {
     width: 180px;
-    padding: 1rem 0.5rem 0 0.5rem;
+    padding: var(--space-md) var(--space-sm) 0 var(--space-sm);
   }
   .sidebar ul {
     font-size: 1rem;
   }
-  .help-btn {
-    font-size: 0.95rem;
-    padding: 0.6rem 0;
-  }
   .help-panel {
     min-width: 220px;
-    padding: 1rem 1.2rem;
+    padding: var(--space-md) var(--space-md);
     font-size: 1rem;
   }
 }
@@ -237,9 +240,9 @@ function closeStudioMenuOnMobile() {
 }
 .sidebar {
   width: 200px;
-  background: #f7f7f7;
-  border-right: 1px solid #ddd;
-  padding: 2rem 1rem 0 1rem;
+  background: var(--color-bg-alt);
+  border-right: 1px solid var(--color-border);
+  padding: var(--space-lg) var(--space-md) 0 var(--space-md);
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
@@ -248,15 +251,15 @@ function closeStudioMenuOnMobile() {
   list-style: none;
 }
 .sidebar li {
-  margin-bottom: 1rem;
+  margin-bottom: var(--space-md);
 }
 .sidebar a {
-  color: #222;
+  color: var(--color-text);
   text-decoration: none;
   font-weight: 500;
 }
 .sidebar a.active {
-  color: #1976d2;
+  color: var(--color-primary);
 }
 .sidebar a.disabled {
   pointer-events: none;
@@ -267,24 +270,18 @@ function closeStudioMenuOnMobile() {
   display: flex;
   flex-direction: column;
   min-width: 0;
+  background: transparent;
 }
 .studio-body {
   flex: 1;
-  padding: 2rem;
+  padding: var(--space-lg);
   background: #fafbfc;
   min-width: 0;
 }
 .help-btn {
-  margin-top: 2rem;
+  margin-top: var(--space-lg);
   width: 100%;
-  padding: 0.75rem 0;
-  background: #1976d2;
-  color: #fff;
-  border: none;
-  border-radius: 4px;
-  font-weight: 600;
-  cursor: pointer;
-  font-size: 1rem;
+  /* Use global button styles, only override margin/width */
 }
 .help-panel-overlay {
   position: fixed;
@@ -296,9 +293,9 @@ function closeStudioMenuOnMobile() {
   z-index: 2000;
 }
 .help-panel {
-  background: #fff;
-  padding: 2rem 2.5rem;
-  border-radius: 10px;
+  background: var(--color-bg);
+  padding: var(--space-lg) var(--space-xl);
+  border-radius: var(--radius-lg);
   min-width: 320px;
   max-width: 90vw;
   box-shadow: 0 2px 16px rgba(0,0,0,0.18);
@@ -306,8 +303,8 @@ function closeStudioMenuOnMobile() {
 }
 .close-help {
   position: absolute;
-  top: 1rem;
-  right: 1rem;
+  top: var(--space-md);
+  right: var(--space-md);
   background: none;
   border: none;
   font-size: 2rem;

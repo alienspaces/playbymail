@@ -67,7 +67,7 @@ table {
   border-collapse: collapse;
 }
 th, td {
-  border: 1px solid #ccc;
-  padding: 0.5em;
+  border: 1px solid var(--color-border);
+  padding: var(--space-sm);
 }
 </style> 

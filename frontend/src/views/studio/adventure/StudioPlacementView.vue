@@ -21,6 +21,6 @@ const { selectedGame } = storeToRefs(gamesStore);
 
 <style scoped>
 h1 {
-  margin-bottom: 1rem;
+  margin-bottom: var(--space-md);
 }
 </style> 

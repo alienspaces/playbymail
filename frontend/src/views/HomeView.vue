@@ -25,40 +25,40 @@
 <style scoped>
 .home-view {
   max-width: 700px;
-  margin: 2rem auto;
-  padding: 2.5rem;
-  background: #fff;
-  border-radius: 12px;
+  margin: var(--space-lg) auto;
+  padding: var(--space-xl);
+  background: var(--color-bg);
+  border-radius: var(--radius-lg);
   box-shadow: 0 2px 12px rgba(0,0,0,0.07);
 }
 .home-view h1 {
-  margin-bottom: 1.5rem;
-  font-size: 2.2rem;
+  margin-bottom: var(--space-lg);
+  font-size: var(--font-size-xl);
   text-align: left;
 }
 .home-view p {
-  margin-bottom: 1.25rem;
-  font-size: 1.1rem;
+  margin-bottom: var(--space-md);
+  font-size: var(--font-size-md);
   text-align: left;
 }
 .home-view ul {
   text-align: left;
-  margin: 2rem 0 2rem 2rem;
-  padding-left: 0.5rem;
+  margin: var(--space-lg) 0 var(--space-lg) var(--space-lg);
+  padding-left: var(--space-sm);
 }
 .home-view li {
-  margin-bottom: 1.5rem;
-  font-size: 1.05rem;
+  margin-bottom: var(--space-lg);
+  font-size: var(--font-size-sm);
 }
 .studio-cta {
   display: inline-block;
-  margin-top: 2rem;
-  padding: 0.75rem 2rem;
+  margin-top: var(--space-lg);
+  padding: var(--space-md) var(--space-lg);
   background: #2c3e50;
-  color: #fff;
-  border-radius: 4px;
+  color: var(--color-text-light);
+  border-radius: var(--radius-sm);
   text-decoration: none;
-  font-weight: bold;
+  font-weight: var(--font-weight-bold);
   transition: background 0.2s;
   text-align: center;
 }

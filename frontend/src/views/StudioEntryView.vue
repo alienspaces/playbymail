@@ -39,60 +39,60 @@ const isLoggedIn = computed(() => !!authStore.sessionToken);
 <style scoped>
 .studio-entry {
   max-width: 700px;
-  margin: 2rem auto;
-  padding: 2.5rem 2.5rem 2.5rem 2.5rem;
-  background: #fff;
-  border-radius: 12px;
+  margin: var(--space-lg) auto;
+  padding: var(--space-xl);
+  background: var(--color-bg);
+  border-radius: var(--radius-lg);
   box-shadow: 0 2px 12px rgba(0,0,0,0.07);
 }
 .studio-entry h1 {
-  margin-bottom: 1.5rem;
-  font-size: 2.2rem;
+  margin-bottom: var(--space-lg);
+  font-size: var(--font-size-xl);
 }
 .studio-entry p {
-  margin-bottom: 1.25rem;
-  font-size: 1.1rem;
+  margin-bottom: var(--space-md);
+  font-size: var(--font-size-md);
 }
 .studio-entry ul {
-  margin-bottom: 1.5rem;
-  margin-left: 2rem;
-  padding-left: 0.5rem;
+  margin-bottom: var(--space-lg);
+  margin-left: var(--space-lg);
+  padding-left: var(--space-sm);
 }
 .studio-entry li {
-  margin-bottom: 0.75rem;
-  font-size: 1.05rem;
+  margin-bottom: var(--space-sm);
+  font-size: var(--font-size-sm);
 }
 .studio-entry em {
   display: block;
-  margin-top: 1.5rem;
-  font-size: 1.05rem;
+  margin-top: var(--space-lg);
+  font-size: var(--font-size-sm);
 }
 .studio-main {
   display: flex;
-  gap: 2rem;
+  gap: var(--space-lg);
   align-items: flex-start;
 }
 .studio-help {
   min-width: 250px;
-  background: #f7f7f7;
-  border: 1px solid #eee;
-  border-radius: 12px;
-  padding: 2.5rem;
-  margin: 2rem 0 2rem 2rem;
+  background: var(--color-bg-alt);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-xl);
+  margin: var(--space-lg) 0 var(--space-lg) var(--space-lg);
   box-shadow: 0 2px 12px rgba(0,0,0,0.07);
-  font-size: 1.05rem;
+  font-size: var(--font-size-sm);
   text-align: left;
 }
 .studio-help h2 {
-  font-size: 2.2rem;
-  margin-bottom: 1.5rem;
+  font-size: var(--font-size-xl);
+  margin-bottom: var(--space-lg);
   text-align: left;
 }
 .studio-help ul {
-  margin-left: 2rem;
-  padding-left: 0.5rem;
+  margin-left: var(--space-lg);
+  padding-left: var(--space-sm);
 }
 .studio-help li {
-  margin-bottom: 0.75rem;
+  margin-bottom: var(--space-sm);
 }
 </style> 

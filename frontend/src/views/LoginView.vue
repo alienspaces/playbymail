@@ -58,46 +58,46 @@ export default {
 .login-container {
   max-width: 400px;
   margin: 80px auto;
-  padding: 2rem;
-  background: #fff;
-  border-radius: 8px;
+  padding: var(--space-lg);
+  background: var(--color-bg);
+  border-radius: var(--radius-md);
   box-shadow: 0 2px 8px rgba(0,0,0,0.07);
   display: flex;
   flex-direction: column;
   align-items: stretch;
 }
 h2 {
-  margin-bottom: 1.5rem;
+  margin-bottom: var(--space-lg);
   text-align: center;
 }
 label {
-  margin-bottom: 0.5rem;
+  margin-bottom: var(--space-sm);
   font-weight: 500;
 }
 input {
-  padding: 0.5rem;
-  margin-bottom: 1rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-size: 1rem;
+  padding: var(--space-sm);
+  margin-bottom: var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-base);
 }
 button {
-  background: #11181c;
-  color: #fff;
+  background: #11181c; /* Keep specific dark color for login */
+  color: var(--color-text-light);
   border: none;
-  padding: 0.75rem;
-  border-radius: 4px;
-  font-size: 1rem;
+  padding: var(--space-md);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-base);
   cursor: pointer;
-  font-weight: 600;
+  font-weight: var(--font-weight-bold);
 }
 button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
 .message {
-  color: #d33;
-  margin-top: 1rem;
+  color: var(--color-error);
+  margin-top: var(--space-md);
   text-align: center;
 }
 </style> 

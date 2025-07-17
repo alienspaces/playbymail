@@ -39,7 +39,7 @@ function closeMobileMenu() {
         </template>
       </div>
       <div class="mobile-logo">PlayByMail</div>
-      <button class="burger" @click="toggleMobileMenu" aria-label="Open navigation menu">
+      <button class="burger icon-btn" @click="toggleMobileMenu" aria-label="Open navigation menu">
         <span :class="{ 'open': mobileMenuOpen }"></span>
         <span :class="{ 'open': mobileMenuOpen }"></span>
         <span :class="{ 'open': mobileMenuOpen }"></span>
@@ -63,11 +63,6 @@ function closeMobileMenu() {
 </template>
 
 <style>
-body {
-  background: #f6f8fa;
-  margin: 0;
-  font-family: 'Inter', Arial, sans-serif;
-}
 #app {
   min-height: 100vh;
 }
@@ -75,49 +70,49 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #11181c;
-  color: #fff;
-  padding: 1rem 2rem;
+  background: #11181c; /* Keep this specific dark color for navbar */
+  color: var(--color-text-light);
+  padding: var(--space-md) var(--space-lg);
   position: relative;
 }
 .nav-links {
   display: flex;
-  gap: 2rem;
+  gap: var(--space-lg);
   align-items: center;
 }
 .nav-links a {
-  color: #fff;
+  color: var(--color-text-light);
   text-decoration: none;
   font-weight: 500;
-  padding: 0.25rem 0.5rem;
+  padding: var(--space-xs) var(--space-sm);
   border-radius: 3px;
   transition: background 0.2s;
 }
 .nav-links a.active {
-  background: #1976d2;
-  color: #fff;
+  background: var(--color-primary);
+  color: var(--color-text-light);
 }
 .logo {
-  font-weight: 700;
-  font-size: 2.2rem;
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-xl);
   line-height: 1.1;
 }
 .nav-actions {
   display: flex;
-  gap: 1rem;
+  gap: var(--space-md);
   align-items: center;
 }
 .nav-actions button {
-  background: #fff;
-  color: #11181c;
+  background: var(--color-text-light);
+  color: #11181c; /* Keep this specific dark color */
   border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  font-weight: 600;
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-sm);
+  font-weight: var(--font-weight-bold);
   cursor: pointer;
 }
 .nav-actions a {
-  color: #fff;
+  color: var(--color-text-light);
   text-decoration: underline;
   font-weight: 500;
 }
@@ -128,10 +123,7 @@ body {
   align-items: center;
   width: 40px;
   height: 40px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  margin-left: 1rem;
+  margin-left: var(--space-md);
   z-index: 1002;
 }
 .burger span {
@@ -139,7 +131,7 @@ body {
   width: 26px;
   height: 3px;
   margin: 4px 0;
-  background: #fff;
+  background: var(--color-text-light);
   border-radius: 2px;
   transition: 0.3s;
 }
@@ -159,38 +151,38 @@ body {
   top: 100%;
   left: 0;
   right: 0;
-  background: #11181c;
-  padding: 1.5rem 2rem 2rem 2rem;
+  background: #11181c; /* Keep this specific dark color */
+  padding: var(--space-lg) var(--space-lg) var(--space-lg) var(--space-lg);
   z-index: 3000;
   box-shadow: 0 4px 16px rgba(0,0,0,0.15);
   animation: fadeIn 0.2s;
 }
 .mobile-menu a {
-  color: #fff;
+  color: var(--color-text-light);
   text-decoration: none;
   font-weight: 500;
-  padding: 0.75rem 0;
+  padding: var(--space-md) 0;
   border-radius: 3px;
-  font-size: 1.1rem;
+  font-size: var(--font-size-md);
 }
 .mobile-menu .logo {
-  font-size: 1.2rem;
-  font-weight: 700;
-  margin-bottom: 1rem;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-bold);
+  margin-bottom: var(--space-md);
 }
 .mobile-actions {
-  margin-top: 1.5rem;
+  margin-top: var(--space-lg);
 }
 .mobile-actions button {
   width: 100%;
-  background: #fff;
-  color: #11181c;
+  background: var(--color-text-light);
+  color: #11181c; /* Keep this specific dark color */
   border: none;
-  padding: 0.75rem 0;
-  border-radius: 4px;
-  font-weight: 600;
+  padding: var(--space-md) 0;
+  border-radius: var(--radius-sm);
+  font-weight: var(--font-weight-bold);
   cursor: pointer;
-  font-size: 1.1rem;
+  font-size: var(--font-size-md);
 }
 .mobile-logo {
   display: none;
@@ -205,11 +197,11 @@ body {
   }
   .mobile-logo {
     display: block;
-    color: #fff;
-    font-size: 2.2rem;
+    color: var(--color-text-light);
+    font-size: var(--font-size-xl);
     line-height: 1.1;
-    margin-right: 1rem;
-    margin-left: 0.5rem;
+    margin-right: var(--space-md);
+    margin-left: var(--space-sm);
     user-select: none;
     align-self: center;
   }
