@@ -59,7 +59,7 @@ export const useLocationsStore = defineStore('locations', {
       this.loading = true;
       this.error = null;
       try {
-        const updated = await updateLocation(locationId, data);
+        const updated = await updateLocation(this.gameId, locationId, data);
         const idx = this.locations.findIndex(l => l.id === locationId);
         if (idx !== -1) this.locations[idx] = updated;
         return updated;
@@ -79,7 +79,7 @@ export const useLocationsStore = defineStore('locations', {
       this.loading = true;
       this.error = null;
       try {
-        await deleteLocation(locationId);
+        await deleteLocation(this.gameId, locationId);
         this.locations = this.locations.filter(l => l.id !== locationId);
       } catch (e) {
         this.error = e.message;

@@ -6,7 +6,7 @@ import { baseUrl, getAuthHeaders, apiFetch } from './baseUrl';
  * @returns {Promise<GameLocation[]>}
  */
 export async function fetchLocations(gameId) {
-  const res = await apiFetch(`${baseUrl}/v1/game-locations?game_id=${encodeURIComponent(gameId)}`, {
+  const res = await apiFetch(`${baseUrl}/api/v1/adventure-games/${encodeURIComponent(gameId)}/locations`, {
     headers: { ...getAuthHeaders() },
   });
   if (!res.ok) throw new Error('Failed to fetch locations');
@@ -21,10 +21,10 @@ export async function fetchLocations(gameId) {
  * @returns {Promise<GameLocation>}
  */
 export async function createLocation(gameId, data) {
-  const res = await apiFetch(`${baseUrl}/v1/game-locations`, {
+  const res = await apiFetch(`${baseUrl}/api/v1/adventure-games/${encodeURIComponent(gameId)}/locations`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
-    body: JSON.stringify({ ...data, game_id: gameId })
+    body: JSON.stringify(data)
   });
   if (!res.ok) throw new Error('Failed to create location');
   const json = await res.json();
@@ -33,12 +33,13 @@ export async function createLocation(gameId, data) {
 
 /**
  * Update a location by ID.
+ * @param {string} gameId
  * @param {string} locationId
  * @param {Partial<GameLocation>} data
  * @returns {Promise<GameLocation>}
  */
-export async function updateLocation(locationId, data) {
-  const res = await apiFetch(`${baseUrl}/v1/game-locations/${encodeURIComponent(locationId)}`, {
+export async function updateLocation(gameId, locationId, data) {
+  const res = await apiFetch(`${baseUrl}/api/v1/adventure-games/${encodeURIComponent(gameId)}/locations/${encodeURIComponent(locationId)}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
     body: JSON.stringify(data)
@@ -50,11 +51,12 @@ export async function updateLocation(locationId, data) {
 
 /**
  * Delete a location by ID.
+ * @param {string} gameId
  * @param {string} locationId
  * @returns {Promise<void>}
  */
-export async function deleteLocation(locationId) {
-  const res = await apiFetch(`${baseUrl}/v1/game-locations/${encodeURIComponent(locationId)}`, {
+export async function deleteLocation(gameId, locationId) {
+  const res = await apiFetch(`${baseUrl}/api/v1/adventure-games/${encodeURIComponent(gameId)}/locations/${encodeURIComponent(locationId)}`, {
     method: 'DELETE',
     headers: { ...getAuthHeaders() },
   });

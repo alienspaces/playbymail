@@ -37,7 +37,7 @@ export const useItemsStore = defineStore('items', {
       this.loading = true;
       this.error = null;
       try {
-        await updateItem(itemId, data);
+        await updateItem(this.gameId, itemId, data);
         await this.loadItems(this.gameId);
       } catch (e) {
         this.error = e.message;
@@ -49,7 +49,7 @@ export const useItemsStore = defineStore('items', {
       this.loading = true;
       this.error = null;
       try {
-        await deleteItem(itemId);
+        await deleteItem(this.gameId, itemId);
         await this.loadItems(this.gameId);
       } catch (e) {
         this.error = e.message;

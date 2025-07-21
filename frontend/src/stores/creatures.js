@@ -37,7 +37,7 @@ export const useCreaturesStore = defineStore('creatures', {
       this.loading = true;
       this.error = null;
       try {
-        await updateCreature(creatureId, data);
+        await updateCreature(this.gameId, creatureId, data);
         await this.loadCreatures(this.gameId);
       } catch (e) {
         this.error = e.message;
@@ -49,7 +49,7 @@ export const useCreaturesStore = defineStore('creatures', {
       this.loading = true;
       this.error = null;
       try {
-        await deleteCreature(creatureId);
+        await deleteCreature(this.gameId, creatureId);
         await this.loadCreatures(this.gameId);
       } catch (e) {
         this.error = e.message;
