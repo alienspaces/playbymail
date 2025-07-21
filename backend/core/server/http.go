@@ -9,6 +9,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/julienschmidt/httprouter"
@@ -256,8 +257,44 @@ func (rnr *Runner) registerDefaultStaticRoutes(r *httprouter.Router) (*httproute
 	}
 
 	if rnr.Config.AppHome != "" {
-		l.Info("(core) registering static file server, serving from >%s<", rnr.Config.AppHome)
-		r.NotFound = http.FileServer(http.Dir(rnr.Config.AppHome))
+		l.Info("(core) registering static file server with SPA fallback, serving from >%s<", rnr.Config.AppHome)
+
+		// Create a file server for the static directory
+		fileServer := http.FileServer(http.Dir(rnr.Config.AppHome))
+
+		// Create a custom NotFound handler that implements SPA fallback
+		r.NotFound = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// First, try to serve the requested file
+			filePath := r.URL.Path
+
+			// Check if the file exists
+			fullPath := rnr.Config.AppHome + filePath
+			if _, err := os.Stat(fullPath); err == nil {
+				// File exists, serve it normally
+				fileServer.ServeHTTP(w, r)
+				return
+			}
+
+			// File doesn't exist, check if it's a directory
+			if _, err := os.Stat(fullPath + "/index.html"); err == nil {
+				// Directory with index.html exists, serve it
+				r.URL.Path = filePath + "/index.html"
+				fileServer.ServeHTTP(w, r)
+				return
+			}
+
+			// Neither file nor directory with index.html exists
+			// Serve index.html for SPA routing (except for API routes)
+			if !strings.HasPrefix(filePath, "/api/") && !strings.HasPrefix(filePath, "/v1/") && !strings.HasPrefix(filePath, "/healthz") && !strings.HasPrefix(filePath, "/liveness") {
+				l.Debug("(core) serving index.html for SPA route >%s<", filePath)
+				r.URL.Path = "/index.html"
+				fileServer.ServeHTTP(w, r)
+				return
+			}
+
+			// For API routes or other non-SPA routes, return 404
+			http.NotFound(w, r)
+		})
 	}
 
 	return r, nil
