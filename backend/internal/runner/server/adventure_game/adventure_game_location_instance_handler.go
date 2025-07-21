@@ -1,4 +1,4 @@
-package runner
+package adventure_game
 
 import (
 	"net/http"
@@ -42,7 +42,7 @@ const (
 	deleteOneAdventureGameLocationInstance = "delete-one-adventure-game-location-instance"
 )
 
-func (rnr *Runner) adventureGameLocationInstanceHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error) {
+func adventureGameLocationInstanceHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error) {
 	l = loggerWithFunctionContext(l, "adventureGameLocationInstanceHandlerConfig")
 
 	l.Debug("Adding adventure_game_location_instance handler configuration")
@@ -74,7 +74,7 @@ func (rnr *Runner) adventureGameLocationInstanceHandlerConfig(l logger.Logger) (
 	gameLocationInstanceConfig[searchManyAdventureGameLocationInstances] = server.HandlerConfig{
 		Method:      http.MethodGet,
 		Path:        "/api/v1/adventure-game-location-instances",
-		HandlerFunc: rnr.searchManyAdventureGameLocationInstancesHandler,
+		HandlerFunc: searchManyAdventureGameLocationInstancesHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
 				server.AuthenticationTypeToken,
@@ -91,7 +91,7 @@ func (rnr *Runner) adventureGameLocationInstanceHandlerConfig(l logger.Logger) (
 	gameLocationInstanceConfig[getManyAdventureGameLocationInstances] = server.HandlerConfig{
 		Method:      http.MethodGet,
 		Path:        "/api/v1/adventure-game-instances/:game_instance_id/location-instances",
-		HandlerFunc: rnr.getManyAdventureGameLocationInstancesHandler,
+		HandlerFunc: getManyAdventureGameLocationInstancesHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
 				server.AuthenticationTypeToken,
@@ -108,7 +108,7 @@ func (rnr *Runner) adventureGameLocationInstanceHandlerConfig(l logger.Logger) (
 	gameLocationInstanceConfig[getOneAdventureGameLocationInstance] = server.HandlerConfig{
 		Method:      http.MethodGet,
 		Path:        "/api/v1/adventure-game-instances/:game_instance_id/location-instances/:location_instance_id",
-		HandlerFunc: rnr.getOneAdventureGameLocationInstanceHandler,
+		HandlerFunc: getOneAdventureGameLocationInstanceHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
 				server.AuthenticationTypeToken,
@@ -124,7 +124,7 @@ func (rnr *Runner) adventureGameLocationInstanceHandlerConfig(l logger.Logger) (
 	gameLocationInstanceConfig[createOneAdventureGameLocationInstance] = server.HandlerConfig{
 		Method:      http.MethodPost,
 		Path:        "/api/v1/adventure-game-instances/:game_instance_id/location-instances",
-		HandlerFunc: rnr.createOneAdventureGameLocationInstanceHandler,
+		HandlerFunc: createOneAdventureGameLocationInstanceHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
 				server.AuthenticationTypeToken,
@@ -141,7 +141,7 @@ func (rnr *Runner) adventureGameLocationInstanceHandlerConfig(l logger.Logger) (
 	gameLocationInstanceConfig[updateOneAdventureGameLocationInstance] = server.HandlerConfig{
 		Method:      http.MethodPut,
 		Path:        "/api/v1/adventure-game-instances/:game_instance_id/location-instances/:location_instance_id",
-		HandlerFunc: rnr.updateOneAdventureGameLocationInstanceHandler,
+		HandlerFunc: updateOneAdventureGameLocationInstanceHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
 				server.AuthenticationTypeToken,
@@ -158,7 +158,7 @@ func (rnr *Runner) adventureGameLocationInstanceHandlerConfig(l logger.Logger) (
 	gameLocationInstanceConfig[deleteOneAdventureGameLocationInstance] = server.HandlerConfig{
 		Method:      http.MethodDelete,
 		Path:        "/api/v1/adventure-game-instances/:game_instance_id/location-instances/:location_instance_id",
-		HandlerFunc: rnr.deleteOneAdventureGameLocationInstanceHandler,
+		HandlerFunc: deleteOneAdventureGameLocationInstanceHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
 				server.AuthenticationTypeToken,
@@ -175,7 +175,7 @@ func (rnr *Runner) adventureGameLocationInstanceHandlerConfig(l logger.Logger) (
 
 // New Adventure Game Location Instance Handlers
 
-func (rnr *Runner) searchManyAdventureGameLocationInstancesHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
+func searchManyAdventureGameLocationInstancesHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
 	l = loggerWithFunctionContext(l, "SearchManyAdventureGameLocationInstancesHandler")
 
 	mm := m.(*domain.Domain)
@@ -200,7 +200,7 @@ func (rnr *Runner) searchManyAdventureGameLocationInstancesHandler(w http.Respon
 	return nil
 }
 
-func (rnr *Runner) getManyAdventureGameLocationInstancesHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
+func getManyAdventureGameLocationInstancesHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
 	l = loggerWithFunctionContext(l, "GetManyAdventureGameLocationInstancesHandler")
 
 	gameInstanceID := pp.ByName("game_instance_id")
@@ -238,7 +238,7 @@ func (rnr *Runner) getManyAdventureGameLocationInstancesHandler(w http.ResponseW
 	return nil
 }
 
-func (rnr *Runner) getOneAdventureGameLocationInstanceHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
+func getOneAdventureGameLocationInstanceHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
 	l = loggerWithFunctionContext(l, "GetOneAdventureGameLocationInstanceHandler")
 
 	gameInstanceID := pp.ByName("game_instance_id")
@@ -286,7 +286,7 @@ func (rnr *Runner) getOneAdventureGameLocationInstanceHandler(w http.ResponseWri
 	return nil
 }
 
-func (rnr *Runner) createOneAdventureGameLocationInstanceHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
+func createOneAdventureGameLocationInstanceHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
 	l = loggerWithFunctionContext(l, "CreateOneAdventureGameLocationInstanceHandler")
 
 	gameInstanceID := pp.ByName("game_instance_id")
@@ -338,7 +338,7 @@ func (rnr *Runner) createOneAdventureGameLocationInstanceHandler(w http.Response
 	return nil
 }
 
-func (rnr *Runner) updateOneAdventureGameLocationInstanceHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
+func updateOneAdventureGameLocationInstanceHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
 	l = loggerWithFunctionContext(l, "UpdateOneAdventureGameLocationInstanceHandler")
 
 	gameInstanceID := pp.ByName("game_instance_id")
@@ -409,7 +409,7 @@ func (rnr *Runner) updateOneAdventureGameLocationInstanceHandler(w http.Response
 	return nil
 }
 
-func (rnr *Runner) deleteOneAdventureGameLocationInstanceHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
+func deleteOneAdventureGameLocationInstanceHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
 	l = loggerWithFunctionContext(l, "DeleteOneAdventureGameLocationInstanceHandler")
 
 	gameInstanceID := pp.ByName("game_instance_id")

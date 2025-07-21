@@ -14,6 +14,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/type/runnable"
 	"gitlab.com/alienspaces/playbymail/core/type/storer"
 	"gitlab.com/alienspaces/playbymail/internal/domain"
+	"gitlab.com/alienspaces/playbymail/internal/runner/server/adventure_game"
 	"gitlab.com/alienspaces/playbymail/internal/utils/config"
 	"gitlab.com/alienspaces/playbymail/internal/utils/logging"
 )
@@ -65,19 +66,8 @@ func NewRunner(l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], cfg co
 	handlerConfigFuncs := []func(logger.Logger) (map[string]server.HandlerConfig, error){
 		r.gameHandlerConfig,
 		r.accountHandlerConfig,
-		r.adventureGameCharacterHandlerConfig,
-		r.adventureGameCreatureHandlerConfig,
-		r.adventureGameItemHandlerConfig,
-		r.adventureGameLocationHandlerConfig,
-		r.adventureGameLocationInstanceHandlerConfig,
-		r.adventureGameLocationLinkRequirementHandlerConfig,
-		r.adventureGameLocationLinkHandlerConfig,
-		r.adventureGameCreatureHandlerConfig,
-		r.adventureGameItemHandlerConfig,
-		r.adventureGameLocationLinkRequirementHandlerConfig,
-		r.adventureGameLocationLinkHandlerConfig,
-		r.adventureGameCreatureInstanceHandlerConfig,
-		r.adventureGameItemInstanceHandlerConfig,
+		// Adventure Game Handlers
+		adventure_game.AdventureGameHandlerConfig,
 	}
 
 	for _, fn := range handlerConfigFuncs {

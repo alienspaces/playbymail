@@ -1,4 +1,4 @@
-package runner
+package adventure_game
 
 import (
 	"net/http"
@@ -42,7 +42,7 @@ const (
 	deleteOneAdventureGameCharacter = "delete-one-adventure-game-character"
 )
 
-func (rnr *Runner) adventureGameCharacterHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error) {
+func adventureGameCharacterHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error) {
 	l = loggerWithFunctionContext(l, "adventureGameCharacterHandlerConfig")
 
 	l.Debug("Adding adventure_game_character handler configuration")
@@ -74,7 +74,7 @@ func (rnr *Runner) adventureGameCharacterHandlerConfig(l logger.Logger) (map[str
 	gameCharacterConfig[searchManyAdventureGameCharacters] = server.HandlerConfig{
 		Method:      http.MethodGet,
 		Path:        "/api/v1/adventure-game-characters",
-		HandlerFunc: rnr.searchManyAdventureGameCharactersHandler,
+		HandlerFunc: searchManyAdventureGameCharactersHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
 				server.AuthenticationTypeToken,
@@ -91,7 +91,7 @@ func (rnr *Runner) adventureGameCharacterHandlerConfig(l logger.Logger) (map[str
 	gameCharacterConfig[getManyAdventureGameCharacters] = server.HandlerConfig{
 		Method:      http.MethodGet,
 		Path:        "/api/v1/adventure-games/:game_id/characters",
-		HandlerFunc: rnr.getManyAdventureGameCharactersHandler,
+		HandlerFunc: getManyAdventureGameCharactersHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
 				server.AuthenticationTypeToken,
@@ -108,7 +108,7 @@ func (rnr *Runner) adventureGameCharacterHandlerConfig(l logger.Logger) (map[str
 	gameCharacterConfig[getOneAdventureGameCharacter] = server.HandlerConfig{
 		Method:      http.MethodGet,
 		Path:        "/api/v1/adventure-games/:game_id/characters/:character_id",
-		HandlerFunc: rnr.getOneAdventureGameCharacterHandler,
+		HandlerFunc: getOneAdventureGameCharacterHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
 				server.AuthenticationTypeToken,
@@ -124,7 +124,7 @@ func (rnr *Runner) adventureGameCharacterHandlerConfig(l logger.Logger) (map[str
 	gameCharacterConfig[createOneAdventureGameCharacter] = server.HandlerConfig{
 		Method:      http.MethodPost,
 		Path:        "/api/v1/adventure-games/:game_id/characters",
-		HandlerFunc: rnr.createOneAdventureGameCharacterHandler,
+		HandlerFunc: createOneAdventureGameCharacterHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
 				server.AuthenticationTypeToken,
@@ -141,7 +141,7 @@ func (rnr *Runner) adventureGameCharacterHandlerConfig(l logger.Logger) (map[str
 	gameCharacterConfig[updateOneAdventureGameCharacter] = server.HandlerConfig{
 		Method:      http.MethodPut,
 		Path:        "/api/v1/adventure-games/:game_id/characters/:character_id",
-		HandlerFunc: rnr.updateOneAdventureGameCharacterHandler,
+		HandlerFunc: updateOneAdventureGameCharacterHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
 				server.AuthenticationTypeToken,
@@ -158,7 +158,7 @@ func (rnr *Runner) adventureGameCharacterHandlerConfig(l logger.Logger) (map[str
 	gameCharacterConfig[deleteOneAdventureGameCharacter] = server.HandlerConfig{
 		Method:      http.MethodDelete,
 		Path:        "/api/v1/adventure-games/:game_id/characters/:character_id",
-		HandlerFunc: rnr.deleteOneAdventureGameCharacterHandler,
+		HandlerFunc: deleteOneAdventureGameCharacterHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
 				server.AuthenticationTypeToken,
@@ -175,7 +175,7 @@ func (rnr *Runner) adventureGameCharacterHandlerConfig(l logger.Logger) (map[str
 
 // New Adventure Game Character Handlers
 
-func (rnr *Runner) searchManyAdventureGameCharactersHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
+func searchManyAdventureGameCharactersHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
 	l = loggerWithFunctionContext(l, "SearchManyAdventureGameCharactersHandler")
 
 	mm := m.(*domain.Domain)
@@ -200,7 +200,7 @@ func (rnr *Runner) searchManyAdventureGameCharactersHandler(w http.ResponseWrite
 	return nil
 }
 
-func (rnr *Runner) getManyAdventureGameCharactersHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
+func getManyAdventureGameCharactersHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
 	l = loggerWithFunctionContext(l, "GetManyAdventureGameCharactersHandler")
 
 	// Create SQL options from query parameters
@@ -238,7 +238,7 @@ func (rnr *Runner) getManyAdventureGameCharactersHandler(w http.ResponseWriter, 
 	return nil
 }
 
-func (rnr *Runner) getOneAdventureGameCharacterHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
+func getOneAdventureGameCharacterHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
 	l = loggerWithFunctionContext(l, "GetOneAdventureGameCharacterHandler")
 
 	gameID := pp.ByName("game_id")
@@ -271,7 +271,7 @@ func (rnr *Runner) getOneAdventureGameCharacterHandler(w http.ResponseWriter, r 
 	return nil
 }
 
-func (rnr *Runner) createOneAdventureGameCharacterHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
+func createOneAdventureGameCharacterHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
 	l = loggerWithFunctionContext(l, "CreateOneAdventureGameCharacterHandler")
 
 	gameID := pp.ByName("game_id")
@@ -311,7 +311,7 @@ func (rnr *Runner) createOneAdventureGameCharacterHandler(w http.ResponseWriter,
 	return nil
 }
 
-func (rnr *Runner) updateOneAdventureGameCharacterHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
+func updateOneAdventureGameCharacterHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
 	l = loggerWithFunctionContext(l, "UpdateOneAdventureGameCharacterHandler")
 
 	gameID := pp.ByName("game_id")
@@ -368,7 +368,7 @@ func (rnr *Runner) updateOneAdventureGameCharacterHandler(w http.ResponseWriter,
 	return nil
 }
 
-func (rnr *Runner) deleteOneAdventureGameCharacterHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
+func deleteOneAdventureGameCharacterHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
 	l = loggerWithFunctionContext(l, "DeleteOneAdventureGameCharacterHandler")
 
 	gameID := pp.ByName("game_id")

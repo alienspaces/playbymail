@@ -1,4 +1,4 @@
-package runner
+package adventure_game
 
 import (
 	"net/http"
@@ -8,14 +8,15 @@ import (
 
 	"gitlab.com/alienspaces/playbymail/core/server"
 	"gitlab.com/alienspaces/playbymail/internal/harness"
+	"gitlab.com/alienspaces/playbymail/internal/runner/server/testutil"
 	"gitlab.com/alienspaces/playbymail/schema"
 )
 
 func Test_adventureGameLocationLinkHandler(t *testing.T) {
 	t.Parallel()
 
-	th := newTestHarness(t)
-	require.NotNil(t, th, "newTestHarness returns without error")
+	th := testutil.NewTestHarness(t)
+	require.NotNil(t, th, "NewTestHarness returns without error")
 
 	// Add a new location to the game that we can use in the test
 	th.DataConfig.GameConfigs[0].GameLocationConfigs = append(
@@ -41,16 +42,16 @@ func Test_adventureGameLocationLinkHandler(t *testing.T) {
 	linkRec, err := th.Data.GetGameLocationLinkRecByRef(harness.GameLocationLinkOneRef)
 	require.NoError(t, err, "GetGameLocationLinkRecByRef returns without error")
 
-	testCaseCollectionResponseDecoder := testCaseResponseDecoderGeneric[schema.AdventureGameLocationLinkCollectionResponse]
-	testCaseResponseDecoder := testCaseResponseDecoderGeneric[schema.AdventureGameLocationLinkResponse]
+	testCaseCollectionResponseDecoder := testutil.TestCaseResponseDecoderGeneric[schema.AdventureGameLocationLinkCollectionResponse]
+	testCaseResponseDecoder := testutil.TestCaseResponseDecoderGeneric[schema.AdventureGameLocationLinkResponse]
 
 	testCases := []struct {
-		TestCase
+		testutil.TestCase
 	}{
 		{
-			TestCase: TestCase{
+			TestCase: testutil.TestCase{
 				Name: "API key with open access \\ get many location links \\ returns expected links",
-				HandlerConfig: func(rnr *Runner) server.HandlerConfig {
+				HandlerConfig: func(rnr *server.Runner) server.HandlerConfig {
 					return rnr.HandlerConfig[getManyAdventureGameLocationLinks]
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
@@ -69,9 +70,9 @@ func Test_adventureGameLocationLinkHandler(t *testing.T) {
 			},
 		},
 		{
-			TestCase: TestCase{
+			TestCase: testutil.TestCase{
 				Name: "API key with open access \\ get one location link with valid ID \\ returns expected link",
-				HandlerConfig: func(rnr *Runner) server.HandlerConfig {
+				HandlerConfig: func(rnr *server.Runner) server.HandlerConfig {
 					return rnr.HandlerConfig[getOneAdventureGameLocationLink]
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
@@ -85,9 +86,9 @@ func Test_adventureGameLocationLinkHandler(t *testing.T) {
 			},
 		},
 		{
-			TestCase: TestCase{
+			TestCase: testutil.TestCase{
 				Name: "API key with open access \\ create location link with valid properties \\ returns created link",
-				HandlerConfig: func(rnr *Runner) server.HandlerConfig {
+				HandlerConfig: func(rnr *server.Runner) server.HandlerConfig {
 					return rnr.HandlerConfig[createOneAdventureGameLocationLink]
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
@@ -107,9 +108,9 @@ func Test_adventureGameLocationLinkHandler(t *testing.T) {
 			},
 		},
 		{
-			TestCase: TestCase{
+			TestCase: testutil.TestCase{
 				Name: "API key with open access \\ update location link with valid properties \\ returns updated link",
-				HandlerConfig: func(rnr *Runner) server.HandlerConfig {
+				HandlerConfig: func(rnr *server.Runner) server.HandlerConfig {
 					return rnr.HandlerConfig[updateOneAdventureGameLocationLink]
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
@@ -131,9 +132,9 @@ func Test_adventureGameLocationLinkHandler(t *testing.T) {
 			},
 		},
 		{
-			TestCase: TestCase{
+			TestCase: testutil.TestCase{
 				Name: "API key with open access \\ delete location link with valid ID \\ returns no content",
-				HandlerConfig: func(rnr *Runner) server.HandlerConfig {
+				HandlerConfig: func(rnr *server.Runner) server.HandlerConfig {
 					return rnr.HandlerConfig[deleteOneAdventureGameLocationLink]
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
@@ -149,7 +150,7 @@ func Test_adventureGameLocationLinkHandler(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.TestName(), func(t *testing.T) {
-			RunTestCase(t, th, &tc.TestCase, nil)
+			testutil.RunTestCase(t, th, &tc.TestCase, nil)
 		})
 	}
 }

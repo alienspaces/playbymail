@@ -1,4 +1,4 @@
-package runner
+package adventure_game
 
 import (
 	"net/http"
@@ -8,13 +8,14 @@ import (
 
 	"gitlab.com/alienspaces/playbymail/core/server"
 	"gitlab.com/alienspaces/playbymail/internal/harness"
+	"gitlab.com/alienspaces/playbymail/internal/runner/server/testutil"
 	"gitlab.com/alienspaces/playbymail/schema"
 )
 
 func Test_getGameLocationHandler(t *testing.T) {
 	t.Parallel()
 
-	th := newTestHarness(t)
+	th := testutil.NewTestHarness(t)
 	require.NotNil(t, th, "newTestHarness returns without error")
 
 	_, err := th.Setup()
@@ -31,19 +32,19 @@ func Test_getGameLocationHandler(t *testing.T) {
 	require.NoError(t, err, "GetGameLocationRecByRef returns without error")
 
 	type testCase struct {
-		TestCase
+		testutil.TestCase
 		collectionRequest     bool
 		collectionRecordCount int
 	}
 
-	testCaseCollectionResponseDecoder := testCaseResponseDecoderGeneric[schema.AdventureGameLocationCollectionResponse]
-	testCaseResponseDecoder := testCaseResponseDecoderGeneric[schema.AdventureGameLocationResponse]
+	testCaseCollectionResponseDecoder := testutil.TestCaseResponseDecoderGeneric[schema.AdventureGameLocationCollectionResponse]
+	testCaseResponseDecoder := testutil.TestCaseResponseDecoderGeneric[schema.AdventureGameLocationResponse]
 
 	testCases := []testCase{
 		{
-			TestCase: TestCase{
+			TestCase: testutil.TestCase{
 				Name: "API key with open access \\ get many locations \\ returns expected locations",
-				HandlerConfig: func(rnr *Runner) server.HandlerConfig {
+				HandlerConfig: func(rnr *server.Runner) server.HandlerConfig {
 					return rnr.HandlerConfig[getManyAdventureGameLocations]
 				},
 				RequestQueryParams: func(d harness.Data) map[string]any {
@@ -64,9 +65,9 @@ func Test_getGameLocationHandler(t *testing.T) {
 			collectionRecordCount: 2,
 		},
 		{
-			TestCase: TestCase{
+			TestCase: testutil.TestCase{
 				Name: "API key with open access \\ get one location with valid location ID \\ returns expected location",
-				HandlerConfig: func(rnr *Runner) server.HandlerConfig {
+				HandlerConfig: func(rnr *server.Runner) server.HandlerConfig {
 					return rnr.HandlerConfig[getOneAdventureGameLocation]
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
@@ -118,7 +119,7 @@ func Test_getGameLocationHandler(t *testing.T) {
 				}
 			}
 
-			RunTestCase(t, th, &testCase, testFunc)
+			testutil.RunTestCase(t, th, &testCase, testFunc)
 		})
 	}
 }
@@ -126,7 +127,7 @@ func Test_getGameLocationHandler(t *testing.T) {
 func Test_createUpdateDeleteGameLocationHandler(t *testing.T) {
 	t.Parallel()
 
-	th := newTestHarness(t)
+	th := testutil.NewTestHarness(t)
 	require.NotNil(t, th, "newTestHarness returns without error")
 
 	_, err := th.Setup()
@@ -137,11 +138,11 @@ func Test_createUpdateDeleteGameLocationHandler(t *testing.T) {
 	}()
 
 	type testCase struct {
-		TestCase
+		testutil.TestCase
 		expectResponse func(d harness.Data, req schema.AdventureGameLocationRequest) schema.AdventureGameLocationResponse
 	}
 
-	testCaseResponseDecoder := testCaseResponseDecoderGeneric[schema.AdventureGameLocationResponse]
+	testCaseResponseDecoder := testutil.TestCaseResponseDecoderGeneric[schema.AdventureGameLocationResponse]
 
 	gameRec, err := th.Data.GetGameRecByRef(harness.GameOneRef)
 	require.NoError(t, err, "GetGameRecByRef returns without error")
@@ -150,9 +151,9 @@ func Test_createUpdateDeleteGameLocationHandler(t *testing.T) {
 
 	testCases := []testCase{
 		{
-			TestCase: TestCase{
+			TestCase: testutil.TestCase{
 				Name: "API key with open access \\ create location with valid properties \\ returns created location",
-				HandlerConfig: func(rnr *Runner) server.HandlerConfig {
+				HandlerConfig: func(rnr *server.Runner) server.HandlerConfig {
 					return rnr.HandlerConfig[createOneAdventureGameLocation]
 				},
 				RequestBody: func(d harness.Data) interface{} {
@@ -180,9 +181,9 @@ func Test_createUpdateDeleteGameLocationHandler(t *testing.T) {
 			},
 		},
 		{
-			TestCase: TestCase{
+			TestCase: testutil.TestCase{
 				Name: "API key with open access \\ update location with valid properties \\ returns updated location",
-				HandlerConfig: func(rnr *Runner) server.HandlerConfig {
+				HandlerConfig: func(rnr *server.Runner) server.HandlerConfig {
 					return rnr.HandlerConfig[updateOneAdventureGameLocation]
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
@@ -212,9 +213,9 @@ func Test_createUpdateDeleteGameLocationHandler(t *testing.T) {
 			},
 		},
 		{
-			TestCase: TestCase{
+			TestCase: testutil.TestCase{
 				Name: "API key with open access \\ delete location with valid location ID \\ returns no content",
-				HandlerConfig: func(rnr *Runner) server.HandlerConfig {
+				HandlerConfig: func(rnr *server.Runner) server.HandlerConfig {
 					return rnr.HandlerConfig[deleteOneAdventureGameLocation]
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
@@ -260,7 +261,7 @@ func Test_createUpdateDeleteGameLocationHandler(t *testing.T) {
 				}
 			}
 
-			RunTestCase(t, th, &testCase, testFunc)
+			testutil.RunTestCase(t, th, &testCase, testFunc)
 		})
 	}
 }
