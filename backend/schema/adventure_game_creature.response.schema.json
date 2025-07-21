@@ -1,0 +1,19 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "AdventureGameCreatureResponse",
+    "type": "object",
+    "properties": {
+        "data": {
+            "$ref": "./adventure_game_creature.schema.json"
+        },
+        "error": {
+            "$ref": "common.schema.json#/$defs/error"
+        },
+        "pagination": {
+            "$ref": "common.schema.json#/$defs/pagination"
+        }
+    },
+    "required": [
+        "data"
+    ]
+}

@@ -8,19 +8,19 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/record"
 )
 
-func (t *Testing) createGameLocationRec(gameLocationConfig GameLocationConfig, gameRec *record.Game) (*record.GameLocation, error) {
+func (t *Testing) createGameLocationRec(gameLocationConfig GameLocationConfig, gameRec *record.Game) (*record.AdventureGameLocation, error) {
 	l := t.Logger("createGameLocationRec")
 
 	if gameRec == nil {
 		return nil, fmt.Errorf("game record is nil for game location record >%#v<", gameLocationConfig)
 	}
 
-	var rec *record.GameLocation
+	var rec *record.AdventureGameLocation
 	if gameLocationConfig.Record != nil {
 		recCopy := *gameLocationConfig.Record
 		rec = &recCopy
 	} else {
-		rec = &record.GameLocation{}
+		rec = &record.AdventureGameLocation{}
 	}
 
 	rec = t.applyGameLocationRecDefaultValues(rec)
@@ -30,7 +30,7 @@ func (t *Testing) createGameLocationRec(gameLocationConfig GameLocationConfig, g
 	// Create record
 	l.Info("creating game location record >%#v<", rec)
 
-	rec, err := t.Domain.(*domain.Domain).CreateGameLocationRec(rec)
+	rec, err := t.Domain.(*domain.Domain).CreateAdventureGameLocationRec(rec)
 	if err != nil {
 		l.Warn("failed creating game location record >%v<", err)
 		return nil, err
@@ -50,9 +50,9 @@ func (t *Testing) createGameLocationRec(gameLocationConfig GameLocationConfig, g
 	return rec, nil
 }
 
-func (t *Testing) applyGameLocationRecDefaultValues(rec *record.GameLocation) *record.GameLocation {
+func (t *Testing) applyGameLocationRecDefaultValues(rec *record.AdventureGameLocation) *record.AdventureGameLocation {
 	if rec == nil {
-		rec = &record.GameLocation{}
+		rec = &record.AdventureGameLocation{}
 	}
 	if rec.Name == "" {
 		rec.Name = UniqueName(gofakeit.Name())

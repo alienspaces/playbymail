@@ -13,18 +13,18 @@ import (
 
 	"gitlab.com/alienspaces/playbymail/internal/record"
 	"gitlab.com/alienspaces/playbymail/internal/repository/account"
+	"gitlab.com/alienspaces/playbymail/internal/repository/adventure_game_character"
+	"gitlab.com/alienspaces/playbymail/internal/repository/adventure_game_character_instance"
+	"gitlab.com/alienspaces/playbymail/internal/repository/adventure_game_creature"
+	"gitlab.com/alienspaces/playbymail/internal/repository/adventure_game_creature_instance"
+	"gitlab.com/alienspaces/playbymail/internal/repository/adventure_game_instance"
+	"gitlab.com/alienspaces/playbymail/internal/repository/adventure_game_item"
+	"gitlab.com/alienspaces/playbymail/internal/repository/adventure_game_item_instance"
+	"gitlab.com/alienspaces/playbymail/internal/repository/adventure_game_location"
+	"gitlab.com/alienspaces/playbymail/internal/repository/adventure_game_location_instance"
+	"gitlab.com/alienspaces/playbymail/internal/repository/adventure_game_location_link"
+	"gitlab.com/alienspaces/playbymail/internal/repository/adventure_game_location_link_requirement"
 	"gitlab.com/alienspaces/playbymail/internal/repository/game"
-	"gitlab.com/alienspaces/playbymail/internal/repository/game_character"
-	"gitlab.com/alienspaces/playbymail/internal/repository/game_character_instance"
-	"gitlab.com/alienspaces/playbymail/internal/repository/game_creature"
-	"gitlab.com/alienspaces/playbymail/internal/repository/game_creature_instance"
-	"gitlab.com/alienspaces/playbymail/internal/repository/game_instance"
-	"gitlab.com/alienspaces/playbymail/internal/repository/game_item"
-	"gitlab.com/alienspaces/playbymail/internal/repository/game_item_instance"
-	"gitlab.com/alienspaces/playbymail/internal/repository/game_location"
-	"gitlab.com/alienspaces/playbymail/internal/repository/game_location_instance"
-	"gitlab.com/alienspaces/playbymail/internal/repository/game_location_link"
-	"gitlab.com/alienspaces/playbymail/internal/repository/game_location_link_requirement"
 	"gitlab.com/alienspaces/playbymail/internal/utils/config"
 )
 
@@ -49,17 +49,17 @@ func NewDomain(l logger.Logger, j *river.Client[pgx.Tx], cfg config.Config) (*Do
 			RepositoryConstructors: []domain.RepositoryConstructor{
 				account.NewRepository,
 				game.NewRepository,
-				game_location.NewRepository,
-				game_location_link.NewRepository,
-				game_character.NewRepository,
-				game_item.NewRepository,
-				game_creature.NewRepository,
-				game_item_instance.NewRepository,
-				game_location_link_requirement.NewRepository,
-				game_instance.NewRepository,
-				game_location_instance.NewRepository,
-				game_creature_instance.NewRepository,
-				game_character_instance.NewRepository,
+				adventure_game_location.NewRepository,
+				adventure_game_location_link.NewRepository,
+				adventure_game_character.NewRepository,
+				adventure_game_item.NewRepository,
+				adventure_game_creature.NewRepository,
+				adventure_game_item_instance.NewRepository,
+				adventure_game_location_link_requirement.NewRepository,
+				adventure_game_instance.NewRepository,
+				adventure_game_location_instance.NewRepository,
+				adventure_game_creature_instance.NewRepository,
+				adventure_game_character_instance.NewRepository,
 			},
 		},
 		config: cfg,
@@ -83,58 +83,58 @@ func (m *Domain) GameRepository() *repository.Generic[record.Game, *record.Game]
 }
 
 // GameLocationLinkRepository -
-func (m *Domain) GameLocationLinkRepository() *repository.Generic[record.GameLocationLink, *record.GameLocationLink] {
-	return m.Repositories[game_location_link.TableName].(*repository.Generic[record.GameLocationLink, *record.GameLocationLink])
+func (m *Domain) AdventureGameLocationLinkRepository() *repository.Generic[record.AdventureGameLocationLink, *record.AdventureGameLocationLink] {
+	return m.Repositories[adventure_game_location_link.TableName].(*repository.Generic[record.AdventureGameLocationLink, *record.AdventureGameLocationLink])
 }
 
-// GameCharacterRepository -
-func (m *Domain) GameCharacterRepository() *repository.Generic[record.GameCharacter, *record.GameCharacter] {
-	return m.Repositories[game_character.TableName].(*repository.Generic[record.GameCharacter, *record.GameCharacter])
+// AdventureGameCharacterRepository -
+func (m *Domain) AdventureGameCharacterRepository() *repository.Generic[record.AdventureGameCharacter, *record.AdventureGameCharacter] {
+	return m.Repositories[adventure_game_character.TableName].(*repository.Generic[record.AdventureGameCharacter, *record.AdventureGameCharacter])
 }
 
-// GameLocationRepository -
-func (m *Domain) GameLocationRepository() *repository.Generic[record.GameLocation, *record.GameLocation] {
-	return m.Repositories[game_location.TableName].(*repository.Generic[record.GameLocation, *record.GameLocation])
+// AdventureGameLocationRepository -
+func (m *Domain) AdventureGameLocationRepository() *repository.Generic[record.AdventureGameLocation, *record.AdventureGameLocation] {
+	return m.Repositories[adventure_game_location.TableName].(*repository.Generic[record.AdventureGameLocation, *record.AdventureGameLocation])
 }
 
-// GameItemRepository -
-func (m *Domain) GameItemRepository() *repository.Generic[record.GameItem, *record.GameItem] {
-	return m.Repositories[game_item.TableName].(*repository.Generic[record.GameItem, *record.GameItem])
+// AdventureGameItemRepository -
+func (m *Domain) AdventureGameItemRepository() *repository.Generic[record.AdventureGameItem, *record.AdventureGameItem] {
+	return m.Repositories[adventure_game_item.TableName].(*repository.Generic[record.AdventureGameItem, *record.AdventureGameItem])
 }
 
-// GameCreatureRepository -
-func (m *Domain) GameCreatureRepository() *repository.Generic[record.GameCreature, *record.GameCreature] {
-	return m.Repositories[game_creature.TableName].(*repository.Generic[record.GameCreature, *record.GameCreature])
+// AdventureGameCreatureRepository -
+func (m *Domain) AdventureGameCreatureRepository() *repository.Generic[record.AdventureGameCreature, *record.AdventureGameCreature] {
+	return m.Repositories[adventure_game_creature.TableName].(*repository.Generic[record.AdventureGameCreature, *record.AdventureGameCreature])
 }
 
-// GameItemInstanceRepository -
-func (m *Domain) GameItemInstanceRepository() *repository.Generic[record.GameItemInstance, *record.GameItemInstance] {
-	return m.Repositories[game_item_instance.TableName].(*repository.Generic[record.GameItemInstance, *record.GameItemInstance])
+// AdventureGameItemInstanceRepository -
+func (m *Domain) AdventureGameItemInstanceRepository() *repository.Generic[record.AdventureGameItemInstance, *record.AdventureGameItemInstance] {
+	return m.Repositories[adventure_game_item_instance.TableName].(*repository.Generic[record.AdventureGameItemInstance, *record.AdventureGameItemInstance])
 }
 
-// GameLocationLinkRequirementRepository -
-func (m *Domain) GameLocationLinkRequirementRepository() *repository.Generic[record.GameLocationLinkRequirement, *record.GameLocationLinkRequirement] {
-	return m.Repositories[game_location_link_requirement.TableName].(*repository.Generic[record.GameLocationLinkRequirement, *record.GameLocationLinkRequirement])
+// AdventureGameLocationLinkRequirementRepository -
+func (m *Domain) AdventureGameLocationLinkRequirementRepository() *repository.Generic[record.AdventureGameLocationLinkRequirement, *record.AdventureGameLocationLinkRequirement] {
+	return m.Repositories[adventure_game_location_link_requirement.TableName].(*repository.Generic[record.AdventureGameLocationLinkRequirement, *record.AdventureGameLocationLinkRequirement])
 }
 
-// GameInstanceRepository -
-func (m *Domain) GameInstanceRepository() *repository.Generic[record.GameInstance, *record.GameInstance] {
-	return m.Repositories[game_instance.TableName].(*repository.Generic[record.GameInstance, *record.GameInstance])
+// AdventureGameInstanceRepository -
+func (m *Domain) AdventureGameInstanceRepository() *repository.Generic[record.AdventureGameInstance, *record.AdventureGameInstance] {
+	return m.Repositories[adventure_game_instance.TableName].(*repository.Generic[record.AdventureGameInstance, *record.AdventureGameInstance])
 }
 
-// GameLocationInstanceRepository -
-func (m *Domain) GameLocationInstanceRepository() *repository.Generic[record.GameLocationInstance, *record.GameLocationInstance] {
-	return m.Repositories[game_location_instance.TableName].(*repository.Generic[record.GameLocationInstance, *record.GameLocationInstance])
+// AdventureGameLocationInstanceRepository -
+func (m *Domain) AdventureGameLocationInstanceRepository() *repository.Generic[record.AdventureGameLocationInstance, *record.AdventureGameLocationInstance] {
+	return m.Repositories[adventure_game_location_instance.TableName].(*repository.Generic[record.AdventureGameLocationInstance, *record.AdventureGameLocationInstance])
 }
 
-// GameCreatureInstanceRepository -
-func (m *Domain) GameCreatureInstanceRepository() *repository.Generic[record.GameCreatureInstance, *record.GameCreatureInstance] {
-	return m.Repositories[record.TableGameCreatureInstance].(*repository.Generic[record.GameCreatureInstance, *record.GameCreatureInstance])
+// AdventureGameCreatureInstanceRepository -
+func (m *Domain) AdventureGameCreatureInstanceRepository() *repository.Generic[record.AdventureGameCreatureInstance, *record.AdventureGameCreatureInstance] {
+	return m.Repositories[record.TableAdventureGameCreatureInstance].(*repository.Generic[record.AdventureGameCreatureInstance, *record.AdventureGameCreatureInstance])
 }
 
-// GameCharacterInstanceRepository -
-func (m *Domain) GameCharacterInstanceRepository() *repository.Generic[record.GameCharacterInstance, *record.GameCharacterInstance] {
-	return m.Repositories[record.TableGameCharacterInstance].(*repository.Generic[record.GameCharacterInstance, *record.GameCharacterInstance])
+// AdventureGameCharacterInstanceRepository -
+func (m *Domain) AdventureGameCharacterInstanceRepository() *repository.Generic[record.AdventureGameCharacterInstance, *record.AdventureGameCharacterInstance] {
+	return m.Repositories[record.TableAdventureGameCharacterInstance].(*repository.Generic[record.AdventureGameCharacterInstance, *record.AdventureGameCharacterInstance])
 }
 
 // SetRLS -

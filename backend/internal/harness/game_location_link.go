@@ -8,7 +8,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/record"
 )
 
-func (t *Testing) createGameLocationLinkRec(linkConfig GameLocationLinkConfig, gameRec *record.Game) (*record.GameLocationLink, error) {
+func (t *Testing) createGameLocationLinkRec(linkConfig GameLocationLinkConfig, gameRec *record.Game) (*record.AdventureGameLocationLink, error) {
 	l := t.Logger("createGameLocationLinkRec")
 
 	if gameRec == nil {
@@ -19,12 +19,12 @@ func (t *Testing) createGameLocationLinkRec(linkConfig GameLocationLinkConfig, g
 		return nil, fmt.Errorf("game_location_link record >%#v< must have either FromLocationRef or ToLocationRef set", linkConfig)
 	}
 
-	var rec *record.GameLocationLink
+	var rec *record.AdventureGameLocationLink
 	if linkConfig.Record != nil {
 		recCopy := *linkConfig.Record
 		rec = &recCopy
 	} else {
-		rec = &record.GameLocationLink{}
+		rec = &record.AdventureGameLocationLink{}
 	}
 
 	rec = t.applyGameLocationLinkRecDefaultValues(rec)
@@ -38,7 +38,7 @@ func (t *Testing) createGameLocationLinkRec(linkConfig GameLocationLinkConfig, g
 			l.Error("could not resolve FromLocationRef >%s< to a valid location ID", linkConfig.FromLocationRef)
 			return nil, fmt.Errorf("could not resolve FromLocationRef >%s< to a valid location ID", linkConfig.FromLocationRef)
 		}
-		rec.FromGameLocationID = fromLoc.ID
+		rec.FromAdventureGameLocationID = fromLoc.ID
 	}
 
 	if linkConfig.ToLocationRef != "" {
@@ -47,18 +47,18 @@ func (t *Testing) createGameLocationLinkRec(linkConfig GameLocationLinkConfig, g
 			l.Error("could not resolve ToLocationRef >%s< to a valid location ID", linkConfig.ToLocationRef)
 			return nil, fmt.Errorf("could not resolve ToLocationRef >%s< to a valid location ID", linkConfig.ToLocationRef)
 		}
-		rec.ToGameLocationID = toLoc.ID
+		rec.ToAdventureGameLocationID = toLoc.ID
 	}
 
-	if rec.FromGameLocationID == "" || rec.ToGameLocationID == "" {
-		l.Error("location link must have both FromGameLocationID and ToGameLocationID set, got from: >%s< to: >%s<", rec.FromGameLocationID, rec.ToGameLocationID)
-		return nil, fmt.Errorf("location link must have both FromGameLocationID and ToGameLocationID set, got from: >%s< to: >%s<", rec.FromGameLocationID, rec.ToGameLocationID)
+	if rec.FromAdventureGameLocationID == "" || rec.ToAdventureGameLocationID == "" {
+		l.Error("location link must have both FromAdventureGameLocationID and ToAdventureGameLocationID set, got from: >%s< to: >%s<", rec.FromAdventureGameLocationID, rec.ToAdventureGameLocationID)
+		return nil, fmt.Errorf("location link must have both FromAdventureGameLocationID and ToAdventureGameLocationID set, got from: >%s< to: >%s<", rec.FromAdventureGameLocationID, rec.ToAdventureGameLocationID)
 	}
 
 	// Create record
 	l.Info("creating location link record >%#v<", rec)
 
-	rec, err := t.Domain.(*domain.Domain).CreateGameLocationLinkRec(rec)
+	rec, err := t.Domain.(*domain.Domain).CreateAdventureGameLocationLinkRec(rec)
 	if err != nil {
 		l.Warn("failed creating location link record >%v<", err)
 		return nil, err
@@ -78,9 +78,9 @@ func (t *Testing) createGameLocationLinkRec(linkConfig GameLocationLinkConfig, g
 	return rec, nil
 }
 
-func (t *Testing) applyGameLocationLinkRecDefaultValues(rec *record.GameLocationLink) *record.GameLocationLink {
+func (t *Testing) applyGameLocationLinkRecDefaultValues(rec *record.AdventureGameLocationLink) *record.AdventureGameLocationLink {
 	if rec == nil {
-		rec = &record.GameLocationLink{}
+		rec = &record.AdventureGameLocationLink{}
 	}
 	if rec.Description == "" {
 		rec.Description = gofakeit.Sentence(5)

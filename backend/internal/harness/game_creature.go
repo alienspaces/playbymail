@@ -8,19 +8,19 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/record"
 )
 
-func (t *Testing) createGameCreatureRec(charConfig GameCreatureConfig, gameRec *record.Game) (*record.GameCreature, error) {
+func (t *Testing) createGameCreatureRec(charConfig GameCreatureConfig, gameRec *record.Game) (*record.AdventureGameCreature, error) {
 	l := t.Logger("createGameCreatureRec")
 
 	if gameRec == nil {
 		return nil, fmt.Errorf("game record is nil for game_character record >%#v<", charConfig)
 	}
 
-	var rec *record.GameCreature
+	var rec *record.AdventureGameCreature
 	if charConfig.Record != nil {
 		recCopy := *charConfig.Record
 		rec = &recCopy
 	} else {
-		rec = &record.GameCreature{}
+		rec = &record.AdventureGameCreature{}
 	}
 
 	rec = t.applyGameCreatureRecDefaultValues(rec)
@@ -30,7 +30,7 @@ func (t *Testing) createGameCreatureRec(charConfig GameCreatureConfig, gameRec *
 	// Create record
 	l.Info("creating game_character record >%#v<", rec)
 
-	createdRec, err := t.Domain.(*domain.Domain).CreateGameCreatureRec(rec)
+	createdRec, err := t.Domain.(*domain.Domain).CreateAdventureGameCreatureRec(rec)
 	if err != nil {
 		l.Warn("failed creating game_character record >%v<", err)
 		return nil, err
@@ -50,9 +50,9 @@ func (t *Testing) createGameCreatureRec(charConfig GameCreatureConfig, gameRec *
 	return createdRec, nil
 }
 
-func (t *Testing) applyGameCreatureRecDefaultValues(rec *record.GameCreature) *record.GameCreature {
+func (t *Testing) applyGameCreatureRecDefaultValues(rec *record.AdventureGameCreature) *record.AdventureGameCreature {
 	if rec == nil {
-		rec = &record.GameCreature{}
+		rec = &record.AdventureGameCreature{}
 	}
 	if rec.Name == "" {
 		rec.Name = UniqueName(gofakeit.Name())

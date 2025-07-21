@@ -154,6 +154,49 @@
             "description": "Date/time the resource failed processing.",
             "type": "string",
             "format": "date-time"
+        },
+        "error": {
+            "description": "API response error information",
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "detail": {
+                    "type": "string",
+                    "minLength": 1
+                }
+            },
+            "required": [
+                "code",
+                "detail"
+            ],
+            "additionalProperties": false
+        },
+        "pagination": {
+            "description": "API response pagination information",
+            "type": "object",
+            "properties": {
+                "page_number": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "page_size": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "page_count": {
+                    "type": "integer",
+                    "minimum": 0
+                }
+            },
+            "required": [
+                "page_number",
+                "page_size",
+                "page_count"
+            ],
+            "additionalProperties": false
         }
     }
 }

@@ -7,7 +7,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/record"
 )
 
-func (t *Testing) createGameLocationInstanceRec(cfg GameLocationInstanceConfig, gameInstanceRec *record.GameInstance) (*record.GameLocationInstance, error) {
+func (t *Testing) createGameLocationInstanceRec(cfg GameLocationInstanceConfig, gameInstanceRec *record.AdventureGameInstance) (*record.AdventureGameLocationInstance, error) {
 	l := t.Logger("createGameLocationInstanceRec")
 
 	if gameInstanceRec == nil {
@@ -18,19 +18,19 @@ func (t *Testing) createGameLocationInstanceRec(cfg GameLocationInstanceConfig, 
 		return nil, fmt.Errorf("game location reference is required for game_location_instance record >%#v<", cfg)
 	}
 
-	var rec *record.GameLocationInstance
+	var rec *record.AdventureGameLocationInstance
 	if cfg.Record != nil {
 		recCopy := *cfg.Record
 		rec = &recCopy
 	} else {
-		rec = &record.GameLocationInstance{}
+		rec = &record.AdventureGameLocationInstance{}
 	}
 
 	rec = t.applyGameLocationInstanceRecDefaultValues(rec)
 
 	// Set game_id from parent game instance
 	rec.GameID = gameInstanceRec.GameID
-	rec.GameInstanceID = gameInstanceRec.ID
+	rec.AdventureGameInstanceID = gameInstanceRec.ID
 
 	// The game location is retrieved by reference
 	gameLocationRec, err := t.Data.GetGameLocationRecByRef(cfg.GameLocationRef)
@@ -38,12 +38,12 @@ func (t *Testing) createGameLocationInstanceRec(cfg GameLocationInstanceConfig, 
 		l.Error("could not resolve GameLocationRef >%s< to a valid game location ID", cfg.GameLocationRef)
 		return nil, fmt.Errorf("could not resolve GameLocationRef >%s< to a valid game location ID", cfg.GameLocationRef)
 	}
-	rec.GameLocationID = gameLocationRec.ID
+	rec.AdventureGameLocationID = gameLocationRec.ID
 
 	// Create record
 	l.Info("creating game_location_instance record >%#v<", rec)
 
-	createdRec, err := t.Domain.(*domain.Domain).CreateGameLocationInstanceRec(rec)
+	createdRec, err := t.Domain.(*domain.Domain).CreateAdventureGameLocationInstanceRec(rec)
 	if err != nil {
 		l.Warn("failed creating game_location_instance record >%v<", err)
 		return nil, err
@@ -63,9 +63,9 @@ func (t *Testing) createGameLocationInstanceRec(cfg GameLocationInstanceConfig, 
 	return createdRec, nil
 }
 
-func (t *Testing) applyGameLocationInstanceRecDefaultValues(rec *record.GameLocationInstance) *record.GameLocationInstance {
+func (t *Testing) applyGameLocationInstanceRecDefaultValues(rec *record.AdventureGameLocationInstance) *record.AdventureGameLocationInstance {
 	if rec == nil {
-		rec = &record.GameLocationInstance{}
+		rec = &record.AdventureGameLocationInstance{}
 	}
 	return rec
 }

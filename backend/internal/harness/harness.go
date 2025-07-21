@@ -227,7 +227,7 @@ func (t *Testing) RemoveData() error {
 			l.Warn("[teardown] skipping game creature instance with empty ID")
 			continue
 		}
-		err := t.Domain.(*domain.Domain).RemoveGameCreatureInstanceRec(creatureInstanceRec.ID)
+		err := t.Domain.(*domain.Domain).RemoveAdventureGameCreatureInstanceRec(creatureInstanceRec.ID)
 		if err != nil {
 			l.Warn("failed removing game creature instance record >%v<", err)
 			return err
@@ -242,7 +242,7 @@ func (t *Testing) RemoveData() error {
 			l.Warn("[teardown] skipping game character instance with empty ID")
 			continue
 		}
-		err := t.Domain.(*domain.Domain).RemoveGameCharacterInstanceRec(characterInstanceRec.ID)
+		err := t.Domain.(*domain.Domain).RemoveAdventureGameCharacterInstanceRec(characterInstanceRec.ID)
 		if err != nil {
 			l.Warn("failed removing game character instance record >%v<", err)
 			return err
@@ -257,7 +257,7 @@ func (t *Testing) RemoveData() error {
 			l.Warn("[teardown] skipping game item instance with empty ID")
 			continue
 		}
-		err := t.Domain.(*domain.Domain).RemoveGameItemInstanceRec(itemInstanceRec.ID)
+		err := t.Domain.(*domain.Domain).RemoveAdventureGameItemInstanceRec(itemInstanceRec.ID)
 		if err != nil {
 			l.Warn("failed removing game item instance record >%v<", err)
 			return err
@@ -272,7 +272,7 @@ func (t *Testing) RemoveData() error {
 			l.Warn("[teardown] skipping game location instance with empty ID")
 			continue
 		}
-		err := t.Domain.(*domain.Domain).RemoveGameLocationInstanceRec(locationInstanceRec.ID)
+		err := t.Domain.(*domain.Domain).RemoveAdventureGameLocationInstanceRec(locationInstanceRec.ID)
 		if err != nil {
 			l.Warn("failed removing game location instance record >%v<", err)
 			return err
@@ -287,7 +287,7 @@ func (t *Testing) RemoveData() error {
 			l.Warn("[teardown] skipping game instance with empty ID")
 			continue
 		}
-		err := t.Domain.(*domain.Domain).RemoveGameInstanceRec(instanceRec.ID)
+		err := t.Domain.(*domain.Domain).RemoveAdventureGameInstanceRec(instanceRec.ID)
 		if err != nil {
 			l.Warn("failed removing game instance record >%v<", err)
 			return err
@@ -302,7 +302,7 @@ func (t *Testing) RemoveData() error {
 			l.Warn("[teardown] skipping game creature with empty ID")
 			continue
 		}
-		err := t.Domain.(*domain.Domain).RemoveGameCreatureRec(creatureRec.ID)
+		err := t.Domain.(*domain.Domain).RemoveAdventureGameCreatureRec(creatureRec.ID)
 		if err != nil {
 			l.Warn("failed removing game creature record >%v<", err)
 			return err
@@ -317,7 +317,7 @@ func (t *Testing) RemoveData() error {
 			l.Warn("[teardown] skipping game location link requirement with empty ID")
 			continue
 		}
-		err := t.Domain.(*domain.Domain).RemoveGameLocationLinkRequirementRec(reqRec.ID)
+		err := t.Domain.(*domain.Domain).RemoveAdventureGameLocationLinkRequirementRec(reqRec.ID)
 		if err != nil {
 			l.Warn("failed removing game location link requirement record >%v<", err)
 			return err
@@ -332,7 +332,7 @@ func (t *Testing) RemoveData() error {
 			l.Warn("[teardown] skipping game location link with empty ID")
 			continue
 		}
-		err := t.Domain.(*domain.Domain).RemoveGameLocationLinkRec(linkRec.ID)
+		err := t.Domain.(*domain.Domain).RemoveAdventureGameLocationLinkRec(linkRec.ID)
 		if err != nil {
 			l.Warn("failed removing game location link record >%v<", err)
 			return err
@@ -348,7 +348,7 @@ func (t *Testing) RemoveData() error {
 			continue
 		}
 		l.Debug("removing game location record ID >%s<", gameLocationRec.ID)
-		err := t.Domain.(*domain.Domain).RemoveGameLocationRec(gameLocationRec.ID)
+		err := t.Domain.(*domain.Domain).RemoveAdventureGameLocationRec(gameLocationRec.ID)
 		if err != nil {
 			l.Warn("failed removing game location record >%v<", err)
 			return err
@@ -363,7 +363,7 @@ func (t *Testing) RemoveData() error {
 			l.Warn("[teardown] skipping game item with empty ID")
 			continue
 		}
-		err := t.Domain.(*domain.Domain).RemoveGameItemRec(itemRec.ID)
+		err := t.Domain.(*domain.Domain).RemoveAdventureGameItemRec(itemRec.ID)
 		if err != nil {
 			l.Warn("failed removing game item record >%v<", err)
 			return err
@@ -378,7 +378,7 @@ func (t *Testing) RemoveData() error {
 			l.Warn("[teardown] skipping game character with empty ID")
 			continue
 		}
-		err := t.Domain.(*domain.Domain).RemoveGameCharacterRec(charRec.ID)
+		err := t.Domain.(*domain.Domain).RemoveAdventureGameCharacterRec(charRec.ID)
 		if err != nil {
 			l.Warn("failed removing game character record >%v<", err)
 			return err

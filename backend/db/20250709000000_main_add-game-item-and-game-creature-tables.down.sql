@@ -1,2 +1,2 @@
-DROP TABLE IF EXISTS public.game_item;
-DROP TABLE IF EXISTS public.game_creature; 
+DROP TABLE IF EXISTS public.adventure_game_item;
+DROP TABLE IF EXISTS public.adventure_game_creature;

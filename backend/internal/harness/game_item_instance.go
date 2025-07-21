@@ -8,7 +8,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/record"
 )
 
-func (t *Testing) createGameItemInstanceRec(cfg GameItemInstanceConfig, gameInstanceRec *record.GameInstance) (*record.GameItemInstance, error) {
+func (t *Testing) createGameItemInstanceRec(cfg GameItemInstanceConfig, gameInstanceRec *record.AdventureGameInstance) (*record.AdventureGameItemInstance, error) {
 	l := t.Logger("createGameItemInstanceRec")
 
 	if gameInstanceRec == nil {
@@ -19,18 +19,18 @@ func (t *Testing) createGameItemInstanceRec(cfg GameItemInstanceConfig, gameInst
 		return nil, fmt.Errorf("game_item_instance record must have a GameItemRef")
 	}
 
-	var rec *record.GameItemInstance
+	var rec *record.AdventureGameItemInstance
 	if cfg.Record != nil {
 		recCopy := *cfg.Record
 		rec = &recCopy
 	} else {
-		rec = &record.GameItemInstance{}
+		rec = &record.AdventureGameItemInstance{}
 	}
 
 	rec = t.applyGameItemInstanceRecDefaultValues(rec)
 
 	rec.GameID = gameInstanceRec.GameID
-	rec.GameInstanceID = gameInstanceRec.ID
+	rec.AdventureGameInstanceID = gameInstanceRec.ID
 
 	// The game item is retrieved by reference
 	gameItemRec, err := t.Data.GetGameItemRecByRef(cfg.GameItemRef)
@@ -38,7 +38,7 @@ func (t *Testing) createGameItemInstanceRec(cfg GameItemInstanceConfig, gameInst
 		l.Error("could not resolve GameItemRef >%s< to a valid game item ID", cfg.GameItemRef)
 		return nil, fmt.Errorf("could not resolve GameItemRef >%s< to a valid game item ID", cfg.GameItemRef)
 	}
-	rec.GameItemID = gameItemRec.ID
+	rec.AdventureGameItemID = gameItemRec.ID
 
 	// The game location instance the item is attached to is retrieved by reference
 	if cfg.GameLocationRef != "" {
@@ -47,13 +47,13 @@ func (t *Testing) createGameItemInstanceRec(cfg GameItemInstanceConfig, gameInst
 			l.Error("could not resolve GameLocationRef >%s< to a valid game location ID", cfg.GameLocationRef)
 			return nil, fmt.Errorf("could not resolve GameLocationRef >%s< to a valid game location ID", cfg.GameLocationRef)
 		}
-		rec.GameLocationInstanceID = nullstring.FromString(gameLocationInstanceRec.ID)
+		rec.AdventureGameLocationInstanceID = nullstring.FromString(gameLocationInstanceRec.ID)
 	}
 
 	// Create record
 	l.Info("creating game_item_instance record >%#v<", rec)
 
-	createdRec, err := t.Domain.(*domain.Domain).CreateGameItemInstanceRec(rec)
+	createdRec, err := t.Domain.(*domain.Domain).CreateAdventureGameItemInstanceRec(rec)
 	if err != nil {
 		l.Warn("failed creating game_item_instance record >%v<", err)
 		return nil, err
@@ -72,9 +72,9 @@ func (t *Testing) createGameItemInstanceRec(cfg GameItemInstanceConfig, gameInst
 	return createdRec, nil
 }
 
-func (t *Testing) applyGameItemInstanceRecDefaultValues(rec *record.GameItemInstance) *record.GameItemInstance {
+func (t *Testing) applyGameItemInstanceRecDefaultValues(rec *record.AdventureGameItemInstance) *record.AdventureGameItemInstance {
 	if rec == nil {
-		rec = &record.GameItemInstance{}
+		rec = &record.AdventureGameItemInstance{}
 	}
 	return rec
 }

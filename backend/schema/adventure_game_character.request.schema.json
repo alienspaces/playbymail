@@ -1,0 +1,24 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "AdventureGameCharacterRequest",
+    "type": "object",
+    "properties": {
+        "game_id": {
+            "$ref": "common.schema.json#/$defs/id"
+        },
+        "account_id": {
+            "$ref": "common.schema.json#/$defs/id"
+        },
+        "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+        }
+    },
+    "required": [
+        "game_id",
+        "account_id",
+        "name"
+    ],
+    "additionalProperties": false
+}

@@ -1,0 +1,48 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "AdventureGameLocationLink",
+    "type": "object",
+    "properties": {
+        "id": {
+            "$ref": "common.schema.json#/$defs/id"
+        },
+        "game_id": {
+            "$ref": "common.schema.json#/$defs/id"
+        },
+        "from_game_location_id": {
+            "$ref": "common.schema.json#/$defs/id"
+        },
+        "to_game_location_id": {
+            "$ref": "common.schema.json#/$defs/id"
+        },
+        "description": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+        },
+        "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+        },
+        "created_at": {
+            "$ref": "common.schema.json#/$defs/created_at"
+        },
+        "updated_at": {
+            "$ref": "common.schema.json#/$defs/updated_at"
+        },
+        "deleted_at": {
+            "$ref": "common.schema.json#/$defs/updated_at"
+        }
+    },
+    "required": [
+        "id",
+        "game_id",
+        "from_game_location_id",
+        "to_game_location_id",
+        "description",
+        "name",
+        "created_at"
+    ],
+    "additionalProperties": false
+}

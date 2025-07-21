@@ -7,19 +7,19 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/record"
 )
 
-func (t *Testing) createGameInstanceRec(cfg GameInstanceConfig, gameRec *record.Game) (*record.GameInstance, error) {
+func (t *Testing) createGameInstanceRec(cfg GameInstanceConfig, gameRec *record.Game) (*record.AdventureGameInstance, error) {
 	l := t.Logger("createGameInstanceRec")
 
 	if gameRec == nil {
 		return nil, fmt.Errorf("game record is nil for game_instance record >%#v<", cfg)
 	}
 
-	var rec *record.GameInstance
+	var rec *record.AdventureGameInstance
 	if cfg.Record != nil {
 		recCopy := *cfg.Record
 		rec = &recCopy
 	} else {
-		rec = &record.GameInstance{}
+		rec = &record.AdventureGameInstance{}
 	}
 
 	rec = t.applyGameInstanceRecDefaultValues(rec)
@@ -29,7 +29,7 @@ func (t *Testing) createGameInstanceRec(cfg GameInstanceConfig, gameRec *record.
 	l.Info("creating game_instance record >%#v<", rec)
 
 	// Create record
-	createdRec, err := t.Domain.(*domain.Domain).CreateGameInstanceRec(rec)
+	createdRec, err := t.Domain.(*domain.Domain).CreateAdventureGameInstanceRec(rec)
 	if err != nil {
 		l.Warn("failed creating game_instance record >%v<", err)
 		return rec, err
@@ -48,9 +48,9 @@ func (t *Testing) createGameInstanceRec(cfg GameInstanceConfig, gameRec *record.
 	return createdRec, nil
 }
 
-func (t *Testing) applyGameInstanceRecDefaultValues(rec *record.GameInstance) *record.GameInstance {
+func (t *Testing) applyGameInstanceRecDefaultValues(rec *record.AdventureGameInstance) *record.AdventureGameInstance {
 	if rec == nil {
-		rec = &record.GameInstance{}
+		rec = &record.AdventureGameInstance{}
 	}
 	return rec
 }

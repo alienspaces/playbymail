@@ -7,25 +7,25 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/record"
 )
 
-func (t *Testing) createGameLocationLinkRequirementRec(cfg GameLocationLinkRequirementConfig, gameLocationLinkRec *record.GameLocationLink) (*record.GameLocationLinkRequirement, error) {
+func (t *Testing) createGameLocationLinkRequirementRec(cfg GameLocationLinkRequirementConfig, gameLocationLinkRec *record.AdventureGameLocationLink) (*record.AdventureGameLocationLinkRequirement, error) {
 	l := t.Logger("createGameLocationLinkRequirementRec")
 
 	if gameLocationLinkRec == nil {
 		return nil, fmt.Errorf("game location link record is nil for game_location_link_requirement record >%#v<", cfg)
 	}
 
-	var rec *record.GameLocationLinkRequirement
+	var rec *record.AdventureGameLocationLinkRequirement
 	if cfg.Record != nil {
 		recCopy := *cfg.Record
 		rec = &recCopy
 	} else {
-		rec = &record.GameLocationLinkRequirement{}
+		rec = &record.AdventureGameLocationLinkRequirement{}
 	}
 
 	rec = t.applyGameLocationLinkRequirementRecDefaultValues(rec)
 
 	rec.GameID = gameLocationLinkRec.GameID
-	rec.GameLocationLinkID = gameLocationLinkRec.ID
+	rec.AdventureGameLocationLinkID = gameLocationLinkRec.ID
 
 	if cfg.GameItemRef != "" {
 		gameItemRec, err := t.Data.GetGameItemRecByRef(cfg.GameItemRef)
@@ -33,13 +33,13 @@ func (t *Testing) createGameLocationLinkRequirementRec(cfg GameLocationLinkRequi
 			l.Error("could not resolve GameItemRef >%s< to a valid game item ID", cfg.GameItemRef)
 			return nil, fmt.Errorf("could not resolve GameItemRef >%s< to a valid game item ID", cfg.GameItemRef)
 		}
-		rec.GameItemID = gameItemRec.ID
+		rec.AdventureGameItemID = gameItemRec.ID
 	}
 
 	// Create record
 	l.Info("creating game_location_link_requirement record >%#v<", rec)
 
-	rec, err := t.Domain.(*domain.Domain).CreateGameLocationLinkRequirementRec(rec)
+	rec, err := t.Domain.(*domain.Domain).CreateAdventureGameLocationLinkRequirementRec(rec)
 	if err != nil {
 		l.Warn("failed creating game_location_link_requirement record >%v<", err)
 		return nil, err
@@ -59,9 +59,9 @@ func (t *Testing) createGameLocationLinkRequirementRec(cfg GameLocationLinkRequi
 	return rec, nil
 }
 
-func (t *Testing) applyGameLocationLinkRequirementRecDefaultValues(rec *record.GameLocationLinkRequirement) *record.GameLocationLinkRequirement {
+func (t *Testing) applyGameLocationLinkRequirementRecDefaultValues(rec *record.AdventureGameLocationLinkRequirement) *record.AdventureGameLocationLinkRequirement {
 	if rec == nil {
-		rec = &record.GameLocationLinkRequirement{}
+		rec = &record.AdventureGameLocationLinkRequirement{}
 	}
 	if rec.Quantity == 0 {
 		rec.Quantity = 1
