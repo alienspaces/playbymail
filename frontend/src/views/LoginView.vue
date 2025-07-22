@@ -1,10 +1,14 @@
 <template>
   <div class="login-container">
     <h2>Sign in with Email</h2>
-    <form @submit.prevent="onSubmit">
-      <label for="email">Email address</label>
-      <input v-model="email" id="email" type="email" required autofocus />
-      <button type="submit" :disabled="loading">Send Code</button>
+    <form @submit.prevent="onSubmit" class="login-form">
+      <div class="form-group">
+        <label for="email">Email address</label>
+        <input v-model="email" id="email" type="email" required autofocus />
+      </div>
+      <div class="form-actions">
+        <button type="submit" :disabled="loading">Send Code</button>
+      </div>
     </form>
     <p v-if="message" class="message">{{ message }}</p>
   </div>
@@ -99,5 +103,20 @@ button:disabled {
   color: var(--color-error);
   margin-top: var(--space-md);
   text-align: center;
+}
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-md);
+}
+.form-actions {
+  display: flex;
+  justify-content: center;
 }
 </style> 

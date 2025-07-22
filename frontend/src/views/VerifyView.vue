@@ -1,10 +1,14 @@
 <template>
   <div class="verify-container">
     <h2>Enter your verification code</h2>
-    <form @submit.prevent="onSubmit">
-      <label for="code">Verification code</label>
-      <input v-model="code" id="code" type="text" required autofocus />
-      <button type="submit" :disabled="loading">Verify</button>
+    <form @submit.prevent="onSubmit" class="verify-form">
+      <div class="form-group">
+        <label for="code">Verification code</label>
+        <input v-model="code" id="code" type="text" required autofocus />
+      </div>
+      <div class="form-actions">
+        <button type="submit" :disabled="loading">Verify</button>
+      </div>
     </form>
     <p v-if="message" class="message">{{ message }}</p>
   </div>
@@ -95,5 +99,20 @@ button:disabled {
   color: var(--color-error);
   margin-top: var(--space-md);
   text-align: center;
+}
+.verify-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-md);
+}
+.form-actions {
+  display: flex;
+  justify-content: center;
 }
 </style> 
