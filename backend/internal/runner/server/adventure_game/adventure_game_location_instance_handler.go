@@ -15,6 +15,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/mapper"
 	"gitlab.com/alienspaces/playbymail/internal/record"
+	"gitlab.com/alienspaces/playbymail/internal/utils/logging"
 	"gitlab.com/alienspaces/playbymail/schema"
 )
 
@@ -43,7 +44,7 @@ const (
 )
 
 func adventureGameLocationInstanceHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error) {
-	l = loggerWithFunctionContext(l, "adventureGameLocationInstanceHandlerConfig")
+	l = logging.LoggerWithFunctionContext(l, packageName, "adventureGameLocationInstanceHandlerConfig")
 
 	l.Debug("Adding adventure_game_location_instance handler configuration")
 
@@ -173,10 +174,8 @@ func adventureGameLocationInstanceHandlerConfig(l logger.Logger) (map[string]ser
 	return gameLocationInstanceConfig, nil
 }
 
-// New Adventure Game Location Instance Handlers
-
 func searchManyAdventureGameLocationInstancesHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
-	l = loggerWithFunctionContext(l, "SearchManyAdventureGameLocationInstancesHandler")
+	l = logging.LoggerWithFunctionContext(l, packageName, "searchManyAdventureGameLocationInstancesHandler")
 
 	mm := m.(*domain.Domain)
 	opts := queryparam.ToSQLOptionsWithDefaults(qp)
@@ -201,7 +200,7 @@ func searchManyAdventureGameLocationInstancesHandler(w http.ResponseWriter, r *h
 }
 
 func getManyAdventureGameLocationInstancesHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
-	l = loggerWithFunctionContext(l, "GetManyAdventureGameLocationInstancesHandler")
+	l = logging.LoggerWithFunctionContext(l, packageName, "getManyAdventureGameLocationInstancesHandler")
 
 	gameInstanceID := pp.ByName("game_instance_id")
 	if gameInstanceID == "" {
@@ -239,7 +238,7 @@ func getManyAdventureGameLocationInstancesHandler(w http.ResponseWriter, r *http
 }
 
 func getOneAdventureGameLocationInstanceHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
-	l = loggerWithFunctionContext(l, "GetOneAdventureGameLocationInstanceHandler")
+	l = logging.LoggerWithFunctionContext(l, packageName, "getOneAdventureGameLocationInstanceHandler")
 
 	gameInstanceID := pp.ByName("game_instance_id")
 	if gameInstanceID == "" {
@@ -287,7 +286,7 @@ func getOneAdventureGameLocationInstanceHandler(w http.ResponseWriter, r *http.R
 }
 
 func createOneAdventureGameLocationInstanceHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
-	l = loggerWithFunctionContext(l, "CreateOneAdventureGameLocationInstanceHandler")
+	l = logging.LoggerWithFunctionContext(l, packageName, "createOneAdventureGameLocationInstanceHandler")
 
 	gameInstanceID := pp.ByName("game_instance_id")
 	if gameInstanceID == "" {
@@ -339,7 +338,7 @@ func createOneAdventureGameLocationInstanceHandler(w http.ResponseWriter, r *htt
 }
 
 func updateOneAdventureGameLocationInstanceHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
-	l = loggerWithFunctionContext(l, "UpdateOneAdventureGameLocationInstanceHandler")
+	l = logging.LoggerWithFunctionContext(l, packageName, "updateOneAdventureGameLocationInstanceHandler")
 
 	gameInstanceID := pp.ByName("game_instance_id")
 	if gameInstanceID == "" {
@@ -410,7 +409,7 @@ func updateOneAdventureGameLocationInstanceHandler(w http.ResponseWriter, r *htt
 }
 
 func deleteOneAdventureGameLocationInstanceHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
-	l = loggerWithFunctionContext(l, "DeleteOneAdventureGameLocationInstanceHandler")
+	l = logging.LoggerWithFunctionContext(l, packageName, "deleteOneAdventureGameLocationInstanceHandler")
 
 	gameInstanceID := pp.ByName("game_instance_id")
 	if gameInstanceID == "" {

@@ -14,6 +14,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/mapper"
 	"gitlab.com/alienspaces/playbymail/internal/record"
+	"gitlab.com/alienspaces/playbymail/internal/utils/logging"
 	"gitlab.com/alienspaces/playbymail/schema"
 )
 
@@ -42,7 +43,7 @@ const (
 )
 
 func adventureGameItemInstanceHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error) {
-	l = loggerWithFunctionContext(l, "adventureGameItemInstanceHandlerConfig")
+	l = logging.LoggerWithFunctionContext(l, packageName, "adventureGameItemInstanceHandlerConfig")
 
 	l.Debug("Adding adventure_game_item_instance handler configuration")
 
@@ -172,10 +173,8 @@ func adventureGameItemInstanceHandlerConfig(l logger.Logger) (map[string]server.
 	return gameItemInstanceConfig, nil
 }
 
-// New Adventure Game Item Instance Handlers
-
 func searchManyAdventureGameItemInstancesHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
-	l = loggerWithFunctionContext(l, "SearchManyAdventureGameItemInstancesHandler")
+	l = logging.LoggerWithFunctionContext(l, packageName, "searchManyAdventureGameItemInstancesHandler")
 
 	mm := m.(*domain.Domain)
 	opts := queryparam.ToSQLOptionsWithDefaults(qp)
@@ -200,7 +199,7 @@ func searchManyAdventureGameItemInstancesHandler(w http.ResponseWriter, r *http.
 }
 
 func getManyAdventureGameItemInstancesHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
-	l = loggerWithFunctionContext(l, "GetManyAdventureGameItemInstancesHandler")
+	l = logging.LoggerWithFunctionContext(l, packageName, "getManyAdventureGameItemInstancesHandler")
 
 	gameInstanceID := pp.ByName("game_instance_id")
 	if gameInstanceID == "" {
@@ -237,7 +236,7 @@ func getManyAdventureGameItemInstancesHandler(w http.ResponseWriter, r *http.Req
 }
 
 func getOneAdventureGameItemInstanceHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
-	l = loggerWithFunctionContext(l, "GetOneAdventureGameItemInstanceHandler")
+	l = logging.LoggerWithFunctionContext(l, packageName, "getOneAdventureGameItemInstanceHandler")
 
 	gameInstanceID := pp.ByName("game_instance_id")
 	if gameInstanceID == "" {
@@ -285,7 +284,7 @@ func getOneAdventureGameItemInstanceHandler(w http.ResponseWriter, r *http.Reque
 }
 
 func createOneAdventureGameItemInstanceHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
-	l = loggerWithFunctionContext(l, "CreateOneAdventureGameItemInstanceHandler")
+	l = logging.LoggerWithFunctionContext(l, packageName, "createOneAdventureGameItemInstanceHandler")
 
 	gameInstanceID := pp.ByName("game_instance_id")
 	if gameInstanceID == "" {
@@ -335,7 +334,7 @@ func createOneAdventureGameItemInstanceHandler(w http.ResponseWriter, r *http.Re
 }
 
 func updateOneAdventureGameItemInstanceHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
-	l = loggerWithFunctionContext(l, "UpdateOneAdventureGameItemInstanceHandler")
+	l = logging.LoggerWithFunctionContext(l, packageName, "updateOneAdventureGameItemInstanceHandler")
 
 	gameInstanceID := pp.ByName("game_instance_id")
 	if gameInstanceID == "" {
@@ -406,7 +405,7 @@ func updateOneAdventureGameItemInstanceHandler(w http.ResponseWriter, r *http.Re
 }
 
 func deleteOneAdventureGameItemInstanceHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
-	l = loggerWithFunctionContext(l, "DeleteOneAdventureGameItemInstanceHandler")
+	l = logging.LoggerWithFunctionContext(l, packageName, "deleteOneAdventureGameItemInstanceHandler")
 
 	gameInstanceID := pp.ByName("game_instance_id")
 	if gameInstanceID == "" {

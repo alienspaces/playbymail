@@ -18,7 +18,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	l, s, j, err := deps.Default(cfg)
+	l, s, j, err := deps.NewDefaultDependencies(cfg)
 	if err != nil {
 		fmt.Printf("(cmd) failed default dependencies >%v<\n", err)
 		os.Exit(0)

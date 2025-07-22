@@ -14,6 +14,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/mapper"
 	"gitlab.com/alienspaces/playbymail/internal/record"
+	"gitlab.com/alienspaces/playbymail/internal/utils/logging"
 	"gitlab.com/alienspaces/playbymail/schema"
 )
 
@@ -42,7 +43,7 @@ const (
 )
 
 func adventureGameLocationLinkRequirementHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error) {
-	l = loggerWithFunctionContext(l, "adventureGameLocationLinkRequirementHandlerConfig")
+	l = logging.LoggerWithFunctionContext(l, packageName, "adventureGameLocationLinkRequirementHandlerConfig")
 
 	l.Debug("Adding adventure_game_location_link_requirement handler configuration")
 
@@ -175,7 +176,7 @@ func adventureGameLocationLinkRequirementHandlerConfig(l logger.Logger) (map[str
 // New Adventure Game Location Link Requirement Handlers
 
 func searchManyAdventureGameLocationLinkRequirementsHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
-	l = loggerWithFunctionContext(l, "SearchManyAdventureGameLocationLinkRequirementsHandler")
+	l = logging.LoggerWithFunctionContext(l, packageName, "searchManyAdventureGameLocationLinkRequirementsHandler")
 
 	mm := m.(*domain.Domain)
 	opts := queryparam.ToSQLOptionsWithDefaults(qp)
@@ -200,7 +201,7 @@ func searchManyAdventureGameLocationLinkRequirementsHandler(w http.ResponseWrite
 }
 
 func getManyAdventureGameLocationLinkRequirementsHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
-	l = loggerWithFunctionContext(l, "GetManyAdventureGameLocationLinkRequirementsHandler")
+	l = logging.LoggerWithFunctionContext(l, packageName, "getManyAdventureGameLocationLinkRequirementsHandler")
 
 	gameID := pp.ByName("game_id")
 	mm := m.(*domain.Domain)
@@ -232,7 +233,7 @@ func getManyAdventureGameLocationLinkRequirementsHandler(w http.ResponseWriter, 
 }
 
 func getOneAdventureGameLocationLinkRequirementHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
-	l = loggerWithFunctionContext(l, "GetOneAdventureGameLocationLinkRequirementHandler")
+	l = logging.LoggerWithFunctionContext(l, packageName, "getOneAdventureGameLocationLinkRequirementHandler")
 
 	gameID := pp.ByName("game_id")
 	locationLinkRequirementID := pp.ByName("location_link_requirement_id")
@@ -265,7 +266,7 @@ func getOneAdventureGameLocationLinkRequirementHandler(w http.ResponseWriter, r 
 }
 
 func createOneAdventureGameLocationLinkRequirementHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
-	l = loggerWithFunctionContext(l, "CreateOneAdventureGameLocationLinkRequirementHandler")
+	l = logging.LoggerWithFunctionContext(l, packageName, "createOneAdventureGameLocationLinkRequirementHandler")
 
 	gameID := pp.ByName("game_id")
 
@@ -305,7 +306,7 @@ func createOneAdventureGameLocationLinkRequirementHandler(w http.ResponseWriter,
 }
 
 func updateOneAdventureGameLocationLinkRequirementHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
-	l = loggerWithFunctionContext(l, "UpdateOneAdventureGameLocationLinkRequirementHandler")
+	l = logging.LoggerWithFunctionContext(l, packageName, "updateOneAdventureGameLocationLinkRequirementHandler")
 
 	gameID := pp.ByName("game_id")
 	locationLinkRequirementID := pp.ByName("location_link_requirement_id")
@@ -362,7 +363,7 @@ func updateOneAdventureGameLocationLinkRequirementHandler(w http.ResponseWriter,
 }
 
 func deleteOneAdventureGameLocationLinkRequirementHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
-	l = loggerWithFunctionContext(l, "DeleteOneAdventureGameLocationLinkRequirementHandler")
+	l = logging.LoggerWithFunctionContext(l, packageName, "deleteOneAdventureGameLocationLinkRequirementHandler")
 
 	gameID := pp.ByName("game_id")
 	locationLinkRequirementID := pp.ByName("location_link_requirement_id")

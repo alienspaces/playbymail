@@ -8,14 +8,15 @@ import (
 
 	"gitlab.com/alienspaces/playbymail/core/server"
 	"gitlab.com/alienspaces/playbymail/internal/harness"
-	"gitlab.com/alienspaces/playbymail/internal/runner/server/testutil"
+	"gitlab.com/alienspaces/playbymail/internal/utils/deps"
+	"gitlab.com/alienspaces/playbymail/internal/utils/testutil"
 	"gitlab.com/alienspaces/playbymail/schema"
 )
 
 func Test_getGameLocationInstanceHandler(t *testing.T) {
 	t.Parallel()
 
-	th := testutil.NewTestHarness(t)
+	th := deps.NewHandlerTestHarness(t)
 	require.NotNil(t, th, "newTestHarness returns without error")
 
 	_, err := th.Setup()
@@ -136,7 +137,7 @@ func Test_getGameLocationInstanceHandler(t *testing.T) {
 func Test_createUpdateDeleteGameLocationInstanceHandler(t *testing.T) {
 	t.Parallel()
 
-	th := testutil.NewTestHarness(t)
+	th := deps.NewHandlerTestHarness(t)
 	require.NotNil(t, th, "newTestHarness returns without error")
 
 	_, err := th.Setup()

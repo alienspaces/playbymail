@@ -21,7 +21,6 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/type/storer"
 	"gitlab.com/alienspaces/playbymail/internal/harness"
 	"gitlab.com/alienspaces/playbymail/internal/utils/config"
-	"gitlab.com/alienspaces/playbymail/internal/utils/deps"
 )
 
 type ExpectedErrorResponse struct {
@@ -235,25 +234,4 @@ func RunTestCase(t *testing.T, th *harness.Testing, tc TestCaser, tf func(method
 		t.Logf("Request path with query params >%s<", requestPath)
 	}
 	// ... existing code ...
-}
-
-func NewDefaultDependencies(t *testing.T) (logger.Logger, storer.Storer, *river.Client[pgx.Tx], config.Config) {
-	cfg, err := config.Parse()
-	require.NoError(t, err, "Parse returns without error")
-
-	l, s, j, err := deps.Default(cfg)
-	require.NoError(t, err, "NewDefaultDependencies returns without error")
-
-	return l, s, j, cfg
-}
-
-func NewTestHarness(t *testing.T) *harness.Testing {
-	config := harness.DefaultDataConfig()
-	l, s, j, cfg := NewDefaultDependencies(t)
-	h, err := harness.NewTesting(l, s, j, cfg, config)
-	require.NoError(t, err, "NewTesting returns without error")
-	h.ShouldCommitData = true
-	err = h.Teardown()
-	require.NoError(t, err, "Teardown returns without error")
-	return h
 }

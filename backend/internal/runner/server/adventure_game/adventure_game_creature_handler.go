@@ -14,6 +14,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/mapper"
 	"gitlab.com/alienspaces/playbymail/internal/record"
+	"gitlab.com/alienspaces/playbymail/internal/utils/logging"
 	"gitlab.com/alienspaces/playbymail/schema"
 )
 
@@ -42,7 +43,7 @@ const (
 )
 
 func adventureGameCreatureHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error) {
-	l = loggerWithFunctionContext(l, "adventureGameCreatureHandlerConfig")
+	l = logging.LoggerWithFunctionContext(l, packageName, "adventureGameCreatureHandlerConfig")
 
 	l.Debug("Adding adventure_game_creature handler configuration")
 
@@ -172,10 +173,8 @@ func adventureGameCreatureHandlerConfig(l logger.Logger) (map[string]server.Hand
 	return gameCreatureConfig, nil
 }
 
-// New Adventure Game Creature Handlers
-
 func searchManyAdventureGameCreaturesHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
-	l = loggerWithFunctionContext(l, "SearchManyAdventureGameCreaturesHandler")
+	l = logging.LoggerWithFunctionContext(l, packageName, "searchManyAdventureGameCreaturesHandler")
 
 	mm := m.(*domain.Domain)
 	opts := queryparam.ToSQLOptionsWithDefaults(qp)
@@ -206,7 +205,7 @@ func searchManyAdventureGameCreaturesHandler(w http.ResponseWriter, r *http.Requ
 }
 
 func getManyAdventureGameCreaturesHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
-	l = loggerWithFunctionContext(l, "GetManyAdventureGameCreaturesHandler")
+	l = logging.LoggerWithFunctionContext(l, packageName, "getManyAdventureGameCreaturesHandler")
 
 	gameID := pp.ByName("game_id")
 	mm := m.(*domain.Domain)
@@ -238,7 +237,7 @@ func getManyAdventureGameCreaturesHandler(w http.ResponseWriter, r *http.Request
 }
 
 func getOneAdventureGameCreatureHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
-	l = loggerWithFunctionContext(l, "GetOneAdventureGameCreatureHandler")
+	l = logging.LoggerWithFunctionContext(l, packageName, "getOneAdventureGameCreatureHandler")
 
 	gameID := pp.ByName("game_id")
 	creatureID := pp.ByName("creature_id")
@@ -271,7 +270,7 @@ func getOneAdventureGameCreatureHandler(w http.ResponseWriter, r *http.Request, 
 }
 
 func createOneAdventureGameCreatureHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
-	l = loggerWithFunctionContext(l, "CreateOneAdventureGameCreatureHandler")
+	l = logging.LoggerWithFunctionContext(l, packageName, "createOneAdventureGameCreatureHandler")
 
 	gameID := pp.ByName("game_id")
 
@@ -311,7 +310,7 @@ func createOneAdventureGameCreatureHandler(w http.ResponseWriter, r *http.Reques
 }
 
 func updateOneAdventureGameCreatureHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
-	l = loggerWithFunctionContext(l, "UpdateOneAdventureGameCreatureHandler")
+	l = logging.LoggerWithFunctionContext(l, packageName, "updateOneAdventureGameCreatureHandler")
 
 	gameID := pp.ByName("game_id")
 	creatureID := pp.ByName("creature_id")
@@ -368,7 +367,7 @@ func updateOneAdventureGameCreatureHandler(w http.ResponseWriter, r *http.Reques
 }
 
 func deleteOneAdventureGameCreatureHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
-	l = loggerWithFunctionContext(l, "DeleteOneAdventureGameCreatureHandler")
+	l = logging.LoggerWithFunctionContext(l, packageName, "deleteOneAdventureGameCreatureHandler")
 
 	gameID := pp.ByName("game_id")
 	creatureID := pp.ByName("creature_id")
@@ -405,7 +404,7 @@ func deleteOneAdventureGameCreatureHandler(w http.ResponseWriter, r *http.Reques
 // Legacy handler - commented out due to Adventure-prefixed naming alignment
 /*
 func getManyGameCreaturesHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
-	l = loggerWithFunctionContext(l, "GetManyGameCreaturesHandler")
+	l = logging.LoggerWithFunctionContext(l, "GetManyGameCreaturesHandler")
 
 	mm := m.(*domain.Domain)
 	opts := queryparam.ToSQLOptionsWithDefaults(qp)
@@ -433,7 +432,7 @@ func getManyGameCreaturesHandler(w http.ResponseWriter, r *http.Request, pp http
 // Legacy handler - commented out due to Adventure-prefixed naming alignment
 /*
 func getGameCreatureHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
-	l = loggerWithFunctionContext(l, "GetGameCreatureHandler")
+	l = logging.LoggerWithFunctionContext(l, "GetGameCreatureHandler")
 
 	gameCreatureID := pp.ByName("game_creature_id")
 	mm := m.(*domain.Domain)
@@ -462,7 +461,7 @@ func getGameCreatureHandler(w http.ResponseWriter, r *http.Request, pp httproute
 // Legacy handler - commented out due to Adventure-prefixed naming alignment
 /*
 func createGameCreatureHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
-	l = loggerWithFunctionContext(l, "CreateGameCreatureHandler")
+	l = logging.LoggerWithFunctionContext(l, "CreateGameCreatureHandler")
 
 	var req schema.GameCreatureRequest
 	if _, err := server.ReadRequest(l, r, &req); err != nil {
@@ -499,7 +498,7 @@ func createGameCreatureHandler(w http.ResponseWriter, r *http.Request, pp httpro
 
 // // Legacy handler
 // func updateGameCreatureHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
-// 	l = loggerWithFunctionContext(l, "UpdateGameCreatureHandler")
+// 	l = logging.LoggerWithFunctionContext(l, "UpdateGameCreatureHandler")
 
 // 	gameCreatureID := pp.ByName("game_creature_id")
 
@@ -550,7 +549,7 @@ func createGameCreatureHandler(w http.ResponseWriter, r *http.Request, pp httpro
 
 // // Legacy handler
 // func deleteGameCreatureHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
-// 	l = loggerWithFunctionContext(l, "DeleteGameCreatureHandler")
+// 	l = logging.LoggerWithFunctionContext(l, "DeleteGameCreatureHandler")
 
 // 	gameCreatureID := pp.ByName("game_creature_id")
 

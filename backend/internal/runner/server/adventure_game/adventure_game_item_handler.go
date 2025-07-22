@@ -14,6 +14,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/mapper"
 	"gitlab.com/alienspaces/playbymail/internal/record"
+	"gitlab.com/alienspaces/playbymail/internal/utils/logging"
 	"gitlab.com/alienspaces/playbymail/schema"
 )
 
@@ -42,7 +43,7 @@ const (
 )
 
 func adventureGameItemHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error) {
-	l = loggerWithFunctionContext(l, "adventureGameItemHandlerConfig")
+	l = logging.LoggerWithFunctionContext(l, packageName, "adventureGameItemHandlerConfig")
 
 	l.Debug("Adding adventure_game_item handler configuration")
 
@@ -258,10 +259,8 @@ func adventureGameItemHandlerConfig(l logger.Logger) (map[string]server.HandlerC
 	return gameItemConfig, nil
 }
 
-// New Adventure Game Item Handlers
-
 func searchManyAdventureGameItemsHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
-	l = loggerWithFunctionContext(l, "SearchManyAdventureGameItemsHandler")
+	l = logging.LoggerWithFunctionContext(l, packageName, "searchManyAdventureGameItemsHandler")
 
 	mm := m.(*domain.Domain)
 	opts := queryparam.ToSQLOptionsWithDefaults(qp)
@@ -292,7 +291,7 @@ func searchManyAdventureGameItemsHandler(w http.ResponseWriter, r *http.Request,
 }
 
 func getManyAdventureGameItemsHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
-	l = loggerWithFunctionContext(l, "GetManyAdventureGameItemsHandler")
+	l = logging.LoggerWithFunctionContext(l, packageName, "getManyAdventureGameItemsHandler")
 
 	gameID := pp.ByName("game_id")
 	mm := m.(*domain.Domain)
@@ -324,7 +323,7 @@ func getManyAdventureGameItemsHandler(w http.ResponseWriter, r *http.Request, pp
 }
 
 func getOneAdventureGameItemHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
-	l = loggerWithFunctionContext(l, "GetOneAdventureGameItemHandler")
+	l = logging.LoggerWithFunctionContext(l, packageName, "getOneAdventureGameItemHandler")
 
 	gameID := pp.ByName("game_id")
 	itemID := pp.ByName("item_id")
@@ -357,7 +356,7 @@ func getOneAdventureGameItemHandler(w http.ResponseWriter, r *http.Request, pp h
 }
 
 func createOneAdventureGameItemHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
-	l = loggerWithFunctionContext(l, "CreateOneAdventureGameItemHandler")
+	l = logging.LoggerWithFunctionContext(l, packageName, "createOneAdventureGameItemHandler")
 
 	gameID := pp.ByName("game_id")
 
@@ -397,7 +396,7 @@ func createOneAdventureGameItemHandler(w http.ResponseWriter, r *http.Request, p
 }
 
 func updateOneAdventureGameItemHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
-	l = loggerWithFunctionContext(l, "UpdateOneAdventureGameItemHandler")
+	l = logging.LoggerWithFunctionContext(l, packageName, "updateOneAdventureGameItemHandler")
 
 	gameID := pp.ByName("game_id")
 	itemID := pp.ByName("item_id")
@@ -454,7 +453,7 @@ func updateOneAdventureGameItemHandler(w http.ResponseWriter, r *http.Request, p
 }
 
 func deleteOneAdventureGameItemHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
-	l = loggerWithFunctionContext(l, "DeleteOneAdventureGameItemHandler")
+	l = logging.LoggerWithFunctionContext(l, packageName, "deleteOneAdventureGameItemHandler")
 
 	gameID := pp.ByName("game_id")
 	itemID := pp.ByName("item_id")
@@ -491,7 +490,7 @@ func deleteOneAdventureGameItemHandler(w http.ResponseWriter, r *http.Request, p
 // Legacy handler - commented out due to Adventure-prefixed naming alignment
 /*
 func getManyGameItemsHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
-	l = loggerWithFunctionContext(l, "GetManyGameItemsHandler")
+	l = logging.LoggerWithFunctionContext(l, "GetManyGameItemsHandler")
 
 	mm := m.(*domain.Domain)
 	opts := queryparam.ToSQLOptionsWithDefaults(qp)
@@ -519,7 +518,7 @@ func getManyGameItemsHandler(w http.ResponseWriter, r *http.Request, pp httprout
 // Legacy handler - commented out due to Adventure-prefixed naming alignment
 /*
 func getGameItemHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
-	l = loggerWithFunctionContext(l, "GetGameItemHandler")
+	l = logging.LoggerWithFunctionContext(l, "GetGameItemHandler")
 
 	gameItemID := pp.ByName("game_item_id")
 	mm := m.(*domain.Domain)
@@ -548,7 +547,7 @@ func getGameItemHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Pa
 // Legacy handler - commented out due to Adventure-prefixed naming alignment
 /*
 func createGameItemHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
-	l = loggerWithFunctionContext(l, "CreateGameItemHandler")
+	l = logging.LoggerWithFunctionContext(l, "CreateGameItemHandler")
 
 	var req schema.GameItemRequest
 	if _, err := server.ReadRequest(l, r, &req); err != nil {
@@ -586,7 +585,7 @@ func createGameItemHandler(w http.ResponseWriter, r *http.Request, pp httprouter
 // Legacy handler - commented out due to Adventure-prefixed naming alignment
 /*
 func updateGameItemHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
-	l = loggerWithFunctionContext(l, "UpdateGameItemHandler")
+	l = logging.LoggerWithFunctionContext(l, "UpdateGameItemHandler")
 
 	gameItemID := pp.ByName("game_item_id")
 
@@ -639,7 +638,7 @@ func updateGameItemHandler(w http.ResponseWriter, r *http.Request, pp httprouter
 // Legacy handler - commented out due to Adventure-prefixed naming alignment
 /*
 func deleteGameItemHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
-	l = loggerWithFunctionContext(l, "DeleteGameItemHandler")
+	l = logging.LoggerWithFunctionContext(l, "DeleteGameItemHandler")
 
 	gameItemID := pp.ByName("game_item_id")
 

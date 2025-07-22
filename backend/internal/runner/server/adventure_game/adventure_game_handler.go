@@ -9,6 +9,10 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/utils/logging"
 )
 
+const (
+	packageName = "adventure_game"
+)
+
 var referenceSchemas = []jsonschema.Schema{
 	{
 		Location: "schema",
@@ -21,7 +25,7 @@ var referenceSchemas = []jsonschema.Schema{
 }
 
 func AdventureGameHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error) {
-	l = loggerWithFunctionContext(l, "AdventureGameHandlerConfig")
+	l = logging.LoggerWithFunctionContext(l, packageName, "AdventureGameHandlerConfig")
 
 	l.Debug("Adding adventure_game handler configuration")
 
@@ -57,9 +61,4 @@ func mergeHandlerConfigs(hc1 map[string]server.HandlerConfig, hc2 map[string]ser
 	}
 	maps.Copy(hc1, hc2)
 	return hc1
-}
-
-// loggerWithFunctionContext provides a logger with function context
-func loggerWithFunctionContext(l logger.Logger, functionName string) logger.Logger {
-	return logging.LoggerWithFunctionContext(l, "adventure_game", functionName)
 }

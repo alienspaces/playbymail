@@ -23,7 +23,7 @@ func NewHarness(t *testing.T) *harness.Testing {
 	dcfg := harness.DefaultDataConfig()
 	cfg, err := config.Parse()
 	require.NoError(t, err)
-	l, s, j, err := Default(cfg)
+	l, s, j, err := NewDefaultDependencies(cfg)
 	require.NoError(t, err)
 	h, err := harness.NewTesting(l, s, j, cfg, dcfg)
 	require.NoError(t, err)
@@ -35,7 +35,17 @@ func NewHarness(t *testing.T) *harness.Testing {
 	return h
 }
 
-func Default(cfg config.Config) (*log.Log, *store.Store, *river.Client[pgx.Tx], error) {
+func NewHandlerTestHarness(t *testing.T) *harness.Testing {
+	h := NewHarness(t)
+
+	// API handlers create a new transaction for each request
+	// in middleware so we need to manage our own transactions
+	h.ShouldCommitData = true
+
+	return h
+}
+
+func NewDefaultDependencies(cfg config.Config) (*log.Log, *store.Store, *river.Client[pgx.Tx], error) {
 
 	// Logger
 	l, err := log.NewLogger(cfg.Config)

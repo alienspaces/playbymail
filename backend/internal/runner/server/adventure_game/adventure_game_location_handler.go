@@ -14,6 +14,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/mapper"
 	"gitlab.com/alienspaces/playbymail/internal/record"
+	"gitlab.com/alienspaces/playbymail/internal/utils/logging"
 	"gitlab.com/alienspaces/playbymail/schema"
 )
 
@@ -42,7 +43,7 @@ const (
 )
 
 func adventureGameLocationHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error) {
-	l = loggerWithFunctionContext(l, "adventureGameLocationHandlerConfig")
+	l = logging.LoggerWithFunctionContext(l, packageName, "adventureGameLocationHandlerConfig")
 
 	l.Debug("Adding adventure_game_location handler configuration")
 
@@ -173,7 +174,7 @@ func adventureGameLocationHandlerConfig(l logger.Logger) (map[string]server.Hand
 }
 
 func searchManyAdventureGameLocationsHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
-	l = loggerWithFunctionContext(l, "SearchManyAdventureGameLocationsHandler")
+	l = logging.LoggerWithFunctionContext(l, packageName, "searchManyAdventureGameLocationsHandler")
 
 	mm := m.(*domain.Domain)
 	opts := queryparam.ToSQLOptionsWithDefaults(qp)
@@ -204,7 +205,7 @@ func searchManyAdventureGameLocationsHandler(w http.ResponseWriter, r *http.Requ
 }
 
 func getManyAdventureGameLocationsHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
-	l = loggerWithFunctionContext(l, "GetManyAdventureGameLocationsHandler")
+	l = logging.LoggerWithFunctionContext(l, packageName, "getManyAdventureGameLocationsHandler")
 
 	gameID := pp.ByName("game_id")
 	mm := m.(*domain.Domain)
@@ -236,7 +237,7 @@ func getManyAdventureGameLocationsHandler(w http.ResponseWriter, r *http.Request
 }
 
 func getOneAdventureGameLocationHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
-	l = loggerWithFunctionContext(l, "GetOneAdventureGameLocationHandler")
+	l = logging.LoggerWithFunctionContext(l, packageName, "getOneAdventureGameLocationHandler")
 
 	gameID := pp.ByName("game_id")
 	locationID := pp.ByName("location_id")
@@ -269,7 +270,7 @@ func getOneAdventureGameLocationHandler(w http.ResponseWriter, r *http.Request, 
 }
 
 func createOneAdventureGameLocationHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
-	l = loggerWithFunctionContext(l, "CreateOneAdventureGameLocationHandler")
+	l = logging.LoggerWithFunctionContext(l, packageName, "createOneAdventureGameLocationHandler")
 
 	gameID := pp.ByName("game_id")
 	if gameID == "" {
@@ -313,7 +314,7 @@ func createOneAdventureGameLocationHandler(w http.ResponseWriter, r *http.Reques
 }
 
 func updateOneAdventureGameLocationHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
-	l = loggerWithFunctionContext(l, "UpdateOneAdventureGameLocationHandler")
+	l = logging.LoggerWithFunctionContext(l, packageName, "updateOneAdventureGameLocationHandler")
 
 	gameID := pp.ByName("game_id")
 	if gameID == "" {
@@ -379,7 +380,7 @@ func updateOneAdventureGameLocationHandler(w http.ResponseWriter, r *http.Reques
 }
 
 func deleteOneAdventureGameLocationHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
-	l = loggerWithFunctionContext(l, "DeleteOneAdventureGameLocationHandler")
+	l = logging.LoggerWithFunctionContext(l, packageName, "deleteOneAdventureGameLocationHandler")
 
 	gameID := pp.ByName("game_id")
 	locationID := pp.ByName("location_id")

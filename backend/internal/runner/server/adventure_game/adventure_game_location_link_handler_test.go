@@ -8,14 +8,15 @@ import (
 
 	"gitlab.com/alienspaces/playbymail/core/server"
 	"gitlab.com/alienspaces/playbymail/internal/harness"
-	"gitlab.com/alienspaces/playbymail/internal/runner/server/testutil"
+	"gitlab.com/alienspaces/playbymail/internal/utils/deps"
+	"gitlab.com/alienspaces/playbymail/internal/utils/testutil"
 	"gitlab.com/alienspaces/playbymail/schema"
 )
 
 func Test_adventureGameLocationLinkHandler(t *testing.T) {
 	t.Parallel()
 
-	th := testutil.NewTestHarness(t)
+	th := deps.NewHandlerTestHarness(t)
 	require.NotNil(t, th, "NewTestHarness returns without error")
 
 	// Add a new location to the game that we can use in the test

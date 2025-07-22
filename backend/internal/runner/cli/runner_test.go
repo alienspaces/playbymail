@@ -17,7 +17,7 @@ func newDefaultDependencies(t *testing.T) (*log.Log, *store.Store, *river.Client
 	cfg, err := config.Parse()
 	require.NoError(t, err, "Parse returns without error")
 
-	l, s, j, err := deps.Default(cfg)
+	l, s, j, err := deps.NewDefaultDependencies(cfg)
 	require.NoError(t, err, "NewDefaultDependencies returns without error")
 
 	return l, s, j

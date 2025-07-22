@@ -15,6 +15,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/mapper"
 	"gitlab.com/alienspaces/playbymail/internal/record"
+	"gitlab.com/alienspaces/playbymail/internal/utils/logging"
 	"gitlab.com/alienspaces/playbymail/schema"
 )
 
@@ -43,7 +44,7 @@ const (
 )
 
 func adventureGameCharacterHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error) {
-	l = loggerWithFunctionContext(l, "adventureGameCharacterHandlerConfig")
+	l = logging.LoggerWithFunctionContext(l, packageName, "adventureGameCharacterHandlerConfig")
 
 	l.Debug("Adding adventure_game_character handler configuration")
 
@@ -173,10 +174,8 @@ func adventureGameCharacterHandlerConfig(l logger.Logger) (map[string]server.Han
 	return gameCharacterConfig, nil
 }
 
-// New Adventure Game Character Handlers
-
 func searchManyAdventureGameCharactersHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
-	l = loggerWithFunctionContext(l, "SearchManyAdventureGameCharactersHandler")
+	l = logging.LoggerWithFunctionContext(l, packageName, "searchManyAdventureGameCharactersHandler")
 
 	mm := m.(*domain.Domain)
 	opts := queryparam.ToSQLOptionsWithDefaults(qp)
@@ -201,7 +200,7 @@ func searchManyAdventureGameCharactersHandler(w http.ResponseWriter, r *http.Req
 }
 
 func getManyAdventureGameCharactersHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
-	l = loggerWithFunctionContext(l, "GetManyAdventureGameCharactersHandler")
+	l = logging.LoggerWithFunctionContext(l, packageName, "getManyAdventureGameCharactersHandler")
 
 	// Create SQL options from query parameters
 	opts := queryparam.ToSQLOptionsWithDefaults(qp)
@@ -239,7 +238,7 @@ func getManyAdventureGameCharactersHandler(w http.ResponseWriter, r *http.Reques
 }
 
 func getOneAdventureGameCharacterHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
-	l = loggerWithFunctionContext(l, "GetOneAdventureGameCharacterHandler")
+	l = logging.LoggerWithFunctionContext(l, packageName, "getOneAdventureGameCharacterHandler")
 
 	gameID := pp.ByName("game_id")
 	characterID := pp.ByName("character_id")
@@ -272,7 +271,7 @@ func getOneAdventureGameCharacterHandler(w http.ResponseWriter, r *http.Request,
 }
 
 func createOneAdventureGameCharacterHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
-	l = loggerWithFunctionContext(l, "CreateOneAdventureGameCharacterHandler")
+	l = logging.LoggerWithFunctionContext(l, packageName, "createOneAdventureGameCharacterHandler")
 
 	gameID := pp.ByName("game_id")
 
@@ -312,7 +311,7 @@ func createOneAdventureGameCharacterHandler(w http.ResponseWriter, r *http.Reque
 }
 
 func updateOneAdventureGameCharacterHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
-	l = loggerWithFunctionContext(l, "UpdateOneAdventureGameCharacterHandler")
+	l = logging.LoggerWithFunctionContext(l, packageName, "updateOneAdventureGameCharacterHandler")
 
 	gameID := pp.ByName("game_id")
 	characterID := pp.ByName("character_id")
@@ -369,7 +368,7 @@ func updateOneAdventureGameCharacterHandler(w http.ResponseWriter, r *http.Reque
 }
 
 func deleteOneAdventureGameCharacterHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
-	l = loggerWithFunctionContext(l, "DeleteOneAdventureGameCharacterHandler")
+	l = logging.LoggerWithFunctionContext(l, packageName, "deleteOneAdventureGameCharacterHandler")
 
 	gameID := pp.ByName("game_id")
 	characterID := pp.ByName("character_id")
