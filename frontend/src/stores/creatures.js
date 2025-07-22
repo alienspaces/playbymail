@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { fetchCreatures, createCreature, updateCreature, deleteCreature } from '../api/creatures';
+import { fetchCreatures as apiFetchCreatures, createCreature as apiCreateCreature, updateCreature as apiUpdateCreature, deleteCreature as apiDeleteCreature } from '../api/creatures';
 
 export const useCreaturesStore = defineStore('creatures', {
   state: () => ({
@@ -9,48 +9,48 @@ export const useCreaturesStore = defineStore('creatures', {
     gameId: null,
   }),
   actions: {
-    async loadCreatures(gameId) {
+    async fetchCreatures(gameId) {
       this.loading = true;
       this.error = null;
       this.gameId = gameId;
       try {
-        this.creatures = await fetchCreatures(gameId);
+        this.creatures = await apiFetchCreatures(gameId);
       } catch (e) {
         this.error = e.message;
       } finally {
         this.loading = false;
       }
     },
-    async addCreature(data) {
+    async createCreature(data) {
       this.loading = true;
       this.error = null;
       try {
-        await createCreature(this.gameId, data);
-        await this.loadCreatures(this.gameId);
+        await apiCreateCreature(this.gameId, data);
+        await this.fetchCreatures(this.gameId);
       } catch (e) {
         this.error = e.message;
       } finally {
         this.loading = false;
       }
     },
-    async editCreature(creatureId, data) {
+    async updateCreature(creatureId, data) {
       this.loading = true;
       this.error = null;
       try {
-        await updateCreature(this.gameId, creatureId, data);
-        await this.loadCreatures(this.gameId);
+        await apiUpdateCreature(this.gameId, creatureId, data);
+        await this.fetchCreatures(this.gameId);
       } catch (e) {
         this.error = e.message;
       } finally {
         this.loading = false;
       }
     },
-    async removeCreature(creatureId) {
+    async deleteCreature(creatureId) {
       this.loading = true;
       this.error = null;
       try {
-        await deleteCreature(this.gameId, creatureId);
-        await this.loadCreatures(this.gameId);
+        await apiDeleteCreature(this.gameId, creatureId);
+        await this.fetchCreatures(this.gameId);
       } catch (e) {
         this.error = e.message;
       } finally {

@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { fetchItems, createItem, updateItem, deleteItem } from '../api/items';
+import { fetchItems as apiFetchItems, createItem as apiCreateItem, updateItem as apiUpdateItem, deleteItem as apiDeleteItem } from '../api/items';
 
 export const useItemsStore = defineStore('items', {
   state: () => ({
@@ -9,48 +9,48 @@ export const useItemsStore = defineStore('items', {
     gameId: null,
   }),
   actions: {
-    async loadItems(gameId) {
+    async fetchItems(gameId) {
       this.loading = true;
       this.error = null;
       this.gameId = gameId;
       try {
-        this.items = await fetchItems(gameId);
+        this.items = await apiFetchItems(gameId);
       } catch (e) {
         this.error = e.message;
       } finally {
         this.loading = false;
       }
     },
-    async addItem(data) {
+    async createItem(data) {
       this.loading = true;
       this.error = null;
       try {
-        await createItem(this.gameId, data);
-        await this.loadItems(this.gameId);
+        await apiCreateItem(this.gameId, data);
+        await this.fetchItems(this.gameId);
       } catch (e) {
         this.error = e.message;
       } finally {
         this.loading = false;
       }
     },
-    async editItem(itemId, data) {
+    async updateItem(itemId, data) {
       this.loading = true;
       this.error = null;
       try {
-        await updateItem(this.gameId, itemId, data);
-        await this.loadItems(this.gameId);
+        await apiUpdateItem(this.gameId, itemId, data);
+        await this.fetchItems(this.gameId);
       } catch (e) {
         this.error = e.message;
       } finally {
         this.loading = false;
       }
     },
-    async removeItem(itemId) {
+    async deleteItem(itemId) {
       this.loading = true;
       this.error = null;
       try {
-        await deleteItem(this.gameId, itemId);
-        await this.loadItems(this.gameId);
+        await apiDeleteItem(this.gameId, itemId);
+        await this.fetchItems(this.gameId);
       } catch (e) {
         this.error = e.message;
       } finally {

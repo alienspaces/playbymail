@@ -22,11 +22,11 @@
         <nav>
           <ul>
             <li><router-link to="/studio" active-class="active">Games</router-link></li>
-            <template v-if="showAdventureMenu">
-              <li><router-link :to="selectedGame ? `/studio/${selectedGame.id}/locations` : '#'" :class="{disabled: !selectedGame}" active-class="active">Locations</router-link></li>
-              <li><router-link :to="selectedGame ? `/studio/${selectedGame.id}/items` : '#'" :class="{disabled: !selectedGame}" active-class="active">Items</router-link></li>
-              <li><router-link :to="selectedGame ? `/studio/${selectedGame.id}/creatures` : '#'" :class="{disabled: !selectedGame}" active-class="active">Creatures</router-link></li>
-              <li><router-link :to="selectedGame ? `/studio/${selectedGame.id}/placement` : '#'" :class="{disabled: !selectedGame}" active-class="active">Placement</router-link></li>
+            <template v-if="selectedGame">
+              <li><router-link :to="`/studio/${selectedGame.id}/locations`" active-class="active">Locations</router-link></li>
+              <li><router-link :to="`/studio/${selectedGame.id}/items`" active-class="active">Items</router-link></li>
+              <li><router-link :to="`/studio/${selectedGame.id}/creatures`" active-class="active">Creatures</router-link></li>
+              <li><router-link :to="`/studio/${selectedGame.id}/placement`" active-class="active">Placement</router-link></li>
             </template>
           </ul>
         </nav>
@@ -54,11 +54,11 @@
       <nav>
         <ul>
           <li><router-link to="/studio" active-class="active" @click="closeStudioMenu">Games</router-link></li>
-          <template v-if="showAdventureMenu">
-            <li><router-link :to="selectedGame ? `/studio/${selectedGame.id}/locations` : '#'" :class="{disabled: !selectedGame}" active-class="active" @click="closeStudioMenu">Locations</router-link></li>
-            <li><router-link :to="selectedGame ? `/studio/${selectedGame.id}/items` : '#'" :class="{disabled: !selectedGame}" active-class="active" @click="closeStudioMenu">Items</router-link></li>
-            <li><router-link :to="selectedGame ? `/studio/${selectedGame.id}/creatures` : '#'" :class="{disabled: !selectedGame}" active-class="active" @click="closeStudioMenu">Creatures</router-link></li>
-            <li><router-link :to="selectedGame ? `/studio/${selectedGame.id}/placement` : '#'" :class="{disabled: !selectedGame}" active-class="active" @click="closeStudioMenu">Placement</router-link></li>
+          <template v-if="selectedGame">
+            <li><router-link :to="`/studio/${selectedGame.id}/locations`" active-class="active" @click="closeStudioMenu">Locations</router-link></li>
+            <li><router-link :to="`/studio/${selectedGame.id}/items`" active-class="active" @click="closeStudioMenu">Items</router-link></li>
+            <li><router-link :to="`/studio/${selectedGame.id}/creatures`" active-class="active" @click="closeStudioMenu">Creatures</router-link></li>
+            <li><router-link :to="`/studio/${selectedGame.id}/placement`" active-class="active" @click="closeStudioMenu">Placement</router-link></li>
           </template>
         </ul>
       </nav>
@@ -68,24 +68,13 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useGamesStore } from '../stores/games';
-import { useRoute } from 'vue-router';
 
 const gamesStore = useGamesStore();
 const { selectedGame } = storeToRefs(gamesStore);
 const showHelp = ref(false);
-const route = useRoute();
-
-// Show adventure menu only on /studio/:gameId/*
-const showAdventureMenu = computed(() => {
-  return (
-    selectedGame.value &&
-    selectedGame.value.game_type === 'adventure' &&
-    /^\/studio\/[^/]+\//.test(route.path)
-  );
-});
 
 // Responsive: detect mobile
 const isMobile = ref(window.innerWidth <= 900);

@@ -1,3 +1,10 @@
+// Standard Store Method Naming Conventions:
+// - fetch<ResourcePlural>(gameId?)
+// - create<ResourceSingular>(data)
+// - update<ResourceSingular>(id, data)
+// - delete<ResourceSingular>(id)
+// Example: fetchLocations, createLocation, updateLocation, deleteLocation
+
 import { defineStore } from 'pinia';
 import { listGames, createGame as apiCreateGame, updateGame as apiUpdateGame, deleteGame as apiDeleteGame } from '../api/games';
 

@@ -1,30 +1,32 @@
 <template>
   <div class="game-list">
-    <h1>Games</h1>
-    <button @click="openCreate">Create New Game</button>
-    <table v-if="games.length">
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Type</th>
-          <th>Created</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="game in games" :key="game.id">
-          <td>{{ game.name }}</td>
-          <td>{{ game.game_type }}</td>
-          <td>{{ formatDate(game.created_at) }}</td>
-          <td>
-            <button @click="openEdit(game)">Edit</button>
-            <button @click="confirmDelete(game)">Delete</button>
-            <button @click="selectGame(game)">Manage</button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-    <p v-else>No games found.</p>
+    <div class="game-table-section">
+      <h1>Games</h1>
+      <button @click="openCreate">Create New Game</button>
+      <table v-if="games.length">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Created</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="game in games" :key="game.id">
+            <td>{{ game.name }}</td>
+            <td>{{ game.game_type }}</td>
+            <td>{{ formatDate(game.created_at) }}</td>
+            <td>
+              <button @click="openEdit(game)">Edit</button>
+              <button @click="confirmDelete(game)">Delete</button>
+              <button @click="selectGame(game)">Manage</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <p v-else>No games found.</p>
+    </div>
 
     <!-- Modal for create/edit -->
     <div v-if="showModal" class="modal-overlay">
@@ -173,8 +175,24 @@ export default {
 
 <style scoped>
 .game-list {
-  max-width: 800px;
-  margin: var(--space-lg) auto;
+  max-width: 1000px;
+  margin: 0;
+  padding: 0;
+}
+.game-table-section {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.game-table-section h1 {
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  font-size: 2rem;
+}
+.game-table-section button,
+.game-table-section table,
+.game-table-section p {
+  align-self: flex-start;
 }
 table {
   width: 100%;

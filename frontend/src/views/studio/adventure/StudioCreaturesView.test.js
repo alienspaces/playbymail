@@ -4,6 +4,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { shallowMount } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
 import StudioCreaturesView from './StudioCreaturesView.vue';
+import ResourceTable from '../../../components/ResourceTable.vue';
+import ResourceModalForm from '../../../components/ResourceModalForm.vue';
 
 vi.mock('../../../api/creatures', () => ({
   fetchCreatures: vi.fn(async () => [
@@ -19,6 +21,18 @@ describe('StudioCreaturesView', () => {
     setActivePinia(createPinia());
   });
 
+  function mountWithRealComponents() {
+    return shallowMount(StudioCreaturesView, {
+      global: {
+        stubs: {
+          ResourceTable: false,
+          ResourceModalForm: false
+        },
+        components: { ResourceTable, ResourceModalForm }
+      }
+    });
+  }
+
   it('shows prompt if no game is selected', () => {
     const wrapper = shallowMount(StudioCreaturesView, {
       props: { gameId: null }
@@ -30,14 +44,19 @@ describe('StudioCreaturesView', () => {
     const { useGamesStore } = await import('../../../stores/games');
     const gamesStore = useGamesStore();
     gamesStore.selectedGame = { id: 'game1', name: 'Test Game' };
-    const wrapper = shallowMount(StudioCreaturesView);
+    const wrapper = mountWithRealComponents();
     await new Promise(r => setTimeout(r));
-    expect(wrapper.text()).toContain('Game Creatures');
-    expect(wrapper.text()).toContain('Name');
-    expect(wrapper.text()).toContain('Description');
-    expect(wrapper.text()).toContain('Created');
-    expect(wrapper.text()).toContain('Goblin');
-    expect(wrapper.text()).toContain('Small and green');
+    // Check table headers
+    const ths = wrapper.findAll('th');
+    const headerTexts = ths.map(th => th.text());
+    expect(headerTexts).toContain('Name');
+    expect(headerTexts).toContain('Description');
+    expect(headerTexts).toContain('Created');
+    // Check table row data
+    const tds = wrapper.findAll('td');
+    const cellTexts = tds.map(td => td.text());
+    expect(cellTexts).toContain('Goblin');
+    expect(cellTexts).toContain('Small and green');
   });
 
   it('shows loading state', async () => {
@@ -48,7 +67,8 @@ describe('StudioCreaturesView', () => {
     const store = useCreaturesStore();
     store.loading = true;
     store.error = null;
-    const wrapper = shallowMount(StudioCreaturesView);
-    expect(wrapper.text()).toContain('Loading...');
+    const wrapper = mountWithRealComponents();
+    // Look for loading indicator
+    expect(wrapper.html()).toContain('Loading...');
   });
 }); 

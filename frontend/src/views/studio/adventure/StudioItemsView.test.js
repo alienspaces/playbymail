@@ -4,6 +4,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { shallowMount } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
 import StudioItemsView from './StudioItemsView.vue';
+import ResourceTable from '../../../components/ResourceTable.vue';
+import ResourceModalForm from '../../../components/ResourceModalForm.vue';
 
 vi.mock('../../../api/items', () => ({
   fetchItems: vi.fn(async () => [
@@ -19,6 +21,18 @@ describe('StudioItemsView', () => {
     setActivePinia(createPinia());
   });
 
+  function mountWithRealComponents() {
+    return shallowMount(StudioItemsView, {
+      global: {
+        stubs: {
+          ResourceTable: false,
+          ResourceModalForm: false
+        },
+        components: { ResourceTable, ResourceModalForm }
+      }
+    });
+  }
+
   it('shows prompt if no game is selected', () => {
     const wrapper = shallowMount(StudioItemsView, {
       props: { gameId: null }
@@ -30,14 +44,19 @@ describe('StudioItemsView', () => {
     const { useGamesStore } = await import('../../../stores/games');
     const gamesStore = useGamesStore();
     gamesStore.selectedGame = { id: 'game1', name: 'Test Game' };
-    const wrapper = shallowMount(StudioItemsView);
+    const wrapper = mountWithRealComponents();
     await new Promise(r => setTimeout(r));
-    expect(wrapper.text()).toContain('Game Items');
-    expect(wrapper.text()).toContain('Name');
-    expect(wrapper.text()).toContain('Description');
-    expect(wrapper.text()).toContain('Created');
-    expect(wrapper.text()).toContain('Sword');
-    expect(wrapper.text()).toContain('Sharp');
+    // Check table headers
+    const ths = wrapper.findAll('th');
+    const headerTexts = ths.map(th => th.text());
+    expect(headerTexts).toContain('Name');
+    expect(headerTexts).toContain('Description');
+    expect(headerTexts).toContain('Created');
+    // Check table row data
+    const tds = wrapper.findAll('td');
+    const cellTexts = tds.map(td => td.text());
+    expect(cellTexts).toContain('Sword');
+    expect(cellTexts).toContain('Sharp');
   });
 
   it('shows loading state', async () => {
@@ -48,7 +67,8 @@ describe('StudioItemsView', () => {
     const store = useItemsStore();
     store.loading = true;
     store.error = null;
-    const wrapper = shallowMount(StudioItemsView);
-    expect(wrapper.text()).toContain('Loading...');
+    const wrapper = mountWithRealComponents();
+    // Look for loading indicator
+    expect(wrapper.html()).toContain('Loading...');
   });
 }); 
