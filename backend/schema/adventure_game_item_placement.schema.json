@@ -1,0 +1,41 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "AdventureGameItemPlacement",
+    "type": "object",
+    "properties": {
+        "id": {
+            "$ref": "common.schema.json#/$defs/id"
+        },
+        "game_id": {
+            "$ref": "common.schema.json#/$defs/id"
+        },
+        "adventure_game_item_id": {
+            "$ref": "common.schema.json#/$defs/id"
+        },
+        "adventure_game_location_id": {
+            "$ref": "common.schema.json#/$defs/id"
+        },
+        "initial_count": {
+            "type": "integer",
+            "minimum": 1
+        },
+        "created_at": {
+            "$ref": "common.schema.json#/$defs/created_at"
+        },
+        "updated_at": {
+            "$ref": "common.schema.json#/$defs/updated_at"
+        },
+        "deleted_at": {
+            "$ref": "common.schema.json#/$defs/updated_at"
+        }
+    },
+    "required": [
+        "id",
+        "game_id",
+        "adventure_game_item_id",
+        "adventure_game_location_id",
+        "initial_count",
+        "created_at"
+    ],
+    "additionalProperties": false
+}

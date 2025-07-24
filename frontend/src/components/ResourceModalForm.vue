@@ -5,14 +5,16 @@
       <form @submit.prevent="handleSubmit">
         <div v-for="field in fields" :key="field.key" class="form-group">
           <label :for="field.key">{{ field.label }}</label>
-          <input
-            v-model="form[field.key]"
-            :id="field.key"
-            :type="field.type || 'text'"
-            :required="field.required"
-            :maxlength="field.maxlength"
-            :placeholder="field.placeholder"
-          />
+          <slot name="field" :field="field" :value="form[field.key]" :update="val => form[field.key] = val">
+            <input
+              v-model="form[field.key]"
+              :id="field.key"
+              :type="field.type || 'text'"
+              :required="field.required"
+              :maxlength="field.maxlength"
+              :placeholder="field.placeholder"
+            />
+          </slot>
         </div>
         <div class="modal-actions">
           <button type="submit">{{ mode === 'create' ? 'Create' : 'Save' }}</button>
