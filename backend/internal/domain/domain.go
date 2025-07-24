@@ -20,6 +20,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/repository/adventure_game_instance"
 	"gitlab.com/alienspaces/playbymail/internal/repository/adventure_game_item"
 	"gitlab.com/alienspaces/playbymail/internal/repository/adventure_game_item_instance"
+	"gitlab.com/alienspaces/playbymail/internal/repository/adventure_game_item_placement"
 	"gitlab.com/alienspaces/playbymail/internal/repository/adventure_game_location"
 	"gitlab.com/alienspaces/playbymail/internal/repository/adventure_game_location_instance"
 	"gitlab.com/alienspaces/playbymail/internal/repository/adventure_game_location_link"
@@ -55,6 +56,7 @@ func NewDomain(l logger.Logger, j *river.Client[pgx.Tx], cfg config.Config) (*Do
 				adventure_game_item.NewRepository,
 				adventure_game_creature.NewRepository,
 				adventure_game_item_instance.NewRepository,
+				adventure_game_item_placement.NewRepository,
 				adventure_game_location_link_requirement.NewRepository,
 				adventure_game_instance.NewRepository,
 				adventure_game_location_instance.NewRepository,
@@ -100,6 +102,11 @@ func (m *Domain) AdventureGameLocationRepository() *repository.Generic[record.Ad
 // AdventureGameItemRepository -
 func (m *Domain) AdventureGameItemRepository() *repository.Generic[record.AdventureGameItem, *record.AdventureGameItem] {
 	return m.Repositories[adventure_game_item.TableName].(*repository.Generic[record.AdventureGameItem, *record.AdventureGameItem])
+}
+
+// AdventureGameItemPlacementRepository -
+func (m *Domain) AdventureGameItemPlacementRepository() *repository.Generic[record.AdventureGameItemPlacement, *record.AdventureGameItemPlacement] {
+	return m.Repositories[adventure_game_item_placement.TableName].(*repository.Generic[record.AdventureGameItemPlacement, *record.AdventureGameItemPlacement])
 }
 
 // AdventureGameCreatureRepository -
