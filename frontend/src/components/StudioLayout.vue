@@ -23,10 +23,11 @@
           <ul>
             <li><router-link to="/studio" active-class="active">Games</router-link></li>
             <template v-if="selectedGame">
-              <li><router-link :to="`/studio/${selectedGame.id}/locations`" active-class="active">Locations</router-link></li>
-              <li><router-link :to="`/studio/${selectedGame.id}/items`" active-class="active">Items</router-link></li>
-              <li><router-link :to="`/studio/${selectedGame.id}/creatures`" active-class="active">Creatures</router-link></li>
-              <li><router-link :to="`/studio/${selectedGame.id}/placement`" active-class="active">Placement</router-link></li>
+                          <li><router-link :to="`/studio/${selectedGame.id}/locations`" active-class="active">Locations</router-link></li>
+            <li><router-link :to="`/studio/${selectedGame.id}/location-links`" active-class="active">Location Links</router-link></li>
+            <li><router-link :to="`/studio/${selectedGame.id}/items`" active-class="active">Items</router-link></li>
+            <li><router-link :to="`/studio/${selectedGame.id}/creatures`" active-class="active">Creatures</router-link></li>
+            <li><router-link :to="`/studio/${selectedGame.id}/placement`" active-class="active">Placement</router-link></li>
             </template>
           </ul>
         </nav>
@@ -56,6 +57,7 @@
           <li><router-link to="/studio" active-class="active" @click="closeStudioMenu">Games</router-link></li>
           <template v-if="selectedGame">
             <li><router-link :to="`/studio/${selectedGame.id}/locations`" active-class="active" @click="closeStudioMenu">Locations</router-link></li>
+            <li><router-link :to="`/studio/${selectedGame.id}/location-links`" active-class="active" @click="closeStudioMenu">Location Links</router-link></li>
             <li><router-link :to="`/studio/${selectedGame.id}/items`" active-class="active" @click="closeStudioMenu">Items</router-link></li>
             <li><router-link :to="`/studio/${selectedGame.id}/creatures`" active-class="active" @click="closeStudioMenu">Creatures</router-link></li>
             <li><router-link :to="`/studio/${selectedGame.id}/placement`" active-class="active" @click="closeStudioMenu">Placement</router-link></li>

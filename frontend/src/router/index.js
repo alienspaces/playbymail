@@ -17,10 +17,12 @@ const routes = [
   {
     path: '/studio',
     component: StudioLayout,
+    meta: { requiresAuth: true },
     children: [
       { path: '', name: 'StudioGames', component: GameView },
       // Adventure game type studio views
       { path: ':gameId/locations', component: () => import('../views/studio/adventure/StudioLocationsView.vue') },
+      { path: ':gameId/location-links', component: () => import('../views/studio/adventure/StudioLocationLinksView.vue') },
       { path: ':gameId/items', component: () => import('../views/studio/adventure/StudioItemsView.vue') },
       { path: ':gameId/creatures', component: () => import('../views/studio/adventure/StudioCreaturesView.vue') },
       { path: ':gameId/placement', component: () => import('../views/studio/adventure/StudioPlacementView.vue') },

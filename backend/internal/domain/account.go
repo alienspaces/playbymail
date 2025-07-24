@@ -272,6 +272,15 @@ func (m *Domain) VerifyAccountSessionToken(token string) (*record.Account, error
 		return nil, nil
 	}
 
+	// Now get the account record with a lock; we want to extend the
+	// session token expiration time and need to wait for any concurrent
+	// updates to the account record.
+	rec, err = m.GetAccountRec(rec.ID, coresql.ForUpdate)
+	if err != nil {
+		l.Warn("failed to get account >%v<", err)
+		return nil, err
+	}
+
 	// Extend the expiration time of the session token
 	rec.SessionTokenExpiresAt = nulltime.FromTime(corerecord.NewRecordTimestamp().Add(15 * time.Minute))
 
