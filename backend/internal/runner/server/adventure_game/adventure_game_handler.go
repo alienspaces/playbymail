@@ -38,6 +38,7 @@ func AdventureGameHandlerConfig(l logger.Logger) (map[string]server.HandlerConfi
 		adventureGameCreatureHandlerConfig,
 		adventureGameItemHandlerConfig,
 		adventureGameItemPlacementHandlerConfig,
+		adventureGameCreaturePlacementHandlerConfig,
 		adventureGameLocationHandlerConfig,
 		adventureGameLocationInstanceHandlerConfig,
 		adventureGameLocationLinkHandlerConfig,
