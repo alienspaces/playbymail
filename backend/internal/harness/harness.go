@@ -152,6 +152,26 @@ func (t *Testing) CreateData() error {
 			l.Debug("created game_character record for game >%s<", gameRec.ID)
 		}
 
+		// Create game subscriptions for this game
+		for _, subscriptionConfig := range gameConfig.GameSubscriptionConfigs {
+			_, err = t.createGameSubscriptionRec(subscriptionConfig, gameRec)
+			if err != nil {
+				l.Warn("failed creating game_subscription record >%v<", err)
+				return err
+			}
+			l.Debug("created game_subscription record for game >%s<", gameRec.ID)
+		}
+
+		// Create game administrations for this game
+		for _, administrationConfig := range gameConfig.GameAdministrationConfigs {
+			_, err = t.createGameAdministrationRec(administrationConfig, gameRec)
+			if err != nil {
+				l.Warn("failed creating game_administration record >%v<", err)
+				return err
+			}
+			l.Debug("created game_administration record for game >%s<", gameRec.ID)
+		}
+
 		// Instance records
 
 		// Create game instances for this game
@@ -381,6 +401,36 @@ func (t *Testing) RemoveData() error {
 		err := t.Domain.(*domain.Domain).RemoveAdventureGameCharacterRec(charRec.ID)
 		if err != nil {
 			l.Warn("failed removing game character record >%v<", err)
+			return err
+		}
+	}
+
+	// Remove game subscription records before games to avoid FK errors
+	l.Debug("removing >%d< game subscription records", len(t.teardownData.GameSubscriptionRecs))
+	for _, subscriptionRec := range t.teardownData.GameSubscriptionRecs {
+		l.Debug("[teardown] game subscription ID: >%s<", subscriptionRec.ID)
+		if subscriptionRec.ID == "" {
+			l.Warn("[teardown] skipping game subscription with empty ID")
+			continue
+		}
+		err := t.Domain.(*domain.Domain).RemoveGameSubscriptionRec(subscriptionRec.ID)
+		if err != nil {
+			l.Warn("failed removing game subscription record >%v<", err)
+			return err
+		}
+	}
+
+	// Remove game administration records before games to avoid FK errors
+	l.Debug("removing >%d< game administration records", len(t.teardownData.GameAdministrationRecs))
+	for _, administrationRec := range t.teardownData.GameAdministrationRecs {
+		l.Debug("[teardown] game administration ID: >%s<", administrationRec.ID)
+		if administrationRec.ID == "" {
+			l.Warn("[teardown] skipping game administration with empty ID")
+			continue
+		}
+		err := t.Domain.(*domain.Domain).RemoveGameAdministrationRec(administrationRec.ID)
+		if err != nil {
+			l.Warn("failed removing game administration record >%v<", err)
 			return err
 		}
 	}

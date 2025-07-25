@@ -178,7 +178,7 @@ func Test_createUpdateDeleteGameLocationInstanceHandler(t *testing.T) {
 						":game_instance_id": gameInstanceRec.ID,
 					}
 				},
-				RequestBody: func(d harness.Data) interface{} {
+				RequestBody: func(d harness.Data) any {
 					return schema.AdventureGameLocationInstanceRequest{
 						GameInstanceID: gameInstanceRec.ID,
 						GameLocationID: locationRec.ID,
@@ -209,7 +209,7 @@ func Test_createUpdateDeleteGameLocationInstanceHandler(t *testing.T) {
 						":location_instance_id": gameLocationInstance.ID,
 					}
 				},
-				RequestBody: func(d harness.Data) interface{} {
+				RequestBody: func(d harness.Data) any {
 					return schema.AdventureGameLocationInstanceRequest{
 						GameInstanceID: gameInstanceRec.ID,
 						GameLocationID: locationRec.ID,

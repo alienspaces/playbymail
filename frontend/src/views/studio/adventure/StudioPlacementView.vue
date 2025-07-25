@@ -38,7 +38,7 @@
           @submit="handleItemPlacementSubmit"
           @cancel="closeItemPlacementModal"
         >
-          <template v-slot:field="{ field, value, update }">
+          <template v-slot:field="{ field }">
             <select v-if="field.key === 'adventure_game_item_id'" v-model="itemPlacementModalForm.adventure_game_item_id">
               <option v-for="item in itemsStore.items" :key="item.id" :value="item.id">{{ item.name }}</option>
             </select>
@@ -95,7 +95,7 @@
           @submit="handleCreaturePlacementSubmit"
           @cancel="closeCreaturePlacementModal"
         >
-          <template v-slot:field="{ field, value, update }">
+          <template v-slot:field="{ field }">
             <select v-if="field.key === 'adventure_game_creature_id'" v-model="creaturePlacementModalForm.adventure_game_creature_id">
               <option v-for="creature in creaturesStore.creatures" :key="creature.id" :value="creature.id">{{ creature.name }}</option>
             </select>

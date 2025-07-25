@@ -147,7 +147,7 @@ func Test_createUpdateDeleteGameHandler(t *testing.T) {
 				HandlerConfig: func(rnr *Runner) server.HandlerConfig {
 					return rnr.HandlerConfig[createGame]
 				},
-				RequestBody: func(d harness.Data) interface{} {
+				RequestBody: func(d harness.Data) any {
 					return schema.GameRequest{
 						Name:     "Test Game",
 						GameType: record.GameTypeAdventure,
@@ -178,7 +178,7 @@ func Test_createUpdateDeleteGameHandler(t *testing.T) {
 					}
 					return params
 				},
-				RequestBody: func(d harness.Data) interface{} {
+				RequestBody: func(d harness.Data) any {
 					return schema.GameRequest{
 						Name:     "Test Game",
 						GameType: record.GameTypeAdventure,

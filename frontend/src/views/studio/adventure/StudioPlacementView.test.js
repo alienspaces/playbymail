@@ -14,7 +14,8 @@ describe('StudioPlacementView', () => {
     gamesStore.selectedGame = { id: 'game1', name: 'Test Game' }
     const wrapper = shallowMount(StudioPlacementView)
     expect(wrapper.text()).toContain('Placement')
-    expect(wrapper.text()).toContain('Assign items and creatures to locations here.')
+    expect(wrapper.text()).toContain('Item Placements')
+    expect(wrapper.text()).toContain('Creature Placements')
   })
 
   it('shows prompt if no game is selected', () => {

@@ -1,0 +1,49 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "GameAdministrationResponse",
+    "type": "object",
+    "properties": {
+        "id": {
+            "type": "string",
+            "format": "uuid"
+        },
+        "game_id": {
+            "type": "string",
+            "format": "uuid"
+        },
+        "account_id": {
+            "type": "string",
+            "format": "uuid"
+        },
+        "granted_by_account_id": {
+            "type": "string",
+            "format": "uuid"
+        },
+        "created_at": {
+            "type": "string",
+            "format": "date-time"
+        },
+        "updated_at": {
+            "type": [
+                "string",
+                "null"
+            ],
+            "format": "date-time"
+        },
+        "deleted_at": {
+            "type": [
+                "string",
+                "null"
+            ],
+            "format": "date-time"
+        }
+    },
+    "required": [
+        "id",
+        "game_id",
+        "account_id",
+        "granted_by_account_id",
+        "created_at"
+    ],
+    "additionalProperties": false
+}

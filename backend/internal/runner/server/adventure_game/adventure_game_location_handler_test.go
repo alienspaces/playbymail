@@ -157,7 +157,7 @@ func Test_createUpdateDeleteGameLocationHandler(t *testing.T) {
 				HandlerConfig: func(rnr *server.Runner) server.HandlerConfig {
 					return rnr.HandlerConfig[createOneAdventureGameLocation]
 				},
-				RequestBody: func(d harness.Data) interface{} {
+				RequestBody: func(d harness.Data) any {
 					return schema.AdventureGameLocationRequest{
 						Name:        "Test Location",
 						Description: "Test Description",
@@ -194,7 +194,7 @@ func Test_createUpdateDeleteGameLocationHandler(t *testing.T) {
 					}
 					return params
 				},
-				RequestBody: func(d harness.Data) interface{} {
+				RequestBody: func(d harness.Data) any {
 					return schema.AdventureGameLocationRequest{
 						Name:        "Updated Location",
 						Description: "Updated Description",

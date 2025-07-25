@@ -1,4 +1,4 @@
-package adventure_game_creature_instance
+package game_administration
 
 import (
 	"github.com/jackc/pgx/v5"
@@ -9,15 +9,15 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/record"
 )
 
-const TableName = record.TableAdventureGameCreatureInstance
+const TableName = record.TableGameAdministration
 
-// NewRepository - implements core domain.RepositoryConstructor
+// NewRepository implements core domain.RepositoryConstructor
 func NewRepository(l logger.Logger, tx pgx.Tx) (repositor.Repositor, error) {
-	return repository.NewGeneric[record.AdventureGameCreatureInstance](
+	return repository.NewGeneric[record.GameAdministration](
 		repository.NewArgs{
 			Tx:        tx,
 			TableName: TableName,
-			Record:    record.AdventureGameCreatureInstance{},
+			Record:    record.GameAdministration{},
 		},
 	)
 }

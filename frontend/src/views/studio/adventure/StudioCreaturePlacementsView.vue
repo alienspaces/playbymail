@@ -29,7 +29,7 @@
         @submit="handleCreaturePlacementSubmit"
         @cancel="closeCreaturePlacementModal"
       >
-        <template v-slot:field="{ field, value, update }">
+        <template v-slot:field="{ field }">
           <select
             v-if="field.key === 'adventure_game_creature_id'"
             :id="field.key"

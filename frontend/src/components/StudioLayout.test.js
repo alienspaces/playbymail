@@ -66,6 +66,7 @@ describe('StudioLayout', () => {
     expect(linkTexts).toContain('Locations')
     expect(linkTexts).toContain('Items')
     expect(linkTexts).toContain('Creatures')
-    expect(linkTexts).toContain('Placement')
+    expect(linkTexts).toContain('Item Placements')
+    expect(linkTexts).toContain('Creature Placements')
   })
 }) 

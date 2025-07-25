@@ -66,6 +66,8 @@ func NewRunner(l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], cfg co
 	handlerConfigFuncs := []func(logger.Logger) (map[string]server.HandlerConfig, error){
 		r.gameHandlerConfig,
 		r.accountHandlerConfig,
+		r.gameSubscriptionHandlerConfig,
+		r.gameAdministrationHandlerConfig,
 		// Adventure Game Handlers
 		adventure_game.AdventureGameHandlerConfig,
 	}

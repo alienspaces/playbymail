@@ -21,6 +21,8 @@ type Data struct {
 	GameItemInstanceRecs            []*record.AdventureGameItemInstance
 	GameCreatureInstanceRecs        []*record.AdventureGameCreatureInstance
 	GameCharacterInstanceRecs       []*record.AdventureGameCharacterInstance
+	GameSubscriptionRecs            []*record.GameSubscription
+	GameAdministrationRecs          []*record.GameAdministration
 	// Data references
 	Refs DataRefs
 }
@@ -43,6 +45,8 @@ type DataRefs struct {
 	GameLocationInstanceRefs        map[string]string // Map of refs to game_location_instance records
 	GameCreatureInstanceRefs        map[string]string // Map of refs to game_creature_instance records
 	GameCharacterInstanceRefs       map[string]string // Map of refs to game_character_instance records
+	GameSubscriptionRefs            map[string]string // Map of refs to game_subscription records
+	GameAdministrationRefs          map[string]string // Map of refs to game_administration records
 }
 
 // initialiseDataStores - Data is required to maintain data references and
@@ -64,6 +68,8 @@ func initialiseDataStores() Data {
 			GameLocationInstanceRefs:        map[string]string{},
 			GameCreatureInstanceRefs:        map[string]string{},
 			GameCharacterInstanceRefs:       map[string]string{},
+			GameSubscriptionRefs:            map[string]string{},
+			GameAdministrationRefs:          map[string]string{},
 		},
 	}
 }
@@ -502,4 +508,42 @@ func (d *Data) GetGameCharacterInstanceRecByRef(ref string) (*record.AdventureGa
 		return nil, fmt.Errorf("failed getting game_character_instance with ref >%s<", ref)
 	}
 	return d.GetGameCharacterInstanceRecByID(id)
+}
+
+func (d *Data) AddGameSubscriptionRec(rec *record.GameSubscription) {
+	for idx := range d.GameSubscriptionRecs {
+		if d.GameSubscriptionRecs[idx].ID == rec.ID {
+			d.GameSubscriptionRecs[idx] = rec
+			return
+		}
+	}
+	d.GameSubscriptionRecs = append(d.GameSubscriptionRecs, rec)
+}
+
+func (d *Data) GetGameSubscriptionRecByID(id string) (*record.GameSubscription, error) {
+	for _, rec := range d.GameSubscriptionRecs {
+		if rec.ID == id {
+			return rec, nil
+		}
+	}
+	return nil, fmt.Errorf("failed getting game_subscription with ID >%s<", id)
+}
+
+func (d *Data) AddGameAdministrationRec(rec *record.GameAdministration) {
+	for idx := range d.GameAdministrationRecs {
+		if d.GameAdministrationRecs[idx].ID == rec.ID {
+			d.GameAdministrationRecs[idx] = rec
+			return
+		}
+	}
+	d.GameAdministrationRecs = append(d.GameAdministrationRecs, rec)
+}
+
+func (d *Data) GetGameAdministrationRecByID(id string) (*record.GameAdministration, error) {
+	for _, rec := range d.GameAdministrationRecs {
+		if rec.ID == id {
+			return rec, nil
+		}
+	}
+	return nil, fmt.Errorf("failed getting game_administration with ID >%s<", id)
 }

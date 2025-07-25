@@ -47,6 +47,10 @@ const (
 	GameCreatureInstanceOneRef = "game-creature-instance-one"
 
 	GameCharacterInstanceOneRef = "game-character-instance-one"
+
+	GameSubscriptionOneRef = "game-subscription-one"
+
+	GameAdministrationOneRef = "game-administration-one"
 )
 
 // DataConfig -
@@ -56,14 +60,16 @@ type DataConfig struct {
 }
 
 type GameConfig struct {
-	Reference               string // Reference to the game record
-	Record                  *record.Game
-	GameLocationConfigs     []GameLocationConfig     // Locations associated with this game
-	GameLocationLinkConfigs []GameLocationLinkConfig // Links associated with this game
-	GameItemConfigs         []GameItemConfig
-	GameCreatureConfigs     []GameCreatureConfig
-	GameCharacterConfigs    []GameCharacterConfig
-	GameInstanceConfigs     []GameInstanceConfig
+	Reference                 string // Reference to the game record
+	Record                    *record.Game
+	GameLocationConfigs       []GameLocationConfig     // Locations associated with this game
+	GameLocationLinkConfigs   []GameLocationLinkConfig // Links associated with this game
+	GameItemConfigs           []GameItemConfig
+	GameCreatureConfigs       []GameCreatureConfig
+	GameCharacterConfigs      []GameCharacterConfig
+	GameInstanceConfigs       []GameInstanceConfig
+	GameSubscriptionConfigs   []GameSubscriptionConfig
+	GameAdministrationConfigs []GameAdministrationConfig
 }
 
 type GameCharacterConfig struct {
@@ -145,6 +151,20 @@ type GameItemInstanceConfig struct {
 	// TODO: Must be assigned to a location, a character, or a creature
 
 	Record *record.AdventureGameItemInstance
+}
+
+type GameSubscriptionConfig struct {
+	Reference        string // Reference to the game_subscription record
+	AccountRef       string // Reference to the account
+	SubscriptionType string // Type of subscription (Player, Manager, Collaborator)
+	Record           *record.GameSubscription
+}
+
+type GameAdministrationConfig struct {
+	Reference           string // Reference to the game_administration record
+	AccountRef          string // Reference to the account
+	GrantedByAccountRef string // Reference to the account that granted the administration rights
+	Record              *record.GameAdministration
 }
 
 // DefaultDataConfig -
@@ -237,6 +257,22 @@ func DefaultDataConfig() DataConfig {
 						Record: &record.AdventureGameCharacter{
 							Name: UniqueName("Default Character Two"),
 						},
+					},
+				},
+				GameSubscriptionConfigs: []GameSubscriptionConfig{
+					{
+						Reference:        GameSubscriptionOneRef,
+						AccountRef:       AccountOneRef,
+						SubscriptionType: "Player",
+						Record:           &record.GameSubscription{},
+					},
+				},
+				GameAdministrationConfigs: []GameAdministrationConfig{
+					{
+						Reference:           "game-administration-one",
+						AccountRef:          AccountOneRef,
+						GrantedByAccountRef: AccountOneRef,
+						Record:              &record.GameAdministration{},
 					},
 				},
 				// Default game instance with a location and an item assigned to the location

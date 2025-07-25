@@ -29,7 +29,7 @@
         @submit="handleItemPlacementSubmit"
         @cancel="closeItemPlacementModal"
       >
-        <template #field="{ field, value, update }">
+        <template #field="{ field }">
           <select
             v-if="field.key === 'adventure_game_item_id'"
             :id="field.key"
