@@ -63,7 +63,7 @@ func NewTesting(l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], cfg c
 func (t *Testing) domainer() (domainer.Domainer, error) {
 	l := t.Logger("domainer")
 
-	m, err := domain.NewDomain(t.Log, t.JobClient, t.Config)
+	m, err := domain.NewDomain(t.Log, t.Config)
 	if err != nil {
 		l.Warn("failed new domain >%v<", err)
 		return nil, err

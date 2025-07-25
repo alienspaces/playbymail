@@ -91,7 +91,7 @@ func NewRunnerWithConfig(l logger.Logger, s storer.Storer, j *river.Client[pgx.T
 func (rnr *Runner) domainFunc(l logger.Logger) (domainer.Domainer, error) {
 	l.Info("(playbymail) DomainFunc called on runner: %p", rnr)
 	l.Info("(playbymail) calling domain.NewDomain")
-	m, err := domain.NewDomain(l, rnr.JobClient, rnr.Config)
+	m, err := domain.NewDomain(l, rnr.Config)
 	if err != nil {
 		l.Warn("(playbymail) failed new domain >%v<", err)
 		return nil, err

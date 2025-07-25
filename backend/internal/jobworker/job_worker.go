@@ -31,7 +31,8 @@ func NewJobWorker(l logger.Logger, cfg config.Config, s storer.Storer) (*JobWork
 	}, nil
 }
 
-// beginJob returns the river client from context and a fresh domain initialised with a new database transaction.
+// beginJob returns the river client from context and a fresh domain model
+// initialised with a new database transaction.
 func (w *JobWorker) beginJob(ctx context.Context) (*river.Client[pgx.Tx], *domain.Domain, error) {
 	l := w.JobWorker.Log.WithFunctionContext("beginJob")
 
@@ -46,7 +47,7 @@ func (w *JobWorker) beginJob(ctx context.Context) (*river.Client[pgx.Tx], *domai
 		return nil, nil, err
 	}
 
-	m, err := domain.NewDomain(l, c, w.Config)
+	m, err := domain.NewDomain(l, w.Config)
 	if err != nil {
 		return nil, nil, err
 	}

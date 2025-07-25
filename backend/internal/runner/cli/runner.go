@@ -72,7 +72,7 @@ Loads static reference data that is expected to exist on any environment.`,
 }
 
 func (rnr *Runner) domainFunc() (domainer.Domainer, error) {
-	m, err := domain.NewDomain(rnr.Log, rnr.JobClient, rnr.Config)
+	m, err := domain.NewDomain(rnr.Log, rnr.Config)
 	if err != nil {
 		return nil, err
 	}

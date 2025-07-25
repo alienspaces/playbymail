@@ -380,6 +380,10 @@ func (rnr *Runner) deleteAccountHandler(w http.ResponseWriter, r *http.Request, 
 
 // requestAuthHandler handles POST /request-auth
 func (rnr *Runner) requestAuthHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
+	l = loggerWithFunctionContext(l, "RequestAuthHandler")
+
+	l.Info("requesting authentication token for email >%s<", r.Header.Get("Authorization"))
+
 	var req mapper.RequestAuthRequest
 	if _, err := server.ReadRequest(l, r, &req); err != nil {
 		l.Warn("failed reading request >%v<", err)
@@ -395,6 +399,7 @@ func (rnr *Runner) requestAuthHandler(w http.ResponseWriter, r *http.Request, pp
 		l.Warn("failed sending account verification email >%v<", err)
 		return server.WriteResponse(l, w, http.StatusOK, mapper.MapRequestAuthResponse("ok"))
 	}
+
 	return server.WriteResponse(l, w, http.StatusOK, mapper.MapRequestAuthResponse("ok"))
 }
 
