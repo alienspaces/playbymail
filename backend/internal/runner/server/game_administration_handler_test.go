@@ -1,4 +1,4 @@
-package runner
+package runner_test
 
 import (
 	"net/http"
@@ -7,32 +7,34 @@ import (
 	"github.com/stretchr/testify/require"
 	"gitlab.com/alienspaces/playbymail/core/server"
 	"gitlab.com/alienspaces/playbymail/internal/harness"
+	runner "gitlab.com/alienspaces/playbymail/internal/runner/server"
+	"gitlab.com/alienspaces/playbymail/internal/utils/testutil"
 	"gitlab.com/alienspaces/playbymail/schema"
 )
 
 func Test_gameAdministrationHandler(t *testing.T) {
-	th := newTestHarness(t)
+	th := testutil.NewTestHarness(t)
 	require.NotNil(t, th, "newTestHarness returns without error")
 	_, err := th.Setup()
 	require.NoError(t, err, "Test data setup returns without error")
 	defer func() { _ = th.Teardown() }()
 
-	collectionDecoder := testCaseResponseDecoderGeneric[schema.GameAdministrationCollectionResponse]
-	singleDecoder := testCaseResponseDecoderGeneric[schema.GameAdministrationResponse]
+	collectionDecoder := testutil.TestCaseResponseDecoderGeneric[schema.GameAdministrationCollectionResponse]
+	singleDecoder := testutil.TestCaseResponseDecoderGeneric[schema.GameAdministrationResponse]
 
-	testCases := []TestCase{
+	testCases := []testutil.TestCase{
 		{
 			Name: "GET many game administrations",
-			HandlerConfig: func(rnr *Runner) server.HandlerConfig {
-				return rnr.HandlerConfig[getManyGameAdministrations]
+			HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
+				return rnr.GetHandlerConfig()[runner.GetManyGameAdministrations]
 			},
 			ResponseDecoder: collectionDecoder,
 			ResponseCode:    http.StatusOK,
 		},
 		{
 			Name: "POST create game administration",
-			HandlerConfig: func(rnr *Runner) server.HandlerConfig {
-				return rnr.HandlerConfig[createGameAdministration]
+			HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
+				return rnr.GetHandlerConfig()[runner.CreateGameAdministration]
 			},
 			RequestBody: func(d harness.Data) any {
 				gameRec, _ := d.GetGameRecByRef(harness.GameOneRef)
@@ -48,8 +50,8 @@ func Test_gameAdministrationHandler(t *testing.T) {
 		},
 		{
 			Name: "GET one game administration",
-			HandlerConfig: func(rnr *Runner) server.HandlerConfig {
-				return rnr.HandlerConfig[getOneGameAdministration]
+			HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
+				return rnr.GetHandlerConfig()[runner.GetOneGameAdministration]
 			},
 			RequestPathParams: func(d harness.Data) map[string]string {
 				return map[string]string{":game_administration_id": d.GameAdministrationRecs[0].ID}
@@ -59,8 +61,8 @@ func Test_gameAdministrationHandler(t *testing.T) {
 		},
 		{
 			Name: "PUT update game administration",
-			HandlerConfig: func(rnr *Runner) server.HandlerConfig {
-				return rnr.HandlerConfig[updateGameAdministration]
+			HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
+				return rnr.GetHandlerConfig()[runner.UpdateGameAdministration]
 			},
 			RequestPathParams: func(d harness.Data) map[string]string {
 				return map[string]string{":game_administration_id": d.GameAdministrationRecs[0].ID}
@@ -77,8 +79,8 @@ func Test_gameAdministrationHandler(t *testing.T) {
 		},
 		{
 			Name: "DELETE game administration",
-			HandlerConfig: func(rnr *Runner) server.HandlerConfig {
-				return rnr.HandlerConfig[deleteGameAdministration]
+			HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
+				return rnr.GetHandlerConfig()[runner.DeleteGameAdministration]
 			},
 			RequestPathParams: func(d harness.Data) map[string]string {
 				return map[string]string{":game_administration_id": d.GameAdministrationRecs[0].ID}
@@ -88,8 +90,11 @@ func Test_gameAdministrationHandler(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+
+		t.Logf("Running test >%s<\n", testCase.Name)
+
 		t.Run(testCase.Name, func(t *testing.T) {
-			RunTestCase(t, th, &testCase, func(method string, body interface{}) {
+			testutil.RunTestCase(t, th, &testCase, func(method string, body any) {
 				if testCase.TestResponseCode() == http.StatusNoContent {
 					return
 				}

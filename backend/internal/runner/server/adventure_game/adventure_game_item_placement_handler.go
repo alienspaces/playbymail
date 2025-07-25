@@ -32,14 +32,14 @@ import (
 
 const (
 	// API Resource Search Path
-	searchManyAdventureGameItemPlacements = "search-many-adventure-game-item-placements"
+	SearchManyAdventureGameItemPlacements = "search-many-adventure-game-item-placements"
 
 	// API Resource CRUD Paths
-	getManyAdventureGameItemPlacements  = "get-many-adventure-game-item-placements"
-	getOneAdventureGameItemPlacement    = "get-one-adventure-game-item-placement"
-	createOneAdventureGameItemPlacement = "create-one-adventure-game-item-placement"
-	updateOneAdventureGameItemPlacement = "update-one-adventure-game-item-placement"
-	deleteOneAdventureGameItemPlacement = "delete-one-adventure-game-item-placement"
+	GetManyAdventureGameItemPlacements  = "get-many-adventure-game-item-placements"
+	GetOneAdventureGameItemPlacement    = "get-one-adventure-game-item-placement"
+	CreateOneAdventureGameItemPlacement = "create-one-adventure-game-item-placement"
+	UpdateOneAdventureGameItemPlacement = "update-one-adventure-game-item-placement"
+	DeleteOneAdventureGameItemPlacement = "delete-one-adventure-game-item-placement"
 )
 
 func adventureGameItemPlacementHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error) {
@@ -71,7 +71,7 @@ func adventureGameItemPlacementHandlerConfig(l logger.Logger) (map[string]server
 	}
 
 	// New Adventure Game Item Placement API paths
-	itemPlacementConfig[searchManyAdventureGameItemPlacements] = server.HandlerConfig{
+	itemPlacementConfig[SearchManyAdventureGameItemPlacements] = server.HandlerConfig{
 		Method:      http.MethodGet,
 		Path:        "/api/v1/adventure-game-item-placements",
 		HandlerFunc: searchManyAdventureGameItemPlacementsHandler,
@@ -88,7 +88,7 @@ func adventureGameItemPlacementHandlerConfig(l logger.Logger) (map[string]server
 		},
 	}
 
-	itemPlacementConfig[getManyAdventureGameItemPlacements] = server.HandlerConfig{
+	itemPlacementConfig[GetManyAdventureGameItemPlacements] = server.HandlerConfig{
 		Method:      http.MethodGet,
 		Path:        "/api/v1/adventure-games/:game_id/item-placements",
 		HandlerFunc: getManyAdventureGameItemPlacementsHandler,
@@ -105,7 +105,7 @@ func adventureGameItemPlacementHandlerConfig(l logger.Logger) (map[string]server
 		},
 	}
 
-	itemPlacementConfig[getOneAdventureGameItemPlacement] = server.HandlerConfig{
+	itemPlacementConfig[GetOneAdventureGameItemPlacement] = server.HandlerConfig{
 		Method:      http.MethodGet,
 		Path:        "/api/v1/adventure-games/:game_id/item-placements/:placement_id",
 		HandlerFunc: getOneAdventureGameItemPlacementHandler,
@@ -121,7 +121,7 @@ func adventureGameItemPlacementHandlerConfig(l logger.Logger) (map[string]server
 		},
 	}
 
-	itemPlacementConfig[createOneAdventureGameItemPlacement] = server.HandlerConfig{
+	itemPlacementConfig[CreateOneAdventureGameItemPlacement] = server.HandlerConfig{
 		Method:      http.MethodPost,
 		Path:        "/api/v1/adventure-games/:game_id/item-placements",
 		HandlerFunc: createOneAdventureGameItemPlacementHandler,
@@ -138,7 +138,7 @@ func adventureGameItemPlacementHandlerConfig(l logger.Logger) (map[string]server
 		},
 	}
 
-	itemPlacementConfig[updateOneAdventureGameItemPlacement] = server.HandlerConfig{
+	itemPlacementConfig[UpdateOneAdventureGameItemPlacement] = server.HandlerConfig{
 		Method:      http.MethodPut,
 		Path:        "/api/v1/adventure-games/:game_id/item-placements/:placement_id",
 		HandlerFunc: updateOneAdventureGameItemPlacementHandler,
@@ -155,7 +155,7 @@ func adventureGameItemPlacementHandlerConfig(l logger.Logger) (map[string]server
 		},
 	}
 
-	itemPlacementConfig[deleteOneAdventureGameItemPlacement] = server.HandlerConfig{
+	itemPlacementConfig[DeleteOneAdventureGameItemPlacement] = server.HandlerConfig{
 		Method:      http.MethodDelete,
 		Path:        "/api/v1/adventure-games/:game_id/item-placements/:placement_id",
 		HandlerFunc: deleteOneAdventureGameItemPlacementHandler,

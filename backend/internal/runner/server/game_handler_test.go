@@ -1,4 +1,4 @@
-package runner
+package runner_test
 
 import (
 	"net/http"
@@ -9,13 +9,15 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/server"
 	"gitlab.com/alienspaces/playbymail/internal/harness"
 	"gitlab.com/alienspaces/playbymail/internal/record"
+	runner "gitlab.com/alienspaces/playbymail/internal/runner/server"
+	"gitlab.com/alienspaces/playbymail/internal/utils/testutil"
 	"gitlab.com/alienspaces/playbymail/schema"
 )
 
 func Test_getGameHandler(t *testing.T) {
 	t.Parallel()
 
-	th := newTestHarness(t)
+	th := testutil.NewTestHarness(t)
 	require.NotNil(t, th, "newTestHarness returns without error")
 
 	_, err := th.Setup()
@@ -26,13 +28,13 @@ func Test_getGameHandler(t *testing.T) {
 	}()
 
 	type testCase struct {
-		TestCase
+		testutil.TestCase
 		collectionRequest     bool
 		collectionRecordCount int
 	}
 
-	testCaseCollectionResponseDecoder := testCaseResponseDecoderGeneric[schema.GameCollectionResponse]
-	testCaseResponseDecoder := testCaseResponseDecoderGeneric[schema.GameResponse]
+	testCaseCollectionResponseDecoder := testutil.TestCaseResponseDecoderGeneric[schema.GameCollectionResponse]
+	testCaseResponseDecoder := testutil.TestCaseResponseDecoderGeneric[schema.GameResponse]
 
 	// Setup: get a game for reference
 	gameRec, err := th.Data.GetGameRecByRef(harness.GameOneRef)
@@ -40,10 +42,10 @@ func Test_getGameHandler(t *testing.T) {
 
 	testCases := []testCase{
 		{
-			TestCase: TestCase{
+			TestCase: testutil.TestCase{
 				Name: "API key with open access \\ get many games \\ returns expected games",
-				HandlerConfig: func(rnr *Runner) server.HandlerConfig {
-					return rnr.HandlerConfig[getManyGames]
+				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
+					return rnr.GetHandlerConfig()[runner.GetManyGames]
 				},
 				RequestQueryParams: func(d harness.Data) map[string]any {
 					return map[string]any{
@@ -59,10 +61,10 @@ func Test_getGameHandler(t *testing.T) {
 			collectionRecordCount: 1,
 		},
 		{
-			TestCase: TestCase{
+			TestCase: testutil.TestCase{
 				Name: "API key with open access \\ get one game with valid game ID \\ returns expected game",
-				HandlerConfig: func(rnr *Runner) server.HandlerConfig {
-					return rnr.HandlerConfig[getOneGame]
+				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
+					return rnr.GetHandlerConfig()[runner.GetOneGame]
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					gameRec, err := d.GetGameRecByRef(harness.GameOneRef)
@@ -115,7 +117,7 @@ func Test_getGameHandler(t *testing.T) {
 				}
 			}
 
-			RunTestCase(t, th, &testCase, testFunc)
+			testutil.RunTestCase(t, th, &testCase, testFunc)
 		})
 	}
 }
@@ -123,7 +125,7 @@ func Test_getGameHandler(t *testing.T) {
 func Test_createUpdateDeleteGameHandler(t *testing.T) {
 	t.Parallel()
 
-	th := newTestHarness(t)
+	th := testutil.NewTestHarness(t)
 	require.NotNil(t, th, "newTestHarness returns without error")
 
 	_, err := th.Setup()
@@ -134,18 +136,18 @@ func Test_createUpdateDeleteGameHandler(t *testing.T) {
 	}()
 
 	type testCase struct {
-		TestCase
+		testutil.TestCase
 		expectResponse func(d harness.Data, req schema.GameRequest) schema.GameResponse
 	}
 
-	testCaseResponseDecoder := testCaseResponseDecoderGeneric[schema.GameResponse]
+	testCaseResponseDecoder := testutil.TestCaseResponseDecoderGeneric[schema.GameResponse]
 
 	testCases := []testCase{
 		{
-			TestCase: TestCase{
+			TestCase: testutil.TestCase{
 				Name: "API key with open access \\ create game with valid properties \\ returns created game",
-				HandlerConfig: func(rnr *Runner) server.HandlerConfig {
-					return rnr.HandlerConfig[createGame]
+				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
+					return rnr.GetHandlerConfig()[runner.CreateGame]
 				},
 				RequestBody: func(d harness.Data) any {
 					return schema.GameRequest{
@@ -165,10 +167,10 @@ func Test_createUpdateDeleteGameHandler(t *testing.T) {
 			},
 		},
 		{
-			TestCase: TestCase{
+			TestCase: testutil.TestCase{
 				Name: "API key with open access \\ update game with valid properties \\ returns updated game",
-				HandlerConfig: func(rnr *Runner) server.HandlerConfig {
-					return rnr.HandlerConfig[updateGame]
+				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
+					return rnr.GetHandlerConfig()[runner.UpdateGame]
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					gameRec, err := d.GetGameRecByRef(harness.GameOneRef)
@@ -196,10 +198,10 @@ func Test_createUpdateDeleteGameHandler(t *testing.T) {
 			},
 		},
 		{
-			TestCase: TestCase{
+			TestCase: testutil.TestCase{
 				Name: "API key with open access \\ delete game with valid game ID \\ returns no content",
-				HandlerConfig: func(rnr *Runner) server.HandlerConfig {
-					return rnr.HandlerConfig[deleteGame]
+				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
+					return rnr.GetHandlerConfig()[runner.DeleteGame]
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					gameRec, err := d.GetGameRecByRef(harness.GameOneRef)
@@ -216,6 +218,7 @@ func Test_createUpdateDeleteGameHandler(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+
 		t.Logf("Running test >%s<\n", testCase.Name)
 
 		t.Run(testCase.Name, func(t *testing.T) {
@@ -238,7 +241,7 @@ func Test_createUpdateDeleteGameHandler(t *testing.T) {
 				require.False(t, aResp.CreatedAt.IsZero(), "Game CreatedAt is not zero")
 			}
 
-			RunTestCase(t, th, &testCase, testFunc)
+			testutil.RunTestCase(t, th, &testCase, testFunc)
 		})
 	}
 }

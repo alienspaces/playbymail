@@ -16,11 +16,11 @@ import (
 )
 
 const (
-	getManyGameSubscriptions = "get-game-subscriptions"
-	getOneGameSubscription   = "get-game-subscription"
-	createGameSubscription   = "create-game-subscription"
-	updateGameSubscription   = "update-game-subscription"
-	deleteGameSubscription   = "delete-game-subscription"
+	GetManyGameSubscriptions = "get-game-subscriptions"
+	GetOneGameSubscription   = "get-game-subscription"
+	CreateGameSubscription   = "create-game-subscription"
+	UpdateGameSubscription   = "update-game-subscription"
+	DeleteGameSubscription   = "delete-game-subscription"
 )
 
 func (rnr *Runner) gameSubscriptionHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error) {
@@ -43,7 +43,7 @@ func (rnr *Runner) gameSubscriptionHandlerConfig(l logger.Logger) (map[string]se
 		References: referenceSchemas,
 	}
 
-	config[getManyGameSubscriptions] = server.HandlerConfig{
+	config[GetManyGameSubscriptions] = server.HandlerConfig{
 		Method:      http.MethodGet,
 		Path:        "/v1/game-subscriptions",
 		HandlerFunc: rnr.getManyGameSubscriptionsHandler,
@@ -52,7 +52,7 @@ func (rnr *Runner) gameSubscriptionHandlerConfig(l logger.Logger) (map[string]se
 			ValidateResponseSchema: collectionResponseSchema,
 		},
 	}
-	config[getOneGameSubscription] = server.HandlerConfig{
+	config[GetOneGameSubscription] = server.HandlerConfig{
 		Method:      http.MethodGet,
 		Path:        "/v1/game-subscriptions/:game_subscription_id",
 		HandlerFunc: rnr.getGameSubscriptionHandler,
@@ -61,7 +61,7 @@ func (rnr *Runner) gameSubscriptionHandlerConfig(l logger.Logger) (map[string]se
 			ValidateResponseSchema: responseSchema,
 		},
 	}
-	config[createGameSubscription] = server.HandlerConfig{
+	config[CreateGameSubscription] = server.HandlerConfig{
 		Method:      http.MethodPost,
 		Path:        "/v1/game-subscriptions",
 		HandlerFunc: rnr.createGameSubscriptionHandler,
@@ -71,7 +71,7 @@ func (rnr *Runner) gameSubscriptionHandlerConfig(l logger.Logger) (map[string]se
 			ValidateResponseSchema: responseSchema,
 		},
 	}
-	config[updateGameSubscription] = server.HandlerConfig{
+	config[UpdateGameSubscription] = server.HandlerConfig{
 		Method:      http.MethodPut,
 		Path:        "/v1/game-subscriptions/:game_subscription_id",
 		HandlerFunc: rnr.updateGameSubscriptionHandler,
@@ -81,7 +81,7 @@ func (rnr *Runner) gameSubscriptionHandlerConfig(l logger.Logger) (map[string]se
 			ValidateResponseSchema: responseSchema,
 		},
 	}
-	config[deleteGameSubscription] = server.HandlerConfig{
+	config[DeleteGameSubscription] = server.HandlerConfig{
 		Method:      http.MethodDelete,
 		Path:        "/v1/game-subscriptions/:game_subscription_id",
 		HandlerFunc: rnr.deleteGameSubscriptionHandler,

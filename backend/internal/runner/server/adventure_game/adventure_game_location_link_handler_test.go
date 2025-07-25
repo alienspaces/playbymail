@@ -1,4 +1,4 @@
-package adventure_game
+package adventure_game_test
 
 import (
 	"net/http"
@@ -8,6 +8,7 @@ import (
 
 	"gitlab.com/alienspaces/playbymail/core/server"
 	"gitlab.com/alienspaces/playbymail/internal/harness"
+	"gitlab.com/alienspaces/playbymail/internal/runner/server/adventure_game"
 	"gitlab.com/alienspaces/playbymail/internal/utils/deps"
 	"gitlab.com/alienspaces/playbymail/internal/utils/testutil"
 	"gitlab.com/alienspaces/playbymail/schema"
@@ -52,8 +53,8 @@ func Test_adventureGameLocationLinkHandler(t *testing.T) {
 		{
 			TestCase: testutil.TestCase{
 				Name: "API key with open access \\ get many location links \\ returns expected links",
-				HandlerConfig: func(rnr *server.Runner) server.HandlerConfig {
-					return rnr.HandlerConfig[getManyAdventureGameLocationLinks]
+				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
+					return rnr.GetHandlerConfig()[adventure_game.SearchManyAdventureGameLocationLinks]
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
@@ -73,8 +74,8 @@ func Test_adventureGameLocationLinkHandler(t *testing.T) {
 		{
 			TestCase: testutil.TestCase{
 				Name: "API key with open access \\ get one location link with valid ID \\ returns expected link",
-				HandlerConfig: func(rnr *server.Runner) server.HandlerConfig {
-					return rnr.HandlerConfig[getOneAdventureGameLocationLink]
+				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
+					return rnr.GetHandlerConfig()[adventure_game.GetOneAdventureGameLocationLink]
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
@@ -89,8 +90,8 @@ func Test_adventureGameLocationLinkHandler(t *testing.T) {
 		{
 			TestCase: testutil.TestCase{
 				Name: "API key with open access \\ create location link with valid properties \\ returns created link",
-				HandlerConfig: func(rnr *server.Runner) server.HandlerConfig {
-					return rnr.HandlerConfig[createOneAdventureGameLocationLink]
+				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
+					return rnr.GetHandlerConfig()[adventure_game.CreateOneAdventureGameLocationLink]
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
@@ -111,8 +112,8 @@ func Test_adventureGameLocationLinkHandler(t *testing.T) {
 		{
 			TestCase: testutil.TestCase{
 				Name: "API key with open access \\ update location link with valid properties \\ returns updated link",
-				HandlerConfig: func(rnr *server.Runner) server.HandlerConfig {
-					return rnr.HandlerConfig[updateOneAdventureGameLocationLink]
+				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
+					return rnr.GetHandlerConfig()[adventure_game.UpdateOneAdventureGameLocationLink]
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
@@ -135,8 +136,8 @@ func Test_adventureGameLocationLinkHandler(t *testing.T) {
 		{
 			TestCase: testutil.TestCase{
 				Name: "API key with open access \\ delete location link with valid ID \\ returns no content",
-				HandlerConfig: func(rnr *server.Runner) server.HandlerConfig {
-					return rnr.HandlerConfig[deleteOneAdventureGameLocationLink]
+				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
+					return rnr.GetHandlerConfig()[adventure_game.DeleteOneAdventureGameLocationLink]
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{

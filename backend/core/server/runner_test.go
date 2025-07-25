@@ -229,3 +229,58 @@ func Test_ApplyMiddleware(t *testing.T) {
 	require.Error(t, err, "Middleware returns with error")
 	require.Nil(t, handle, "Middleware returns nil")
 }
+
+func Test_MergeHandlerConfigs(t *testing.T) {
+	// Test case 1: Merge with nil first map
+	hc2 := map[string]HandlerConfig{
+		"test1": {Name: "test1", Method: "GET", Path: "/test1"},
+		"test2": {Name: "test2", Method: "POST", Path: "/test2"},
+	}
+
+	result := MergeHandlerConfigs(nil, hc2)
+
+	if len(result) != 2 {
+		t.Errorf("Expected 2 handlers, got %d", len(result))
+	}
+
+	if result["test1"].Name != "test1" {
+		t.Errorf("Expected test1, got %s", result["test1"].Name)
+	}
+
+	if result["test2"].Name != "test2" {
+		t.Errorf("Expected test2, got %s", result["test2"].Name)
+	}
+
+	// Test case 2: Merge with existing map
+	hc1 := map[string]HandlerConfig{
+		"existing": {Name: "existing", Method: "GET", Path: "/existing"},
+	}
+
+	result = MergeHandlerConfigs(hc1, hc2)
+
+	if len(result) != 3 {
+		t.Errorf("Expected 3 handlers, got %d", len(result))
+	}
+
+	if result["existing"].Name != "existing" {
+		t.Errorf("Expected existing, got %s", result["existing"].Name)
+	}
+
+	// Test case 3: Override existing key
+	hc1Fresh := map[string]HandlerConfig{
+		"existing": {Name: "existing", Method: "GET", Path: "/existing"},
+	}
+	hc3 := map[string]HandlerConfig{
+		"existing": {Name: "overridden", Method: "PUT", Path: "/overridden"},
+	}
+
+	result = MergeHandlerConfigs(hc1Fresh, hc3)
+
+	if len(result) != 1 {
+		t.Errorf("Expected 1 handler, got %d", len(result))
+	}
+
+	if result["existing"].Name != "overridden" {
+		t.Errorf("Expected overridden, got %s", result["existing"].Name)
+	}
+}

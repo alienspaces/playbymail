@@ -24,7 +24,7 @@ func main() {
 		os.Exit(0)
 	}
 
-	r, err := runner.NewRunner(l, s, j, cfg)
+	r, err := runner.NewRunnerWithConfig(l, s, j, cfg)
 	if err != nil {
 		fmt.Printf("(cmd) failed new runner >%v<\n", err)
 		os.Exit(0)

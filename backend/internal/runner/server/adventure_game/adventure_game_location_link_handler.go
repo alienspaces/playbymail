@@ -32,14 +32,14 @@ import (
 
 const (
 	// API Resource Search Path
-	searchManyAdventureGameLocationLinks = "search-many-adventure-game-location-links"
+	SearchManyAdventureGameLocationLinks = "search-many-adventure-game-location-links"
 
 	// API Resource CRUD Paths
-	getManyAdventureGameLocationLinks  = "get-many-adventure-game-location-links"
-	getOneAdventureGameLocationLink    = "get-one-adventure-game-location-link"
-	createOneAdventureGameLocationLink = "create-one-adventure-game-location-link"
-	updateOneAdventureGameLocationLink = "update-one-adventure-game-location-link"
-	deleteOneAdventureGameLocationLink = "delete-one-adventure-game-location-link"
+	GetManyAdventureGameLocationLinks  = "get-many-adventure-game-location-links"
+	GetOneAdventureGameLocationLink    = "get-one-adventure-game-location-link"
+	CreateOneAdventureGameLocationLink = "create-one-adventure-game-location-link"
+	UpdateOneAdventureGameLocationLink = "update-one-adventure-game-location-link"
+	DeleteOneAdventureGameLocationLink = "delete-one-adventure-game-location-link"
 )
 
 func adventureGameLocationLinkHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error) {
@@ -71,7 +71,7 @@ func adventureGameLocationLinkHandlerConfig(l logger.Logger) (map[string]server.
 	}
 
 	// New Adventure Game Location Link API paths
-	GameLocationLinkConfig[searchManyAdventureGameLocationLinks] = server.HandlerConfig{
+	GameLocationLinkConfig[SearchManyAdventureGameLocationLinks] = server.HandlerConfig{
 		Method:      http.MethodGet,
 		Path:        "/api/v1/adventure-game-location-links",
 		HandlerFunc: searchManyAdventureGameLocationLinksHandler,
@@ -88,7 +88,7 @@ func adventureGameLocationLinkHandlerConfig(l logger.Logger) (map[string]server.
 		},
 	}
 
-	GameLocationLinkConfig[getManyAdventureGameLocationLinks] = server.HandlerConfig{
+	GameLocationLinkConfig[GetManyAdventureGameLocationLinks] = server.HandlerConfig{
 		Method:      http.MethodGet,
 		Path:        "/api/v1/adventure-games/:game_id/location-links",
 		HandlerFunc: getManyAdventureGameLocationLinksHandler,
@@ -105,7 +105,7 @@ func adventureGameLocationLinkHandlerConfig(l logger.Logger) (map[string]server.
 		},
 	}
 
-	GameLocationLinkConfig[getOneAdventureGameLocationLink] = server.HandlerConfig{
+	GameLocationLinkConfig[GetOneAdventureGameLocationLink] = server.HandlerConfig{
 		Method:      http.MethodGet,
 		Path:        "/api/v1/adventure-games/:game_id/location-links/:location_link_id",
 		HandlerFunc: getOneAdventureGameLocationLinkHandler,
@@ -121,7 +121,7 @@ func adventureGameLocationLinkHandlerConfig(l logger.Logger) (map[string]server.
 		},
 	}
 
-	GameLocationLinkConfig[createOneAdventureGameLocationLink] = server.HandlerConfig{
+	GameLocationLinkConfig[CreateOneAdventureGameLocationLink] = server.HandlerConfig{
 		Method:      http.MethodPost,
 		Path:        "/api/v1/adventure-games/:game_id/location-links",
 		HandlerFunc: createOneAdventureGameLocationLinkHandler,
@@ -138,7 +138,7 @@ func adventureGameLocationLinkHandlerConfig(l logger.Logger) (map[string]server.
 		},
 	}
 
-	GameLocationLinkConfig[updateOneAdventureGameLocationLink] = server.HandlerConfig{
+	GameLocationLinkConfig[UpdateOneAdventureGameLocationLink] = server.HandlerConfig{
 		Method:      http.MethodPut,
 		Path:        "/api/v1/adventure-games/:game_id/location-links/:location_link_id",
 		HandlerFunc: updateOneAdventureGameLocationLinkHandler,
@@ -153,7 +153,7 @@ func adventureGameLocationLinkHandlerConfig(l logger.Logger) (map[string]server.
 		},
 	}
 
-	GameLocationLinkConfig[deleteOneAdventureGameLocationLink] = server.HandlerConfig{
+	GameLocationLinkConfig[DeleteOneAdventureGameLocationLink] = server.HandlerConfig{
 		Method:      http.MethodDelete,
 		Path:        "/api/v1/adventure-games/:game_id/location-links/:location_link_id",
 		HandlerFunc: deleteOneAdventureGameLocationLinkHandler,

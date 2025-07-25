@@ -1,4 +1,4 @@
-package runner
+package runner_test
 
 import (
 	"net/http"
@@ -7,32 +7,34 @@ import (
 	"github.com/stretchr/testify/require"
 	"gitlab.com/alienspaces/playbymail/core/server"
 	"gitlab.com/alienspaces/playbymail/internal/harness"
+	runner "gitlab.com/alienspaces/playbymail/internal/runner/server"
+	"gitlab.com/alienspaces/playbymail/internal/utils/testutil"
 	"gitlab.com/alienspaces/playbymail/schema"
 )
 
 func Test_gameSubscriptionHandler(t *testing.T) {
-	th := newTestHarness(t)
+	th := testutil.NewTestHarness(t)
 	require.NotNil(t, th, "newTestHarness returns without error")
 	_, err := th.Setup()
 	require.NoError(t, err, "Test data setup returns without error")
 	defer func() { _ = th.Teardown() }()
 
-	collectionDecoder := testCaseResponseDecoderGeneric[schema.GameSubscriptionCollectionResponse]
-	singleDecoder := testCaseResponseDecoderGeneric[schema.GameSubscriptionResponse]
+	collectionDecoder := testutil.TestCaseResponseDecoderGeneric[schema.GameSubscriptionCollectionResponse]
+	singleDecoder := testutil.TestCaseResponseDecoderGeneric[schema.GameSubscriptionResponse]
 
-	testCases := []TestCase{
+	testCases := []testutil.TestCase{
 		{
 			Name: "GET many game subscriptions",
-			HandlerConfig: func(rnr *Runner) server.HandlerConfig {
-				return rnr.HandlerConfig[getManyGameSubscriptions]
+			HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
+				return rnr.GetHandlerConfig()[runner.GetManyGameSubscriptions]
 			},
 			ResponseDecoder: collectionDecoder,
 			ResponseCode:    http.StatusOK,
 		},
 		{
 			Name: "POST create game subscription",
-			HandlerConfig: func(rnr *Runner) server.HandlerConfig {
-				return rnr.HandlerConfig[createGameSubscription]
+			HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
+				return rnr.GetHandlerConfig()[runner.CreateGameSubscription]
 			},
 			RequestBody: func(d harness.Data) any {
 				gameRec, _ := d.GetGameRecByRef(harness.GameOneRef)
@@ -48,8 +50,8 @@ func Test_gameSubscriptionHandler(t *testing.T) {
 		},
 		{
 			Name: "GET one game subscription",
-			HandlerConfig: func(rnr *Runner) server.HandlerConfig {
-				return rnr.HandlerConfig[getOneGameSubscription]
+			HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
+				return rnr.GetHandlerConfig()[runner.GetOneGameSubscription]
 			},
 			RequestPathParams: func(d harness.Data) map[string]string {
 				// Use the first created subscription
@@ -60,8 +62,8 @@ func Test_gameSubscriptionHandler(t *testing.T) {
 		},
 		{
 			Name: "PUT update game subscription",
-			HandlerConfig: func(rnr *Runner) server.HandlerConfig {
-				return rnr.HandlerConfig[updateGameSubscription]
+			HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
+				return rnr.GetHandlerConfig()[runner.UpdateGameSubscription]
 			},
 			RequestPathParams: func(d harness.Data) map[string]string {
 				return map[string]string{":game_subscription_id": d.GameSubscriptionRecs[0].ID}
@@ -78,8 +80,8 @@ func Test_gameSubscriptionHandler(t *testing.T) {
 		},
 		{
 			Name: "DELETE game subscription",
-			HandlerConfig: func(rnr *Runner) server.HandlerConfig {
-				return rnr.HandlerConfig[deleteGameSubscription]
+			HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
+				return rnr.GetHandlerConfig()[runner.DeleteGameSubscription]
 			},
 			RequestPathParams: func(d harness.Data) map[string]string {
 				return map[string]string{":game_subscription_id": d.GameSubscriptionRecs[0].ID}
@@ -89,8 +91,11 @@ func Test_gameSubscriptionHandler(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+
+		t.Logf("Running test >%s<\n", testCase.Name)
+
 		t.Run(testCase.Name, func(t *testing.T) {
-			RunTestCase(t, th, &testCase, func(method string, body interface{}) {
+			testutil.RunTestCase(t, th, &testCase, func(method string, body any) {
 				if testCase.TestResponseCode() == http.StatusNoContent {
 					return
 				}

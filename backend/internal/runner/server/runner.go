@@ -2,13 +2,13 @@ package runner
 
 import (
 	"fmt"
-	"maps"
 	"net/http"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/riverqueue/river"
 
 	"gitlab.com/alienspaces/playbymail/core/server"
+	coresql "gitlab.com/alienspaces/playbymail/core/sql"
 	"gitlab.com/alienspaces/playbymail/core/type/domainer"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
 	"gitlab.com/alienspaces/playbymail/core/type/runnable"
@@ -32,7 +32,7 @@ type Runner struct {
 var _ runnable.Runnable = &Runner{}
 
 // NewRunner -
-func NewRunner(l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], cfg config.Config) (*Runner, error) {
+func NewRunnerWithConfig(l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], cfg config.Config) (*Runner, error) {
 
 	l = l.WithPackageContext("runner")
 
@@ -59,8 +59,12 @@ func NewRunner(l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], cfg co
 
 	l.Warn("(playbymail) setting authenticate request function")
 
-	// Add mock authentication function for testing
+	// Add authentication function
 	r.AuthenticateRequestFunc = r.authenticateRequestFunc
+
+	// Add RLS function for row-level security
+	l.Warn("(playbymail) setting RLS function")
+	r.RLSFunc = r.rlsFunc
 
 	// Additional handler configurations are added here
 	handlerConfigFuncs := []func(logger.Logger) (map[string]server.HandlerConfig, error){
@@ -77,7 +81,7 @@ func NewRunner(l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], cfg co
 		if err != nil {
 			return nil, err
 		}
-		r.HandlerConfig = mergeHandlerConfigs(r.HandlerConfig, cfg)
+		r.HandlerConfig = server.MergeHandlerConfigs(r.HandlerConfig, cfg)
 	}
 
 	return &r, nil
@@ -135,15 +139,102 @@ func (rnr *Runner) authenticateRequestTokenFunc(l logger.Logger, m domainer.Doma
 	}, nil
 }
 
-func mergeHandlerConfigs(hc1 map[string]server.HandlerConfig, hc2 map[string]server.HandlerConfig) map[string]server.HandlerConfig {
-	if hc1 == nil {
-		hc1 = map[string]server.HandlerConfig{}
+// rlsFunc determines what game resources the authenticated user has access to
+func (rnr *Runner) rlsFunc(l logger.Logger, m domainer.Domainer, authedReq server.AuthenData) (server.RLS, error) {
+
+	l.Info("(playbymail) rlsFunc called for account ID: %s", authedReq.Account.ID)
+
+	mm := m.(*domain.Domain)
+
+	// Get all games the user has access to through subscriptions
+	gameSubscriptions, err := mm.GameSubscriptionRepository().GetMany(&coresql.Options{
+		Params: []coresql.Param{
+			{
+				Col: "account_id",
+				Val: authedReq.Account.ID,
+			},
+		},
+	})
+	if err != nil {
+		l.Warn("(playbymail) failed to get game subscriptions >%v<", err)
+		return server.RLS{}, err
 	}
-	maps.Copy(hc1, hc2)
-	return hc1
+
+	// Extract game IDs from subscriptions
+	gameIDs := make([]string, 0, len(gameSubscriptions))
+	for _, sub := range gameSubscriptions {
+		gameIDs = append(gameIDs, sub.GameID)
+	}
+
+	// Get all games the user administers
+	gameAdministrations, err := mm.GameAdministrationRepository().GetMany(&coresql.Options{
+		Params: []coresql.Param{
+			{
+				Col: "account_id",
+				Val: authedReq.Account.ID,
+			},
+		},
+	})
+	if err != nil {
+		l.Warn("(playbymail) failed to get game administrations >%v<", err)
+		return server.RLS{}, err
+	}
+
+	// Add administered game IDs
+	for _, admin := range gameAdministrations {
+		gameIDs = append(gameIDs, admin.GameID)
+	}
+
+	// Get all games the user owns (if account_id is the owner field)
+	userGames, err := mm.GameRepository().GetMany(&coresql.Options{
+		Params: []coresql.Param{
+			{
+				Col: "account_id",
+				Val: authedReq.Account.ID,
+			},
+		},
+	})
+	if err != nil {
+		l.Warn("(playbymail) failed to get user-owned games >%v<", err)
+		return server.RLS{}, err
+	}
+	for _, game := range userGames {
+		gameIDs = append(gameIDs, game.ID)
+	}
+
+	// Deduplicate gameIDs
+	gameIDSet := make(map[string]struct{})
+	for _, id := range gameIDs {
+		gameIDSet[id] = struct{}{}
+	}
+	uniqueGameIDs := make([]string, 0, len(gameIDSet))
+	for id := range gameIDSet {
+		uniqueGameIDs = append(uniqueGameIDs, id)
+	}
+
+	// Create RLS identifiers map
+	identifiers := map[string][]string{
+		"account_id": {authedReq.Account.ID},
+	}
+
+	// Add game IDs if user has access to any games
+	if len(uniqueGameIDs) > 0 {
+		identifiers["game_id"] = uniqueGameIDs
+	}
+
+	l.Info("(playbymail) RLS identifiers: %+v", identifiers)
+
+	return server.RLS{
+		Identifiers: identifiers,
+	}, nil
 }
 
 // loggerWithFunctionContext provides a logger with function context
 func loggerWithFunctionContext(l logger.Logger, functionName string) logger.Logger {
 	return logging.LoggerWithFunctionContext(l, "runner", functionName)
+}
+
+// GetHandlerConfig returns the HandlerConfig map (for test compatibility)
+func (r *Runner) GetHandlerConfig() map[string]server.HandlerConfig {
+	return r.HandlerConfig
 }

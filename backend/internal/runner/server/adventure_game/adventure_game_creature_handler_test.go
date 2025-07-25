@@ -1,4 +1,4 @@
-package adventure_game
+package adventure_game_test
 
 import (
 	"net/http"
@@ -8,6 +8,7 @@ import (
 
 	"gitlab.com/alienspaces/playbymail/core/server"
 	"gitlab.com/alienspaces/playbymail/internal/harness"
+	"gitlab.com/alienspaces/playbymail/internal/runner/server/adventure_game"
 	"gitlab.com/alienspaces/playbymail/internal/utils/deps"
 	"gitlab.com/alienspaces/playbymail/internal/utils/testutil"
 	"gitlab.com/alienspaces/playbymail/schema"
@@ -40,8 +41,8 @@ func Test_gameCreatureHandler(t *testing.T) {
 		{
 			TestCase: testutil.TestCase{
 				Name: "API key with open access \\ get many game creatures \\ returns expected creatures",
-				HandlerConfig: func(rnr *server.Runner) server.HandlerConfig {
-					return rnr.HandlerConfig[getManyAdventureGameCreatures]
+				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
+					return rnr.GetHandlerConfig()[adventure_game.GetManyAdventureGameCreatures]
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
@@ -61,8 +62,8 @@ func Test_gameCreatureHandler(t *testing.T) {
 		{
 			TestCase: testutil.TestCase{
 				Name: "API key with open access \\ create game creature with valid properties \\ returns created creature",
-				HandlerConfig: func(rnr *server.Runner) server.HandlerConfig {
-					return rnr.HandlerConfig[createOneAdventureGameCreature]
+				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
+					return rnr.GetHandlerConfig()[adventure_game.CreateOneAdventureGameCreature]
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
@@ -81,8 +82,8 @@ func Test_gameCreatureHandler(t *testing.T) {
 		{
 			TestCase: testutil.TestCase{
 				Name: "API key with open access \\ get one game creature with valid ID \\ returns expected creature",
-				HandlerConfig: func(rnr *server.Runner) server.HandlerConfig {
-					return rnr.HandlerConfig[getOneAdventureGameCreature]
+				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
+					return rnr.GetHandlerConfig()[adventure_game.GetOneAdventureGameCreature]
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
@@ -97,8 +98,8 @@ func Test_gameCreatureHandler(t *testing.T) {
 		{
 			TestCase: testutil.TestCase{
 				Name: "API key with open access \\ delete game creature with valid ID \\ returns no content",
-				HandlerConfig: func(rnr *server.Runner) server.HandlerConfig {
-					return rnr.HandlerConfig[deleteOneAdventureGameCreature]
+				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
+					return rnr.GetHandlerConfig()[adventure_game.DeleteOneAdventureGameCreature]
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{

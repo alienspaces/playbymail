@@ -1,4 +1,4 @@
-package runner
+package runner_test
 
 import (
 	"net/http"
@@ -9,13 +9,15 @@ import (
 
 	"gitlab.com/alienspaces/playbymail/core/server"
 	"gitlab.com/alienspaces/playbymail/internal/harness"
+	runner "gitlab.com/alienspaces/playbymail/internal/runner/server"
+	"gitlab.com/alienspaces/playbymail/internal/utils/testutil"
 	"gitlab.com/alienspaces/playbymail/schema"
 )
 
 func Test_getAccountHandler(t *testing.T) {
 	t.Parallel()
 
-	th := newTestHarness(t)
+	th := testutil.NewTestHarness(t)
 	require.NotNil(t, th, "newTestHarness returns without error")
 
 	_, err := th.Setup()
@@ -26,13 +28,13 @@ func Test_getAccountHandler(t *testing.T) {
 	}()
 
 	type testCase struct {
-		TestCase
+		testutil.TestCase
 		collectionRequest     bool
 		collectionRecordCount int
 	}
 
-	testCaseCollectionResponseDecoder := testCaseResponseDecoderGeneric[schema.AccountCollectionResponse]
-	testCaseResponseDecoder := testCaseResponseDecoderGeneric[schema.AccountResponse]
+	testCaseCollectionResponseDecoder := testutil.TestCaseResponseDecoderGeneric[schema.AccountCollectionResponse]
+	testCaseResponseDecoder := testutil.TestCaseResponseDecoderGeneric[schema.AccountResponse]
 
 	// Setup: get an account for reference
 	accountRec, err := th.Data.GetAccountRecByRef(harness.AccountOneRef)
@@ -40,10 +42,10 @@ func Test_getAccountHandler(t *testing.T) {
 
 	testCases := []testCase{
 		{
-			TestCase: TestCase{
+			TestCase: testutil.TestCase{
 				Name: "API key with open access \\ get many accounts \\ returns expected accounts",
-				HandlerConfig: func(rnr *Runner) server.HandlerConfig {
-					return rnr.HandlerConfig[getManyAccounts]
+				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
+					return rnr.GetHandlerConfig()[runner.GetManyAccounts]
 				},
 				RequestQueryParams: func(d harness.Data) map[string]any {
 					return map[string]any{
@@ -59,10 +61,10 @@ func Test_getAccountHandler(t *testing.T) {
 			collectionRecordCount: 1,
 		},
 		{
-			TestCase: TestCase{
+			TestCase: testutil.TestCase{
 				Name: "API key with open access \\ get one account with valid account ID \\ returns expected account",
-				HandlerConfig: func(rnr *Runner) server.HandlerConfig {
-					return rnr.HandlerConfig[getOneAccount]
+				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
+					return rnr.GetHandlerConfig()[runner.GetOneAccount]
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					accountRec, err := d.GetAccountRecByRef(harness.AccountOneRef)
@@ -81,7 +83,7 @@ func Test_getAccountHandler(t *testing.T) {
 
 	for _, testCase := range testCases {
 
-		t.Logf("Running test >%s<", testCase.Name)
+		t.Logf("Running test >%s<\n", testCase.Name)
 
 		t.Run(testCase.Name, func(t *testing.T) {
 			testFunc := func(method string, body interface{}) {
@@ -114,7 +116,7 @@ func Test_getAccountHandler(t *testing.T) {
 				}
 			}
 
-			RunTestCase(t, th, &testCase, testFunc)
+			testutil.RunTestCase(t, th, &testCase, testFunc)
 		})
 	}
 }
@@ -122,7 +124,7 @@ func Test_getAccountHandler(t *testing.T) {
 func Test_createUpdateDeleteAccountHandler(t *testing.T) {
 	t.Parallel()
 
-	th := newTestHarness(t)
+	th := testutil.NewTestHarness(t)
 	require.NotNil(t, th, "newTestHarness returns without error")
 
 	_, err := th.Setup()
@@ -133,18 +135,18 @@ func Test_createUpdateDeleteAccountHandler(t *testing.T) {
 	}()
 
 	type testCase struct {
-		TestCase
+		testutil.TestCase
 		expectResponse func(d harness.Data, req schema.AccountRequest) schema.AccountResponse
 	}
 
-	testCaseResponseDecoder := testCaseResponseDecoderGeneric[schema.AccountResponse]
+	testCaseResponseDecoder := testutil.TestCaseResponseDecoderGeneric[schema.AccountResponse]
 
 	testCases := []testCase{
 		{
-			TestCase: TestCase{
+			TestCase: testutil.TestCase{
 				Name: "API key with open access \\ create account with valid properties \\ returns created account",
-				HandlerConfig: func(rnr *Runner) server.HandlerConfig {
-					return rnr.HandlerConfig[createAccount]
+				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
+					return rnr.GetHandlerConfig()[runner.CreateAccount]
 				},
 				RequestBody: func(d harness.Data) any {
 					return schema.AccountRequest{
@@ -165,10 +167,10 @@ func Test_createUpdateDeleteAccountHandler(t *testing.T) {
 			},
 		},
 		{
-			TestCase: TestCase{
+			TestCase: testutil.TestCase{
 				Name: "API key with open access \\ update account with valid properties \\ returns updated account",
-				HandlerConfig: func(rnr *Runner) server.HandlerConfig {
-					return rnr.HandlerConfig[updateAccount]
+				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
+					return rnr.GetHandlerConfig()[runner.UpdateAccount]
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					accountRec, err := d.GetAccountRecByRef(harness.AccountOneRef)
@@ -197,10 +199,10 @@ func Test_createUpdateDeleteAccountHandler(t *testing.T) {
 			},
 		},
 		{
-			TestCase: TestCase{
+			TestCase: testutil.TestCase{
 				Name: "API key with open access \\ delete account with valid account ID \\ returns no content",
-				HandlerConfig: func(rnr *Runner) server.HandlerConfig {
-					return rnr.HandlerConfig[deleteAccount]
+				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
+					return rnr.GetHandlerConfig()[runner.DeleteAccount]
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					accountRec, err := d.GetAccountRecByRef(harness.AccountOneRef)
@@ -245,7 +247,7 @@ func Test_createUpdateDeleteAccountHandler(t *testing.T) {
 				// UpdatedAt is allowed to be nil, so do not assert on it
 			}
 
-			RunTestCase(t, th, &testCase, testFunc)
+			testutil.RunTestCase(t, th, &testCase, testFunc)
 		})
 	}
 }

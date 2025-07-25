@@ -33,14 +33,14 @@ import (
 
 const (
 	// API Resource Search Path
-	searchManyAdventureGameCharacters = "search-many-adventure-game-characters"
+	SearchManyAdventureGameCharacters = "search-many-adventure-game-characters"
 
 	// API Resource CRUD Paths
-	getManyAdventureGameCharacters  = "get-many-adventure-game-characters"
-	getOneAdventureGameCharacter    = "get-one-adventure-game-character"
-	createOneAdventureGameCharacter = "create-one-adventure-game-character"
-	updateOneAdventureGameCharacter = "update-one-adventure-game-character"
-	deleteOneAdventureGameCharacter = "delete-one-adventure-game-character"
+	GetManyAdventureGameCharacters  = "get-many-adventure-game-characters"
+	GetOneAdventureGameCharacter    = "get-one-adventure-game-character"
+	CreateOneAdventureGameCharacter = "create-one-adventure-game-character"
+	UpdateOneAdventureGameCharacter = "update-one-adventure-game-character"
+	DeleteOneAdventureGameCharacter = "delete-one-adventure-game-character"
 )
 
 func adventureGameCharacterHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error) {
@@ -72,7 +72,7 @@ func adventureGameCharacterHandlerConfig(l logger.Logger) (map[string]server.Han
 	}
 
 	// New Adventure Game Character API paths
-	gameCharacterConfig[searchManyAdventureGameCharacters] = server.HandlerConfig{
+	gameCharacterConfig[SearchManyAdventureGameCharacters] = server.HandlerConfig{
 		Method:      http.MethodGet,
 		Path:        "/api/v1/adventure-game-characters",
 		HandlerFunc: searchManyAdventureGameCharactersHandler,
@@ -89,7 +89,7 @@ func adventureGameCharacterHandlerConfig(l logger.Logger) (map[string]server.Han
 		},
 	}
 
-	gameCharacterConfig[getManyAdventureGameCharacters] = server.HandlerConfig{
+	gameCharacterConfig[GetManyAdventureGameCharacters] = server.HandlerConfig{
 		Method:      http.MethodGet,
 		Path:        "/api/v1/adventure-games/:game_id/characters",
 		HandlerFunc: getManyAdventureGameCharactersHandler,
@@ -106,7 +106,7 @@ func adventureGameCharacterHandlerConfig(l logger.Logger) (map[string]server.Han
 		},
 	}
 
-	gameCharacterConfig[getOneAdventureGameCharacter] = server.HandlerConfig{
+	gameCharacterConfig[GetOneAdventureGameCharacter] = server.HandlerConfig{
 		Method:      http.MethodGet,
 		Path:        "/api/v1/adventure-games/:game_id/characters/:character_id",
 		HandlerFunc: getOneAdventureGameCharacterHandler,
@@ -122,7 +122,7 @@ func adventureGameCharacterHandlerConfig(l logger.Logger) (map[string]server.Han
 		},
 	}
 
-	gameCharacterConfig[createOneAdventureGameCharacter] = server.HandlerConfig{
+	gameCharacterConfig[CreateOneAdventureGameCharacter] = server.HandlerConfig{
 		Method:      http.MethodPost,
 		Path:        "/api/v1/adventure-games/:game_id/characters",
 		HandlerFunc: createOneAdventureGameCharacterHandler,
@@ -139,7 +139,7 @@ func adventureGameCharacterHandlerConfig(l logger.Logger) (map[string]server.Han
 		},
 	}
 
-	gameCharacterConfig[updateOneAdventureGameCharacter] = server.HandlerConfig{
+	gameCharacterConfig[UpdateOneAdventureGameCharacter] = server.HandlerConfig{
 		Method:      http.MethodPut,
 		Path:        "/api/v1/adventure-games/:game_id/characters/:character_id",
 		HandlerFunc: updateOneAdventureGameCharacterHandler,
@@ -156,7 +156,7 @@ func adventureGameCharacterHandlerConfig(l logger.Logger) (map[string]server.Han
 		},
 	}
 
-	gameCharacterConfig[deleteOneAdventureGameCharacter] = server.HandlerConfig{
+	gameCharacterConfig[DeleteOneAdventureGameCharacter] = server.HandlerConfig{
 		Method:      http.MethodDelete,
 		Path:        "/api/v1/adventure-games/:game_id/characters/:character_id",
 		HandlerFunc: deleteOneAdventureGameCharacterHandler,

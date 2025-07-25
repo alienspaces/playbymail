@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"maps"
 	"net/http"
 	"os"
 	"os/signal"
@@ -493,4 +494,17 @@ func validateAuthenticationTypes(handlerConfig map[string]HandlerConfig) error {
 		}
 	}
 	return nil
+}
+
+// GetHandlerConfig returns the HandlerConfig map
+func (r *Runner) GetHandlerConfig() map[string]HandlerConfig {
+	return r.HandlerConfig
+}
+
+func MergeHandlerConfigs(hc1 map[string]HandlerConfig, hc2 map[string]HandlerConfig) map[string]HandlerConfig {
+	if hc1 == nil {
+		hc1 = map[string]HandlerConfig{}
+	}
+	maps.Copy(hc1, hc2)
+	return hc1
 }

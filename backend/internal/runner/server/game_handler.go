@@ -17,12 +17,12 @@ import (
 )
 
 const (
-	getManyGames     = "get-games"
-	getOneGame       = "get-game"
-	createGame       = "create-game"
-	createGameWithID = "create-game-with-id"
-	updateGame       = "update-game"
-	deleteGame       = "delete-game"
+	GetManyGames     = "get-games"
+	GetOneGame       = "get-game"
+	CreateGame       = "create-game"
+	CreateGameWithID = "create-game-with-id"
+	UpdateGame       = "update-game"
+	DeleteGame       = "delete-game"
 )
 
 func (rnr *Runner) gameHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error) {
@@ -55,7 +55,7 @@ func (rnr *Runner) gameHandlerConfig(l logger.Logger) (map[string]server.Handler
 	}
 
 	// Unnested routes
-	gameConfig[getManyGames] = server.HandlerConfig{
+	gameConfig[GetManyGames] = server.HandlerConfig{
 		Method:      http.MethodGet,
 		Path:        "/v1/games",
 		HandlerFunc: rnr.getManyGamesHandler,
@@ -72,7 +72,7 @@ func (rnr *Runner) gameHandlerConfig(l logger.Logger) (map[string]server.Handler
 		},
 	}
 
-	gameConfig[getOneGame] = server.HandlerConfig{
+	gameConfig[GetOneGame] = server.HandlerConfig{
 		Method:      http.MethodGet,
 		Path:        "/v1/games/:game_id",
 		HandlerFunc: rnr.getGameHandler,
@@ -88,7 +88,7 @@ func (rnr *Runner) gameHandlerConfig(l logger.Logger) (map[string]server.Handler
 		},
 	}
 
-	gameConfig[createGame] = server.HandlerConfig{
+	gameConfig[CreateGame] = server.HandlerConfig{
 		Method:      http.MethodPost,
 		Path:        "/v1/games",
 		HandlerFunc: rnr.createGameHandler,
@@ -105,7 +105,7 @@ func (rnr *Runner) gameHandlerConfig(l logger.Logger) (map[string]server.Handler
 		},
 	}
 
-	gameConfig[createGameWithID] = server.HandlerConfig{
+	gameConfig[CreateGameWithID] = server.HandlerConfig{
 		Method:      http.MethodPost,
 		Path:        "/v1/games/:game_id",
 		HandlerFunc: rnr.createGameHandler,
@@ -122,7 +122,7 @@ func (rnr *Runner) gameHandlerConfig(l logger.Logger) (map[string]server.Handler
 		},
 	}
 
-	gameConfig[updateGame] = server.HandlerConfig{
+	gameConfig[UpdateGame] = server.HandlerConfig{
 		Method:      http.MethodPut,
 		Path:        "/v1/games/:game_id",
 		HandlerFunc: rnr.updateGameHandler,
@@ -139,7 +139,7 @@ func (rnr *Runner) gameHandlerConfig(l logger.Logger) (map[string]server.Handler
 		},
 	}
 
-	gameConfig[deleteGame] = server.HandlerConfig{
+	gameConfig[DeleteGame] = server.HandlerConfig{
 		Method:      http.MethodDelete,
 		Path:        "/v1/games/:game_id",
 		HandlerFunc: rnr.deleteGameHandler,

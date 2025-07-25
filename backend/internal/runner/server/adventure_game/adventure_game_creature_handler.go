@@ -32,14 +32,14 @@ import (
 
 const (
 	// API Resource Search Path
-	searchManyAdventureGameCreatures = "search-many-adventure-game-creatures"
+	SearchManyAdventureGameCreatures = "search-many-adventure-game-creatures"
 
 	// API Resource CRUD Paths
-	getManyAdventureGameCreatures  = "get-many-adventure-game-creatures"
-	getOneAdventureGameCreature    = "get-one-adventure-game-creature"
-	createOneAdventureGameCreature = "create-one-adventure-game-creature"
-	updateOneAdventureGameCreature = "update-one-adventure-game-creature"
-	deleteOneAdventureGameCreature = "delete-one-adventure-game-creature"
+	GetManyAdventureGameCreatures  = "get-many-adventure-game-creatures"
+	GetOneAdventureGameCreature    = "get-one-adventure-game-creature"
+	CreateOneAdventureGameCreature = "create-one-adventure-game-creature"
+	UpdateOneAdventureGameCreature = "update-one-adventure-game-creature"
+	DeleteOneAdventureGameCreature = "delete-one-adventure-game-creature"
 )
 
 func adventureGameCreatureHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error) {
@@ -71,7 +71,7 @@ func adventureGameCreatureHandlerConfig(l logger.Logger) (map[string]server.Hand
 	}
 
 	// New Adventure Game Creature API paths
-	gameCreatureConfig[searchManyAdventureGameCreatures] = server.HandlerConfig{
+	gameCreatureConfig[SearchManyAdventureGameCreatures] = server.HandlerConfig{
 		Method:      http.MethodGet,
 		Path:        "/api/v1/adventure-game-creatures",
 		HandlerFunc: searchManyAdventureGameCreaturesHandler,
@@ -88,7 +88,7 @@ func adventureGameCreatureHandlerConfig(l logger.Logger) (map[string]server.Hand
 		},
 	}
 
-	gameCreatureConfig[getManyAdventureGameCreatures] = server.HandlerConfig{
+	gameCreatureConfig[GetManyAdventureGameCreatures] = server.HandlerConfig{
 		Method:      http.MethodGet,
 		Path:        "/api/v1/adventure-games/:game_id/creatures",
 		HandlerFunc: getManyAdventureGameCreaturesHandler,
@@ -105,7 +105,7 @@ func adventureGameCreatureHandlerConfig(l logger.Logger) (map[string]server.Hand
 		},
 	}
 
-	gameCreatureConfig[getOneAdventureGameCreature] = server.HandlerConfig{
+	gameCreatureConfig[GetOneAdventureGameCreature] = server.HandlerConfig{
 		Method:      http.MethodGet,
 		Path:        "/api/v1/adventure-games/:game_id/creatures/:creature_id",
 		HandlerFunc: getOneAdventureGameCreatureHandler,
@@ -121,7 +121,7 @@ func adventureGameCreatureHandlerConfig(l logger.Logger) (map[string]server.Hand
 		},
 	}
 
-	gameCreatureConfig[createOneAdventureGameCreature] = server.HandlerConfig{
+	gameCreatureConfig[CreateOneAdventureGameCreature] = server.HandlerConfig{
 		Method:      http.MethodPost,
 		Path:        "/api/v1/adventure-games/:game_id/creatures",
 		HandlerFunc: createOneAdventureGameCreatureHandler,
@@ -138,7 +138,7 @@ func adventureGameCreatureHandlerConfig(l logger.Logger) (map[string]server.Hand
 		},
 	}
 
-	gameCreatureConfig[updateOneAdventureGameCreature] = server.HandlerConfig{
+	gameCreatureConfig[UpdateOneAdventureGameCreature] = server.HandlerConfig{
 		Method:      http.MethodPut,
 		Path:        "/api/v1/adventure-games/:game_id/creatures/:creature_id",
 		HandlerFunc: updateOneAdventureGameCreatureHandler,
@@ -155,7 +155,7 @@ func adventureGameCreatureHandlerConfig(l logger.Logger) (map[string]server.Hand
 		},
 	}
 
-	gameCreatureConfig[deleteOneAdventureGameCreature] = server.HandlerConfig{
+	gameCreatureConfig[DeleteOneAdventureGameCreature] = server.HandlerConfig{
 		Method:      http.MethodDelete,
 		Path:        "/api/v1/adventure-games/:game_id/creatures/:creature_id",
 		HandlerFunc: deleteOneAdventureGameCreatureHandler,

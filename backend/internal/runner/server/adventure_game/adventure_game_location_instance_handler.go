@@ -33,14 +33,14 @@ import (
 
 const (
 	// API Resource Search Path
-	searchManyAdventureGameLocationInstances = "search-many-adventure-game-location-instances"
+	SearchManyAdventureGameLocationInstances = "search-many-adventure-game-location-instances"
 
 	// API Resource CRUD Paths
-	getManyAdventureGameLocationInstances  = "get-many-adventure-game-location-instances"
-	getOneAdventureGameLocationInstance    = "get-one-adventure-game-location-instance"
-	createOneAdventureGameLocationInstance = "create-one-adventure-game-location-instance"
-	updateOneAdventureGameLocationInstance = "update-one-adventure-game-location-instance"
-	deleteOneAdventureGameLocationInstance = "delete-one-adventure-game-location-instance"
+	GetManyAdventureGameLocationInstances  = "get-many-adventure-game-location-instances"
+	GetOneAdventureGameLocationInstance    = "get-one-adventure-game-location-instance"
+	CreateOneAdventureGameLocationInstance = "create-one-adventure-game-location-instance"
+	UpdateOneAdventureGameLocationInstance = "update-one-adventure-game-location-instance"
+	DeleteOneAdventureGameLocationInstance = "delete-one-adventure-game-location-instance"
 )
 
 func adventureGameLocationInstanceHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error) {
@@ -72,7 +72,7 @@ func adventureGameLocationInstanceHandlerConfig(l logger.Logger) (map[string]ser
 	}
 
 	// New Adventure Game Location Instance API paths
-	gameLocationInstanceConfig[searchManyAdventureGameLocationInstances] = server.HandlerConfig{
+	gameLocationInstanceConfig[SearchManyAdventureGameLocationInstances] = server.HandlerConfig{
 		Method:      http.MethodGet,
 		Path:        "/api/v1/adventure-game-location-instances",
 		HandlerFunc: searchManyAdventureGameLocationInstancesHandler,
@@ -89,7 +89,7 @@ func adventureGameLocationInstanceHandlerConfig(l logger.Logger) (map[string]ser
 		},
 	}
 
-	gameLocationInstanceConfig[getManyAdventureGameLocationInstances] = server.HandlerConfig{
+	gameLocationInstanceConfig[GetManyAdventureGameLocationInstances] = server.HandlerConfig{
 		Method:      http.MethodGet,
 		Path:        "/api/v1/adventure-game-instances/:game_instance_id/location-instances",
 		HandlerFunc: getManyAdventureGameLocationInstancesHandler,
@@ -106,7 +106,7 @@ func adventureGameLocationInstanceHandlerConfig(l logger.Logger) (map[string]ser
 		},
 	}
 
-	gameLocationInstanceConfig[getOneAdventureGameLocationInstance] = server.HandlerConfig{
+	gameLocationInstanceConfig[GetOneAdventureGameLocationInstance] = server.HandlerConfig{
 		Method:      http.MethodGet,
 		Path:        "/api/v1/adventure-game-instances/:game_instance_id/location-instances/:location_instance_id",
 		HandlerFunc: getOneAdventureGameLocationInstanceHandler,
@@ -122,7 +122,7 @@ func adventureGameLocationInstanceHandlerConfig(l logger.Logger) (map[string]ser
 		},
 	}
 
-	gameLocationInstanceConfig[createOneAdventureGameLocationInstance] = server.HandlerConfig{
+	gameLocationInstanceConfig[CreateOneAdventureGameLocationInstance] = server.HandlerConfig{
 		Method:      http.MethodPost,
 		Path:        "/api/v1/adventure-game-instances/:game_instance_id/location-instances",
 		HandlerFunc: createOneAdventureGameLocationInstanceHandler,
@@ -139,7 +139,7 @@ func adventureGameLocationInstanceHandlerConfig(l logger.Logger) (map[string]ser
 		},
 	}
 
-	gameLocationInstanceConfig[updateOneAdventureGameLocationInstance] = server.HandlerConfig{
+	gameLocationInstanceConfig[UpdateOneAdventureGameLocationInstance] = server.HandlerConfig{
 		Method:      http.MethodPut,
 		Path:        "/api/v1/adventure-game-instances/:game_instance_id/location-instances/:location_instance_id",
 		HandlerFunc: updateOneAdventureGameLocationInstanceHandler,
@@ -156,7 +156,7 @@ func adventureGameLocationInstanceHandlerConfig(l logger.Logger) (map[string]ser
 		},
 	}
 
-	gameLocationInstanceConfig[deleteOneAdventureGameLocationInstance] = server.HandlerConfig{
+	gameLocationInstanceConfig[DeleteOneAdventureGameLocationInstance] = server.HandlerConfig{
 		Method:      http.MethodDelete,
 		Path:        "/api/v1/adventure-game-instances/:game_instance_id/location-instances/:location_instance_id",
 		HandlerFunc: deleteOneAdventureGameLocationInstanceHandler,

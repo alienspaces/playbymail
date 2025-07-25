@@ -19,12 +19,126 @@ import (
 )
 
 const (
-	searchManyAdventureGameCreaturePlacements = "searchManyAdventureGameCreaturePlacements"
-	createOneAdventureGameCreaturePlacement   = "createOneAdventureGameCreaturePlacement"
-	getOneAdventureGameCreaturePlacement      = "getOneAdventureGameCreaturePlacement"
-	updateOneAdventureGameCreaturePlacement   = "updateOneAdventureGameCreaturePlacement"
-	deleteOneAdventureGameCreaturePlacement   = "deleteOneAdventureGameCreaturePlacement"
+	SearchManyAdventureGameCreaturePlacements = "searchManyAdventureGameCreaturePlacements"
+	CreateOneAdventureGameCreaturePlacement   = "createOneAdventureGameCreaturePlacement"
+	GetOneAdventureGameCreaturePlacement      = "getOneAdventureGameCreaturePlacement"
+	UpdateOneAdventureGameCreaturePlacement   = "updateOneAdventureGameCreaturePlacement"
+	DeleteOneAdventureGameCreaturePlacement   = "deleteOneAdventureGameCreaturePlacement"
 )
+
+// adventureGameCreaturePlacementHandlerConfig -
+func adventureGameCreaturePlacementHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error) {
+	l = logging.LoggerWithFunctionContext(l, packageName, "adventureGameCreaturePlacementHandlerConfig")
+
+	l.Debug("Adding adventure_game_creature_placement handler configuration")
+
+	creaturePlacementConfig := make(map[string]server.HandlerConfig)
+
+	collectionResponseSchema := jsonschema.SchemaWithReferences{
+		Main: jsonschema.Schema{
+			Name: "adventure_game_creature_placement.collection.response.schema.json",
+		},
+		References: referenceSchemas,
+	}
+
+	requestSchema := jsonschema.SchemaWithReferences{
+		Main: jsonschema.Schema{
+			Name: "adventure_game_creature_placement.request.schema.json",
+		},
+		References: referenceSchemas,
+	}
+
+	responseSchema := jsonschema.SchemaWithReferences{
+		Main: jsonschema.Schema{
+			Name: "adventure_game_creature_placement.response.schema.json",
+		},
+		References: referenceSchemas,
+	}
+
+	creaturePlacementConfig[SearchManyAdventureGameCreaturePlacements] = server.HandlerConfig{
+		Method:      http.MethodGet,
+		Path:        "/api/v1/adventure-games/:game_id/creature-placements",
+		HandlerFunc: searchManyAdventureGameCreaturePlacementsHandler,
+		MiddlewareConfig: server.MiddlewareConfig{
+			AuthenTypes: []server.AuthenticationType{
+				server.AuthenticationTypeToken,
+			},
+			ValidateResponseSchema: collectionResponseSchema,
+		},
+		DocumentationConfig: server.DocumentationConfig{
+			Document:   true,
+			Collection: true,
+			Title:      "Get many adventure game creature placements",
+		},
+	}
+
+	creaturePlacementConfig[CreateOneAdventureGameCreaturePlacement] = server.HandlerConfig{
+		Method:      http.MethodPost,
+		Path:        "/api/v1/adventure-games/:game_id/creature-placements",
+		HandlerFunc: createOneAdventureGameCreaturePlacementHandler,
+		MiddlewareConfig: server.MiddlewareConfig{
+			AuthenTypes: []server.AuthenticationType{
+				server.AuthenticationTypeToken,
+			},
+			ValidateRequestSchema:  requestSchema,
+			ValidateResponseSchema: responseSchema,
+		},
+		DocumentationConfig: server.DocumentationConfig{
+			Document: true,
+			Title:    "Create one adventure game creature placement",
+		},
+	}
+
+	creaturePlacementConfig[GetOneAdventureGameCreaturePlacement] = server.HandlerConfig{
+		Method:      http.MethodGet,
+		Path:        "/api/v1/adventure-games/:game_id/creature-placements/:placement_id",
+		HandlerFunc: getOneAdventureGameCreaturePlacementHandler,
+		MiddlewareConfig: server.MiddlewareConfig{
+			AuthenTypes: []server.AuthenticationType{
+				server.AuthenticationTypeToken,
+			},
+			ValidateResponseSchema: responseSchema,
+		},
+		DocumentationConfig: server.DocumentationConfig{
+			Document: true,
+			Title:    "Get one adventure game creature placement",
+		},
+	}
+
+	creaturePlacementConfig[UpdateOneAdventureGameCreaturePlacement] = server.HandlerConfig{
+		Method:      http.MethodPut,
+		Path:        "/api/v1/adventure-games/:game_id/creature-placements/:placement_id",
+		HandlerFunc: updateOneAdventureGameCreaturePlacementHandler,
+		MiddlewareConfig: server.MiddlewareConfig{
+			AuthenTypes: []server.AuthenticationType{
+				server.AuthenticationTypeToken,
+			},
+			ValidateRequestSchema:  requestSchema,
+			ValidateResponseSchema: responseSchema,
+		},
+		DocumentationConfig: server.DocumentationConfig{
+			Document: true,
+			Title:    "Update one adventure game creature placement",
+		},
+	}
+
+	creaturePlacementConfig[DeleteOneAdventureGameCreaturePlacement] = server.HandlerConfig{
+		Method:      http.MethodDelete,
+		Path:        "/api/v1/adventure-games/:game_id/creature-placements/:placement_id",
+		HandlerFunc: deleteOneAdventureGameCreaturePlacementHandler,
+		MiddlewareConfig: server.MiddlewareConfig{
+			AuthenTypes: []server.AuthenticationType{
+				server.AuthenticationTypeToken,
+			},
+		},
+		DocumentationConfig: server.DocumentationConfig{
+			Document: true,
+			Title:    "Delete one adventure game creature placement",
+		},
+	}
+
+	return creaturePlacementConfig, nil
+}
 
 // searchManyAdventureGameCreaturePlacementsHandler -
 func searchManyAdventureGameCreaturePlacementsHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
@@ -206,118 +320,4 @@ func deleteOneAdventureGameCreaturePlacementHandler(w http.ResponseWriter, r *ht
 
 	w.WriteHeader(http.StatusNoContent)
 	return nil
-}
-
-// adventureGameCreaturePlacementHandlerConfig -
-func adventureGameCreaturePlacementHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error) {
-	l = logging.LoggerWithFunctionContext(l, packageName, "adventureGameCreaturePlacementHandlerConfig")
-
-	l.Debug("Adding adventure_game_creature_placement handler configuration")
-
-	creaturePlacementConfig := make(map[string]server.HandlerConfig)
-
-	collectionResponseSchema := jsonschema.SchemaWithReferences{
-		Main: jsonschema.Schema{
-			Name: "adventure_game_creature_placement.collection.response.schema.json",
-		},
-		References: referenceSchemas,
-	}
-
-	requestSchema := jsonschema.SchemaWithReferences{
-		Main: jsonschema.Schema{
-			Name: "adventure_game_creature_placement.request.schema.json",
-		},
-		References: referenceSchemas,
-	}
-
-	responseSchema := jsonschema.SchemaWithReferences{
-		Main: jsonschema.Schema{
-			Name: "adventure_game_creature_placement.response.schema.json",
-		},
-		References: referenceSchemas,
-	}
-
-	creaturePlacementConfig[searchManyAdventureGameCreaturePlacements] = server.HandlerConfig{
-		Method:      http.MethodGet,
-		Path:        "/api/v1/adventure-games/:game_id/creature-placements",
-		HandlerFunc: searchManyAdventureGameCreaturePlacementsHandler,
-		MiddlewareConfig: server.MiddlewareConfig{
-			AuthenTypes: []server.AuthenticationType{
-				server.AuthenticationTypeToken,
-			},
-			ValidateResponseSchema: collectionResponseSchema,
-		},
-		DocumentationConfig: server.DocumentationConfig{
-			Document:   true,
-			Collection: true,
-			Title:      "Get many adventure game creature placements",
-		},
-	}
-
-	creaturePlacementConfig[createOneAdventureGameCreaturePlacement] = server.HandlerConfig{
-		Method:      http.MethodPost,
-		Path:        "/api/v1/adventure-games/:game_id/creature-placements",
-		HandlerFunc: createOneAdventureGameCreaturePlacementHandler,
-		MiddlewareConfig: server.MiddlewareConfig{
-			AuthenTypes: []server.AuthenticationType{
-				server.AuthenticationTypeToken,
-			},
-			ValidateRequestSchema:  requestSchema,
-			ValidateResponseSchema: responseSchema,
-		},
-		DocumentationConfig: server.DocumentationConfig{
-			Document: true,
-			Title:    "Create one adventure game creature placement",
-		},
-	}
-
-	creaturePlacementConfig[getOneAdventureGameCreaturePlacement] = server.HandlerConfig{
-		Method:      http.MethodGet,
-		Path:        "/api/v1/adventure-games/:game_id/creature-placements/:placement_id",
-		HandlerFunc: getOneAdventureGameCreaturePlacementHandler,
-		MiddlewareConfig: server.MiddlewareConfig{
-			AuthenTypes: []server.AuthenticationType{
-				server.AuthenticationTypeToken,
-			},
-			ValidateResponseSchema: responseSchema,
-		},
-		DocumentationConfig: server.DocumentationConfig{
-			Document: true,
-			Title:    "Get one adventure game creature placement",
-		},
-	}
-
-	creaturePlacementConfig[updateOneAdventureGameCreaturePlacement] = server.HandlerConfig{
-		Method:      http.MethodPut,
-		Path:        "/api/v1/adventure-games/:game_id/creature-placements/:placement_id",
-		HandlerFunc: updateOneAdventureGameCreaturePlacementHandler,
-		MiddlewareConfig: server.MiddlewareConfig{
-			AuthenTypes: []server.AuthenticationType{
-				server.AuthenticationTypeToken,
-			},
-			ValidateRequestSchema:  requestSchema,
-			ValidateResponseSchema: responseSchema,
-		},
-		DocumentationConfig: server.DocumentationConfig{
-			Document: true,
-			Title:    "Update one adventure game creature placement",
-		},
-	}
-
-	creaturePlacementConfig[deleteOneAdventureGameCreaturePlacement] = server.HandlerConfig{
-		Method:      http.MethodDelete,
-		Path:        "/api/v1/adventure-games/:game_id/creature-placements/:placement_id",
-		HandlerFunc: deleteOneAdventureGameCreaturePlacementHandler,
-		MiddlewareConfig: server.MiddlewareConfig{
-			AuthenTypes: []server.AuthenticationType{
-				server.AuthenticationTypeToken,
-			},
-		},
-		DocumentationConfig: server.DocumentationConfig{
-			Document: true,
-			Title:    "Delete one adventure game creature placement",
-		},
-	}
-
-	return creaturePlacementConfig, nil
 }

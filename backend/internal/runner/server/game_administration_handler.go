@@ -16,11 +16,11 @@ import (
 )
 
 const (
-	getManyGameAdministrations = "get-game-administrations"
-	getOneGameAdministration   = "get-game-administration"
-	createGameAdministration   = "create-game-administration"
-	updateGameAdministration   = "update-game-administration"
-	deleteGameAdministration   = "delete-game-administration"
+	GetManyGameAdministrations = "get-game-administrations"
+	GetOneGameAdministration   = "get-game-administration"
+	CreateGameAdministration   = "create-game-administration"
+	UpdateGameAdministration   = "update-game-administration"
+	DeleteGameAdministration   = "delete-game-administration"
 )
 
 func (rnr *Runner) gameAdministrationHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error) {
@@ -43,7 +43,7 @@ func (rnr *Runner) gameAdministrationHandlerConfig(l logger.Logger) (map[string]
 		References: referenceSchemas,
 	}
 
-	config[getManyGameAdministrations] = server.HandlerConfig{
+	config[GetManyGameAdministrations] = server.HandlerConfig{
 		Method:      http.MethodGet,
 		Path:        "/v1/game-administrations",
 		HandlerFunc: rnr.getManyGameAdministrationsHandler,
@@ -52,7 +52,7 @@ func (rnr *Runner) gameAdministrationHandlerConfig(l logger.Logger) (map[string]
 			ValidateResponseSchema: collectionResponseSchema,
 		},
 	}
-	config[getOneGameAdministration] = server.HandlerConfig{
+	config[GetOneGameAdministration] = server.HandlerConfig{
 		Method:      http.MethodGet,
 		Path:        "/v1/game-administrations/:game_administration_id",
 		HandlerFunc: rnr.getGameAdministrationHandler,
@@ -61,7 +61,7 @@ func (rnr *Runner) gameAdministrationHandlerConfig(l logger.Logger) (map[string]
 			ValidateResponseSchema: responseSchema,
 		},
 	}
-	config[createGameAdministration] = server.HandlerConfig{
+	config[CreateGameAdministration] = server.HandlerConfig{
 		Method:      http.MethodPost,
 		Path:        "/v1/game-administrations",
 		HandlerFunc: rnr.createGameAdministrationHandler,
@@ -71,7 +71,7 @@ func (rnr *Runner) gameAdministrationHandlerConfig(l logger.Logger) (map[string]
 			ValidateResponseSchema: responseSchema,
 		},
 	}
-	config[updateGameAdministration] = server.HandlerConfig{
+	config[UpdateGameAdministration] = server.HandlerConfig{
 		Method:      http.MethodPut,
 		Path:        "/v1/game-administrations/:game_administration_id",
 		HandlerFunc: rnr.updateGameAdministrationHandler,
@@ -81,7 +81,7 @@ func (rnr *Runner) gameAdministrationHandlerConfig(l logger.Logger) (map[string]
 			ValidateResponseSchema: responseSchema,
 		},
 	}
-	config[deleteGameAdministration] = server.HandlerConfig{
+	config[DeleteGameAdministration] = server.HandlerConfig{
 		Method:      http.MethodDelete,
 		Path:        "/v1/game-administrations/:game_administration_id",
 		HandlerFunc: rnr.deleteGameAdministrationHandler,

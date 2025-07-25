@@ -22,17 +22,17 @@ import (
 )
 
 const (
-	getManyAccounts     = "get-accounts"
-	getOneAccount       = "get-account"
-	createAccount       = "create-account"
-	createAccountWithID = "create-account-with-id"
-	updateAccount       = "update-account"
-	deleteAccount       = "delete-account"
+	GetManyAccounts     = "get-accounts"
+	GetOneAccount       = "get-account"
+	CreateAccount       = "create-account"
+	CreateAccountWithID = "create-account-with-id"
+	UpdateAccount       = "update-account"
+	DeleteAccount       = "delete-account"
 )
 
 const (
-	requestAuth = "request-auth"
-	verifyAuth  = "verify-auth"
+	RequestAuth = "request-auth"
+	VerifyAuth  = "verify-auth"
 )
 
 func (rnr *Runner) accountHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error) {
@@ -63,7 +63,7 @@ func (rnr *Runner) accountHandlerConfig(l logger.Logger) (map[string]server.Hand
 		References: referenceSchemas,
 	}
 
-	accountConfig[getManyAccounts] = server.HandlerConfig{
+	accountConfig[GetManyAccounts] = server.HandlerConfig{
 		Method:      http.MethodGet,
 		Path:        "/v1/accounts",
 		HandlerFunc: rnr.getManyAccountsHandler,
@@ -80,7 +80,7 @@ func (rnr *Runner) accountHandlerConfig(l logger.Logger) (map[string]server.Hand
 		},
 	}
 
-	accountConfig[getOneAccount] = server.HandlerConfig{
+	accountConfig[GetOneAccount] = server.HandlerConfig{
 		Method:      http.MethodGet,
 		Path:        "/v1/accounts/:account_id",
 		HandlerFunc: rnr.getAccountHandler,
@@ -96,7 +96,7 @@ func (rnr *Runner) accountHandlerConfig(l logger.Logger) (map[string]server.Hand
 		},
 	}
 
-	accountConfig[createAccount] = server.HandlerConfig{
+	accountConfig[CreateAccount] = server.HandlerConfig{
 		Method:      http.MethodPost,
 		Path:        "/v1/accounts",
 		HandlerFunc: rnr.createAccountHandler,
@@ -113,7 +113,7 @@ func (rnr *Runner) accountHandlerConfig(l logger.Logger) (map[string]server.Hand
 		},
 	}
 
-	accountConfig[createAccountWithID] = server.HandlerConfig{
+	accountConfig[CreateAccountWithID] = server.HandlerConfig{
 		Method:      http.MethodPost,
 		Path:        "/v1/accounts/:account_id",
 		HandlerFunc: rnr.createAccountHandler,
@@ -130,7 +130,7 @@ func (rnr *Runner) accountHandlerConfig(l logger.Logger) (map[string]server.Hand
 		},
 	}
 
-	accountConfig[updateAccount] = server.HandlerConfig{
+	accountConfig[UpdateAccount] = server.HandlerConfig{
 		Method:      http.MethodPut,
 		Path:        "/v1/accounts/:account_id",
 		HandlerFunc: rnr.updateAccountHandler,
@@ -147,7 +147,7 @@ func (rnr *Runner) accountHandlerConfig(l logger.Logger) (map[string]server.Hand
 		},
 	}
 
-	accountConfig[deleteAccount] = server.HandlerConfig{
+	accountConfig[DeleteAccount] = server.HandlerConfig{
 		Method:      http.MethodDelete,
 		Path:        "/v1/accounts/:account_id",
 		HandlerFunc: rnr.deleteAccountHandler,
@@ -162,7 +162,7 @@ func (rnr *Runner) accountHandlerConfig(l logger.Logger) (map[string]server.Hand
 		},
 	}
 
-	accountConfig[requestAuth] = server.HandlerConfig{
+	accountConfig[RequestAuth] = server.HandlerConfig{
 		Method:      http.MethodPost,
 		Path:        "/request-auth",
 		HandlerFunc: rnr.requestAuthHandler,
@@ -187,7 +187,7 @@ func (rnr *Runner) accountHandlerConfig(l logger.Logger) (map[string]server.Hand
 		},
 	}
 
-	accountConfig[verifyAuth] = server.HandlerConfig{
+	accountConfig[VerifyAuth] = server.HandlerConfig{
 		Method:      http.MethodPost,
 		Path:        "/verify-auth",
 		HandlerFunc: rnr.verifyAuthHandler,
