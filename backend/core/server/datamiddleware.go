@@ -1,6 +1,7 @@
 package server
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"io"
@@ -27,7 +28,7 @@ func (rnr *Runner) DataMiddleware(hc HandlerConfig, h Handle) (Handle, error) {
 			return h(w, r, pp, qp, l, m)
 		}
 
-		data, err := RequestData(r)
+		data, err := GetRequestData(r)
 		if err != nil {
 			l.Warn("(core) failed reading request data >%v<", err)
 			return err
@@ -79,4 +80,24 @@ func (rnr *Runner) DataMiddleware(hc HandlerConfig, h Handle) (Handle, error) {
 	}
 
 	return handle, nil
+}
+
+// GetRequestData returns the request data from the http request, allowing multiple reads from the request body
+func GetRequestData(r *http.Request) ([]byte, error) {
+	if r.Body == nil {
+		return nil, nil
+	}
+
+	d, err := io.ReadAll(r.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	r.Body = io.NopCloser(bytes.NewBuffer(d))
+
+	if len(d) == 0 {
+		return nil, nil
+	}
+
+	return d, nil
 }

@@ -94,19 +94,19 @@ func (rnr *Runner) domainFunc(l logger.Logger) (domainer.Domainer, error) {
 }
 
 // authenticateRequestFunc authenticates a request based on the authentication type
-func (rnr *Runner) authenticateRequestFunc(l logger.Logger, m domainer.Domainer, r *http.Request, authType server.AuthenticationType) (server.AuthenticatedRequest, error) {
+func (rnr *Runner) authenticateRequestFunc(l logger.Logger, m domainer.Domainer, r *http.Request, authType server.AuthenticationType) (server.AuthenData, error) {
 
 	switch authType {
 	case server.AuthenticationTypeToken:
 		return rnr.authenticateRequestTokenFunc(l, m, r)
 	default:
-		return server.AuthenticatedRequest{}, nil
+		return server.AuthenData{}, nil
 	}
 }
 
 // authenticateRequestTokenFunc authenticates a request based on a session token. Returning anything
-// other than an AuthenticatedRequest{} with a valid Typewill result in a 401 Unauthorized response.
-func (rnr *Runner) authenticateRequestTokenFunc(l logger.Logger, m domainer.Domainer, r *http.Request) (server.AuthenticatedRequest, error) {
+// other than an AuthenData{} with a valid Typewill result in a 401 Unauthorized response.
+func (rnr *Runner) authenticateRequestTokenFunc(l logger.Logger, m domainer.Domainer, r *http.Request) (server.AuthenData, error) {
 
 	l.Info("(playbymail) authenticateRequestTokenFunc called")
 
@@ -115,15 +115,15 @@ func (rnr *Runner) authenticateRequestTokenFunc(l logger.Logger, m domainer.Doma
 	accountRec, err := mm.VerifyAccountSessionToken(r.Header.Get("Authorization"))
 	if err != nil {
 		l.Warn("(playbymail) failed to verify account session token >%v<", err)
-		return server.AuthenticatedRequest{}, err
+		return server.AuthenData{}, err
 	}
 
 	if accountRec == nil {
 		l.Warn("(playbymail) no account found for session token")
-		return server.AuthenticatedRequest{}, nil
+		return server.AuthenData{}, nil
 	}
 
-	return server.AuthenticatedRequest{
+	return server.AuthenData{
 		Type: server.AuthenticatedTypeToken,
 		Account: server.AuthenticatedAccount{
 			ID:    accountRec.ID,

@@ -78,11 +78,12 @@ type Runner struct {
 	DomainFunc func(l logger.Logger) (domainer.Domainer, error)
 
 	// AuthenticateRequestFunc authenticates a request based on the authentication type
-	AuthenticateRequestFunc func(l logger.Logger, m domainer.Domainer, r *http.Request, authType AuthenticationType) (AuthenticatedRequest, error)
+	AuthenticateRequestFunc func(l logger.Logger, m domainer.Domainer, r *http.Request, authType AuthenticationType) (AuthenData, error)
 
-	// SetRLSFunc is the service specific RLS configuration implementation.
-	// This is used to set the RLS configuration for the domainer.
-	SetRLSFunc func(l logger.Logger, m domainer.Domainer, authedReq AuthenticatedRequest) (RLS, error)
+	// RLSFunc is the service specific RLS implementation which is responsible for
+	// returning a map of identifiers the current user has access to. This is used
+	// to set the RLS constraints on the repositories.
+	RLSFunc func(l logger.Logger, m domainer.Domainer, authedReq AuthenData) (RLS, error)
 }
 
 type HTTPCORSConfig struct {
@@ -112,14 +113,14 @@ type HandlerConfig struct {
 	DocumentationConfig DocumentationConfig
 }
 
-type AuthenticatedRequest struct {
+type AuthenData struct {
 	Type        AuthenticatedType      `json:"type"`
 	RLSType     RLSType                `json:"-"`
 	Account     AuthenticatedAccount   `json:"account"`
 	Permissions []AuthorizedPermission `json:"permissions"`
 }
 
-func (a AuthenticatedRequest) IsAuthenticated() bool {
+func (a AuthenData) IsAuthenticated() bool {
 	return a.Type != ""
 }
 

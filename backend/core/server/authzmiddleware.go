@@ -21,30 +21,30 @@ func (rnr *Runner) AuthzMiddleware(hc HandlerConfig, h Handle) (Handle, error) {
 		l = Logger(l, "AuthzMiddleware")
 
 		if _, ok := authenTypes[AuthenticationTypePublic]; ok {
-			l.Debug("(core) handler name >%s< is public, not checking permissions", hc.Name)
+			l.Debug("(authzmiddleware) handler name >%s< is public, not checking permissions", hc.Name)
 			return h(w, r, pp, qp, l, m)
 		}
 
-		authenticatedRequest := RequestAuthData(l, r)
-		if authenticatedRequest == nil {
-			err := coreerror.NewInternalError("failed to read auth data")
+		AuthenData := GetRequestAuthenData(l, r)
+		if AuthenData == nil {
+			err := coreerror.NewInternalError("failed to read request authen data")
 			l.Warn(err.Error())
 			return err
 		}
 
 		// If no permissions are required, allow the request
 		if len(authzPermissions) == 0 {
-			l.Debug("(core) handler name >%s< requires no permissions, allowing request", hc.Name)
+			l.Debug("(authzmiddleware) handler name >%s< requires no permissions, allowing request", hc.Name)
 			return h(w, r, pp, qp, l, m)
 		}
 
-		for _, permission := range authenticatedRequest.Permissions {
+		for _, permission := range AuthenData.Permissions {
 			if _, ok := authzPermissions[permission]; ok {
 				return h(w, r, pp, qp, l, m)
 			}
 		}
 
-		l.Warn("(core) authenticated request >%#v< does not contain any required permissions >%#v<", authenticatedRequest.Permissions, hc.MiddlewareConfig.AuthzPermissions)
+		l.Warn("(authzmiddleware) authenticated request >%#v< does not contain any required permissions >%#v<", AuthenData.Permissions, hc.MiddlewareConfig.AuthzPermissions)
 
 		return coreerror.NewUnauthorizedError()
 	}

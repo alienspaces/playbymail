@@ -13,7 +13,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"gitlab.com/alienspaces/playbymail/core/config"
-	"gitlab.com/alienspaces/playbymail/core/domain"
 	"gitlab.com/alienspaces/playbymail/core/type/domainer"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
 	"gitlab.com/alienspaces/playbymail/core/type/storer"
@@ -34,8 +33,8 @@ func (rnr *TestRunner) Init(l logger.Logger, s storer.Storer) error {
 	return rnr.InitFunc(l, s)
 }
 
-func (rnr *TestRunner) mockAuthenticateRequestFunc(l logger.Logger, m domainer.Domainer, r *http.Request, authType AuthenticationType) (AuthenticatedRequest, error) {
-	return AuthenticatedRequest{
+func (rnr *TestRunner) mockAuthenticateRequestFunc(l logger.Logger, m domainer.Domainer, r *http.Request, authType AuthenticationType) (AuthenData, error) {
+	return AuthenData{
 		Type: AuthenticatedTypeToken,
 		Account: AuthenticatedAccount{
 			ID:    "test-user-id",
@@ -55,9 +54,9 @@ func newTestRunner(l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], cf
 		Runner: *cRnr,
 	}
 
-	tr.DomainFunc = func(l logger.Logger) (domainer.Domainer, error) {
-		return domain.NewDomain(l)
-	}
+	// tr.DomainFunc = func(l logger.Logger) (domainer.Domainer, error) {
+	// 	return domain.NewDomain(l)
+	// }
 
 	tr.AuthenticateRequestFunc = tr.mockAuthenticateRequestFunc
 

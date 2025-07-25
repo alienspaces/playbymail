@@ -97,8 +97,8 @@ func (t *TestCase) TestNewRunner(l logger.Logger, s storer.Storer, j *river.Clie
 	}
 
 	// For general testing all handlers are authenticated by default
-	rnr.AuthenticateRequestFunc = func(l logger.Logger, m domainer.Domainer, r *http.Request, authType server.AuthenticationType) (server.AuthenticatedRequest, error) {
-		return server.AuthenticatedRequest{
+	rnr.AuthenticateRequestFunc = func(l logger.Logger, m domainer.Domainer, r *http.Request, authType server.AuthenticationType) (server.AuthenData, error) {
+		return server.AuthenData{
 			Type: server.AuthenticatedTypeToken,
 			Account: server.AuthenticatedAccount{
 				ID:    "test-account-id",

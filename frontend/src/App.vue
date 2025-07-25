@@ -26,16 +26,17 @@ function closeMobileMenu() {
     <nav class="navbar">
       <div class="nav-links">
         <router-link to="/" class="logo">PlayByMail</router-link>
-        <router-link to="/faq" exact-active-class="active" @click="closeMobileMenu">F.A.Q.</router-link>
-        <router-link to="/studio" exact-active-class="active" @click="closeMobileMenu">Game Designer Studio</router-link>
-        <router-link to="/admin" exact-active-class="active" @click="closeMobileMenu">Game Management & Admin</router-link>
+        <router-link to="/faq" class="navbar-link" exact-active-class="active" @click="closeMobileMenu">F.A.Q.</router-link>
+        <router-link to="/studio" class="navbar-link" exact-active-class="active" @click="closeMobileMenu">Game Designer Studio</router-link>
+        <router-link to="/admin" class="navbar-link" exact-active-class="active" @click="closeMobileMenu">Game Management & Admin</router-link>
       </div>
       <div class="nav-actions">
         <template v-if="sessionToken">
+          <router-link to="/account" class="navbar-link" exact-active-class="active" @click="closeMobileMenu">Account</router-link>
           <button @click="logout">Logout</button>
         </template>
         <template v-else>
-          <router-link to="/login" @click="closeMobileMenu">Login</router-link>
+          <router-link to="/login" class="navbar-link" @click="closeMobileMenu">Login</router-link>
         </template>
       </div>
       <div class="mobile-logo">PlayByMail</div>
@@ -45,15 +46,16 @@ function closeMobileMenu() {
         <span :class="{ 'open': mobileMenuOpen }"></span>
       </button>
       <div class="mobile-menu" v-if="mobileMenuOpen">
-        <router-link to="/faq" exact-active-class="active" @click="closeMobileMenu">F.A.Q.</router-link>
-        <router-link to="/studio" exact-active-class="active" @click="closeMobileMenu">Game Designer Studio</router-link>
-        <router-link to="/admin" exact-active-class="active" @click="closeMobileMenu">Game Management & Admin</router-link>
+        <router-link to="/faq" class="navbar-link" exact-active-class="active" @click="closeMobileMenu">F.A.Q.</router-link>
+        <router-link to="/studio" class="navbar-link" exact-active-class="active" @click="closeMobileMenu">Game Designer Studio</router-link>
+        <router-link to="/admin" class="navbar-link" exact-active-class="active" @click="closeMobileMenu">Game Management & Admin</router-link>
         <div class="mobile-actions">
           <template v-if="sessionToken">
+            <router-link to="/account" class="navbar-link" exact-active-class="active" @click="closeMobileMenu">Account</router-link>
             <button @click="logout">Logout</button>
           </template>
           <template v-else>
-            <router-link to="/login" @click="closeMobileMenu">Login</router-link>
+            <router-link to="/login" class="navbar-link" @click="closeMobileMenu">Login</router-link>
           </template>
         </div>
       </div>
@@ -80,18 +82,6 @@ function closeMobileMenu() {
   gap: var(--space-lg);
   align-items: center;
 }
-.nav-links a {
-  color: var(--color-text-light);
-  text-decoration: none;
-  font-weight: 500;
-  padding: var(--space-xs) var(--space-sm);
-  border-radius: 3px;
-  transition: background 0.2s;
-}
-.nav-links a.active {
-  background: var(--color-primary);
-  color: var(--color-text-light);
-}
 .logo {
   font-weight: var(--font-weight-bold);
   font-size: var(--font-size-xl);
@@ -99,8 +89,8 @@ function closeMobileMenu() {
 }
 .nav-actions {
   display: flex;
-  gap: var(--space-md);
   align-items: center;
+  gap: var(--space-md);
 }
 .nav-actions button {
   background: var(--color-text-light);

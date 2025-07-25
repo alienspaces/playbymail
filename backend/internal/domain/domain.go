@@ -1,8 +1,6 @@
 package domain
 
 import (
-	"maps"
-
 	"github.com/jackc/pgx/v5"
 	"github.com/riverqueue/river"
 
@@ -45,31 +43,33 @@ func NewDomain(l logger.Logger, j *river.Client[pgx.Tx], cfg config.Config) (*Do
 		return nil, err
 	}
 
-	m := &Domain{
-		Domain: domain.Domain{
-			Log: l.WithPackageContext("domain"),
-			RepositoryConstructors: []domain.RepositoryConstructor{
-				account.NewRepository,
-				game.NewRepository,
-				adventure_game_location.NewRepository,
-				adventure_game_location_link.NewRepository,
-				adventure_game_character.NewRepository,
-				adventure_game_item.NewRepository,
-				adventure_game_creature.NewRepository,
-				adventure_game_item_instance.NewRepository,
-				adventure_game_item_placement.NewRepository,
-				adventure_game_creature_placement.NewRepository,
-				adventure_game_location_link_requirement.NewRepository,
-				adventure_game_instance.NewRepository,
-				adventure_game_location_instance.NewRepository,
-				adventure_game_creature_instance.NewRepository,
-				adventure_game_character_instance.NewRepository,
-			},
-		},
-		config: cfg,
+	repositoryConstructors := []domain.RepositoryConstructor{
+		account.NewRepository,
+		game.NewRepository,
+		adventure_game_location.NewRepository,
+		adventure_game_location_link.NewRepository,
+		adventure_game_character.NewRepository,
+		adventure_game_item.NewRepository,
+		adventure_game_creature.NewRepository,
+		adventure_game_item_instance.NewRepository,
+		adventure_game_item_placement.NewRepository,
+		adventure_game_creature_placement.NewRepository,
+		adventure_game_location_link_requirement.NewRepository,
+		adventure_game_instance.NewRepository,
+		adventure_game_location_instance.NewRepository,
+		adventure_game_creature_instance.NewRepository,
+		adventure_game_character_instance.NewRepository,
 	}
 
-	m.SetRLSFunc = m.SetRLS
+	cd, err := domain.NewDomain(l, repositoryConstructors)
+	if err != nil {
+		return nil, err
+	}
+
+	m := &Domain{
+		Domain: *cd,
+		config: cfg,
+	}
 
 	l.Info("returning domain %+v", m)
 
@@ -151,28 +151,28 @@ func (m *Domain) AdventureGameCharacterInstanceRepository() *repository.Generic[
 	return m.Repositories[record.TableAdventureGameCharacterInstance].(*repository.Generic[record.AdventureGameCharacterInstance, *record.AdventureGameCharacterInstance])
 }
 
-// SetRLS -
-func (m *Domain) SetRLS(identifiers map[string][]string) {
+// // SetRLS -
+// func (m *Domain) SetRLS(identifiers map[string][]string) {
 
-	// We'll be resetting the "id" key when we use the map
-	ri := maps.Clone(identifiers)
+// 	// We'll be resetting the "id" key when we use the map
+// 	ri := maps.Clone(identifiers)
 
-	for tableName := range m.Repositories {
+// 	for tableName := range m.Repositories {
 
-		// When the repository table name matches an RLS identifier key, we apply the
-		// RLS constraints to the "id" column to enforce any RLS constraints on itself!
-		// Can this be done inside repository core code on itself? Absolutely... but it
-		// would be making a naive assumption about conventions. This project's convention
-		// is to name foreign key columns according to the table name it foreign keys to.
-		// If that convention is not followed, then the following block would not work.
-		if _, ok := ri[tableName+"_id"]; ok {
-			ri["id"] = ri[tableName+"_id"]
-			m.Repositories[tableName].SetRLS(ri)
-			continue
-		}
-		m.Repositories[tableName].SetRLS(identifiers)
-	}
-}
+// 		// When the repository table name matches an RLS identifier key, we apply the
+// 		// RLS constraints to the "id" column to enforce any RLS constraints on itself!
+// 		// Can this be done inside repository core code on itself? Absolutely... but it
+// 		// would be making a naive assumption about conventions. This project's convention
+// 		// is to name foreign key columns according to the table name it foreign keys to.
+// 		// If that convention is not followed, then the following block would not work.
+// 		if _, ok := ri[tableName+"_id"]; ok {
+// 			ri["id"] = ri[tableName+"_id"]
+// 			m.Repositories[tableName].SetRLS(ri)
+// 			continue
+// 		}
+// 		m.Repositories[tableName].SetRLS(identifiers)
+// 	}
+// }
 
 // Logger - Returns a logger with package context and provided function context
 func (m *Domain) Logger(functionName string) logger.Logger {

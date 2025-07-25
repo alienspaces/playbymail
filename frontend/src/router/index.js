@@ -45,6 +45,11 @@ const routes = [
     component: FaqView,
   },
   {
+    path: '/account',
+    name: 'Account',
+    component: () => import('../views/AccountView.vue'),
+  },
+  {
     path: '/admin',
     name: 'AdminEntry',
     component: AdminEntryView,

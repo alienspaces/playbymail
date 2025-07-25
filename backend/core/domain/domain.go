@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"maps"
 
 	"github.com/jackc/pgx/v5"
 
@@ -24,7 +25,7 @@ type Domain struct {
 
 	// composable functions
 	QueriesFunc func(tx pgx.Tx) ([]querier.Querier, error)
-	SetRLSFunc  func(identifiers map[string][]string)
+	RLSFunc     func(identifiers map[string][]string)
 }
 
 type RepositoryConstructor func(logger.Logger, pgx.Tx) (repositor.Repositor, error)
@@ -32,10 +33,10 @@ type RepositoryConstructor func(logger.Logger, pgx.Tx) (repositor.Repositor, err
 var _ domainer.Domainer = &Domain{}
 
 // NewDomain - intended for testing only, maybe move into test files..
-func NewDomain(l logger.Logger) (m *Domain, err error) {
+func NewDomain(l logger.Logger, repositoryConstructors []RepositoryConstructor) (m *Domain, err error) {
 
 	if l == nil {
-		return nil, fmt.Errorf("failed new model, missing logger")
+		return nil, fmt.Errorf("failed new domain, missing logger")
 	}
 
 	l, err = l.NewInstance()
@@ -44,9 +45,15 @@ func NewDomain(l logger.Logger) (m *Domain, err error) {
 	}
 
 	m = &Domain{
-		Log: l.WithPackageContext("model"),
+		Log: l.WithPackageContext("domain"),
 		Err: nil,
 	}
+
+	// Repository constructors are used to create repositories for the domain
+	m.RepositoryConstructors = repositoryConstructors
+
+	// Default function for setting RLS constraints on repositories
+	m.RLSFunc = m.SetRLS
 
 	return m, nil
 }
@@ -64,8 +71,8 @@ func (m *Domain) Init(tx pgx.Tx) (err error) {
 		m.QueriesFunc = m.NewQueries
 	}
 
-	if m.SetRLSFunc == nil {
-		m.SetRLSFunc = m.SetRLS
+	if m.RLSFunc == nil {
+		m.RLSFunc = m.SetRLS
 	}
 
 	m.Tx = tx
@@ -113,8 +120,27 @@ func (m *Domain) NewRepositories(tx pgx.Tx) (map[string]repositor.Repositor, err
 	return repositories, nil
 }
 
+// SetRLS -
 func (m *Domain) SetRLS(identifiers map[string][]string) {
-	m.Log.Info("set RLS not implemented")
+
+	// We'll be resetting the "id" key when we use the map
+	ri := maps.Clone(identifiers)
+
+	for tableName := range m.Repositories {
+
+		// When the repository table name matches an RLS identifier key, we apply the
+		// RLS constraints to the "id" column to enforce any RLS constraints on itself!
+		// Can this be done inside repository core code on itself? Absolutely... but it
+		// would be making a naive assumption about conventions. This project's convention
+		// is to name foreign key columns according to the table name it foreign keys to.
+		// If that convention is not followed, then the following block would not work.
+		if _, ok := ri[tableName+"_id"]; ok {
+			ri["id"] = ri[tableName+"_id"]
+			m.Repositories[tableName].SetRLS(ri)
+			continue
+		}
+		m.Repositories[tableName].SetRLS(identifiers)
+	}
 }
 
 // SetTxLockTimeout -

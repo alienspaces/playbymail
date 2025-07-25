@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/google/uuid"
@@ -24,18 +25,47 @@ func (rnr *Runner) CorrelationMiddleware(hc HandlerConfig, h Handle) (Handle, er
 		correlationID := r.Header.Get(HeaderXCorrelationID)
 		if correlationID == "" {
 			correlationID = uuid.NewString()
-			l.Debug("(core) generated correlation ID >%s<", correlationID)
+			l.Debug("(correlationmiddleware) generated correlation ID >%s<", correlationID)
 		}
+
+		r, err := SetRequestCorrelationID(l, r, correlationID)
+		if err != nil {
+			l.Error("(correlationmiddleware) failed to set request correlation ID >%v<", err)
+			return err
+		}
+
+		// Add correlation ID to response header
 		w.Header().Set(HeaderXCorrelationID, correlationID)
 
-		ctx := r.Context()
-		ctx = context.WithValue(ctx, ctxKeyCorrelationID, correlationID)
-		r = r.WithContext(ctx)
-
+		// Add correlation ID to logger context
 		l.Context(log.ContextKeyCorrelationID, correlationID)
 
 		return h(w, r, pp, nil, l, nil)
 	}
 
 	return handle, nil
+}
+
+// SetRequestCorrelationID sets the correlation ID in http request context
+func SetRequestCorrelationID(l logger.Logger, r *http.Request, correlationID string) (*http.Request, error) {
+
+	l.Info("(correlationmiddleware) setting request correlation ID >%s<", correlationID)
+
+	ctx := r.Context()
+	ctx = context.WithValue(ctx, ctxKeyCorrelationID, correlationID)
+	r = r.WithContext(ctx)
+
+	return r, nil
+}
+
+// GetRequestCorrelationID returns the correlation ID from http request context
+func GetRequestCorrelationID(l logger.Logger, r *http.Request) (string, error) {
+	correlationID, ok := (r.Context().Value(ctxKeyCorrelationID)).(string)
+	if !ok {
+		return "", fmt.Errorf("missing correlation ID")
+	}
+
+	l.Info("(correlationmiddleware) returning request correlation ID >%s<", correlationID)
+
+	return correlationID, nil
 }

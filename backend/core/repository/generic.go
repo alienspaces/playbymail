@@ -180,3 +180,24 @@ func (r *Generic[Rec, RecPtr]) UpdateOne(rec *Rec) (*Rec, error) {
 
 	return &modRec, nil
 }
+
+func (r *Generic[Rec, RecPtr]) SetRLS(identifiers map[string][]string) {
+	if r.isRLSDisabled {
+		return
+	}
+
+	filtered := map[string][]string{}
+
+	// SELECT queries should only filter on rows with identifiers for resources matching
+	// the attributes of the record. For example; a record with only `program_id`, but
+	// not `client_id`, should not be filtered on `client_id`.
+	for _, attr := range r.Attributes() {
+		if ids, ok := identifiers[attr]; ok {
+			filtered[attr] = ids
+		}
+	}
+
+	if len(filtered) > 0 {
+		r.rlsIdentifiers = filtered
+	}
+}

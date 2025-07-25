@@ -15,6 +15,11 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/type/domainer"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
 	"gitlab.com/alienspaces/playbymail/core/type/storer"
+	"gitlab.com/alienspaces/playbymail/internal/repository/account"
+	"gitlab.com/alienspaces/playbymail/internal/repository/adventure_game_character"
+	"gitlab.com/alienspaces/playbymail/internal/repository/adventure_game_location"
+	"gitlab.com/alienspaces/playbymail/internal/repository/adventure_game_location_link"
+	"gitlab.com/alienspaces/playbymail/internal/repository/game"
 )
 
 // newDefaultDependencies -
@@ -47,8 +52,15 @@ func TestNewServer(t *testing.T) {
 	tr := Runner{
 		Log: l,
 	}
+
 	tr.DomainFunc = func(l logger.Logger) (domainer.Domainer, error) {
-		return domain.NewDomain(l)
+		return domain.NewDomain(l, []domain.RepositoryConstructor{
+			account.NewRepository,
+			game.NewRepository,
+			adventure_game_location.NewRepository,
+			adventure_game_location_link.NewRepository,
+			adventure_game_character.NewRepository,
+		})
 	}
 
 	ts, err := NewServer(l, s, &tr)

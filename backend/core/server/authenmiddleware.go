@@ -13,7 +13,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
 )
 
-var unauthErr = coreerror.NewUnauthenticatedError("Authentication failed")
+var unauthErr = coreerror.NewUnauthenticatedError("authentication failed")
 
 // AuthenMiddleware -
 func (rnr *Runner) AuthenMiddleware(hc HandlerConfig, h Handle) (Handle, error) {
@@ -23,11 +23,11 @@ func (rnr *Runner) AuthenMiddleware(hc HandlerConfig, h Handle) (Handle, error) 
 		l = Logger(l, "AuthenMiddleware")
 
 		if _, ok := handlerAuthenTypes[AuthenticationTypePublic]; ok {
-			l.Debug("(middleware) handler name >%s< is public, not authenticating", hc.Name)
+			l.Debug("(authenmiddleware) handler name >%s< is public, not authenticating", hc.Name)
 			return h(w, r, pp, qp, l, m)
 		}
 
-		var auth AuthenticatedRequest
+		var auth AuthenData
 		var err error
 		hasAuthnType := false
 
@@ -50,11 +50,11 @@ func (rnr *Runner) AuthenMiddleware(hc HandlerConfig, h Handle) (Handle, error) 
 			// UnauthenticatedError or a 500 error.
 			auth, err = rnr.AuthenticateRequestFunc(l, m, r, authnType)
 			if err != nil && !coreerror.IsUnauthenticatedError(err) {
-				l.Error("(middleware) failed to authenticate request authnType >%s< err >%v<", authnType, err)
+				l.Error("(authenmiddleware) failed to authenticate request authnType >%s< err >%v<", authnType, err)
 				return unauthErr // For security reasons, always respond with ambiguous 401
 			}
 			if err != nil {
-				l.Warn("(middleware) failed to authenticate request authnType >%s< err >%v<", authnType, err)
+				l.Warn("(authenmiddleware) failed to authenticate request authnType >%s< err >%v<", authnType, err)
 			}
 
 			if auth.IsAuthenticated() {
@@ -63,18 +63,20 @@ func (rnr *Runner) AuthenMiddleware(hc HandlerConfig, h Handle) (Handle, error) 
 		}
 
 		if !hasAuthnType {
-			l.Error("(middleware) handler name >%s< with non-public authentication type has no registered authentication types", hc.Name)
+			l.Error("(authenmiddleware) handler name >%s< with non-public authentication type has no registered authentication types", hc.Name)
 			return unauthErr
 		}
 
 		if !auth.IsAuthenticated() {
-			l.Warn("(middleware) failed to authenticate request >%#v<", err)
+			l.Warn("(authenmiddleware) failed to authenticate request >%#v<", err)
 			return unauthErr
 		}
 
-		ctx := r.Context()
-		ctx = context.WithValue(ctx, ctxKeyAuth, auth)
-		r = r.WithContext(ctx)
+		r, err = SetRequestAuthenData(l, r, auth)
+		if err != nil {
+			l.Error("(authenmiddleware) failed to set request auth data >%v<", err)
+			return err
+		}
 
 		l.Context("account-id", auth.Account.ID)
 
@@ -82,4 +84,28 @@ func (rnr *Runner) AuthenMiddleware(hc HandlerConfig, h Handle) (Handle, error) 
 	}
 
 	return handle, nil
+}
+
+// SetRequestAuthenData sets authen/authz data in http request context
+func SetRequestAuthenData(l logger.Logger, r *http.Request, auth AuthenData) (*http.Request, error) {
+
+	l.Info("(authenmiddleware) setting request auth data Type >%s< RLSType >%s< Permissions >%v<", auth.Type, auth.RLSType, auth.Permissions)
+
+	ctx := r.Context()
+	ctx = context.WithValue(ctx, ctxKeyAuth, auth)
+	r = r.WithContext(ctx)
+
+	return r, nil
+}
+
+// GetRequestAuthenData returns authen/authz data from http request context
+func GetRequestAuthenData(l logger.Logger, r *http.Request) *AuthenData {
+	auth, ok := (r.Context().Value(ctxKeyAuth)).(AuthenData)
+	if !ok {
+		return nil
+	}
+
+	l.Info("(authenmiddleware) returning request auth data Type >%s< RLSType >%s< Permissions >%v<", auth.Type, auth.RLSType, auth.Permissions)
+
+	return &auth
 }

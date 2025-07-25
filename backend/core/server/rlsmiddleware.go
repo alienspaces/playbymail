@@ -2,12 +2,13 @@ package server
 
 import (
 	"context"
-	"fmt"
 	"net/http"
+	"slices"
 
 	"github.com/julienschmidt/httprouter"
 
 	"gitlab.com/alienspaces/playbymail/core/collection/set"
+	coreerror "gitlab.com/alienspaces/playbymail/core/error"
 	"gitlab.com/alienspaces/playbymail/core/queryparam"
 	"gitlab.com/alienspaces/playbymail/core/type/domainer"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
@@ -24,39 +25,96 @@ func (rnr *Runner) RLSMiddleware(hc HandlerConfig, h Handle) (Handle, error) {
 		l = Logger(l, "RLSMiddleware")
 
 		if _, ok := handlerAuthenTypes[AuthenticationTypePublic]; ok {
-			l.Debug("(core) handler name >%s< is public, not apply RLS", hc.Name)
+			l.Info("(rlsmiddleware) handler name >%s< is public, not applying RLS", hc.Name)
 			return h(w, r, pp, qp, l, m)
 		}
 
-		authenticatedRequest := RequestAuthData(l, r)
-		if authenticatedRequest == nil {
-			err := fmt.Errorf("failed to read auth data")
+		AuthenData := GetRequestAuthenData(l, r)
+		if AuthenData == nil {
+			err := coreerror.NewInternalError("failed to read request authen data")
 			return err
 		}
 
-		if authenticatedRequest.RLSType == RLSTypeOpen {
+		if AuthenData.RLSType == RLSTypeOpen {
+			l.Info("(rlsmiddleware) handler name >%s< is open, not applying RLS", hc.Name)
 			return h(w, r, pp, qp, l, m)
 		}
 
-		if authenticatedRequest.RLSType == RLSTypeRestricted {
-			if rnr.SetRLSFunc == nil {
-				l.Warn("(core) failed to set RLS >%v<", "SetRLSFunc is nil")
-				return fmt.Errorf("failed to set RLS >%v<", "SetRLSFunc is nil")
+		if AuthenData.RLSType == RLSTypeRestricted {
+			if rnr.RLSFunc == nil {
+				l.Warn("(rlsmiddleware) failed to set RLS >%v<", "RLSFunc is nil")
+				return coreerror.NewInternalError("failed to set RLS >%v<", "RLSFunc is nil")
 			}
 
-			rls, err := rnr.SetRLSFunc(l, m, *authenticatedRequest)
+			rls, err := rnr.RLSFunc(l, m, *AuthenData)
 			if err != nil {
-				l.Warn("(core) failed to set RLS >%v<", err)
+				l.Warn("(rlsmiddleware) failed to set RLS >%v<", err)
 				return err
 			}
 
-			// Set RLS context
-			ctx := r.Context()
-			ctx = context.WithValue(ctx, ctxKeyRLS, rls)
-			r = r.WithContext(ctx)
+			r, err = SetRequestRLSData(l, r, rls)
+			if err != nil {
+				l.Warn("(rlsmiddleware) failed to set RLS >%v<", err)
+				return err
+			}
+
+			// Check the path parameters against the RLS identifiers to ensure the user
+			// has access to the resource.
+			//
+			// For example, if the RLS identifiers are `["account_id", "game_id"]` and
+			// the path parameters are `["123", "456"]`, then we can check if the user
+			// has access to the resource.
+
+			// Validate path parameters against RLS identifiers
+			for paramName, allowedValues := range rls.Identifiers {
+				paramValue := pp.ByName(paramName)
+				if paramValue != "" && !slices.Contains(allowedValues, paramValue) {
+					l.Warn("(rlsmiddleware) access denied: path parameter %s=%s not in allowed values %v", paramName, paramValue, allowedValues)
+					return coreerror.NewUnauthorizedError()
+				}
+			}
 		}
 
 		return h(w, r, pp, qp, l, m)
 	}
 	return handle, nil
+}
+
+// SetRequestRLSData sets RLS data in http request context
+func SetRequestRLSData(l logger.Logger, r *http.Request, rls RLS) (*http.Request, error) {
+	ctx := r.Context()
+
+	l.Info("(rlsmiddleware) setting request RLS data >%#v<", rls)
+
+	ctx = context.WithValue(ctx, ctxKeyRLS, rls)
+	r = r.WithContext(ctx)
+
+	return r, nil
+}
+
+// GetRequestRLSData returns RLS data from http request context
+func GetRequestRLSData(l logger.Logger, r *http.Request) *RLS {
+	rls, ok := (r.Context().Value(ctxKeyRLS)).(RLS)
+	if !ok {
+		return nil
+	}
+
+	l.Info("(rlsmiddleware) returning request RLS data >%#v<", rls)
+
+	return &rls
+}
+
+// GetRequestRLSIdentifierSet returns RLS data as sets from http request context
+func GetRequestRLSIdentifierSet(l logger.Logger, r *http.Request) map[string]set.Set[string] {
+	rls := GetRequestRLSData(l, r)
+	if rls == nil {
+		return nil
+	}
+
+	identifiers := make(map[string]set.Set[string])
+	for k, v := range rls.Identifiers {
+		identifiers[k] = set.New(v...)
+	}
+
+	return identifiers
 }

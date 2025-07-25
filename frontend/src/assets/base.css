@@ -168,3 +168,69 @@ input:focus, select:focus, textarea:focus {
   outline: 2px solid var(--color-primary);
   border-color: var(--color-primary);
 }
+
+/* Navbar link styles (centralized) */
+.navbar-link {
+  color: var(--color-text-light);
+  text-decoration: none;
+  font-weight: 500;
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: 3px;
+  transition: background 0.2s, color 0.2s;
+  background: none;
+  outline: none;
+  border: none;
+  font-size: 1rem;
+  display: inline-block;
+}
+
+.navbar-link.active {
+  background: var(--color-primary);
+  color: var(--color-text-light);
+  text-decoration: none;
+}
+
+.navbar-link:hover,
+.navbar-link:focus {
+  background: var(--color-primary-dark);
+  color: var(--color-text-light);
+  text-decoration: none;
+}
+
+/* Ensure navbar links never show underline or wrong color */
+.navbar .navbar-link,
+.navbar .navbar-link:focus,
+.navbar .navbar-link:hover,
+.navbar .navbar-link.active {
+  text-decoration: none !important;
+  color: var(--color-text-light) !important;
+}
+
+.logo {
+  color: var(--color-primary);
+}
+
+@media (max-width: 700px) {
+  .mobile-menu .logo {
+    color: var(--color-primary);
+  }
+  .mobile-menu .navbar-link {
+    padding: 0.75rem 1.25rem;
+    font-size: 1.1rem;
+    display: block;
+    margin-bottom: 0.5rem;
+    border-radius: var(--radius-md);
+  }
+  .mobile-menu .navbar-link.active {
+    background: var(--color-primary);
+    color: var(--color-text-light);
+  }
+  .mobile-menu .mobile-actions button {
+    margin-top: 0.5rem;
+    padding: 0.5rem 1.25rem;
+  }
+}
+
+.mobile-logo {
+  color: var(--color-primary) !important;
+}

@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
-	"io"
 	"net/http"
 	"os"
 	"strings"
@@ -15,7 +14,6 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"github.com/rs/cors"
 
-	"gitlab.com/alienspaces/playbymail/core/collection/set"
 	"gitlab.com/alienspaces/playbymail/core/queryparam"
 	"gitlab.com/alienspaces/playbymail/core/type/domainer"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
@@ -318,81 +316,10 @@ func (rnr *Runner) HttpRouterHandlerWrapper(h Handle) httprouter.Handle {
 	}
 }
 
-// RequestData returns the request data from the http request, allowing multiple reads from the request body
-func RequestData(r *http.Request) ([]byte, error) {
-	if r.Body == nil {
-		return nil, nil
-	}
-
-	d, err := io.ReadAll(r.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	r.Body = io.NopCloser(bytes.NewBuffer(d))
-
-	if len(d) == 0 {
-		return nil, nil
-	}
-
-	return d, nil
-}
-
-// RequestAuthData returns authen/authz data from http request context
-func RequestAuthData(l logger.Logger, r *http.Request) *AuthenticatedRequest {
-	auth, ok := (r.Context().Value(ctxKeyAuth)).(AuthenticatedRequest)
-	if !ok {
-		return nil
-	}
-
-	l.Info("(core) request auth data Type >%s< RLSType >%s< Permissions >%v<", auth.Type, auth.RLSType, auth.Permissions)
-
-	return &auth
-}
-
-// RequestRLSData returns RLS data from http request context
-func RequestRLSData(l logger.Logger, r *http.Request) *RLS {
-	rls, ok := (r.Context().Value(ctxKeyRLS)).(RLS)
-	if !ok {
-		return nil
-	}
-
-	l.Info("(core) request RLS >%#v<", rls)
-
-	return &rls
-}
-
-// RequestRLSIdentifierSet returns RLS data as sets from http request context
-func RequestRLSIdentifierSet(l logger.Logger, r *http.Request) map[string]set.Set[string] {
-	rls := RequestRLSData(l, r)
-	if rls == nil {
-		return nil
-	}
-
-	identifiers := make(map[string]set.Set[string])
-	for k, v := range rls.Identifiers {
-		identifiers[k] = set.New(v...)
-	}
-
-	return identifiers
-}
-
-// RequestCorrelationID returns the correlation ID from http request context
-func RequestCorrelationID(l logger.Logger, r *http.Request) (string, error) {
-	correlationID, ok := (r.Context().Value(ctxKeyCorrelationID)).(string)
-	if !ok {
-		return "", fmt.Errorf("missing correlation ID")
-	}
-
-	l.Info("(core) request correlation ID >%s<", correlationID)
-
-	return correlationID, nil
-}
-
 // ReadRequest -
 func ReadRequest[T any](l logger.Logger, r *http.Request, s *T) (*T, error) {
 
-	data, err := RequestData(r)
+	data, err := GetRequestData(r)
 	if err != nil {
 		return nil, err
 	}
@@ -413,7 +340,7 @@ func ReadRequest[T any](l logger.Logger, r *http.Request, s *T) (*T, error) {
 // ReadXMLRequest -
 func ReadXMLRequest(l logger.Logger, r *http.Request, s interface{}) ([]byte, error) {
 
-	data, err := RequestData(r)
+	data, err := GetRequestData(r)
 	if err != nil {
 		return nil, err
 	}
