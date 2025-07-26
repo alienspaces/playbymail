@@ -61,7 +61,7 @@ func GameSubscriptionRecordToResponse(l logger.Logger, rec *record.GameSubscript
 }
 
 func GameSubscriptionRecordsToCollectionResponse(l logger.Logger, recs []*record.GameSubscription) (schema.GameSubscriptionCollectionResponse, error) {
-	var data []*schema.GameSubscriptionResponseData
+	data := []*schema.GameSubscriptionResponseData{}
 	for _, rec := range recs {
 		d, err := GameSubscriptionRecordToResponseData(l, rec)
 		if err != nil {

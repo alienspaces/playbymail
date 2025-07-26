@@ -54,9 +54,6 @@ func Test_adventureGameItemPlacementHandler(t *testing.T) {
 						"page_number": 1,
 					}
 				},
-				RequestPathParams: func(d harness.Data) map[string]string {
-					return map[string]string{":game_id": gameRec.ID}
-				},
 				ResponseDecoder: testCaseCollectionResponseDecoder,
 				ResponseCode:    http.StatusOK,
 			},

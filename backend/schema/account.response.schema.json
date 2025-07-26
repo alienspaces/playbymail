@@ -7,13 +7,14 @@
             "$ref": "./account.schema.json"
         },
         "error": {
-            "type": [
-                "object",
-                "null"
-            ]
+            "$ref": "common.schema.json#/$defs/error"
+        },
+        "pagination": {
+            "$ref": "common.schema.json#/$defs/pagination"
         }
     },
     "required": [
         "data"
-    ]
+    ],
+    "additionalProperties": false
 }

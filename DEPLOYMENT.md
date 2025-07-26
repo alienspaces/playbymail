@@ -1,5 +1,8 @@
 # Playbymail Deployment Guide (Heroku Buildpack, Monorepo, Automated Migrations)
 
+<!-- markdownlint-disable MD031 -->
+<!-- markdownlint-disable MD032 -->
+
 This guide describes how to deploy the Playbymail full-stack application (Vue.js frontend + Go backend) to Heroku using a monorepo, GitLab CI/CD, and Heroku's Go buildpack. It details the configuration files and scripts that make the deployment work.
 
 ## Architecture Overview

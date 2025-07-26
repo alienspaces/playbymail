@@ -59,7 +59,7 @@ func AccountRecordToResponse(l logger.Logger, rec *record.Account) (schema.Accou
 }
 
 func AccountRecordsToCollectionResponse(l logger.Logger, recs []*record.Account) (schema.AccountCollectionResponse, error) {
-	var data []*schema.AccountResponseData
+	data := []*schema.AccountResponseData{}
 	for _, rec := range recs {
 		d, err := AccountRecordToResponseData(l, rec)
 		if err != nil {

@@ -42,6 +42,7 @@ func GameRecordToResponseData(l logger.Logger, rec *record.Game) (schema.GameRes
 	data := schema.GameResponseData{
 		ID:        rec.ID,
 		Name:      rec.Name,
+		GameType:  rec.GameType,
 		CreatedAt: rec.CreatedAt,
 		UpdatedAt: nulltime.ToTimePtr(rec.UpdatedAt),
 	}
@@ -60,7 +61,7 @@ func GameRecordToResponse(l logger.Logger, rec *record.Game) (schema.GameRespons
 }
 
 func GameRecordsToCollectionResponse(l logger.Logger, recs []*record.Game) (schema.GameCollectionResponse, error) {
-	var data []*schema.GameResponseData
+	data := []*schema.GameResponseData{}
 	for _, rec := range recs {
 		d, err := GameRecordToResponseData(l, rec)
 		if err != nil {

@@ -33,7 +33,7 @@ func AdventureGameItemPlacementRecordToResponse(l logger.Logger, rec *record.Adv
 }
 
 func AdventureGameItemPlacementRecordsToCollectionResponse(l logger.Logger, recs []*record.AdventureGameItemPlacement) (schema.AdventureGameItemPlacementCollectionResponse, error) {
-	var data []*schema.AdventureGameItemPlacementResponseData
+	data := []*schema.AdventureGameItemPlacementResponseData{}
 	for _, rec := range recs {
 		d, err := AdventureGameItemPlacementRecordToResponseData(l, rec)
 		if err != nil {

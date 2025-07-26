@@ -32,7 +32,7 @@ func AdventureGameLocationRecordToResponse(l logger.Logger, rec *record.Adventur
 }
 
 func AdventureGameLocationRecordsToCollectionResponse(l logger.Logger, recs []*record.AdventureGameLocation) (schema.AdventureGameLocationCollectionResponse, error) {
-	var data []*schema.AdventureGameLocationResponseData
+	data := []*schema.AdventureGameLocationResponseData{}
 	for _, rec := range recs {
 		d, err := AdventureGameLocationRecordToResponseData(l, rec)
 		if err != nil {

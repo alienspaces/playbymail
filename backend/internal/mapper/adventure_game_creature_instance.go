@@ -48,7 +48,7 @@ func AdventureGameCreatureInstanceRecordToResponse(rec *record.AdventureGameCrea
 }
 
 func AdventureGameCreatureInstanceRecordsToCollectionResponse(recs []*record.AdventureGameCreatureInstance) *schema.AdventureGameCreatureInstanceCollectionResponse {
-	var data []*schema.AdventureGameCreatureInstanceResponseData
+	data := []*schema.AdventureGameCreatureInstanceResponseData{}
 	for _, rec := range recs {
 		data = append(data, AdventureGameCreatureInstanceRecordToResponseData(rec))
 	}

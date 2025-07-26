@@ -22,6 +22,9 @@ type Config struct {
 	// Assets (javascript, css, images, etc.) (default: ./frontend/src/assets)
 	AssetsPath string `env:"ASSETS_PATH" envDefault:"./frontend/src/assets"`
 
+	// Schemas (json) (default: ./backend/schemas)
+	SchemaPath string `env:"SCHEMA_PATH" envDefault:"./backend/schemas"`
+
 	// Templates (html, email, etc.) (default: ./backend/templates)
 	TemplatesPath string `env:"TEMPLATES_PATH" envDefault:"./backend/templates"`
 

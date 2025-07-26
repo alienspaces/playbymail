@@ -29,7 +29,7 @@ func AdventureGameInstanceRecordToResponse(l logger.Logger, rec *record.Adventur
 }
 
 func AdventureGameInstanceRecordsToCollectionResponse(l logger.Logger, recs []*record.AdventureGameInstance) (schema.AdventureGameInstanceCollectionResponse, error) {
-	var data []*schema.AdventureGameInstance
+	data := []*schema.AdventureGameInstance{}
 	for _, rec := range recs {
 		d, err := AdventureGameInstanceRecordToResponseData(l, rec)
 		if err != nil {

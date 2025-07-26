@@ -1,11 +1,12 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "http://playbymail.dev/schema/account.schema.json",
     "title": "Account",
+    "description": "Account",
     "type": "object",
     "properties": {
         "id": {
-            "type": "string",
-            "format": "uuid"
+            "$ref": "common.schema.json#/$defs/id"
         },
         "email": {
             "type": "string",
@@ -15,19 +16,17 @@
             "type": "string"
         },
         "created_at": {
-            "type": "string",
-            "format": "date-time"
+            "$ref": "common.schema.json#/$defs/created_at"
         },
         "updated_at": {
-            "type": "string",
-            "format": "date-time"
+            "$ref": "common.schema.json#/$defs/updated_at"
         }
     },
     "required": [
         "id",
         "email",
         "name",
-        "created_at",
-        "updated_at"
-    ]
+        "created_at"
+    ],
+    "additionalProperties": false
 }

@@ -1,6 +1,7 @@
 package error
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 	"testing"
@@ -242,20 +243,23 @@ func TestNewSchemaError(t *testing.T) {
 	cwd, err := os.Getwd()
 	require.NoError(t, err, "Getwd returns without error")
 
+	testdataPath := fmt.Sprintf("%s/testdata", cwd)
+
 	schema := jsonschema.SchemaWithReferences{
 		Main: jsonschema.Schema{
-			LocationRoot: cwd,
-			Location:     "testdata",
-			Name:         "test.main.schema.json",
+			Location: "",
+			Name:     "test.main.schema.json",
 		},
 		References: []jsonschema.Schema{
 			{
-				LocationRoot: cwd,
-				Location:     "testdata",
-				Name:         "test.reference.schema.json",
+				Location: "",
+				Name:     "test.reference.schema.json",
 			},
 		},
 	}
+
+	// Resolve the schema location to set the fullPath fields
+	schema = jsonschema.ResolveSchemaLocation(testdataPath, schema)
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

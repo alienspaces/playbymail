@@ -1,6 +1,7 @@
 package server
 
 import (
+	"fmt"
 	"net/url"
 	"os"
 	"testing"
@@ -213,21 +214,24 @@ func Test_validateQueryParameters(t *testing.T) {
 	cwd, err := os.Getwd()
 	require.NoError(t, err, "Getwd returns without error")
 
+	testdataPath := fmt.Sprintf("%s/testdata", cwd)
+
 	for i := range tests {
 		tests[i].args.paramSchema = jsonschema.SchemaWithReferences{
 			Main: jsonschema.Schema{
-				LocationRoot: cwd,
-				Location:     "testdata",
-				Name:         "test.main.schema.json",
+				Location: "",
+				Name:     "test.main.schema.json",
 			},
 			References: []jsonschema.Schema{
 				{
-					LocationRoot: cwd,
-					Location:     "testdata",
-					Name:         "test.data.schema.json",
+					Location: "",
+					Name:     "test.data.schema.json",
 				},
 			},
 		}
+
+		// Resolve the schema location to set the fullPath fields
+		tests[i].args.paramSchema = jsonschema.ResolveSchemaLocation(testdataPath, tests[i].args.paramSchema)
 	}
 
 	noSchemaTests := []testcase{

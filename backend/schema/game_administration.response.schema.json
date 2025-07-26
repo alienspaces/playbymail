@@ -3,47 +3,18 @@
     "title": "GameAdministrationResponse",
     "type": "object",
     "properties": {
-        "id": {
-            "type": "string",
-            "format": "uuid"
+        "data": {
+            "$ref": "./game_administration.schema.json"
         },
-        "game_id": {
-            "type": "string",
-            "format": "uuid"
+        "error": {
+            "$ref": "common.schema.json#/$defs/error"
         },
-        "account_id": {
-            "type": "string",
-            "format": "uuid"
-        },
-        "granted_by_account_id": {
-            "type": "string",
-            "format": "uuid"
-        },
-        "created_at": {
-            "type": "string",
-            "format": "date-time"
-        },
-        "updated_at": {
-            "type": [
-                "string",
-                "null"
-            ],
-            "format": "date-time"
-        },
-        "deleted_at": {
-            "type": [
-                "string",
-                "null"
-            ],
-            "format": "date-time"
+        "pagination": {
+            "$ref": "common.schema.json#/$defs/pagination"
         }
     },
     "required": [
-        "id",
-        "game_id",
-        "account_id",
-        "granted_by_account_id",
-        "created_at"
+        "data"
     ],
     "additionalProperties": false
 }

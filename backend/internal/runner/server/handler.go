@@ -49,12 +49,10 @@ import (
 // the `./schema` directory.
 var referenceSchemas = []jsonschema.Schema{
 	{
-		Location: "schema",
-		Name:     "query.schema.json",
+		Name: "query.schema.json",
 	},
 	{
-		Location: "schema",
-		Name:     "common.schema.json",
+		Name: "common.schema.json",
 	},
 }
 

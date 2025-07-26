@@ -3,50 +3,18 @@
     "title": "GameSubscriptionResponse",
     "type": "object",
     "properties": {
-        "id": {
-            "type": "string",
-            "format": "uuid"
+        "data": {
+            "$ref": "./game_subscription.schema.json"
         },
-        "game_id": {
-            "type": "string",
-            "format": "uuid"
+        "error": {
+            "$ref": "common.schema.json#/$defs/error"
         },
-        "account_id": {
-            "type": "string",
-            "format": "uuid"
-        },
-        "subscription_type": {
-            "type": "string",
-            "enum": [
-                "Player",
-                "Manager"
-            ]
-        },
-        "created_at": {
-            "type": "string",
-            "format": "date-time"
-        },
-        "updated_at": {
-            "type": [
-                "string",
-                "null"
-            ],
-            "format": "date-time"
-        },
-        "deleted_at": {
-            "type": [
-                "string",
-                "null"
-            ],
-            "format": "date-time"
+        "pagination": {
+            "$ref": "common.schema.json#/$defs/pagination"
         }
     },
     "required": [
-        "id",
-        "game_id",
-        "account_id",
-        "subscription_type",
-        "created_at"
+        "data"
     ],
     "additionalProperties": false
 }

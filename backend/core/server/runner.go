@@ -59,10 +59,6 @@ type Runner struct {
 	// HTTPCORSConfig
 	HTTPCORSConfig HTTPCORSConfig
 
-	// SchemaPath is the relative location from the application root where
-	// JSON schemas can be found
-	SchemaPath string
-
 	// Handler and message configuration
 	HandlerConfig map[string]HandlerConfig
 
@@ -439,8 +435,9 @@ func (rnr *Runner) LogMemStats(l logger.Logger) {
 
 func (rnr *Runner) resolveHandlerSchemaLocation(hc HandlerConfig) (HandlerConfig, error) {
 
-	schemaPath := rnr.SchemaPath
+	schemaPath := rnr.Config.SchemaPath
 
+	// Query and path paramater schemas
 	if hc.MiddlewareConfig.ValidateParamsConfig != nil {
 		if schemaPath == "" {
 			err := fmt.Errorf("missing SchemaPath")
@@ -449,10 +446,31 @@ func (rnr *Runner) resolveHandlerSchemaLocation(hc HandlerConfig) (HandlerConfig
 		}
 		schema := hc.MiddlewareConfig.ValidateParamsConfig.Schema
 		if len(schema.Main.Name) > 0 {
-			hc.MiddlewareConfig.ValidateParamsConfig.Schema = jsonschema.ResolveSchemaLocation(schema, schemaPath)
+			hc.MiddlewareConfig.ValidateParamsConfig.Schema = jsonschema.ResolveSchemaLocation(schemaPath, schema)
 		}
 	}
 
+	// Request schemas
+	if len(hc.MiddlewareConfig.ValidateRequestSchema.Main.Name) > 0 {
+		if schemaPath == "" {
+			err := fmt.Errorf("missing SchemaPath")
+			rnr.Log.Warn(err.Error())
+			return hc, err
+		}
+		hc.MiddlewareConfig.ValidateRequestSchema = jsonschema.ResolveSchemaLocation(schemaPath, hc.MiddlewareConfig.ValidateRequestSchema)
+	}
+
+	// Response schemas
+	if len(hc.MiddlewareConfig.ValidateResponseSchema.Main.Name) > 0 {
+		if schemaPath == "" {
+			err := fmt.Errorf("missing SchemaPath")
+			rnr.Log.Warn(err.Error())
+			return hc, err
+		}
+		hc.MiddlewareConfig.ValidateResponseSchema = jsonschema.ResolveSchemaLocation(schemaPath, hc.MiddlewareConfig.ValidateResponseSchema)
+	}
+
+	// Headers for documentation
 	if len(hc.DocumentationConfig.RequestHeaders) > 0 {
 		if schemaPath == "" {
 			err := fmt.Errorf("missing SchemaPath")
@@ -460,57 +478,8 @@ func (rnr *Runner) resolveHandlerSchemaLocation(hc HandlerConfig) (HandlerConfig
 			return hc, err
 		}
 		for i, header := range hc.DocumentationConfig.RequestHeaders {
-			hc.DocumentationConfig.RequestHeaders[i].Schema = jsonschema.ResolveSchemaLocation(header.Schema, schemaPath)
+			hc.DocumentationConfig.RequestHeaders[i].Schema = jsonschema.ResolveSchemaLocation(schemaPath, header.Schema)
 		}
-	}
-
-	if len(hc.MiddlewareConfig.ValidateRequestSchema.Main.Name) > 0 {
-		if schemaPath == "" {
-			err := fmt.Errorf("missing SchemaPath")
-			rnr.Log.Warn(err.Error())
-			return hc, err
-		}
-		hc.MiddlewareConfig.ValidateRequestSchema = jsonschema.ResolveSchemaLocation(hc.MiddlewareConfig.ValidateRequestSchema, schemaPath)
-	}
-
-	if len(hc.MiddlewareConfig.ValidateResponseSchema.Main.Name) > 0 {
-		if schemaPath == "" {
-			err := fmt.Errorf("missing SchemaPath")
-			rnr.Log.Warn(err.Error())
-			return hc, err
-		}
-		hc.MiddlewareConfig.ValidateResponseSchema = jsonschema.ResolveSchemaLocation(hc.MiddlewareConfig.ValidateResponseSchema, schemaPath)
-	}
-
-	return hc, nil
-}
-
-func (rnr *Runner) resolveHandlerSchemaLocationRoot(hc HandlerConfig) (HandlerConfig, error) {
-
-	appHome := rnr.Config.AppHome
-	if appHome == "" {
-		err := fmt.Errorf("missing configuration AppHome")
-		rnr.Log.Warn(err.Error())
-		return hc, err
-	}
-
-	if hc.MiddlewareConfig.ValidateParamsConfig != nil {
-		schema := hc.MiddlewareConfig.ValidateParamsConfig.Schema
-		if len(schema.Main.Name) > 0 {
-			hc.MiddlewareConfig.ValidateParamsConfig.Schema = jsonschema.ResolveSchemaLocationRoot(schema, appHome)
-		}
-	}
-
-	for i, header := range hc.DocumentationConfig.RequestHeaders {
-		hc.DocumentationConfig.RequestHeaders[i].Schema = jsonschema.ResolveSchemaLocationRoot(header.Schema, appHome)
-	}
-
-	if len(hc.MiddlewareConfig.ValidateRequestSchema.Main.Name) > 0 {
-		hc.MiddlewareConfig.ValidateRequestSchema = jsonschema.ResolveSchemaLocationRoot(hc.MiddlewareConfig.ValidateRequestSchema, appHome)
-	}
-
-	if len(hc.MiddlewareConfig.ValidateResponseSchema.Main.Name) > 0 {
-		hc.MiddlewareConfig.ValidateResponseSchema = jsonschema.ResolveSchemaLocationRoot(hc.MiddlewareConfig.ValidateResponseSchema, appHome)
 	}
 
 	return hc, nil

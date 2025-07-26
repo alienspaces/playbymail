@@ -170,6 +170,16 @@ func (rnr *Runner) accountHandlerConfig(l logger.Logger) (map[string]server.Hand
 			AuthenTypes: []server.AuthenticationType{
 				server.AuthenticationTypePublic,
 			},
+			ValidateRequestSchema: jsonschema.SchemaWithReferences{
+				Main: jsonschema.Schema{
+					Name: "account.request-auth.request.schema.json",
+				},
+			},
+			ValidateResponseSchema: jsonschema.SchemaWithReferences{
+				Main: jsonschema.Schema{
+					Name: "account.request-auth.response.schema.json",
+				},
+			},
 		},
 		DocumentationConfig: server.DocumentationConfig{
 			Document: true,
@@ -184,6 +194,16 @@ func (rnr *Runner) accountHandlerConfig(l logger.Logger) (map[string]server.Hand
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
 				server.AuthenticationTypePublic,
+			},
+			ValidateRequestSchema: jsonschema.SchemaWithReferences{
+				Main: jsonschema.Schema{
+					Name: "account.verify-auth.request.schema.json",
+				},
+			},
+			ValidateResponseSchema: jsonschema.SchemaWithReferences{
+				Main: jsonschema.Schema{
+					Name: "account.verify-auth.response.schema.json",
+				},
 			},
 		},
 		DocumentationConfig: server.DocumentationConfig{

@@ -194,9 +194,11 @@ func (rnr *Runner) resolveHandlerQueryParamsConfig(hc HandlerConfig) (HandlerCon
 	if hc.MiddlewareConfig.ValidateParamsConfig == nil {
 		return hc, nil
 	}
+
 	if hc.MiddlewareConfig.ValidateParamsConfig.QueryParams == nil {
 		return hc, fmt.Errorf("handler >%s< has ValidateParamsConfig without QueryParams", hc.Name)
 	}
+
 	hc.MiddlewareConfig.ValidateParamsConfig.queryParamTypes = jsonschema.CreateJSONTypeMap(hc.MiddlewareConfig.ValidateParamsConfig.QueryParams)
 
 	return hc, nil

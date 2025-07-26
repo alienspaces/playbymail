@@ -86,6 +86,7 @@ type ExpectedErrorResponse struct {
 // TestRunnerer is a minimal interface for test runners
 // It is satisfied by both *server.Runner and custom runners embedding it.
 type TestRunnerer interface {
+	ResolveHandlerConfig(hc server.HandlerConfig) (server.HandlerConfig, error)
 	ApplyMiddleware(hc server.HandlerConfig, h server.Handle) (httprouter.Handle, error)
 	GetHandlerConfig() map[string]server.HandlerConfig
 }
@@ -248,6 +249,9 @@ func RunTestCase(t *testing.T, th *harness.Testing, tc TestCaser, tf func(method
 
 	cfg := tc.TestHandlerConfig(rnr)
 
+	cfg, err = rnr.ResolveHandlerConfig(cfg)
+	require.NoError(t, err, "ResolveHandlerConfig returns without error")
+
 	t.Logf("Applying middleware to handler >%s %s<", cfg.Method, cfg.Path)
 
 	h, err := rnr.ApplyMiddleware(cfg, cfg.HandlerFunc)
@@ -299,6 +303,7 @@ func RunTestCase(t *testing.T, th *harness.Testing, tc TestCaser, tf func(method
 		}
 		t.Logf("Request path with query params >%s<", requestPath)
 	}
+
 	// request data
 	data := tc.TestRequestBody(th.Data)
 	multipartForms := tc.TestRequestForms(th.Data)
@@ -330,20 +335,17 @@ func RunTestCase(t *testing.T, th *harness.Testing, tc TestCaser, tf func(method
 				// Create a form field in the multipart request with a byte slice
 				part, err := w.CreateFormFile(key, "fakefile.csv")
 				if err != nil {
-					fmt.Println(err)
-					return
+					t.Errorf("WriteField returns error >%v<", err)
 				}
 
 				_, err = part.Write(fileContent)
 				if err != nil {
-					fmt.Println(err)
-					return
+					t.Errorf("CreateFormFile returns error >%v<", err)
 				}
 			} else {
 				err = w.WriteField(key, val.(string))
 				if err != nil {
-					fmt.Println(err)
-					return
+					t.Errorf("WriteField returns error >%v<", err)
 				}
 			}
 		}
@@ -352,7 +354,7 @@ func RunTestCase(t *testing.T, th *harness.Testing, tc TestCaser, tf func(method
 
 		req, err = http.NewRequest("POST", requestPath, &requestBody)
 		if err != nil {
-			return
+			t.Errorf("NewRequest returns error >%v<", err)
 		}
 
 		req.Header.Set("Content-Type", w.FormDataContentType())
@@ -375,7 +377,7 @@ func RunTestCase(t *testing.T, th *harness.Testing, tc TestCaser, tf func(method
 
 	// test status
 	if tc.TestResponseCode() != recorder.Code {
-		t.Logf("%s", recorder.Body.String())
+		t.Errorf("Response code >%d< does not equal expected >%d<", recorder.Code, tc.TestResponseCode())
 	}
 	require.Equalf(t, tc.TestResponseCode(), recorder.Code, "%s - Response code equals expected", tc.TestName())
 
@@ -401,8 +403,11 @@ func RunTestCase(t *testing.T, th *harness.Testing, tc TestCaser, tf func(method
 		responseBody, err = tc.TestResponseDecoder(recorder.Result().Body)
 		require.NoError(t, err, fmt.Sprintf("Response body decodes without error >%#v<", err))
 
-		if _, isStr := responseBody.(string); responseBody != nil &&
-			!isStr &&
+		t.Logf("Middleware validate response schema >%#v<", cfg.MiddlewareConfig.ValidateResponseSchema)
+
+		_, isStr := responseBody.(string)
+
+		if responseBody != nil && !isStr &&
 			// When handler configuration does not have a JSON schema defined
 			!cfg.MiddlewareConfig.ValidateResponseSchema.IsEmpty() &&
 			// When a handler supports JSON and additional content types tests
@@ -412,6 +417,7 @@ func RunTestCase(t *testing.T, th *harness.Testing, tc TestCaser, tf func(method
 
 			jsonData, err := json.Marshal(responseBody)
 			require.NoError(t, err, "Marshal returns without error")
+
 			testResponseSchema(t, cfg, jsonData)
 		}
 	}
@@ -427,11 +433,9 @@ func testResponseSchema(t *testing.T, hc server.HandlerConfig, actualRes any) {
 	t.Run("response validates against JSON schema", func(t *testing.T) {
 		schema := hc.MiddlewareConfig.ValidateResponseSchema
 		schemaMain := schema.Main
-		require.NotEmpty(t, schemaMain.Location, "handler >%s %s< ValidateResponseSchema main location path should not be empty", hc.Method, hc.Path)
 		require.NotEmpty(t, schemaMain.Name, "handler >%s %s< ValidateResponseSchema main filename should not be empty", hc.Method, hc.Path)
 
 		for _, r := range schema.References {
-			require.NotEmpty(t, r.Location, "handler >%s %s< ValidateResponseSchema reference location path should not be empty", hc.Method, hc.Path)
 			require.NotEmpty(t, r.Name, "handler >%s %s< ValidateResponseSchema reference filename should not be empty", hc.Method, hc.Path)
 		}
 

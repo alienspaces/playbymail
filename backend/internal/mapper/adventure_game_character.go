@@ -67,7 +67,7 @@ func AdventureGameCharacterRecordToResponse(l logger.Logger, rec *record.Adventu
 }
 
 func AdventureGameCharacterRecordsToCollectionResponse(l logger.Logger, recs []*record.AdventureGameCharacter) (schema.AdventureGameCharacterCollectionResponse, error) {
-	var data []*schema.AdventureGameCharacterResponseData
+	data := []*schema.AdventureGameCharacterResponseData{}
 	for _, rec := range recs {
 		d, err := AdventureGameCharacterRecordToResponseData(l, rec)
 		if err != nil {

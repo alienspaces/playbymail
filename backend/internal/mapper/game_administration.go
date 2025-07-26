@@ -61,7 +61,7 @@ func GameAdministrationRecordToResponse(l logger.Logger, rec *record.GameAdminis
 }
 
 func GameAdministrationRecordsToCollectionResponse(l logger.Logger, recs []*record.GameAdministration) (schema.GameAdministrationCollectionResponse, error) {
-	var data []*schema.GameAdministrationResponseData
+	data := []*schema.GameAdministrationResponseData{}
 	for _, rec := range recs {
 		d, err := GameAdministrationRecordToResponseData(l, rec)
 		if err != nil {

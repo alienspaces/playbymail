@@ -100,9 +100,10 @@ func Test_adventureGameLocationLinkHandler(t *testing.T) {
 				},
 				RequestBody: func(d harness.Data) any {
 					return schema.AdventureGameLocationLinkRequest{
+						Name:               "Test Link",
+						Description:        "Test Link Description",
 						FromGameLocationID: locationOneRec.ID,
 						ToGameLocationID:   locationThreeRec.ID,
-						Name:               "Test Link",
 					}
 				},
 				ResponseDecoder: testCaseResponseDecoder,

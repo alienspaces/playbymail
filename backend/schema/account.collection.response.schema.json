@@ -10,19 +10,14 @@
             }
         },
         "error": {
-            "type": [
-                "object",
-                "null"
-            ]
+            "$ref": "common.schema.json#/$defs/error"
         },
         "pagination": {
-            "type": [
-                "object",
-                "null"
-            ]
+            "$ref": "common.schema.json#/$defs/pagination"
         }
     },
     "required": [
         "data"
-    ]
+    ],
+    "additionalProperties": false
 }

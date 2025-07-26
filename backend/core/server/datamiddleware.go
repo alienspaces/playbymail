@@ -32,7 +32,7 @@ func (rnr *Runner) DataMiddleware(hc HandlerConfig, h Handle) (Handle, error) {
 
 		data, err := GetRequestData(r)
 		if err != nil {
-			l.Warn("(core) failed reading request data >%v<", err)
+			l.Warn("(datamiddleware) failed reading request data >%v<", err)
 			return err
 		}
 
@@ -42,27 +42,27 @@ func (rnr *Runner) DataMiddleware(hc HandlerConfig, h Handle) (Handle, error) {
 		contentType := jsonContentType
 		headerContentTypes := r.Header[http.CanonicalHeaderKey("Content-Type")]
 		if len(headerContentTypes) > 0 {
-			l.Info("(core) assigning content type from header >%s<", headerContentTypes[0])
+			l.Info("(datamiddleware) assigning content type from header >%s<", headerContentTypes[0])
 			contentType = headerContentTypes[0]
 		}
 
 		if contentType != jsonContentType {
-			l.Debug("(core) skipping validation of URI >%s< Content-Type >%s<", r.RequestURI, contentType)
+			l.Debug("(datamiddleware) skipping validation of URI >%s< Content-Type >%s<", r.RequestURI, contentType)
 			return h(w, r, pp, qp, l, m, jc)
 		}
 
 		requestSchema := hc.MiddlewareConfig.ValidateRequestSchema
 		schemaMain := requestSchema.Main
 		if schemaMain.Name == "" || schemaMain.Location == "" {
-			l.Warn("(core) missing schemas, not validating data for URI >%s< method >%s<", r.RequestURI, r.Method)
+			l.Warn("(datamiddleware) missing schemas, not validating data for URI >%s< method >%s<", r.RequestURI, r.Method)
 			return h(w, r, pp, qp, l, m, jc)
 		}
 
-		l.Debug("(core) schemas >%#v<", requestSchema)
+		l.Debug("(datamiddleware) schemas >%#v<", requestSchema)
 
 		result, err := jsonschema.Validate(requestSchema, data)
 		if err != nil {
-			l.Warn("(core) failed validate >%v<", err)
+			l.Warn("(datamiddleware) failed validate >%v<", err)
 			var jsonSyntaxError *json.SyntaxError
 			if errors.As(err, &jsonSyntaxError) || errors.Is(err, io.ErrUnexpectedEOF) {
 				err = coreerror.NewInvalidDataError("")
@@ -74,7 +74,7 @@ func (rnr *Runner) DataMiddleware(hc HandlerConfig, h Handle) (Handle, error) {
 
 		if !result.Valid() {
 			err := coreerror.NewSchemaValidationError(result.Errors())
-			l.Warn("(core) failed validating request data >%#v<", err)
+			l.Warn("(datamiddleware) failed validating request data >%#v<", err)
 			return err
 		}
 

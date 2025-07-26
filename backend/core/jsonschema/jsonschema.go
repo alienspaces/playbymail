@@ -1,6 +1,7 @@
 package jsonschema
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"sync"
@@ -22,7 +23,7 @@ type SchemaWithReferences struct {
 }
 
 func (s *SchemaWithReferences) IsEmpty() bool {
-	return s.Main.Name == "" || s.Main.Location == ""
+	return s.Main.Name == "" && s.Main.Location == ""
 }
 
 func (s *SchemaWithReferences) GetReferencesFullPaths() []string {
@@ -39,28 +40,12 @@ func (s *SchemaWithReferences) GetReferencesFullPaths() []string {
 
 // Schema -
 type Schema struct {
-	LocationRoot string
-	Location     string
-	Name         string
-	fullPath     string
-}
-
-func (s *Schema) GetLocation() string {
-	if s.LocationRoot == "" || s.Location == "" {
-		return ""
-	}
-	return fmt.Sprintf("%s/%s", s.LocationRoot, s.Location)
+	Location string
+	Name     string
+	fullPath string
 }
 
 func (s *Schema) GetFullPath() string {
-	if s.fullPath != "" {
-		return s.fullPath
-	}
-	loc := s.GetLocation()
-	if loc == "" || s.Name == "" {
-		return ""
-	}
-	s.fullPath = fmt.Sprintf("%s/%s", loc, s.Name)
 	return s.fullPath
 }
 
@@ -110,7 +95,7 @@ func MapError(result *gojsonschema.Result) error {
 		errStr = fmt.Sprintf("%s, %s", errStr, e.String())
 	}
 
-	return fmt.Errorf(errStr)
+	return errors.New(errStr)
 }
 
 // Compile caches JSON schema compilation
@@ -180,30 +165,21 @@ func compile(sr SchemaWithReferences) (*gojsonschema.Schema, error) {
 	return s, nil
 }
 
-func ResolveSchemaLocationRoot(cfg SchemaWithReferences, root string) SchemaWithReferences {
-	cfg.Main.LocationRoot = resolveString(cfg.Main.LocationRoot, root)
+func ResolveSchemaLocation(schemaPath string, cfg SchemaWithReferences) SchemaWithReferences {
+
+	if cfg.Main.Location != "" {
+		cfg.Main.fullPath = fmt.Sprintf("%s/%s/%s", schemaPath, cfg.Main.Location, cfg.Main.Name)
+	} else {
+		cfg.Main.fullPath = fmt.Sprintf("%s/%s", schemaPath, cfg.Main.Name)
+	}
 
 	for i := range cfg.References {
-		cfg.References[i].LocationRoot = resolveString(cfg.References[i].LocationRoot, root)
+		if cfg.References[i].Location != "" {
+			cfg.References[i].fullPath = fmt.Sprintf("%s/%s/%s", schemaPath, cfg.References[i].Location, cfg.References[i].Name)
+		} else {
+			cfg.References[i].fullPath = fmt.Sprintf("%s/%s", schemaPath, cfg.References[i].Name)
+		}
 	}
 
 	return cfg
-}
-
-func ResolveSchemaLocation(cfg SchemaWithReferences, location string) SchemaWithReferences {
-	cfg.Main.Location = resolveString(cfg.Main.Location, location)
-
-	for i := range cfg.References {
-		cfg.References[i].Location = resolveString(cfg.References[i].Location, location)
-	}
-
-	return cfg
-}
-
-func resolveString(str string, defaultStr string) string {
-	if str != "" {
-		return str
-	}
-
-	return defaultStr
 }

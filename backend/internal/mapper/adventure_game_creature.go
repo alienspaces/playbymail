@@ -32,7 +32,7 @@ func AdventureGameCreatureRecordToResponse(l logger.Logger, rec *record.Adventur
 }
 
 func AdventureGameCreatureRecordsToCollectionResponse(l logger.Logger, recs []*record.AdventureGameCreature) (schema.AdventureGameCreatureCollectionResponse, error) {
-	var data []*schema.AdventureGameCreatureResponseData
+	data := []*schema.AdventureGameCreatureResponseData{}
 	for _, rec := range recs {
 		d, err := AdventureGameCreatureRecordToResponseData(l, rec)
 		if err != nil {

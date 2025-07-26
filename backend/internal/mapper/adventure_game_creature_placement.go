@@ -8,7 +8,6 @@ import (
 )
 
 func AdventureGameCreaturePlacementRecordToResponseData(l logger.Logger, rec *record.AdventureGameCreaturePlacement) (schema.AdventureGameCreaturePlacementResponseData, error) {
-	l.Debug("mapping adventure_game_creature_placement record to response data")
 	data := schema.AdventureGameCreaturePlacementResponseData{
 		ID:                      rec.ID,
 		GameID:                  rec.GameID,
@@ -23,7 +22,6 @@ func AdventureGameCreaturePlacementRecordToResponseData(l logger.Logger, rec *re
 }
 
 func AdventureGameCreaturePlacementRecordsToCollectionResponse(l logger.Logger, recs []*record.AdventureGameCreaturePlacement) (*schema.AdventureGameCreaturePlacementCollectionResponse, error) {
-	l.Debug("mapping adventure_game_creature_placement records to collection response")
 	data := []*schema.AdventureGameCreaturePlacementResponseData{}
 	for _, rec := range recs {
 		item, err := AdventureGameCreaturePlacementRecordToResponseData(l, rec)
@@ -38,7 +36,6 @@ func AdventureGameCreaturePlacementRecordsToCollectionResponse(l logger.Logger, 
 }
 
 func AdventureGameCreaturePlacementRecordToResponse(l logger.Logger, rec *record.AdventureGameCreaturePlacement) (*schema.AdventureGameCreaturePlacementResponse, error) {
-	l.Debug("mapping adventure_game_creature_placement record to response")
 	data, err := AdventureGameCreaturePlacementRecordToResponseData(l, rec)
 	if err != nil {
 		return nil, err
@@ -55,7 +52,6 @@ func AdventureGameCreaturePlacementRequestToRecord(l logger.Logger, req *schema.
 	if req == nil {
 		return nil, nil
 	}
-	l.Debug("mapping adventure_game_creature_placement request to record")
 	rec.AdventureGameCreatureID = req.AdventureGameCreatureID
 	rec.AdventureGameLocationID = req.AdventureGameLocationID
 	rec.InitialCount = req.InitialCount

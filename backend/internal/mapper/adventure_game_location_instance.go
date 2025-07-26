@@ -47,7 +47,7 @@ func AdventureGameLocationInstanceRecordToResponse(l logger.Logger, rec *record.
 
 func AdventureGameLocationInstanceRecordsToCollectionResponse(l logger.Logger, recs []*record.AdventureGameLocationInstance) (schema.AdventureGameLocationInstanceCollectionResponse, error) {
 	l.Debug("mapping adventure_game_location_instance records to collection response")
-	var data []*schema.AdventureGameLocationInstanceResponseData
+	data := []*schema.AdventureGameLocationInstanceResponseData{}
 	for _, rec := range recs {
 		d, err := AdventureGameLocationInstanceRecordToResponseData(l, rec)
 		if err != nil {

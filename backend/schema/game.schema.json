@@ -3,49 +3,10 @@
     "$id": "http://playbymail.dev/schema/game.schema.json",
     "title": "Game",
     "description": "Game",
-    "$defs": {
-        "resource": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-                "id": {
-                    "$ref": "#/$defs/game_id"
-                },
-                "name": {
-                    "$ref": "#/$defs/name"
-                },
-                "game_type": {
-                    "description": "The type of the game.",
-                    "type": "string",
-                    "enum": [
-                        "adventure"
-                    ],
-                    "minLength": 1,
-                    "maxLength": 50,
-                    "examples": [
-                        "adventure"
-                    ]
-                },
-                "created_at": {
-                    "$ref": "../common/common.schema.json#/$defs/created_at"
-                },
-                "updated_at": {
-                    "$ref": "../common/common.schema.json#/$defs/updated_at"
-                }
-            },
-            "required": [
-                "id",
-                "name",
-                "game_type",
-                "created_at",
-                "updated_at"
-            ]
-        },
-        "game_id": {
-            "description": "Unique game resource ID.",
-            "type": "string",
-            "format": "uuid",
-            "example": "3c87bd2b-df9a-413b-94ab-0238dcacaf68"
+    "type": "object",
+    "properties": {
+        "id": {
+            "$ref": "common.schema.json#/$defs/id"
         },
         "name": {
             "description": "The name of the game.",
@@ -57,6 +18,31 @@
                 "Game 2",
                 "Game 3"
             ]
+        },
+        "game_type": {
+            "description": "The type of the game.",
+            "type": "string",
+            "enum": [
+                "adventure"
+            ],
+            "minLength": 1,
+            "maxLength": 50,
+            "examples": [
+                "adventure"
+            ]
+        },
+        "created_at": {
+            "$ref": "common.schema.json#/$defs/created_at"
+        },
+        "updated_at": {
+            "$ref": "common.schema.json#/$defs/updated_at"
         }
-    }
+    },
+    "required": [
+        "id",
+        "name",
+        "game_type",
+        "created_at"
+    ],
+    "additionalProperties": false
 }
