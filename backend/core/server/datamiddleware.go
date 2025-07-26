@@ -7,7 +7,9 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/julienschmidt/httprouter"
+	"github.com/riverqueue/river"
 
 	coreerror "gitlab.com/alienspaces/playbymail/core/error"
 	"gitlab.com/alienspaces/playbymail/core/jsonschema"
@@ -21,11 +23,11 @@ const jsonContentType = "application/json"
 // DataMiddleware -
 func (rnr *Runner) DataMiddleware(hc HandlerConfig, h Handle) (Handle, error) {
 
-	handle := func(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
+	handle := func(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 		l = Logger(l, "DataMiddleware")
 
 		if r.Method == http.MethodGet {
-			return h(w, r, pp, qp, l, m)
+			return h(w, r, pp, qp, l, m, jc)
 		}
 
 		data, err := GetRequestData(r)
@@ -46,14 +48,14 @@ func (rnr *Runner) DataMiddleware(hc HandlerConfig, h Handle) (Handle, error) {
 
 		if contentType != jsonContentType {
 			l.Debug("(core) skipping validation of URI >%s< Content-Type >%s<", r.RequestURI, contentType)
-			return h(w, r, pp, qp, l, m)
+			return h(w, r, pp, qp, l, m, jc)
 		}
 
 		requestSchema := hc.MiddlewareConfig.ValidateRequestSchema
 		schemaMain := requestSchema.Main
 		if schemaMain.Name == "" || schemaMain.Location == "" {
 			l.Warn("(core) missing schemas, not validating data for URI >%s< method >%s<", r.RequestURI, r.Method)
-			return h(w, r, pp, qp, l, m)
+			return h(w, r, pp, qp, l, m, jc)
 		}
 
 		l.Debug("(core) schemas >%#v<", requestSchema)
@@ -76,7 +78,7 @@ func (rnr *Runner) DataMiddleware(hc HandlerConfig, h Handle) (Handle, error) {
 			return err
 		}
 
-		return h(w, r, pp, qp, l, m)
+		return h(w, r, pp, qp, l, m, jc)
 	}
 
 	return handle, nil

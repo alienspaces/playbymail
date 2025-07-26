@@ -3,7 +3,9 @@ package runner
 import (
 	"net/http"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/julienschmidt/httprouter"
+	"github.com/riverqueue/river"
 	"gitlab.com/alienspaces/playbymail/core/jsonschema"
 	"gitlab.com/alienspaces/playbymail/core/queryparam"
 	"gitlab.com/alienspaces/playbymail/core/server"
@@ -93,7 +95,7 @@ func (rnr *Runner) gameSubscriptionHandlerConfig(l logger.Logger) (map[string]se
 	return config, nil
 }
 
-func (rnr *Runner) getManyGameSubscriptionsHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
+func (rnr *Runner) getManyGameSubscriptionsHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = loggerWithFunctionContext(l, "getManyGameSubscriptionsHandler")
 	mm := m.(*domain.Domain)
 	opts := queryparam.ToSQLOptionsWithDefaults(qp)
@@ -108,7 +110,7 @@ func (rnr *Runner) getManyGameSubscriptionsHandler(w http.ResponseWriter, r *htt
 	return server.WriteResponse(l, w, http.StatusOK, res, server.XPaginationHeader(len(recs), qp.PageSize))
 }
 
-func (rnr *Runner) getGameSubscriptionHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
+func (rnr *Runner) getGameSubscriptionHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = loggerWithFunctionContext(l, "getGameSubscriptionHandler")
 	mm := m.(*domain.Domain)
 	recID := pp.ByName("game_subscription_id")
@@ -123,7 +125,7 @@ func (rnr *Runner) getGameSubscriptionHandler(w http.ResponseWriter, r *http.Req
 	return server.WriteResponse(l, w, http.StatusOK, res)
 }
 
-func (rnr *Runner) createGameSubscriptionHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
+func (rnr *Runner) createGameSubscriptionHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = loggerWithFunctionContext(l, "createGameSubscriptionHandler")
 	mm := m.(*domain.Domain)
 	rec, err := mapper.GameSubscriptionRequestToRecord(l, r, &record.GameSubscription{})
@@ -141,7 +143,7 @@ func (rnr *Runner) createGameSubscriptionHandler(w http.ResponseWriter, r *http.
 	return server.WriteResponse(l, w, http.StatusCreated, res)
 }
 
-func (rnr *Runner) updateGameSubscriptionHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
+func (rnr *Runner) updateGameSubscriptionHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = loggerWithFunctionContext(l, "updateGameSubscriptionHandler")
 	mm := m.(*domain.Domain)
 	recID := pp.ByName("game_subscription_id")
@@ -164,7 +166,7 @@ func (rnr *Runner) updateGameSubscriptionHandler(w http.ResponseWriter, r *http.
 	return server.WriteResponse(l, w, http.StatusOK, res)
 }
 
-func (rnr *Runner) deleteGameSubscriptionHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
+func (rnr *Runner) deleteGameSubscriptionHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = loggerWithFunctionContext(l, "deleteGameSubscriptionHandler")
 	mm := m.(*domain.Domain)
 	recID := pp.ByName("game_subscription_id")

@@ -5,7 +5,9 @@ import (
 	"net/http"
 	"slices"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/julienschmidt/httprouter"
+	"github.com/riverqueue/river"
 
 	"gitlab.com/alienspaces/playbymail/core/collection/set"
 	coreerror "gitlab.com/alienspaces/playbymail/core/error"
@@ -21,12 +23,12 @@ type RLS struct {
 func (rnr *Runner) RLSMiddleware(hc HandlerConfig, h Handle) (Handle, error) {
 	handlerAuthenTypes := set.New(hc.MiddlewareConfig.AuthenTypes...)
 
-	handle := func(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
+	handle := func(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 		l = Logger(l, "RLSMiddleware")
 
 		if _, ok := handlerAuthenTypes[AuthenticationTypePublic]; ok {
 			l.Info("(rlsmiddleware) handler name >%s< is public, not applying RLS", hc.Name)
-			return h(w, r, pp, qp, l, m)
+			return h(w, r, pp, qp, l, m, jc)
 		}
 
 		AuthenData := GetRequestAuthenData(l, r)
@@ -37,7 +39,7 @@ func (rnr *Runner) RLSMiddleware(hc HandlerConfig, h Handle) (Handle, error) {
 
 		if AuthenData.RLSType == RLSTypeOpen {
 			l.Info("(rlsmiddleware) handler name >%s< is open, not applying RLS", hc.Name)
-			return h(w, r, pp, qp, l, m)
+			return h(w, r, pp, qp, l, m, jc)
 		}
 
 		if AuthenData.RLSType == RLSTypeRestricted {
@@ -75,7 +77,7 @@ func (rnr *Runner) RLSMiddleware(hc HandlerConfig, h Handle) (Handle, error) {
 			}
 		}
 
-		return h(w, r, pp, qp, l, m)
+		return h(w, r, pp, qp, l, m, jc)
 	}
 	return handle, nil
 }

@@ -102,7 +102,7 @@ func (rnr *Runner) accountHandlerConfig(l logger.Logger) (map[string]server.Hand
 		HandlerFunc: rnr.createAccountHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
-				server.AuthenticationTypeToken,
+				server.AuthenticationTypePublic,
 			},
 			ValidateRequestSchema:  requestSchema,
 			ValidateResponseSchema: responseSchema,
@@ -119,7 +119,7 @@ func (rnr *Runner) accountHandlerConfig(l logger.Logger) (map[string]server.Hand
 		HandlerFunc: rnr.createAccountHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
-				server.AuthenticationTypeToken,
+				server.AuthenticationTypePublic,
 			},
 			ValidateRequestSchema:  requestSchema,
 			ValidateResponseSchema: responseSchema,
@@ -164,58 +164,38 @@ func (rnr *Runner) accountHandlerConfig(l logger.Logger) (map[string]server.Hand
 
 	accountConfig[RequestAuth] = server.HandlerConfig{
 		Method:      http.MethodPost,
-		Path:        "/request-auth",
+		Path:        "/v1/request-auth",
 		HandlerFunc: rnr.requestAuthHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
 				server.AuthenticationTypePublic,
 			},
-			ValidateRequestSchema: jsonschema.SchemaWithReferences{
-				Main: jsonschema.Schema{
-					Name: "account.request-auth.request.schema.json",
-				},
-			},
-			ValidateResponseSchema: jsonschema.SchemaWithReferences{
-				Main: jsonschema.Schema{
-					Name: "account.request-auth.response.schema.json",
-				},
-			},
 		},
 		DocumentationConfig: server.DocumentationConfig{
 			Document: true,
-			Title:    "Request authentication token",
+			Title:    "Request authentication",
 		},
 	}
 
 	accountConfig[VerifyAuth] = server.HandlerConfig{
 		Method:      http.MethodPost,
-		Path:        "/verify-auth",
+		Path:        "/v1/verify-auth",
 		HandlerFunc: rnr.verifyAuthHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
 				server.AuthenticationTypePublic,
 			},
-			ValidateRequestSchema: jsonschema.SchemaWithReferences{
-				Main: jsonschema.Schema{
-					Name: "account.verify-auth.request.schema.json",
-				},
-			},
-			ValidateResponseSchema: jsonschema.SchemaWithReferences{
-				Main: jsonschema.Schema{
-					Name: "account.verify-auth.response.schema.json",
-				},
-			},
 		},
 		DocumentationConfig: server.DocumentationConfig{
 			Document: true,
-			Title:    "Verify authentication token",
+			Title:    "Verify authentication",
 		},
 	}
 
 	return accountConfig, nil
 }
 
-func (rnr *Runner) getManyAccountsHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
+func (rnr *Runner) getManyAccountsHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = loggerWithFunctionContext(l, "GetManyAccountsHandler")
 
 	l.Info("querying many account records with params >%#v<", qp)
@@ -245,7 +225,7 @@ func (rnr *Runner) getManyAccountsHandler(w http.ResponseWriter, r *http.Request
 	return nil
 }
 
-func (rnr *Runner) getAccountHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
+func (rnr *Runner) getAccountHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = loggerWithFunctionContext(l, "GetAccountHandler")
 
 	accountID := pp.ByName("account_id")
@@ -275,7 +255,7 @@ func (rnr *Runner) getAccountHandler(w http.ResponseWriter, r *http.Request, pp 
 	return nil
 }
 
-func (rnr *Runner) createAccountHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
+func (rnr *Runner) createAccountHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	if w == nil {
 		panic("DEBUG: http.ResponseWriter w is nil in createAccountHandler")
 	}
@@ -313,7 +293,7 @@ func (rnr *Runner) createAccountHandler(w http.ResponseWriter, r *http.Request, 
 	return nil
 }
 
-func (rnr *Runner) updateAccountHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
+func (rnr *Runner) updateAccountHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = loggerWithFunctionContext(l, "UpdateAccountHandler")
 
 	l.Info("updating account record with path params >%#v<", pp)
@@ -355,7 +335,7 @@ func (rnr *Runner) updateAccountHandler(w http.ResponseWriter, r *http.Request, 
 	return nil
 }
 
-func (rnr *Runner) deleteAccountHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
+func (rnr *Runner) deleteAccountHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = loggerWithFunctionContext(l, "DeleteAccountHandler")
 
 	accountID := pp.ByName("account_id")
@@ -379,7 +359,7 @@ func (rnr *Runner) deleteAccountHandler(w http.ResponseWriter, r *http.Request, 
 }
 
 // requestAuthHandler handles POST /request-auth
-func (rnr *Runner) requestAuthHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
+func (rnr *Runner) requestAuthHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = loggerWithFunctionContext(l, "RequestAuthHandler")
 
 	l.Info("requesting authentication token for email >%s<", r.Header.Get("Authorization"))
@@ -394,7 +374,10 @@ func (rnr *Runner) requestAuthHandler(w http.ResponseWriter, r *http.Request, pp
 	}
 
 	mm := m.(*domain.Domain)
-	err := sendAccountVerificationEmail(mm, rnr.JobClient, req.Email)
+
+	// Within API handler context we must use the job client passed down through
+	// the handler chain.
+	err := sendAccountVerificationEmail(mm, jc, req.Email)
 	if err != nil {
 		l.Warn("failed sending account verification email >%v<", err)
 		return server.WriteResponse(l, w, http.StatusOK, mapper.MapRequestAuthResponse("ok"))
@@ -403,7 +386,7 @@ func (rnr *Runner) requestAuthHandler(w http.ResponseWriter, r *http.Request, pp
 	return server.WriteResponse(l, w, http.StatusOK, mapper.MapRequestAuthResponse("ok"))
 }
 
-func (rnr *Runner) verifyAuthHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
+func (rnr *Runner) verifyAuthHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = loggerWithFunctionContext(l, "VerifyAuthHandler")
 
 	var req mapper.VerifyAuthRequest
@@ -461,7 +444,9 @@ func sendAccountVerificationEmail(m *domain.Domain, jc *river.Client[pgx.Tx], em
 	// Register job to send verification token
 	l.Info("registering job to send verification token for account ID >%s<", rec.ID)
 
-	jc.Insert(context.Background(), &jobworker.SendAccountVerificationEmailWorkerArgs{
+	// Within API handler context we must use the transaction from the domain model so
+	// if there is an error the entire API request transaction is rolled back.
+	jc.InsertTx(context.Background(), m.Tx, &jobworker.SendAccountVerificationEmailWorkerArgs{
 		AccountID: rec.ID,
 	}, &river.InsertOpts{
 		Queue: jobqueue.QueueDefault,

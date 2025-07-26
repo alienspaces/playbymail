@@ -7,7 +7,9 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/julienschmidt/httprouter"
+	"github.com/riverqueue/river"
 
 	coreerror "gitlab.com/alienspaces/playbymail/core/error"
 	"gitlab.com/alienspaces/playbymail/core/jsonschema"
@@ -22,7 +24,7 @@ func (rnr *Runner) ParamMiddleware(hc HandlerConfig, h Handle) (Handle, error) {
 	// Used to verify path parameters are resolved
 	pathParams := extractPathParams(hc.Path)
 
-	handle := func(w http.ResponseWriter, r *http.Request, pp httprouter.Params, _ *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
+	handle := func(w http.ResponseWriter, r *http.Request, pp httprouter.Params, _ *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 		l = Logger(l, "ParamMiddleware")
 
 		vals := r.URL.Query()
@@ -55,7 +57,7 @@ func (rnr *Runner) ParamMiddleware(hc HandlerConfig, h Handle) (Handle, error) {
 			return err
 		}
 
-		return h(w, r, pp, qp, l, m)
+		return h(w, r, pp, qp, l, m, jc)
 	}
 
 	return handle, nil

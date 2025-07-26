@@ -3,7 +3,9 @@ package runner
 import (
 	"net/http"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/julienschmidt/httprouter"
+	"github.com/riverqueue/river"
 
 	"gitlab.com/alienspaces/playbymail/core/jsonschema"
 	"gitlab.com/alienspaces/playbymail/core/queryparam"
@@ -158,7 +160,7 @@ func (rnr *Runner) gameHandlerConfig(l logger.Logger) (map[string]server.Handler
 }
 
 // GetManyGamesHandler -
-func (rnr *Runner) getManyGamesHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
+func (rnr *Runner) getManyGamesHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = loggerWithFunctionContext(l, "GetManyGamesHandler")
 
 	l.Info("querying many game records with params >%#v<", qp)
@@ -188,7 +190,7 @@ func (rnr *Runner) getManyGamesHandler(w http.ResponseWriter, r *http.Request, p
 	return nil
 }
 
-func (rnr *Runner) getGameHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
+func (rnr *Runner) getGameHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = loggerWithFunctionContext(l, "GetGameHandler")
 
 	l.Info("querying game record with path params >%#v<", pp)
@@ -220,7 +222,7 @@ func (rnr *Runner) getGameHandler(w http.ResponseWriter, r *http.Request, pp htt
 	return nil
 }
 
-func (rnr *Runner) createGameHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
+func (rnr *Runner) createGameHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = loggerWithFunctionContext(l, "CreateGameHandler")
 
 	l.Info("creating game record with path params >%#v<", pp)
@@ -253,7 +255,7 @@ func (rnr *Runner) createGameHandler(w http.ResponseWriter, r *http.Request, pp 
 	return nil
 }
 
-func (rnr *Runner) updateGameHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
+func (rnr *Runner) updateGameHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = loggerWithFunctionContext(l, "UpdateGameHandler")
 
 	l.Info("updating game record with path params >%#v<", pp)
@@ -292,7 +294,7 @@ func (rnr *Runner) updateGameHandler(w http.ResponseWriter, r *http.Request, pp 
 	return nil
 }
 
-func (rnr *Runner) deleteGameHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
+func (rnr *Runner) deleteGameHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = loggerWithFunctionContext(l, "DeleteGameHandler")
 
 	l.Info("deleting game record with path params >%#v<", pp)

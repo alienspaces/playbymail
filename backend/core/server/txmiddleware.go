@@ -3,7 +3,9 @@ package server
 import (
 	"net/http"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/julienschmidt/httprouter"
+	"github.com/riverqueue/river"
 
 	"gitlab.com/alienspaces/playbymail/core/queryparam"
 	"gitlab.com/alienspaces/playbymail/core/type/domainer"
@@ -21,7 +23,7 @@ const HeaderXTxRollback = "X-Tx-Rollback"
 // TxMiddleware -
 func (rnr *Runner) TxMiddleware(hc HandlerConfig, h Handle) (Handle, error) {
 
-	handle := func(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, _ domainer.Domainer) error {
+	handle := func(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, _ domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 		l = Logger(l, "TxMiddleware")
 
 		// NOTE: The domainer is created and initialised with every request instead of
@@ -36,7 +38,7 @@ func (rnr *Runner) TxMiddleware(hc HandlerConfig, h Handle) (Handle, error) {
 			return err
 		}
 
-		err = h(w, r, pp, qp, l, m)
+		err = h(w, r, pp, qp, l, m, jc)
 		if err != nil {
 			l.Warn("(core) handler error, rolling back database transaction")
 			if err := m.Rollback(); err != nil {

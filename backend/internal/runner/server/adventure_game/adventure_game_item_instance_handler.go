@@ -3,7 +3,9 @@ package adventure_game
 import (
 	"net/http"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/julienschmidt/httprouter"
+	"github.com/riverqueue/river"
 	coreerror "gitlab.com/alienspaces/playbymail/core/error"
 	"gitlab.com/alienspaces/playbymail/core/jsonschema"
 	"gitlab.com/alienspaces/playbymail/core/queryparam"
@@ -173,7 +175,7 @@ func adventureGameItemInstanceHandlerConfig(l logger.Logger) (map[string]server.
 	return gameItemInstanceConfig, nil
 }
 
-func searchManyAdventureGameItemInstancesHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
+func searchManyAdventureGameItemInstancesHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = logging.LoggerWithFunctionContext(l, packageName, "searchManyAdventureGameItemInstancesHandler")
 
 	mm := m.(*domain.Domain)
@@ -198,7 +200,7 @@ func searchManyAdventureGameItemInstancesHandler(w http.ResponseWriter, r *http.
 	return nil
 }
 
-func getManyAdventureGameItemInstancesHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
+func getManyAdventureGameItemInstancesHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = logging.LoggerWithFunctionContext(l, packageName, "getManyAdventureGameItemInstancesHandler")
 
 	gameInstanceID := pp.ByName("game_instance_id")
@@ -235,7 +237,7 @@ func getManyAdventureGameItemInstancesHandler(w http.ResponseWriter, r *http.Req
 	return nil
 }
 
-func getOneAdventureGameItemInstanceHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
+func getOneAdventureGameItemInstanceHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = logging.LoggerWithFunctionContext(l, packageName, "getOneAdventureGameItemInstanceHandler")
 
 	gameInstanceID := pp.ByName("game_instance_id")
@@ -283,7 +285,7 @@ func getOneAdventureGameItemInstanceHandler(w http.ResponseWriter, r *http.Reque
 	return nil
 }
 
-func createOneAdventureGameItemInstanceHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
+func createOneAdventureGameItemInstanceHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = logging.LoggerWithFunctionContext(l, packageName, "createOneAdventureGameItemInstanceHandler")
 
 	gameInstanceID := pp.ByName("game_instance_id")
@@ -333,7 +335,7 @@ func createOneAdventureGameItemInstanceHandler(w http.ResponseWriter, r *http.Re
 	return nil
 }
 
-func updateOneAdventureGameItemInstanceHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
+func updateOneAdventureGameItemInstanceHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = logging.LoggerWithFunctionContext(l, packageName, "updateOneAdventureGameItemInstanceHandler")
 
 	gameInstanceID := pp.ByName("game_instance_id")
@@ -404,7 +406,7 @@ func updateOneAdventureGameItemInstanceHandler(w http.ResponseWriter, r *http.Re
 	return nil
 }
 
-func deleteOneAdventureGameItemInstanceHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
+func deleteOneAdventureGameItemInstanceHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = logging.LoggerWithFunctionContext(l, packageName, "deleteOneAdventureGameItemInstanceHandler")
 
 	gameInstanceID := pp.ByName("game_instance_id")

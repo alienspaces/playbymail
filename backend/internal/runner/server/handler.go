@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/julienschmidt/httprouter"
+	"github.com/riverqueue/river"
 	"gitlab.com/alienspaces/playbymail/core/jsonschema"
 	"gitlab.com/alienspaces/playbymail/core/queryparam"
 	"gitlab.com/alienspaces/playbymail/core/type/domainer"
@@ -57,7 +59,7 @@ var referenceSchemas = []jsonschema.Schema{
 }
 
 // handlerFunc - default handler
-func (rnr *Runner) handlerFunc(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
+func (rnr *Runner) handlerFunc(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = loggerWithFunctionContext(l, "Handler")
 
 	l.Info("(playbymail) using playbymail handler")

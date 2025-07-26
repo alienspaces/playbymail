@@ -3,7 +3,9 @@ package adventure_game
 import (
 	"net/http"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/julienschmidt/httprouter"
+	"github.com/riverqueue/river"
 
 	coreerror "gitlab.com/alienspaces/playbymail/core/error"
 	"gitlab.com/alienspaces/playbymail/core/jsonschema"
@@ -174,7 +176,7 @@ func adventureGameCharacterHandlerConfig(l logger.Logger) (map[string]server.Han
 	return gameCharacterConfig, nil
 }
 
-func searchManyAdventureGameCharactersHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
+func searchManyAdventureGameCharactersHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = logging.LoggerWithFunctionContext(l, packageName, "searchManyAdventureGameCharactersHandler")
 
 	mm := m.(*domain.Domain)
@@ -199,7 +201,7 @@ func searchManyAdventureGameCharactersHandler(w http.ResponseWriter, r *http.Req
 	return nil
 }
 
-func getManyAdventureGameCharactersHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
+func getManyAdventureGameCharactersHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = logging.LoggerWithFunctionContext(l, packageName, "getManyAdventureGameCharactersHandler")
 
 	// Create SQL options from query parameters
@@ -237,7 +239,7 @@ func getManyAdventureGameCharactersHandler(w http.ResponseWriter, r *http.Reques
 	return nil
 }
 
-func getOneAdventureGameCharacterHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
+func getOneAdventureGameCharacterHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = logging.LoggerWithFunctionContext(l, packageName, "getOneAdventureGameCharacterHandler")
 
 	gameID := pp.ByName("game_id")
@@ -270,7 +272,7 @@ func getOneAdventureGameCharacterHandler(w http.ResponseWriter, r *http.Request,
 	return nil
 }
 
-func createOneAdventureGameCharacterHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
+func createOneAdventureGameCharacterHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = logging.LoggerWithFunctionContext(l, packageName, "createOneAdventureGameCharacterHandler")
 
 	gameID := pp.ByName("game_id")
@@ -310,7 +312,7 @@ func createOneAdventureGameCharacterHandler(w http.ResponseWriter, r *http.Reque
 	return nil
 }
 
-func updateOneAdventureGameCharacterHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
+func updateOneAdventureGameCharacterHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = logging.LoggerWithFunctionContext(l, packageName, "updateOneAdventureGameCharacterHandler")
 
 	gameID := pp.ByName("game_id")
@@ -367,7 +369,7 @@ func updateOneAdventureGameCharacterHandler(w http.ResponseWriter, r *http.Reque
 	return nil
 }
 
-func deleteOneAdventureGameCharacterHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
+func deleteOneAdventureGameCharacterHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = logging.LoggerWithFunctionContext(l, packageName, "deleteOneAdventureGameCharacterHandler")
 
 	gameID := pp.ByName("game_id")

@@ -6,7 +6,9 @@ import (
 	"net/http"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/julienschmidt/httprouter"
+	"github.com/riverqueue/river"
 
 	"gitlab.com/alienspaces/playbymail/core/log"
 	"gitlab.com/alienspaces/playbymail/core/queryparam"
@@ -19,7 +21,7 @@ const HeaderXCorrelationID = "X-Correlation-ID"
 // CorrelationMiddleware -
 func (rnr *Runner) CorrelationMiddleware(hc HandlerConfig, h Handle) (Handle, error) {
 
-	handle := func(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, _ domainer.Domainer) error {
+	handle := func(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, _ domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 		l = Logger(l, "CorrelationMiddleware")
 
 		correlationID := r.Header.Get(HeaderXCorrelationID)
@@ -40,7 +42,7 @@ func (rnr *Runner) CorrelationMiddleware(hc HandlerConfig, h Handle) (Handle, er
 		// Add correlation ID to logger context
 		l.Context(log.ContextKeyCorrelationID, correlationID)
 
-		return h(w, r, pp, nil, l, nil)
+		return h(w, r, pp, nil, l, nil, jc)
 	}
 
 	return handle, nil

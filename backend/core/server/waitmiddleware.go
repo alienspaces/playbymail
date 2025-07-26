@@ -7,7 +7,9 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/julienschmidt/httprouter"
+	"github.com/riverqueue/river"
 
 	coreerror "gitlab.com/alienspaces/playbymail/core/error"
 	"gitlab.com/alienspaces/playbymail/core/queryparam"
@@ -35,7 +37,7 @@ const HeaderXTxLockWaitTimeoutSeconds = "X-Tx-Lock-Wait-Timeout-Seconds"
 
 func (rnr *Runner) WaitMiddleware(hc HandlerConfig, h Handle) (Handle, error) {
 
-	handle := func(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
+	handle := func(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 		l = Logger(l, "WaitMiddleware")
 
 		if r.Header.Get(HeaderXTxLockWaitTimeoutSeconds) != "" {
@@ -58,7 +60,7 @@ func (rnr *Runner) WaitMiddleware(hc HandlerConfig, h Handle) (Handle, error) {
 			}
 		}
 
-		err := h(w, r, pp, qp, l, m)
+		err := h(w, r, pp, qp, l, m, jc)
 
 		if r.Header.Get(HeaderXWaitSeconds) != "" {
 			waitSecs, err := strconv.ParseFloat(r.Header.Get(HeaderXWaitSeconds), 32)

@@ -4,7 +4,9 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/julienschmidt/httprouter"
+	"github.com/riverqueue/river"
 
 	"gitlab.com/alienspaces/playbymail/core/collection/set"
 	coreerror "gitlab.com/alienspaces/playbymail/core/error"
@@ -19,12 +21,12 @@ var unauthErr = coreerror.NewUnauthenticatedError("authentication failed")
 func (rnr *Runner) AuthenMiddleware(hc HandlerConfig, h Handle) (Handle, error) {
 	handlerAuthenTypes := set.New(hc.MiddlewareConfig.AuthenTypes...)
 
-	handle := func(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
+	handle := func(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 		l = Logger(l, "AuthenMiddleware")
 
 		if _, ok := handlerAuthenTypes[AuthenticationTypePublic]; ok {
 			l.Debug("(authenmiddleware) handler name >%s< is public, not authenticating", hc.Name)
-			return h(w, r, pp, qp, l, m)
+			return h(w, r, pp, qp, l, m, jc)
 		}
 
 		var auth AuthenData
@@ -80,7 +82,7 @@ func (rnr *Runner) AuthenMiddleware(hc HandlerConfig, h Handle) (Handle, error) 
 
 		l.Context("account-id", auth.Account.ID)
 
-		return h(w, r, pp, qp, l, m)
+		return h(w, r, pp, qp, l, m, jc)
 	}
 
 	return handle, nil

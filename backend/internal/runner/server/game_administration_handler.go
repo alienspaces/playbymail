@@ -3,7 +3,9 @@ package runner
 import (
 	"net/http"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/julienschmidt/httprouter"
+	"github.com/riverqueue/river"
 	"gitlab.com/alienspaces/playbymail/core/jsonschema"
 	"gitlab.com/alienspaces/playbymail/core/queryparam"
 	"gitlab.com/alienspaces/playbymail/core/server"
@@ -93,7 +95,7 @@ func (rnr *Runner) gameAdministrationHandlerConfig(l logger.Logger) (map[string]
 	return config, nil
 }
 
-func (rnr *Runner) getManyGameAdministrationsHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
+func (rnr *Runner) getManyGameAdministrationsHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = loggerWithFunctionContext(l, "getManyGameAdministrationsHandler")
 	mm := m.(*domain.Domain)
 	opts := queryparam.ToSQLOptionsWithDefaults(qp)
@@ -108,7 +110,7 @@ func (rnr *Runner) getManyGameAdministrationsHandler(w http.ResponseWriter, r *h
 	return server.WriteResponse(l, w, http.StatusOK, res, server.XPaginationHeader(len(recs), qp.PageSize))
 }
 
-func (rnr *Runner) getGameAdministrationHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
+func (rnr *Runner) getGameAdministrationHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = loggerWithFunctionContext(l, "getGameAdministrationHandler")
 	mm := m.(*domain.Domain)
 	recID := pp.ByName("game_administration_id")
@@ -123,7 +125,7 @@ func (rnr *Runner) getGameAdministrationHandler(w http.ResponseWriter, r *http.R
 	return server.WriteResponse(l, w, http.StatusOK, res)
 }
 
-func (rnr *Runner) createGameAdministrationHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
+func (rnr *Runner) createGameAdministrationHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = loggerWithFunctionContext(l, "createGameAdministrationHandler")
 	mm := m.(*domain.Domain)
 	rec, err := mapper.GameAdministrationRequestToRecord(l, r, &record.GameAdministration{})
@@ -141,7 +143,7 @@ func (rnr *Runner) createGameAdministrationHandler(w http.ResponseWriter, r *htt
 	return server.WriteResponse(l, w, http.StatusCreated, res)
 }
 
-func (rnr *Runner) updateGameAdministrationHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
+func (rnr *Runner) updateGameAdministrationHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = loggerWithFunctionContext(l, "updateGameAdministrationHandler")
 	mm := m.(*domain.Domain)
 	recID := pp.ByName("game_administration_id")
@@ -164,7 +166,7 @@ func (rnr *Runner) updateGameAdministrationHandler(w http.ResponseWriter, r *htt
 	return server.WriteResponse(l, w, http.StatusOK, res)
 }
 
-func (rnr *Runner) deleteGameAdministrationHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
+func (rnr *Runner) deleteGameAdministrationHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = loggerWithFunctionContext(l, "deleteGameAdministrationHandler")
 	mm := m.(*domain.Domain)
 	recID := pp.ByName("game_administration_id")

@@ -11,7 +11,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/julienschmidt/httprouter"
+	"github.com/riverqueue/river"
 	"github.com/rs/cors"
 
 	"gitlab.com/alienspaces/playbymail/core/queryparam"
@@ -145,7 +147,7 @@ func (rnr *Runner) registerRoutes(r *httprouter.Router) (*httprouter.Router, err
 }
 
 // defaultHandler is the default HandlerFunc
-func (rnr *Runner) defaultHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
+func (rnr *Runner) defaultHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	WriteResponse(l, w, http.StatusOK, "ok")
 	return nil
 }
@@ -184,7 +186,7 @@ func (rnr *Runner) registerDefaultLivenessRoute(r *httprouter.Router) (*httprout
 		return nil, err
 	}
 	r.GET("/liveness", func(w http.ResponseWriter, r *http.Request, pp httprouter.Params) {
-		_ = rnr.HandlerFunc(w, r, pp, nil, hl, nil)
+		_ = rnr.HandlerFunc(w, r, pp, nil, hl, nil, nil)
 	})
 
 	l.Info("(core) registered /liveness")
@@ -312,7 +314,7 @@ func (rnr *Runner) HttpRouterHandlerWrapper(h Handle) httprouter.Handle {
 			return
 		}
 
-		_ = h(w, r, pp, nil, l, nil)
+		_ = h(w, r, pp, nil, l, nil, nil)
 	}
 }
 

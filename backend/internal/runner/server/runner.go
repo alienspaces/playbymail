@@ -14,6 +14,8 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/type/runnable"
 	"gitlab.com/alienspaces/playbymail/core/type/storer"
 	"gitlab.com/alienspaces/playbymail/internal/domain"
+	"gitlab.com/alienspaces/playbymail/internal/jobclient"
+	"gitlab.com/alienspaces/playbymail/internal/jobqueue"
 	"gitlab.com/alienspaces/playbymail/internal/runner/server/adventure_game"
 	"gitlab.com/alienspaces/playbymail/internal/utils/config"
 	"gitlab.com/alienspaces/playbymail/internal/utils/logging"
@@ -57,12 +59,12 @@ func NewRunnerWithConfig(l logger.Logger, s storer.Storer, j *river.Client[pgx.T
 	l.Warn("(playbymail) setting domain function on runner: %p", &r)
 	r.DomainFunc = r.domainFunc
 
-	l.Warn("(playbymail) setting authenticate request function")
+	l.Warn("(playbymail) setting job client function on runner: %p", &r)
+	r.JobClientFunc = r.jobClientFunc
 
-	// Add authentication function
+	l.Warn("(playbymail) setting authenticate request function")
 	r.AuthenticateRequestFunc = r.authenticateRequestFunc
 
-	// Add RLS function for row-level security
 	l.Warn("(playbymail) setting RLS function")
 	r.RLSFunc = r.rlsFunc
 
@@ -87,10 +89,36 @@ func NewRunnerWithConfig(l logger.Logger, s storer.Storer, j *river.Client[pgx.T
 	return &r, nil
 }
 
-// DomainFunc -
+// GetHandlerConfig returns the HandlerConfig map
+// TODO: The core runner equivalent method should work fine and this should be removed.
+func (r *Runner) GetHandlerConfig() map[string]server.HandlerConfig {
+	return r.HandlerConfig
+}
+
+// jobClientFunc returns a new job client instance.
+func (rnr *Runner) jobClientFunc(l logger.Logger, s storer.Storer) (*river.Client[pgx.Tx], error) {
+	l = l.WithFunctionContext("jobClientFunc")
+
+	l.Info("(playbymail) JobClientFunc called on runner: %p", rnr)
+	l.Info("(playbymail) calling jobclient.NewJobClient")
+
+	// This job client is only used for registering jobs within the handler functions
+	// and is not used for processing jobs so should not need an actual emailer.
+	j, err := jobclient.NewJobClient(l, rnr.Config, s, nil, []string{jobqueue.QueueDefault})
+	if err != nil {
+		l.Warn("(playbymail) failed new job client >%v<", err)
+		return nil, err
+	}
+	return j, nil
+}
+
+// domainFunc returns a new domain model instance.
 func (rnr *Runner) domainFunc(l logger.Logger) (domainer.Domainer, error) {
+	l = l.WithFunctionContext("domainFunc")
+
 	l.Info("(playbymail) DomainFunc called on runner: %p", rnr)
 	l.Info("(playbymail) calling domain.NewDomain")
+
 	m, err := domain.NewDomain(l, rnr.Config)
 	if err != nil {
 		l.Warn("(playbymail) failed new domain >%v<", err)
@@ -232,9 +260,4 @@ func (rnr *Runner) rlsFunc(l logger.Logger, m domainer.Domainer, authedReq serve
 // loggerWithFunctionContext provides a logger with function context
 func loggerWithFunctionContext(l logger.Logger, functionName string) logger.Logger {
 	return logging.LoggerWithFunctionContext(l, "runner", functionName)
-}
-
-// GetHandlerConfig returns the HandlerConfig map (for test compatibility)
-func (r *Runner) GetHandlerConfig() map[string]server.HandlerConfig {
-	return r.HandlerConfig
 }

@@ -4,7 +4,9 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/julienschmidt/httprouter"
+	"github.com/riverqueue/river"
 
 	"gitlab.com/alienspaces/playbymail/core/queryparam"
 	"gitlab.com/alienspaces/playbymail/core/type/domainer"
@@ -15,10 +17,10 @@ import (
 // handler functions
 func (rnr *Runner) TimerMiddleware(hc HandlerConfig, h Handle) (Handle, error) {
 
-	handle := func(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, _ domainer.Domainer) error {
+	handle := func(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, _ domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 
 		startTime := time.Now()
-		err := h(w, r, pp, qp, l, nil)
+		err := h(w, r, pp, qp, l, nil, jc)
 		duration := time.Since(startTime)
 
 		l = Logger(l, "TimerMiddleware").WithDurationContext(duration.String())

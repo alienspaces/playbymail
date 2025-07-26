@@ -49,10 +49,17 @@ func NewSendAccountVerificationEmailWorker(l logger.Logger, cfg config.Config, s
 		return nil, err
 	}
 
-	// We need an email client and we need to know where the templates are stored
-	// otherwise we cannot do our work.
+	// Job clients and workers will be instantiated under two scenarios.
+	// 1. To start a job client server and execute jobs
+	// 2. To register jobs with a job client server
+	//
+	// In the first scenario we need an email client and we need to know where
+	// the templates are stored otherwise we cannot do our work.
+	//
+	// In the second scenario we do not need an email client and we do not need
+	// to know where the templates are stored.
 	if e == nil {
-		return nil, fmt.Errorf("email client is nil")
+		l.Warn("email client is nil, assuming instantiation for registration purposes only")
 	}
 
 	if cfg.TemplatesPath == "" {
@@ -76,6 +83,11 @@ func (w *SendAccountVerificationEmailWorker) Work(ctx context.Context, j *river.
 	l := w.JobWorker.Log.WithFunctionContext("SendAccountVerificationEmailWorker/Work")
 
 	l.Info("Running job ID >%s< Args >%#v<", strconv.FormatInt(j.ID, 10), j.Args)
+
+	// We can assume here that we must have an email client as we've been told to perform work.
+	if w.emailClient == nil {
+		return fmt.Errorf("email client is nil")
+	}
 
 	c, m, err := w.beginJob(ctx)
 	if err != nil {

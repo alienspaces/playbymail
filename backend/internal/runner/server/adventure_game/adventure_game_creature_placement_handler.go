@@ -3,7 +3,10 @@ package adventure_game
 import (
 	"net/http"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/julienschmidt/httprouter"
+	"github.com/riverqueue/river"
+
 	coreerror "gitlab.com/alienspaces/playbymail/core/error"
 	"gitlab.com/alienspaces/playbymail/core/jsonschema"
 	"gitlab.com/alienspaces/playbymail/core/queryparam"
@@ -141,7 +144,7 @@ func adventureGameCreaturePlacementHandlerConfig(l logger.Logger) (map[string]se
 }
 
 // searchManyAdventureGameCreaturePlacementsHandler -
-func searchManyAdventureGameCreaturePlacementsHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
+func searchManyAdventureGameCreaturePlacementsHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = logging.LoggerWithFunctionContext(l, packageName, "searchManyAdventureGameCreaturePlacementsHandler")
 
 	mm := m.(*domain.Domain)
@@ -167,7 +170,7 @@ func searchManyAdventureGameCreaturePlacementsHandler(w http.ResponseWriter, r *
 }
 
 // createOneAdventureGameCreaturePlacementHandler -
-func createOneAdventureGameCreaturePlacementHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
+func createOneAdventureGameCreaturePlacementHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = logging.LoggerWithFunctionContext(l, packageName, "createOneAdventureGameCreaturePlacementHandler")
 
 	gameID := pp.ByName("game_id")
@@ -208,7 +211,7 @@ func createOneAdventureGameCreaturePlacementHandler(w http.ResponseWriter, r *ht
 }
 
 // getOneAdventureGameCreaturePlacementHandler -
-func getOneAdventureGameCreaturePlacementHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
+func getOneAdventureGameCreaturePlacementHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = logging.LoggerWithFunctionContext(l, packageName, "getOneAdventureGameCreaturePlacementHandler")
 
 	gameID := pp.ByName("game_id")
@@ -242,7 +245,7 @@ func getOneAdventureGameCreaturePlacementHandler(w http.ResponseWriter, r *http.
 }
 
 // updateOneAdventureGameCreaturePlacementHandler -
-func updateOneAdventureGameCreaturePlacementHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
+func updateOneAdventureGameCreaturePlacementHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = logging.LoggerWithFunctionContext(l, packageName, "updateOneAdventureGameCreaturePlacementHandler")
 
 	gameID := pp.ByName("game_id")
@@ -293,7 +296,7 @@ func updateOneAdventureGameCreaturePlacementHandler(w http.ResponseWriter, r *ht
 }
 
 // deleteOneAdventureGameCreaturePlacementHandler -
-func deleteOneAdventureGameCreaturePlacementHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
+func deleteOneAdventureGameCreaturePlacementHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = logging.LoggerWithFunctionContext(l, packageName, "deleteOneAdventureGameCreaturePlacementHandler")
 
 	gameID := pp.ByName("game_id")

@@ -45,7 +45,15 @@ type Runner struct {
 	// Store
 	Store storer.Storer
 
-	// JobClient is the river client for the job queue
+	// JobClient is the riverqueue client for registering and processing jobs.
+	//
+	// It is unsafe to access this job client instance from the handler functions
+	// and should only be accessed from the server daemon to start and stop the
+	// job worker.
+	//
+	// A separate job client instance is created in middleware and passed along to
+	// handler functions and can be used solely for registering jobs within the
+	// handler functions.
 	JobClient *river.Client[pgx.Tx]
 
 	// HTTPCORSConfig
@@ -78,6 +86,9 @@ type Runner struct {
 	// DomainFunc returns the service specific domainer implementation
 	DomainFunc func(l logger.Logger) (domainer.Domainer, error)
 
+	// JobClientFunc returns a new job client instance.
+	JobClientFunc func(l logger.Logger, s storer.Storer) (*river.Client[pgx.Tx], error)
+
 	// AuthenticateRequestFunc authenticates a request based on the authentication type
 	AuthenticateRequestFunc func(l logger.Logger, m domainer.Domainer, r *http.Request, authType AuthenticationType) (AuthenData, error)
 
@@ -97,7 +108,7 @@ type HTTPCORSConfig struct {
 var _ runnable.Runnable = &Runner{}
 
 // Handle - custom service handle
-type Handle func(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error
+type Handle func(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error
 
 // HandlerConfig - configuration for routes, handlers and middleware
 type HandlerConfig struct {
@@ -271,17 +282,35 @@ func (rnr *Runner) Init(s storer.Storer) error {
 	return nil
 }
 
+// InitJobClient initialises and returns a new job client instance.
+func (rnr *Runner) InitJobClient(l logger.Logger) (*river.Client[pgx.Tx], error) {
+	l = Logger(l, "InitJobClient")
+
+	l.Info("(core) initialising job client")
+
+	// NOTE: This is called from txmiddleware during request processing.
+	// The domain model is created fresh for each HTTP request and passed along
+	// the handler chain, ensuring each request has a unique domain instance.
+	// This prevents shared state issues when multiple requests are processed
+	// concurrently, as each request gets its own isolated domain context.
+	if rnr.JobClientFunc == nil {
+		return nil, fmt.Errorf("(core) JobClientFunc is nil on runner: %p", rnr)
+	}
+
+	return rnr.JobClientFunc(l, rnr.Store)
+}
+
 // InitDomain initialises and returns a new domain
 func (rnr *Runner) InitDomain(l logger.Logger) (domainer.Domainer, error) {
 	l = Logger(l, "InitDomain")
 
 	l.Info("(core) initialising domain")
 
-	// NOTE: The domain is created and initialised with every request instead of
-	// creating and assigning to a runner struct "Domain" property at start up.
-	// This prevents directly accessing a shared property (e.g., logger context map)
-	// from the handler function which is running in a goroutine. Otherwise accessing
-	// the "Domain" property would require locking and blocking simultaneous requests.
+	// NOTE: This is called from txmiddleware during request processing.
+	// The domain model is created fresh for each HTTP request and passed along
+	// the handler chain, ensuring each request has a unique domain instance.
+	// This prevents shared state issues when multiple requests are processed
+	// concurrently, as each request gets its own isolated domain context.
 	if rnr.DomainFunc == nil {
 		return nil, fmt.Errorf("(core) DomainFunc is nil on runner: %p", rnr)
 	}
@@ -490,7 +519,7 @@ func (rnr *Runner) resolveHandlerSchemaLocationRoot(hc HandlerConfig) (HandlerCo
 func validateAuthenticationTypes(handlerConfig map[string]HandlerConfig) error {
 	for _, cfg := range handlerConfig {
 		if len(cfg.MiddlewareConfig.AuthenTypes) == 0 {
-			return fmt.Errorf("handler >%s< with undefined authentication type", cfg.Name)
+			return fmt.Errorf("handler method >%s< path >%s< with undefined authentication type", cfg.Method, cfg.Path)
 		}
 	}
 	return nil

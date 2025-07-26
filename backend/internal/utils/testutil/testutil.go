@@ -57,6 +57,7 @@ func NewTestRunner(l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx]) (*
 	if err != nil {
 		return nil, err
 	}
+
 	rnr, err := runner.NewRunnerWithConfig(l, s, j, cfg)
 	if err != nil {
 		return nil, err

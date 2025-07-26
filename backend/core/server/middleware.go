@@ -15,6 +15,7 @@ func (rnr *Runner) defaultMiddlewareFuncs() []MiddlewareFunc {
 		rnr.ParamMiddleware,
 		rnr.DataMiddleware,
 		rnr.RLSMiddleware,
+		rnr.JobClientMiddleware,
 		rnr.AuthzMiddleware,
 		rnr.AuthenMiddleware,
 		rnr.TxMiddleware,
@@ -84,6 +85,6 @@ func (rnr *Runner) httpRouterHandlerWrapper(h Handle) httprouter.Handle {
 		l = l.WithPackageContext("core/runner")
 
 		// delegate
-		_ = h(w, r, pp, nil, l, nil)
+		_ = h(w, r, pp, nil, l, nil, nil)
 	}
 }
