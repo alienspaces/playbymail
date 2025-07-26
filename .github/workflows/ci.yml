@@ -46,6 +46,17 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: 1.23.5
+      - name: Cache Go modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            backend/go.sum
+            backend/go.mod
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('backend/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
       - name: Install dependencies
         run: sudo apt-get update && sudo apt-get install -y build-essential git postgresql-client
       - name: Run backend tests
