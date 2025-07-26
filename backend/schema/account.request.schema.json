@@ -12,7 +12,6 @@
         }
     },
     "required": [
-        "email",
         "name"
     ],
     "additionalProperties": false

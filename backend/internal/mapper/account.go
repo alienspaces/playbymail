@@ -4,12 +4,15 @@ import (
 	"fmt"
 	"net/http"
 
+	"gitlab.com/alienspaces/playbymail/core/convert"
 	"gitlab.com/alienspaces/playbymail/core/nulltime"
 	"gitlab.com/alienspaces/playbymail/core/server"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
 	"gitlab.com/alienspaces/playbymail/internal/record"
 	"gitlab.com/alienspaces/playbymail/schema"
 )
+
+// Account
 
 func AccountRequestToRecord(l logger.Logger, r *http.Request, rec *record.Account) (*record.Account, error) {
 	l.Debug("mapping account request to record")
@@ -22,10 +25,10 @@ func AccountRequestToRecord(l logger.Logger, r *http.Request, rec *record.Accoun
 
 	switch server.HttpMethod(r.Method) {
 	case server.HttpMethodPost:
-		rec.Email = req.Email
+		rec.Email = convert.String(req.Email)
 		rec.Name = req.Name
 	case server.HttpMethodPut, server.HttpMethodPatch:
-		rec.Email = req.Email
+		// Email cannot be updated - only name can be changed
 		rec.Name = req.Name
 	default:
 		return nil, fmt.Errorf("unsupported HTTP method")
@@ -72,39 +75,20 @@ func AccountRecordsToCollectionResponse(l logger.Logger, recs []*record.Account)
 	}, nil
 }
 
-// RequestAuthRequest maps to the /request-auth request schema
-//
-//go:generate jsonschema -o ../../schema/account.request-auth.request.schema.json -t RequestAuthRequest
-//go:generate jsonschema -o ../../schema/account.request-auth.response.schema.json -t RequestAuthResponse
-type RequestAuthRequest struct {
-	Email string `json:"email"`
-}
-type RequestAuthResponse struct {
-	Status string `json:"status"`
-}
+// Authentication
 
-// VerifyAuthRequest maps to the /verify-auth request schema
-//
-//go:generate jsonschema -o ../../schema/account.verify-auth.request.schema.json -t VerifyAuthRequest
-//go:generate jsonschema -o ../../schema/account.verify-auth.response.schema.json -t VerifyAuthResponse
-type VerifyAuthRequest struct {
-	Email             string `json:"email"`
-	VerificationToken string `json:"verification_token"`
-}
-type VerifyAuthResponse struct {
-	SessionToken string `json:"session_token"`
-}
-
-// Mapper functions (expand as needed)
-func MapRequestAuthRequestToDomain(req *RequestAuthRequest) string {
+func MapRequestAuthRequestToDomain(req *schema.RequestAuthRequest) string {
 	return req.Email
 }
-func MapRequestAuthResponse(status string) *RequestAuthResponse {
-	return &RequestAuthResponse{Status: status}
+
+func MapRequestAuthResponse(status string) *schema.RequestAuthResponse {
+	return &schema.RequestAuthResponse{Status: status}
 }
-func MapVerifyAuthRequestToDomain(req *VerifyAuthRequest) (string, string) {
+
+func MapVerifyAuthRequestToDomain(req *schema.VerifyAuthRequest) (string, string) {
 	return req.Email, req.VerificationToken
 }
-func MapVerifyAuthResponse(token string) *VerifyAuthResponse {
-	return &VerifyAuthResponse{SessionToken: token}
+
+func MapVerifyAuthResponse(token string) *schema.VerifyAuthResponse {
+	return &schema.VerifyAuthResponse{SessionToken: token}
 }

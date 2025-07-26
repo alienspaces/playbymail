@@ -20,15 +20,19 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/mapper"
 	"gitlab.com/alienspaces/playbymail/internal/record"
 	"gitlab.com/alienspaces/playbymail/internal/utils/logging"
+	"gitlab.com/alienspaces/playbymail/schema"
 )
 
 const (
 	GetManyAccounts     = "get-accounts"
 	GetOneAccount       = "get-account"
+	GetMyAccount        = "get-my-account"
 	CreateAccount       = "create-account"
 	CreateAccountWithID = "create-account-with-id"
 	UpdateAccount       = "update-account"
+	UpdateMyAccount     = "update-my-account"
 	DeleteAccount       = "delete-account"
+	DeleteMyAccount     = "delete-my-account"
 )
 
 const (
@@ -97,6 +101,22 @@ func accountHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, err
 		},
 	}
 
+	accountConfig[GetMyAccount] = server.HandlerConfig{
+		Method:      http.MethodGet,
+		Path:        "/v1/accounts/me",
+		HandlerFunc: getMyAccountHandler,
+		MiddlewareConfig: server.MiddlewareConfig{
+			AuthenTypes: []server.AuthenticationType{
+				server.AuthenticationTypeToken,
+			},
+			ValidateResponseSchema: responseSchema,
+		},
+		DocumentationConfig: server.DocumentationConfig{
+			Document: true,
+			Title:    "Get my account",
+		},
+	}
+
 	accountConfig[CreateAccount] = server.HandlerConfig{
 		Method:      http.MethodPost,
 		Path:        "/v1/accounts",
@@ -148,6 +168,23 @@ func accountHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, err
 		},
 	}
 
+	accountConfig[UpdateMyAccount] = server.HandlerConfig{
+		Method:      http.MethodPut,
+		Path:        "/v1/accounts/me",
+		HandlerFunc: updateMyAccountHandler,
+		MiddlewareConfig: server.MiddlewareConfig{
+			AuthenTypes: []server.AuthenticationType{
+				server.AuthenticationTypeToken,
+			},
+			ValidateRequestSchema:  requestSchema,
+			ValidateResponseSchema: responseSchema,
+		},
+		DocumentationConfig: server.DocumentationConfig{
+			Document: true,
+			Title:    "Update my account",
+		},
+	}
+
 	accountConfig[DeleteAccount] = server.HandlerConfig{
 		Method:      http.MethodDelete,
 		Path:        "/v1/accounts/:account_id",
@@ -160,6 +197,21 @@ func accountHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, err
 		DocumentationConfig: server.DocumentationConfig{
 			Document: true,
 			Title:    "Delete account",
+		},
+	}
+
+	accountConfig[DeleteMyAccount] = server.HandlerConfig{
+		Method:      http.MethodDelete,
+		Path:        "/v1/accounts/me",
+		HandlerFunc: deleteMyAccountHandler,
+		MiddlewareConfig: server.MiddlewareConfig{
+			AuthenTypes: []server.AuthenticationType{
+				server.AuthenticationTypeToken,
+			},
+		},
+		DocumentationConfig: server.DocumentationConfig{
+			Document: true,
+			Title:    "Delete my account",
 		},
 	}
 
@@ -382,7 +434,7 @@ func requestAuthHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Pa
 
 	l.Info("requesting authentication token for email >%s<", r.Header.Get("Authorization"))
 
-	var req mapper.RequestAuthRequest
+	var req schema.RequestAuthRequest
 	if _, err := server.ReadRequest(l, r, &req); err != nil {
 		l.Warn("failed reading request >%v<", err)
 		return server.WriteResponse(l, w, http.StatusOK, mapper.MapRequestAuthResponse("ok"))
@@ -407,7 +459,7 @@ func requestAuthHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Pa
 func verifyAuthHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = logging.LoggerWithFunctionContext(l, packageName, "verifyAuthHandler")
 
-	var req mapper.VerifyAuthRequest
+	var req schema.VerifyAuthRequest
 	if _, err := server.ReadRequest(l, r, &req); err != nil {
 		l.Warn("failed reading request >%v<", err)
 		return err
@@ -424,6 +476,123 @@ func verifyAuthHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Par
 	l.Info("verified account verification token for email >%s<, session token >%s<", req.Email, sessionToken)
 
 	return server.WriteResponse(l, w, http.StatusOK, mapper.MapVerifyAuthResponse(sessionToken))
+}
+
+func getMyAccountHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
+	l = logging.LoggerWithFunctionContext(l, packageName, "getMyAccountHandler")
+
+	l.Info("querying authenticated user account")
+
+	mm := m.(*domain.Domain)
+
+	// Get the authenticated account from the request context
+	authData := server.GetRequestAuthenData(l, r)
+	if authData == nil {
+		l.Warn("failed getting authenticated account data")
+		return server.WriteResponse(l, w, http.StatusUnauthorized, nil)
+	}
+
+	rec, err := mm.GetAccountRec(authData.Account.ID, nil)
+	if err != nil {
+		l.Warn("failed getting account record >%v<", err)
+		return err
+	}
+
+	res, err := mapper.AccountRecordToResponse(l, rec)
+	if err != nil {
+		l.Warn("failed mapping account record to response >%v<", err)
+		return err
+	}
+
+	l.Info("responding with authenticated account record id >%s<", rec.ID)
+
+	if err = server.WriteResponse(l, w, http.StatusOK, res); err != nil {
+		l.Warn("failed writing response >%v<", err)
+		return err
+	}
+
+	return nil
+}
+
+func updateMyAccountHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
+	l = logging.LoggerWithFunctionContext(l, packageName, "updateMyAccountHandler")
+
+	l.Info("updating authenticated user account")
+
+	mm := m.(*domain.Domain)
+
+	// Get the authenticated account from the request context
+	authData := server.GetRequestAuthenData(l, r)
+	if authData == nil {
+		l.Warn("failed getting authenticated account data")
+		return server.WriteResponse(l, w, http.StatusUnauthorized, nil)
+	}
+
+	rec, err := mm.GetAccountRec(authData.Account.ID, coresql.ForUpdateNoWait)
+	if err != nil {
+		l.Warn("failed getting account record >%v<", err)
+		return err
+	}
+
+	// Map the request to record, but preserve the email (it cannot be changed)
+	originalEmail := rec.Email
+	rec, err = mapper.AccountRequestToRecord(l, r, rec)
+	if err != nil {
+		l.Warn("failed mapping account request to record >%v<", err)
+		return err
+	}
+	// Ensure email cannot be changed
+	rec.Email = originalEmail
+
+	updatedRec, err := mm.UpdateAccountRec(rec)
+	if err != nil {
+		l.Warn("failed updating account record >%v<", err)
+		return err
+	}
+
+	res, err := mapper.AccountRecordToResponse(l, updatedRec)
+	if err != nil {
+		l.Warn("failed mapping account record to response >%v<", err)
+		return err
+	}
+
+	l.Info("responding with updated authenticated account record id >%s<", updatedRec.ID)
+
+	if err = server.WriteResponse(l, w, http.StatusOK, res); err != nil {
+		l.Warn("failed writing response >%v<", err)
+		return err
+	}
+
+	return nil
+}
+
+func deleteMyAccountHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
+	l = logging.LoggerWithFunctionContext(l, packageName, "deleteMyAccountHandler")
+
+	l.Info("deleting authenticated user account")
+
+	mm := m.(*domain.Domain)
+
+	// Get the authenticated account from the request context
+	authData := server.GetRequestAuthenData(l, r)
+	if authData == nil {
+		l.Warn("failed getting authenticated account data")
+		return server.WriteResponse(l, w, http.StatusUnauthorized, nil)
+	}
+
+	if err := mm.DeleteAccountRec(authData.Account.ID); err != nil {
+		l.Warn("failed deleting account record >%v<", err)
+		return err
+	}
+
+	l.Info("deleted authenticated account record id >%s<", authData.Account.ID)
+
+	if err := server.WriteResponse(l, w, http.StatusNoContent, nil); err != nil {
+		l.Warn("failed writing response >%v<", err)
+		return err
+	}
+
+	return nil
 }
 
 // SendAccountVerificationEmail generates, stores, and emails a verification token for the given email address.
