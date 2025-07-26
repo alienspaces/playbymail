@@ -50,8 +50,6 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            backend/go.sum
-            backend/go.mod
             ~/.cache/go-build
             ~/go/pkg/mod
           key: ${{ runner.os }}-go-${{ hashFiles('backend/go.sum') }}
@@ -106,6 +104,15 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: 1.23.5
+      - name: Cache Go modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('backend/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
       - name: Install dependencies
         run: sudo apt-get update && sudo apt-get install -y git bash
       - name: Download frontend build
@@ -133,6 +140,7 @@ jobs:
           git checkout -
       - name: Deploy to Heroku
         env:
+          # GitHub Actions: Secrets are configured in repository settings
           HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
           HEROKU_APP_NAME: ${{ secrets.HEROKU_APP_NAME }}
         run: |

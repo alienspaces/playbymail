@@ -63,12 +63,14 @@ func NewTestRunner(l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx]) (*
 		return nil, err
 	}
 
+	// By default all requests are authenticated as token type
 	rnr.AuthenticateRequestFunc = func(l logger.Logger, m domainer.Domainer, r *http.Request, authType server.AuthenticationType) (server.AuthenData, error) {
 		return server.AuthenData{
 			Type: server.AuthenticatedTypeToken,
 		}, nil
 	}
 
+	// By default all requests are not restricted by any RLS identifiers
 	rnr.RLSFunc = func(l logger.Logger, m domainer.Domainer, authedReq server.AuthenData) (server.RLS, error) {
 		return server.RLS{
 			Identifiers: map[string][]string{},
