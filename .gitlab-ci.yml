@@ -30,6 +30,7 @@ test-backend:
     JOBCLIENT_MAX_WORKERS: "10"
     TOKEN_HMAC_KEY: "changeme-super-secret-key"
     TEMPLATES_PATH: "${CI_PROJECT_DIR}/backend/templates"
+    SCHEMA_PATH: "${CI_PROJECT_DIR}/backend/schema"
   image: golang:1.23.5-alpine
   stage: test
   services:
