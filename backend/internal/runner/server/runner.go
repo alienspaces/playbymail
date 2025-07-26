@@ -16,9 +16,10 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/jobclient"
 	"gitlab.com/alienspaces/playbymail/internal/jobqueue"
+	"gitlab.com/alienspaces/playbymail/internal/runner/server/account"
 	"gitlab.com/alienspaces/playbymail/internal/runner/server/adventure_game"
+	"gitlab.com/alienspaces/playbymail/internal/runner/server/game"
 	"gitlab.com/alienspaces/playbymail/internal/utils/config"
-	"gitlab.com/alienspaces/playbymail/internal/utils/logging"
 )
 
 // Runner -
@@ -35,7 +36,6 @@ var _ runnable.Runnable = &Runner{}
 
 // NewRunner -
 func NewRunnerWithConfig(l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], cfg config.Config) (*Runner, error) {
-
 	l = l.WithPackageContext("runner")
 
 	cr, err := server.NewRunnerWithConfig(l, s, j, cfg.Config)
@@ -70,11 +70,11 @@ func NewRunnerWithConfig(l logger.Logger, s storer.Storer, j *river.Client[pgx.T
 
 	// Additional handler configurations are added here
 	handlerConfigFuncs := []func(logger.Logger) (map[string]server.HandlerConfig, error){
-		r.gameHandlerConfig,
-		r.accountHandlerConfig,
-		r.gameSubscriptionHandlerConfig,
-		r.gameAdministrationHandlerConfig,
-		// Adventure Game Handlers
+		// Account related handlers
+		account.AccountHandlerConfig,
+		// Game related handlers
+		game.GameHandlerConfig,
+		// Adventure Game handlers
 		adventure_game.AdventureGameHandlerConfig,
 	}
 
@@ -255,9 +255,4 @@ func (rnr *Runner) rlsFunc(l logger.Logger, m domainer.Domainer, authedReq serve
 	return server.RLS{
 		Identifiers: identifiers,
 	}, nil
-}
-
-// loggerWithFunctionContext provides a logger with function context
-func loggerWithFunctionContext(l logger.Logger, functionName string) logger.Logger {
-	return logging.LoggerWithFunctionContext(l, "runner", functionName)
 }

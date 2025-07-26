@@ -1,4 +1,4 @@
-package runner_test
+package game_test
 
 import (
 	"net/http"
@@ -9,7 +9,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/server"
 	"gitlab.com/alienspaces/playbymail/internal/harness"
 	"gitlab.com/alienspaces/playbymail/internal/record"
-	runner "gitlab.com/alienspaces/playbymail/internal/runner/server"
+	"gitlab.com/alienspaces/playbymail/internal/runner/server/game"
 	"gitlab.com/alienspaces/playbymail/internal/utils/testutil"
 	"gitlab.com/alienspaces/playbymail/schema"
 )
@@ -45,7 +45,7 @@ func Test_getGameHandler(t *testing.T) {
 			TestCase: testutil.TestCase{
 				Name: "API key with open access \\ get many games \\ returns expected games",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
-					return rnr.GetHandlerConfig()[runner.GetManyGames]
+					return rnr.GetHandlerConfig()[game.GetManyGames]
 				},
 				RequestQueryParams: func(d harness.Data) map[string]any {
 					return map[string]any{
@@ -64,7 +64,7 @@ func Test_getGameHandler(t *testing.T) {
 			TestCase: testutil.TestCase{
 				Name: "API key with open access \\ get one game with valid game ID \\ returns expected game",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
-					return rnr.GetHandlerConfig()[runner.GetOneGame]
+					return rnr.GetHandlerConfig()[game.GetOneGame]
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					gameRec, err := d.GetGameRecByRef(harness.GameOneRef)
@@ -147,7 +147,7 @@ func Test_createUpdateDeleteGameHandler(t *testing.T) {
 			TestCase: testutil.TestCase{
 				Name: "API key with open access \\ create game with valid properties \\ returns created game",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
-					return rnr.GetHandlerConfig()[runner.CreateGame]
+					return rnr.GetHandlerConfig()[game.CreateGame]
 				},
 				RequestBody: func(d harness.Data) any {
 					return schema.GameRequest{
@@ -170,7 +170,7 @@ func Test_createUpdateDeleteGameHandler(t *testing.T) {
 			TestCase: testutil.TestCase{
 				Name: "API key with open access \\ update game with valid properties \\ returns updated game",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
-					return rnr.GetHandlerConfig()[runner.UpdateGame]
+					return rnr.GetHandlerConfig()[game.UpdateGame]
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					gameRec, err := d.GetGameRecByRef(harness.GameOneRef)
@@ -201,7 +201,7 @@ func Test_createUpdateDeleteGameHandler(t *testing.T) {
 			TestCase: testutil.TestCase{
 				Name: "API key with open access \\ delete game with valid game ID \\ returns no content",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
-					return rnr.GetHandlerConfig()[runner.DeleteGame]
+					return rnr.GetHandlerConfig()[game.DeleteGame]
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					gameRec, err := d.GetGameRecByRef(harness.GameOneRef)

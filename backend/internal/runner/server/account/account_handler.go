@@ -1,4 +1,4 @@
-package runner
+package account
 
 import (
 	"context"
@@ -19,6 +19,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/jobworker"
 	"gitlab.com/alienspaces/playbymail/internal/mapper"
 	"gitlab.com/alienspaces/playbymail/internal/record"
+	"gitlab.com/alienspaces/playbymail/internal/utils/logging"
 )
 
 const (
@@ -35,8 +36,8 @@ const (
 	VerifyAuth  = "verify-auth"
 )
 
-func (rnr *Runner) accountHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error) {
-	l = loggerWithFunctionContext(l, "accountHandlerConfig")
+func accountHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error) {
+	l = logging.LoggerWithFunctionContext(l, packageName, "accountHandlerConfig")
 
 	l.Debug("adding account handler configuration")
 
@@ -66,7 +67,7 @@ func (rnr *Runner) accountHandlerConfig(l logger.Logger) (map[string]server.Hand
 	accountConfig[GetManyAccounts] = server.HandlerConfig{
 		Method:      http.MethodGet,
 		Path:        "/v1/accounts",
-		HandlerFunc: rnr.getManyAccountsHandler,
+		HandlerFunc: getManyAccountsHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
 				server.AuthenticationTypeToken,
@@ -83,7 +84,7 @@ func (rnr *Runner) accountHandlerConfig(l logger.Logger) (map[string]server.Hand
 	accountConfig[GetOneAccount] = server.HandlerConfig{
 		Method:      http.MethodGet,
 		Path:        "/v1/accounts/:account_id",
-		HandlerFunc: rnr.getAccountHandler,
+		HandlerFunc: getAccountHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
 				server.AuthenticationTypeToken,
@@ -99,7 +100,7 @@ func (rnr *Runner) accountHandlerConfig(l logger.Logger) (map[string]server.Hand
 	accountConfig[CreateAccount] = server.HandlerConfig{
 		Method:      http.MethodPost,
 		Path:        "/v1/accounts",
-		HandlerFunc: rnr.createAccountHandler,
+		HandlerFunc: createAccountHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
 				server.AuthenticationTypePublic,
@@ -116,7 +117,7 @@ func (rnr *Runner) accountHandlerConfig(l logger.Logger) (map[string]server.Hand
 	accountConfig[CreateAccountWithID] = server.HandlerConfig{
 		Method:      http.MethodPost,
 		Path:        "/v1/accounts/:account_id",
-		HandlerFunc: rnr.createAccountHandler,
+		HandlerFunc: createAccountHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
 				server.AuthenticationTypePublic,
@@ -133,7 +134,7 @@ func (rnr *Runner) accountHandlerConfig(l logger.Logger) (map[string]server.Hand
 	accountConfig[UpdateAccount] = server.HandlerConfig{
 		Method:      http.MethodPut,
 		Path:        "/v1/accounts/:account_id",
-		HandlerFunc: rnr.updateAccountHandler,
+		HandlerFunc: updateAccountHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
 				server.AuthenticationTypeToken,
@@ -150,7 +151,7 @@ func (rnr *Runner) accountHandlerConfig(l logger.Logger) (map[string]server.Hand
 	accountConfig[DeleteAccount] = server.HandlerConfig{
 		Method:      http.MethodDelete,
 		Path:        "/v1/accounts/:account_id",
-		HandlerFunc: rnr.deleteAccountHandler,
+		HandlerFunc: deleteAccountHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
 				server.AuthenticationTypeToken,
@@ -165,7 +166,7 @@ func (rnr *Runner) accountHandlerConfig(l logger.Logger) (map[string]server.Hand
 	accountConfig[RequestAuth] = server.HandlerConfig{
 		Method:      http.MethodPost,
 		Path:        "/v1/request-auth",
-		HandlerFunc: rnr.requestAuthHandler,
+		HandlerFunc: requestAuthHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
 				server.AuthenticationTypePublic,
@@ -190,7 +191,7 @@ func (rnr *Runner) accountHandlerConfig(l logger.Logger) (map[string]server.Hand
 	accountConfig[VerifyAuth] = server.HandlerConfig{
 		Method:      http.MethodPost,
 		Path:        "/v1/verify-auth",
-		HandlerFunc: rnr.verifyAuthHandler,
+		HandlerFunc: verifyAuthHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
 				server.AuthenticationTypePublic,
@@ -215,8 +216,8 @@ func (rnr *Runner) accountHandlerConfig(l logger.Logger) (map[string]server.Hand
 	return accountConfig, nil
 }
 
-func (rnr *Runner) getManyAccountsHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
-	l = loggerWithFunctionContext(l, "GetManyAccountsHandler")
+func getManyAccountsHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
+	l = logging.LoggerWithFunctionContext(l, packageName, "getManyAccountsHandler")
 
 	l.Info("querying many account records with params >%#v<", qp)
 
@@ -245,8 +246,8 @@ func (rnr *Runner) getManyAccountsHandler(w http.ResponseWriter, r *http.Request
 	return nil
 }
 
-func (rnr *Runner) getAccountHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
-	l = loggerWithFunctionContext(l, "GetAccountHandler")
+func getAccountHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
+	l = logging.LoggerWithFunctionContext(l, packageName, "getAccountHandler")
 
 	accountID := pp.ByName("account_id")
 	l.Info("querying account record with id >%s<", accountID)
@@ -275,11 +276,8 @@ func (rnr *Runner) getAccountHandler(w http.ResponseWriter, r *http.Request, pp 
 	return nil
 }
 
-func (rnr *Runner) createAccountHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
-	if w == nil {
-		panic("DEBUG: http.ResponseWriter w is nil in createAccountHandler")
-	}
-	l = loggerWithFunctionContext(l, "CreateAccountHandler")
+func createAccountHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
+	l = logging.LoggerWithFunctionContext(l, packageName, "createAccountHandler")
 
 	l.Info("creating account record with request >%#v<", r)
 
@@ -313,8 +311,8 @@ func (rnr *Runner) createAccountHandler(w http.ResponseWriter, r *http.Request, 
 	return nil
 }
 
-func (rnr *Runner) updateAccountHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
-	l = loggerWithFunctionContext(l, "UpdateAccountHandler")
+func updateAccountHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
+	l = logging.LoggerWithFunctionContext(l, packageName, "updateAccountHandler")
 
 	l.Info("updating account record with path params >%#v<", pp)
 
@@ -355,8 +353,8 @@ func (rnr *Runner) updateAccountHandler(w http.ResponseWriter, r *http.Request, 
 	return nil
 }
 
-func (rnr *Runner) deleteAccountHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
-	l = loggerWithFunctionContext(l, "DeleteAccountHandler")
+func deleteAccountHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
+	l = logging.LoggerWithFunctionContext(l, packageName, "deleteAccountHandler")
 
 	accountID := pp.ByName("account_id")
 	l.Info("deleting account record with id >%s<", accountID)
@@ -379,8 +377,8 @@ func (rnr *Runner) deleteAccountHandler(w http.ResponseWriter, r *http.Request, 
 }
 
 // requestAuthHandler handles POST /request-auth
-func (rnr *Runner) requestAuthHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
-	l = loggerWithFunctionContext(l, "RequestAuthHandler")
+func requestAuthHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
+	l = logging.LoggerWithFunctionContext(l, packageName, "requestAuthHandler")
 
 	l.Info("requesting authentication token for email >%s<", r.Header.Get("Authorization"))
 
@@ -406,8 +404,8 @@ func (rnr *Runner) requestAuthHandler(w http.ResponseWriter, r *http.Request, pp
 	return server.WriteResponse(l, w, http.StatusOK, mapper.MapRequestAuthResponse("ok"))
 }
 
-func (rnr *Runner) verifyAuthHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
-	l = loggerWithFunctionContext(l, "VerifyAuthHandler")
+func verifyAuthHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
+	l = logging.LoggerWithFunctionContext(l, packageName, "verifyAuthHandler")
 
 	var req mapper.VerifyAuthRequest
 	if _, err := server.ReadRequest(l, r, &req); err != nil {

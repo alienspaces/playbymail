@@ -1,4 +1,4 @@
-package runner
+package game
 
 import (
 	"net/http"
@@ -16,6 +16,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/mapper"
 	"gitlab.com/alienspaces/playbymail/internal/record"
+	"gitlab.com/alienspaces/playbymail/internal/utils/logging"
 )
 
 const (
@@ -27,8 +28,8 @@ const (
 	DeleteGame       = "delete-game"
 )
 
-func (rnr *Runner) gameHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error) {
-	l = loggerWithFunctionContext(l, "gameHandlerConfig")
+func gameHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error) {
+	l = logging.LoggerWithFunctionContext(l, packageName, "gameHandlerConfig")
 
 	l.Debug("Adding game handler configuration")
 
@@ -60,7 +61,7 @@ func (rnr *Runner) gameHandlerConfig(l logger.Logger) (map[string]server.Handler
 	gameConfig[GetManyGames] = server.HandlerConfig{
 		Method:      http.MethodGet,
 		Path:        "/v1/games",
-		HandlerFunc: rnr.getManyGamesHandler,
+		HandlerFunc: getManyGamesHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
 				server.AuthenticationTypeToken,
@@ -77,7 +78,7 @@ func (rnr *Runner) gameHandlerConfig(l logger.Logger) (map[string]server.Handler
 	gameConfig[GetOneGame] = server.HandlerConfig{
 		Method:      http.MethodGet,
 		Path:        "/v1/games/:game_id",
-		HandlerFunc: rnr.getGameHandler,
+		HandlerFunc: getGameHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
 				server.AuthenticationTypeToken,
@@ -93,7 +94,7 @@ func (rnr *Runner) gameHandlerConfig(l logger.Logger) (map[string]server.Handler
 	gameConfig[CreateGame] = server.HandlerConfig{
 		Method:      http.MethodPost,
 		Path:        "/v1/games",
-		HandlerFunc: rnr.createGameHandler,
+		HandlerFunc: createGameHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
 				server.AuthenticationTypeToken,
@@ -110,7 +111,7 @@ func (rnr *Runner) gameHandlerConfig(l logger.Logger) (map[string]server.Handler
 	gameConfig[CreateGameWithID] = server.HandlerConfig{
 		Method:      http.MethodPost,
 		Path:        "/v1/games/:game_id",
-		HandlerFunc: rnr.createGameHandler,
+		HandlerFunc: createGameHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
 				server.AuthenticationTypeToken,
@@ -127,7 +128,7 @@ func (rnr *Runner) gameHandlerConfig(l logger.Logger) (map[string]server.Handler
 	gameConfig[UpdateGame] = server.HandlerConfig{
 		Method:      http.MethodPut,
 		Path:        "/v1/games/:game_id",
-		HandlerFunc: rnr.updateGameHandler,
+		HandlerFunc: updateGameHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
 				server.AuthenticationTypeToken,
@@ -144,7 +145,7 @@ func (rnr *Runner) gameHandlerConfig(l logger.Logger) (map[string]server.Handler
 	gameConfig[DeleteGame] = server.HandlerConfig{
 		Method:      http.MethodDelete,
 		Path:        "/v1/games/:game_id",
-		HandlerFunc: rnr.deleteGameHandler,
+		HandlerFunc: deleteGameHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
 				server.AuthenticationTypeToken,
@@ -160,8 +161,8 @@ func (rnr *Runner) gameHandlerConfig(l logger.Logger) (map[string]server.Handler
 }
 
 // GetManyGamesHandler -
-func (rnr *Runner) getManyGamesHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
-	l = loggerWithFunctionContext(l, "GetManyGamesHandler")
+func getManyGamesHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
+	l = logging.LoggerWithFunctionContext(l, packageName, "GetManyGamesHandler")
 
 	l.Info("querying many game records with params >%#v<", qp)
 
@@ -190,8 +191,8 @@ func (rnr *Runner) getManyGamesHandler(w http.ResponseWriter, r *http.Request, p
 	return nil
 }
 
-func (rnr *Runner) getGameHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
-	l = loggerWithFunctionContext(l, "GetGameHandler")
+func getGameHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
+	l = logging.LoggerWithFunctionContext(l, packageName, "GetGameHandler")
 
 	l.Info("querying game record with path params >%#v<", pp)
 
@@ -222,8 +223,8 @@ func (rnr *Runner) getGameHandler(w http.ResponseWriter, r *http.Request, pp htt
 	return nil
 }
 
-func (rnr *Runner) createGameHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
-	l = loggerWithFunctionContext(l, "CreateGameHandler")
+func createGameHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
+	l = logging.LoggerWithFunctionContext(l, packageName, "CreateGameHandler")
 
 	l.Info("creating game record with path params >%#v<", pp)
 
@@ -255,8 +256,8 @@ func (rnr *Runner) createGameHandler(w http.ResponseWriter, r *http.Request, pp 
 	return nil
 }
 
-func (rnr *Runner) updateGameHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
-	l = loggerWithFunctionContext(l, "UpdateGameHandler")
+func updateGameHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
+	l = logging.LoggerWithFunctionContext(l, packageName, "UpdateGameHandler")
 
 	l.Info("updating game record with path params >%#v<", pp)
 
@@ -294,8 +295,8 @@ func (rnr *Runner) updateGameHandler(w http.ResponseWriter, r *http.Request, pp 
 	return nil
 }
 
-func (rnr *Runner) deleteGameHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
-	l = loggerWithFunctionContext(l, "DeleteGameHandler")
+func deleteGameHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
+	l = logging.LoggerWithFunctionContext(l, packageName, "DeleteGameHandler")
 
 	l.Info("deleting game record with path params >%#v<", pp)
 

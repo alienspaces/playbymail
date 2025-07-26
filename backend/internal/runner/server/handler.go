@@ -7,10 +7,10 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/julienschmidt/httprouter"
 	"github.com/riverqueue/river"
-	"gitlab.com/alienspaces/playbymail/core/jsonschema"
 	"gitlab.com/alienspaces/playbymail/core/queryparam"
 	"gitlab.com/alienspaces/playbymail/core/type/domainer"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
+	"gitlab.com/alienspaces/playbymail/internal/utils/logging"
 )
 
 // API Resource Paths
@@ -44,21 +44,9 @@ import (
 // PUT (document) /api/v1/games/{game_id}/characters/{character_id}
 // DELETE (document) /api/v1/games/{game_id}/characters/{character_id}
 
-// Common reference schemas used by all param, request and response schemas. These
-// schemas must be loaded for all schemas to be validated. Schemas are loaded from
-// the `./schema` directory.
-var referenceSchemas = []jsonschema.Schema{
-	{
-		Name: "query.schema.json",
-	},
-	{
-		Name: "common.schema.json",
-	},
-}
-
 // handlerFunc - default handler
 func (rnr *Runner) handlerFunc(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
-	l = loggerWithFunctionContext(l, "Handler")
+	l = logging.LoggerWithFunctionContext(l, "runner", "handlerFunc")
 
 	l.Info("(playbymail) using playbymail handler")
 

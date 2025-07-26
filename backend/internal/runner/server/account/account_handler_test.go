@@ -1,4 +1,4 @@
-package runner_test
+package account_test
 
 import (
 	"net/http"
@@ -9,7 +9,7 @@ import (
 
 	"gitlab.com/alienspaces/playbymail/core/server"
 	"gitlab.com/alienspaces/playbymail/internal/harness"
-	runner "gitlab.com/alienspaces/playbymail/internal/runner/server"
+	"gitlab.com/alienspaces/playbymail/internal/runner/server/account"
 	"gitlab.com/alienspaces/playbymail/internal/utils/testutil"
 	"gitlab.com/alienspaces/playbymail/schema"
 )
@@ -45,7 +45,7 @@ func Test_getAccountHandler(t *testing.T) {
 			TestCase: testutil.TestCase{
 				Name: "API key with open access \\ get many accounts \\ returns expected accounts",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
-					return rnr.GetHandlerConfig()[runner.GetManyAccounts]
+					return rnr.GetHandlerConfig()[account.GetManyAccounts]
 				},
 				RequestQueryParams: func(d harness.Data) map[string]any {
 					return map[string]any{
@@ -64,7 +64,7 @@ func Test_getAccountHandler(t *testing.T) {
 			TestCase: testutil.TestCase{
 				Name: "API key with open access \\ get one account with valid account ID \\ returns expected account",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
-					return rnr.GetHandlerConfig()[runner.GetOneAccount]
+					return rnr.GetHandlerConfig()[account.GetOneAccount]
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					accountRec, err := d.GetAccountRecByRef(harness.AccountOneRef)
@@ -146,7 +146,7 @@ func Test_createUpdateDeleteAccountHandler(t *testing.T) {
 			TestCase: testutil.TestCase{
 				Name: "API key with open access \\ create account with valid properties \\ returns created account",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
-					return rnr.GetHandlerConfig()[runner.CreateAccount]
+					return rnr.GetHandlerConfig()[account.CreateAccount]
 				},
 				RequestBody: func(d harness.Data) any {
 					return schema.AccountRequest{
@@ -170,7 +170,7 @@ func Test_createUpdateDeleteAccountHandler(t *testing.T) {
 			TestCase: testutil.TestCase{
 				Name: "API key with open access \\ update account with valid properties \\ returns updated account",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
-					return rnr.GetHandlerConfig()[runner.UpdateAccount]
+					return rnr.GetHandlerConfig()[account.UpdateAccount]
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					accountRec, err := d.GetAccountRecByRef(harness.AccountOneRef)
@@ -202,7 +202,7 @@ func Test_createUpdateDeleteAccountHandler(t *testing.T) {
 			TestCase: testutil.TestCase{
 				Name: "API key with open access \\ delete account with valid account ID \\ returns no content",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
-					return rnr.GetHandlerConfig()[runner.DeleteAccount]
+					return rnr.GetHandlerConfig()[account.DeleteAccount]
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					accountRec, err := d.GetAccountRecByRef(harness.AccountOneRef)

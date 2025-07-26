@@ -1,4 +1,4 @@
-package runner_test
+package game_test
 
 import (
 	"net/http"
@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"gitlab.com/alienspaces/playbymail/core/server"
 	"gitlab.com/alienspaces/playbymail/internal/harness"
-	runner "gitlab.com/alienspaces/playbymail/internal/runner/server"
+	"gitlab.com/alienspaces/playbymail/internal/runner/server/game"
 	"gitlab.com/alienspaces/playbymail/internal/utils/testutil"
 	"gitlab.com/alienspaces/playbymail/schema"
 )
@@ -26,7 +26,7 @@ func Test_gameSubscriptionHandler(t *testing.T) {
 		{
 			Name: "GET many game subscriptions",
 			HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
-				return rnr.GetHandlerConfig()[runner.GetManyGameSubscriptions]
+				return rnr.GetHandlerConfig()[game.GetManyGameSubscriptions]
 			},
 			ResponseDecoder: collectionDecoder,
 			ResponseCode:    http.StatusOK,
@@ -34,7 +34,7 @@ func Test_gameSubscriptionHandler(t *testing.T) {
 		{
 			Name: "POST create game subscription",
 			HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
-				return rnr.GetHandlerConfig()[runner.CreateGameSubscription]
+				return rnr.GetHandlerConfig()[game.CreateGameSubscription]
 			},
 			RequestBody: func(d harness.Data) any {
 				gameRec, _ := d.GetGameRecByRef(harness.GameOneRef)
@@ -51,7 +51,7 @@ func Test_gameSubscriptionHandler(t *testing.T) {
 		{
 			Name: "GET one game subscription",
 			HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
-				return rnr.GetHandlerConfig()[runner.GetOneGameSubscription]
+				return rnr.GetHandlerConfig()[game.GetOneGameSubscription]
 			},
 			RequestPathParams: func(d harness.Data) map[string]string {
 				// Use the first created subscription
@@ -63,7 +63,7 @@ func Test_gameSubscriptionHandler(t *testing.T) {
 		{
 			Name: "PUT update game subscription",
 			HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
-				return rnr.GetHandlerConfig()[runner.UpdateGameSubscription]
+				return rnr.GetHandlerConfig()[game.UpdateGameSubscription]
 			},
 			RequestPathParams: func(d harness.Data) map[string]string {
 				return map[string]string{":game_subscription_id": d.GameSubscriptionRecs[0].ID}
@@ -81,7 +81,7 @@ func Test_gameSubscriptionHandler(t *testing.T) {
 		{
 			Name: "DELETE game subscription",
 			HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
-				return rnr.GetHandlerConfig()[runner.DeleteGameSubscription]
+				return rnr.GetHandlerConfig()[game.DeleteGameSubscription]
 			},
 			RequestPathParams: func(d harness.Data) map[string]string {
 				return map[string]string{":game_subscription_id": d.GameSubscriptionRecs[0].ID}

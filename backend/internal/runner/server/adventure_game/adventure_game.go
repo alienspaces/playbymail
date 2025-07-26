@@ -1,8 +1,6 @@
 package adventure_game
 
 import (
-	"maps"
-
 	"gitlab.com/alienspaces/playbymail/core/jsonschema"
 	"gitlab.com/alienspaces/playbymail/core/server"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
@@ -50,16 +48,8 @@ func AdventureGameHandlerConfig(l logger.Logger) (map[string]server.HandlerConfi
 		if err != nil {
 			return nil, err
 		}
-		adventureGameConfig = mergeHandlerConfigs(adventureGameConfig, cfg)
+		adventureGameConfig = server.MergeHandlerConfigs(adventureGameConfig, cfg)
 	}
 
 	return adventureGameConfig, nil
-}
-
-func mergeHandlerConfigs(hc1 map[string]server.HandlerConfig, hc2 map[string]server.HandlerConfig) map[string]server.HandlerConfig {
-	if hc1 == nil {
-		hc1 = map[string]server.HandlerConfig{}
-	}
-	maps.Copy(hc1, hc2)
-	return hc1
 }
