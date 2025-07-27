@@ -3,11 +3,11 @@ package mapper
 import (
 	"gitlab.com/alienspaces/playbymail/core/nulltime"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
-	"gitlab.com/alienspaces/playbymail/internal/record"
+	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game"
 	"gitlab.com/alienspaces/playbymail/schema"
 )
 
-func AdventureGameCreatureRecordToResponseData(l logger.Logger, rec *record.AdventureGameCreature) (schema.AdventureGameCreatureResponseData, error) {
+func AdventureGameCreatureRecordToResponseData(l logger.Logger, rec *adventure_game_record.AdventureGameCreature) (schema.AdventureGameCreatureResponseData, error) {
 	l.Debug("mapping adventure_game_creature record to response data")
 	data := schema.AdventureGameCreatureResponseData{
 		ID:          rec.ID,
@@ -21,7 +21,7 @@ func AdventureGameCreatureRecordToResponseData(l logger.Logger, rec *record.Adve
 	return data, nil
 }
 
-func AdventureGameCreatureRecordToResponse(l logger.Logger, rec *record.AdventureGameCreature) (schema.AdventureGameCreatureResponse, error) {
+func AdventureGameCreatureRecordToResponse(l logger.Logger, rec *adventure_game_record.AdventureGameCreature) (schema.AdventureGameCreatureResponse, error) {
 	data, err := AdventureGameCreatureRecordToResponseData(l, rec)
 	if err != nil {
 		return schema.AdventureGameCreatureResponse{}, err
@@ -31,7 +31,7 @@ func AdventureGameCreatureRecordToResponse(l logger.Logger, rec *record.Adventur
 	}, nil
 }
 
-func AdventureGameCreatureRecordsToCollectionResponse(l logger.Logger, recs []*record.AdventureGameCreature) (schema.AdventureGameCreatureCollectionResponse, error) {
+func AdventureGameCreatureRecordsToCollectionResponse(l logger.Logger, recs []*adventure_game_record.AdventureGameCreature) (schema.AdventureGameCreatureCollectionResponse, error) {
 	data := []*schema.AdventureGameCreatureResponseData{}
 	for _, rec := range recs {
 		d, err := AdventureGameCreatureRecordToResponseData(l, rec)
@@ -45,9 +45,9 @@ func AdventureGameCreatureRecordsToCollectionResponse(l logger.Logger, recs []*r
 	}, nil
 }
 
-func AdventureGameCreatureRequestToRecord(l logger.Logger, req *schema.AdventureGameCreatureRequest, rec *record.AdventureGameCreature) (*record.AdventureGameCreature, error) {
+func AdventureGameCreatureRequestToRecord(l logger.Logger, req *schema.AdventureGameCreatureRequest, rec *adventure_game_record.AdventureGameCreature) (*adventure_game_record.AdventureGameCreature, error) {
 	if rec == nil {
-		rec = &record.AdventureGameCreature{}
+		rec = &adventure_game_record.AdventureGameCreature{}
 	}
 	if req == nil {
 		return nil, nil

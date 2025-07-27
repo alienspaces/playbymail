@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/harness"
-	"gitlab.com/alienspaces/playbymail/internal/record"
+	adventure_game_record "gitlab.com/alienspaces/playbymail/internal/record/adventure_game"
 	"gitlab.com/alienspaces/playbymail/internal/utils/deps"
 )
 
@@ -16,17 +16,17 @@ func TestCreateOne(t *testing.T) {
 
 	tests := []struct {
 		name   string
-		rec    func(d harness.Data, t *testing.T) *record.AdventureGameInstance
+		rec    func(d harness.Data, t *testing.T) *adventure_game_record.AdventureGameInstance
 		hasErr bool
 	}{
 		{
 			name: "Valid",
-			rec: func(d harness.Data, t *testing.T) *record.AdventureGameInstance {
+			rec: func(d harness.Data, t *testing.T) *adventure_game_record.AdventureGameInstance {
 				gameRec, err := d.GetGameRecByRef(harness.GameOneRef)
 				require.NoError(t, err)
-				return &record.AdventureGameInstance{
+				return &adventure_game_record.AdventureGameInstance{
 					GameID:            gameRec.ID,
-					Status:            record.GameInstanceStatusCreated,
+					Status:            adventure_game_record.GameInstanceStatusCreated,
 					CurrentTurn:       0,
 					TurnDeadlineHours: 168,
 				}
@@ -35,8 +35,8 @@ func TestCreateOne(t *testing.T) {
 		},
 		{
 			name: "Missing GameID",
-			rec: func(d harness.Data, t *testing.T) *record.AdventureGameInstance {
-				return &record.AdventureGameInstance{GameID: ""}
+			rec: func(d harness.Data, t *testing.T) *adventure_game_record.AdventureGameInstance {
+				return &adventure_game_record.AdventureGameInstance{GameID: ""}
 			},
 			hasErr: true,
 		},
@@ -117,12 +117,12 @@ func TestUpdateOne(t *testing.T) {
 
 	tests := []struct {
 		name   string
-		rec    func(d harness.Data, t *testing.T) *record.AdventureGameInstance
+		rec    func(d harness.Data, t *testing.T) *adventure_game_record.AdventureGameInstance
 		hasErr bool
 	}{
 		{
 			name: "Valid",
-			rec: func(d harness.Data, t *testing.T) *record.AdventureGameInstance {
+			rec: func(d harness.Data, t *testing.T) *adventure_game_record.AdventureGameInstance {
 				rec, err := d.GetGameInstanceRecByRef(harness.GameInstanceOneRef)
 				require.NoError(t, err)
 				return rec
@@ -131,7 +131,7 @@ func TestUpdateOne(t *testing.T) {
 		},
 		{
 			name: "Missing ID",
-			rec: func(d harness.Data, t *testing.T) *record.AdventureGameInstance {
+			rec: func(d harness.Data, t *testing.T) *adventure_game_record.AdventureGameInstance {
 				rec, err := d.GetGameInstanceRecByRef(harness.GameInstanceOneRef)
 				require.NoError(t, err)
 				rec.ID = ""

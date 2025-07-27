@@ -3,11 +3,11 @@ package domain
 import (
 	coreerror "gitlab.com/alienspaces/playbymail/core/error"
 	coresql "gitlab.com/alienspaces/playbymail/core/sql"
-	"gitlab.com/alienspaces/playbymail/internal/record"
+	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game"
 )
 
 // GetManyAdventureGameCreaturePlacementRecs -
-func (m *Domain) GetManyAdventureGameCreaturePlacementRecs(opts *coresql.Options) ([]*record.AdventureGameCreaturePlacement, error) {
+func (m *Domain) GetManyAdventureGameCreaturePlacementRecs(opts *coresql.Options) ([]*adventure_game_record.AdventureGameCreaturePlacement, error) {
 	l := m.Logger("GetManyAdventureGameCreaturePlacementRecs")
 	l.Debug("getting many adventure_game_creature_placement records opts >%#v<", opts)
 	r := m.AdventureGameCreaturePlacementRepository()
@@ -19,7 +19,7 @@ func (m *Domain) GetManyAdventureGameCreaturePlacementRecs(opts *coresql.Options
 }
 
 // GetAdventureGameCreaturePlacementRec -
-func (m *Domain) GetAdventureGameCreaturePlacementRec(id string, lock *coresql.Lock) (*record.AdventureGameCreaturePlacement, error) {
+func (m *Domain) GetAdventureGameCreaturePlacementRec(id string, lock *coresql.Lock) (*adventure_game_record.AdventureGameCreaturePlacement, error) {
 	l := m.Logger("GetAdventureGameCreaturePlacementRec")
 	l.Debug("getting adventure_game_creature_placement record id >%s< lock >%#v<", id, lock)
 	r := m.AdventureGameCreaturePlacementRepository()
@@ -31,7 +31,7 @@ func (m *Domain) GetAdventureGameCreaturePlacementRec(id string, lock *coresql.L
 }
 
 // CreateAdventureGameCreaturePlacementRec -
-func (m *Domain) CreateAdventureGameCreaturePlacementRec(rec *record.AdventureGameCreaturePlacement) (*record.AdventureGameCreaturePlacement, error) {
+func (m *Domain) CreateAdventureGameCreaturePlacementRec(rec *adventure_game_record.AdventureGameCreaturePlacement) (*adventure_game_record.AdventureGameCreaturePlacement, error) {
 	l := m.Logger("CreateAdventureGameCreaturePlacementRec")
 	l.Debug("creating adventure_game_creature_placement record >%#v<", rec)
 
@@ -64,7 +64,7 @@ func (m *Domain) CreateAdventureGameCreaturePlacementRec(rec *record.AdventureGa
 }
 
 // UpdateAdventureGameCreaturePlacementRec -
-func (m *Domain) UpdateAdventureGameCreaturePlacementRec(rec *record.AdventureGameCreaturePlacement) (*record.AdventureGameCreaturePlacement, error) {
+func (m *Domain) UpdateAdventureGameCreaturePlacementRec(rec *adventure_game_record.AdventureGameCreaturePlacement) (*adventure_game_record.AdventureGameCreaturePlacement, error) {
 	l := m.Logger("UpdateAdventureGameCreaturePlacementRec")
 	l.Debug("updating adventure_game_creature_placement record >%#v<", rec)
 

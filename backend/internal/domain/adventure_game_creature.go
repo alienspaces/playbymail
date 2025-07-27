@@ -7,11 +7,11 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/domain"
 	coreerror "gitlab.com/alienspaces/playbymail/core/error"
 	coresql "gitlab.com/alienspaces/playbymail/core/sql"
-	"gitlab.com/alienspaces/playbymail/internal/record"
+	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game"
 )
 
 // GetManyAdventureGameCreatureRecs -
-func (m *Domain) GetManyAdventureGameCreatureRecs(opts *coresql.Options) ([]*record.AdventureGameCreature, error) {
+func (m *Domain) GetManyAdventureGameCreatureRecs(opts *coresql.Options) ([]*adventure_game_record.AdventureGameCreature, error) {
 	l := m.Logger("GetManyAdventureGameCreatureRecs")
 	l.Debug("getting many adventure_game_creature records opts >%#v<", opts)
 	r := m.AdventureGameCreatureRepository()
@@ -23,7 +23,7 @@ func (m *Domain) GetManyAdventureGameCreatureRecs(opts *coresql.Options) ([]*rec
 }
 
 // GetAdventureGameCreatureRec -
-func (m *Domain) GetAdventureGameCreatureRec(recID string, lock *coresql.Lock) (*record.AdventureGameCreature, error) {
+func (m *Domain) GetAdventureGameCreatureRec(recID string, lock *coresql.Lock) (*adventure_game_record.AdventureGameCreature, error) {
 	l := m.Logger("GetAdventureGameCreatureRec")
 	l.Debug("getting adventure_game_creature record ID >%s<", recID)
 	if err := domain.ValidateUUIDField("id", recID); err != nil {
@@ -32,7 +32,7 @@ func (m *Domain) GetAdventureGameCreatureRec(recID string, lock *coresql.Lock) (
 	r := m.AdventureGameCreatureRepository()
 	rec, err := r.GetOne(recID, lock)
 	if errors.Is(err, pgx.ErrNoRows) {
-		return nil, coreerror.NewNotFoundError(record.TableAdventureGameCreature, recID)
+		return nil, coreerror.NewNotFoundError(adventure_game_record.TableAdventureGameCreature, recID)
 	} else if err != nil {
 		return nil, databaseError(err)
 	}
@@ -40,7 +40,7 @@ func (m *Domain) GetAdventureGameCreatureRec(recID string, lock *coresql.Lock) (
 }
 
 // CreateAdventureGameCreatureRec -
-func (m *Domain) CreateAdventureGameCreatureRec(rec *record.AdventureGameCreature) (*record.AdventureGameCreature, error) {
+func (m *Domain) CreateAdventureGameCreatureRec(rec *adventure_game_record.AdventureGameCreature) (*adventure_game_record.AdventureGameCreature, error) {
 	l := m.Logger("CreateAdventureGameCreatureRec")
 	l.Debug("creating adventure_game_creature record >%#v<", rec)
 	r := m.AdventureGameCreatureRepository()
@@ -54,7 +54,7 @@ func (m *Domain) CreateAdventureGameCreatureRec(rec *record.AdventureGameCreatur
 }
 
 // UpdateAdventureGameCreatureRec -
-func (m *Domain) UpdateAdventureGameCreatureRec(next *record.AdventureGameCreature) (*record.AdventureGameCreature, error) {
+func (m *Domain) UpdateAdventureGameCreatureRec(next *adventure_game_record.AdventureGameCreature) (*adventure_game_record.AdventureGameCreature, error) {
 	l := m.Logger("UpdateAdventureGameCreatureRec")
 	_, err := m.GetAdventureGameCreatureRec(next.ID, coresql.ForUpdateNoWait)
 	if err != nil {

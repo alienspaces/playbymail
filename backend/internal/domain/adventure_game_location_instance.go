@@ -2,10 +2,10 @@ package domain
 
 import (
 	"gitlab.com/alienspaces/playbymail/core/sql"
-	"gitlab.com/alienspaces/playbymail/internal/record"
+	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game"
 )
 
-func (m *Domain) GetAdventureGameLocationInstanceRec(recID string, lock *sql.Lock) (*record.AdventureGameLocationInstance, error) {
+func (m *Domain) GetAdventureGameLocationInstanceRec(recID string, lock *sql.Lock) (*adventure_game_record.AdventureGameLocationInstance, error) {
 	r := m.AdventureGameLocationInstanceRepository()
 	rec, err := r.GetOne(recID, lock)
 	if err != nil {
@@ -14,7 +14,7 @@ func (m *Domain) GetAdventureGameLocationInstanceRec(recID string, lock *sql.Loc
 	return rec, nil
 }
 
-func (m *Domain) CreateAdventureGameLocationInstanceRec(rec *record.AdventureGameLocationInstance) (*record.AdventureGameLocationInstance, error) {
+func (m *Domain) CreateAdventureGameLocationInstanceRec(rec *adventure_game_record.AdventureGameLocationInstance) (*adventure_game_record.AdventureGameLocationInstance, error) {
 	r := m.AdventureGameLocationInstanceRepository()
 	var err error
 	rec, err = r.CreateOne(rec)
@@ -24,7 +24,7 @@ func (m *Domain) CreateAdventureGameLocationInstanceRec(rec *record.AdventureGam
 	return rec, nil
 }
 
-func (m *Domain) UpdateAdventureGameLocationInstanceRec(next *record.AdventureGameLocationInstance) (*record.AdventureGameLocationInstance, error) {
+func (m *Domain) UpdateAdventureGameLocationInstanceRec(next *adventure_game_record.AdventureGameLocationInstance) (*adventure_game_record.AdventureGameLocationInstance, error) {
 	r := m.AdventureGameLocationInstanceRepository()
 	next, err := r.UpdateOne(next)
 	if err != nil {
@@ -49,12 +49,12 @@ func (m *Domain) RemoveAdventureGameLocationInstanceRec(recID string) error {
 	return nil
 }
 
-func (m *Domain) ValidateAdventureGameLocationInstance(rec *record.AdventureGameLocationInstance) error {
+func (m *Domain) ValidateAdventureGameLocationInstance(rec *adventure_game_record.AdventureGameLocationInstance) error {
 	// Add validation logic as needed
 	return nil
 }
 
-func (m *Domain) GetManyAdventureGameLocationInstanceRecs(opts *sql.Options) ([]*record.AdventureGameLocationInstance, error) {
+func (m *Domain) GetManyAdventureGameLocationInstanceRecs(opts *sql.Options) ([]*adventure_game_record.AdventureGameLocationInstance, error) {
 	r := m.AdventureGameLocationInstanceRepository()
 	recs, err := r.GetMany(opts)
 	if err != nil {

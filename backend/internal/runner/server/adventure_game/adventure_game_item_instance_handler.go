@@ -15,7 +15,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/mapper"
-	"gitlab.com/alienspaces/playbymail/internal/record"
+	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game"
 	"gitlab.com/alienspaces/playbymail/internal/utils/logging"
 	"gitlab.com/alienspaces/playbymail/schema"
 )
@@ -214,7 +214,7 @@ func getManyAdventureGameItemInstancesHandler(w http.ResponseWriter, r *http.Req
 
 	// Add filter for specific game
 	opts.Params = append(opts.Params, sql.Param{
-		Col: record.FieldAdventureGameItemInstanceAdventureGameInstanceID,
+		Col: adventure_game_record.FieldAdventureGameItemInstanceAdventureGameInstanceID,
 		Val: gameInstanceID,
 	})
 
@@ -300,7 +300,7 @@ func createOneAdventureGameItemInstanceHandler(w http.ResponseWriter, r *http.Re
 		return err
 	}
 
-	rec, err := mapper.AdventureGameItemInstanceRequestToRecord(l, &req, &record.AdventureGameItemInstance{})
+	rec, err := mapper.AdventureGameItemInstanceRequestToRecord(l, &req, &adventure_game_record.AdventureGameItemInstance{})
 	if err != nil {
 		return err
 	}

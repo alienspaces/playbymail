@@ -3,11 +3,11 @@ package mapper
 import (
 	"gitlab.com/alienspaces/playbymail/core/nulltime"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
-	"gitlab.com/alienspaces/playbymail/internal/record"
+	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game"
 	"gitlab.com/alienspaces/playbymail/schema"
 )
 
-func AdventureGameInstanceRecordToResponseData(l logger.Logger, rec *record.AdventureGameInstance) (schema.AdventureGameInstance, error) {
+func AdventureGameInstanceRecordToResponseData(l logger.Logger, rec *adventure_game_record.AdventureGameInstance) (schema.AdventureGameInstance, error) {
 	data := schema.AdventureGameInstance{
 		ID:                  rec.ID,
 		GameID:              rec.GameID,
@@ -27,7 +27,7 @@ func AdventureGameInstanceRecordToResponseData(l logger.Logger, rec *record.Adve
 	return data, nil
 }
 
-func AdventureGameInstanceRecordToResponse(l logger.Logger, rec *record.AdventureGameInstance) (schema.AdventureGameInstanceResponse, error) {
+func AdventureGameInstanceRecordToResponse(l logger.Logger, rec *adventure_game_record.AdventureGameInstance) (schema.AdventureGameInstanceResponse, error) {
 	data, err := AdventureGameInstanceRecordToResponseData(l, rec)
 	if err != nil {
 		return schema.AdventureGameInstanceResponse{}, err
@@ -37,7 +37,7 @@ func AdventureGameInstanceRecordToResponse(l logger.Logger, rec *record.Adventur
 	}, nil
 }
 
-func AdventureGameInstanceRecordsToCollectionResponse(l logger.Logger, recs []*record.AdventureGameInstance) (schema.AdventureGameInstanceCollectionResponse, error) {
+func AdventureGameInstanceRecordsToCollectionResponse(l logger.Logger, recs []*adventure_game_record.AdventureGameInstance) (schema.AdventureGameInstanceCollectionResponse, error) {
 	data := []*schema.AdventureGameInstance{}
 	for _, rec := range recs {
 		d, err := AdventureGameInstanceRecordToResponseData(l, rec)
@@ -51,7 +51,7 @@ func AdventureGameInstanceRecordsToCollectionResponse(l logger.Logger, recs []*r
 	}, nil
 }
 
-func AdventureGameInstanceRequestToRecord(l logger.Logger, req *schema.AdventureGameInstanceRequest, rec *record.AdventureGameInstance) (*record.AdventureGameInstance, error) {
+func AdventureGameInstanceRequestToRecord(l logger.Logger, req *schema.AdventureGameInstanceRequest, rec *adventure_game_record.AdventureGameInstance) (*adventure_game_record.AdventureGameInstance, error) {
 	if req.GameID != "" {
 		rec.GameID = req.GameID
 	}

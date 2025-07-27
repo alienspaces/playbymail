@@ -1,6 +1,9 @@
 package harness
 
-import "gitlab.com/alienspaces/playbymail/internal/record"
+import (
+	"gitlab.com/alienspaces/playbymail/internal/record"
+	adventure_game_record "gitlab.com/alienspaces/playbymail/internal/record/adventure_game"
+)
 
 const (
 	GameOneRef = "game-one"
@@ -75,17 +78,17 @@ type GameConfig struct {
 type GameCharacterConfig struct {
 	Reference  string // Reference to the game_character record
 	AccountRef string // Reference to the account
-	Record     *record.AdventureGameCharacter
+	Record     *adventure_game_record.AdventureGameCharacter
 }
 
 type GameItemConfig struct {
 	Reference string // Reference to the game_item record
-	Record    *record.AdventureGameItem
+	Record    *adventure_game_record.AdventureGameItem
 }
 
 type GameCreatureConfig struct {
 	Reference string // Reference to the game_creature record
-	Record    *record.AdventureGameCreature
+	Record    *adventure_game_record.AdventureGameCreature
 }
 
 type AccountConfig struct {
@@ -95,26 +98,26 @@ type AccountConfig struct {
 
 type GameLocationConfig struct {
 	Reference string // Reference to the game_location record
-	Record    *record.AdventureGameLocation
+	Record    *adventure_game_record.AdventureGameLocation
 }
 
 type GameLocationLinkConfig struct {
 	Reference                          string // Reference to the game_location_link record
 	FromLocationRef                    string // Reference to the from location
 	ToLocationRef                      string // Reference to the to location
-	Record                             *record.AdventureGameLocationLink
+	Record                             *adventure_game_record.AdventureGameLocationLink
 	GameLocationLinkRequirementConfigs []GameLocationLinkRequirementConfig
 }
 
 type GameLocationLinkRequirementConfig struct {
 	Reference   string // Reference to the game_location_link_requirement record
 	GameItemRef string // Reference to the game_item
-	Record      *record.AdventureGameLocationLinkRequirement
+	Record      *adventure_game_record.AdventureGameLocationLinkRequirement
 }
 
 type GameInstanceConfig struct {
 	Reference                    string // Reference to the game_instance record
-	Record                       *record.AdventureGameInstance
+	Record                       *adventure_game_record.AdventureGameInstance
 	GameLocationInstanceConfigs  []GameLocationInstanceConfig
 	GameItemInstanceConfigs      []GameItemInstanceConfig
 	GameCreatureInstanceConfigs  []GameCreatureInstanceConfig
@@ -124,21 +127,21 @@ type GameInstanceConfig struct {
 type GameLocationInstanceConfig struct {
 	Reference       string // Reference to the game_location_instance record
 	GameLocationRef string // Reference to the game_location (required)
-	Record          *record.AdventureGameLocationInstance
+	Record          *adventure_game_record.AdventureGameLocationInstance
 }
 
 type GameCreatureInstanceConfig struct {
 	Reference       string // Reference to the game_creature_instance record
 	GameCreatureRef string // Reference to the game_creature (required)
 	GameLocationRef string // Reference to the game_location (required)
-	Record          *record.AdventureGameCreatureInstance
+	Record          *adventure_game_record.AdventureGameCreatureInstance
 }
 
 type GameCharacterInstanceConfig struct {
 	Reference        string // Reference to the game_character_instance record
 	GameCharacterRef string // Reference to the game_character (required)
 	GameLocationRef  string // Reference to the game_location (optional)
-	Record           *record.AdventureGameCharacterInstance
+	Record           *adventure_game_record.AdventureGameCharacterInstance
 }
 
 type GameItemInstanceConfig struct {
@@ -150,7 +153,7 @@ type GameItemInstanceConfig struct {
 
 	// TODO: Must be assigned to a location, a character, or a creature
 
-	Record *record.AdventureGameItemInstance
+	Record *adventure_game_record.AdventureGameItemInstance
 }
 
 type GameSubscriptionConfig struct {
@@ -180,14 +183,14 @@ func DefaultDataConfig() DataConfig {
 				GameItemConfigs: []GameItemConfig{
 					{
 						Reference: GameItemOneRef,
-						Record: &record.AdventureGameItem{
+						Record: &adventure_game_record.AdventureGameItem{
 							Name:        UniqueName("Default Item One"),
 							Description: "Default item one for handler tests",
 						},
 					},
 					{
 						Reference: GameItemTwoRef,
-						Record: &record.AdventureGameItem{
+						Record: &adventure_game_record.AdventureGameItem{
 							Name:        UniqueName("Default Item Two"),
 							Description: "Default item two for handler tests",
 						},
@@ -196,14 +199,14 @@ func DefaultDataConfig() DataConfig {
 				GameLocationConfigs: []GameLocationConfig{
 					{
 						Reference: GameLocationOneRef,
-						Record: &record.AdventureGameLocation{
+						Record: &adventure_game_record.AdventureGameLocation{
 							Name:        UniqueName("Default Location One"),
 							Description: "Default location one for handler tests",
 						},
 					},
 					{
 						Reference: GameLocationTwoRef,
-						Record: &record.AdventureGameLocation{
+						Record: &adventure_game_record.AdventureGameLocation{
 							Name:        UniqueName("Default Location Two"),
 							Description: "Default location two for handler tests",
 						},
@@ -214,7 +217,7 @@ func DefaultDataConfig() DataConfig {
 						Reference:       GameLocationLinkOneRef,
 						FromLocationRef: GameLocationOneRef,
 						ToLocationRef:   GameLocationTwoRef,
-						Record: &record.AdventureGameLocationLink{
+						Record: &adventure_game_record.AdventureGameLocationLink{
 							Name:        UniqueName("The Red Door"),
 							Description: "Travel by boat to the swamp of the long forgotten Frog God",
 						},
@@ -222,7 +225,7 @@ func DefaultDataConfig() DataConfig {
 							{
 								Reference:   GameLocationLinkRequirementOneRef,
 								GameItemRef: GameItemOneRef,
-								Record: &record.AdventureGameLocationLinkRequirement{
+								Record: &adventure_game_record.AdventureGameLocationLinkRequirement{
 									Quantity: 1,
 								},
 							},
@@ -232,13 +235,13 @@ func DefaultDataConfig() DataConfig {
 				GameCreatureConfigs: []GameCreatureConfig{
 					{
 						Reference: GameCreatureOneRef,
-						Record: &record.AdventureGameCreature{
+						Record: &adventure_game_record.AdventureGameCreature{
 							Name: UniqueName("Default Creature One"),
 						},
 					},
 					{
 						Reference: GameCreatureTwoRef,
-						Record: &record.AdventureGameCreature{
+						Record: &adventure_game_record.AdventureGameCreature{
 							Name: UniqueName("Default Creature Two"),
 						},
 					},
@@ -247,14 +250,14 @@ func DefaultDataConfig() DataConfig {
 					{
 						Reference:  GameCharacterOneRef,
 						AccountRef: AccountOneRef,
-						Record: &record.AdventureGameCharacter{
+						Record: &adventure_game_record.AdventureGameCharacter{
 							Name: UniqueName("Default Character One"),
 						},
 					},
 					{
 						Reference:  GameCharacterTwoRef,
 						AccountRef: AccountTwoRef,
-						Record: &record.AdventureGameCharacter{
+						Record: &adventure_game_record.AdventureGameCharacter{
 							Name: UniqueName("Default Character Two"),
 						},
 					},
@@ -279,17 +282,17 @@ func DefaultDataConfig() DataConfig {
 				GameInstanceConfigs: []GameInstanceConfig{
 					{
 						Reference: GameInstanceOneRef,
-						Record:    &record.AdventureGameInstance{},
+						Record:    &adventure_game_record.AdventureGameInstance{},
 						GameLocationInstanceConfigs: []GameLocationInstanceConfig{
 							{
 								Reference:       GameLocationInstanceOneRef,
 								GameLocationRef: GameLocationOneRef,
-								Record:          &record.AdventureGameLocationInstance{},
+								Record:          &adventure_game_record.AdventureGameLocationInstance{},
 							},
 							{
 								Reference:       GameLocationInstanceTwoRef,
 								GameLocationRef: GameLocationTwoRef,
-								Record:          &record.AdventureGameLocationInstance{},
+								Record:          &adventure_game_record.AdventureGameLocationInstance{},
 							},
 						},
 						GameItemInstanceConfigs: []GameItemInstanceConfig{
@@ -297,7 +300,7 @@ func DefaultDataConfig() DataConfig {
 								Reference:       GameItemInstanceOneRef,
 								GameItemRef:     GameItemOneRef,
 								GameLocationRef: GameLocationOneRef, // Assign to location
-								Record:          &record.AdventureGameItemInstance{},
+								Record:          &adventure_game_record.AdventureGameItemInstance{},
 							},
 						},
 						GameCreatureInstanceConfigs: []GameCreatureInstanceConfig{
@@ -305,7 +308,7 @@ func DefaultDataConfig() DataConfig {
 								Reference:       GameCreatureInstanceOneRef,
 								GameCreatureRef: GameCreatureOneRef,
 								GameLocationRef: GameLocationOneRef, // Assign to location
-								Record:          &record.AdventureGameCreatureInstance{},
+								Record:          &adventure_game_record.AdventureGameCreatureInstance{},
 							},
 						},
 						GameCharacterInstanceConfigs: []GameCharacterInstanceConfig{
@@ -313,7 +316,7 @@ func DefaultDataConfig() DataConfig {
 								Reference:        GameCharacterInstanceOneRef,
 								GameCharacterRef: GameCharacterOneRef,
 								GameLocationRef:  GameLocationOneRef,
-								Record:           &record.AdventureGameCharacterInstance{},
+								Record:           &adventure_game_record.AdventureGameCharacterInstance{},
 							},
 						},
 					},

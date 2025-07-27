@@ -8,11 +8,11 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/domain"
 	coreerror "gitlab.com/alienspaces/playbymail/core/error"
 	coresql "gitlab.com/alienspaces/playbymail/core/sql"
-	"gitlab.com/alienspaces/playbymail/internal/record"
+	adventure_game_record "gitlab.com/alienspaces/playbymail/internal/record/adventure_game"
 )
 
 // GetManyAdventureGameCharacterRecs -
-func (m *Domain) GetManyAdventureGameCharacterRecs(opts *coresql.Options) ([]*record.AdventureGameCharacter, error) {
+func (m *Domain) GetManyAdventureGameCharacterRecs(opts *coresql.Options) ([]*adventure_game_record.AdventureGameCharacter, error) {
 	l := m.Logger("GetManyAdventureGameCharacterRecs")
 	l.Debug("getting many adventure_game_character records opts >%#v<", opts)
 	r := m.AdventureGameCharacterRepository()
@@ -24,7 +24,7 @@ func (m *Domain) GetManyAdventureGameCharacterRecs(opts *coresql.Options) ([]*re
 }
 
 // GetAdventureGameCharacterRec -
-func (m *Domain) GetAdventureGameCharacterRec(recID string, lock *coresql.Lock) (*record.AdventureGameCharacter, error) {
+func (m *Domain) GetAdventureGameCharacterRec(recID string, lock *coresql.Lock) (*adventure_game_record.AdventureGameCharacter, error) {
 	l := m.Logger("GetAdventureGameCharacterRec")
 	l.Debug("getting adventure_game_character record ID >%s<", recID)
 	if err := domain.ValidateUUIDField("id", recID); err != nil {
@@ -33,7 +33,7 @@ func (m *Domain) GetAdventureGameCharacterRec(recID string, lock *coresql.Lock) 
 	r := m.AdventureGameCharacterRepository()
 	rec, err := r.GetOne(recID, lock)
 	if errors.Is(err, pgx.ErrNoRows) {
-		return nil, coreerror.NewNotFoundError(record.TableAdventureGameCharacter, recID)
+		return nil, coreerror.NewNotFoundError(adventure_game_record.TableAdventureGameCharacter, recID)
 	} else if err != nil {
 		return nil, databaseError(err)
 	}
@@ -41,7 +41,7 @@ func (m *Domain) GetAdventureGameCharacterRec(recID string, lock *coresql.Lock) 
 }
 
 // CreateAdventureGameCharacterRec -
-func (m *Domain) CreateAdventureGameCharacterRec(rec *record.AdventureGameCharacter) (*record.AdventureGameCharacter, error) {
+func (m *Domain) CreateAdventureGameCharacterRec(rec *adventure_game_record.AdventureGameCharacter) (*adventure_game_record.AdventureGameCharacter, error) {
 	l := m.Logger("CreateAdventureGameCharacterRec")
 	l.Debug("creating adventure_game_character record >%#v<", rec)
 	if err := m.validateAdventureGameCharacterRecForCreate(rec); err != nil {
@@ -58,7 +58,7 @@ func (m *Domain) CreateAdventureGameCharacterRec(rec *record.AdventureGameCharac
 }
 
 // UpdateAdventureGameCharacterRec -
-func (m *Domain) UpdateAdventureGameCharacterRec(rec *record.AdventureGameCharacter) (*record.AdventureGameCharacter, error) {
+func (m *Domain) UpdateAdventureGameCharacterRec(rec *adventure_game_record.AdventureGameCharacter) (*adventure_game_record.AdventureGameCharacter, error) {
 	l := m.Logger("UpdateAdventureGameCharacterRec")
 	l.Debug("updating adventure_game_character record >%#v<", rec)
 	if err := m.validateAdventureGameCharacterRecForCreate(rec); err != nil {
@@ -89,8 +89,8 @@ func (m *Domain) DeleteAdventureGameCharacterRec(recID string) error {
 }
 
 // validateAdventureGameCharacterRecForCreate -
-func (m *Domain) validateAdventureGameCharacterRecForCreate(rec *record.AdventureGameCharacter) error {
-	if err := domain.ValidateStringField(record.FieldAdventureGameCharacterName, rec.Name); err != nil {
+func (m *Domain) validateAdventureGameCharacterRecForCreate(rec *adventure_game_record.AdventureGameCharacter) error {
+	if err := domain.ValidateStringField(adventure_game_record.FieldAdventureGameCharacterName, rec.Name); err != nil {
 		return err
 	}
 	if len(rec.Name) > 128 {

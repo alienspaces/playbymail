@@ -7,11 +7,11 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/domain"
 	coreerror "gitlab.com/alienspaces/playbymail/core/error"
 	coresql "gitlab.com/alienspaces/playbymail/core/sql"
-	"gitlab.com/alienspaces/playbymail/internal/record"
+	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game"
 )
 
 // GetManyAdventureGameLocationLinkRequirementRecs -
-func (m *Domain) GetManyAdventureGameLocationLinkRequirementRecs(opts *coresql.Options) ([]*record.AdventureGameLocationLinkRequirement, error) {
+func (m *Domain) GetManyAdventureGameLocationLinkRequirementRecs(opts *coresql.Options) ([]*adventure_game_record.AdventureGameLocationLinkRequirement, error) {
 	l := m.Logger("GetManyAdventureGameLocationLinkRequirementRecs")
 	l.Debug("getting many adventure_game_location_link_requirement records opts >%#v<", opts)
 	r := m.AdventureGameLocationLinkRequirementRepository()
@@ -23,7 +23,7 @@ func (m *Domain) GetManyAdventureGameLocationLinkRequirementRecs(opts *coresql.O
 }
 
 // GetAdventureGameLocationLinkRequirementRec -
-func (m *Domain) GetAdventureGameLocationLinkRequirementRec(recID string, lock *coresql.Lock) (*record.AdventureGameLocationLinkRequirement, error) {
+func (m *Domain) GetAdventureGameLocationLinkRequirementRec(recID string, lock *coresql.Lock) (*adventure_game_record.AdventureGameLocationLinkRequirement, error) {
 	l := m.Logger("GetAdventureGameLocationLinkRequirementRec")
 	l.Debug("getting adventure_game_location_link_requirement record ID >%s<", recID)
 	if err := domain.ValidateUUIDField("id", recID); err != nil {
@@ -32,7 +32,7 @@ func (m *Domain) GetAdventureGameLocationLinkRequirementRec(recID string, lock *
 	r := m.AdventureGameLocationLinkRequirementRepository()
 	rec, err := r.GetOne(recID, lock)
 	if errors.Is(err, pgx.ErrNoRows) {
-		return nil, coreerror.NewNotFoundError(record.TableAdventureGameLocationLinkRequirement, recID)
+		return nil, coreerror.NewNotFoundError(adventure_game_record.TableAdventureGameLocationLinkRequirement, recID)
 	} else if err != nil {
 		return nil, databaseError(err)
 	}
@@ -40,7 +40,7 @@ func (m *Domain) GetAdventureGameLocationLinkRequirementRec(recID string, lock *
 }
 
 // CreateAdventureGameLocationLinkRequirementRec -
-func (m *Domain) CreateAdventureGameLocationLinkRequirementRec(rec *record.AdventureGameLocationLinkRequirement) (*record.AdventureGameLocationLinkRequirement, error) {
+func (m *Domain) CreateAdventureGameLocationLinkRequirementRec(rec *adventure_game_record.AdventureGameLocationLinkRequirement) (*adventure_game_record.AdventureGameLocationLinkRequirement, error) {
 	l := m.Logger("CreateAdventureGameLocationLinkRequirementRec")
 	l.Debug("creating adventure_game_location_link_requirement record >%#v<", rec)
 	r := m.AdventureGameLocationLinkRequirementRepository()
@@ -54,7 +54,7 @@ func (m *Domain) CreateAdventureGameLocationLinkRequirementRec(rec *record.Adven
 }
 
 // UpdateAdventureGameLocationLinkRequirementRec -
-func (m *Domain) UpdateAdventureGameLocationLinkRequirementRec(next *record.AdventureGameLocationLinkRequirement) (*record.AdventureGameLocationLinkRequirement, error) {
+func (m *Domain) UpdateAdventureGameLocationLinkRequirementRec(next *adventure_game_record.AdventureGameLocationLinkRequirement) (*adventure_game_record.AdventureGameLocationLinkRequirement, error) {
 	l := m.Logger("UpdateAdventureGameLocationLinkRequirementRec")
 	_, err := m.GetAdventureGameLocationLinkRequirementRec(next.ID, coresql.ForUpdateNoWait)
 	if err != nil {

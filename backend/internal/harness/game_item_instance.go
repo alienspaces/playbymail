@@ -5,10 +5,10 @@ import (
 
 	"gitlab.com/alienspaces/playbymail/core/nullstring"
 	"gitlab.com/alienspaces/playbymail/internal/domain"
-	"gitlab.com/alienspaces/playbymail/internal/record"
+	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game"
 )
 
-func (t *Testing) createGameItemInstanceRec(cfg GameItemInstanceConfig, gameInstanceRec *record.AdventureGameInstance) (*record.AdventureGameItemInstance, error) {
+func (t *Testing) createGameItemInstanceRec(cfg GameItemInstanceConfig, gameInstanceRec *adventure_game_record.AdventureGameInstance) (*adventure_game_record.AdventureGameItemInstance, error) {
 	l := t.Logger("createGameItemInstanceRec")
 
 	if gameInstanceRec == nil {
@@ -19,12 +19,12 @@ func (t *Testing) createGameItemInstanceRec(cfg GameItemInstanceConfig, gameInst
 		return nil, fmt.Errorf("game_item_instance record must have a GameItemRef")
 	}
 
-	var rec *record.AdventureGameItemInstance
+	var rec *adventure_game_record.AdventureGameItemInstance
 	if cfg.Record != nil {
 		recCopy := *cfg.Record
 		rec = &recCopy
 	} else {
-		rec = &record.AdventureGameItemInstance{}
+		rec = &adventure_game_record.AdventureGameItemInstance{}
 	}
 
 	rec = t.applyGameItemInstanceRecDefaultValues(rec)
@@ -72,9 +72,9 @@ func (t *Testing) createGameItemInstanceRec(cfg GameItemInstanceConfig, gameInst
 	return createdRec, nil
 }
 
-func (t *Testing) applyGameItemInstanceRecDefaultValues(rec *record.AdventureGameItemInstance) *record.AdventureGameItemInstance {
+func (t *Testing) applyGameItemInstanceRecDefaultValues(rec *adventure_game_record.AdventureGameItemInstance) *adventure_game_record.AdventureGameItemInstance {
 	if rec == nil {
-		rec = &record.AdventureGameItemInstance{}
+		rec = &adventure_game_record.AdventureGameItemInstance{}
 	}
 	return rec
 }

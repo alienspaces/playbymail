@@ -8,7 +8,7 @@ import (
 
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/harness"
-	"gitlab.com/alienspaces/playbymail/internal/record"
+	adventure_game_record "gitlab.com/alienspaces/playbymail/internal/record/adventure_game"
 	"gitlab.com/alienspaces/playbymail/internal/utils/deps"
 )
 
@@ -17,19 +17,19 @@ func TestCreateOne(t *testing.T) {
 
 	tests := []struct {
 		name   string
-		rec    func(data *harness.Data, t *testing.T) *record.AdventureGameLocationInstance
+		rec    func(data *harness.Data, t *testing.T) *adventure_game_record.AdventureGameLocationInstance
 		hasErr bool
 	}{
 		{
 			name: "valid",
-			rec: func(data *harness.Data, t *testing.T) *record.AdventureGameLocationInstance {
+			rec: func(data *harness.Data, t *testing.T) *adventure_game_record.AdventureGameLocationInstance {
 				game, err := h.Data.GetGameRecByRef(harness.GameOneRef)
 				require.NoError(t, err)
 				gameInstance, err := h.Data.GetGameInstanceRecByRef(harness.GameInstanceOneRef)
 				require.NoError(t, err)
 				location, err := h.Data.GetGameLocationRecByRef(harness.GameLocationOneRef)
 				require.NoError(t, err)
-				return &record.AdventureGameLocationInstance{
+				return &adventure_game_record.AdventureGameLocationInstance{
 					GameID:                  game.ID,
 					AdventureGameInstanceID: gameInstance.ID,
 					AdventureGameLocationID: location.ID,
@@ -39,8 +39,8 @@ func TestCreateOne(t *testing.T) {
 		},
 		{
 			name: "missing foreign key",
-			rec: func(data *harness.Data, t *testing.T) *record.AdventureGameLocationInstance {
-				return &record.AdventureGameLocationInstance{
+			rec: func(data *harness.Data, t *testing.T) *adventure_game_record.AdventureGameLocationInstance {
+				return &adventure_game_record.AdventureGameLocationInstance{
 					GameID:                  uuid.NewString(),
 					AdventureGameInstanceID: uuid.NewString(),
 					AdventureGameLocationID: uuid.NewString(),
@@ -115,12 +115,12 @@ func TestUpdateOne(t *testing.T) {
 
 	tests := []struct {
 		name   string
-		rec    func(data *harness.Data, t *testing.T) *record.AdventureGameLocationInstance
+		rec    func(data *harness.Data, t *testing.T) *adventure_game_record.AdventureGameLocationInstance
 		hasErr bool
 	}{
 		{
 			name: "valid",
-			rec: func(data *harness.Data, t *testing.T) *record.AdventureGameLocationInstance {
+			rec: func(data *harness.Data, t *testing.T) *adventure_game_record.AdventureGameLocationInstance {
 				rec, err := h.Data.GetGameLocationInstanceRecByRef(harness.GameLocationInstanceOneRef)
 				require.NoError(t, err)
 				return rec
@@ -129,7 +129,7 @@ func TestUpdateOne(t *testing.T) {
 		},
 		{
 			name: "not found",
-			rec: func(data *harness.Data, t *testing.T) *record.AdventureGameLocationInstance {
+			rec: func(data *harness.Data, t *testing.T) *adventure_game_record.AdventureGameLocationInstance {
 				rec, err := h.Data.GetGameLocationInstanceRecByRef(harness.GameLocationInstanceOneRef)
 				require.NoError(t, err)
 				rec.ID = uuid.NewString()

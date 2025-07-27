@@ -3,11 +3,11 @@ package mapper
 import (
 	"gitlab.com/alienspaces/playbymail/core/nulltime"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
-	"gitlab.com/alienspaces/playbymail/internal/record"
+	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game"
 	"gitlab.com/alienspaces/playbymail/schema"
 )
 
-func AdventureGameItemRecordToResponseData(l logger.Logger, rec *record.AdventureGameItem) (schema.AdventureGameItemResponseData, error) {
+func AdventureGameItemRecordToResponseData(l logger.Logger, rec *adventure_game_record.AdventureGameItem) (schema.AdventureGameItemResponseData, error) {
 	l.Debug("mapping adventure_game_item record to response data")
 	data := schema.AdventureGameItemResponseData{
 		ID:          rec.ID,
@@ -21,7 +21,7 @@ func AdventureGameItemRecordToResponseData(l logger.Logger, rec *record.Adventur
 	return data, nil
 }
 
-func AdventureGameItemRecordToResponse(l logger.Logger, rec *record.AdventureGameItem) (schema.AdventureGameItemResponse, error) {
+func AdventureGameItemRecordToResponse(l logger.Logger, rec *adventure_game_record.AdventureGameItem) (schema.AdventureGameItemResponse, error) {
 	data, err := AdventureGameItemRecordToResponseData(l, rec)
 	if err != nil {
 		return schema.AdventureGameItemResponse{}, err
@@ -31,7 +31,7 @@ func AdventureGameItemRecordToResponse(l logger.Logger, rec *record.AdventureGam
 	}, nil
 }
 
-func AdventureGameItemRecordsToCollectionResponse(l logger.Logger, recs []*record.AdventureGameItem) (schema.AdventureGameItemCollectionResponse, error) {
+func AdventureGameItemRecordsToCollectionResponse(l logger.Logger, recs []*adventure_game_record.AdventureGameItem) (schema.AdventureGameItemCollectionResponse, error) {
 	data := []*schema.AdventureGameItemResponseData{}
 	for _, rec := range recs {
 		d, err := AdventureGameItemRecordToResponseData(l, rec)
@@ -45,9 +45,9 @@ func AdventureGameItemRecordsToCollectionResponse(l logger.Logger, recs []*recor
 	}, nil
 }
 
-func AdventureGameItemRequestToRecord(l logger.Logger, req *schema.AdventureGameItemRequest, rec *record.AdventureGameItem) (*record.AdventureGameItem, error) {
+func AdventureGameItemRequestToRecord(l logger.Logger, req *schema.AdventureGameItemRequest, rec *adventure_game_record.AdventureGameItem) (*adventure_game_record.AdventureGameItem, error) {
 	if rec == nil {
-		rec = &record.AdventureGameItem{}
+		rec = &adventure_game_record.AdventureGameItem{}
 	}
 	if req == nil {
 		return nil, nil

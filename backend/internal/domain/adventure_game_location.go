@@ -8,11 +8,11 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/domain"
 	coreerror "gitlab.com/alienspaces/playbymail/core/error"
 	coresql "gitlab.com/alienspaces/playbymail/core/sql"
-	"gitlab.com/alienspaces/playbymail/internal/record"
+	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game"
 )
 
 // GetManyAdventureGameLocationRecs -
-func (m *Domain) GetManyAdventureGameLocationRecs(opts *coresql.Options) ([]*record.AdventureGameLocation, error) {
+func (m *Domain) GetManyAdventureGameLocationRecs(opts *coresql.Options) ([]*adventure_game_record.AdventureGameLocation, error) {
 	l := m.Logger("GetManyAdventureGameLocationRecs")
 
 	l.Debug("getting many adventure_game_location records opts >%#v<", opts)
@@ -28,7 +28,7 @@ func (m *Domain) GetManyAdventureGameLocationRecs(opts *coresql.Options) ([]*rec
 }
 
 // GetAdventureGameLocationRec -
-func (m *Domain) GetAdventureGameLocationRec(recID string, lock *coresql.Lock) (*record.AdventureGameLocation, error) {
+func (m *Domain) GetAdventureGameLocationRec(recID string, lock *coresql.Lock) (*adventure_game_record.AdventureGameLocation, error) {
 	l := m.Logger("GetAdventureGameLocationRec")
 
 	l.Debug("getting adventure_game_location record ID >%s<", recID)
@@ -41,7 +41,7 @@ func (m *Domain) GetAdventureGameLocationRec(recID string, lock *coresql.Lock) (
 
 	rec, err := r.GetOne(recID, lock)
 	if errors.Is(err, pgx.ErrNoRows) {
-		return nil, coreerror.NewNotFoundError(record.TableAdventureGameLocation, recID)
+		return nil, coreerror.NewNotFoundError(adventure_game_record.TableAdventureGameLocation, recID)
 	} else if err != nil {
 		return nil, databaseError(err)
 	}
@@ -50,7 +50,7 @@ func (m *Domain) GetAdventureGameLocationRec(recID string, lock *coresql.Lock) (
 }
 
 // CreateAdventureGameLocationRec -
-func (m *Domain) CreateAdventureGameLocationRec(rec *record.AdventureGameLocation) (*record.AdventureGameLocation, error) {
+func (m *Domain) CreateAdventureGameLocationRec(rec *adventure_game_record.AdventureGameLocation) (*adventure_game_record.AdventureGameLocation, error) {
 	l := m.Logger("CreateAdventureGameLocationRec")
 
 	l.Debug("creating adventure_game_location record >%#v<", rec)
@@ -69,7 +69,7 @@ func (m *Domain) CreateAdventureGameLocationRec(rec *record.AdventureGameLocatio
 }
 
 // UpdateAdventureGameLocationRec -
-func (m *Domain) UpdateAdventureGameLocationRec(next *record.AdventureGameLocation) (*record.AdventureGameLocation, error) {
+func (m *Domain) UpdateAdventureGameLocationRec(next *adventure_game_record.AdventureGameLocation) (*adventure_game_record.AdventureGameLocation, error) {
 	l := m.Logger("UpdateAdventureGameLocationRec")
 
 	_, err := m.GetAdventureGameLocationRec(next.ID, coresql.ForUpdateNoWait)

@@ -6,21 +6,22 @@ import (
 	"github.com/brianvoe/gofakeit"
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/record"
+	adventure_game_record "gitlab.com/alienspaces/playbymail/internal/record/adventure_game"
 )
 
-func (t *Testing) createGameItemRec(itemConfig GameItemConfig, gameRec *record.Game) (*record.AdventureGameItem, error) {
+func (t *Testing) createGameItemRec(itemConfig GameItemConfig, gameRec *record.Game) (*adventure_game_record.AdventureGameItem, error) {
 	l := t.Logger("createGameItemRec")
 
 	if gameRec == nil {
 		return nil, fmt.Errorf("game record is nil for game_item record >%#v<", itemConfig)
 	}
 
-	var rec *record.AdventureGameItem
+	var rec *adventure_game_record.AdventureGameItem
 	if itemConfig.Record != nil {
 		recCopy := *itemConfig.Record
 		rec = &recCopy
 	} else {
-		rec = &record.AdventureGameItem{}
+		rec = &adventure_game_record.AdventureGameItem{}
 	}
 
 	rec = t.applyGameItemRecDefaultValues(rec)
@@ -50,9 +51,9 @@ func (t *Testing) createGameItemRec(itemConfig GameItemConfig, gameRec *record.G
 	return rec, nil
 }
 
-func (t *Testing) applyGameItemRecDefaultValues(rec *record.AdventureGameItem) *record.AdventureGameItem {
+func (t *Testing) applyGameItemRecDefaultValues(rec *adventure_game_record.AdventureGameItem) *adventure_game_record.AdventureGameItem {
 	if rec == nil {
-		rec = &record.AdventureGameItem{}
+		rec = &adventure_game_record.AdventureGameItem{}
 	}
 	if rec.Name == "" {
 		rec.Name = UniqueName(gofakeit.Name())

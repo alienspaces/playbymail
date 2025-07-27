@@ -5,21 +5,22 @@ import (
 
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/record"
+	adventure_game_record "gitlab.com/alienspaces/playbymail/internal/record/adventure_game"
 )
 
-func (t *Testing) createGameInstanceRec(cfg GameInstanceConfig, gameRec *record.Game) (*record.AdventureGameInstance, error) {
+func (t *Testing) createGameInstanceRec(cfg GameInstanceConfig, gameRec *record.Game) (*adventure_game_record.AdventureGameInstance, error) {
 	l := t.Logger("createGameInstanceRec")
 
 	if gameRec == nil {
 		return nil, fmt.Errorf("game record is nil for game_instance record >%#v<", cfg)
 	}
 
-	var rec *record.AdventureGameInstance
+	var rec *adventure_game_record.AdventureGameInstance
 	if cfg.Record != nil {
 		recCopy := *cfg.Record
 		rec = &recCopy
 	} else {
-		rec = &record.AdventureGameInstance{}
+		rec = &adventure_game_record.AdventureGameInstance{}
 	}
 
 	rec = t.applyGameInstanceRecDefaultValues(rec)
@@ -48,14 +49,14 @@ func (t *Testing) createGameInstanceRec(cfg GameInstanceConfig, gameRec *record.
 	return createdRec, nil
 }
 
-func (t *Testing) applyGameInstanceRecDefaultValues(rec *record.AdventureGameInstance) *record.AdventureGameInstance {
+func (t *Testing) applyGameInstanceRecDefaultValues(rec *adventure_game_record.AdventureGameInstance) *adventure_game_record.AdventureGameInstance {
 	if rec == nil {
-		rec = &record.AdventureGameInstance{}
+		rec = &adventure_game_record.AdventureGameInstance{}
 	}
 
 	// Set default status if not already set
 	if rec.Status == "" {
-		rec.Status = record.GameInstanceStatusCreated
+		rec.Status = adventure_game_record.GameInstanceStatusCreated
 	}
 
 	// Set default turn deadline if not already set

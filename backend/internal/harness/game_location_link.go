@@ -6,9 +6,10 @@ import (
 	"github.com/brianvoe/gofakeit"
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/record"
+	adventure_game_record "gitlab.com/alienspaces/playbymail/internal/record/adventure_game"
 )
 
-func (t *Testing) createGameLocationLinkRec(linkConfig GameLocationLinkConfig, gameRec *record.Game) (*record.AdventureGameLocationLink, error) {
+func (t *Testing) createGameLocationLinkRec(linkConfig GameLocationLinkConfig, gameRec *record.Game) (*adventure_game_record.AdventureGameLocationLink, error) {
 	l := t.Logger("createGameLocationLinkRec")
 
 	if gameRec == nil {
@@ -19,12 +20,12 @@ func (t *Testing) createGameLocationLinkRec(linkConfig GameLocationLinkConfig, g
 		return nil, fmt.Errorf("game_location_link record >%#v< must have either FromLocationRef or ToLocationRef set", linkConfig)
 	}
 
-	var rec *record.AdventureGameLocationLink
+	var rec *adventure_game_record.AdventureGameLocationLink
 	if linkConfig.Record != nil {
 		recCopy := *linkConfig.Record
 		rec = &recCopy
 	} else {
-		rec = &record.AdventureGameLocationLink{}
+		rec = &adventure_game_record.AdventureGameLocationLink{}
 	}
 
 	rec = t.applyGameLocationLinkRecDefaultValues(rec)
@@ -78,9 +79,9 @@ func (t *Testing) createGameLocationLinkRec(linkConfig GameLocationLinkConfig, g
 	return rec, nil
 }
 
-func (t *Testing) applyGameLocationLinkRecDefaultValues(rec *record.AdventureGameLocationLink) *record.AdventureGameLocationLink {
+func (t *Testing) applyGameLocationLinkRecDefaultValues(rec *adventure_game_record.AdventureGameLocationLink) *adventure_game_record.AdventureGameLocationLink {
 	if rec == nil {
-		rec = &record.AdventureGameLocationLink{}
+		rec = &adventure_game_record.AdventureGameLocationLink{}
 	}
 	if rec.Description == "" {
 		rec.Description = gofakeit.Sentence(5)

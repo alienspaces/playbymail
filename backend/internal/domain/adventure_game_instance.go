@@ -5,10 +5,10 @@ import (
 	"time"
 
 	"gitlab.com/alienspaces/playbymail/core/sql"
-	"gitlab.com/alienspaces/playbymail/internal/record"
+	adventure_game_record "gitlab.com/alienspaces/playbymail/internal/record/adventure_game"
 )
 
-func (m *Domain) GetAdventureGameInstanceRec(recID string, lock *sql.Lock) (*record.AdventureGameInstance, error) {
+func (m *Domain) GetAdventureGameInstanceRec(recID string, lock *sql.Lock) (*adventure_game_record.AdventureGameInstance, error) {
 	r := m.AdventureGameInstanceRepository()
 	rec, err := r.GetOne(recID, lock)
 	if err != nil {
@@ -17,7 +17,7 @@ func (m *Domain) GetAdventureGameInstanceRec(recID string, lock *sql.Lock) (*rec
 	return rec, nil
 }
 
-func (m *Domain) CreateAdventureGameInstanceRec(rec *record.AdventureGameInstance) (*record.AdventureGameInstance, error) {
+func (m *Domain) CreateAdventureGameInstanceRec(rec *adventure_game_record.AdventureGameInstance) (*adventure_game_record.AdventureGameInstance, error) {
 	r := m.AdventureGameInstanceRepository()
 	var err error
 	rec, err = r.CreateOne(rec)
@@ -27,7 +27,7 @@ func (m *Domain) CreateAdventureGameInstanceRec(rec *record.AdventureGameInstanc
 	return rec, nil
 }
 
-func (m *Domain) UpdateAdventureGameInstanceRec(next *record.AdventureGameInstance) (*record.AdventureGameInstance, error) {
+func (m *Domain) UpdateAdventureGameInstanceRec(next *adventure_game_record.AdventureGameInstance) (*adventure_game_record.AdventureGameInstance, error) {
 	r := m.AdventureGameInstanceRepository()
 	next, err := r.UpdateOne(next)
 	if err != nil {
@@ -44,7 +44,7 @@ func (m *Domain) DeleteAdventureGameInstanceRec(recID string) error {
 	return nil
 }
 
-func (m *Domain) ValidateAdventureGameInstance(rec *record.AdventureGameInstance) error {
+func (m *Domain) ValidateAdventureGameInstance(rec *adventure_game_record.AdventureGameInstance) error {
 	// Add validation logic as needed
 	return nil
 }
@@ -60,7 +60,7 @@ func (m *Domain) RemoveAdventureGameInstanceRec(recID string) error {
 // Game Runtime Management Functions
 
 // StartGameInstance starts a game instance and sets up the first turn
-func (m *Domain) StartGameInstance(instanceID string) (*record.AdventureGameInstance, error) {
+func (m *Domain) StartGameInstance(instanceID string) (*adventure_game_record.AdventureGameInstance, error) {
 	l := m.Logger("StartGameInstance")
 
 	instance, err := m.GetAdventureGameInstanceRec(instanceID, sql.ForUpdateNoWait)
@@ -68,12 +68,12 @@ func (m *Domain) StartGameInstance(instanceID string) (*record.AdventureGameInst
 		return nil, err
 	}
 
-	if instance.Status != record.GameInstanceStatusCreated {
+	if instance.Status != adventure_game_record.GameInstanceStatusCreated {
 		return nil, fmt.Errorf("game instance must be in 'created' status to start")
 	}
 
 	now := time.Now()
-	instance.Status = record.GameInstanceStatusStarting
+	instance.Status = adventure_game_record.GameInstanceStatusStarting
 	instance.StartedAt = &now
 	instance.CurrentTurn = 0
 
@@ -92,7 +92,7 @@ func (m *Domain) StartGameInstance(instanceID string) (*record.AdventureGameInst
 }
 
 // BeginTurnProcessing starts processing the current turn
-func (m *Domain) BeginTurnProcessing(instanceID string) (*record.AdventureGameInstance, error) {
+func (m *Domain) BeginTurnProcessing(instanceID string) (*adventure_game_record.AdventureGameInstance, error) {
 	l := m.Logger("BeginTurnProcessing")
 
 	instance, err := m.GetAdventureGameInstanceRec(instanceID, sql.ForUpdateNoWait)
@@ -100,11 +100,11 @@ func (m *Domain) BeginTurnProcessing(instanceID string) (*record.AdventureGameIn
 		return nil, err
 	}
 
-	if instance.Status != record.GameInstanceStatusRunning && instance.Status != record.GameInstanceStatusStarting {
+	if instance.Status != adventure_game_record.GameInstanceStatusRunning && instance.Status != adventure_game_record.GameInstanceStatusStarting {
 		return nil, fmt.Errorf("game instance must be running or starting to process turns")
 	}
 
-	instance.Status = record.GameInstanceStatusRunning
+	instance.Status = adventure_game_record.GameInstanceStatusRunning
 	now := time.Now()
 	instance.LastTurnProcessedAt = &now
 
@@ -119,7 +119,7 @@ func (m *Domain) BeginTurnProcessing(instanceID string) (*record.AdventureGameIn
 }
 
 // CompleteTurn advances the game to the next turn
-func (m *Domain) CompleteTurn(instanceID string) (*record.AdventureGameInstance, error) {
+func (m *Domain) CompleteTurn(instanceID string) (*adventure_game_record.AdventureGameInstance, error) {
 	l := m.Logger("CompleteTurn")
 
 	instance, err := m.GetAdventureGameInstanceRec(instanceID, sql.ForUpdateNoWait)
@@ -127,13 +127,13 @@ func (m *Domain) CompleteTurn(instanceID string) (*record.AdventureGameInstance,
 		return nil, err
 	}
 
-	if instance.Status != record.GameInstanceStatusRunning {
+	if instance.Status != adventure_game_record.GameInstanceStatusRunning {
 		return nil, fmt.Errorf("game instance must be running to complete turns")
 	}
 
 	// Check if we've reached max turns
 	if instance.MaxTurns != nil && instance.CurrentTurn >= *instance.MaxTurns {
-		instance.Status = record.GameInstanceStatusCompleted
+		instance.Status = adventure_game_record.GameInstanceStatusCompleted
 		now := time.Now()
 		instance.CompletedAt = &now
 		l.Info("game instance >%s< completed after reaching max turns >%d<", instanceID, *instance.MaxTurns)
@@ -156,7 +156,7 @@ func (m *Domain) CompleteTurn(instanceID string) (*record.AdventureGameInstance,
 }
 
 // PauseGameInstance pauses a running game instance
-func (m *Domain) PauseGameInstance(instanceID string) (*record.AdventureGameInstance, error) {
+func (m *Domain) PauseGameInstance(instanceID string) (*adventure_game_record.AdventureGameInstance, error) {
 	l := m.Logger("PauseGameInstance")
 
 	instance, err := m.GetAdventureGameInstanceRec(instanceID, sql.ForUpdateNoWait)
@@ -164,11 +164,11 @@ func (m *Domain) PauseGameInstance(instanceID string) (*record.AdventureGameInst
 		return nil, err
 	}
 
-	if instance.Status != record.GameInstanceStatusRunning {
+	if instance.Status != adventure_game_record.GameInstanceStatusRunning {
 		return nil, fmt.Errorf("game instance must be running to pause")
 	}
 
-	instance.Status = record.GameInstanceStatusPaused
+	instance.Status = adventure_game_record.GameInstanceStatusPaused
 
 	instance, err = m.UpdateAdventureGameInstanceRec(instance)
 	if err != nil {
@@ -181,7 +181,7 @@ func (m *Domain) PauseGameInstance(instanceID string) (*record.AdventureGameInst
 }
 
 // ResumeGameInstance resumes a paused game instance
-func (m *Domain) ResumeGameInstance(instanceID string) (*record.AdventureGameInstance, error) {
+func (m *Domain) ResumeGameInstance(instanceID string) (*adventure_game_record.AdventureGameInstance, error) {
 	l := m.Logger("ResumeGameInstance")
 
 	instance, err := m.GetAdventureGameInstanceRec(instanceID, sql.ForUpdateNoWait)
@@ -189,11 +189,11 @@ func (m *Domain) ResumeGameInstance(instanceID string) (*record.AdventureGameIns
 		return nil, err
 	}
 
-	if instance.Status != record.GameInstanceStatusPaused {
+	if instance.Status != adventure_game_record.GameInstanceStatusPaused {
 		return nil, fmt.Errorf("game instance must be paused to resume")
 	}
 
-	instance.Status = record.GameInstanceStatusRunning
+	instance.Status = adventure_game_record.GameInstanceStatusRunning
 
 	instance, err = m.UpdateAdventureGameInstanceRec(instance)
 	if err != nil {
@@ -206,7 +206,7 @@ func (m *Domain) ResumeGameInstance(instanceID string) (*record.AdventureGameIns
 }
 
 // CancelGameInstance cancels a game instance
-func (m *Domain) CancelGameInstance(instanceID string) (*record.AdventureGameInstance, error) {
+func (m *Domain) CancelGameInstance(instanceID string) (*adventure_game_record.AdventureGameInstance, error) {
 	l := m.Logger("CancelGameInstance")
 
 	instance, err := m.GetAdventureGameInstanceRec(instanceID, sql.ForUpdateNoWait)
@@ -214,11 +214,11 @@ func (m *Domain) CancelGameInstance(instanceID string) (*record.AdventureGameIns
 		return nil, err
 	}
 
-	if instance.Status == record.GameInstanceStatusCompleted || instance.Status == record.GameInstanceStatusCancelled {
+	if instance.Status == adventure_game_record.GameInstanceStatusCompleted || instance.Status == adventure_game_record.GameInstanceStatusCancelled {
 		return nil, fmt.Errorf("game instance is already completed or cancelled")
 	}
 
-	instance.Status = record.GameInstanceStatusCancelled
+	instance.Status = adventure_game_record.GameInstanceStatusCancelled
 	now := time.Now()
 	instance.CompletedAt = &now
 
@@ -233,7 +233,7 @@ func (m *Domain) CancelGameInstance(instanceID string) (*record.AdventureGameIns
 }
 
 // GetGameInstancesByStatus gets all game instances with a specific status
-func (m *Domain) GetGameInstancesByStatus(status string) ([]*record.AdventureGameInstance, error) {
+func (m *Domain) GetGameInstancesByStatus(status string) ([]*adventure_game_record.AdventureGameInstance, error) {
 	r := m.AdventureGameInstanceRepository()
 	opts := &sql.Options{
 		Params: []sql.Param{
@@ -251,7 +251,7 @@ func (m *Domain) GetGameInstancesByStatus(status string) ([]*record.AdventureGam
 }
 
 // GetGameInstancesNeedingTurnProcessing gets game instances that need turn processing
-func (m *Domain) GetGameInstancesNeedingTurnProcessing() ([]*record.AdventureGameInstance, error) {
+func (m *Domain) GetGameInstancesNeedingTurnProcessing() ([]*adventure_game_record.AdventureGameInstance, error) {
 	r := m.AdventureGameInstanceRepository()
 	now := time.Now()
 
@@ -259,7 +259,7 @@ func (m *Domain) GetGameInstancesNeedingTurnProcessing() ([]*record.AdventureGam
 		Params: []sql.Param{
 			{
 				Col: "status",
-				Val: record.GameInstanceStatusRunning,
+				Val: adventure_game_record.GameInstanceStatusRunning,
 			},
 			{
 				Col: "next_turn_deadline",

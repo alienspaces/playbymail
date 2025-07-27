@@ -9,7 +9,7 @@ import (
 
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/harness"
-	"gitlab.com/alienspaces/playbymail/internal/record"
+	adventure_game_record "gitlab.com/alienspaces/playbymail/internal/record/adventure_game"
 	"gitlab.com/alienspaces/playbymail/internal/utils/deps"
 )
 
@@ -18,17 +18,17 @@ func TestCreateOne(t *testing.T) {
 
 	tests := []struct {
 		name   string
-		rec    func(d harness.Data, t *testing.T) *record.AdventureGameCharacter
+		rec    func(d harness.Data, t *testing.T) *adventure_game_record.AdventureGameCharacter
 		hasErr bool
 	}{
 		{
 			name: "valid",
-			rec: func(d harness.Data, t *testing.T) *record.AdventureGameCharacter {
+			rec: func(d harness.Data, t *testing.T) *adventure_game_record.AdventureGameCharacter {
 				gameRec, err := d.GetGameRecByRef(harness.GameOneRef)
 				require.NoError(t, err)
 				accountRec, err := d.GetAccountRecByRef(harness.AccountThreeRef)
 				require.NoError(t, err)
-				return &record.AdventureGameCharacter{
+				return &adventure_game_record.AdventureGameCharacter{
 					GameID:    gameRec.ID,
 					AccountID: accountRec.ID,
 					Name:      harness.UniqueName(gofakeit.Name()),
@@ -38,12 +38,12 @@ func TestCreateOne(t *testing.T) {
 		},
 		{
 			name: "missing name",
-			rec: func(d harness.Data, t *testing.T) *record.AdventureGameCharacter {
+			rec: func(d harness.Data, t *testing.T) *adventure_game_record.AdventureGameCharacter {
 				gameRec, err := d.GetGameRecByRef(harness.GameOneRef)
 				require.NoError(t, err)
 				accountRec, err := d.GetAccountRecByRef(harness.AccountThreeRef)
 				require.NoError(t, err)
-				return &record.AdventureGameCharacter{
+				return &adventure_game_record.AdventureGameCharacter{
 					GameID:    gameRec.ID,
 					AccountID: accountRec.ID,
 				}
@@ -117,12 +117,12 @@ func TestUpdateOne(t *testing.T) {
 
 	tests := []struct {
 		name   string
-		rec    func(d harness.Data, t *testing.T) *record.AdventureGameCharacter
+		rec    func(d harness.Data, t *testing.T) *adventure_game_record.AdventureGameCharacter
 		hasErr bool
 	}{
 		{
 			name: "valid update",
-			rec: func(d harness.Data, t *testing.T) *record.AdventureGameCharacter {
+			rec: func(d harness.Data, t *testing.T) *adventure_game_record.AdventureGameCharacter {
 				rec, err := d.GetGameCharacterRecByRef(harness.GameCharacterOneRef)
 				require.NoError(t, err)
 				rec.Name = harness.UniqueName(gofakeit.Name())
@@ -132,7 +132,7 @@ func TestUpdateOne(t *testing.T) {
 		},
 		{
 			name: "missing name",
-			rec: func(d harness.Data, t *testing.T) *record.AdventureGameCharacter {
+			rec: func(d harness.Data, t *testing.T) *adventure_game_record.AdventureGameCharacter {
 				rec, err := d.GetGameCharacterRecByRef(harness.GameCharacterOneRef)
 				require.NoError(t, err)
 				rec.Name = ""

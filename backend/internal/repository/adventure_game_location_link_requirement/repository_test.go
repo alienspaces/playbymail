@@ -8,7 +8,7 @@ import (
 
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/harness"
-	"gitlab.com/alienspaces/playbymail/internal/record"
+	adventure_game_record "gitlab.com/alienspaces/playbymail/internal/record/adventure_game"
 	"gitlab.com/alienspaces/playbymail/internal/utils/deps"
 )
 
@@ -17,19 +17,19 @@ func TestCreateOne(t *testing.T) {
 
 	tests := []struct {
 		name   string
-		rec    func(data *harness.Data, t *testing.T) *record.AdventureGameLocationLinkRequirement
+		rec    func(data *harness.Data, t *testing.T) *adventure_game_record.AdventureGameLocationLinkRequirement
 		hasErr bool
 	}{
 		{
 			name: "valid",
-			rec: func(data *harness.Data, t *testing.T) *record.AdventureGameLocationLinkRequirement {
+			rec: func(data *harness.Data, t *testing.T) *adventure_game_record.AdventureGameLocationLinkRequirement {
 				game, err := data.GetGameRecByRef(harness.GameOneRef)
 				require.NoError(t, err)
 				link, err := data.GetGameLocationLinkRecByRef(harness.GameLocationLinkOneRef)
 				require.NoError(t, err)
 				item, err := data.GetGameItemRecByRef(harness.GameItemOneRef)
 				require.NoError(t, err)
-				return &record.AdventureGameLocationLinkRequirement{
+				return &adventure_game_record.AdventureGameLocationLinkRequirement{
 					GameID:                      game.ID,
 					AdventureGameLocationLinkID: link.ID,
 					AdventureGameItemID:         item.ID,
@@ -40,8 +40,8 @@ func TestCreateOne(t *testing.T) {
 		},
 		{
 			name: "missing foreign key",
-			rec: func(data *harness.Data, t *testing.T) *record.AdventureGameLocationLinkRequirement {
-				return &record.AdventureGameLocationLinkRequirement{
+			rec: func(data *harness.Data, t *testing.T) *adventure_game_record.AdventureGameLocationLinkRequirement {
+				return &adventure_game_record.AdventureGameLocationLinkRequirement{
 					GameID:                      uuid.NewString(),
 					AdventureGameLocationLinkID: uuid.NewString(),
 					AdventureGameItemID:         uuid.NewString(),
@@ -117,12 +117,12 @@ func TestUpdateOne(t *testing.T) {
 
 	tests := []struct {
 		name   string
-		rec    func(data *harness.Data, t *testing.T) *record.AdventureGameLocationLinkRequirement
+		rec    func(data *harness.Data, t *testing.T) *adventure_game_record.AdventureGameLocationLinkRequirement
 		hasErr bool
 	}{
 		{
 			name: "valid",
-			rec: func(data *harness.Data, t *testing.T) *record.AdventureGameLocationLinkRequirement {
+			rec: func(data *harness.Data, t *testing.T) *adventure_game_record.AdventureGameLocationLinkRequirement {
 				rec, err := data.GetGameLocationLinkRequirementRecByRef(harness.GameLocationLinkRequirementOneRef)
 				require.NoError(t, err)
 				rec.Quantity = 2 // simulate update
@@ -132,7 +132,7 @@ func TestUpdateOne(t *testing.T) {
 		},
 		{
 			name: "not found",
-			rec: func(data *harness.Data, t *testing.T) *record.AdventureGameLocationLinkRequirement {
+			rec: func(data *harness.Data, t *testing.T) *adventure_game_record.AdventureGameLocationLinkRequirement {
 				rec, err := data.GetGameLocationLinkRequirementRecByRef(harness.GameLocationLinkRequirementOneRef)
 				require.NoError(t, err)
 				rec.ID = uuid.NewString()

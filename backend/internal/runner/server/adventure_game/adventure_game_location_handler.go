@@ -15,7 +15,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/mapper"
-	"gitlab.com/alienspaces/playbymail/internal/record"
+	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game"
 	"gitlab.com/alienspaces/playbymail/internal/utils/logging"
 	"gitlab.com/alienspaces/playbymail/schema"
 )
@@ -286,7 +286,7 @@ func createOneAdventureGameLocationHandler(w http.ResponseWriter, r *http.Reques
 		return err
 	}
 
-	rec, err := mapper.AdventureGameLocationRequestToRecord(l, &req, &record.AdventureGameLocation{})
+	rec, err := mapper.AdventureGameLocationRequestToRecord(l, &req, &adventure_game_record.AdventureGameLocation{})
 	if err != nil {
 		return err
 	}

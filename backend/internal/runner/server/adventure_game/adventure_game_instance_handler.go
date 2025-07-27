@@ -15,7 +15,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/mapper"
-	"gitlab.com/alienspaces/playbymail/internal/record"
+	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game"
 	"gitlab.com/alienspaces/playbymail/internal/utils/logging"
 )
 
@@ -276,7 +276,7 @@ func getManyAdventureGameInstancesHandler(w http.ResponseWriter, r *http.Request
 	mm := m.(*domain.Domain)
 	opts := queryparam.ToSQLOptionsWithDefaults(qp)
 	opts.Params = append(opts.Params, sql.Param{
-		Col: record.FieldAdventureGameInstanceGameID,
+		Col: adventure_game_record.FieldAdventureGameInstanceGameID,
 		Val: gameID,
 	})
 
@@ -343,7 +343,7 @@ func createOneAdventureGameInstanceHandler(w http.ResponseWriter, r *http.Reques
 		return coreerror.NewNotFoundError("game", gameID)
 	}
 
-	rec := &record.AdventureGameInstance{GameID: gameID}
+	rec := &adventure_game_record.AdventureGameInstance{GameID: gameID}
 	mm := m.(*domain.Domain)
 	rec, err := mm.CreateAdventureGameInstanceRec(rec)
 	if err != nil {

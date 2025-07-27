@@ -6,12 +6,12 @@ import (
 
 	"gitlab.com/alienspaces/playbymail/core/server"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
-	"gitlab.com/alienspaces/playbymail/internal/record"
+	adventure_game_record "gitlab.com/alienspaces/playbymail/internal/record/adventure_game"
 	"gitlab.com/alienspaces/playbymail/schema"
 )
 
-// AdventureGameCharacterRequestToRecord maps a AdventureGameCharacterRequest to a record.AdventureGameCharacter
-func AdventureGameCharacterRequestToRecord(l logger.Logger, r *http.Request, rec *record.AdventureGameCharacter) (*record.AdventureGameCharacter, error) {
+// AdventureGameCharacterRequestToRecord maps a AdventureGameCharacterRequest to a adventure_game_record.AdventureGameCharacter
+func AdventureGameCharacterRequestToRecord(l logger.Logger, r *http.Request, rec *adventure_game_record.AdventureGameCharacter) (*adventure_game_record.AdventureGameCharacter, error) {
 	l.Debug("mapping adventure_game_character request to record")
 
 	var req schema.AdventureGameCharacterRequest
@@ -34,8 +34,8 @@ func AdventureGameCharacterRequestToRecord(l logger.Logger, r *http.Request, rec
 	return rec, nil
 }
 
-// AdventureGameCharacterRecordToResponseData maps a record.AdventureGameCharacter to schema.AdventureGameCharacterResponseData
-func AdventureGameCharacterRecordToResponseData(l logger.Logger, rec *record.AdventureGameCharacter) (schema.AdventureGameCharacterResponseData, error) {
+// AdventureGameCharacterRecordToResponseData maps a adventure_game_record.AdventureGameCharacter to schema.AdventureGameCharacterResponseData
+func AdventureGameCharacterRecordToResponseData(l logger.Logger, rec *adventure_game_record.AdventureGameCharacter) (schema.AdventureGameCharacterResponseData, error) {
 	l.Debug("mapping adventure_game_character record to response data")
 	data := schema.AdventureGameCharacterResponseData{
 		ID:        rec.ID,
@@ -56,7 +56,7 @@ func AdventureGameCharacterRecordToResponseData(l logger.Logger, rec *record.Adv
 }
 
 // AdventureGameCharacterRecordToResponse wraps response data in schema.AdventureGameCharacterResponse
-func AdventureGameCharacterRecordToResponse(l logger.Logger, rec *record.AdventureGameCharacter) (schema.AdventureGameCharacterResponse, error) {
+func AdventureGameCharacterRecordToResponse(l logger.Logger, rec *adventure_game_record.AdventureGameCharacter) (schema.AdventureGameCharacterResponse, error) {
 	data, err := AdventureGameCharacterRecordToResponseData(l, rec)
 	if err != nil {
 		return schema.AdventureGameCharacterResponse{}, err
@@ -66,7 +66,7 @@ func AdventureGameCharacterRecordToResponse(l logger.Logger, rec *record.Adventu
 	}, nil
 }
 
-func AdventureGameCharacterRecordsToCollectionResponse(l logger.Logger, recs []*record.AdventureGameCharacter) (schema.AdventureGameCharacterCollectionResponse, error) {
+func AdventureGameCharacterRecordsToCollectionResponse(l logger.Logger, recs []*adventure_game_record.AdventureGameCharacter) (schema.AdventureGameCharacterCollectionResponse, error) {
 	data := []*schema.AdventureGameCharacterResponseData{}
 	for _, rec := range recs {
 		d, err := AdventureGameCharacterRecordToResponseData(l, rec)

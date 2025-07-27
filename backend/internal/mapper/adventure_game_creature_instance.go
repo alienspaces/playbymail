@@ -4,10 +4,10 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/nulltime"
 	"gitlab.com/alienspaces/playbymail/schema"
 
-	"gitlab.com/alienspaces/playbymail/internal/record"
+	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game"
 )
 
-func AdventureGameCreatureInstanceRequestToRecord(req *schema.AdventureGameCreatureInstanceRequest, rec *record.AdventureGameCreatureInstance) (*record.AdventureGameCreatureInstance, error) {
+func AdventureGameCreatureInstanceRequestToRecord(req *schema.AdventureGameCreatureInstanceRequest, rec *adventure_game_record.AdventureGameCreatureInstance) (*adventure_game_record.AdventureGameCreatureInstance, error) {
 	if req == nil {
 		return nil, nil
 	}
@@ -24,7 +24,7 @@ func AdventureGameCreatureInstanceRequestToRecord(req *schema.AdventureGameCreat
 	return rec, nil
 }
 
-func AdventureGameCreatureInstanceRecordToResponseData(rec *record.AdventureGameCreatureInstance) *schema.AdventureGameCreatureInstanceResponseData {
+func AdventureGameCreatureInstanceRecordToResponseData(rec *adventure_game_record.AdventureGameCreatureInstance) *schema.AdventureGameCreatureInstanceResponseData {
 	if rec == nil {
 		return nil
 	}
@@ -41,13 +41,13 @@ func AdventureGameCreatureInstanceRecordToResponseData(rec *record.AdventureGame
 	}
 }
 
-func AdventureGameCreatureInstanceRecordToResponse(rec *record.AdventureGameCreatureInstance) *schema.AdventureGameCreatureInstanceResponse {
+func AdventureGameCreatureInstanceRecordToResponse(rec *adventure_game_record.AdventureGameCreatureInstance) *schema.AdventureGameCreatureInstanceResponse {
 	return &schema.AdventureGameCreatureInstanceResponse{
 		Data: AdventureGameCreatureInstanceRecordToResponseData(rec),
 	}
 }
 
-func AdventureGameCreatureInstanceRecordsToCollectionResponse(recs []*record.AdventureGameCreatureInstance) *schema.AdventureGameCreatureInstanceCollectionResponse {
+func AdventureGameCreatureInstanceRecordsToCollectionResponse(recs []*adventure_game_record.AdventureGameCreatureInstance) *schema.AdventureGameCreatureInstanceCollectionResponse {
 	data := []*schema.AdventureGameCreatureInstanceResponseData{}
 	for _, rec := range recs {
 		data = append(data, AdventureGameCreatureInstanceRecordToResponseData(rec))

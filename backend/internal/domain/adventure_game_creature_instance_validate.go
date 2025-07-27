@@ -4,10 +4,10 @@ import (
 	"context"
 	"errors"
 
-	"gitlab.com/alienspaces/playbymail/internal/record"
+	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game"
 )
 
-func ValidateAdventureGameCreatureInstanceFields(ctx context.Context, rec *record.AdventureGameCreatureInstance) error {
+func ValidateAdventureGameCreatureInstanceFields(ctx context.Context, rec *adventure_game_record.AdventureGameCreatureInstance) error {
 	if rec.ID == "" {
 		return errors.New("id is required")
 	}

@@ -3,11 +3,11 @@ package domain
 import (
 	"gitlab.com/alienspaces/playbymail/core/domain"
 	"gitlab.com/alienspaces/playbymail/core/sql"
-	"gitlab.com/alienspaces/playbymail/internal/record"
+	adventure_game_record "gitlab.com/alienspaces/playbymail/internal/record/adventure_game"
 )
 
 // GetManyAdventureGameLocationLinkRecs -
-func (m *Domain) GetManyAdventureGameLocationLinkRecs(opts *sql.Options) ([]*record.AdventureGameLocationLink, error) {
+func (m *Domain) GetManyAdventureGameLocationLinkRecs(opts *sql.Options) ([]*adventure_game_record.AdventureGameLocationLink, error) {
 	l := m.Logger("GetManyAdventureGameLocationLinkRecs")
 	l.Debug("getting many adventure_game_location_link records opts >%#v<", opts)
 	r := m.AdventureGameLocationLinkRepository()
@@ -19,7 +19,7 @@ func (m *Domain) GetManyAdventureGameLocationLinkRecs(opts *sql.Options) ([]*rec
 }
 
 // GetAdventureGameLocationLinkRec -
-func (m *Domain) GetAdventureGameLocationLinkRec(recID string, lock *sql.Lock) (*record.AdventureGameLocationLink, error) {
+func (m *Domain) GetAdventureGameLocationLinkRec(recID string, lock *sql.Lock) (*adventure_game_record.AdventureGameLocationLink, error) {
 	l := m.Logger("GetAdventureGameLocationLinkRec")
 	l.Debug("getting adventure_game_location_link record ID >%s<", recID)
 	if err := domain.ValidateUUIDField("id", recID); err != nil {
@@ -34,7 +34,7 @@ func (m *Domain) GetAdventureGameLocationLinkRec(recID string, lock *sql.Lock) (
 }
 
 // CreateAdventureGameLocationLinkRec -
-func (m *Domain) CreateAdventureGameLocationLinkRec(rec *record.AdventureGameLocationLink) (*record.AdventureGameLocationLink, error) {
+func (m *Domain) CreateAdventureGameLocationLinkRec(rec *adventure_game_record.AdventureGameLocationLink) (*adventure_game_record.AdventureGameLocationLink, error) {
 	l := m.Logger("CreateAdventureGameLocationLinkRec")
 	l.Debug("creating adventure_game_location_link record >%#v<", rec)
 
@@ -53,8 +53,8 @@ func (m *Domain) CreateAdventureGameLocationLinkRec(rec *record.AdventureGameLoc
 }
 
 // validateAdventureGameLocationLinkRecForCreate validates the Name field for creation
-func (m *Domain) validateAdventureGameLocationLinkRecForCreate(rec *record.AdventureGameLocationLink) error {
-	if err := domain.ValidateStringField(record.FieldAdventureGameLocationLinkName, rec.Name); err != nil {
+func (m *Domain) validateAdventureGameLocationLinkRecForCreate(rec *adventure_game_record.AdventureGameLocationLink) error {
+	if err := domain.ValidateStringField(adventure_game_record.FieldAdventureGameLocationLinkName, rec.Name); err != nil {
 		return err
 	}
 	if len(rec.Name) > 64 {
@@ -63,7 +63,7 @@ func (m *Domain) validateAdventureGameLocationLinkRecForCreate(rec *record.Adven
 	return nil
 }
 
-func (m *Domain) UpdateAdventureGameLocationLinkRec(rec *record.AdventureGameLocationLink) (*record.AdventureGameLocationLink, error) {
+func (m *Domain) UpdateAdventureGameLocationLinkRec(rec *adventure_game_record.AdventureGameLocationLink) (*adventure_game_record.AdventureGameLocationLink, error) {
 	l := m.Logger("UpdateAdventureGameLocationLinkRec")
 	l.Debug("updating adventure_game_location_link record >%#v<", rec)
 
@@ -83,8 +83,8 @@ func (m *Domain) UpdateAdventureGameLocationLinkRec(rec *record.AdventureGameLoc
 	return rec, nil
 }
 
-func (m *Domain) validateAdventureGameLocationLinkRecForUpdate(rec *record.AdventureGameLocationLink) error {
-	if err := domain.ValidateStringField(record.FieldAdventureGameLocationLinkName, rec.Name); err != nil {
+func (m *Domain) validateAdventureGameLocationLinkRecForUpdate(rec *adventure_game_record.AdventureGameLocationLink) error {
+	if err := domain.ValidateStringField(adventure_game_record.FieldAdventureGameLocationLinkName, rec.Name); err != nil {
 		return err
 	}
 	return nil

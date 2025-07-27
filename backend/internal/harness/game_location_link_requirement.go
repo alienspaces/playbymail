@@ -4,22 +4,22 @@ import (
 	"fmt"
 
 	"gitlab.com/alienspaces/playbymail/internal/domain"
-	"gitlab.com/alienspaces/playbymail/internal/record"
+	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game"
 )
 
-func (t *Testing) createGameLocationLinkRequirementRec(cfg GameLocationLinkRequirementConfig, gameLocationLinkRec *record.AdventureGameLocationLink) (*record.AdventureGameLocationLinkRequirement, error) {
+func (t *Testing) createGameLocationLinkRequirementRec(cfg GameLocationLinkRequirementConfig, gameLocationLinkRec *adventure_game_record.AdventureGameLocationLink) (*adventure_game_record.AdventureGameLocationLinkRequirement, error) {
 	l := t.Logger("createGameLocationLinkRequirementRec")
 
 	if gameLocationLinkRec == nil {
 		return nil, fmt.Errorf("game location link record is nil for game_location_link_requirement record >%#v<", cfg)
 	}
 
-	var rec *record.AdventureGameLocationLinkRequirement
+	var rec *adventure_game_record.AdventureGameLocationLinkRequirement
 	if cfg.Record != nil {
 		recCopy := *cfg.Record
 		rec = &recCopy
 	} else {
-		rec = &record.AdventureGameLocationLinkRequirement{}
+		rec = &adventure_game_record.AdventureGameLocationLinkRequirement{}
 	}
 
 	rec = t.applyGameLocationLinkRequirementRecDefaultValues(rec)
@@ -59,9 +59,9 @@ func (t *Testing) createGameLocationLinkRequirementRec(cfg GameLocationLinkRequi
 	return rec, nil
 }
 
-func (t *Testing) applyGameLocationLinkRequirementRecDefaultValues(rec *record.AdventureGameLocationLinkRequirement) *record.AdventureGameLocationLinkRequirement {
+func (t *Testing) applyGameLocationLinkRequirementRecDefaultValues(rec *adventure_game_record.AdventureGameLocationLinkRequirement) *adventure_game_record.AdventureGameLocationLinkRequirement {
 	if rec == nil {
-		rec = &record.AdventureGameLocationLinkRequirement{}
+		rec = &adventure_game_record.AdventureGameLocationLinkRequirement{}
 	}
 	if rec.Quantity == 0 {
 		rec.Quantity = 1

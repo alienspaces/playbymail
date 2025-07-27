@@ -5,17 +5,17 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/repository"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
 	"gitlab.com/alienspaces/playbymail/core/type/repositor"
-	"gitlab.com/alienspaces/playbymail/internal/record"
+	adventure_game_record "gitlab.com/alienspaces/playbymail/internal/record/adventure_game"
 )
 
-const TableName = record.TableAdventureGameItemInstance
+const TableName = adventure_game_record.TableAdventureGameItemInstance
 
 func NewRepository(l logger.Logger, tx pgx.Tx) (repositor.Repositor, error) {
-	return repository.NewGeneric[record.AdventureGameItemInstance](
+	return repository.NewGeneric[adventure_game_record.AdventureGameItemInstance](
 		repository.NewArgs{
 			Tx:        tx,
 			TableName: TableName,
-			Record:    record.AdventureGameItemInstance{},
+			Record:    adventure_game_record.AdventureGameItemInstance{},
 		},
 	)
 }

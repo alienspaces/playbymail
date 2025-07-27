@@ -3,11 +3,11 @@ package mapper
 import (
 	"gitlab.com/alienspaces/playbymail/core/nulltime"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
-	"gitlab.com/alienspaces/playbymail/internal/record"
+	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game"
 	"gitlab.com/alienspaces/playbymail/schema"
 )
 
-func AdventureGameItemPlacementRecordToResponseData(l logger.Logger, rec *record.AdventureGameItemPlacement) (schema.AdventureGameItemPlacementResponseData, error) {
+func AdventureGameItemPlacementRecordToResponseData(l logger.Logger, rec *adventure_game_record.AdventureGameItemPlacement) (schema.AdventureGameItemPlacementResponseData, error) {
 	l.Debug("mapping adventure_game_item_placement record to response data")
 	data := schema.AdventureGameItemPlacementResponseData{
 		ID:                      rec.ID,
@@ -22,7 +22,7 @@ func AdventureGameItemPlacementRecordToResponseData(l logger.Logger, rec *record
 	return data, nil
 }
 
-func AdventureGameItemPlacementRecordToResponse(l logger.Logger, rec *record.AdventureGameItemPlacement) (schema.AdventureGameItemPlacementResponse, error) {
+func AdventureGameItemPlacementRecordToResponse(l logger.Logger, rec *adventure_game_record.AdventureGameItemPlacement) (schema.AdventureGameItemPlacementResponse, error) {
 	data, err := AdventureGameItemPlacementRecordToResponseData(l, rec)
 	if err != nil {
 		return schema.AdventureGameItemPlacementResponse{}, err
@@ -32,7 +32,7 @@ func AdventureGameItemPlacementRecordToResponse(l logger.Logger, rec *record.Adv
 	}, nil
 }
 
-func AdventureGameItemPlacementRecordsToCollectionResponse(l logger.Logger, recs []*record.AdventureGameItemPlacement) (schema.AdventureGameItemPlacementCollectionResponse, error) {
+func AdventureGameItemPlacementRecordsToCollectionResponse(l logger.Logger, recs []*adventure_game_record.AdventureGameItemPlacement) (schema.AdventureGameItemPlacementCollectionResponse, error) {
 	data := []*schema.AdventureGameItemPlacementResponseData{}
 	for _, rec := range recs {
 		d, err := AdventureGameItemPlacementRecordToResponseData(l, rec)
@@ -46,9 +46,9 @@ func AdventureGameItemPlacementRecordsToCollectionResponse(l logger.Logger, recs
 	}, nil
 }
 
-func AdventureGameItemPlacementRequestToRecord(l logger.Logger, req *schema.AdventureGameItemPlacementRequest, rec *record.AdventureGameItemPlacement) (*record.AdventureGameItemPlacement, error) {
+func AdventureGameItemPlacementRequestToRecord(l logger.Logger, req *schema.AdventureGameItemPlacementRequest, rec *adventure_game_record.AdventureGameItemPlacement) (*adventure_game_record.AdventureGameItemPlacement, error) {
 	if rec == nil {
-		rec = &record.AdventureGameItemPlacement{}
+		rec = &adventure_game_record.AdventureGameItemPlacement{}
 	}
 	if req == nil {
 		return nil, nil

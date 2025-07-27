@@ -10,7 +10,7 @@ import (
 
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/harness"
-	"gitlab.com/alienspaces/playbymail/internal/record"
+	adventure_game_record "gitlab.com/alienspaces/playbymail/internal/record/adventure_game"
 	"gitlab.com/alienspaces/playbymail/internal/utils/deps"
 )
 
@@ -19,15 +19,15 @@ func TestCreateOne(t *testing.T) {
 
 	tests := []struct {
 		name   string
-		rec    func(d harness.Data, t *testing.T) *record.AdventureGameLocation
+		rec    func(d harness.Data, t *testing.T) *adventure_game_record.AdventureGameLocation
 		hasErr bool
 	}{
 		{
 			name: "Without ID",
-			rec: func(d harness.Data, t *testing.T) *record.AdventureGameLocation {
+			rec: func(d harness.Data, t *testing.T) *adventure_game_record.AdventureGameLocation {
 				gameRec, err := d.GetGameRecByRef(harness.GameOneRef)
 				require.NoError(t, err, "GetGameRecByRef returns without error")
-				return &record.AdventureGameLocation{
+				return &adventure_game_record.AdventureGameLocation{
 					GameID:      gameRec.ID,
 					Name:        fmt.Sprintf("%s %s", gofakeit.Name(), gofakeit.Name()),
 					Description: gofakeit.Sentence(5),
@@ -37,10 +37,10 @@ func TestCreateOne(t *testing.T) {
 		},
 		{
 			name: "With ID",
-			rec: func(d harness.Data, t *testing.T) *record.AdventureGameLocation {
+			rec: func(d harness.Data, t *testing.T) *adventure_game_record.AdventureGameLocation {
 				gameRec, err := d.GetGameRecByRef(harness.GameOneRef)
 				require.NoError(t, err, "GetGameRecByRef returns without error")
-				rec := &record.AdventureGameLocation{
+				rec := &adventure_game_record.AdventureGameLocation{
 					GameID:      gameRec.ID,
 					Name:        fmt.Sprintf("%s %s", gofakeit.Name(), gofakeit.Name()),
 					Description: gofakeit.Sentence(5),
@@ -137,12 +137,12 @@ func TestUpdateOne(t *testing.T) {
 
 	tests := []struct {
 		name   string
-		rec    func(d harness.Data, t *testing.T) *record.AdventureGameLocation
+		rec    func(d harness.Data, t *testing.T) *adventure_game_record.AdventureGameLocation
 		hasErr bool
 	}{
 		{
 			name: "With ID",
-			rec: func(d harness.Data, t *testing.T) *record.AdventureGameLocation {
+			rec: func(d harness.Data, t *testing.T) *adventure_game_record.AdventureGameLocation {
 				gameLocationRec, err := d.GetGameLocationRecByRef(harness.GameLocationOneRef)
 				require.NoError(t, err, "GetGameLocationRecByRef returns without error")
 				return gameLocationRec
@@ -151,8 +151,8 @@ func TestUpdateOne(t *testing.T) {
 		},
 		{
 			name: "Without ID",
-			rec: func(d harness.Data, t *testing.T) *record.AdventureGameLocation {
-				return &record.AdventureGameLocation{}
+			rec: func(d harness.Data, t *testing.T) *adventure_game_record.AdventureGameLocation {
+				return &adventure_game_record.AdventureGameLocation{}
 			},
 			hasErr: true,
 		},

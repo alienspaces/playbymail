@@ -1,4 +1,4 @@
-package record
+package adventure_game_record
 
 import (
 	"encoding/json"

@@ -7,11 +7,11 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/domain"
 	coreerror "gitlab.com/alienspaces/playbymail/core/error"
 	coresql "gitlab.com/alienspaces/playbymail/core/sql"
-	"gitlab.com/alienspaces/playbymail/internal/record"
+	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game"
 )
 
 // GetManyAdventureGameItemPlacementRecs -
-func (m *Domain) GetManyAdventureGameItemPlacementRecs(opts *coresql.Options) ([]*record.AdventureGameItemPlacement, error) {
+func (m *Domain) GetManyAdventureGameItemPlacementRecs(opts *coresql.Options) ([]*adventure_game_record.AdventureGameItemPlacement, error) {
 	l := m.Logger("GetManyAdventureGameItemPlacementRecs")
 	l.Debug("getting many adventure_game_item_placement records opts >%#v<", opts)
 	r := m.AdventureGameItemPlacementRepository()
@@ -23,7 +23,7 @@ func (m *Domain) GetManyAdventureGameItemPlacementRecs(opts *coresql.Options) ([
 }
 
 // GetAdventureGameItemPlacementRec -
-func (m *Domain) GetAdventureGameItemPlacementRec(recID string, lock *coresql.Lock) (*record.AdventureGameItemPlacement, error) {
+func (m *Domain) GetAdventureGameItemPlacementRec(recID string, lock *coresql.Lock) (*adventure_game_record.AdventureGameItemPlacement, error) {
 	l := m.Logger("GetAdventureGameItemPlacementRec")
 	l.Debug("getting adventure_game_item_placement record ID >%s<", recID)
 	if err := domain.ValidateUUIDField("id", recID); err != nil {
@@ -32,7 +32,7 @@ func (m *Domain) GetAdventureGameItemPlacementRec(recID string, lock *coresql.Lo
 	r := m.AdventureGameItemPlacementRepository()
 	rec, err := r.GetOne(recID, lock)
 	if errors.Is(err, pgx.ErrNoRows) {
-		return nil, coreerror.NewNotFoundError(record.TableAdventureGameItemPlacement, recID)
+		return nil, coreerror.NewNotFoundError(adventure_game_record.TableAdventureGameItemPlacement, recID)
 	} else if err != nil {
 		return nil, databaseError(err)
 	}
@@ -40,7 +40,7 @@ func (m *Domain) GetAdventureGameItemPlacementRec(recID string, lock *coresql.Lo
 }
 
 // CreateAdventureGameItemPlacementRec -
-func (m *Domain) CreateAdventureGameItemPlacementRec(rec *record.AdventureGameItemPlacement) (*record.AdventureGameItemPlacement, error) {
+func (m *Domain) CreateAdventureGameItemPlacementRec(rec *adventure_game_record.AdventureGameItemPlacement) (*adventure_game_record.AdventureGameItemPlacement, error) {
 	l := m.Logger("CreateAdventureGameItemPlacementRec")
 	l.Debug("creating adventure_game_item_placement record >%#v<", rec)
 	r := m.AdventureGameItemPlacementRepository()
@@ -54,7 +54,7 @@ func (m *Domain) CreateAdventureGameItemPlacementRec(rec *record.AdventureGameIt
 }
 
 // UpdateAdventureGameItemPlacementRec -
-func (m *Domain) UpdateAdventureGameItemPlacementRec(next *record.AdventureGameItemPlacement) (*record.AdventureGameItemPlacement, error) {
+func (m *Domain) UpdateAdventureGameItemPlacementRec(next *adventure_game_record.AdventureGameItemPlacement) (*adventure_game_record.AdventureGameItemPlacement, error) {
 	l := m.Logger("UpdateAdventureGameItemPlacementRec")
 	_, err := m.GetAdventureGameItemPlacementRec(next.ID, coresql.ForUpdateNoWait)
 	if err != nil {

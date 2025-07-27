@@ -7,11 +7,11 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/domain"
 	coreerror "gitlab.com/alienspaces/playbymail/core/error"
 	coresql "gitlab.com/alienspaces/playbymail/core/sql"
-	"gitlab.com/alienspaces/playbymail/internal/record"
+	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game"
 )
 
 // GetManyAdventureGameItemInstanceRecs -
-func (m *Domain) GetManyAdventureGameItemInstanceRecs(opts *coresql.Options) ([]*record.AdventureGameItemInstance, error) {
+func (m *Domain) GetManyAdventureGameItemInstanceRecs(opts *coresql.Options) ([]*adventure_game_record.AdventureGameItemInstance, error) {
 	l := m.Logger("GetManyAdventureGameItemInstanceRecs")
 	l.Debug("getting many adventure_game_item_instance records opts >%#v<", opts)
 	r := m.AdventureGameItemInstanceRepository()
@@ -23,7 +23,7 @@ func (m *Domain) GetManyAdventureGameItemInstanceRecs(opts *coresql.Options) ([]
 }
 
 // GetAdventureGameItemInstanceRec -
-func (m *Domain) GetAdventureGameItemInstanceRec(recID string, lock *coresql.Lock) (*record.AdventureGameItemInstance, error) {
+func (m *Domain) GetAdventureGameItemInstanceRec(recID string, lock *coresql.Lock) (*adventure_game_record.AdventureGameItemInstance, error) {
 	l := m.Logger("GetAdventureGameItemInstanceRec")
 	l.Debug("getting adventure_game_item_instance record ID >%s<", recID)
 	if err := domain.ValidateUUIDField("id", recID); err != nil {
@@ -32,7 +32,7 @@ func (m *Domain) GetAdventureGameItemInstanceRec(recID string, lock *coresql.Loc
 	r := m.AdventureGameItemInstanceRepository()
 	rec, err := r.GetOne(recID, lock)
 	if errors.Is(err, pgx.ErrNoRows) {
-		return nil, coreerror.NewNotFoundError(record.TableAdventureGameItemInstance, recID)
+		return nil, coreerror.NewNotFoundError(adventure_game_record.TableAdventureGameItemInstance, recID)
 	} else if err != nil {
 		return nil, databaseError(err)
 	}
@@ -40,7 +40,7 @@ func (m *Domain) GetAdventureGameItemInstanceRec(recID string, lock *coresql.Loc
 }
 
 // CreateAdventureGameItemInstanceRec -
-func (m *Domain) CreateAdventureGameItemInstanceRec(rec *record.AdventureGameItemInstance) (*record.AdventureGameItemInstance, error) {
+func (m *Domain) CreateAdventureGameItemInstanceRec(rec *adventure_game_record.AdventureGameItemInstance) (*adventure_game_record.AdventureGameItemInstance, error) {
 	l := m.Logger("CreateAdventureGameItemInstanceRec")
 	l.Debug("creating adventure_game_item_instance record >%#v<", rec)
 	r := m.AdventureGameItemInstanceRepository()
@@ -54,7 +54,7 @@ func (m *Domain) CreateAdventureGameItemInstanceRec(rec *record.AdventureGameIte
 }
 
 // UpdateAdventureGameItemInstanceRec -
-func (m *Domain) UpdateAdventureGameItemInstanceRec(next *record.AdventureGameItemInstance) (*record.AdventureGameItemInstance, error) {
+func (m *Domain) UpdateAdventureGameItemInstanceRec(next *adventure_game_record.AdventureGameItemInstance) (*adventure_game_record.AdventureGameItemInstance, error) {
 	l := m.Logger("UpdateAdventureGameItemInstanceRec")
 	_, err := m.GetAdventureGameItemInstanceRec(next.ID, coresql.ForUpdateNoWait)
 	if err != nil {

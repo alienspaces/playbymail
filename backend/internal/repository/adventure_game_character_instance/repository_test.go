@@ -8,7 +8,7 @@ import (
 
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/harness"
-	"gitlab.com/alienspaces/playbymail/internal/record"
+	adventure_game_record "gitlab.com/alienspaces/playbymail/internal/record/adventure_game"
 	"gitlab.com/alienspaces/playbymail/internal/utils/deps"
 )
 
@@ -17,19 +17,19 @@ func TestCreateOne(t *testing.T) {
 
 	tests := []struct {
 		name   string
-		rec    func(d harness.Data, t *testing.T) *record.AdventureGameCharacterInstance
+		rec    func(d harness.Data, t *testing.T) *adventure_game_record.AdventureGameCharacterInstance
 		hasErr bool
 	}{
 		{
 			name: "Without ID",
-			rec: func(d harness.Data, t *testing.T) *record.AdventureGameCharacterInstance {
+			rec: func(d harness.Data, t *testing.T) *adventure_game_record.AdventureGameCharacterInstance {
 				gameInstanceRec, err := d.GetGameInstanceRecByRef(harness.GameInstanceOneRef)
 				require.NoError(t, err)
 				charRec, err := d.GetGameCharacterRecByRef(harness.GameCharacterTwoRef)
 				require.NoError(t, err)
 				locationInstanceRec, err := d.GetGameLocationInstanceRecByRef(harness.GameLocationInstanceOneRef)
 				require.NoError(t, err)
-				return &record.AdventureGameCharacterInstance{
+				return &adventure_game_record.AdventureGameCharacterInstance{
 					GameID:                          gameInstanceRec.GameID,
 					AdventureGameInstanceID:         gameInstanceRec.ID,
 					AdventureGameCharacterID:        charRec.ID,
@@ -41,14 +41,14 @@ func TestCreateOne(t *testing.T) {
 		},
 		{
 			name: "With ID",
-			rec: func(d harness.Data, t *testing.T) *record.AdventureGameCharacterInstance {
+			rec: func(d harness.Data, t *testing.T) *adventure_game_record.AdventureGameCharacterInstance {
 				gameInstanceRec, err := d.GetGameInstanceRecByRef(harness.GameInstanceOneRef)
 				require.NoError(t, err)
 				charRec, err := d.GetGameCharacterRecByRef(harness.GameCharacterTwoRef)
 				require.NoError(t, err)
 				locationInstanceRec, err := d.GetGameLocationInstanceRecByRef(harness.GameLocationInstanceOneRef)
 				require.NoError(t, err)
-				rec := &record.AdventureGameCharacterInstance{
+				rec := &adventure_game_record.AdventureGameCharacterInstance{
 					GameID:                          gameInstanceRec.GameID,
 					AdventureGameInstanceID:         gameInstanceRec.ID,
 					AdventureGameCharacterID:        charRec.ID,
@@ -150,12 +150,12 @@ func TestUpdateOne(t *testing.T) {
 
 	tests := []struct {
 		name   string
-		rec    func(d harness.Data, t *testing.T) *record.AdventureGameCharacterInstance
+		rec    func(d harness.Data, t *testing.T) *adventure_game_record.AdventureGameCharacterInstance
 		hasErr bool
 	}{
 		{
 			name: "With ID",
-			rec: func(d harness.Data, t *testing.T) *record.AdventureGameCharacterInstance {
+			rec: func(d harness.Data, t *testing.T) *adventure_game_record.AdventureGameCharacterInstance {
 				rec, err := h.Data.GetGameCharacterInstanceRecByRef(harness.GameCharacterInstanceOneRef) // Add a reference if available
 				require.NoError(t, err)
 				return rec
@@ -164,7 +164,7 @@ func TestUpdateOne(t *testing.T) {
 		},
 		{
 			name: "Without ID",
-			rec: func(d harness.Data, t *testing.T) *record.AdventureGameCharacterInstance {
+			rec: func(d harness.Data, t *testing.T) *adventure_game_record.AdventureGameCharacterInstance {
 				rec, err := h.Data.GetGameCharacterInstanceRecByRef(harness.GameCharacterInstanceOneRef) // Add a reference if available
 				require.NoError(t, err)
 				rec.ID = ""
