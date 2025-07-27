@@ -9,6 +9,7 @@
   /* Color palette */
   --color-primary: #1976d2;
   --color-primary-dark: #115293;
+  --color-primary-light: #64b5f6; /* New lighter blue for sub-headings */
   --color-bg: #fff;
   --color-bg-alt: #f7f7f7;
   --color-border: #ddd;
@@ -62,6 +63,7 @@ h3, .h3 {
   font-size: var(--font-size-md);
   font-weight: var(--font-weight-bold);
   margin-bottom: var(--space-xs);
+  color: var(--color-primary-light);
 }
 p {
   margin-bottom: var(--space-sm);

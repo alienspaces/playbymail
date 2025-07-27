@@ -26,18 +26,61 @@
         <aside class="sidebar" v-if="!isMobile">
           <nav>
             <ul>
-              <li><router-link to="/studio" active-class="active">Games</router-link></li>
+              <li><router-link to="/studio" active-class="active">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                </svg>
+                Games
+              </router-link></li>
               <template v-if="selectedGame">
-                <li><router-link :to="`/studio/${selectedGame.id}/locations`" active-class="active">Locations</router-link></li>
-                <li><router-link :to="`/studio/${selectedGame.id}/location-links`" active-class="active">Location Links</router-link></li>
-                <li><router-link :to="`/studio/${selectedGame.id}/items`" active-class="active">Items</router-link></li>
-                <li><router-link :to="`/studio/${selectedGame.id}/item-placements`" active-class="active">Item Placements</router-link></li>
-                <li><router-link :to="`/studio/${selectedGame.id}/creatures`" active-class="active">Creatures</router-link></li>
-                <li><router-link :to="`/studio/${selectedGame.id}/creature-placements`" active-class="active">Creature Placements</router-link></li>
+                <li><router-link :to="`/studio/${selectedGame.id}/locations`" active-class="active">
+                  <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                  </svg>
+                  Locations
+                </router-link></li>
+                <li><router-link :to="`/studio/${selectedGame.id}/location-links`" active-class="active">
+                  <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                    <path d="M7 10l5 3 5-3"/>
+                  </svg>
+                  Location Links
+                </router-link></li>
+                <li><router-link :to="`/studio/${selectedGame.id}/items`" active-class="active">
+                  <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                  </svg>
+                  Items
+                </router-link></li>
+                <li><router-link :to="`/studio/${selectedGame.id}/item-placements`" active-class="active">
+                  <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                  </svg>
+                  Item Placements
+                </router-link></li>
+                <li><router-link :to="`/studio/${selectedGame.id}/creatures`" active-class="active">
+                  <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                  </svg>
+                  Creatures
+                </router-link></li>
+                <li><router-link :to="`/studio/${selectedGame.id}/creature-placements`" active-class="active">
+                  <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                  </svg>
+                  Creature Placements
+                </router-link></li>
               </template>
             </ul>
           </nav>
-          <button class="help-btn" @click="showHelp = true">Help</button>
+          <button class="help-btn" @click="showHelp = true">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/>
+            </svg>
+            Help
+          </button>
         </aside>
         <!-- Main content area -->
         <div class="main-content" @click="closeStudioMenuOnMobile">
@@ -60,18 +103,61 @@
     <aside v-if="isMobile && studioMenuOpen" class="sidebar mobile">
       <nav>
         <ul>
-          <li><router-link to="/studio" active-class="active" @click="closeStudioMenu">Games</router-link></li>
+          <li><router-link to="/studio" active-class="active" @click="closeStudioMenu">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+            </svg>
+            Games
+          </router-link></li>
           <template v-if="selectedGame">
-            <li><router-link :to="`/studio/${selectedGame.id}/locations`" active-class="active" @click="closeStudioMenu">Locations</router-link></li>
-            <li><router-link :to="`/studio/${selectedGame.id}/location-links`" active-class="active" @click="closeStudioMenu">Location Links</router-link></li>
-            <li><router-link :to="`/studio/${selectedGame.id}/items`" active-class="active" @click="closeStudioMenu">Items</router-link></li>
-            <li><router-link :to="`/studio/${selectedGame.id}/item-placements`" active-class="active" @click="closeStudioMenu">Item Placements</router-link></li>
-            <li><router-link :to="`/studio/${selectedGame.id}/creatures`" active-class="active" @click="closeStudioMenu">Creatures</router-link></li>
-            <li><router-link :to="`/studio/${selectedGame.id}/creature-placements`" active-class="active" @click="closeStudioMenu">Creature Placements</router-link></li>
+            <li><router-link :to="`/studio/${selectedGame.id}/locations`" active-class="active" @click="closeStudioMenu">
+              <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+              </svg>
+              Locations
+            </router-link></li>
+            <li><router-link :to="`/studio/${selectedGame.id}/location-links`" active-class="active" @click="closeStudioMenu">
+              <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                <path d="M7 10l5 3 5-3"/>
+              </svg>
+              Location Links
+            </router-link></li>
+            <li><router-link :to="`/studio/${selectedGame.id}/items`" active-class="active" @click="closeStudioMenu">
+              <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+              </svg>
+              Items
+            </router-link></li>
+            <li><router-link :to="`/studio/${selectedGame.id}/item-placements`" active-class="active" @click="closeStudioMenu">
+              <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+              Item Placements
+            </router-link></li>
+            <li><router-link :to="`/studio/${selectedGame.id}/creatures`" active-class="active" @click="closeStudioMenu">
+              <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+              </svg>
+              Creatures
+            </router-link></li>
+            <li><router-link :to="`/studio/${selectedGame.id}/creature-placements`" active-class="active" @click="closeStudioMenu">
+              <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+              Creature Placements
+            </router-link></li>
           </template>
         </ul>
       </nav>
-      <button class="help-btn" @click="showHelp = true; closeStudioMenu()">Help</button>
+      <button class="help-btn" @click="showHelp = true; closeStudioMenu()">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/>
+        </svg>
+        Help
+      </button>
     </aside>
     </div>
   </div>
@@ -262,6 +348,15 @@ function closeStudioMenuOnMobile() {
   color: var(--color-text);
   text-decoration: none;
   font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.nav-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
 }
 .sidebar a.active {
   color: var(--color-primary);
@@ -286,6 +381,10 @@ function closeStudioMenuOnMobile() {
 .help-btn {
   margin-top: var(--space-lg);
   width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
   /* Use global button styles, only override margin/width */
 }
 .help-panel-overlay {

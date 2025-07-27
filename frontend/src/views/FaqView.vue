@@ -120,7 +120,7 @@
 .user-type h3 {
   margin: 0 0 var(--space-sm) 0;
   font-size: var(--font-size-md);
-  color: var(--color-primary);
+  color: var(--color-primary-light);
   font-weight: var(--font-weight-bold);
 }
 .user-type p {

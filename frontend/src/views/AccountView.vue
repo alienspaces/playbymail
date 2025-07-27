@@ -68,34 +68,19 @@
     </div>
 
     <!-- Delete Confirmation Modal -->
-    <div v-if="showDeleteModal" class="modal-overlay" @click="hideDeleteConfirmation">
-      <div class="modal-content" @click.stop>
-        <h2>Delete Account</h2>
-        <p>Are you sure you want to delete your account? This action cannot be undone.</p>
-        <p class="warning-text">All your data, including games, characters, and settings will be permanently deleted.</p>
-        
-        <div class="confirmation-input">
-          <label for="confirm-delete">Type "DELETE" to confirm:</label>
-          <input 
-            id="confirm-delete"
-            v-model="deleteConfirmationText" 
-            placeholder="DELETE"
-            class="confirm-input"
-          />
-        </div>
-        
-        <div class="modal-actions">
-          <button @click="hideDeleteConfirmation" class="cancel-btn">Cancel</button>
-          <button 
-            @click="confirmDeleteAccount" 
-            :disabled="deleteConfirmationText !== 'DELETE' || deleting"
-            class="confirm-delete-btn"
-          >
-            {{ deleting ? 'Deleting...' : 'Delete Account' }}
-          </button>
-        </div>
-      </div>
-    </div>
+    <ConfirmationModal
+      :visible="showDeleteModal"
+      title="Delete Account"
+      message="Are you sure you want to delete your account? This action cannot be undone."
+      warning="All your data, including games, characters, and settings will be permanently deleted."
+      confirmText="Delete Account"
+      :loading="deleting"
+      loadingText="Deleting..."
+      :requireConfirmation="true"
+      confirmationText="DELETE"
+      @confirm="confirmDeleteAccount"
+      @cancel="hideDeleteConfirmation"
+    />
   </div>
 </template>
 
@@ -103,9 +88,13 @@
 import { getMyAccount, updateMyAccount, deleteMyAccount } from '@/api/account'
 import { useAuthStore } from '@/stores/auth'
 import { useRouter } from 'vue-router'
+import ConfirmationModal from '@/components/ConfirmationModal.vue'
 
 export default {
   name: 'AccountView',
+  components: {
+    ConfirmationModal
+  },
   data() {
     return {
       account: null,

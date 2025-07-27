@@ -8,11 +8,12 @@
       <p>Select a game to manage locations.</p>
     </div>
     <div v-else class="game-table-section">
-      <p class="game-context-name">Game: {{ selectedGame.name }}</p>
-      <div class="section-header">
-        <h2>Locations</h2>
-        <button @click="openCreate">Create New Location</button>
-      </div>
+      <GameContext :gameName="selectedGame.name" />
+      <SectionHeader 
+        title="Locations" 
+        resourceName="Location" 
+        @create="openCreate"
+      />
       <ResourceTable
         :columns="columns"
         :rows="locationsStore.locations"
@@ -69,10 +70,18 @@ import { useLocationsStore } from '../../../stores/locations';
 import { useGamesStore } from '../../../stores/games';
 import { storeToRefs } from 'pinia';
 import ResourceTable from '../../../components/ResourceTable.vue';
+import GameContext from '../../../components/GameContext.vue';
+import SectionHeader from '../../../components/SectionHeader.vue';
 
 const locationsStore = useLocationsStore();
 const gamesStore = useGamesStore();
 const { selectedGame } = storeToRefs(gamesStore);
+
+// Define components for the template
+const components = {
+  GameContext,
+  SectionHeader
+};
 
 const columns = [
   { key: 'name', label: 'Name' },

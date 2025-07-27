@@ -25,7 +25,14 @@ function closeMobileMenu() {
   <div id="app">
     <nav class="navbar">
       <div class="nav-links">
-        <router-link to="/" class="logo">PlayByMail</router-link>
+        <router-link to="/" class="logo">
+          <svg class="logo-icon" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+          </svg>
+          <span class="logo-text">
+            <span class="logo-capital">P</span>lay<span class="logo-capital">B</span>y<span class="logo-capital">M</span>ail
+          </span>
+        </router-link>
         <router-link to="/faq" class="navbar-link" exact-active-class="active" @click="closeMobileMenu">F.A.Q.</router-link>
         <router-link to="/studio" class="navbar-link" exact-active-class="active" @click="closeMobileMenu">Game Designer Studio</router-link>
         <router-link to="/admin" class="navbar-link" exact-active-class="active" @click="closeMobileMenu">Game Management</router-link>
@@ -39,7 +46,11 @@ function closeMobileMenu() {
           <router-link to="/login" class="navbar-link" exact-active-class="active" @click="closeMobileMenu">Login</router-link>
         </template>
       </div>
-      <div class="mobile-logo">PlayByMail</div>
+      <div class="mobile-logo">
+        <span class="logo-text">
+          <span class="logo-capital">P</span>lay<span class="logo-capital">B</span>y<span class="logo-capital">M</span>ail
+        </span>
+      </div>
       <button class="burger icon-btn" @click="toggleMobileMenu" aria-label="Open navigation menu">
         <span :class="{ 'open': mobileMenuOpen }"></span>
         <span :class="{ 'open': mobileMenuOpen }"></span>
@@ -86,6 +97,24 @@ function closeMobileMenu() {
   font-weight: var(--font-weight-bold);
   font-size: var(--font-size-xl);
   line-height: 1.1;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  color: var(--color-primary);
+}
+
+.logo-icon {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.logo-text {
+  color: var(--color-primary-light);
+}
+
+.logo-capital {
+  color: var(--color-primary-dark);
 }
 .nav-actions {
   display: flex;

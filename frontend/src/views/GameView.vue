@@ -1,10 +1,11 @@
 <template>
   <div class="game-list">
     <div class="game-table-section">
-      <div class="section-header">
-        <h1>Games</h1>
-        <button @click="openCreate">Create New Game</button>
-      </div>
+      <PageHeader 
+        title="Games" 
+        actionText="Create New Game" 
+        @action="openCreate"
+      />
       <table v-if="games.length">
         <thead>
           <tr>
@@ -71,9 +72,13 @@
 
 <script>
 import { useGamesStore } from '../stores/games';
+import PageHeader from '../components/PageHeader.vue';
 
 export default {
   name: 'GameView',
+  components: {
+    PageHeader
+  },
   data() {
     return {
       showModal: false,
