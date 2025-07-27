@@ -56,6 +56,7 @@ func getRiverConfig(l logger.Logger, cfg config.Config, s storer.Storer, e email
 	// Periodic job configuration functions
 	periodicJobFuncs := map[string]func(l logger.Logger, s storer.Storer, p []*river.PeriodicJob) ([]*river.PeriodicJob, error){
 		jobqueue.QueueDefault: addDefaultPeriodicJobs,
+		jobqueue.QueueGame:    addGamePeriodicJobs,
 	}
 
 	// Add queue and periodic job configuration for the queues this client is going to process
@@ -97,6 +98,17 @@ func addDefaultPeriodicJobs(l logger.Logger, s storer.Storer, p []*river.Periodi
 	return p, nil
 }
 
+func addGamePeriodicJobs(l logger.Logger, s storer.Storer, p []*river.PeriodicJob) ([]*river.PeriodicJob, error) {
+	l = l.WithFunctionContext("addGamePeriodicJobs")
+
+	l.Info("Adding game periodic jobs")
+
+	// TODO: Add periodic job to check game deadlines every hour
+	// Need to check river documentation for correct PeriodicJob structure
+
+	return p, nil
+}
+
 func getWorkers(l logger.Logger, cfg config.Config, s storer.Storer, e emailer.Emailer) (*river.Workers, error) {
 	w := river.NewWorkers()
 
@@ -107,6 +119,25 @@ func getWorkers(l logger.Logger, cfg config.Config, s storer.Storer, e emailer.E
 
 	if err := river.AddWorkerSafely(w, SendAccountVerificationEmailWorker); err != nil {
 		return nil, fmt.Errorf("failed to add NewSendAccountVerificationEmailWorker worker: %w", err)
+	}
+
+	// Add game processing workers
+	ProcessGameTurnWorker, err := jobworker.NewProcessGameTurnWorker(l, cfg, s)
+	if err != nil {
+		return nil, fmt.Errorf("failed NewProcessGameTurnWorker worker: %w", err)
+	}
+
+	if err := river.AddWorkerSafely(w, ProcessGameTurnWorker); err != nil {
+		return nil, fmt.Errorf("failed to add NewProcessGameTurnWorker worker: %w", err)
+	}
+
+	CheckGameDeadlinesWorker, err := jobworker.NewCheckGameDeadlinesWorker(l, cfg, s)
+	if err != nil {
+		return nil, fmt.Errorf("failed NewCheckGameDeadlinesWorker worker: %w", err)
+	}
+
+	if err := river.AddWorkerSafely(w, CheckGameDeadlinesWorker); err != nil {
+		return nil, fmt.Errorf("failed to add NewCheckGameDeadlinesWorker worker: %w", err)
 	}
 
 	return w, nil

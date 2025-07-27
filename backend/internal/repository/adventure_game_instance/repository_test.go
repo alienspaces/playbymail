@@ -24,7 +24,12 @@ func TestCreateOne(t *testing.T) {
 			rec: func(d harness.Data, t *testing.T) *record.AdventureGameInstance {
 				gameRec, err := d.GetGameRecByRef(harness.GameOneRef)
 				require.NoError(t, err)
-				return &record.AdventureGameInstance{GameID: gameRec.ID}
+				return &record.AdventureGameInstance{
+					GameID:            gameRec.ID,
+					Status:            record.GameInstanceStatusCreated,
+					CurrentTurn:       0,
+					TurnDeadlineHours: 168,
+				}
 			},
 			hasErr: false,
 		},

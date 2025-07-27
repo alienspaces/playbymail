@@ -53,7 +53,7 @@ const props = defineProps({
   }
 });
 
-const emit = defineEmits(['confirm', 'cancel']);
+defineEmits(['confirm', 'cancel']);
 
 const confirmationValue = ref('');
 const confirmationId = ref(`confirm-${Date.now()}`);

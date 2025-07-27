@@ -52,5 +52,16 @@ func (t *Testing) applyGameInstanceRecDefaultValues(rec *record.AdventureGameIns
 	if rec == nil {
 		rec = &record.AdventureGameInstance{}
 	}
+
+	// Set default status if not already set
+	if rec.Status == "" {
+		rec.Status = record.GameInstanceStatusCreated
+	}
+
+	// Set default turn deadline if not already set
+	if rec.TurnDeadlineHours == 0 {
+		rec.TurnDeadlineHours = 168 // 7 days default
+	}
+
 	return rec
 }

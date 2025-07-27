@@ -38,6 +38,10 @@ const (
 	createOneAdventureGameInstance   = "create-one-adventure-game-instance"
 	updateOneAdventureGameInstance   = "update-one-adventure-game-instance"
 	deleteOneAdventureGameInstance   = "delete-one-adventure-game-instance"
+	startGameInstance                = "start-game-instance"
+	pauseGameInstance                = "pause-game-instance"
+	resumeGameInstance               = "resume-game-instance"
+	cancelGameInstance               = "cancel-game-instance"
 )
 
 func adventureGameInstanceHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error) {
@@ -164,6 +168,71 @@ func adventureGameInstanceHandlerConfig(l logger.Logger) (map[string]server.Hand
 		DocumentationConfig: server.DocumentationConfig{
 			Document: true,
 			Title:    "Delete adventure game instance",
+		},
+	}
+
+	// Runtime management endpoints
+	gameInstanceConfig[startGameInstance] = server.HandlerConfig{
+		Method:      http.MethodPost,
+		Path:        "/api/v1/adventure-games/:game_id/instances/:instance_id/start",
+		HandlerFunc: startGameInstanceHandler,
+		MiddlewareConfig: server.MiddlewareConfig{
+			AuthenTypes: []server.AuthenticationType{
+				server.AuthenticationTypeToken,
+			},
+			ValidateResponseSchema: responseSchema,
+		},
+		DocumentationConfig: server.DocumentationConfig{
+			Document: true,
+			Title:    "Start game instance",
+		},
+	}
+
+	gameInstanceConfig[pauseGameInstance] = server.HandlerConfig{
+		Method:      http.MethodPost,
+		Path:        "/api/v1/adventure-games/:game_id/instances/:instance_id/pause",
+		HandlerFunc: pauseGameInstanceHandler,
+		MiddlewareConfig: server.MiddlewareConfig{
+			AuthenTypes: []server.AuthenticationType{
+				server.AuthenticationTypeToken,
+			},
+			ValidateResponseSchema: responseSchema,
+		},
+		DocumentationConfig: server.DocumentationConfig{
+			Document: true,
+			Title:    "Pause game instance",
+		},
+	}
+
+	gameInstanceConfig[resumeGameInstance] = server.HandlerConfig{
+		Method:      http.MethodPost,
+		Path:        "/api/v1/adventure-games/:game_id/instances/:instance_id/resume",
+		HandlerFunc: resumeGameInstanceHandler,
+		MiddlewareConfig: server.MiddlewareConfig{
+			AuthenTypes: []server.AuthenticationType{
+				server.AuthenticationTypeToken,
+			},
+			ValidateResponseSchema: responseSchema,
+		},
+		DocumentationConfig: server.DocumentationConfig{
+			Document: true,
+			Title:    "Resume game instance",
+		},
+	}
+
+	gameInstanceConfig[cancelGameInstance] = server.HandlerConfig{
+		Method:      http.MethodPost,
+		Path:        "/api/v1/adventure-games/:game_id/instances/:instance_id/cancel",
+		HandlerFunc: cancelGameInstanceHandler,
+		MiddlewareConfig: server.MiddlewareConfig{
+			AuthenTypes: []server.AuthenticationType{
+				server.AuthenticationTypeToken,
+			},
+			ValidateResponseSchema: responseSchema,
+		},
+		DocumentationConfig: server.DocumentationConfig{
+			Document: true,
+			Title:    "Cancel game instance",
 		},
 	}
 
@@ -362,6 +431,158 @@ func deleteOneAdventureGameInstanceHandler(w http.ResponseWriter, r *http.Reques
 	}
 
 	if err := server.WriteResponse(l, w, http.StatusNoContent, nil); err != nil {
+		l.Warn("failed writing response >%v<", err)
+		return err
+	}
+
+	return nil
+}
+
+// startGameInstanceHandler starts a game instance
+func startGameInstanceHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
+	l = logging.LoggerWithFunctionContext(l, packageName, "startGameInstanceHandler")
+
+	l.Info("starting game instance")
+
+	// Get path parameters
+	gameID := pp.ByName("game_id")
+	instanceID := pp.ByName("instance_id")
+
+	if gameID == "" || instanceID == "" {
+		l.Warn("game id and instance id are required")
+		return coreerror.NewNotFoundError("game instance", instanceID)
+	}
+
+	mm := m.(*domain.Domain)
+
+	// Start the game instance
+	instance, err := mm.StartGameInstance(instanceID)
+	if err != nil {
+		l.Warn("failed to start game instance >%v<", err)
+		return err
+	}
+
+	// Convert to response
+	res, err := mapper.AdventureGameInstanceRecordToResponse(l, instance)
+	if err != nil {
+		return err
+	}
+
+	if err = server.WriteResponse(l, w, http.StatusOK, res); err != nil {
+		l.Warn("failed writing response >%v<", err)
+		return err
+	}
+
+	return nil
+}
+
+// pauseGameInstanceHandler pauses a game instance
+func pauseGameInstanceHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
+	l = logging.LoggerWithFunctionContext(l, packageName, "pauseGameInstanceHandler")
+
+	l.Info("pausing game instance")
+
+	// Get path parameters
+	gameID := pp.ByName("game_id")
+	instanceID := pp.ByName("instance_id")
+
+	if gameID == "" || instanceID == "" {
+		l.Warn("game id and instance id are required")
+		return coreerror.NewNotFoundError("game instance", instanceID)
+	}
+
+	mm := m.(*domain.Domain)
+
+	// Pause the game instance
+	instance, err := mm.PauseGameInstance(instanceID)
+	if err != nil {
+		l.Warn("failed to pause game instance >%v<", err)
+		return err
+	}
+
+	// Convert to response
+	res, err := mapper.AdventureGameInstanceRecordToResponse(l, instance)
+	if err != nil {
+		return err
+	}
+
+	if err = server.WriteResponse(l, w, http.StatusOK, res); err != nil {
+		l.Warn("failed writing response >%v<", err)
+		return err
+	}
+
+	return nil
+}
+
+// resumeGameInstanceHandler resumes a game instance
+func resumeGameInstanceHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
+	l = logging.LoggerWithFunctionContext(l, packageName, "resumeGameInstanceHandler")
+
+	l.Info("resuming game instance")
+
+	// Get path parameters
+	gameID := pp.ByName("game_id")
+	instanceID := pp.ByName("instance_id")
+
+	if gameID == "" || instanceID == "" {
+		l.Warn("game id and instance id are required")
+		return coreerror.NewNotFoundError("game instance", instanceID)
+	}
+
+	mm := m.(*domain.Domain)
+
+	// Resume the game instance
+	instance, err := mm.ResumeGameInstance(instanceID)
+	if err != nil {
+		l.Warn("failed to resume game instance >%v<", err)
+		return err
+	}
+
+	// Convert to response
+	res, err := mapper.AdventureGameInstanceRecordToResponse(l, instance)
+	if err != nil {
+		return err
+	}
+
+	if err = server.WriteResponse(l, w, http.StatusOK, res); err != nil {
+		l.Warn("failed writing response >%v<", err)
+		return err
+	}
+
+	return nil
+}
+
+// cancelGameInstanceHandler cancels a game instance
+func cancelGameInstanceHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
+	l = logging.LoggerWithFunctionContext(l, packageName, "cancelGameInstanceHandler")
+
+	l.Info("canceling game instance")
+
+	// Get path parameters
+	gameID := pp.ByName("game_id")
+	instanceID := pp.ByName("instance_id")
+
+	if gameID == "" || instanceID == "" {
+		l.Warn("game id and instance id are required")
+		return coreerror.NewNotFoundError("game instance", instanceID)
+	}
+
+	mm := m.(*domain.Domain)
+
+	// Cancel the game instance
+	instance, err := mm.CancelGameInstance(instanceID)
+	if err != nil {
+		l.Warn("failed to cancel game instance >%v<", err)
+		return err
+	}
+
+	// Convert to response
+	res, err := mapper.AdventureGameInstanceRecordToResponse(l, instance)
+	if err != nil {
+		return err
+	}
+
+	if err = server.WriteResponse(l, w, http.StatusOK, res); err != nil {
 		l.Warn("failed writing response >%v<", err)
 		return err
 	}

@@ -9,11 +9,20 @@ import (
 
 func AdventureGameInstanceRecordToResponseData(l logger.Logger, rec *record.AdventureGameInstance) (schema.AdventureGameInstance, error) {
 	data := schema.AdventureGameInstance{
-		ID:        rec.ID,
-		GameID:    rec.GameID,
-		CreatedAt: rec.CreatedAt,
-		UpdatedAt: nulltime.ToTimePtr(rec.UpdatedAt),
-		DeletedAt: nulltime.ToTimePtr(rec.DeletedAt),
+		ID:                  rec.ID,
+		GameID:              rec.GameID,
+		Status:              rec.Status,
+		CurrentTurn:         rec.CurrentTurn,
+		MaxTurns:            rec.MaxTurns,
+		TurnDeadlineHours:   rec.TurnDeadlineHours,
+		LastTurnProcessedAt: rec.LastTurnProcessedAt,
+		NextTurnDeadline:    rec.NextTurnDeadline,
+		StartedAt:           rec.StartedAt,
+		CompletedAt:         rec.CompletedAt,
+		GameConfig:          rec.GameConfig,
+		CreatedAt:           rec.CreatedAt,
+		UpdatedAt:           nulltime.ToTimePtr(rec.UpdatedAt),
+		DeletedAt:           nulltime.ToTimePtr(rec.DeletedAt),
 	}
 	return data, nil
 }
@@ -40,4 +49,38 @@ func AdventureGameInstanceRecordsToCollectionResponse(l logger.Logger, recs []*r
 	return schema.AdventureGameInstanceCollectionResponse{
 		Data: data,
 	}, nil
+}
+
+func AdventureGameInstanceRequestToRecord(l logger.Logger, req *schema.AdventureGameInstanceRequest, rec *record.AdventureGameInstance) (*record.AdventureGameInstance, error) {
+	if req.GameID != "" {
+		rec.GameID = req.GameID
+	}
+	if req.Status != "" {
+		rec.Status = req.Status
+	}
+	if req.CurrentTurn > 0 {
+		rec.CurrentTurn = req.CurrentTurn
+	}
+	if req.MaxTurns != nil {
+		rec.MaxTurns = req.MaxTurns
+	}
+	if req.TurnDeadlineHours > 0 {
+		rec.TurnDeadlineHours = req.TurnDeadlineHours
+	}
+	if req.LastTurnProcessedAt != nil {
+		rec.LastTurnProcessedAt = req.LastTurnProcessedAt
+	}
+	if req.NextTurnDeadline != nil {
+		rec.NextTurnDeadline = req.NextTurnDeadline
+	}
+	if req.StartedAt != nil {
+		rec.StartedAt = req.StartedAt
+	}
+	if req.CompletedAt != nil {
+		rec.CompletedAt = req.CompletedAt
+	}
+	if req.GameConfig != nil {
+		rec.GameConfig = req.GameConfig
+	}
+	return rec, nil
 }

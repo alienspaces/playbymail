@@ -77,11 +77,7 @@ const locationsStore = useLocationsStore();
 const gamesStore = useGamesStore();
 const { selectedGame } = storeToRefs(gamesStore);
 
-// Define components for the template
-const components = {
-  GameContext,
-  SectionHeader
-};
+// Components are imported and used directly in template
 
 const columns = [
   { key: 'name', label: 'Name' },

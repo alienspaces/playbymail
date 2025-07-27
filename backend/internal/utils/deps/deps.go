@@ -76,7 +76,7 @@ func NewDefaultDependencies(cfg config.Config) (*log.Log, *store.Store, *river.C
 	}
 
 	// River
-	j, err := jobclient.NewJobClient(l, cfg, s, e, []string{jobqueue.QueueDefault})
+	j, err := jobclient.NewJobClient(l, cfg, s, e, []string{jobqueue.QueueDefault, jobqueue.QueueGame})
 	if err != nil {
 		fmt.Printf("failed new job client >%v<", err)
 		return nil, nil, nil, err
