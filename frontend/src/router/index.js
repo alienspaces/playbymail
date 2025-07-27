@@ -4,7 +4,7 @@ import LoginView from '../views/LoginView.vue';
 import VerifyView from '../views/VerifyView.vue';
 import FaqView from '../views/FaqView.vue';
 import StudioLayout from '../components/StudioLayout.vue';
-import ManagementEntryView from '../views/ManagementEntryView.vue';
+
 import { useAuthStore } from '../stores/auth';
 
 const routes = [
@@ -25,6 +25,7 @@ const routes = [
       { path: ':gameId/creatures', component: () => import('../views/studio/adventure/StudioCreaturesView.vue') },
       { path: ':gameId/item-placements', component: () => import('../views/studio/adventure/StudioItemPlacementsView.vue') },
       { path: ':gameId/creature-placements', component: () => import('../views/studio/adventure/StudioCreaturePlacementsView.vue') },
+
     ],
   },
   {
@@ -49,9 +50,13 @@ const routes = [
   },
   {
     path: '/admin',
-    name: 'ManagementEntry',
-    component: ManagementEntryView,
-    // Placeholder: add children for management features as implemented
+    component: () => import('../components/ManagementLayout.vue'),
+    children: [
+      { path: '', name: 'ManagementDashboard', component: () => import('../views/management/ManagementGamesDashboardView.vue') },
+      { path: 'games/:gameId/instances', name: 'ManagementGameInstances', component: () => import('../views/management/ManagementGameInstancesView.vue') },
+      { path: 'games/:gameId/instances/create', name: 'ManagementCreateInstance', component: () => import('../views/management/ManagementCreateInstanceView.vue') },
+      { path: 'games/:gameId/instances/:instanceId', name: 'ManagementInstanceDetail', component: () => import('../views/management/ManagementInstanceDetailView.vue') },
+    ],
   },
 ];
 

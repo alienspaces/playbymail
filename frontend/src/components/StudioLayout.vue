@@ -72,6 +72,7 @@
                   </svg>
                   Creature Placements
                 </router-link></li>
+
               </template>
             </ul>
           </nav>
@@ -149,6 +150,7 @@
               </svg>
               Creature Placements
             </router-link></li>
+
           </template>
         </ul>
       </nav>
