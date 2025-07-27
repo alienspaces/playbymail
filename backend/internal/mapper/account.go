@@ -8,13 +8,13 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/nulltime"
 	"gitlab.com/alienspaces/playbymail/core/server"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
-	"gitlab.com/alienspaces/playbymail/internal/record"
+	"gitlab.com/alienspaces/playbymail/internal/record/account_record"
 	"gitlab.com/alienspaces/playbymail/schema"
 )
 
 // Account
 
-func AccountRequestToRecord(l logger.Logger, r *http.Request, rec *record.Account) (*record.Account, error) {
+func AccountRequestToRecord(l logger.Logger, r *http.Request, rec *account_record.Account) (*account_record.Account, error) {
 	l.Debug("mapping account request to record")
 
 	var req schema.AccountRequest
@@ -37,7 +37,7 @@ func AccountRequestToRecord(l logger.Logger, r *http.Request, rec *record.Accoun
 	return rec, nil
 }
 
-func AccountRecordToResponseData(l logger.Logger, rec *record.Account) (schema.AccountResponseData, error) {
+func AccountRecordToResponseData(l logger.Logger, rec *account_record.Account) (schema.AccountResponseData, error) {
 	l.Debug("mapping account record to response data")
 
 	data := schema.AccountResponseData{
@@ -51,7 +51,7 @@ func AccountRecordToResponseData(l logger.Logger, rec *record.Account) (schema.A
 	return data, nil
 }
 
-func AccountRecordToResponse(l logger.Logger, rec *record.Account) (schema.AccountResponse, error) {
+func AccountRecordToResponse(l logger.Logger, rec *account_record.Account) (schema.AccountResponse, error) {
 	data, err := AccountRecordToResponseData(l, rec)
 	if err != nil {
 		return schema.AccountResponse{}, err
@@ -61,7 +61,7 @@ func AccountRecordToResponse(l logger.Logger, rec *record.Account) (schema.Accou
 	}, nil
 }
 
-func AccountRecordsToCollectionResponse(l logger.Logger, recs []*record.Account) (schema.AccountCollectionResponse, error) {
+func AccountRecordsToCollectionResponse(l logger.Logger, recs []*account_record.Account) (schema.AccountCollectionResponse, error) {
 	data := []*schema.AccountResponseData{}
 	for _, rec := range recs {
 		d, err := AccountRecordToResponseData(l, rec)

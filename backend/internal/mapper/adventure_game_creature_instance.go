@@ -4,7 +4,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/nulltime"
 	"gitlab.com/alienspaces/playbymail/schema"
 
-	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game"
+	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 )
 
 func AdventureGameCreatureInstanceRequestToRecord(req *schema.AdventureGameCreatureInstanceRequest, rec *adventure_game_record.AdventureGameCreatureInstance) (*adventure_game_record.AdventureGameCreatureInstance, error) {

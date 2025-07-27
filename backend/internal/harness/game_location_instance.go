@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"gitlab.com/alienspaces/playbymail/internal/domain"
-	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game"
+	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 )
 
 func (t *Testing) createGameLocationInstanceRec(cfg GameLocationInstanceConfig, gameInstanceRec *adventure_game_record.AdventureGameInstance) (*adventure_game_record.AdventureGameLocationInstance, error) {

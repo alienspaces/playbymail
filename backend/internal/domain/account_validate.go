@@ -2,15 +2,15 @@ package domain
 
 import (
 	"gitlab.com/alienspaces/playbymail/core/domain"
-	"gitlab.com/alienspaces/playbymail/internal/record"
+	"gitlab.com/alienspaces/playbymail/internal/record/account_record"
 )
 
 type validateAccountArgs struct {
-	next *record.Account
-	curr *record.Account
+	next *account_record.Account
+	curr *account_record.Account
 }
 
-func (m *Domain) populateAccountValidateArgs(next, curr *record.Account) (*validateAccountArgs, error) {
+func (m *Domain) populateAccountValidateArgs(next, curr *account_record.Account) (*validateAccountArgs, error) {
 	args := &validateAccountArgs{
 		curr: curr,
 		next: next,
@@ -18,7 +18,7 @@ func (m *Domain) populateAccountValidateArgs(next, curr *record.Account) (*valid
 	return args, nil
 }
 
-func (m *Domain) validateAccountRecForCreate(rec *record.Account) error {
+func (m *Domain) validateAccountRecForCreate(rec *account_record.Account) error {
 	args, err := m.populateAccountValidateArgs(rec, nil)
 	if err != nil {
 		return err
@@ -26,7 +26,7 @@ func (m *Domain) validateAccountRecForCreate(rec *record.Account) error {
 	return validateAccountRecForCreate(args)
 }
 
-func (m *Domain) validateAccountRecForUpdate(next, curr *record.Account) error {
+func (m *Domain) validateAccountRecForUpdate(next, curr *account_record.Account) error {
 	args, err := m.populateAccountValidateArgs(next, curr)
 	if err != nil {
 		return err
@@ -34,7 +34,7 @@ func (m *Domain) validateAccountRecForUpdate(next, curr *record.Account) error {
 	return validateAccountRecForUpdate(args)
 }
 
-func (m *Domain) validateAccountRecForDelete(rec *record.Account) error {
+func (m *Domain) validateAccountRecForDelete(rec *account_record.Account) error {
 	args, err := m.populateAccountValidateArgs(rec, nil)
 	if err != nil {
 		return err
@@ -53,7 +53,7 @@ func validateAccountRecForUpdate(args *validateAccountArgs) error {
 func validateAccountRec(args *validateAccountArgs) error {
 	rec := args.next
 
-	if err := domain.ValidateStringField(record.FieldAccountEmail, rec.Email); err != nil {
+	if err := domain.ValidateStringField(account_record.FieldAccountEmail, rec.Email); err != nil {
 		return err
 	}
 
@@ -63,7 +63,7 @@ func validateAccountRec(args *validateAccountArgs) error {
 func validateAccountRecForDelete(args *validateAccountArgs) error {
 	rec := args.next
 
-	if err := domain.ValidateUUIDField(record.FieldAccountID, rec.ID); err != nil {
+	if err := domain.ValidateUUIDField(account_record.FieldAccountID, rec.ID); err != nil {
 		return err
 	}
 

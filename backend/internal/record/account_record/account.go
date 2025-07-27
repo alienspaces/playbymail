@@ -1,4 +1,4 @@
-package record
+package account_record
 
 import (
 	"database/sql"

@@ -6,20 +6,20 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/repository"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
 	"gitlab.com/alienspaces/playbymail/core/type/repositor"
-	"gitlab.com/alienspaces/playbymail/internal/record"
+	"gitlab.com/alienspaces/playbymail/internal/record/account_record"
 )
 
 const (
-	TableName string = record.TableAccount
+	TableName string = account_record.TableAccount
 )
 
 // NewRepository -
 func NewRepository(l logger.Logger, tx pgx.Tx) (repositor.Repositor, error) {
-	return repository.NewGeneric[record.Account](
+	return repository.NewGeneric[account_record.Account](
 		repository.NewArgs{
 			Tx:        tx,
 			TableName: TableName,
-			Record:    record.Account{},
+			Record:    account_record.Account{},
 		},
 	)
 }

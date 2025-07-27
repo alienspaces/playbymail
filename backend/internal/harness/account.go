@@ -3,20 +3,20 @@ package harness
 import (
 	"github.com/brianvoe/gofakeit"
 	"gitlab.com/alienspaces/playbymail/internal/domain"
-	"gitlab.com/alienspaces/playbymail/internal/record"
+	"gitlab.com/alienspaces/playbymail/internal/record/account_record"
 )
 
-func (t *Testing) createAccountRec(accountConfig AccountConfig) (*record.Account, error) {
+func (t *Testing) createAccountRec(accountConfig AccountConfig) (*account_record.Account, error) {
 	l := t.Logger("createAccountRec")
 
 	// Create a new record instance to avoid reusing the same record across tests
-	var rec *record.Account
+	var rec *account_record.Account
 	if accountConfig.Record != nil {
 		// Copy the record to avoid modifying the original
 		recCopy := *accountConfig.Record
 		rec = &recCopy
 	} else {
-		rec = &record.Account{}
+		rec = &account_record.Account{}
 	}
 
 	rec = t.applyAccountRecDefaultValues(rec)
@@ -43,9 +43,9 @@ func (t *Testing) createAccountRec(accountConfig AccountConfig) (*record.Account
 	return rec, nil
 }
 
-func (t *Testing) applyAccountRecDefaultValues(rec *record.Account) *record.Account {
+func (t *Testing) applyAccountRecDefaultValues(rec *account_record.Account) *account_record.Account {
 	if rec == nil {
-		rec = &record.Account{}
+		rec = &account_record.Account{}
 	}
 
 	if rec.Email == "" {

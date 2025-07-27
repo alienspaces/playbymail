@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/harness"
-	adventure_game_record "gitlab.com/alienspaces/playbymail/internal/record/adventure_game"
+	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 	"gitlab.com/alienspaces/playbymail/internal/utils/deps"
 )
 

@@ -8,7 +8,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/domain"
 	coreerror "gitlab.com/alienspaces/playbymail/core/error"
 	"gitlab.com/alienspaces/playbymail/core/sql"
-	game_record "gitlab.com/alienspaces/playbymail/internal/record/game"
+	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 )
 
 // GetManyGameSubscriptionRecs -

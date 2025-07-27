@@ -10,7 +10,7 @@ import (
 
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/harness"
-	"gitlab.com/alienspaces/playbymail/internal/record"
+	"gitlab.com/alienspaces/playbymail/internal/record/account_record"
 	"gitlab.com/alienspaces/playbymail/internal/utils/deps"
 )
 
@@ -19,13 +19,13 @@ func TestCreateOne(t *testing.T) {
 
 	tests := []struct {
 		name   string
-		rec    func(d harness.Data, t *testing.T) *record.Account
+		rec    func(d harness.Data, t *testing.T) *account_record.Account
 		hasErr bool
 	}{
 		{
 			name: "Without ID",
-			rec: func(d harness.Data, t *testing.T) *record.Account {
-				return &record.Account{
+			rec: func(d harness.Data, t *testing.T) *account_record.Account {
+				return &account_record.Account{
 					Email: fmt.Sprintf("%s@example.com", gofakeit.Name()),
 				}
 			},
@@ -33,8 +33,8 @@ func TestCreateOne(t *testing.T) {
 		},
 		{
 			name: "With ID",
-			rec: func(d harness.Data, t *testing.T) *record.Account {
-				rec := &record.Account{
+			rec: func(d harness.Data, t *testing.T) *account_record.Account {
+				rec := &account_record.Account{
 					Email: fmt.Sprintf("%s@example.com", gofakeit.Name()),
 				}
 				id, _ := uuid.NewRandom()
@@ -137,12 +137,12 @@ func TestUpdateOne(t *testing.T) {
 
 	tests := []struct {
 		name   string
-		rec    func(d harness.Data, t *testing.T) *record.Account
+		rec    func(d harness.Data, t *testing.T) *account_record.Account
 		hasErr bool
 	}{
 		{
 			name: "With ID",
-			rec: func(d harness.Data, t *testing.T) *record.Account {
+			rec: func(d harness.Data, t *testing.T) *account_record.Account {
 				accRec, err := d.GetAccountRecByRef(harness.AccountOneRef)
 				require.NoError(t, err, "GetAccountRecByRef returns without error")
 				return accRec
@@ -151,7 +151,7 @@ func TestUpdateOne(t *testing.T) {
 		},
 		{
 			name: "Without ID",
-			rec: func(d harness.Data, t *testing.T) *record.Account {
+			rec: func(d harness.Data, t *testing.T) *account_record.Account {
 				accRec, err := d.GetAccountRecByRef(harness.AccountOneRef)
 				require.NoError(t, err, "GetAccountRecByRef returns without error")
 				rec := accRec

@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game"
+	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 )
 
 func ValidateAdventureGameCreatureInstanceFields(ctx context.Context, rec *adventure_game_record.AdventureGameCreatureInstance) error {

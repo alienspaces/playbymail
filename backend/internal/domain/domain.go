@@ -6,9 +6,9 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/type/domainer"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
 
-	"gitlab.com/alienspaces/playbymail/internal/record"
-	adventure_game_record "gitlab.com/alienspaces/playbymail/internal/record/adventure_game"
-	game_record "gitlab.com/alienspaces/playbymail/internal/record/game"
+	"gitlab.com/alienspaces/playbymail/internal/record/account_record"
+	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
+	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 	"gitlab.com/alienspaces/playbymail/internal/repository/account"
 	"gitlab.com/alienspaces/playbymail/internal/repository/adventure_game_character"
 	"gitlab.com/alienspaces/playbymail/internal/repository/adventure_game_character_instance"
@@ -80,8 +80,8 @@ func NewDomain(l logger.Logger, cfg config.Config) (*Domain, error) {
 }
 
 // AccountRepository -
-func (m *Domain) AccountRepository() *repository.Generic[record.Account, *record.Account] {
-	return m.Repositories[account.TableName].(*repository.Generic[record.Account, *record.Account])
+func (m *Domain) AccountRepository() *repository.Generic[account_record.Account, *account_record.Account] {
+	return m.Repositories[account.TableName].(*repository.Generic[account_record.Account, *account_record.Account])
 }
 
 // GameRepository -

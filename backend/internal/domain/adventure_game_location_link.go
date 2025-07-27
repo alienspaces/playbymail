@@ -3,7 +3,7 @@ package domain
 import (
 	"gitlab.com/alienspaces/playbymail/core/domain"
 	"gitlab.com/alienspaces/playbymail/core/sql"
-	adventure_game_record "gitlab.com/alienspaces/playbymail/internal/record/adventure_game"
+	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 )
 
 // GetManyAdventureGameLocationLinkRecs -

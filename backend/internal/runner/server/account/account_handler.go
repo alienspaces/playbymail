@@ -18,7 +18,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/jobqueue"
 	"gitlab.com/alienspaces/playbymail/internal/jobworker"
 	"gitlab.com/alienspaces/playbymail/internal/mapper"
-	"gitlab.com/alienspaces/playbymail/internal/record"
+	"gitlab.com/alienspaces/playbymail/internal/record/account_record"
 	"gitlab.com/alienspaces/playbymail/internal/utils/logging"
 	"gitlab.com/alienspaces/playbymail/schema"
 )
@@ -339,7 +339,7 @@ func createAccountHandler(w http.ResponseWriter, r *http.Request, pp httprouter.
 
 	mm := m.(*domain.Domain)
 
-	rec, err := mapper.AccountRequestToRecord(l, r, &record.Account{})
+	rec, err := mapper.AccountRequestToRecord(l, r, &account_record.Account{})
 	if err != nil {
 		l.Warn("failed mapping account request to record >%v<", err)
 		return err
@@ -608,7 +608,7 @@ func sendAccountVerificationEmail(m *domain.Domain, jc *river.Client[pgx.Tx], em
 
 	recs, err := repo.GetMany(&coresql.Options{
 		Params: []coresql.Param{
-			{Col: record.FieldAccountEmail, Val: emailAddr},
+			{Col: account_record.FieldAccountEmail, Val: emailAddr},
 		},
 		Limit: 1,
 	})
@@ -617,10 +617,10 @@ func sendAccountVerificationEmail(m *domain.Domain, jc *river.Client[pgx.Tx], em
 		return err
 	}
 
-	var rec *record.Account
+	var rec *account_record.Account
 	if len(recs) == 0 {
 		l.Info("no account found for email >%s<, creating account", emailAddr)
-		rec = &record.Account{
+		rec = &account_record.Account{
 			Email: emailAddr,
 		}
 		rec, err = m.CreateAccountRec(rec)

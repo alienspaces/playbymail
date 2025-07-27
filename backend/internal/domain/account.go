@@ -16,7 +16,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/nulltime"
 	corerecord "gitlab.com/alienspaces/playbymail/core/record"
 	coresql "gitlab.com/alienspaces/playbymail/core/sql"
-	"gitlab.com/alienspaces/playbymail/internal/record"
+	"gitlab.com/alienspaces/playbymail/internal/record/account_record"
 )
 
 // Utility for HMAC-SHA256 hashing
@@ -27,7 +27,7 @@ func hmacSHA256(key, data string) string {
 }
 
 // GetManyAccountRecs -
-func (m *Domain) GetManyAccountRecs(opts *coresql.Options) ([]*record.Account, error) {
+func (m *Domain) GetManyAccountRecs(opts *coresql.Options) ([]*account_record.Account, error) {
 	l := m.Logger("GetManyAccountRecs")
 
 	l.Debug("getting many client records opts >%#v<", opts)
@@ -43,7 +43,7 @@ func (m *Domain) GetManyAccountRecs(opts *coresql.Options) ([]*record.Account, e
 }
 
 // GetAccountRec -
-func (m *Domain) GetAccountRec(recID string, lock *coresql.Lock) (*record.Account, error) {
+func (m *Domain) GetAccountRec(recID string, lock *coresql.Lock) (*account_record.Account, error) {
 	l := m.Logger("GetAccountRec")
 
 	l.Debug("getting client record ID >%s<", recID)
@@ -56,7 +56,7 @@ func (m *Domain) GetAccountRec(recID string, lock *coresql.Lock) (*record.Accoun
 
 	rec, err := r.GetOne(recID, lock)
 	if errors.Is(err, pgx.ErrNoRows) {
-		return nil, coreerror.NewNotFoundError(record.TableAccount, recID)
+		return nil, coreerror.NewNotFoundError(account_record.TableAccount, recID)
 	} else if err != nil {
 		return nil, databaseError(err)
 	}
@@ -65,7 +65,7 @@ func (m *Domain) GetAccountRec(recID string, lock *coresql.Lock) (*record.Accoun
 }
 
 // CreateAccountRec -
-func (m *Domain) CreateAccountRec(rec *record.Account) (*record.Account, error) {
+func (m *Domain) CreateAccountRec(rec *account_record.Account) (*account_record.Account, error) {
 	l := m.Logger("CreateAccountRec")
 
 	l.Debug("creating client record >%#v<", rec)
@@ -87,7 +87,7 @@ func (m *Domain) CreateAccountRec(rec *record.Account) (*record.Account, error) 
 }
 
 // UpdateAccountRec -
-func (m *Domain) UpdateAccountRec(next *record.Account) (*record.Account, error) {
+func (m *Domain) UpdateAccountRec(next *account_record.Account) (*account_record.Account, error) {
 	l := m.Logger("UpdateAccountRec")
 
 	curr, err := m.GetAccountRec(next.ID, coresql.ForUpdateNoWait)
@@ -162,7 +162,7 @@ func (m *Domain) RemoveAccountRec(recID string) error {
 	return nil
 }
 
-func (m *Domain) GenerateAccountVerificationToken(rec *record.Account) (string, error) {
+func (m *Domain) GenerateAccountVerificationToken(rec *account_record.Account) (string, error) {
 	l := m.Logger("GenerateAccountVerificationToken")
 
 	l.Debug("generating verification token for account ID >%s<", rec.ID)
@@ -199,7 +199,7 @@ func (m *Domain) VerifyAccountVerificationToken(token string) (string, error) {
 
 	recs, err := repo.GetMany(&coresql.Options{
 		Params: []coresql.Param{
-			{Col: record.FieldAccountVerificationToken, Val: hash},
+			{Col: account_record.FieldAccountVerificationToken, Val: hash},
 		},
 		Limit: 1,
 	})
@@ -237,7 +237,7 @@ func (m *Domain) VerifyAccountVerificationToken(token string) (string, error) {
 	return sessionToken, nil
 }
 
-func (m *Domain) VerifyAccountSessionToken(token string) (*record.Account, error) {
+func (m *Domain) VerifyAccountSessionToken(token string) (*account_record.Account, error) {
 	l := m.Logger("VerifyAccountSessionToken")
 
 	l.Info("verifying account session token >%s<", token)
@@ -250,7 +250,7 @@ func (m *Domain) VerifyAccountSessionToken(token string) (*record.Account, error
 
 	recs, err := repo.GetMany(&coresql.Options{
 		Params: []coresql.Param{
-			{Col: record.FieldAccountSessionToken, Val: hash},
+			{Col: account_record.FieldAccountSessionToken, Val: hash},
 		},
 		Limit: 1,
 	})

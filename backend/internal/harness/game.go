@@ -3,7 +3,7 @@ package harness
 import (
 	"github.com/brianvoe/gofakeit"
 	"gitlab.com/alienspaces/playbymail/internal/domain"
-	game_record "gitlab.com/alienspaces/playbymail/internal/record/game"
+	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 )
 
 func (t *Testing) createGameRec(gameConfig GameConfig) (*game_record.Game, error) {

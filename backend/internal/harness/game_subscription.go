@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"gitlab.com/alienspaces/playbymail/internal/domain"
-	game_record "gitlab.com/alienspaces/playbymail/internal/record/game"
+	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 )
 
 func (t *Testing) createGameSubscriptionRec(subscriptionConfig GameSubscriptionConfig, gameRec *game_record.Game) (*game_record.GameSubscription, error) {

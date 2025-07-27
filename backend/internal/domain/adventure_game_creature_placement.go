@@ -3,7 +3,7 @@ package domain
 import (
 	coreerror "gitlab.com/alienspaces/playbymail/core/error"
 	coresql "gitlab.com/alienspaces/playbymail/core/sql"
-	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game"
+	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 )
 
 // GetManyAdventureGameCreaturePlacementRecs -

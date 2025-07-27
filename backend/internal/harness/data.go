@@ -3,14 +3,14 @@ package harness
 import (
 	"fmt"
 
-	"gitlab.com/alienspaces/playbymail/internal/record"
-	adventure_game_record "gitlab.com/alienspaces/playbymail/internal/record/adventure_game"
-	game_record "gitlab.com/alienspaces/playbymail/internal/record/game"
+	"gitlab.com/alienspaces/playbymail/internal/record/account_record"
+	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
+	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 )
 
 // Data -
 type Data struct {
-	AccountRecs                     []*record.Account
+	AccountRecs                     []*account_record.Account
 	GameRecs                        []*game_record.Game
 	GameLocationRecs                []*adventure_game_record.AdventureGameLocation
 	GameLocationLinkRecs            []*adventure_game_record.AdventureGameLocationLink
@@ -83,7 +83,7 @@ func initialiseTeardownDataStores() Data {
 }
 
 // Account
-func (d *Data) AddAccountRec(rec *record.Account) {
+func (d *Data) AddAccountRec(rec *account_record.Account) {
 	for idx := range d.AccountRecs {
 		if d.AccountRecs[idx].ID == rec.ID {
 			d.AccountRecs[idx] = rec
@@ -93,7 +93,7 @@ func (d *Data) AddAccountRec(rec *record.Account) {
 	d.AccountRecs = append(d.AccountRecs, rec)
 }
 
-func (d *Data) GetAccountRecByID(accountID string) (*record.Account, error) {
+func (d *Data) GetAccountRecByID(accountID string) (*account_record.Account, error) {
 	for _, rec := range d.AccountRecs {
 		if rec.ID == accountID {
 			return rec, nil
@@ -102,7 +102,7 @@ func (d *Data) GetAccountRecByID(accountID string) (*record.Account, error) {
 	return nil, fmt.Errorf("failed getting account with ID >%s<", accountID)
 }
 
-func (d *Data) GetAccountRecByRef(ref string) (*record.Account, error) {
+func (d *Data) GetAccountRecByRef(ref string) (*account_record.Account, error) {
 	accountID, ok := d.Refs.AccountRefs[ref]
 	if !ok {
 		return nil, fmt.Errorf("failed getting account with ref >%s<", ref)

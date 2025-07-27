@@ -2,7 +2,7 @@ package maintestdata
 
 import (
 	"gitlab.com/alienspaces/playbymail/internal/harness"
-	game_record "gitlab.com/alienspaces/playbymail/internal/record/game"
+	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 )
 
 // MainTestDataConfig returns the main test data configuration for

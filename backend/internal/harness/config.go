@@ -1,9 +1,9 @@
 package harness
 
 import (
-	"gitlab.com/alienspaces/playbymail/internal/record"
-	adventure_game_record "gitlab.com/alienspaces/playbymail/internal/record/adventure_game"
-	game_record "gitlab.com/alienspaces/playbymail/internal/record/game"
+	"gitlab.com/alienspaces/playbymail/internal/record/account_record"
+	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
+	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 )
 
 const (
@@ -94,7 +94,7 @@ type GameCreatureConfig struct {
 
 type AccountConfig struct {
 	Reference string // Reference to the account record
-	Record    *record.Account
+	Record    *account_record.Account
 }
 
 type GameLocationConfig struct {
@@ -327,19 +327,19 @@ func DefaultDataConfig() DataConfig {
 		AccountConfigs: []AccountConfig{
 			{
 				Reference: AccountOneRef,
-				Record: &record.Account{
+				Record: &account_record.Account{
 					Email: UniqueEmail("default-account-one@example.com"),
 				},
 			},
 			{
 				Reference: AccountTwoRef,
-				Record: &record.Account{
+				Record: &account_record.Account{
 					Email: UniqueEmail("default-account-two@example.com"),
 				},
 			},
 			{
 				Reference: AccountThreeRef,
-				Record: &record.Account{
+				Record: &account_record.Account{
 					Email: UniqueEmail("default-account-three@example.com"),
 				},
 			},

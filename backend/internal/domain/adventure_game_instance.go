@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"gitlab.com/alienspaces/playbymail/core/sql"
-	adventure_game_record "gitlab.com/alienspaces/playbymail/internal/record/adventure_game"
+	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 )
 
 func (m *Domain) GetAdventureGameInstanceRec(recID string, lock *sql.Lock) (*adventure_game_record.AdventureGameInstance, error) {

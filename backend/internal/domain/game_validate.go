@@ -2,7 +2,7 @@ package domain
 
 import (
 	"gitlab.com/alienspaces/playbymail/core/domain"
-	game_record "gitlab.com/alienspaces/playbymail/internal/record/game"
+	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 )
 
 type validateGameArgs struct {
