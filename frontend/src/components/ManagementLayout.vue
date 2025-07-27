@@ -4,24 +4,30 @@
 -->
 <template>
   <div class="management-layout">
-    <!-- Management Header -->
-    <div class="management-header">
-      <h1>Game Management</h1>
-      <div class="header-actions">
-        <button class="help-btn" @click="showHelp = true">
-          <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/>
-          </svg>
-          Help
-        </button>
+    <!-- Show ManagementEntryView for unauthenticated users -->
+    <ManagementEntryView v-if="!isLoggedIn" />
+    
+    <!-- Show full management interface for authenticated users -->
+    <div v-else>
+      <!-- Management Header -->
+      <div class="management-header">
+        <h1>Game Management</h1>
+        <div class="header-actions">
+          <button class="help-btn" @click="showHelp = true">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/>
+            </svg>
+            Help
+          </button>
+        </div>
       </div>
-    </div>
 
-    <!-- Main content area -->
-    <div class="management-body">
-      <section class="management-content">
-        <router-view />
-      </section>
+      <!-- Main content area -->
+      <div class="management-body">
+        <section class="management-content">
+          <router-view />
+        </section>
+      </div>
     </div>
 
     <!-- Help Panel -->
@@ -57,8 +63,14 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
+import { useAuthStore } from '../stores/auth';
+import { storeToRefs } from 'pinia';
+import ManagementEntryView from '../views/ManagementEntryView.vue';
 
+const authStore = useAuthStore();
+const { sessionToken } = storeToRefs(authStore);
+const isLoggedIn = computed(() => !!sessionToken.value);
 const showHelp = ref(false);
 </script>
 

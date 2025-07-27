@@ -46,11 +46,11 @@ function closeMobileMenu() {
           <router-link to="/login" class="navbar-link" exact-active-class="active" @click="closeMobileMenu">Login</router-link>
         </template>
       </div>
-      <div class="mobile-logo">
+      <router-link to="/" class="mobile-logo">
         <span class="logo-text">
           <span class="logo-capital">P</span>lay<span class="logo-capital">B</span>y<span class="logo-capital">M</span>ail
         </span>
-      </div>
+      </router-link>
       <button class="burger icon-btn" @click="toggleMobileMenu" aria-label="Open navigation menu">
         <span :class="{ 'open': mobileMenuOpen }"></span>
         <span :class="{ 'open': mobileMenuOpen }"></span>

@@ -243,5 +243,16 @@
     grid-template-columns: 1fr;
     gap: var(--space-lg);
   }
+  
+  .hero-decoration {
+    top: -30px;
+    width: 80px;
+    height: 80px;
+  }
+  
+  .hero-icon {
+    width: 40px;
+    height: 40px;
+  }
 }
 </style>
