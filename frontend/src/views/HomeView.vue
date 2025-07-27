@@ -19,7 +19,7 @@
         </div>
         <div class="user-type">
           <h3>Players</h3>
-          <p>Join games, manage their accounts, and seek help.</p>
+          <p>Join games, manage your account, and seek help.</p>
         </div>
       </div>
     </div>
