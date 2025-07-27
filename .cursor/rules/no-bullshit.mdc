@@ -1,0 +1,124 @@
+# No Bullshit Rule
+
+This rule applies to everything. No idealized patterns, no over-engineering, no academic perfection. Just practical, working solutions.
+
+## Core Principles
+
+### 1. Keep It Simple
+- **Don't over-engineer**: If a simple solution works, use it
+- **Don't add complexity**: Unless there's a clear, immediate benefit
+- **Don't future-proof**: Solve today's problems, not tomorrow's
+- **Don't optimize prematurely**: Make it work first, optimize later
+
+### 2. Focus on What Matters
+- **User experience**: Does it work for users?
+- **Maintainability**: Can other developers understand it?
+- **Reliability**: Does it work consistently?
+- **Performance**: Is it fast enough for the use case?
+
+### 3. Be Honest About What We Do
+- **Document actual patterns**: Not idealized ones
+- **Acknowledge limitations**: Don't pretend we're perfect
+- **Keep it real**: Show what actually works, not what should work
+- **Learn from mistakes**: Document what didn't work and why
+
+## Code Quality
+
+### What We Actually Care About
+- **It works**: Code does what it's supposed to do
+- **It's readable**: Other developers can understand it
+- **It's testable**: We can verify it works correctly
+- **It's maintainable**: We can change it without breaking everything
+
+### What We Don't Care About
+- **Perfect architecture**: Good enough is good enough
+- **100% test coverage**: Test the important stuff
+- **Following every best practice**: Follow the ones that matter
+- **Code style perfection**: Consistent and readable is fine
+
+## Testing
+
+### What We Actually Test
+- **User workflows**: Do the main features work?
+- **Error cases**: Do errors display properly?
+- **Edge cases**: Only the ones that actually happen
+- **Integration**: Do components work together?
+
+### What We Don't Test
+- **Implementation details**: Test behavior, not internals
+- **Every possible scenario**: Test the likely ones
+- **Perfect mocking**: Mock what you need, not everything
+- **Academic test patterns**: Use patterns that work for us
+
+## Documentation
+
+### What We Actually Document
+- **How to use it**: What does it do and how?
+- **What it expects**: What inputs/outputs?
+- **Known limitations**: What doesn't work?
+- **Real examples**: Show actual usage, not idealized
+
+### What We Don't Document
+- **Perfect API design**: Document what we have
+- **Future plans**: Document what works now
+- **Academic explanations**: Explain it simply
+- **Overly detailed specs**: Keep it practical
+
+## Problem Solving
+
+### Our Approach
+1. **Understand the problem**: What are we actually trying to solve?
+2. **Find the simplest solution**: What's the easiest way to fix it?
+3. **Test it works**: Does it actually solve the problem?
+4. **Document it**: How do we use this solution?
+
+### What We Avoid
+- **Over-analysis**: Don't overthink simple problems
+- **Perfect solutions**: Good enough solutions that work
+- **Academic approaches**: Practical solutions that work
+- **Future-proofing**: Solve today's problems
+
+## Communication
+
+### Be Direct
+- **Say what you mean**: No corporate speak
+- **Acknowledge reality**: Don't pretend everything is perfect
+- **Focus on solutions**: What can we do about it?
+- **Keep it practical**: What actually matters?
+
+### Avoid
+- **Buzzwords**: Use plain language
+- **Over-promising**: Be realistic about what we can do
+- **Academic language**: Explain it simply
+- **Corporate speak**: Just say what you mean
+
+## When Things Go Wrong
+
+### Our Response
+1. **Acknowledge the problem**: Don't pretend it's not broken
+2. **Find the root cause**: What actually went wrong?
+3. **Fix it simply**: What's the easiest way to fix it?
+4. **Learn from it**: What can we do better next time?
+
+### What We Don't Do
+- **Blame people**: Focus on fixing the problem
+- **Over-analyze**: Find the cause and fix it
+- **Make excuses**: Just fix it
+- **Pretend it's perfect**: Acknowledge what went wrong
+
+## Summary
+
+**Keep it simple, keep it real, keep it working.**
+
+- Don't over-engineer
+- Don't pretend we're perfect
+- Don't add complexity without clear benefit
+- Do what works
+- Do what's practical
+- Do what users need
+
+This is our approach. No bullshit, just practical solutions that work.
+description:
+globs:
+alwaysApply: false
+---
