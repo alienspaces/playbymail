@@ -8,11 +8,11 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/domain"
 	coreerror "gitlab.com/alienspaces/playbymail/core/error"
 	coresql "gitlab.com/alienspaces/playbymail/core/sql"
-	"gitlab.com/alienspaces/playbymail/internal/record"
+	game_record "gitlab.com/alienspaces/playbymail/internal/record/game"
 )
 
 // GetManyGameRecs -
-func (m *Domain) GetManyGameRecs(opts *coresql.Options) ([]*record.Game, error) {
+func (m *Domain) GetManyGameRecs(opts *coresql.Options) ([]*game_record.Game, error) {
 	l := m.Logger("GetManyGameRecs")
 
 	l.Debug("getting many client records opts >%#v<", opts)
@@ -28,7 +28,7 @@ func (m *Domain) GetManyGameRecs(opts *coresql.Options) ([]*record.Game, error) 
 }
 
 // GetGameRec -
-func (m *Domain) GetGameRec(recID string, lock *coresql.Lock) (*record.Game, error) {
+func (m *Domain) GetGameRec(recID string, lock *coresql.Lock) (*game_record.Game, error) {
 	l := m.Logger("GetGameRec")
 
 	l.Debug("getting client record ID >%s<", recID)
@@ -41,7 +41,7 @@ func (m *Domain) GetGameRec(recID string, lock *coresql.Lock) (*record.Game, err
 
 	rec, err := r.GetOne(recID, lock)
 	if errors.Is(err, pgx.ErrNoRows) {
-		return nil, coreerror.NewNotFoundError(record.TableGame, recID)
+		return nil, coreerror.NewNotFoundError(game_record.TableGame, recID)
 	} else if err != nil {
 		return nil, databaseError(err)
 	}
@@ -50,7 +50,7 @@ func (m *Domain) GetGameRec(recID string, lock *coresql.Lock) (*record.Game, err
 }
 
 // CreateGameRec -
-func (m *Domain) CreateGameRec(rec *record.Game) (*record.Game, error) {
+func (m *Domain) CreateGameRec(rec *game_record.Game) (*game_record.Game, error) {
 	l := m.Logger("CreateGameRec")
 
 	l.Debug("creating client record >%#v<", rec)
@@ -72,7 +72,7 @@ func (m *Domain) CreateGameRec(rec *record.Game) (*record.Game, error) {
 }
 
 // UpdateGameRec -
-func (m *Domain) UpdateGameRec(next *record.Game) (*record.Game, error) {
+func (m *Domain) UpdateGameRec(next *game_record.Game) (*game_record.Game, error) {
 	l := m.Logger("UpdateGameRec")
 
 	curr, err := m.GetGameRec(next.ID, coresql.ForUpdateNoWait)

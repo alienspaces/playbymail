@@ -8,11 +8,11 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/domain"
 	coreerror "gitlab.com/alienspaces/playbymail/core/error"
 	"gitlab.com/alienspaces/playbymail/core/sql"
-	"gitlab.com/alienspaces/playbymail/internal/record"
+	game_record "gitlab.com/alienspaces/playbymail/internal/record/game"
 )
 
 // GetManyGameSubscriptionRecs -
-func (m *Domain) GetManyGameSubscriptionRecs(opts *sql.Options) ([]*record.GameSubscription, error) {
+func (m *Domain) GetManyGameSubscriptionRecs(opts *sql.Options) ([]*game_record.GameSubscription, error) {
 	l := m.Logger("GetManyGameSubscriptionRecs")
 	l.Debug("getting many game_subscription records opts >%#v<", opts)
 	r := m.GameSubscriptionRepository()
@@ -24,7 +24,7 @@ func (m *Domain) GetManyGameSubscriptionRecs(opts *sql.Options) ([]*record.GameS
 }
 
 // GetGameSubscriptionRec -
-func (m *Domain) GetGameSubscriptionRec(recID string, lock *sql.Lock) (*record.GameSubscription, error) {
+func (m *Domain) GetGameSubscriptionRec(recID string, lock *sql.Lock) (*game_record.GameSubscription, error) {
 	l := m.Logger("GetGameSubscriptionRec")
 	l.Debug("getting game_subscription record ID >%s<", recID)
 	if err := domain.ValidateUUIDField("id", recID); err != nil {
@@ -33,7 +33,7 @@ func (m *Domain) GetGameSubscriptionRec(recID string, lock *sql.Lock) (*record.G
 	r := m.GameSubscriptionRepository()
 	rec, err := r.GetOne(recID, lock)
 	if errors.Is(err, pgx.ErrNoRows) {
-		return nil, coreerror.NewNotFoundError(record.TableGameSubscription, recID)
+		return nil, coreerror.NewNotFoundError(game_record.TableGameSubscription, recID)
 	} else if err != nil {
 		return nil, databaseError(err)
 	}
@@ -41,7 +41,7 @@ func (m *Domain) GetGameSubscriptionRec(recID string, lock *sql.Lock) (*record.G
 }
 
 // CreateGameSubscriptionRec -
-func (m *Domain) CreateGameSubscriptionRec(rec *record.GameSubscription) (*record.GameSubscription, error) {
+func (m *Domain) CreateGameSubscriptionRec(rec *game_record.GameSubscription) (*game_record.GameSubscription, error) {
 	l := m.Logger("CreateGameSubscriptionRec")
 	l.Debug("creating game_subscription record >%#v<", rec)
 	r := m.GameSubscriptionRepository()
@@ -58,7 +58,7 @@ func (m *Domain) CreateGameSubscriptionRec(rec *record.GameSubscription) (*recor
 }
 
 // UpdateGameSubscriptionRec -
-func (m *Domain) UpdateGameSubscriptionRec(next *record.GameSubscription) (*record.GameSubscription, error) {
+func (m *Domain) UpdateGameSubscriptionRec(next *game_record.GameSubscription) (*game_record.GameSubscription, error) {
 	l := m.Logger("UpdateGameSubscriptionRec")
 	curr, err := m.GetGameSubscriptionRec(next.ID, sql.ForUpdateNoWait)
 	if err != nil {
@@ -116,19 +116,19 @@ func (m *Domain) RemoveGameSubscriptionRec(recID string) error {
 }
 
 // Validation stubs
-func (m *Domain) validateGameSubscriptionRecForCreate(rec *record.GameSubscription) error {
+func (m *Domain) validateGameSubscriptionRecForCreate(rec *game_record.GameSubscription) error {
 	l := m.Logger("validateGameSubscriptionRecForCreate")
 	l.Debug("validating game_subscription record >%#v<", rec)
 	// TODO: Add validation logic
 	return nil
 }
-func (m *Domain) validateGameSubscriptionRecForUpdate(next, curr *record.GameSubscription) error {
+func (m *Domain) validateGameSubscriptionRecForUpdate(next, curr *game_record.GameSubscription) error {
 	l := m.Logger("validateGameSubscriptionRecForUpdate")
 	l.Debug("validating current game_subscription record >%#v< against next >%#v<", curr, next)
 	// TODO: Add validation logic
 	return nil
 }
-func (m *Domain) validateGameSubscriptionRecForDelete(rec *record.GameSubscription) error {
+func (m *Domain) validateGameSubscriptionRecForDelete(rec *game_record.GameSubscription) error {
 	l := m.Logger("validateGameSubscriptionRecForDelete")
 	l.Debug("validating game_subscription record >%#v<", rec)
 	// TODO: Add validation logic

@@ -8,6 +8,7 @@ import (
 
 	"gitlab.com/alienspaces/playbymail/internal/record"
 	adventure_game_record "gitlab.com/alienspaces/playbymail/internal/record/adventure_game"
+	game_record "gitlab.com/alienspaces/playbymail/internal/record/game"
 	"gitlab.com/alienspaces/playbymail/internal/repository/account"
 	"gitlab.com/alienspaces/playbymail/internal/repository/adventure_game_character"
 	"gitlab.com/alienspaces/playbymail/internal/repository/adventure_game_character_instance"
@@ -84,8 +85,8 @@ func (m *Domain) AccountRepository() *repository.Generic[record.Account, *record
 }
 
 // GameRepository -
-func (m *Domain) GameRepository() *repository.Generic[record.Game, *record.Game] {
-	return m.Repositories[game.TableName].(*repository.Generic[record.Game, *record.Game])
+func (m *Domain) GameRepository() *repository.Generic[game_record.Game, *game_record.Game] {
+	return m.Repositories[game.TableName].(*repository.Generic[game_record.Game, *game_record.Game])
 }
 
 // GameLocationLinkRepository -
@@ -154,13 +155,13 @@ func (m *Domain) AdventureGameCharacterInstanceRepository() *repository.Generic[
 }
 
 // GameSubscriptionRepository -
-func (m *Domain) GameSubscriptionRepository() *repository.Generic[record.GameSubscription, *record.GameSubscription] {
-	return m.Repositories[game_subscription.TableName].(*repository.Generic[record.GameSubscription, *record.GameSubscription])
+func (m *Domain) GameSubscriptionRepository() *repository.Generic[game_record.GameSubscription, *game_record.GameSubscription] {
+	return m.Repositories[game_subscription.TableName].(*repository.Generic[game_record.GameSubscription, *game_record.GameSubscription])
 }
 
 // GameAdministrationRepository -
-func (m *Domain) GameAdministrationRepository() *repository.Generic[record.GameAdministration, *record.GameAdministration] {
-	return m.Repositories[game_administration.TableName].(*repository.Generic[record.GameAdministration, *record.GameAdministration])
+func (m *Domain) GameAdministrationRepository() *repository.Generic[game_record.GameAdministration, *game_record.GameAdministration] {
+	return m.Repositories[game_administration.TableName].(*repository.Generic[game_record.GameAdministration, *game_record.GameAdministration])
 }
 
 // Logger - Returns a logger with package context and provided function context

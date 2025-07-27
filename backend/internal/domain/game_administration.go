@@ -8,11 +8,11 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/domain"
 	coreerror "gitlab.com/alienspaces/playbymail/core/error"
 	"gitlab.com/alienspaces/playbymail/core/sql"
-	"gitlab.com/alienspaces/playbymail/internal/record"
+	game_record "gitlab.com/alienspaces/playbymail/internal/record/game"
 )
 
 // GetManyGameAdministrationRecs -
-func (m *Domain) GetManyGameAdministrationRecs(opts *sql.Options) ([]*record.GameAdministration, error) {
+func (m *Domain) GetManyGameAdministrationRecs(opts *sql.Options) ([]*game_record.GameAdministration, error) {
 	l := m.Logger("GetManyGameAdministrationRecs")
 	l.Debug("getting many game_administration records opts >%#v<", opts)
 	r := m.GameAdministrationRepository()
@@ -24,7 +24,7 @@ func (m *Domain) GetManyGameAdministrationRecs(opts *sql.Options) ([]*record.Gam
 }
 
 // GetGameAdministrationRec -
-func (m *Domain) GetGameAdministrationRec(recID string, lock *sql.Lock) (*record.GameAdministration, error) {
+func (m *Domain) GetGameAdministrationRec(recID string, lock *sql.Lock) (*game_record.GameAdministration, error) {
 	l := m.Logger("GetGameAdministrationRec")
 	l.Debug("getting game_administration record ID >%s<", recID)
 	if err := domain.ValidateUUIDField("id", recID); err != nil {
@@ -33,7 +33,7 @@ func (m *Domain) GetGameAdministrationRec(recID string, lock *sql.Lock) (*record
 	r := m.GameAdministrationRepository()
 	rec, err := r.GetOne(recID, lock)
 	if errors.Is(err, pgx.ErrNoRows) {
-		return nil, coreerror.NewNotFoundError(record.TableGameAdministration, recID)
+		return nil, coreerror.NewNotFoundError(game_record.TableGameAdministration, recID)
 	} else if err != nil {
 		return nil, databaseError(err)
 	}
@@ -41,7 +41,7 @@ func (m *Domain) GetGameAdministrationRec(recID string, lock *sql.Lock) (*record
 }
 
 // CreateGameAdministrationRec -
-func (m *Domain) CreateGameAdministrationRec(rec *record.GameAdministration) (*record.GameAdministration, error) {
+func (m *Domain) CreateGameAdministrationRec(rec *game_record.GameAdministration) (*game_record.GameAdministration, error) {
 	l := m.Logger("CreateGameAdministrationRec")
 	l.Debug("creating game_administration record >%#v<", rec)
 	r := m.GameAdministrationRepository()
@@ -58,7 +58,7 @@ func (m *Domain) CreateGameAdministrationRec(rec *record.GameAdministration) (*r
 }
 
 // UpdateGameAdministrationRec -
-func (m *Domain) UpdateGameAdministrationRec(next *record.GameAdministration) (*record.GameAdministration, error) {
+func (m *Domain) UpdateGameAdministrationRec(next *game_record.GameAdministration) (*game_record.GameAdministration, error) {
 	l := m.Logger("UpdateGameAdministrationRec")
 	curr, err := m.GetGameAdministrationRec(next.ID, sql.ForUpdateNoWait)
 	if err != nil {
@@ -116,20 +116,20 @@ func (m *Domain) RemoveGameAdministrationRec(recID string) error {
 }
 
 // Validation stubs
-func (m *Domain) validateGameAdministrationRecForCreate(rec *record.GameAdministration) error {
+func (m *Domain) validateGameAdministrationRecForCreate(rec *game_record.GameAdministration) error {
 	l := m.Logger("validateGameAdministrationRecForCreate")
 	l.Debug("validating game_administration record >%#v<", rec)
 	// TODO: Add validation logic
 	return nil
 }
-func (m *Domain) validateGameAdministrationRecForUpdate(next, curr *record.GameAdministration) error {
+func (m *Domain) validateGameAdministrationRecForUpdate(next, curr *game_record.GameAdministration) error {
 	l := m.Logger("validateGameAdministrationRecForUpdate")
 	l.Debug("validating current game_administration record >%#v< against next >%#v<", curr, next)
 
 	// TODO: Add validation logic
 	return nil
 }
-func (m *Domain) validateGameAdministrationRecForDelete(rec *record.GameAdministration) error {
+func (m *Domain) validateGameAdministrationRecForDelete(rec *game_record.GameAdministration) error {
 	l := m.Logger("validateGameAdministrationRecForDelete")
 	l.Debug("validating game_administration record >%#v<", rec)
 	// TODO: Add validation logic

@@ -2,7 +2,7 @@ package maintestdata
 
 import (
 	"gitlab.com/alienspaces/playbymail/internal/harness"
-	"gitlab.com/alienspaces/playbymail/internal/record"
+	game_record "gitlab.com/alienspaces/playbymail/internal/record/game"
 )
 
 // MainTestDataConfig returns the main test data configuration for
@@ -19,13 +19,13 @@ func GameConfig() []harness.GameConfig {
 	return []harness.GameConfig{
 		{
 			Reference: "game-one",
-			Record: &record.Game{
+			Record: &game_record.Game{
 				Name: "Test Game One",
 			},
 		},
 		{
 			Reference: "game-two",
-			Record: &record.Game{
+			Record: &game_record.Game{
 				Name: "Test Game Two",
 			},
 		},

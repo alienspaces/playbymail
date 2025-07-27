@@ -6,6 +6,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/julienschmidt/httprouter"
 	"github.com/riverqueue/river"
+
 	"gitlab.com/alienspaces/playbymail/core/jsonschema"
 	"gitlab.com/alienspaces/playbymail/core/queryparam"
 	"gitlab.com/alienspaces/playbymail/core/server"
@@ -14,7 +15,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/mapper"
-	"gitlab.com/alienspaces/playbymail/internal/record"
+	game_record "gitlab.com/alienspaces/playbymail/internal/record/game"
 	"gitlab.com/alienspaces/playbymail/internal/utils/logging"
 )
 
@@ -129,7 +130,7 @@ func getGameSubscriptionHandler(w http.ResponseWriter, r *http.Request, pp httpr
 func createGameSubscriptionHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = logging.LoggerWithFunctionContext(l, packageName, "createGameSubscriptionHandler")
 	mm := m.(*domain.Domain)
-	rec, err := mapper.GameSubscriptionRequestToRecord(l, r, &record.GameSubscription{})
+	rec, err := mapper.GameSubscriptionRequestToRecord(l, r, &game_record.GameSubscription{})
 	if err != nil {
 		return err
 	}

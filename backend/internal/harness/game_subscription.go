@@ -4,10 +4,10 @@ import (
 	"fmt"
 
 	"gitlab.com/alienspaces/playbymail/internal/domain"
-	"gitlab.com/alienspaces/playbymail/internal/record"
+	game_record "gitlab.com/alienspaces/playbymail/internal/record/game"
 )
 
-func (t *Testing) createGameSubscriptionRec(subscriptionConfig GameSubscriptionConfig, gameRec *record.Game) (*record.GameSubscription, error) {
+func (t *Testing) createGameSubscriptionRec(subscriptionConfig GameSubscriptionConfig, gameRec *game_record.Game) (*game_record.GameSubscription, error) {
 	l := t.Logger("createGameSubscriptionRec")
 
 	if gameRec == nil {
@@ -18,12 +18,12 @@ func (t *Testing) createGameSubscriptionRec(subscriptionConfig GameSubscriptionC
 		return nil, fmt.Errorf("game_subscription record >%#v< must have an AccountRef set", subscriptionConfig)
 	}
 
-	var rec *record.GameSubscription
+	var rec *game_record.GameSubscription
 	if subscriptionConfig.Record != nil {
 		recCopy := *subscriptionConfig.Record
 		rec = &recCopy
 	} else {
-		rec = &record.GameSubscription{}
+		rec = &game_record.GameSubscription{}
 	}
 
 	rec = t.applyGameSubscriptionRecDefaultValues(rec)
@@ -66,9 +66,9 @@ func (t *Testing) createGameSubscriptionRec(subscriptionConfig GameSubscriptionC
 	return rec, nil
 }
 
-func (t *Testing) applyGameSubscriptionRecDefaultValues(rec *record.GameSubscription) *record.GameSubscription {
+func (t *Testing) applyGameSubscriptionRecDefaultValues(rec *game_record.GameSubscription) *game_record.GameSubscription {
 	if rec == nil {
-		rec = &record.GameSubscription{}
+		rec = &game_record.GameSubscription{}
 	}
 	if rec.SubscriptionType == "" {
 		rec.SubscriptionType = "Player" // Default subscription type

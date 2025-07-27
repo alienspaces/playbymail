@@ -3,20 +3,20 @@ package harness
 import (
 	"github.com/brianvoe/gofakeit"
 	"gitlab.com/alienspaces/playbymail/internal/domain"
-	"gitlab.com/alienspaces/playbymail/internal/record"
+	game_record "gitlab.com/alienspaces/playbymail/internal/record/game"
 )
 
-func (t *Testing) createGameRec(gameConfig GameConfig) (*record.Game, error) {
+func (t *Testing) createGameRec(gameConfig GameConfig) (*game_record.Game, error) {
 	l := t.Logger("createGameRec")
 
 	// Create a new record instance to avoid reusing the same record across tests
-	var rec *record.Game
+	var rec *game_record.Game
 	if gameConfig.Record != nil {
 		// Copy the record to avoid modifying the original
 		recCopy := *gameConfig.Record
 		rec = &recCopy
 	} else {
-		rec = &record.Game{}
+		rec = &game_record.Game{}
 	}
 
 	rec = t.applyGameRecDefaultValues(rec)
@@ -44,9 +44,9 @@ func (t *Testing) createGameRec(gameConfig GameConfig) (*record.Game, error) {
 	return rec, nil
 }
 
-func (t *Testing) applyGameRecDefaultValues(rec *record.Game) *record.Game {
+func (t *Testing) applyGameRecDefaultValues(rec *game_record.Game) *game_record.Game {
 	if rec == nil {
-		rec = &record.Game{}
+		rec = &game_record.Game{}
 	}
 
 	if rec.Name == "" {
@@ -54,7 +54,7 @@ func (t *Testing) applyGameRecDefaultValues(rec *record.Game) *record.Game {
 	}
 
 	if rec.GameType == "" {
-		rec.GameType = record.GameTypeAdventure
+		rec.GameType = game_record.GameTypeAdventure
 	}
 
 	return rec

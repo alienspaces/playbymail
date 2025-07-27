@@ -15,7 +15,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/mapper"
-	"gitlab.com/alienspaces/playbymail/internal/record"
+	game_record "gitlab.com/alienspaces/playbymail/internal/record/game"
 	"gitlab.com/alienspaces/playbymail/internal/utils/logging"
 )
 
@@ -230,7 +230,7 @@ func createGameHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Par
 
 	mm := m.(*domain.Domain)
 
-	rec, err := mapper.GameRequestToRecord(l, r, &record.Game{})
+	rec, err := mapper.GameRequestToRecord(l, r, &game_record.Game{})
 	if err != nil {
 		return err
 	}

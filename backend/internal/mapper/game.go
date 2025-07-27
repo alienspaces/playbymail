@@ -7,11 +7,11 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/nulltime"
 	"gitlab.com/alienspaces/playbymail/core/server"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
-	"gitlab.com/alienspaces/playbymail/internal/record"
+	game_record "gitlab.com/alienspaces/playbymail/internal/record/game"
 	"gitlab.com/alienspaces/playbymail/schema"
 )
 
-func GameRequestToRecord(l logger.Logger, r *http.Request, rec *record.Game) (*record.Game, error) {
+func GameRequestToRecord(l logger.Logger, r *http.Request, rec *game_record.Game) (*game_record.Game, error) {
 
 	l.Debug("mapping game request to record")
 
@@ -35,7 +35,7 @@ func GameRequestToRecord(l logger.Logger, r *http.Request, rec *record.Game) (*r
 	return rec, nil
 }
 
-func GameRecordToResponseData(l logger.Logger, rec *record.Game) (schema.GameResponseData, error) {
+func GameRecordToResponseData(l logger.Logger, rec *game_record.Game) (schema.GameResponseData, error) {
 
 	l.Debug("mapping game record to response data")
 
@@ -50,7 +50,7 @@ func GameRecordToResponseData(l logger.Logger, rec *record.Game) (schema.GameRes
 	return data, nil
 }
 
-func GameRecordToResponse(l logger.Logger, rec *record.Game) (schema.GameResponse, error) {
+func GameRecordToResponse(l logger.Logger, rec *game_record.Game) (schema.GameResponse, error) {
 	data, err := GameRecordToResponseData(l, rec)
 	if err != nil {
 		return schema.GameResponse{}, err
@@ -60,7 +60,7 @@ func GameRecordToResponse(l logger.Logger, rec *record.Game) (schema.GameRespons
 	}, nil
 }
 
-func GameRecordsToCollectionResponse(l logger.Logger, recs []*record.Game) (schema.GameCollectionResponse, error) {
+func GameRecordsToCollectionResponse(l logger.Logger, recs []*game_record.Game) (schema.GameCollectionResponse, error) {
 	data := []*schema.GameResponseData{}
 	for _, rec := range recs {
 		d, err := GameRecordToResponseData(l, rec)

@@ -4,10 +4,10 @@ import (
 	"fmt"
 
 	"gitlab.com/alienspaces/playbymail/internal/domain"
-	"gitlab.com/alienspaces/playbymail/internal/record"
+	game_record "gitlab.com/alienspaces/playbymail/internal/record/game"
 )
 
-func (t *Testing) createGameAdministrationRec(administrationConfig GameAdministrationConfig, gameRec *record.Game) (*record.GameAdministration, error) {
+func (t *Testing) createGameAdministrationRec(administrationConfig GameAdministrationConfig, gameRec *game_record.Game) (*game_record.GameAdministration, error) {
 	l := t.Logger("createGameAdministrationRec")
 
 	if gameRec == nil {
@@ -22,12 +22,12 @@ func (t *Testing) createGameAdministrationRec(administrationConfig GameAdministr
 		return nil, fmt.Errorf("game_administration record >%#v< must have a GrantedByAccountRef set", administrationConfig)
 	}
 
-	var rec *record.GameAdministration
+	var rec *game_record.GameAdministration
 	if administrationConfig.Record != nil {
 		recCopy := *administrationConfig.Record
 		rec = &recCopy
 	} else {
-		rec = &record.GameAdministration{}
+		rec = &game_record.GameAdministration{}
 	}
 
 	rec = t.applyGameAdministrationRecDefaultValues(rec)
@@ -73,9 +73,9 @@ func (t *Testing) createGameAdministrationRec(administrationConfig GameAdministr
 	return rec, nil
 }
 
-func (t *Testing) applyGameAdministrationRecDefaultValues(rec *record.GameAdministration) *record.GameAdministration {
+func (t *Testing) applyGameAdministrationRecDefaultValues(rec *game_record.GameAdministration) *game_record.GameAdministration {
 	if rec == nil {
-		rec = &record.GameAdministration{}
+		rec = &game_record.GameAdministration{}
 	}
 	return rec
 }

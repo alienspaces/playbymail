@@ -3,6 +3,7 @@ package harness
 import (
 	"gitlab.com/alienspaces/playbymail/internal/record"
 	adventure_game_record "gitlab.com/alienspaces/playbymail/internal/record/adventure_game"
+	game_record "gitlab.com/alienspaces/playbymail/internal/record/game"
 )
 
 const (
@@ -64,7 +65,7 @@ type DataConfig struct {
 
 type GameConfig struct {
 	Reference                 string // Reference to the game record
-	Record                    *record.Game
+	Record                    *game_record.Game
 	GameLocationConfigs       []GameLocationConfig     // Locations associated with this game
 	GameLocationLinkConfigs   []GameLocationLinkConfig // Links associated with this game
 	GameItemConfigs           []GameItemConfig
@@ -160,14 +161,14 @@ type GameSubscriptionConfig struct {
 	Reference        string // Reference to the game_subscription record
 	AccountRef       string // Reference to the account
 	SubscriptionType string // Type of subscription (Player, Manager, Collaborator)
-	Record           *record.GameSubscription
+	Record           *game_record.GameSubscription
 }
 
 type GameAdministrationConfig struct {
 	Reference           string // Reference to the game_administration record
 	AccountRef          string // Reference to the account
 	GrantedByAccountRef string // Reference to the account that granted the administration rights
-	Record              *record.GameAdministration
+	Record              *game_record.GameAdministration
 }
 
 // DefaultDataConfig -
@@ -176,9 +177,9 @@ func DefaultDataConfig() DataConfig {
 		GameConfigs: []GameConfig{
 			{
 				Reference: GameOneRef,
-				Record: &record.Game{
+				Record: &game_record.Game{
 					Name:     UniqueName("Default Game One"),
-					GameType: record.GameTypeAdventure,
+					GameType: game_record.GameTypeAdventure,
 				},
 				GameItemConfigs: []GameItemConfig{
 					{
@@ -267,7 +268,7 @@ func DefaultDataConfig() DataConfig {
 						Reference:        GameSubscriptionOneRef,
 						AccountRef:       AccountOneRef,
 						SubscriptionType: "Player",
-						Record:           &record.GameSubscription{},
+						Record:           &game_record.GameSubscription{},
 					},
 				},
 				GameAdministrationConfigs: []GameAdministrationConfig{
@@ -275,7 +276,7 @@ func DefaultDataConfig() DataConfig {
 						Reference:           "game-administration-one",
 						AccountRef:          AccountOneRef,
 						GrantedByAccountRef: AccountOneRef,
-						Record:              &record.GameAdministration{},
+						Record:              &game_record.GameAdministration{},
 					},
 				},
 				// Default game instance with a location and an item assigned to the location

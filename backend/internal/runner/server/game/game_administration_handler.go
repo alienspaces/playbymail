@@ -6,6 +6,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/julienschmidt/httprouter"
 	"github.com/riverqueue/river"
+
 	"gitlab.com/alienspaces/playbymail/core/jsonschema"
 	"gitlab.com/alienspaces/playbymail/core/queryparam"
 	"gitlab.com/alienspaces/playbymail/core/server"
@@ -14,7 +15,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/mapper"
-	"gitlab.com/alienspaces/playbymail/internal/record"
+	game_record "gitlab.com/alienspaces/playbymail/internal/record/game"
 	"gitlab.com/alienspaces/playbymail/internal/utils/logging"
 )
 
@@ -129,7 +130,7 @@ func getGameAdministrationHandler(w http.ResponseWriter, r *http.Request, pp htt
 func createGameAdministrationHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = logging.LoggerWithFunctionContext(l, packageName, "createGameAdministrationHandler")
 	mm := m.(*domain.Domain)
-	rec, err := mapper.GameAdministrationRequestToRecord(l, r, &record.GameAdministration{})
+	rec, err := mapper.GameAdministrationRequestToRecord(l, r, &game_record.GameAdministration{})
 	if err != nil {
 		return err
 	}

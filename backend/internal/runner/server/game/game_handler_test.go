@@ -8,7 +8,7 @@ import (
 
 	"gitlab.com/alienspaces/playbymail/core/server"
 	"gitlab.com/alienspaces/playbymail/internal/harness"
-	"gitlab.com/alienspaces/playbymail/internal/record"
+	game_record "gitlab.com/alienspaces/playbymail/internal/record/game"
 	"gitlab.com/alienspaces/playbymail/internal/runner/server/game"
 	"gitlab.com/alienspaces/playbymail/internal/utils/testutil"
 	"gitlab.com/alienspaces/playbymail/schema"
@@ -152,7 +152,7 @@ func Test_createUpdateDeleteGameHandler(t *testing.T) {
 				RequestBody: func(d harness.Data) any {
 					return schema.GameRequest{
 						Name:     "Test Game",
-						GameType: record.GameTypeAdventure,
+						GameType: game_record.GameTypeAdventure,
 					}
 				},
 				ResponseDecoder: testCaseResponseDecoder,
@@ -183,7 +183,7 @@ func Test_createUpdateDeleteGameHandler(t *testing.T) {
 				RequestBody: func(d harness.Data) any {
 					return schema.GameRequest{
 						Name:     "Test Game",
-						GameType: record.GameTypeAdventure,
+						GameType: game_record.GameTypeAdventure,
 					}
 				},
 				ResponseDecoder: testCaseResponseDecoder,

@@ -13,7 +13,7 @@ import (
 
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/harness"
-	"gitlab.com/alienspaces/playbymail/internal/record"
+	game_record "gitlab.com/alienspaces/playbymail/internal/record/game"
 	"gitlab.com/alienspaces/playbymail/internal/utils/deps"
 )
 
@@ -22,25 +22,25 @@ func TestCreateOne(t *testing.T) {
 
 	tests := []struct {
 		name string
-		rec  func(d harness.Data, t *testing.T) *record.Game
+		rec  func(d harness.Data, t *testing.T) *game_record.Game
 		err  bool
 	}{
 		{
 			name: "Without ID",
-			rec: func(d harness.Data, t *testing.T) *record.Game {
-				return &record.Game{
+			rec: func(d harness.Data, t *testing.T) *game_record.Game {
+				return &game_record.Game{
 					Name:     fmt.Sprintf("%s %s", gofakeit.Name(), gofakeit.Name()),
-					GameType: record.GameTypeAdventure,
+					GameType: game_record.GameTypeAdventure,
 				}
 			},
 			err: false,
 		},
 		{
 			name: "With ID",
-			rec: func(d harness.Data, t *testing.T) *record.Game {
-				rec := &record.Game{
+			rec: func(d harness.Data, t *testing.T) *game_record.Game {
+				rec := &game_record.Game{
 					Name:     fmt.Sprintf("%s %s", gofakeit.Name(), gofakeit.Name()),
-					GameType: record.GameTypeAdventure,
+					GameType: game_record.GameTypeAdventure,
 				}
 				id, _ := uuid.NewRandom()
 				rec.ID = id.String()
@@ -142,12 +142,12 @@ func TestUpdateOne(t *testing.T) {
 
 	tests := []struct {
 		name string
-		rec  func(d harness.Data, t *testing.T) *record.Game
+		rec  func(d harness.Data, t *testing.T) *game_record.Game
 		err  bool
 	}{
 		{
 			name: "With ID",
-			rec: func(d harness.Data, t *testing.T) *record.Game {
+			rec: func(d harness.Data, t *testing.T) *game_record.Game {
 				gameRec, err := d.GetGameRecByRef(harness.GameOneRef)
 				require.NoError(t, err, "GetGameRecByRef returns without error")
 				return gameRec
@@ -156,7 +156,7 @@ func TestUpdateOne(t *testing.T) {
 		},
 		{
 			name: "Without ID",
-			rec: func(d harness.Data, t *testing.T) *record.Game {
+			rec: func(d harness.Data, t *testing.T) *game_record.Game {
 				gameRec, err := d.GetGameRecByRef(harness.GameOneRef)
 				require.NoError(t, err, "GetGameRecByRef returns without error")
 				rec := gameRec

@@ -1,7 +1,8 @@
-package record
+package game_record
 
 import (
 	"github.com/jackc/pgx/v5"
+
 	"gitlab.com/alienspaces/playbymail/core/record"
 )
 

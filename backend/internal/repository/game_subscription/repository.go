@@ -6,18 +6,18 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/repository"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
 	"gitlab.com/alienspaces/playbymail/core/type/repositor"
-	"gitlab.com/alienspaces/playbymail/internal/record"
+	game_record "gitlab.com/alienspaces/playbymail/internal/record/game"
 )
 
-const TableName = record.TableGameSubscription
+const TableName = game_record.TableGameSubscription
 
 // NewRepository implements core domain.RepositoryConstructor
 func NewRepository(l logger.Logger, tx pgx.Tx) (repositor.Repositor, error) {
-	return repository.NewGeneric[record.GameSubscription](
+	return repository.NewGeneric[game_record.GameSubscription](
 		repository.NewArgs{
 			Tx:        tx,
 			TableName: TableName,
-			Record:    record.GameSubscription{},
+			Record:    game_record.GameSubscription{},
 		},
 	)
 }

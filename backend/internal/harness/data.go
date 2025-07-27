@@ -5,12 +5,13 @@ import (
 
 	"gitlab.com/alienspaces/playbymail/internal/record"
 	adventure_game_record "gitlab.com/alienspaces/playbymail/internal/record/adventure_game"
+	game_record "gitlab.com/alienspaces/playbymail/internal/record/game"
 )
 
 // Data -
 type Data struct {
 	AccountRecs                     []*record.Account
-	GameRecs                        []*record.Game
+	GameRecs                        []*game_record.Game
 	GameLocationRecs                []*adventure_game_record.AdventureGameLocation
 	GameLocationLinkRecs            []*adventure_game_record.AdventureGameLocationLink
 	GameCharacterRecs               []*adventure_game_record.AdventureGameCharacter
@@ -22,8 +23,8 @@ type Data struct {
 	GameItemInstanceRecs            []*adventure_game_record.AdventureGameItemInstance
 	GameCreatureInstanceRecs        []*adventure_game_record.AdventureGameCreatureInstance
 	GameCharacterInstanceRecs       []*adventure_game_record.AdventureGameCharacterInstance
-	GameSubscriptionRecs            []*record.GameSubscription
-	GameAdministrationRecs          []*record.GameAdministration
+	GameSubscriptionRecs            []*game_record.GameSubscription
+	GameAdministrationRecs          []*game_record.GameAdministration
 	// Data references
 	Refs DataRefs
 }
@@ -110,7 +111,7 @@ func (d *Data) GetAccountRecByRef(ref string) (*record.Account, error) {
 }
 
 // Game
-func (d *Data) AddGameRec(rec *record.Game) {
+func (d *Data) AddGameRec(rec *game_record.Game) {
 	for idx := range d.GameRecs {
 		if d.GameRecs[idx].ID == rec.ID {
 			d.GameRecs[idx] = rec
@@ -120,7 +121,7 @@ func (d *Data) AddGameRec(rec *record.Game) {
 	d.GameRecs = append(d.GameRecs, rec)
 }
 
-func (d *Data) GetGameRecByID(gameID string) (*record.Game, error) {
+func (d *Data) GetGameRecByID(gameID string) (*game_record.Game, error) {
 	for _, rec := range d.GameRecs {
 		if rec.ID == gameID {
 			return rec, nil
@@ -129,7 +130,7 @@ func (d *Data) GetGameRecByID(gameID string) (*record.Game, error) {
 	return nil, fmt.Errorf("failed getting game with ID >%s<", gameID)
 }
 
-func (d *Data) GetGameRecByRef(ref string) (*record.Game, error) {
+func (d *Data) GetGameRecByRef(ref string) (*game_record.Game, error) {
 	gameID, ok := d.Refs.GameRefs[ref]
 	if !ok {
 		return nil, fmt.Errorf("failed getting game with ref >%s<", ref)
@@ -511,7 +512,7 @@ func (d *Data) GetGameCharacterInstanceRecByRef(ref string) (*adventure_game_rec
 	return d.GetGameCharacterInstanceRecByID(id)
 }
 
-func (d *Data) AddGameSubscriptionRec(rec *record.GameSubscription) {
+func (d *Data) AddGameSubscriptionRec(rec *game_record.GameSubscription) {
 	for idx := range d.GameSubscriptionRecs {
 		if d.GameSubscriptionRecs[idx].ID == rec.ID {
 			d.GameSubscriptionRecs[idx] = rec
@@ -521,7 +522,7 @@ func (d *Data) AddGameSubscriptionRec(rec *record.GameSubscription) {
 	d.GameSubscriptionRecs = append(d.GameSubscriptionRecs, rec)
 }
 
-func (d *Data) GetGameSubscriptionRecByID(id string) (*record.GameSubscription, error) {
+func (d *Data) GetGameSubscriptionRecByID(id string) (*game_record.GameSubscription, error) {
 	for _, rec := range d.GameSubscriptionRecs {
 		if rec.ID == id {
 			return rec, nil
@@ -530,7 +531,7 @@ func (d *Data) GetGameSubscriptionRecByID(id string) (*record.GameSubscription, 
 	return nil, fmt.Errorf("failed getting game_subscription with ID >%s<", id)
 }
 
-func (d *Data) AddGameAdministrationRec(rec *record.GameAdministration) {
+func (d *Data) AddGameAdministrationRec(rec *game_record.GameAdministration) {
 	for idx := range d.GameAdministrationRecs {
 		if d.GameAdministrationRecs[idx].ID == rec.ID {
 			d.GameAdministrationRecs[idx] = rec
@@ -540,7 +541,7 @@ func (d *Data) AddGameAdministrationRec(rec *record.GameAdministration) {
 	d.GameAdministrationRecs = append(d.GameAdministrationRecs, rec)
 }
 
-func (d *Data) GetGameAdministrationRecByID(id string) (*record.GameAdministration, error) {
+func (d *Data) GetGameAdministrationRecByID(id string) (*game_record.GameAdministration, error) {
 	for _, rec := range d.GameAdministrationRecs {
 		if rec.ID == id {
 			return rec, nil

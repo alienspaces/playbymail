@@ -2,15 +2,15 @@ package domain
 
 import (
 	"gitlab.com/alienspaces/playbymail/core/domain"
-	"gitlab.com/alienspaces/playbymail/internal/record"
+	game_record "gitlab.com/alienspaces/playbymail/internal/record/game"
 )
 
 type validateGameArgs struct {
-	next *record.Game
-	curr *record.Game
+	next *game_record.Game
+	curr *game_record.Game
 }
 
-func (m *Domain) populateGameValidateArgs(next, curr *record.Game) (*validateGameArgs, error) {
+func (m *Domain) populateGameValidateArgs(next, curr *game_record.Game) (*validateGameArgs, error) {
 	args := &validateGameArgs{
 		curr: curr,
 		next: next,
@@ -18,7 +18,7 @@ func (m *Domain) populateGameValidateArgs(next, curr *record.Game) (*validateGam
 	return args, nil
 }
 
-func (m *Domain) validateGameRecForCreate(rec *record.Game) error {
+func (m *Domain) validateGameRecForCreate(rec *game_record.Game) error {
 	args, err := m.populateGameValidateArgs(rec, nil)
 	if err != nil {
 		return err
@@ -26,7 +26,7 @@ func (m *Domain) validateGameRecForCreate(rec *record.Game) error {
 	return validateGameRecForCreate(args)
 }
 
-func (m *Domain) validateGameRecForUpdate(next, curr *record.Game) error {
+func (m *Domain) validateGameRecForUpdate(next, curr *game_record.Game) error {
 	args, err := m.populateGameValidateArgs(next, curr)
 	if err != nil {
 		return err
@@ -34,7 +34,7 @@ func (m *Domain) validateGameRecForUpdate(next, curr *record.Game) error {
 	return validateGameRecForUpdate(args)
 }
 
-func (m *Domain) validateGameRecForDelete(rec *record.Game) error {
+func (m *Domain) validateGameRecForDelete(rec *game_record.Game) error {
 	args, err := m.populateGameValidateArgs(rec, nil)
 	if err != nil {
 		return err
@@ -53,11 +53,11 @@ func validateGameRecForUpdate(args *validateGameArgs) error {
 func validateGameRec(args *validateGameArgs) error {
 	rec := args.next
 
-	if err := domain.ValidateStringField(record.FieldGameName, rec.Name); err != nil {
+	if err := domain.ValidateStringField(game_record.FieldGameName, rec.Name); err != nil {
 		return err
 	}
 
-	if rec.GameType != record.GameTypeAdventure {
+	if rec.GameType != game_record.GameTypeAdventure {
 		return InvalidFieldValue("game_type")
 	}
 
@@ -67,7 +67,7 @@ func validateGameRec(args *validateGameArgs) error {
 func validateGameRecForDelete(args *validateGameArgs) error {
 	rec := args.next
 
-	if err := domain.ValidateUUIDField(record.FieldGameID, rec.ID); err != nil {
+	if err := domain.ValidateUUIDField(game_record.FieldGameID, rec.ID); err != nil {
 		return err
 	}
 

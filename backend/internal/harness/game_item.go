@@ -5,11 +5,11 @@ import (
 
 	"github.com/brianvoe/gofakeit"
 	"gitlab.com/alienspaces/playbymail/internal/domain"
-	"gitlab.com/alienspaces/playbymail/internal/record"
 	adventure_game_record "gitlab.com/alienspaces/playbymail/internal/record/adventure_game"
+	game_record "gitlab.com/alienspaces/playbymail/internal/record/game"
 )
 
-func (t *Testing) createGameItemRec(itemConfig GameItemConfig, gameRec *record.Game) (*adventure_game_record.AdventureGameItem, error) {
+func (t *Testing) createGameItemRec(itemConfig GameItemConfig, gameRec *game_record.Game) (*adventure_game_record.AdventureGameItem, error) {
 	l := t.Logger("createGameItemRec")
 
 	if gameRec == nil {

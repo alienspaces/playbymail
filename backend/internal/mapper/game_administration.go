@@ -7,11 +7,11 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/nulltime"
 	"gitlab.com/alienspaces/playbymail/core/server"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
-	"gitlab.com/alienspaces/playbymail/internal/record"
+	game_record "gitlab.com/alienspaces/playbymail/internal/record/game"
 	"gitlab.com/alienspaces/playbymail/schema"
 )
 
-func GameAdministrationRequestToRecord(l logger.Logger, r *http.Request, rec *record.GameAdministration) (*record.GameAdministration, error) {
+func GameAdministrationRequestToRecord(l logger.Logger, r *http.Request, rec *game_record.GameAdministration) (*game_record.GameAdministration, error) {
 	l.Debug("mapping game_administration request to record")
 
 	var req schema.GameAdministrationRequest
@@ -36,7 +36,7 @@ func GameAdministrationRequestToRecord(l logger.Logger, r *http.Request, rec *re
 	return rec, nil
 }
 
-func GameAdministrationRecordToResponseData(l logger.Logger, rec *record.GameAdministration) (schema.GameAdministrationResponseData, error) {
+func GameAdministrationRecordToResponseData(l logger.Logger, rec *game_record.GameAdministration) (schema.GameAdministrationResponseData, error) {
 	l.Debug("mapping game_administration record to response data")
 	data := schema.GameAdministrationResponseData{
 		ID:                 rec.ID,
@@ -50,7 +50,7 @@ func GameAdministrationRecordToResponseData(l logger.Logger, rec *record.GameAdm
 	return data, nil
 }
 
-func GameAdministrationRecordToResponse(l logger.Logger, rec *record.GameAdministration) (schema.GameAdministrationResponse, error) {
+func GameAdministrationRecordToResponse(l logger.Logger, rec *game_record.GameAdministration) (schema.GameAdministrationResponse, error) {
 	data, err := GameAdministrationRecordToResponseData(l, rec)
 	if err != nil {
 		return schema.GameAdministrationResponse{}, err
@@ -60,7 +60,7 @@ func GameAdministrationRecordToResponse(l logger.Logger, rec *record.GameAdminis
 	}, nil
 }
 
-func GameAdministrationRecordsToCollectionResponse(l logger.Logger, recs []*record.GameAdministration) (schema.GameAdministrationCollectionResponse, error) {
+func GameAdministrationRecordsToCollectionResponse(l logger.Logger, recs []*game_record.GameAdministration) (schema.GameAdministrationCollectionResponse, error) {
 	data := []*schema.GameAdministrationResponseData{}
 	for _, rec := range recs {
 		d, err := GameAdministrationRecordToResponseData(l, rec)
