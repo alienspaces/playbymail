@@ -1,11 +1,14 @@
 <template>
   <div>
-    <div v-if="!gameId">
+    <div v-if="!selectedGame">
       <p>Please select or create a game to manage creature placements.</p>
     </div>
-    <div v-else>
-      <h2>Creature Placements</h2>
-      <button @click="openCreaturePlacementCreate">Create Creature Placement</button>
+    <div v-else class="game-table-section">
+      <p class="game-context-name">Game: {{ selectedGame.name }}</p>
+      <div class="section-header">
+        <h2>Creature Placements</h2>
+        <button @click="openCreaturePlacementCreate">Create Creature Placement</button>
+      </div>
       <ResourceTable
         :columns="creaturePlacementColumns"
         :rows="creaturePlacementsStore.creaturePlacements"
@@ -19,48 +22,46 @@
           </div>
         </template>
       </ResourceTable>
-      <ResourceModalForm
-        :visible="showCreaturePlacementModal"
-        :mode="creaturePlacementModalMode"
-        title="Creature Placement"
-        :fields="creaturePlacementFields"
-        :modelValue="creaturePlacementModalForm"
-        :error="creaturePlacementModalError"
-        @submit="handleCreaturePlacementSubmit"
-        @cancel="closeCreaturePlacementModal"
-      >
-        <template v-slot:field="{ field }">
-          <select
-            v-if="field.key === 'adventure_game_creature_id'"
-            :id="field.key"
-            v-model="creaturePlacementModalForm.adventure_game_creature_id"
-            required
-            class="form-select"
-          >
-            <option value="" disabled>Select a creature...</option>
-            <option v-for="creature in creaturesStore.creatures" :key="creature.id" :value="creature.id">{{ creature.name }}</option>
-          </select>
-          <select
-            v-else-if="field.key === 'adventure_game_location_id'"
-            :id="field.key"
-            v-model="creaturePlacementModalForm.adventure_game_location_id"
-            required
-            class="form-select"
-          >
-            <option value="" disabled>Select a location...</option>
-            <option v-for="loc in locationsStore.locations" :key="loc.id" :value="loc.id">{{ loc.name }}</option>
-          </select>
-          <input
-            v-else
-            v-model="creaturePlacementModalForm[field.key]"
-            :id="field.key"
-            :type="field.type || 'text'"
-            :required="field.required"
-            :maxlength="field.maxlength"
-            :placeholder="field.placeholder"
-          />
-        </template>
-      </ResourceModalForm>
+
+      <!-- Create/Edit Creature Placement Modal -->
+      <div v-if="showCreaturePlacementModal" class="modal-overlay">
+        <div class="modal">
+          <h2>{{ creaturePlacementModalMode === 'create' ? 'Create Creature Placement' : 'Edit Creature Placement' }}</h2>
+          <form @submit.prevent="handleCreaturePlacementSubmit(creaturePlacementModalForm)">
+            <div class="form-group">
+              <label for="adventure_game_creature_id">Creature:</label>
+              <select
+                id="adventure_game_creature_id"
+                v-model="creaturePlacementModalForm.adventure_game_creature_id"
+                required
+                class="form-select"
+              >
+                <option value="" disabled>Select a creature...</option>
+                <option v-for="creature in creaturesStore.creatures" :key="creature.id" :value="creature.id">{{ creature.name }}</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="adventure_game_location_id">Location:</label>
+              <select
+                id="adventure_game_location_id"
+                v-model="creaturePlacementModalForm.adventure_game_location_id"
+                required
+                class="form-select"
+              >
+                <option value="" disabled>Select a location...</option>
+                <option v-for="loc in locationsStore.locations" :key="loc.id" :value="loc.id">{{ loc.name }}</option>
+              </select>
+            </div>
+            <div class="modal-actions">
+              <button type="submit">{{ creaturePlacementModalMode === 'create' ? 'Create' : 'Save' }}</button>
+              <button type="button" @click="closeCreaturePlacementModal">Cancel</button>
+            </div>
+          </form>
+          <p v-if="creaturePlacementModalError" class="error">{{ creaturePlacementModalError }}</p>
+        </div>
+      </div>
+
+      <!-- Confirm Delete Dialog -->
       <div v-if="showCreaturePlacementDeleteConfirm" class="modal-overlay">
         <div class="modal">
           <h2>Delete Creature Placement</h2>
@@ -77,14 +78,13 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue';
+import { ref, watch } from 'vue';
 import { useCreaturesStore } from '../../../stores/creatures';
 import { useLocationsStore } from '../../../stores/locations';
 import { useCreaturePlacementsStore } from '../../../stores/creaturePlacements';
 import { useGamesStore } from '../../../stores/games';
 import { storeToRefs } from 'pinia';
 import ResourceTable from '../../../components/ResourceTable.vue';
-import ResourceModalForm from '../../../components/ResourceModalForm.vue';
 
 const creaturesStore = useCreaturesStore();
 const locationsStore = useLocationsStore();
@@ -92,57 +92,52 @@ const creaturePlacementsStore = useCreaturePlacementsStore();
 const gamesStore = useGamesStore();
 const { selectedGame } = storeToRefs(gamesStore);
 
-const gameId = computed(() => selectedGame.value ? selectedGame.value.id : null);
-
-watch(
-  () => gameId.value,
-  (newGameId) => {
-    if (newGameId) {
-      creaturesStore.fetchCreatures(newGameId);
-      locationsStore.fetchLocations(newGameId);
-      creaturePlacementsStore.fetchCreaturePlacements(newGameId);
-    }
-  },
-  { immediate: true }
-);
-
 const creaturePlacementColumns = [
-  { key: 'adventure_game_creature_id', label: 'Creature' },
-  { key: 'adventure_game_location_id', label: 'Location' },
-  { key: 'initial_count', label: 'Count' },
+  { key: 'adventure_game_creature_id', label: 'Creature ID' },
+  { key: 'adventure_game_location_id', label: 'Location ID' },
   { key: 'created_at', label: 'Created' }
-  // Do NOT include { key: 'actions', label: 'Actions' }
-];
-const creaturePlacementFields = [
-  { key: 'adventure_game_creature_id', label: 'Creature', required: true },
-  { key: 'adventure_game_location_id', label: 'Location', required: true },
-  { key: 'initial_count', label: 'Count', type: 'number', required: true, min: 1 }
 ];
 
 const showCreaturePlacementModal = ref(false);
 const creaturePlacementModalMode = ref('create');
-const creaturePlacementModalForm = ref({});
+const creaturePlacementModalForm = ref({ adventure_game_creature_id: '', adventure_game_location_id: '' });
 const creaturePlacementModalError = ref('');
 const showCreaturePlacementDeleteConfirm = ref(false);
 const creaturePlacementDeleteTarget = ref(null);
 const creaturePlacementDeleteError = ref('');
 
+// Watch for game selection changes
+watch(
+  () => selectedGame.value,
+  (newGame) => {
+    if (newGame) {
+      creaturesStore.fetchCreatures(newGame.id);
+      locationsStore.fetchLocations(newGame.id);
+      creaturePlacementsStore.fetchCreaturePlacements(newGame.id);
+    }
+  },
+  { immediate: true }
+);
+
 function openCreaturePlacementCreate() {
   creaturePlacementModalMode.value = 'create';
-  creaturePlacementModalForm.value = { adventure_game_creature_id: '', adventure_game_location_id: '', initial_count: 1 };
+  creaturePlacementModalForm.value = { adventure_game_creature_id: '', adventure_game_location_id: '' };
   creaturePlacementModalError.value = '';
   showCreaturePlacementModal.value = true;
 }
+
 function openCreaturePlacementEdit(row) {
   creaturePlacementModalMode.value = 'edit';
   creaturePlacementModalForm.value = { ...row };
   creaturePlacementModalError.value = '';
   showCreaturePlacementModal.value = true;
 }
+
 function closeCreaturePlacementModal() {
   showCreaturePlacementModal.value = false;
   creaturePlacementModalError.value = '';
 }
+
 async function handleCreaturePlacementSubmit(form) {
   creaturePlacementModalError.value = '';
   try {
@@ -156,16 +151,19 @@ async function handleCreaturePlacementSubmit(form) {
     creaturePlacementModalError.value = err.message || 'Failed to save.';
   }
 }
+
 function confirmCreaturePlacementDelete(row) {
   creaturePlacementDeleteTarget.value = row;
   creaturePlacementDeleteError.value = '';
   showCreaturePlacementDeleteConfirm.value = true;
 }
+
 function closeCreaturePlacementDelete() {
   showCreaturePlacementDeleteConfirm.value = false;
   creaturePlacementDeleteTarget.value = null;
   creaturePlacementDeleteError.value = '';
 }
+
 async function deleteCreaturePlacement() {
   if (!creaturePlacementDeleteTarget.value) return;
   creaturePlacementDeleteError.value = '';
@@ -179,38 +177,18 @@ async function deleteCreaturePlacement() {
 </script>
 
 <style scoped>
-h2 {
-  margin-top: 2rem;
-  margin-bottom: 1rem;
+.game-table-section {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
 }
 button {
-  margin-bottom: 1rem;
+  margin-right: var(--space-sm);
 }
-.modal-overlay {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.3);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-.modal {
-  background: var(--color-bg);
-  padding: var(--space-lg);
-  border-radius: var(--radius-md);
-  min-width: 300px;
-  max-width: 90vw;
-  box-shadow: 0 2px 16px rgba(0,0,0,0.2);
-}
-.modal-actions {
-  margin-top: var(--space-md);
-  display: flex;
-  gap: var(--space-md);
-  justify-content: flex-start;
-}
-.error {
-  color: var(--color-error);
-  margin-top: var(--space-md);
+.game-context-name {
+  font-size: 1.1rem;
+  font-weight: 400;
+  color: #444;
+  margin-bottom: var(--space-sm);
 }
 </style> 

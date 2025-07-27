@@ -1,5 +1,5 @@
 <template>
-  <div class="home-view">
+  <div class="home-view card">
     <h1>Welcome to PlayByMail</h1>
     <p>
       <strong>PlayByMail</strong> is a platform for designing, managing, and running play-by-mail games—games played entirely through physical mail, not online.
@@ -51,9 +51,6 @@
   max-width: 900px;
   margin: var(--space-lg) auto;
   padding: var(--space-xl);
-  background: var(--color-bg);
-  border-radius: var(--radius-lg);
-  box-shadow: 0 2px 12px rgba(0,0,0,0.07);
 }
 .home-view h1 {
   margin-bottom: var(--space-lg);
@@ -81,7 +78,7 @@
 .user-type {
   margin-bottom: var(--space-lg);
   padding: var(--space-md);
-  background: #f8f9fa;
+  background: var(--color-bg-alt);
   border-left: 4px solid var(--color-primary);
   border-radius: var(--radius-sm);
 }

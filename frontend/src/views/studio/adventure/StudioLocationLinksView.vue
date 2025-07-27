@@ -4,118 +4,116 @@
 -->
 <template>
   <div>
-    <div v-if="!gameId">
+    <div v-if="!selectedGame">
       <p>Select a game to manage location links.</p>
     </div>
-    <div v-else>
-      <h3 v-if="selectedGame && selectedGame.name" class="game-context-name">
-        Game: {{ selectedGame.name }}
-      </h3>
-      <div class="game-table-section">
+    <div v-else class="game-table-section">
+      <p class="game-context-name">Game: {{ selectedGame.name }}</p>
+      <div class="section-header">
         <h2>Location Links</h2>
         <button @click="openCreate">Create New Location Link</button>
-        <ResourceTable
-          :columns="columns"
-          :rows="enhancedLocationLinks"
-          :loading="locationLinksStore.loading"
-          :error="locationLinksStore.error"
-        >
-          <template #actions="{ row }">
-            <button @click="openEdit(row)">Edit</button>
-            <button @click="confirmDelete(row)">Delete</button>
-          </template>
-        </ResourceTable>
-        
-        <!-- Custom Modal for Location Links -->
-        <div v-if="showModal" class="modal-overlay">
-          <div class="modal">
-            <h2>{{ modalMode === 'create' ? 'Create' : 'Edit' }} Location Link</h2>
-            <form @submit.prevent="handleSubmit" class="form">
-              <div class="form-group">
-                <label for="fromLocation">From Location *</label>
-                <select 
-                  id="fromLocation" 
-                  v-model="modalForm.from_game_location_id" 
-                  required
-                  class="form-control"
+      </div>
+      <ResourceTable
+        :columns="columns"
+        :rows="enhancedLocationLinks"
+        :loading="locationLinksStore.loading"
+        :error="locationLinksStore.error"
+      >
+        <template #actions="{ row }">
+          <button @click="openEdit(row)">Edit</button>
+          <button @click="confirmDelete(row)">Delete</button>
+        </template>
+      </ResourceTable>
+      
+      <!-- Custom Modal for Location Links -->
+      <div v-if="showModal" class="modal-overlay">
+        <div class="modal">
+          <h2>{{ modalMode === 'create' ? 'Create' : 'Edit' }} Location Link</h2>
+          <form @submit.prevent="handleSubmit" class="form">
+            <div class="form-group">
+              <label for="fromLocation">From Location *</label>
+              <select 
+                id="fromLocation" 
+                v-model="modalForm.from_game_location_id" 
+                required
+                class="form-control"
+              >
+                <option value="">Select a location...</option>
+                <option 
+                  v-for="location in locationsStore.locations" 
+                  :key="location.id" 
+                  :value="location.id"
                 >
-                  <option value="">Select a location...</option>
-                  <option 
-                    v-for="location in locationsStore.locations" 
-                    :key="location.id" 
-                    :value="location.id"
-                  >
-                    {{ location.name }}
-                  </option>
-                </select>
-              </div>
-              
-              <div class="form-group">
-                <label for="toLocation">To Location *</label>
-                <select 
-                  id="toLocation" 
-                  v-model="modalForm.to_game_location_id" 
-                  required
-                  class="form-control"
-                >
-                  <option value="">Select a location...</option>
-                  <option 
-                    v-for="location in locationsStore.locations" 
-                    :key="location.id" 
-                    :value="location.id"
-                  >
-                    {{ location.name }}
-                  </option>
-                </select>
-              </div>
-              
-              <div class="form-group">
-                <label for="name">Link Name *</label>
-                <input 
-                  id="name" 
-                  v-model="modalForm.name" 
-                  type="text" 
-                  required 
-                  maxlength="64"
-                  class="form-control"
-                  placeholder="e.g., North Path, Secret Door"
-                />
-              </div>
-              
-              <div class="form-group">
-                <label for="description">Description</label>
-                <textarea 
-                  id="description" 
-                  v-model="modalForm.description" 
-                  maxlength="255"
-                  class="form-control"
-                  placeholder="Describe the link between locations..."
-                  rows="3"
-                ></textarea>
-              </div>
-              
-              <div class="modal-actions">
-                <button type="submit" :disabled="submitting">
-                  {{ submitting ? 'Saving...' : (modalMode === 'create' ? 'Create' : 'Update') }}
-                </button>
-                <button type="button" @click="closeModal">Cancel</button>
-              </div>
-              
-              <p v-if="modalError" class="error">{{ modalError }}</p>
-            </form>
-          </div>
-        </div>
-        
-        <div v-if="showDeleteConfirm" class="modal-overlay">
-          <div class="modal">
-            <h2>Delete Location Link</h2>
-            <p>Are you sure you want to delete the link <b>"{{ deleteTarget?.name }}"</b>?</p>
-            <div class="modal-actions">
-              <button @click="deleteLocationLink">Delete</button>
-              <button @click="closeDelete">Cancel</button>
+                  {{ location.name }}
+                </option>
+              </select>
             </div>
-            <p v-if="deleteError" class="error">{{ deleteError }}</p>
+            
+            <div class="form-group">
+              <label for="toLocation">To Location *</label>
+              <select 
+                id="toLocation" 
+                v-model="modalForm.to_game_location_id" 
+                required
+                class="form-control"
+              >
+                <option value="">Select a location...</option>
+                <option 
+                  v-for="location in locationsStore.locations" 
+                  :key="location.id" 
+                  :value="location.id"
+                >
+                  {{ location.name }}
+                </option>
+              </select>
+            </div>
+            
+            <div class="form-group">
+              <label for="name">Link Name *</label>
+              <input 
+                id="name" 
+                v-model="modalForm.name" 
+                type="text" 
+                required 
+                maxlength="64"
+                class="form-control"
+                placeholder="e.g., North Path, Secret Door"
+              />
+            </div>
+            
+            <div class="form-group">
+              <label for="description">Description</label>
+              <textarea 
+                id="description" 
+                v-model="modalForm.description" 
+                maxlength="255"
+                class="form-control"
+                placeholder="Describe the link between locations..."
+                rows="3"
+              ></textarea>
+            </div>
+            
+            <div class="modal-actions">
+              <button type="submit" :disabled="submitting">
+                {{ submitting ? 'Saving...' : (modalMode === 'create' ? 'Create' : 'Update') }}
+              </button>
+              <button type="button" @click="closeModal">Cancel</button>
+            </div>
+            
+            <p v-if="modalError" class="error">{{ modalError }}</p>
+          </form>
+        </div>
+      </div>
+      
+      <div v-if="showDeleteConfirm" class="modal-overlay">
+        <div class="modal">
+          <h2>Delete Location Link</h2>
+          <p>Are you sure you want to delete the link <b>"{{ deleteTarget?.name }}"</b>?</p>
+          <div class="modal-actions">
+            <button @click="deleteLocationLink">Delete</button>
+            <button @click="closeDelete">Cancel</button>
           </div>
+          <p v-if="deleteError" class="error">{{ deleteError }}</p>
         </div>
       </div>
     </div>
@@ -135,19 +133,6 @@ const locationsStore = useLocationsStore();
 const gamesStore = useGamesStore();
 const { selectedGame } = storeToRefs(gamesStore);
 
-const gameId = computed(() => selectedGame.value ? selectedGame.value.id : null);
-
-watch(
-  () => gameId.value,
-  (newGameId) => {
-    if (newGameId) {
-      locationLinksStore.fetchLocationLinks(newGameId);
-      locationsStore.fetchLocations(newGameId);
-    }
-  },
-  { immediate: true }
-);
-
 const columns = [
   { key: 'name', label: 'Link Name' },
   { key: 'from_location_name', label: 'From Location' },
@@ -164,6 +149,18 @@ const submitting = ref(false);
 const showDeleteConfirm = ref(false);
 const deleteTarget = ref(null);
 const deleteError = ref('');
+
+// Watch for game selection changes
+watch(
+  () => selectedGame.value,
+  (newGame) => {
+    if (newGame) {
+      locationLinksStore.fetchLocationLinks(newGame.id);
+      locationsStore.fetchLocations(newGame.id);
+    }
+  },
+  { immediate: true }
+);
 
 // Enhance location links with location names for display
 const enhancedLocationLinks = computed(() => {
@@ -258,35 +255,15 @@ async function deleteLocationLink() {
   align-items: flex-start;
 }
 
-.game-table-section h2 {
-  margin-top: 0;
-  margin-bottom: 1.5rem;
-  font-size: 2rem;
-}
-
 button {
   margin-right: var(--space-sm);
 }
 
-.modal-overlay {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.3);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.modal {
-  background: var(--color-bg);
-  padding: var(--space-lg);
-  border-radius: var(--radius-md);
-  min-width: 400px;
-  max-width: 90vw;
-  max-height: 90vh;
-  overflow-y: auto;
-  box-shadow: 0 2px 16px rgba(0,0,0,0.2);
+.game-context-name {
+  font-size: 1.1rem;
+  font-weight: 400;
+  color: #444;
+  margin-bottom: var(--space-sm);
 }
 
 .form {
@@ -328,24 +305,5 @@ select.form-control {
 textarea.form-control {
   resize: vertical;
   min-height: 80px;
-}
-
-.modal-actions {
-  margin-top: var(--space-lg);
-  display: flex;
-  gap: var(--space-md);
-  justify-content: flex-start;
-}
-
-.error {
-  color: var(--color-error);
-  margin-top: var(--space-md);
-}
-
-.game-context-name {
-  font-size: 1.1rem;
-  font-weight: 400;
-  color: #444;
-  margin-bottom: 0.5rem;
 }
 </style> 

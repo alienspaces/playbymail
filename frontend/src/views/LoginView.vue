@@ -1,5 +1,5 @@
 <template>
-  <div class="login-container">
+  <div class="login-container card">
     <h2>Sign in with Email</h2>
     <form @submit.prevent="onSubmit" class="login-form">
       <div class="form-group">
@@ -62,10 +62,6 @@ export default {
 .login-container {
   max-width: 400px;
   margin: 80px auto;
-  padding: var(--space-lg);
-  background: var(--color-bg);
-  border-radius: var(--radius-md);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
   display: flex;
   flex-direction: column;
   align-items: stretch;
@@ -73,17 +69,6 @@ export default {
 h2 {
   margin-bottom: var(--space-lg);
   text-align: center;
-}
-label {
-  margin-bottom: var(--space-sm);
-  font-weight: 500;
-}
-input {
-  padding: var(--space-sm);
-  margin-bottom: var(--space-md);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  font-size: var(--font-size-base);
 }
 button {
   background: #11181c; /* Keep specific dark color for login */
@@ -99,24 +84,9 @@ button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
-.message {
-  color: var(--color-error);
-  margin-top: var(--space-md);
-  text-align: center;
-}
 .login-form {
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
-}
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-xs);
-  margin-bottom: var(--space-md);
-}
-.form-actions {
-  display: flex;
-  justify-content: center;
 }
 </style> 

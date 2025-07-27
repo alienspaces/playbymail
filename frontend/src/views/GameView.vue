@@ -1,8 +1,10 @@
 <template>
   <div class="game-list">
     <div class="game-table-section">
-      <h1>Games</h1>
-      <button @click="openCreate">Create New Game</button>
+      <div class="section-header">
+        <h1>Games</h1>
+        <button @click="openCreate">Create New Game</button>
+      </div>
       <table v-if="games.length">
         <thead>
           <tr>
@@ -33,16 +35,16 @@
       <div class="modal">
         <h2>{{ modalMode === 'create' ? 'Create Game' : 'Edit Game' }}</h2>
         <form @submit.prevent="modalMode === 'create' ? createGame() : updateGame()">
-          <label>
-            Name:
-            <input v-model="modalForm.name" required maxlength="1024" />
-          </label>
-          <label>
-            Type:
-            <select v-model="modalForm.game_type" required>
+          <div class="form-group">
+            <label for="game-name">Name:</label>
+            <input v-model="modalForm.name" id="game-name" required maxlength="1024" />
+          </div>
+          <div class="form-group">
+            <label for="game-type">Type:</label>
+            <select v-model="modalForm.game_type" id="game-type" required>
               <option value="adventure">Adventure</option>
             </select>
-          </label>
+          </div>
           <div class="modal-actions">
             <button type="submit">{{ modalMode === 'create' ? 'Create' : 'Save' }}</button>
             <button type="button" @click="closeModal">Cancel</button>
@@ -184,54 +186,7 @@ export default {
   flex-direction: column;
   align-items: flex-start;
 }
-.game-table-section h1 {
-  margin-top: 0;
-  margin-bottom: 1.5rem;
-  font-size: 2rem;
-}
-.game-table-section button,
-.game-table-section table,
-.game-table-section p {
-  align-self: flex-start;
-}
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: var(--space-md);
-}
-th, td {
-  border: 1px solid var(--color-border);
-  padding: var(--space-sm) var(--space-md);
-  text-align: left;
-}
-th {
-  background: var(--color-bg-alt);
-}
 button {
   margin-right: var(--space-sm);
-}
-.modal-overlay {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.3);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-.modal {
-  background: var(--color-bg);
-  padding: var(--space-lg);
-  border-radius: var(--radius-md);
-  min-width: 300px;
-  max-width: 90vw;
-  box-shadow: 0 2px 16px rgba(0,0,0,0.2);
-}
-.modal-actions {
-  margin-top: var(--space-md);
-}
-.error {
-  color: var(--color-error);
-  margin-top: var(--space-md);
 }
 </style> 

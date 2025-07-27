@@ -35,21 +35,4 @@ defineProps({
 .resource-table-section {
   width: 100%;
 }
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: var(--space-md);
-}
-th, td {
-  border: 1px solid var(--color-border);
-  padding: var(--space-sm) var(--space-md);
-  text-align: left;
-}
-th {
-  background: var(--color-bg-alt);
-}
-.error {
-  color: var(--color-error);
-  margin-top: var(--space-md);
-}
 </style> 

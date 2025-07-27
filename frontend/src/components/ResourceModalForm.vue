@@ -51,46 +51,5 @@ function handleSubmit() {
 </script>
 
 <style scoped>
-.modal-overlay {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.3);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-.modal {
-  background: var(--color-bg);
-  padding: var(--space-lg);
-  border-radius: var(--radius-md);
-  min-width: 300px;
-  max-width: 90vw;
-  box-shadow: 0 2px 16px rgba(0,0,0,0.2);
-}
-.form-group {
-  display: flex;
-  flex-direction: column;
-  margin-bottom: var(--space-md);
-}
-label {
-  margin-bottom: var(--space-xs);
-  font-weight: 500;
-}
-input {
-  padding: var(--space-sm);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  font-size: var(--font-size-base);
-}
-.modal-actions {
-  margin-top: var(--space-md);
-  display: flex;
-  gap: var(--space-md);
-  justify-content: flex-start;
-}
-.error {
-  color: var(--color-error);
-  margin-top: var(--space-md);
-}
+/* Component-specific styles only */
 </style> 
