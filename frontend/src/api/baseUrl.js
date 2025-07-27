@@ -11,7 +11,7 @@ export const baseUrl = isLocalhost
 export function getAuthHeaders() {
   const authStore = useAuthStore();
   const token = authStore.sessionToken;
-  return token ? { Authorization: token } : {};
+  return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
 export async function apiFetch(url, options = {}) {

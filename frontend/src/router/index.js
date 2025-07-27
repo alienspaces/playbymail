@@ -4,7 +4,7 @@ import LoginView from '../views/LoginView.vue';
 import VerifyView from '../views/VerifyView.vue';
 import FaqView from '../views/FaqView.vue';
 import StudioLayout from '../components/StudioLayout.vue';
-import AdminEntryView from '../views/AdminEntryView.vue';
+import ManagementEntryView from '../views/ManagementEntryView.vue';
 import { useAuthStore } from '../stores/auth';
 
 const routes = [
@@ -12,12 +12,10 @@ const routes = [
     path: '/',
     name: 'Home',
     component: () => import('../views/HomeView.vue'),
-    meta: { requiresAuth: true },
   },
   {
     path: '/studio',
     component: StudioLayout,
-    meta: { requiresAuth: true },
     children: [
       { path: '', name: 'StudioGames', component: GameView },
       // Adventure game type studio views
@@ -51,9 +49,9 @@ const routes = [
   },
   {
     path: '/admin',
-    name: 'AdminEntry',
-    component: AdminEntryView,
-    // Placeholder: add children for admin features as implemented
+    name: 'ManagementEntry',
+    component: ManagementEntryView,
+    // Placeholder: add children for management features as implemented
   },
 ];
 

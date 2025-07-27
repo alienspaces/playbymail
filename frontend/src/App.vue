@@ -28,7 +28,7 @@ function closeMobileMenu() {
         <router-link to="/" class="logo">PlayByMail</router-link>
         <router-link to="/faq" class="navbar-link" exact-active-class="active" @click="closeMobileMenu">F.A.Q.</router-link>
         <router-link to="/studio" class="navbar-link" exact-active-class="active" @click="closeMobileMenu">Game Designer Studio</router-link>
-        <router-link to="/admin" class="navbar-link" exact-active-class="active" @click="closeMobileMenu">Game Management & Admin</router-link>
+        <router-link to="/admin" class="navbar-link" exact-active-class="active" @click="closeMobileMenu">Game Management</router-link>
       </div>
       <div class="nav-actions">
         <template v-if="sessionToken">
@@ -36,7 +36,7 @@ function closeMobileMenu() {
           <button @click="logout">Logout</button>
         </template>
         <template v-else>
-          <router-link to="/login" class="navbar-link" @click="closeMobileMenu">Login</router-link>
+          <router-link to="/login" class="navbar-link" exact-active-class="active" @click="closeMobileMenu">Login</router-link>
         </template>
       </div>
       <div class="mobile-logo">PlayByMail</div>
@@ -48,14 +48,14 @@ function closeMobileMenu() {
       <div class="mobile-menu" v-if="mobileMenuOpen">
         <router-link to="/faq" class="navbar-link" exact-active-class="active" @click="closeMobileMenu">F.A.Q.</router-link>
         <router-link to="/studio" class="navbar-link" exact-active-class="active" @click="closeMobileMenu">Game Designer Studio</router-link>
-        <router-link to="/admin" class="navbar-link" exact-active-class="active" @click="closeMobileMenu">Game Management & Admin</router-link>
+        <router-link to="/admin" class="navbar-link" exact-active-class="active" @click="closeMobileMenu">Game Management</router-link>
         <div class="mobile-actions">
           <template v-if="sessionToken">
             <router-link to="/account" class="navbar-link" exact-active-class="active" @click="closeMobileMenu">Account</router-link>
             <button @click="logout">Logout</button>
           </template>
           <template v-else>
-            <router-link to="/login" class="navbar-link" @click="closeMobileMenu">Login</router-link>
+            <router-link to="/login" class="navbar-link" exact-active-class="active" @click="closeMobileMenu">Login</router-link>
           </template>
         </div>
       </div>

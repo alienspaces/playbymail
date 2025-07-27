@@ -4,17 +4,41 @@
     <p>
       <strong>PlayByMail</strong> is a platform for designing, managing, and running play-by-mail games—games played entirely through physical mail, not online.
     </p>
-    <ul>
-      <li><strong>What is Play by Mail?</strong><br>
-        Play by mail is a way to play games through the postal service. Players send in their moves by mail and receive results by mail—no online play.
-      </li>
-      <li><strong>What does playbymail.games provide?</strong><br>
-        Tools for game designers and administrators to create, manage, and run play-by-mail games, including turn processing, printing, and mailing support.
-      </li>
-      <li><strong>Who is this site for?</strong><br>
-        Game designers and administrators who want to run play-by-mail games. Players use the system only to get help, not to play.
-      </li>
-    </ul>
+    
+    <div class="who-section">
+      <h2>Who is this site for?</h2>
+      <p>Our platform is designed for:</p>
+      <div class="user-types">
+        <div class="user-type">
+          <h3>Game Designers</h3>
+          <p>Create and publish play-by-mail games using our design tools.</p>
+        </div>
+        <div class="user-type">
+          <h3>Game Managers</h3>
+          <p>Run games, review player turn submissions and outcomes, attend to player queries, provide assistance, and review potential issues highlighted by the platform.</p>
+        </div>
+        <div class="user-type">
+          <h3>Players</h3>
+          <p>Join games, manage their accounts, and seek help.</p>
+        </div>
+      </div>
+    </div>
+    
+    <div class="divider"></div>
+    
+    <div class="sections">
+      <div class="section">
+        <h2>Game Designer Studio</h2>
+        <p>Create, edit, and manage play-by-mail games. Design locations, items, creatures, and game mechanics.</p>
+        <router-link to="/studio" class="section-link">Go to Studio</router-link>
+      </div>
+      
+      <div class="section">
+        <h2>Game Management</h2>
+        <p>Subscribe to or purchase games, configure runtime parameters, review game states, process player turns, and provide player help.</p>
+        <router-link to="/admin" class="section-link">Go to Game Management</router-link>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -24,7 +48,7 @@
 
 <style scoped>
 .home-view {
-  max-width: 700px;
+  max-width: 900px;
   margin: var(--space-lg) auto;
   padding: var(--space-xl);
   background: var(--color-bg);
@@ -41,28 +65,90 @@
   font-size: var(--font-size-md);
   text-align: left;
 }
-.home-view ul {
+.who-section {
+  margin: var(--space-lg) 0;
+}
+.who-section h2 {
+  margin-bottom: var(--space-md);
+  font-size: var(--font-size-lg);
+  color: var(--color-primary);
   text-align: left;
-  margin: var(--space-lg) 0 var(--space-lg) var(--space-lg);
-  padding-left: var(--space-sm);
 }
-.home-view li {
+.user-types {
+  margin-top: var(--space-md);
+  margin-bottom: var(--space-md);
+}
+.user-type {
   margin-bottom: var(--space-lg);
-  font-size: var(--font-size-sm);
+  padding: var(--space-md);
+  background: #f8f9fa;
+  border-left: 4px solid var(--color-primary);
+  border-radius: var(--radius-sm);
 }
-.studio-cta {
+.user-type:last-child {
+  margin-bottom: 0;
+}
+.user-type h3 {
+  margin: 0 0 var(--space-sm) 0;
+  font-size: var(--font-size-md);
+  color: var(--color-primary);
+  font-weight: var(--font-weight-bold);
+}
+.user-type p {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+}
+.divider {
+  height: 1px;
+  background: var(--color-border);
+  margin: var(--space-md) 0;
+}
+.sections {
+  margin: var(--space-lg) 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-xl);
+}
+.section {
+  padding: var(--space-lg);
+  background: var(--color-bg-alt);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 200px;
+}
+.section h2 {
+  margin-bottom: var(--space-md);
+  font-size: var(--font-size-lg);
+  color: var(--color-primary);
+}
+.section p {
+  margin-bottom: var(--space-lg);
+  font-size: var(--font-size-md);
+  line-height: 1.5;
+}
+.section-link {
   display: inline-block;
-  margin-top: var(--space-lg);
   padding: var(--space-md) var(--space-lg);
-  background: #2c3e50;
+  background: var(--color-primary);
   color: var(--color-text-light);
   border-radius: var(--radius-sm);
   text-decoration: none;
   font-weight: var(--font-weight-bold);
   transition: background 0.2s;
-  text-align: center;
+  margin-top: auto;
 }
-.studio-cta:hover {
-  background: #1a232b;
+.section-link:hover {
+  background: var(--color-primary-dark);
+}
+@media (max-width: 768px) {
+  .sections {
+    grid-template-columns: 1fr;
+    gap: var(--space-lg);
+  }
 }
 </style>

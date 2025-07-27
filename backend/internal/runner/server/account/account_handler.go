@@ -68,6 +68,7 @@ func accountHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, err
 		References: referenceSchemas,
 	}
 
+	// Register collection routes first
 	accountConfig[GetManyAccounts] = server.HandlerConfig{
 		Method:      http.MethodGet,
 		Path:        "/v1/accounts",
@@ -85,38 +86,6 @@ func accountHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, err
 		},
 	}
 
-	accountConfig[GetOneAccount] = server.HandlerConfig{
-		Method:      http.MethodGet,
-		Path:        "/v1/accounts/:account_id",
-		HandlerFunc: getAccountHandler,
-		MiddlewareConfig: server.MiddlewareConfig{
-			AuthenTypes: []server.AuthenticationType{
-				server.AuthenticationTypeToken,
-			},
-			ValidateResponseSchema: responseSchema,
-		},
-		DocumentationConfig: server.DocumentationConfig{
-			Document: true,
-			Title:    "Get account",
-		},
-	}
-
-	accountConfig[GetMyAccount] = server.HandlerConfig{
-		Method:      http.MethodGet,
-		Path:        "/v1/accounts/me",
-		HandlerFunc: getMyAccountHandler,
-		MiddlewareConfig: server.MiddlewareConfig{
-			AuthenTypes: []server.AuthenticationType{
-				server.AuthenticationTypeToken,
-			},
-			ValidateResponseSchema: responseSchema,
-		},
-		DocumentationConfig: server.DocumentationConfig{
-			Document: true,
-			Title:    "Get my account",
-		},
-	}
-
 	accountConfig[CreateAccount] = server.HandlerConfig{
 		Method:      http.MethodPost,
 		Path:        "/v1/accounts",
@@ -131,6 +100,23 @@ func accountHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, err
 		DocumentationConfig: server.DocumentationConfig{
 			Document: true,
 			Title:    "Create account",
+		},
+	}
+
+	// Now register parameterized routes
+	accountConfig[GetOneAccount] = server.HandlerConfig{
+		Method:      http.MethodGet,
+		Path:        "/v1/accounts/:account_id",
+		HandlerFunc: getAccountHandler,
+		MiddlewareConfig: server.MiddlewareConfig{
+			AuthenTypes: []server.AuthenticationType{
+				server.AuthenticationTypeToken,
+			},
+			ValidateResponseSchema: responseSchema,
+		},
+		DocumentationConfig: server.DocumentationConfig{
+			Document: true,
+			Title:    "Get account",
 		},
 	}
 
@@ -168,23 +154,6 @@ func accountHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, err
 		},
 	}
 
-	accountConfig[UpdateMyAccount] = server.HandlerConfig{
-		Method:      http.MethodPut,
-		Path:        "/v1/accounts/me",
-		HandlerFunc: updateMyAccountHandler,
-		MiddlewareConfig: server.MiddlewareConfig{
-			AuthenTypes: []server.AuthenticationType{
-				server.AuthenticationTypeToken,
-			},
-			ValidateRequestSchema:  requestSchema,
-			ValidateResponseSchema: responseSchema,
-		},
-		DocumentationConfig: server.DocumentationConfig{
-			Document: true,
-			Title:    "Update my account",
-		},
-	}
-
 	accountConfig[DeleteAccount] = server.HandlerConfig{
 		Method:      http.MethodDelete,
 		Path:        "/v1/accounts/:account_id",
@@ -200,9 +169,43 @@ func accountHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, err
 		},
 	}
 
+	// Register "my account" routes
+	accountConfig[GetMyAccount] = server.HandlerConfig{
+		Method:      http.MethodGet,
+		Path:        "/v1/my-account",
+		HandlerFunc: getMyAccountHandler,
+		MiddlewareConfig: server.MiddlewareConfig{
+			AuthenTypes: []server.AuthenticationType{
+				server.AuthenticationTypeToken,
+			},
+			ValidateResponseSchema: responseSchema,
+		},
+		DocumentationConfig: server.DocumentationConfig{
+			Document: true,
+			Title:    "Get my account",
+		},
+	}
+
+	accountConfig[UpdateMyAccount] = server.HandlerConfig{
+		Method:      http.MethodPut,
+		Path:        "/v1/my-account",
+		HandlerFunc: updateMyAccountHandler,
+		MiddlewareConfig: server.MiddlewareConfig{
+			AuthenTypes: []server.AuthenticationType{
+				server.AuthenticationTypeToken,
+			},
+			ValidateRequestSchema:  requestSchema,
+			ValidateResponseSchema: responseSchema,
+		},
+		DocumentationConfig: server.DocumentationConfig{
+			Document: true,
+			Title:    "Update my account",
+		},
+	}
+
 	accountConfig[DeleteMyAccount] = server.HandlerConfig{
 		Method:      http.MethodDelete,
-		Path:        "/v1/accounts/me",
+		Path:        "/v1/my-account",
 		HandlerFunc: deleteMyAccountHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
@@ -215,6 +218,7 @@ func accountHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, err
 		},
 	}
 
+	// Register auth routes
 	accountConfig[RequestAuth] = server.HandlerConfig{
 		Method:      http.MethodPost,
 		Path:        "/v1/request-auth",

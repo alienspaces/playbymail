@@ -1,15 +1,16 @@
 <template>
   <div class="admin-view">
-    <h1>Game Management & Administration</h1>
+    <h1>Game Management</h1>
     <p>
-      This section will provide tools for managing running games, processing mailed-in turns, printing and mailing results, and tracking player progress.
+      This section provides tools for managing running games with automated turn processing and human oversight. The platform automatically handles routine turn processing, while game managers provide human intelligence for complex situations and player support.
     </p>
     <ul>
-      <li>Manage running games</li>
-      <li>Process and scan mailed-in turns</li>
-      <li>Print and mail results to players</li>
-      <li>Track game state and player progress</li>
-      <li>Administer player accounts and game data</li>
+      <li>Subscribe to and configure games for automated processing</li>
+      <li>Review automated turn processing results and player submissions</li>
+      <li>Attend to player queries and provide personalized assistance</li>
+      <li>Review potential issues flagged by the platform for human oversight</li>
+      <li>Monitor game states, player progress, and overall game health</li>
+      <li>Manage print/mail operations and player communications</li>
     </ul>
     <p><em>Coming soon!</em></p>
   </div>

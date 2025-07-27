@@ -1,46 +1,51 @@
 <template>
   <div class="studio-layout">
-    <!-- Studio Header expands entire screen width-->
-    <div class="studio-header">
-      <!-- Studio burger menu (mobile only) -->
-      <button
-        class="studio-burger icon-btn"
-        @click="toggleStudioMenu"
-        aria-label="Open studio menu"
-        v-if="isMobile"
-      >
-        <span></span>
-        <span></span>
-        <span></span>
-      </button>
-      <h1>Game Designer Studio</h1>
-    </div>
-    <!-- Flex row: sidebar + main content -->
-    <div class="studio-body-row">
-      <!-- Desktop sidebar -->
-      <aside class="sidebar" v-if="!isMobile">
-        <nav>
-          <ul>
-            <li><router-link to="/studio" active-class="active">Games</router-link></li>
-            <template v-if="selectedGame">
-              <li><router-link :to="`/studio/${selectedGame.id}/locations`" active-class="active">Locations</router-link></li>
-              <li><router-link :to="`/studio/${selectedGame.id}/location-links`" active-class="active">Location Links</router-link></li>
-              <li><router-link :to="`/studio/${selectedGame.id}/items`" active-class="active">Items</router-link></li>
-              <li><router-link :to="`/studio/${selectedGame.id}/item-placements`" active-class="active">Item Placements</router-link></li>
-              <li><router-link :to="`/studio/${selectedGame.id}/creatures`" active-class="active">Creatures</router-link></li>
-              <li><router-link :to="`/studio/${selectedGame.id}/creature-placements`" active-class="active">Creature Placements</router-link></li>
-            </template>
-          </ul>
-        </nav>
-        <button class="help-btn" @click="showHelp = true">Help</button>
-      </aside>
-      <!-- Main content area -->
-      <div class="main-content" @click="closeStudioMenuOnMobile">
-        <section class="studio-body">
-          <router-view />
-        </section>
+    <!-- Show StudioEntryView for unauthenticated users -->
+    <StudioEntryView v-if="!isLoggedIn" />
+    
+    <!-- Show full studio interface for authenticated users -->
+    <div v-else>
+      <!-- Studio Header expands entire screen width-->
+      <div class="studio-header">
+        <!-- Studio burger menu (mobile only) -->
+        <button
+          class="studio-burger icon-btn"
+          @click="toggleStudioMenu"
+          aria-label="Open studio menu"
+          v-if="isMobile"
+        >
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+        <h1>Game Designer Studio</h1>
       </div>
-    </div>
+      <!-- Flex row: sidebar + main content -->
+      <div class="studio-body-row">
+        <!-- Desktop sidebar -->
+        <aside class="sidebar" v-if="!isMobile">
+          <nav>
+            <ul>
+              <li><router-link to="/studio" active-class="active">Games</router-link></li>
+              <template v-if="selectedGame">
+                <li><router-link :to="`/studio/${selectedGame.id}/locations`" active-class="active">Locations</router-link></li>
+                <li><router-link :to="`/studio/${selectedGame.id}/location-links`" active-class="active">Location Links</router-link></li>
+                <li><router-link :to="`/studio/${selectedGame.id}/items`" active-class="active">Items</router-link></li>
+                <li><router-link :to="`/studio/${selectedGame.id}/item-placements`" active-class="active">Item Placements</router-link></li>
+                <li><router-link :to="`/studio/${selectedGame.id}/creatures`" active-class="active">Creatures</router-link></li>
+                <li><router-link :to="`/studio/${selectedGame.id}/creature-placements`" active-class="active">Creature Placements</router-link></li>
+              </template>
+            </ul>
+          </nav>
+          <button class="help-btn" @click="showHelp = true">Help</button>
+        </aside>
+        <!-- Main content area -->
+        <div class="main-content" @click="closeStudioMenuOnMobile">
+          <section class="studio-body">
+            <router-view />
+          </section>
+        </div>
+      </div>
     <!-- Help Panel emerges from the right of the screen -->
     <div v-if="showHelp" class="help-panel-overlay" @click.self="showHelp = false">
       <div class="help-panel">
@@ -68,17 +73,24 @@
       </nav>
       <button class="help-btn" @click="showHelp = true; closeStudioMenu()">Help</button>
     </aside>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useGamesStore } from '../stores/games';
+import { useAuthStore } from '../stores/auth';
+import StudioEntryView from '../views/StudioEntryView.vue';
 
 const gamesStore = useGamesStore();
+const authStore = useAuthStore();
 const { selectedGame } = storeToRefs(gamesStore);
+const { sessionToken } = storeToRefs(authStore);
 const showHelp = ref(false);
+
+const isLoggedIn = computed(() => !!sessionToken.value);
 
 // Responsive: detect mobile
 const isMobile = ref(window.innerWidth <= 900);

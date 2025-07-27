@@ -146,7 +146,23 @@ func (rnr *Runner) authenticateRequestTokenFunc(l logger.Logger, m domainer.Doma
 
 	mm := m.(*domain.Domain)
 
-	accountRec, err := mm.VerifyAccountSessionToken(r.Header.Get("Authorization"))
+	// Extract token from Authorization header
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" {
+		l.Warn("(playbymail) no authorization header found")
+		return server.AuthenData{}, nil
+	}
+
+	// Check if it starts with "Bearer "
+	if len(authHeader) < 7 || authHeader[:7] != "Bearer " {
+		l.Warn("(playbymail) invalid authorization header format")
+		return server.AuthenData{}, nil
+	}
+
+	// Extract the token (remove "Bearer " prefix)
+	token := authHeader[7:]
+
+	accountRec, err := mm.VerifyAccountSessionToken(token)
 	if err != nil {
 		l.Warn("(playbymail) failed to verify account session token >%v<", err)
 		return server.AuthenData{}, err
