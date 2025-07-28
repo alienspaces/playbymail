@@ -60,7 +60,7 @@ func gameSubscriptionHandlerConfig(l logger.Logger) (map[string]server.HandlerCo
 
 	config[GetManyGameSubscriptions] = server.HandlerConfig{
 		Method:      http.MethodGet,
-		Path:        "/v1/game-subscriptions",
+		Path:        "/api/v1/game-subscriptions",
 		HandlerFunc: getManyGameSubscriptionsHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes:            []server.AuthenticationType{server.AuthenticationTypeToken},
@@ -69,7 +69,7 @@ func gameSubscriptionHandlerConfig(l logger.Logger) (map[string]server.HandlerCo
 	}
 	config[GetOneGameSubscription] = server.HandlerConfig{
 		Method:      http.MethodGet,
-		Path:        "/v1/game-subscriptions/:game_subscription_id",
+		Path:        "/api/v1/game-subscriptions/:game_subscription_id",
 		HandlerFunc: getGameSubscriptionHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes:            []server.AuthenticationType{server.AuthenticationTypeToken},
@@ -78,7 +78,7 @@ func gameSubscriptionHandlerConfig(l logger.Logger) (map[string]server.HandlerCo
 	}
 	config[CreateGameSubscription] = server.HandlerConfig{
 		Method:      http.MethodPost,
-		Path:        "/v1/game-subscriptions",
+		Path:        "/api/v1/game-subscriptions",
 		HandlerFunc: createGameSubscriptionHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes:            []server.AuthenticationType{server.AuthenticationTypeToken},
@@ -88,7 +88,7 @@ func gameSubscriptionHandlerConfig(l logger.Logger) (map[string]server.HandlerCo
 	}
 	config[UpdateGameSubscription] = server.HandlerConfig{
 		Method:      http.MethodPut,
-		Path:        "/v1/game-subscriptions/:game_subscription_id",
+		Path:        "/api/v1/game-subscriptions/:game_subscription_id",
 		HandlerFunc: updateGameSubscriptionHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes:            []server.AuthenticationType{server.AuthenticationTypeToken},
@@ -98,7 +98,7 @@ func gameSubscriptionHandlerConfig(l logger.Logger) (map[string]server.HandlerCo
 	}
 	config[DeleteGameSubscription] = server.HandlerConfig{
 		Method:      http.MethodDelete,
-		Path:        "/v1/game-subscriptions/:game_subscription_id",
+		Path:        "/api/v1/game-subscriptions/:game_subscription_id",
 		HandlerFunc: deleteGameSubscriptionHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{server.AuthenticationTypeToken},

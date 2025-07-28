@@ -60,48 +60,69 @@ func gameAdministrationHandlerConfig(l logger.Logger) (map[string]server.Handler
 
 	config[GetManyGameAdministrations] = server.HandlerConfig{
 		Method:      http.MethodGet,
-		Path:        "/v1/game-administrations",
+		Path:        "/api/v1/game-administrations",
 		HandlerFunc: getManyGameAdministrationsHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes:            []server.AuthenticationType{server.AuthenticationTypeToken},
 			ValidateResponseSchema: collectionResponseSchema,
 		},
+		DocumentationConfig: server.DocumentationConfig{
+			Document:   true,
+			Collection: true,
+			Title:      "Get game administration collection",
+		},
 	}
 	config[GetOneGameAdministration] = server.HandlerConfig{
 		Method:      http.MethodGet,
-		Path:        "/v1/game-administrations/:game_administration_id",
+		Path:        "/api/v1/game-administrations/:game_administration_id",
 		HandlerFunc: getGameAdministrationHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes:            []server.AuthenticationType{server.AuthenticationTypeToken},
 			ValidateResponseSchema: responseSchema,
 		},
+		DocumentationConfig: server.DocumentationConfig{
+			Document: true,
+			Title:    "Get game administration",
+		},
 	}
 	config[CreateGameAdministration] = server.HandlerConfig{
 		Method:      http.MethodPost,
-		Path:        "/v1/game-administrations",
+		Path:        "/api/v1/game-administrations",
 		HandlerFunc: createGameAdministrationHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes:            []server.AuthenticationType{server.AuthenticationTypeToken},
 			ValidateRequestSchema:  requestSchema,
 			ValidateResponseSchema: responseSchema,
 		},
+		DocumentationConfig: server.DocumentationConfig{
+			Document: true,
+			Title:    "Create game administration",
+		},
 	}
 	config[UpdateGameAdministration] = server.HandlerConfig{
 		Method:      http.MethodPut,
-		Path:        "/v1/game-administrations/:game_administration_id",
+		Path:        "/api/v1/game-administrations/:game_administration_id",
 		HandlerFunc: updateGameAdministrationHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes:            []server.AuthenticationType{server.AuthenticationTypeToken},
 			ValidateRequestSchema:  requestSchema,
 			ValidateResponseSchema: responseSchema,
 		},
+		DocumentationConfig: server.DocumentationConfig{
+			Document: true,
+			Title:    "Update game administration",
+		},
 	}
 	config[DeleteGameAdministration] = server.HandlerConfig{
 		Method:      http.MethodDelete,
-		Path:        "/v1/game-administrations/:game_administration_id",
+		Path:        "/api/v1/game-administrations/:game_administration_id",
 		HandlerFunc: deleteGameAdministrationHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{server.AuthenticationTypeToken},
+		},
+		DocumentationConfig: server.DocumentationConfig{
+			Document: true,
+			Title:    "Delete game administration",
 		},
 	}
 

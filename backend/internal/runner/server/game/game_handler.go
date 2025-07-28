@@ -63,7 +63,7 @@ func gameHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error)
 	// Unnested routes
 	gameConfig[GetManyGames] = server.HandlerConfig{
 		Method:      http.MethodGet,
-		Path:        "/v1/games",
+		Path:        "/api/v1/games",
 		HandlerFunc: getManyGamesHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
@@ -74,13 +74,13 @@ func gameHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error)
 		DocumentationConfig: server.DocumentationConfig{
 			Document:   true,
 			Collection: true,
-			Title:      "Get client collection",
+			Title:      "Get game collection",
 		},
 	}
 
 	gameConfig[GetOneGame] = server.HandlerConfig{
 		Method:      http.MethodGet,
-		Path:        "/v1/games/:game_id",
+		Path:        "/api/v1/games/:game_id",
 		HandlerFunc: getGameHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
@@ -96,7 +96,7 @@ func gameHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error)
 
 	gameConfig[CreateGame] = server.HandlerConfig{
 		Method:      http.MethodPost,
-		Path:        "/v1/games",
+		Path:        "/api/v1/games",
 		HandlerFunc: createGameHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
@@ -113,7 +113,7 @@ func gameHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error)
 
 	gameConfig[CreateGameWithID] = server.HandlerConfig{
 		Method:      http.MethodPost,
-		Path:        "/v1/games/:game_id",
+		Path:        "/api/v1/games/:game_id",
 		HandlerFunc: createGameHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
@@ -130,7 +130,7 @@ func gameHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error)
 
 	gameConfig[UpdateGame] = server.HandlerConfig{
 		Method:      http.MethodPut,
-		Path:        "/v1/games/:game_id",
+		Path:        "/api/v1/games/:game_id",
 		HandlerFunc: updateGameHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
@@ -147,7 +147,7 @@ func gameHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error)
 
 	gameConfig[DeleteGame] = server.HandlerConfig{
 		Method:      http.MethodDelete,
-		Path:        "/v1/games/:game_id",
+		Path:        "/api/v1/games/:game_id",
 		HandlerFunc: deleteGameHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{

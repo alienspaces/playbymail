@@ -49,26 +49,15 @@
           </div>
 
           <div class="form-group">
-            <label for="max-turns">Maximum Turns (optional)</label>
+            <label for="maxTurns">Max Turns (optional)</label>
             <input
-              id="max-turns"
+              id="maxTurns"
               v-model.number="form.maxTurns"
               type="number"
               min="1"
-              placeholder="Leave empty for unlimited"
+              class="form-control"
+              placeholder="Leave empty for unlimited turns"
             />
-            <p class="help-text">Maximum number of turns before the game ends automatically</p>
-          </div>
-
-          <div class="form-group">
-            <label for="game-config">Game Configuration (JSON)</label>
-            <textarea
-              id="game-config"
-              v-model="form.gameConfig"
-              rows="6"
-              placeholder='{"player_limit": 10, "starting_location": "town_square"}'
-            ></textarea>
-            <p class="help-text">Optional JSON configuration specific to this game type</p>
           </div>
         </div>
 
@@ -108,9 +97,8 @@ const loading = ref(false);
 const error = ref('');
 
 const form = ref({
-  turnDeadlineHours: 168, // 7 days default
-  maxTurns: null,
-  gameConfig: ''
+  turnDeadlineHours: 24,
+  maxTurns: null
 });
 
 onMounted(async () => {
@@ -129,29 +117,14 @@ const createInstance = async () => {
   error.value = '';
 
   try {
-    // Parse game config if provided
-    let gameConfig = null;
-    if (form.value.gameConfig.trim()) {
-      try {
-        gameConfig = JSON.parse(form.value.gameConfig);
-      } catch {
-        error.value = 'Invalid JSON in game configuration';
-        loading.value = false;
-        return;
-      }
-    }
-
     const instanceData = {
       game_id: gameId.value,
       turn_deadline_hours: form.value.turnDeadlineHours,
-      max_turns: form.value.maxTurns || null,
-      game_config: gameConfig
+      max_turns: form.value.maxTurns || null
     };
 
     await gameInstancesStore.createGameInstance(gameId.value, instanceData);
-    
-    // Navigate to the instances list
-    router.push(`/admin/games/${gameId.value}/instances`);
+    router.push(`/management/games/${gameId.value}/instances`);
   } catch (err) {
     error.value = err.message || 'Failed to create game instance';
   } finally {

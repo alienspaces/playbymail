@@ -3,9 +3,6 @@
     "title": "AdventureGameItemRequest",
     "type": "object",
     "properties": {
-        "game_id": {
-            "$ref": "common.schema.json#/$defs/id"
-        },
         "name": {
             "type": "string",
             "minLength": 1,
@@ -16,7 +13,6 @@
         }
     },
     "required": [
-        "game_id",
         "name"
     ],
     "additionalProperties": false

@@ -1,7 +1,7 @@
 import { baseUrl, getAuthHeaders, apiFetch } from './baseUrl';
 
 export async function listGameInstances(gameId) {
-  const res = await apiFetch(`${baseUrl}/v1/adventure-games/${gameId}/instances`, {
+  const res = await apiFetch(`${baseUrl}/api/v1/games/${gameId}/instances`, {
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
   });
   if (!res.ok) throw new Error('Failed to fetch game instances');
@@ -9,7 +9,7 @@ export async function listGameInstances(gameId) {
 }
 
 export async function getGameInstance(gameId, instanceId) {
-  const res = await apiFetch(`${baseUrl}/v1/adventure-games/${gameId}/instances/${instanceId}`, {
+  const res = await apiFetch(`${baseUrl}/api/v1/games/${gameId}/instances/${instanceId}`, {
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
   });
   if (!res.ok) throw new Error('Failed to fetch game instance');
@@ -17,7 +17,7 @@ export async function getGameInstance(gameId, instanceId) {
 }
 
 export async function createGameInstance(gameId, data) {
-  const res = await apiFetch(`${baseUrl}/v1/adventure-games/${gameId}/instances`, {
+  const res = await apiFetch(`${baseUrl}/api/v1/games/${gameId}/instances`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
     body: JSON.stringify(data),
@@ -27,7 +27,7 @@ export async function createGameInstance(gameId, data) {
 }
 
 export async function updateGameInstance(gameId, instanceId, data) {
-  const res = await apiFetch(`${baseUrl}/v1/adventure-games/${gameId}/instances/${instanceId}`, {
+  const res = await apiFetch(`${baseUrl}/api/v1/games/${gameId}/instances/${instanceId}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
     body: JSON.stringify(data),
@@ -37,7 +37,7 @@ export async function updateGameInstance(gameId, instanceId, data) {
 }
 
 export async function deleteGameInstance(gameId, instanceId) {
-  const res = await apiFetch(`${baseUrl}/v1/adventure-games/${gameId}/instances/${instanceId}`, {
+  const res = await apiFetch(`${baseUrl}/api/v1/games/${gameId}/instances/${instanceId}`, {
     method: 'DELETE',
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
   });
@@ -47,7 +47,7 @@ export async function deleteGameInstance(gameId, instanceId) {
 
 // Game instance runtime management
 export async function startGameInstance(gameId, instanceId) {
-  const res = await apiFetch(`${baseUrl}/v1/adventure-games/${gameId}/instances/${instanceId}/start`, {
+  const res = await apiFetch(`${baseUrl}/api/v1/games/${gameId}/instances/${instanceId}/start`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
   });
@@ -56,7 +56,7 @@ export async function startGameInstance(gameId, instanceId) {
 }
 
 export async function pauseGameInstance(gameId, instanceId) {
-  const res = await apiFetch(`${baseUrl}/v1/adventure-games/${gameId}/instances/${instanceId}/pause`, {
+  const res = await apiFetch(`${baseUrl}/api/v1/games/${gameId}/instances/${instanceId}/pause`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
   });
@@ -65,7 +65,7 @@ export async function pauseGameInstance(gameId, instanceId) {
 }
 
 export async function resumeGameInstance(gameId, instanceId) {
-  const res = await apiFetch(`${baseUrl}/v1/adventure-games/${gameId}/instances/${instanceId}/resume`, {
+  const res = await apiFetch(`${baseUrl}/api/v1/games/${gameId}/instances/${instanceId}/resume`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
   });
@@ -74,7 +74,7 @@ export async function resumeGameInstance(gameId, instanceId) {
 }
 
 export async function cancelGameInstance(gameId, instanceId) {
-  const res = await apiFetch(`${baseUrl}/v1/adventure-games/${gameId}/instances/${instanceId}/cancel`, {
+  const res = await apiFetch(`${baseUrl}/api/v1/games/${gameId}/instances/${instanceId}/cancel`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
   });

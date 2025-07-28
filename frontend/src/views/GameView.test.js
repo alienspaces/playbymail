@@ -25,7 +25,7 @@ describe('GameView', () => {
     const wrapper = mount(GameView)
     // Wait for fetchGames to complete
     await new Promise(r => setTimeout(r, 0))
-    expect(fetch).toHaveBeenCalledWith('http://localhost:8080/v1/games', expect.any(Object))
+    expect(fetch).toHaveBeenCalledWith('http://localhost:8080/api/v1/games', expect.any(Object))
     expect(wrapper.text()).toContain('Games')
     expect(wrapper.text()).toContain('Test Game')
     expect(wrapper.find('th').text()).toBe('Name')

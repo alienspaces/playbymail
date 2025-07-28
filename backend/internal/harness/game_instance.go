@@ -57,7 +57,7 @@ func (t *Testing) applyGameInstanceRecDefaultValues(rec *game_record.GameInstanc
 
 	// Set default status if not already set
 	if rec.Status == "" {
-		rec.Status = "created"
+		rec.Status = game_record.GameInstanceStatusCreated
 	}
 
 	// Set default turn deadline if not already set

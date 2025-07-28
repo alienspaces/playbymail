@@ -77,14 +77,6 @@
         </div>
       </div>
 
-      <!-- Configuration Section -->
-      <div class="detail-section" v-if="instance.game_config">
-        <h3>Game Configuration</h3>
-        <div class="config-display">
-          <pre>{{ JSON.stringify(instance.game_config, null, 2) }}</pre>
-        </div>
-      </div>
-
       <!-- Runtime Controls Section -->
       <div class="detail-section">
         <h3>Runtime Controls</h3>

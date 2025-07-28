@@ -53,7 +53,6 @@ func AdventureGameItemRequestToRecord(l logger.Logger, req *api.AdventureGameIte
 		return nil, nil
 	}
 	l.Debug("mapping adventure_game_item request to record")
-	rec.GameID = req.GameID
 	rec.Name = req.Name
 	rec.Description = req.Description
 	return rec, nil

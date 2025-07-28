@@ -111,7 +111,7 @@ func gameInstanceHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig
 
 	gameInstanceConfig[getOneGameInstance] = server.HandlerConfig{
 		Method:      http.MethodGet,
-		Path:        "/api/v1/games/:game_id/instances/:instance_id",
+		Path:        "/api/v1/games/:game_id/instances/:game_instance_id",
 		HandlerFunc: getOneGameInstanceHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
@@ -144,7 +144,7 @@ func gameInstanceHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig
 
 	gameInstanceConfig[updateOneGameInstance] = server.HandlerConfig{
 		Method:      http.MethodPut,
-		Path:        "/api/v1/games/:game_id/instances/:instance_id",
+		Path:        "/api/v1/games/:game_id/instances/:game_instance_id",
 		HandlerFunc: updateOneGameInstanceHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
@@ -161,7 +161,7 @@ func gameInstanceHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig
 
 	gameInstanceConfig[deleteOneGameInstance] = server.HandlerConfig{
 		Method:      http.MethodDelete,
-		Path:        "/api/v1/games/:game_id/instances/:instance_id",
+		Path:        "/api/v1/games/:game_id/instances/:game_instance_id",
 		HandlerFunc: deleteOneGameInstanceHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
@@ -177,7 +177,7 @@ func gameInstanceHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig
 	// Runtime management endpoints
 	gameInstanceConfig[startGameInstance] = server.HandlerConfig{
 		Method:      http.MethodPost,
-		Path:        "/api/v1/games/:game_id/instances/:instance_id/start",
+		Path:        "/api/v1/games/:game_id/instances/:game_instance_id/start",
 		HandlerFunc: startGameInstanceHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
@@ -193,7 +193,7 @@ func gameInstanceHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig
 
 	gameInstanceConfig[pauseGameInstance] = server.HandlerConfig{
 		Method:      http.MethodPost,
-		Path:        "/api/v1/games/:game_id/instances/:instance_id/pause",
+		Path:        "/api/v1/games/:game_id/instances/:game_instance_id/pause",
 		HandlerFunc: pauseGameInstanceHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
@@ -209,7 +209,7 @@ func gameInstanceHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig
 
 	gameInstanceConfig[resumeGameInstance] = server.HandlerConfig{
 		Method:      http.MethodPost,
-		Path:        "/api/v1/games/:game_id/instances/:instance_id/resume",
+		Path:        "/api/v1/games/:game_id/instances/:game_instance_id/resume",
 		HandlerFunc: resumeGameInstanceHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
@@ -225,7 +225,7 @@ func gameInstanceHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig
 
 	gameInstanceConfig[cancelGameInstance] = server.HandlerConfig{
 		Method:      http.MethodPost,
-		Path:        "/api/v1/games/:game_id/instances/:instance_id/cancel",
+		Path:        "/api/v1/games/:game_id/instances/:game_instance_id/cancel",
 		HandlerFunc: cancelGameInstanceHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
@@ -306,7 +306,7 @@ func getOneGameInstanceHandler(w http.ResponseWriter, r *http.Request, pp httpro
 	l = logging.LoggerWithFunctionContext(l, packageName, "getOneGameInstanceHandler")
 
 	gameID := pp.ByName("game_id")
-	instanceID := pp.ByName("instance_id")
+	instanceID := pp.ByName("game_instance_id")
 	if gameID == "" || instanceID == "" {
 		l.Warn("game id and instance id are required")
 		return coreerror.NewNotFoundError("game instance", instanceID)
@@ -346,7 +346,11 @@ func createOneGameInstanceHandler(w http.ResponseWriter, r *http.Request, pp htt
 		return coreerror.NewNotFoundError("game", gameID)
 	}
 
-	rec := &game_record.GameInstance{GameID: gameID}
+	// Create record with just the GameID - domain layer will set defaults
+	rec := &game_record.GameInstance{
+		GameID: gameID,
+	}
+
 	mm := m.(*domain.Domain)
 	rec, err := mm.CreateGameInstanceRec(rec)
 	if err != nil {
@@ -371,7 +375,7 @@ func updateOneGameInstanceHandler(w http.ResponseWriter, r *http.Request, pp htt
 	l = logging.LoggerWithFunctionContext(l, packageName, "updateOneGameInstanceHandler")
 
 	gameID := pp.ByName("game_id")
-	instanceID := pp.ByName("instance_id")
+	instanceID := pp.ByName("game_instance_id")
 	if gameID == "" || instanceID == "" {
 		l.Warn("game id and instance id are required")
 		return coreerror.NewNotFoundError("game instance", instanceID)
@@ -411,7 +415,7 @@ func deleteOneGameInstanceHandler(w http.ResponseWriter, r *http.Request, pp htt
 	l = logging.LoggerWithFunctionContext(l, packageName, "deleteOneGameInstanceHandler")
 
 	gameID := pp.ByName("game_id")
-	instanceID := pp.ByName("instance_id")
+	instanceID := pp.ByName("game_instance_id")
 	if gameID == "" || instanceID == "" {
 		l.Warn("game id and instance id are required")
 		return coreerror.NewNotFoundError("game instance", instanceID)
@@ -449,7 +453,7 @@ func startGameInstanceHandler(w http.ResponseWriter, r *http.Request, pp httprou
 
 	// Get path parameters
 	gameID := pp.ByName("game_id")
-	instanceID := pp.ByName("instance_id")
+	instanceID := pp.ByName("game_instance_id")
 
 	if gameID == "" || instanceID == "" {
 		l.Warn("game id and instance id are required")
@@ -487,7 +491,7 @@ func pauseGameInstanceHandler(w http.ResponseWriter, r *http.Request, pp httprou
 
 	// Get path parameters
 	gameID := pp.ByName("game_id")
-	instanceID := pp.ByName("instance_id")
+	instanceID := pp.ByName("game_instance_id")
 
 	if gameID == "" || instanceID == "" {
 		l.Warn("game id and instance id are required")
@@ -525,7 +529,7 @@ func resumeGameInstanceHandler(w http.ResponseWriter, r *http.Request, pp httpro
 
 	// Get path parameters
 	gameID := pp.ByName("game_id")
-	instanceID := pp.ByName("instance_id")
+	instanceID := pp.ByName("game_instance_id")
 
 	if gameID == "" || instanceID == "" {
 		l.Warn("game id and instance id are required")
@@ -563,7 +567,7 @@ func cancelGameInstanceHandler(w http.ResponseWriter, r *http.Request, pp httpro
 
 	// Get path parameters
 	gameID := pp.ByName("game_id")
-	instanceID := pp.ByName("instance_id")
+	instanceID := pp.ByName("game_instance_id")
 
 	if gameID == "" || instanceID == "" {
 		l.Warn("game id and instance id are required")

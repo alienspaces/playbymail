@@ -1,7 +1,7 @@
 import { baseUrl, getAuthHeaders } from './baseUrl';
 
 export async function getMyAccount() {
-  const res = await fetch(`${baseUrl}/v1/my-account`, {
+  const res = await fetch(`${baseUrl}/api/v1/my-account`, {
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() }
   });
   if (!res.ok) throw new Error('Failed to fetch account');
@@ -10,7 +10,7 @@ export async function getMyAccount() {
 }
 
 export async function updateMyAccount(accountData) {
-  const res = await fetch(`${baseUrl}/v1/my-account`, {
+  const res = await fetch(`${baseUrl}/api/v1/my-account`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
     body: JSON.stringify(accountData)
@@ -21,7 +21,7 @@ export async function updateMyAccount(accountData) {
 }
 
 export async function deleteMyAccount() {
-  const res = await fetch(`${baseUrl}/v1/my-account`, {
+  const res = await fetch(`${baseUrl}/api/v1/my-account`, {
     method: 'DELETE',
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() }
   });

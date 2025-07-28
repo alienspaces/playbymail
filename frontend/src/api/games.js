@@ -1,7 +1,7 @@
 import { baseUrl, getAuthHeaders, apiFetch } from './baseUrl';
 
 export async function listGames() {
-  const res = await apiFetch(`${baseUrl}/v1/games`, {
+  const res = await apiFetch(`${baseUrl}/api/v1/games`, {
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
   });
   if (!res.ok) throw new Error('Failed to fetch games');
@@ -9,7 +9,7 @@ export async function listGames() {
 }
 
 export async function createGame({ name, game_type }) {
-  const res = await apiFetch(`${baseUrl}/v1/games`, {
+  const res = await apiFetch(`${baseUrl}/api/v1/games`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
     body: JSON.stringify({ name, game_type }),
@@ -19,7 +19,7 @@ export async function createGame({ name, game_type }) {
 }
 
 export async function updateGame(id, { name, game_type }) {
-  const res = await apiFetch(`${baseUrl}/v1/games/${id}`, {
+  const res = await apiFetch(`${baseUrl}/api/v1/games/${id}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
     body: JSON.stringify({ name, game_type }),
@@ -29,7 +29,7 @@ export async function updateGame(id, { name, game_type }) {
 }
 
 export async function deleteGame(id) {
-  const res = await apiFetch(`${baseUrl}/v1/games/${id}`, {
+  const res = await apiFetch(`${baseUrl}/api/v1/games/${id}`, {
     method: 'DELETE',
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
   });

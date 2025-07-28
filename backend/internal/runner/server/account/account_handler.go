@@ -74,7 +74,7 @@ func accountHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, err
 	// Register collection routes first
 	accountConfig[GetManyAccounts] = server.HandlerConfig{
 		Method:      http.MethodGet,
-		Path:        "/v1/accounts",
+		Path:        "/api/v1/accounts",
 		HandlerFunc: getManyAccountsHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
@@ -91,7 +91,7 @@ func accountHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, err
 
 	accountConfig[CreateAccount] = server.HandlerConfig{
 		Method:      http.MethodPost,
-		Path:        "/v1/accounts",
+		Path:        "/api/v1/accounts",
 		HandlerFunc: createAccountHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
@@ -109,7 +109,7 @@ func accountHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, err
 	// Now register parameterized routes
 	accountConfig[GetOneAccount] = server.HandlerConfig{
 		Method:      http.MethodGet,
-		Path:        "/v1/accounts/:account_id",
+		Path:        "/api/v1/accounts/:account_id",
 		HandlerFunc: getAccountHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
@@ -125,7 +125,7 @@ func accountHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, err
 
 	accountConfig[CreateAccountWithID] = server.HandlerConfig{
 		Method:      http.MethodPost,
-		Path:        "/v1/accounts/:account_id",
+		Path:        "/api/v1/accounts/:account_id",
 		HandlerFunc: createAccountHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
@@ -142,7 +142,7 @@ func accountHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, err
 
 	accountConfig[UpdateAccount] = server.HandlerConfig{
 		Method:      http.MethodPut,
-		Path:        "/v1/accounts/:account_id",
+		Path:        "/api/v1/accounts/:account_id",
 		HandlerFunc: updateAccountHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
@@ -159,7 +159,7 @@ func accountHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, err
 
 	accountConfig[DeleteAccount] = server.HandlerConfig{
 		Method:      http.MethodDelete,
-		Path:        "/v1/accounts/:account_id",
+		Path:        "/api/v1/accounts/:account_id",
 		HandlerFunc: deleteAccountHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
@@ -175,7 +175,7 @@ func accountHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, err
 	// Register "my account" routes
 	accountConfig[GetMyAccount] = server.HandlerConfig{
 		Method:      http.MethodGet,
-		Path:        "/v1/my-account",
+		Path:        "/api/v1/my-account",
 		HandlerFunc: getMyAccountHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
@@ -191,7 +191,7 @@ func accountHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, err
 
 	accountConfig[UpdateMyAccount] = server.HandlerConfig{
 		Method:      http.MethodPut,
-		Path:        "/v1/my-account",
+		Path:        "/api/v1/my-account",
 		HandlerFunc: updateMyAccountHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
@@ -208,7 +208,7 @@ func accountHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, err
 
 	accountConfig[DeleteMyAccount] = server.HandlerConfig{
 		Method:      http.MethodDelete,
-		Path:        "/v1/my-account",
+		Path:        "/api/v1/my-account",
 		HandlerFunc: deleteMyAccountHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
@@ -224,7 +224,7 @@ func accountHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, err
 	// Register auth routes
 	accountConfig[RequestAuth] = server.HandlerConfig{
 		Method:      http.MethodPost,
-		Path:        "/v1/request-auth",
+		Path:        "/api/v1/request-auth",
 		HandlerFunc: requestAuthHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
@@ -251,7 +251,7 @@ func accountHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, err
 
 	accountConfig[VerifyAuth] = server.HandlerConfig{
 		Method:      http.MethodPost,
-		Path:        "/v1/verify-auth",
+		Path:        "/api/v1/verify-auth",
 		HandlerFunc: verifyAuthHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{

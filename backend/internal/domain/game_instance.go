@@ -19,6 +19,18 @@ func (m *Domain) GetGameInstanceRec(recID string, lock *sql.Lock) (*game_record.
 
 func (m *Domain) CreateGameInstanceRec(rec *game_record.GameInstance) (*game_record.GameInstance, error) {
 	r := m.GameInstanceRepository()
+
+	// Set initial status and default values if not already set
+	if rec.Status == "" {
+		rec.Status = game_record.GameInstanceStatusCreated
+	}
+	if rec.CurrentTurn == 0 {
+		rec.CurrentTurn = 0
+	}
+	if rec.TurnDeadlineHours == 0 {
+		rec.TurnDeadlineHours = 168 // Default 7 days
+	}
+
 	var err error
 	rec, err = r.CreateOne(rec)
 	if err != nil {

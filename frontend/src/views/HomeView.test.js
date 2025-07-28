@@ -43,7 +43,7 @@ describe('HomeView', () => {
     const wrapper = mountWithStubs()
     
     expect(wrapper.find('.who-section').exists()).toBe(true)
-    expect(wrapper.find('.who-section h2').text()).toBe('Who is this site for?')
+    expect(wrapper.find('.who-section h2').text()).toBe('Who is this platform for?')
     
     const userTypes = wrapper.findAll('.user-type')
     expect(userTypes).toHaveLength(3)

@@ -27,6 +27,9 @@ func (rnr *Runner) defaultMiddlewareFuncs() []MiddlewareFunc {
 
 // ResolveHandlerConfig validates and resolves handler configuration.
 func (rnr *Runner) ResolveHandlerConfig(hc HandlerConfig) (HandlerConfig, error) {
+	l := Logger(rnr.Log, "ResolveHandlerConfig")
+
+	l.Info("(core) resolving handler config method >%s< path >%s<", hc.Method, hc.Path)
 
 	hc, err := rnr.resolveHandlerSchemaLocation(hc)
 	if err != nil {
@@ -45,7 +48,7 @@ func (rnr *Runner) ResolveHandlerConfig(hc HandlerConfig) (HandlerConfig, error)
 func (rnr *Runner) ApplyMiddleware(hc HandlerConfig, h Handle) (httprouter.Handle, error) {
 	l := Logger(rnr.Log, "ApplyMiddleware")
 
-	l.Info("(core) applying middleware to handler config >%#v<", hc)
+	l.Info("(core) applying middleware to handler method >%s< path >%s<", hc.Method, hc.Path)
 
 	if rnr.HandlerMiddlewareFuncs == nil {
 		l.Warn("(core) HandlerMiddlewareFuncs is nil in ApplyMiddleware, using defaultMiddlewareFuncs")

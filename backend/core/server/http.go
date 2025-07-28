@@ -216,15 +216,11 @@ func (rnr *Runner) defaultRouter(r *httprouter.Router) (*httprouter.Router, erro
 
 	for _, hc := range rnr.HandlerConfig {
 
-		l.Info("(core) resolving handler config method >%s< path >%s<", hc.Method, hc.Path)
-
 		hc, err := rnr.ResolveHandlerConfig(hc)
 		if err != nil {
 			l.Warn("(core) failed resolving handler config >%v<", err)
 			return nil, err
 		}
-
-		l.Info("(core) applying middleware to handler config method >%s< path >%s<", hc.Method, hc.Path)
 
 		h, err := rnr.ApplyMiddleware(hc, hc.HandlerFunc)
 		if err != nil {
