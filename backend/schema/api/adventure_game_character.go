@@ -27,7 +27,6 @@ type AdventureGameCharacterCollectionResponse struct {
 
 type AdventureGameCharacterRequest struct {
 	Request
-	GameID    string `json:"game_id"`
 	AccountID string `json:"account_id"`
 	Name      string `json:"name"`
 }

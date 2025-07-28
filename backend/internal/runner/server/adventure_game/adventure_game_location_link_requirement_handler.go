@@ -53,21 +53,24 @@ func adventureGameLocationLinkRequirementHandlerConfig(l logger.Logger) (map[str
 
 	collectionResponseSchema := jsonschema.SchemaWithReferences{
 		Main: jsonschema.Schema{
-			Name: "adventure_game_location_link_requirement.collection.response.api.json",
+			Location: "api",
+			Name:     "adventure_game_location_link_requirement.collection.response.schema.json",
 		},
 		References: referenceSchemas,
 	}
 
 	requestSchema := jsonschema.SchemaWithReferences{
 		Main: jsonschema.Schema{
-			Name: "adventure_game_location_link_requirement.request.api.json",
+			Location: "api",
+			Name:     "adventure_game_location_link_requirement.request.schema.json",
 		},
 		References: referenceSchemas,
 	}
 
 	responseSchema := jsonschema.SchemaWithReferences{
 		Main: jsonschema.Schema{
-			Name: "adventure_game_location_link_requirement.response.api.json",
+			Location: "api",
+			Name:     "adventure_game_location_link_requirement.response.schema.json",
 		},
 		References: referenceSchemas,
 	}

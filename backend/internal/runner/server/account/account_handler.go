@@ -49,21 +49,24 @@ func accountHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, err
 
 	collectionResponseSchema := jsonschema.SchemaWithReferences{
 		Main: jsonschema.Schema{
-			Name: "account.collection.response.api.json",
+			Location: "api",
+			Name:     "account.collection.response.schema.json",
 		},
 		References: referenceSchemas,
 	}
 
 	requestSchema := jsonschema.SchemaWithReferences{
 		Main: jsonschema.Schema{
-			Name: "account.request.api.json",
+			Location: "api",
+			Name:     "account.request.schema.json",
 		},
 		References: referenceSchemas,
 	}
 
 	responseSchema := jsonschema.SchemaWithReferences{
 		Main: jsonschema.Schema{
-			Name: "account.response.api.json",
+			Location: "api",
+			Name:     "account.response.schema.json",
 		},
 		References: referenceSchemas,
 	}
@@ -229,12 +232,14 @@ func accountHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, err
 			},
 			ValidateRequestSchema: jsonschema.SchemaWithReferences{
 				Main: jsonschema.Schema{
-					Name: "account.request-auth.request.api.json",
+					Location: "api",
+					Name:     "account.request-auth.request.schema.json",
 				},
 			},
 			ValidateResponseSchema: jsonschema.SchemaWithReferences{
 				Main: jsonschema.Schema{
-					Name: "account.request-auth.response.api.json",
+					Location: "api",
+					Name:     "account.request-auth.response.schema.json",
 				},
 			},
 		},
@@ -254,12 +259,14 @@ func accountHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, err
 			},
 			ValidateRequestSchema: jsonschema.SchemaWithReferences{
 				Main: jsonschema.Schema{
-					Name: "account.verify-auth.request.api.json",
+					Location: "api",
+					Name:     "account.verify-auth.request.schema.json",
 				},
 			},
 			ValidateResponseSchema: jsonschema.SchemaWithReferences{
 				Main: jsonschema.Schema{
-					Name: "account.verify-auth.response.api.json",
+					Location: "api",
+					Name:     "account.verify-auth.response.schema.json",
 				},
 			},
 		},

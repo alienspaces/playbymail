@@ -54,21 +54,24 @@ func adventureGameCharacterHandlerConfig(l logger.Logger) (map[string]server.Han
 
 	collectionResponseSchema := jsonschema.SchemaWithReferences{
 		Main: jsonschema.Schema{
-			Name: "adventure_game_character.collection.response.api.json",
+			Location: "api",
+			Name:     "adventure_game_character.collection.response.schema.json",
 		},
 		References: referenceSchemas,
 	}
 
 	requestSchema := jsonschema.SchemaWithReferences{
 		Main: jsonschema.Schema{
-			Name: "adventure_game_character.request.api.json",
+			Location: "api",
+			Name:     "adventure_game_character.request.schema.json",
 		},
 		References: referenceSchemas,
 	}
 
 	responseSchema := jsonschema.SchemaWithReferences{
 		Main: jsonschema.Schema{
-			Name: "adventure_game_character.response.api.json",
+			Location: "api",
+			Name:     "adventure_game_character.response.schema.json",
 		},
 		References: referenceSchemas,
 	}

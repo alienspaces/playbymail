@@ -38,21 +38,24 @@ func gameHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error)
 
 	collectionResponseSchema := jsonschema.SchemaWithReferences{
 		Main: jsonschema.Schema{
-			Name: "game.collection.response.api.json",
+			Location: "api",
+			Name:     "game.collection.response.schema.json",
 		},
 		References: referenceSchemas,
 	}
 
 	requestSchema := jsonschema.SchemaWithReferences{
 		Main: jsonschema.Schema{
-			Name: "game.request.api.json",
+			Location: "api",
+			Name:     "game.request.schema.json",
 		},
 		References: referenceSchemas,
 	}
 
 	responseSchema := jsonschema.SchemaWithReferences{
 		Main: jsonschema.Schema{
-			Name: "game.response.api.json",
+			Location: "api",
+			Name:     "game.response.schema.json",
 		},
 		References: referenceSchemas,
 	}

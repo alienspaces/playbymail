@@ -13,10 +13,12 @@ const (
 
 var referenceSchemas = []jsonschema.Schema{
 	{
-		Name: "query.api.json",
+		Location: "api",
+		Name:     "query.schema.json",
 	},
 	{
-		Name: "common.api.json",
+		Location: "api",
+		Name:     "common.schema.json",
 	},
 }
 

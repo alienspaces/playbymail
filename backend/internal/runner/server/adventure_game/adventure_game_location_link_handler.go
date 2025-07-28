@@ -49,31 +49,34 @@ func adventureGameLocationLinkHandlerConfig(l logger.Logger) (map[string]server.
 
 	l.Debug("Adding adventure_game_location_link handler configuration")
 
-	GameLocationLinkConfig := make(map[string]server.HandlerConfig)
+	gameLocationLinkConfig := make(map[string]server.HandlerConfig)
 
 	collectionResponseSchema := jsonschema.SchemaWithReferences{
 		Main: jsonschema.Schema{
-			Name: "adventure_game_location_link.collection.response.api.json",
+			Location: "api",
+			Name:     "adventure_game_location_link.collection.response.schema.json",
 		},
 		References: referenceSchemas,
 	}
 
 	requestSchema := jsonschema.SchemaWithReferences{
 		Main: jsonschema.Schema{
-			Name: "adventure_game_location_link.request.api.json",
+			Location: "api",
+			Name:     "adventure_game_location_link.request.schema.json",
 		},
 		References: referenceSchemas,
 	}
 
 	responseSchema := jsonschema.SchemaWithReferences{
 		Main: jsonschema.Schema{
-			Name: "adventure_game_location_link.response.api.json",
+			Location: "api",
+			Name:     "adventure_game_location_link.response.schema.json",
 		},
 		References: referenceSchemas,
 	}
 
 	// New Adventure Game Location Link API paths
-	GameLocationLinkConfig[SearchManyAdventureGameLocationLinks] = server.HandlerConfig{
+	gameLocationLinkConfig[SearchManyAdventureGameLocationLinks] = server.HandlerConfig{
 		Method:      http.MethodGet,
 		Path:        "/api/v1/adventure-game-location-links",
 		HandlerFunc: searchManyAdventureGameLocationLinksHandler,
@@ -90,7 +93,7 @@ func adventureGameLocationLinkHandlerConfig(l logger.Logger) (map[string]server.
 		},
 	}
 
-	GameLocationLinkConfig[GetManyAdventureGameLocationLinks] = server.HandlerConfig{
+	gameLocationLinkConfig[GetManyAdventureGameLocationLinks] = server.HandlerConfig{
 		Method:      http.MethodGet,
 		Path:        "/api/v1/adventure-games/:game_id/location-links",
 		HandlerFunc: getManyAdventureGameLocationLinksHandler,
@@ -107,7 +110,7 @@ func adventureGameLocationLinkHandlerConfig(l logger.Logger) (map[string]server.
 		},
 	}
 
-	GameLocationLinkConfig[GetOneAdventureGameLocationLink] = server.HandlerConfig{
+	gameLocationLinkConfig[GetOneAdventureGameLocationLink] = server.HandlerConfig{
 		Method:      http.MethodGet,
 		Path:        "/api/v1/adventure-games/:game_id/location-links/:location_link_id",
 		HandlerFunc: getOneAdventureGameLocationLinkHandler,
@@ -123,7 +126,7 @@ func adventureGameLocationLinkHandlerConfig(l logger.Logger) (map[string]server.
 		},
 	}
 
-	GameLocationLinkConfig[CreateOneAdventureGameLocationLink] = server.HandlerConfig{
+	gameLocationLinkConfig[CreateOneAdventureGameLocationLink] = server.HandlerConfig{
 		Method:      http.MethodPost,
 		Path:        "/api/v1/adventure-games/:game_id/location-links",
 		HandlerFunc: createOneAdventureGameLocationLinkHandler,
@@ -140,7 +143,7 @@ func adventureGameLocationLinkHandlerConfig(l logger.Logger) (map[string]server.
 		},
 	}
 
-	GameLocationLinkConfig[UpdateOneAdventureGameLocationLink] = server.HandlerConfig{
+	gameLocationLinkConfig[UpdateOneAdventureGameLocationLink] = server.HandlerConfig{
 		Method:      http.MethodPut,
 		Path:        "/api/v1/adventure-games/:game_id/location-links/:location_link_id",
 		HandlerFunc: updateOneAdventureGameLocationLinkHandler,
@@ -155,7 +158,7 @@ func adventureGameLocationLinkHandlerConfig(l logger.Logger) (map[string]server.
 		},
 	}
 
-	GameLocationLinkConfig[DeleteOneAdventureGameLocationLink] = server.HandlerConfig{
+	gameLocationLinkConfig[DeleteOneAdventureGameLocationLink] = server.HandlerConfig{
 		Method:      http.MethodDelete,
 		Path:        "/api/v1/adventure-games/:game_id/location-links/:location_link_id",
 		HandlerFunc: deleteOneAdventureGameLocationLinkHandler,
@@ -170,7 +173,7 @@ func adventureGameLocationLinkHandlerConfig(l logger.Logger) (map[string]server.
 		},
 	}
 
-	return GameLocationLinkConfig, nil
+	return gameLocationLinkConfig, nil
 }
 
 func searchManyAdventureGameLocationLinksHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {

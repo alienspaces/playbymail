@@ -22,11 +22,9 @@ func AdventureGameCharacterRequestToRecord(l logger.Logger, r *http.Request, rec
 
 	switch server.HttpMethod(r.Method) {
 	case server.HttpMethodPost:
-		rec.GameID = req.GameID
 		rec.AccountID = req.AccountID
 		rec.Name = req.Name
 	case server.HttpMethodPut, server.HttpMethodPatch:
-		rec.GameID = req.GameID
 		rec.AccountID = req.AccountID
 		rec.Name = req.Name
 	}

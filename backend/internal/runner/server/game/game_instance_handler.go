@@ -47,27 +47,30 @@ const (
 func gameInstanceHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error) {
 	l = logging.LoggerWithFunctionContext(l, packageName, "gameInstanceHandlerConfig")
 
-	l.Debug("Adding game_instance handler configuration")
+	l.Debug("Adding game instance handler configuration")
 
 	gameInstanceConfig := make(map[string]server.HandlerConfig)
 
 	collectionResponseSchema := jsonschema.SchemaWithReferences{
 		Main: jsonschema.Schema{
-			Name: "game_instance.collection.response.api.json",
+			Location: "api",
+			Name:     "game_instance.collection.response.schema.json",
 		},
 		References: referenceSchemas,
 	}
 
 	requestSchema := jsonschema.SchemaWithReferences{
 		Main: jsonschema.Schema{
-			Name: "game_instance.request.api.json",
+			Location: "api",
+			Name:     "game_instance.request.schema.json",
 		},
 		References: referenceSchemas,
 	}
 
 	responseSchema := jsonschema.SchemaWithReferences{
 		Main: jsonschema.Schema{
-			Name: "game_instance.response.api.json",
+			Location: "api",
+			Name:     "game_instance.response.schema.json",
 		},
 		References: referenceSchemas,
 	}

@@ -53,21 +53,24 @@ func adventureGameItemHandlerConfig(l logger.Logger) (map[string]server.HandlerC
 
 	collectionResponseSchema := jsonschema.SchemaWithReferences{
 		Main: jsonschema.Schema{
-			Name: "adventure_game_item.collection.response.api.json",
+			Location: "api",
+			Name:     "adventure_game_item.collection.response.schema.json",
 		},
 		References: referenceSchemas,
 	}
 
 	requestSchema := jsonschema.SchemaWithReferences{
 		Main: jsonschema.Schema{
-			Name: "adventure_game_item.request.api.json",
+			Location: "api",
+			Name:     "adventure_game_item.request.schema.json",
 		},
 		References: referenceSchemas,
 	}
 
 	responseSchema := jsonschema.SchemaWithReferences{
 		Main: jsonschema.Schema{
-			Name: "adventure_game_item.response.api.json",
+			Location: "api",
+			Name:     "adventure_game_item.response.schema.json",
 		},
 		References: referenceSchemas,
 	}

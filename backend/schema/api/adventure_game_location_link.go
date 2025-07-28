@@ -29,7 +29,6 @@ type AdventureGameLocationLinkCollectionResponse struct {
 
 type AdventureGameLocationLinkRequest struct {
 	Request
-	GameID             string `json:"game_id"`
 	FromGameLocationID string `json:"from_game_location_id"`
 	ToGameLocationID   string `json:"to_game_location_id"`
 	Description        string `json:"description"`

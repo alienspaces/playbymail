@@ -3,9 +3,6 @@
     "title": "AdventureGameCharacterRequest",
     "type": "object",
     "properties": {
-        "game_id": {
-            "$ref": "common.schema.json#/$defs/id"
-        },
         "account_id": {
             "$ref": "common.schema.json#/$defs/id"
         },
@@ -16,7 +13,6 @@
         }
     },
     "required": [
-        "game_id",
         "account_id",
         "name"
     ],

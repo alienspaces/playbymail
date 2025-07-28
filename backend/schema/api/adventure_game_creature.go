@@ -27,7 +27,6 @@ type AdventureGameCreatureCollectionResponse struct {
 
 type AdventureGameCreatureRequest struct {
 	Request
-	GameID      string `json:"game_id"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
 }
