@@ -31,7 +31,7 @@ func TestCreateOne(t *testing.T) {
 				require.NoError(t, err)
 				return &adventure_game_record.AdventureGameCharacterInstance{
 					GameID:                          gameInstanceRec.GameID,
-					AdventureGameInstanceID:         gameInstanceRec.ID,
+					GameInstanceID:                  gameInstanceRec.ID,
 					AdventureGameCharacterID:        charRec.ID,
 					AdventureGameLocationInstanceID: locationInstanceRec.ID,
 					Health:                          100,
@@ -50,7 +50,7 @@ func TestCreateOne(t *testing.T) {
 				require.NoError(t, err)
 				rec := &adventure_game_record.AdventureGameCharacterInstance{
 					GameID:                          gameInstanceRec.GameID,
-					AdventureGameInstanceID:         gameInstanceRec.ID,
+					GameInstanceID:                  gameInstanceRec.ID,
 					AdventureGameCharacterID:        charRec.ID,
 					AdventureGameLocationInstanceID: locationInstanceRec.ID,
 					Health:                          100,

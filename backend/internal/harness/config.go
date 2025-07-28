@@ -118,7 +118,7 @@ type GameLocationLinkRequirementConfig struct {
 
 type GameInstanceConfig struct {
 	Reference                    string // Reference to the game_instance record
-	Record                       *adventure_game_record.AdventureGameInstance
+	Record                       *game_record.GameInstance
 	GameLocationInstanceConfigs  []GameLocationInstanceConfig
 	GameItemInstanceConfigs      []GameItemInstanceConfig
 	GameCreatureInstanceConfigs  []GameCreatureInstanceConfig
@@ -283,7 +283,7 @@ func DefaultDataConfig() DataConfig {
 				GameInstanceConfigs: []GameInstanceConfig{
 					{
 						Reference: GameInstanceOneRef,
-						Record:    &adventure_game_record.AdventureGameInstance{},
+						Record:    &game_record.GameInstance{},
 						GameLocationInstanceConfigs: []GameLocationInstanceConfig{
 							{
 								Reference:       GameLocationInstanceOneRef,

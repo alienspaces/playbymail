@@ -1,0 +1,16 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "AdventureGameLocationResponse",
+    "type": "object",
+    "properties": {
+        "data": {
+            "$ref": "./adventure_game_location.api.json"
+        },
+        "error": {
+            "$ref": "common.api.json#/$defs/error"
+        }
+    },
+    "required": [
+        "data"
+    ]
+}

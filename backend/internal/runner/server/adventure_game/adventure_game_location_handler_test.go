@@ -11,7 +11,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/runner/server/adventure_game"
 	"gitlab.com/alienspaces/playbymail/internal/utils/deps"
 	"gitlab.com/alienspaces/playbymail/internal/utils/testutil"
-	"gitlab.com/alienspaces/playbymail/schema"
+	"gitlab.com/alienspaces/playbymail/schema/api"
 )
 
 func Test_getGameLocationHandler(t *testing.T) {
@@ -39,8 +39,8 @@ func Test_getGameLocationHandler(t *testing.T) {
 		collectionRecordCount int
 	}
 
-	testCaseCollectionResponseDecoder := testutil.TestCaseResponseDecoderGeneric[schema.AdventureGameLocationCollectionResponse]
-	testCaseResponseDecoder := testutil.TestCaseResponseDecoderGeneric[schema.AdventureGameLocationResponse]
+	testCaseCollectionResponseDecoder := testutil.TestCaseResponseDecoderGeneric[api.AdventureGameLocationCollectionResponse]
+	testCaseResponseDecoder := testutil.TestCaseResponseDecoderGeneric[api.AdventureGameLocationResponse]
 
 	testCases := []testCase{
 		{
@@ -97,11 +97,11 @@ func Test_getGameLocationHandler(t *testing.T) {
 
 				require.NotNil(t, body, "Response body is not nil")
 
-				var responses []*schema.AdventureGameLocationResponseData
+				var responses []*api.AdventureGameLocationResponseData
 				if testCase.collectionRequest {
-					responses = body.(schema.AdventureGameLocationCollectionResponse).Data
+					responses = body.(api.AdventureGameLocationCollectionResponse).Data
 				} else {
-					responses = append(responses, body.(schema.AdventureGameLocationResponse).Data)
+					responses = append(responses, body.(api.AdventureGameLocationResponse).Data)
 				}
 
 				if testCase.collectionRequest {
@@ -141,10 +141,10 @@ func Test_createUpdateDeleteGameLocationHandler(t *testing.T) {
 
 	type testCase struct {
 		testutil.TestCase
-		expectResponse func(d harness.Data, req schema.AdventureGameLocationRequest) schema.AdventureGameLocationResponse
+		expectResponse func(d harness.Data, req api.AdventureGameLocationRequest) api.AdventureGameLocationResponse
 	}
 
-	testCaseResponseDecoder := testutil.TestCaseResponseDecoderGeneric[schema.AdventureGameLocationResponse]
+	testCaseResponseDecoder := testutil.TestCaseResponseDecoderGeneric[api.AdventureGameLocationResponse]
 
 	gameRec, err := th.Data.GetGameRecByRef(harness.GameOneRef)
 	require.NoError(t, err, "GetGameRecByRef returns without error")
@@ -159,7 +159,7 @@ func Test_createUpdateDeleteGameLocationHandler(t *testing.T) {
 					return rnr.GetHandlerConfig()[adventure_game.CreateOneAdventureGameLocation]
 				},
 				RequestBody: func(d harness.Data) any {
-					return schema.AdventureGameLocationRequest{
+					return api.AdventureGameLocationRequest{
 						Name:        "Test Location",
 						Description: "Test Description",
 					}
@@ -172,9 +172,9 @@ func Test_createUpdateDeleteGameLocationHandler(t *testing.T) {
 				ResponseDecoder: testCaseResponseDecoder,
 				ResponseCode:    http.StatusCreated,
 			},
-			expectResponse: func(d harness.Data, req schema.AdventureGameLocationRequest) schema.AdventureGameLocationResponse {
-				return schema.AdventureGameLocationResponse{
-					Data: &schema.AdventureGameLocationResponseData{
+			expectResponse: func(d harness.Data, req api.AdventureGameLocationRequest) api.AdventureGameLocationResponse {
+				return api.AdventureGameLocationResponse{
+					Data: &api.AdventureGameLocationResponseData{
 						GameID:      gameRec.ID,
 						Name:        req.Name,
 						Description: req.Description,
@@ -196,7 +196,7 @@ func Test_createUpdateDeleteGameLocationHandler(t *testing.T) {
 					return params
 				},
 				RequestBody: func(d harness.Data) any {
-					return schema.AdventureGameLocationRequest{
+					return api.AdventureGameLocationRequest{
 						Name:        "Updated Location",
 						Description: "Updated Description",
 					}
@@ -204,9 +204,9 @@ func Test_createUpdateDeleteGameLocationHandler(t *testing.T) {
 				ResponseDecoder: testCaseResponseDecoder,
 				ResponseCode:    http.StatusOK,
 			},
-			expectResponse: func(d harness.Data, req schema.AdventureGameLocationRequest) schema.AdventureGameLocationResponse {
-				return schema.AdventureGameLocationResponse{
-					Data: &schema.AdventureGameLocationResponseData{
+			expectResponse: func(d harness.Data, req api.AdventureGameLocationRequest) api.AdventureGameLocationResponse {
+				return api.AdventureGameLocationResponse{
+					Data: &api.AdventureGameLocationResponseData{
 						GameID:      gameRec.ID,
 						Name:        req.Name,
 						Description: req.Description,
@@ -245,8 +245,8 @@ func Test_createUpdateDeleteGameLocationHandler(t *testing.T) {
 				}
 
 				require.NotNil(t, body, "Response body is not nil")
-				resp, ok := body.(schema.AdventureGameLocationResponse)
-				require.True(t, ok, "Response body is of type schema.AdventureGameLocationResponse")
+				resp, ok := body.(api.AdventureGameLocationResponse)
+				require.True(t, ok, "Response body is of type api.AdventureGameLocationResponse")
 				lResp := resp.Data
 				require.NotNil(t, lResp, "LocationResponseData is not nil")
 				require.NotEmpty(t, lResp.ID, "Location ID is not empty")
@@ -255,7 +255,7 @@ func Test_createUpdateDeleteGameLocationHandler(t *testing.T) {
 				if testCase.expectResponse != nil {
 					xResp := testCase.expectResponse(
 						th.Data,
-						testCase.TestRequestBody(th.Data).(schema.AdventureGameLocationRequest),
+						testCase.TestRequestBody(th.Data).(api.AdventureGameLocationRequest),
 					).Data
 					require.Equal(t, xResp.GameID, lResp.GameID, "Location GameID matches expected")
 					require.Equal(t, xResp.Name, lResp.Name, "Location Name equals expected")

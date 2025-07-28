@@ -1,26 +1,27 @@
 package harness
 
 import (
+	"database/sql"
 	"fmt"
+	"time"
 
 	"gitlab.com/alienspaces/playbymail/internal/domain"
-	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 )
 
-func (t *Testing) createGameInstanceRec(cfg GameInstanceConfig, gameRec *game_record.Game) (*adventure_game_record.AdventureGameInstance, error) {
+func (t *Testing) createGameInstanceRec(cfg GameInstanceConfig, gameRec *game_record.Game) (*game_record.GameInstance, error) {
 	l := t.Logger("createGameInstanceRec")
 
 	if gameRec == nil {
 		return nil, fmt.Errorf("game record is nil for game_instance record >%#v<", cfg)
 	}
 
-	var rec *adventure_game_record.AdventureGameInstance
+	var rec *game_record.GameInstance
 	if cfg.Record != nil {
 		recCopy := *cfg.Record
 		rec = &recCopy
 	} else {
-		rec = &adventure_game_record.AdventureGameInstance{}
+		rec = &game_record.GameInstance{}
 	}
 
 	rec = t.applyGameInstanceRecDefaultValues(rec)
@@ -30,7 +31,7 @@ func (t *Testing) createGameInstanceRec(cfg GameInstanceConfig, gameRec *game_re
 	l.Info("creating game_instance record >%#v<", rec)
 
 	// Create record
-	createdRec, err := t.Domain.(*domain.Domain).CreateAdventureGameInstanceRec(rec)
+	createdRec, err := t.Domain.(*domain.Domain).CreateGameInstanceRec(rec)
 	if err != nil {
 		l.Warn("failed creating game_instance record >%v<", err)
 		return rec, err
@@ -49,19 +50,28 @@ func (t *Testing) createGameInstanceRec(cfg GameInstanceConfig, gameRec *game_re
 	return createdRec, nil
 }
 
-func (t *Testing) applyGameInstanceRecDefaultValues(rec *adventure_game_record.AdventureGameInstance) *adventure_game_record.AdventureGameInstance {
+func (t *Testing) applyGameInstanceRecDefaultValues(rec *game_record.GameInstance) *game_record.GameInstance {
 	if rec == nil {
-		rec = &adventure_game_record.AdventureGameInstance{}
+		rec = &game_record.GameInstance{}
 	}
 
 	// Set default status if not already set
 	if rec.Status == "" {
-		rec.Status = adventure_game_record.GameInstanceStatusCreated
+		rec.Status = "created"
 	}
 
 	// Set default turn deadline if not already set
 	if rec.TurnDeadlineHours == 0 {
 		rec.TurnDeadlineHours = 168 // 7 days default
+	}
+
+	// Set timestamps if not already set
+	now := time.Now()
+	if rec.CreatedAt.IsZero() {
+		rec.CreatedAt = now
+	}
+	if !rec.UpdatedAt.Valid {
+		rec.UpdatedAt = sql.NullTime{Time: now, Valid: true}
 	}
 
 	return rec

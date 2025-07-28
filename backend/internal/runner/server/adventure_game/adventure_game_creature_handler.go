@@ -18,7 +18,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/mapper"
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 	"gitlab.com/alienspaces/playbymail/internal/utils/logging"
-	"gitlab.com/alienspaces/playbymail/schema"
+	"gitlab.com/alienspaces/playbymail/schema/api"
 )
 
 // API Resource Search Path
@@ -54,21 +54,21 @@ func adventureGameCreatureHandlerConfig(l logger.Logger) (map[string]server.Hand
 
 	collectionResponseSchema := jsonschema.SchemaWithReferences{
 		Main: jsonschema.Schema{
-			Name: "adventure_game_creature.collection.response.schema.json",
+			Name: "adventure_game_creature.collection.response.api.json",
 		},
 		References: referenceSchemas,
 	}
 
 	requestSchema := jsonschema.SchemaWithReferences{
 		Main: jsonschema.Schema{
-			Name: "adventure_game_creature.request.schema.json",
+			Name: "adventure_game_creature.request.api.json",
 		},
 		References: referenceSchemas,
 	}
 
 	responseSchema := jsonschema.SchemaWithReferences{
 		Main: jsonschema.Schema{
-			Name: "adventure_game_creature.response.schema.json",
+			Name: "adventure_game_creature.response.api.json",
 		},
 		References: referenceSchemas,
 	}
@@ -283,7 +283,7 @@ func createOneAdventureGameCreatureHandler(w http.ResponseWriter, r *http.Reques
 
 	gameID := pp.ByName("game_id")
 
-	var req schema.AdventureGameCreatureRequest
+	var req api.AdventureGameCreatureRequest
 	if _, err := server.ReadRequest(l, r, &req); err != nil {
 		l.Warn("failed reading request >%v<", err)
 		return err
@@ -326,7 +326,7 @@ func updateOneAdventureGameCreatureHandler(w http.ResponseWriter, r *http.Reques
 
 	l.Info("updating adventure game creature record with path params >%#v<", pp)
 
-	var req schema.AdventureGameCreatureRequest
+	var req api.AdventureGameCreatureRequest
 	if _, err := server.ReadRequest(l, r, &req); err != nil {
 		l.Warn("failed reading request >%v<", err)
 		return err
@@ -361,7 +361,7 @@ func updateOneAdventureGameCreatureHandler(w http.ResponseWriter, r *http.Reques
 		return err
 	}
 
-	res := schema.AdventureGameCreatureResponse{
+	res := api.AdventureGameCreatureResponse{
 		Data: &data,
 	}
 
@@ -472,7 +472,7 @@ func getGameCreatureHandler(w http.ResponseWriter, r *http.Request, pp httproute
 func createGameCreatureHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
 	l = logging.LoggerWithFunctionContext(l, "CreateGameCreatureHandler")
 
-	var req schema.GameCreatureRequest
+	var req api.GameCreatureRequest
 	if _, err := server.ReadRequest(l, r, &req); err != nil {
 		l.Warn("failed reading request >%v<", err)
 		return err
@@ -513,7 +513,7 @@ func createGameCreatureHandler(w http.ResponseWriter, r *http.Request, pp httpro
 
 // 	l.Info("updating game_creature record with path params >%#v<", pp)
 
-// 	var req schema.AdventureGameCreatureRequest
+// 	var req api.AdventureGameCreatureRequest
 // 	if _, err := server.ReadRequest(l, r, &req); err != nil {
 // 		l.Warn("failed reading request >%v<", err)
 // 		return err
@@ -542,7 +542,7 @@ func createGameCreatureHandler(w http.ResponseWriter, r *http.Request, pp httpro
 // 		return err
 // 	}
 
-// 	res := schema.AdventureGameCreatureResponse{
+// 	res := api.AdventureGameCreatureResponse{
 // 		Data: &data,
 // 	}
 

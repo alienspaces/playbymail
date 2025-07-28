@@ -307,7 +307,7 @@ func (t *Testing) RemoveData() error {
 			l.Warn("[teardown] skipping game instance with empty ID")
 			continue
 		}
-		err := t.Domain.(*domain.Domain).RemoveAdventureGameInstanceRec(instanceRec.ID)
+		err := t.Domain.(*domain.Domain).RemoveGameInstanceRec(instanceRec.ID)
 		if err != nil {
 			l.Warn("failed removing game instance record >%v<", err)
 			return err

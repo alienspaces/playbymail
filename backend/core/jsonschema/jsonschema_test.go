@@ -56,7 +56,7 @@ func TestSchemaPathFileURL(t *testing.T) {
 	}
 
 	// Absolute path
-	absolutePath := filepath.Join(cwd, "../../schema", "account.request-auth.request.schema.json")
+	absolutePath := filepath.Join(cwd, "../../schema/api", "account.request-auth.request.schema.json")
 	if _, err := os.Stat(absolutePath); err != nil {
 		t.Fatalf("File does not exist at absolute path: %v", err)
 	}
@@ -67,7 +67,7 @@ func TestSchemaPathFileURL(t *testing.T) {
 	}
 
 	// Relative path (relative to backend/core/jsonschema)
-	relativePath := "../../schema/account.request-auth.request.schema.json"
+	relativePath := "../../schema/api/account.request-auth.request.schema.json"
 	if _, err := os.Stat(relativePath); err != nil {
 		t.Fatalf("File does not exist at relative path: %v", err)
 	}

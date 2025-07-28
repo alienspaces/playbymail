@@ -1,0 +1,39 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "http://playbymail.dev/schema/adventure_game_character.api.json",
+    "title": "AdventureGameCharacter",
+    "type": "object",
+    "properties": {
+        "id": {
+            "$ref": "common.api.json#/$defs/id"
+        },
+        "game_id": {
+            "$ref": "common.api.json#/$defs/id"
+        },
+        "account_id": {
+            "$ref": "common.api.json#/$defs/id"
+        },
+        "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+        },
+        "created_at": {
+            "$ref": "common.api.json#/$defs/created_at"
+        },
+        "updated_at": {
+            "$ref": "common.api.json#/$defs/updated_at"
+        },
+        "deleted_at": {
+            "$ref": "common.api.json#/$defs/updated_at"
+        }
+    },
+    "required": [
+        "id",
+        "game_id",
+        "account_id",
+        "name",
+        "created_at"
+    ],
+    "additionalProperties": false
+}

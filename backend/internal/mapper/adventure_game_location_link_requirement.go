@@ -4,10 +4,10 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/nulltime"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
-	"gitlab.com/alienspaces/playbymail/schema"
+	"gitlab.com/alienspaces/playbymail/schema/api"
 )
 
-func AdventureGameLocationLinkRequirementRequestToRecord(l logger.Logger, req *schema.AdventureGameLocationLinkRequirementRequest, rec *adventure_game_record.AdventureGameLocationLinkRequirement) (*adventure_game_record.AdventureGameLocationLinkRequirement, error) {
+func AdventureGameLocationLinkRequirementRequestToRecord(l logger.Logger, req *api.AdventureGameLocationLinkRequirementRequest, rec *adventure_game_record.AdventureGameLocationLinkRequirement) (*adventure_game_record.AdventureGameLocationLinkRequirement, error) {
 	if rec == nil {
 		rec = &adventure_game_record.AdventureGameLocationLinkRequirement{}
 	}
@@ -22,9 +22,9 @@ func AdventureGameLocationLinkRequirementRequestToRecord(l logger.Logger, req *s
 	return rec, nil
 }
 
-func AdventureGameLocationLinkRequirementRecordToResponseData(l logger.Logger, rec *adventure_game_record.AdventureGameLocationLinkRequirement) (schema.AdventureGameLocationLinkRequirementResponseData, error) {
+func AdventureGameLocationLinkRequirementRecordToResponseData(l logger.Logger, rec *adventure_game_record.AdventureGameLocationLinkRequirement) (api.AdventureGameLocationLinkRequirementResponseData, error) {
 	l.Debug("mapping adventure_game_location_link_requirement record to response data")
-	data := schema.AdventureGameLocationLinkRequirementResponseData{
+	data := api.AdventureGameLocationLinkRequirementResponseData{
 		ID:                 rec.ID,
 		GameID:             rec.GameID,
 		GameLocationLinkID: rec.AdventureGameLocationLinkID,
@@ -37,26 +37,26 @@ func AdventureGameLocationLinkRequirementRecordToResponseData(l logger.Logger, r
 	return data, nil
 }
 
-func AdventureGameLocationLinkRequirementRecordToResponse(l logger.Logger, rec *adventure_game_record.AdventureGameLocationLinkRequirement) (schema.AdventureGameLocationLinkRequirementResponse, error) {
+func AdventureGameLocationLinkRequirementRecordToResponse(l logger.Logger, rec *adventure_game_record.AdventureGameLocationLinkRequirement) (api.AdventureGameLocationLinkRequirementResponse, error) {
 	data, err := AdventureGameLocationLinkRequirementRecordToResponseData(l, rec)
 	if err != nil {
-		return schema.AdventureGameLocationLinkRequirementResponse{}, err
+		return api.AdventureGameLocationLinkRequirementResponse{}, err
 	}
-	return schema.AdventureGameLocationLinkRequirementResponse{
+	return api.AdventureGameLocationLinkRequirementResponse{
 		Data: &data,
 	}, nil
 }
 
-func AdventureGameLocationLinkRequirementRecordsToCollectionResponse(l logger.Logger, recs []*adventure_game_record.AdventureGameLocationLinkRequirement) (schema.AdventureGameLocationLinkRequirementCollectionResponse, error) {
-	data := []*schema.AdventureGameLocationLinkRequirementResponseData{}
+func AdventureGameLocationLinkRequirementRecordsToCollectionResponse(l logger.Logger, recs []*adventure_game_record.AdventureGameLocationLinkRequirement) (api.AdventureGameLocationLinkRequirementCollectionResponse, error) {
+	data := []*api.AdventureGameLocationLinkRequirementResponseData{}
 	for _, rec := range recs {
 		d, err := AdventureGameLocationLinkRequirementRecordToResponseData(l, rec)
 		if err != nil {
-			return schema.AdventureGameLocationLinkRequirementCollectionResponse{}, err
+			return api.AdventureGameLocationLinkRequirementCollectionResponse{}, err
 		}
 		data = append(data, &d)
 	}
-	return schema.AdventureGameLocationLinkRequirementCollectionResponse{
+	return api.AdventureGameLocationLinkRequirementCollectionResponse{
 		Data: data,
 	}, nil
 }

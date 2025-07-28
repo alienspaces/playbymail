@@ -18,13 +18,15 @@ type Data struct {
 	GameCreatureRecs                []*adventure_game_record.AdventureGameCreature
 	GameItemRecs                    []*adventure_game_record.AdventureGameItem
 	GameLocationLinkRequirementRecs []*adventure_game_record.AdventureGameLocationLinkRequirement
-	GameInstanceRecs                []*adventure_game_record.AdventureGameInstance
+	GameInstanceRecs                []*game_record.GameInstance
 	GameLocationInstanceRecs        []*adventure_game_record.AdventureGameLocationInstance
 	GameItemInstanceRecs            []*adventure_game_record.AdventureGameItemInstance
 	GameCreatureInstanceRecs        []*adventure_game_record.AdventureGameCreatureInstance
 	GameCharacterInstanceRecs       []*adventure_game_record.AdventureGameCharacterInstance
 	GameSubscriptionRecs            []*game_record.GameSubscription
 	GameAdministrationRecs          []*game_record.GameAdministration
+	GameConfigurationRecs           []*game_record.GameConfiguration
+	GameInstanceConfigurationRecs   []*game_record.GameInstanceConfiguration
 	// Data references
 	Refs DataRefs
 }
@@ -49,6 +51,8 @@ type DataRefs struct {
 	GameCharacterInstanceRefs       map[string]string // Map of refs to game_character_instance records
 	GameSubscriptionRefs            map[string]string // Map of refs to game_subscription records
 	GameAdministrationRefs          map[string]string // Map of refs to game_administration records
+	GameConfigurationRefs           map[string]string // Map of refs to game_configuration records
+	GameInstanceConfigurationRefs   map[string]string // Map of refs to game_instance_configuration records
 }
 
 // initialiseDataStores - Data is required to maintain data references and
@@ -72,6 +76,8 @@ func initialiseDataStores() Data {
 			GameCharacterInstanceRefs:       map[string]string{},
 			GameSubscriptionRefs:            map[string]string{},
 			GameAdministrationRefs:          map[string]string{},
+			GameConfigurationRefs:           map[string]string{},
+			GameInstanceConfigurationRefs:   map[string]string{},
 		},
 	}
 }
@@ -317,7 +323,7 @@ func (d *Data) GetGameLocationLinkRequirementRecByRef(ref string) (*adventure_ga
 }
 
 // GameInstance
-func (d *Data) AddGameInstanceRec(rec *adventure_game_record.AdventureGameInstance) {
+func (d *Data) AddGameInstanceRec(rec *game_record.GameInstance) {
 	for idx := range d.GameInstanceRecs {
 		if d.GameInstanceRecs[idx].ID == rec.ID {
 			d.GameInstanceRecs[idx] = rec
@@ -327,7 +333,7 @@ func (d *Data) AddGameInstanceRec(rec *adventure_game_record.AdventureGameInstan
 	d.GameInstanceRecs = append(d.GameInstanceRecs, rec)
 }
 
-func (d *Data) GetGameInstanceRecByID(id string) (*adventure_game_record.AdventureGameInstance, error) {
+func (d *Data) GetGameInstanceRecByID(id string) (*game_record.GameInstance, error) {
 	for _, rec := range d.GameInstanceRecs {
 		if rec.ID == id {
 			return rec, nil
@@ -336,7 +342,7 @@ func (d *Data) GetGameInstanceRecByID(id string) (*adventure_game_record.Adventu
 	return nil, fmt.Errorf("failed getting game_instance with ID >%s<", id)
 }
 
-func (d *Data) GetGameInstanceRecByRef(ref string) (*adventure_game_record.AdventureGameInstance, error) {
+func (d *Data) GetGameInstanceRecByRef(ref string) (*game_record.GameInstance, error) {
 	id, ok := d.Refs.GameInstanceRefs[ref]
 	if !ok {
 		return nil, fmt.Errorf("failed getting game_instance with ref >%s<", ref)
@@ -344,8 +350,8 @@ func (d *Data) GetGameInstanceRecByRef(ref string) (*adventure_game_record.Adven
 	return d.GetGameInstanceRecByID(id)
 }
 
-func (d *Data) GetGameInstanceRecByGameID(gameID string) []*adventure_game_record.AdventureGameInstance {
-	var result []*adventure_game_record.AdventureGameInstance
+func (d *Data) GetGameInstanceRecByGameID(gameID string) []*game_record.GameInstance {
+	var result []*game_record.GameInstance
 	for _, rec := range d.GameInstanceRecs {
 		if rec.GameID == gameID {
 			result = append(result, rec)
@@ -547,5 +553,61 @@ func (d *Data) GetGameAdministrationRecByID(id string) (*game_record.GameAdminis
 			return rec, nil
 		}
 	}
-	return nil, fmt.Errorf("failed getting game_administration with ID >%s<", id)
+	return nil, fmt.Errorf("game administration record not found for id >%s<", id)
+}
+
+// GameConfiguration
+func (d *Data) AddGameConfigurationRec(rec *game_record.GameConfiguration) {
+	for idx := range d.GameConfigurationRecs {
+		if d.GameConfigurationRecs[idx].ID == rec.ID {
+			d.GameConfigurationRecs[idx] = rec
+			return
+		}
+	}
+	d.GameConfigurationRecs = append(d.GameConfigurationRecs, rec)
+}
+
+func (d *Data) GetGameConfigurationRecByID(id string) (*game_record.GameConfiguration, error) {
+	for _, rec := range d.GameConfigurationRecs {
+		if rec.ID == id {
+			return rec, nil
+		}
+	}
+	return nil, fmt.Errorf("game configuration record not found for id >%s<", id)
+}
+
+func (d *Data) GetGameConfigurationRecByRef(ref string) (*game_record.GameConfiguration, error) {
+	id, exists := d.Refs.GameConfigurationRefs[ref]
+	if !exists {
+		return nil, fmt.Errorf("game configuration reference not found for ref >%s<", ref)
+	}
+	return d.GetGameConfigurationRecByID(id)
+}
+
+// GameInstanceConfiguration
+func (d *Data) AddGameInstanceConfigurationRec(rec *game_record.GameInstanceConfiguration) {
+	for idx := range d.GameInstanceConfigurationRecs {
+		if d.GameInstanceConfigurationRecs[idx].ID == rec.ID {
+			d.GameInstanceConfigurationRecs[idx] = rec
+			return
+		}
+	}
+	d.GameInstanceConfigurationRecs = append(d.GameInstanceConfigurationRecs, rec)
+}
+
+func (d *Data) GetGameInstanceConfigurationRecByID(id string) (*game_record.GameInstanceConfiguration, error) {
+	for _, rec := range d.GameInstanceConfigurationRecs {
+		if rec.ID == id {
+			return rec, nil
+		}
+	}
+	return nil, fmt.Errorf("game instance configuration record not found for id >%s<", id)
+}
+
+func (d *Data) GetGameInstanceConfigurationRecByRef(ref string) (*game_record.GameInstanceConfiguration, error) {
+	id, exists := d.Refs.GameInstanceConfigurationRefs[ref]
+	if !exists {
+		return nil, fmt.Errorf("game instance configuration reference not found for ref >%s<", ref)
+	}
+	return d.GetGameInstanceConfigurationRecByID(id)
 }

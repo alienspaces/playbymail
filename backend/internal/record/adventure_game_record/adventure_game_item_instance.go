@@ -13,8 +13,8 @@ const TableAdventureGameItemInstance = "adventure_game_item_instance"
 const (
 	FieldAdventureGameItemInstanceID                               = "id"
 	FieldAdventureGameItemInstanceGameID                           = "game_id"
+	FieldAdventureGameItemInstanceGameInstanceID                   = "game_instance_id"
 	FieldAdventureGameItemInstanceAdventureGameItemID              = "adventure_game_item_id"
-	FieldAdventureGameItemInstanceAdventureGameInstanceID          = "adventure_game_instance_id"
 	FieldAdventureGameItemInstanceAdventureGameLocationInstanceID  = "adventure_game_location_instance_id"
 	FieldAdventureGameItemInstanceAdventureGameCharacterInstanceID = "adventure_game_character_instance_id"
 	FieldAdventureGameItemInstanceAdventureGameCreatureInstanceID  = "adventure_game_creature_instance_id"
@@ -27,8 +27,8 @@ const (
 type AdventureGameItemInstance struct {
 	record.Record
 	GameID                           string         `db:"game_id"`
+	GameInstanceID                   string         `db:"game_instance_id"`
 	AdventureGameItemID              string         `db:"adventure_game_item_id"`
-	AdventureGameInstanceID          string         `db:"adventure_game_instance_id"`
 	AdventureGameLocationInstanceID  sql.NullString `db:"adventure_game_location_instance_id"`
 	AdventureGameCharacterInstanceID sql.NullString `db:"adventure_game_character_instance_id"`
 	AdventureGameCreatureInstanceID  sql.NullString `db:"adventure_game_creature_instance_id"`
@@ -40,8 +40,8 @@ type AdventureGameItemInstance struct {
 func (r *AdventureGameItemInstance) ToNamedArgs() pgx.NamedArgs {
 	args := r.Record.ToNamedArgs()
 	args[FieldAdventureGameItemInstanceGameID] = r.GameID
+	args[FieldAdventureGameItemInstanceGameInstanceID] = r.GameInstanceID
 	args[FieldAdventureGameItemInstanceAdventureGameItemID] = r.AdventureGameItemID
-	args[FieldAdventureGameItemInstanceAdventureGameInstanceID] = r.AdventureGameInstanceID
 	args[FieldAdventureGameItemInstanceAdventureGameLocationInstanceID] = r.AdventureGameLocationInstanceID
 	args[FieldAdventureGameItemInstanceAdventureGameCharacterInstanceID] = r.AdventureGameCharacterInstanceID
 	args[FieldAdventureGameItemInstanceAdventureGameCreatureInstanceID] = r.AdventureGameCreatureInstanceID

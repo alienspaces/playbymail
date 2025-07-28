@@ -18,7 +18,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/mapper"
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 	"gitlab.com/alienspaces/playbymail/internal/utils/logging"
-	"gitlab.com/alienspaces/playbymail/schema"
+	"gitlab.com/alienspaces/playbymail/schema/api"
 )
 
 // API Resource Search Path
@@ -54,21 +54,21 @@ func adventureGameCreatureInstanceHandlerConfig(l logger.Logger) (map[string]ser
 
 	collectionResponseSchema := jsonschema.SchemaWithReferences{
 		Main: jsonschema.Schema{
-			Name: "adventure_game_creature_instance.collection.response.schema.json",
+			Name: "adventure_game_creature_instance.collection.response.api.json",
 		},
 		References: referenceSchemas,
 	}
 
 	requestSchema := jsonschema.SchemaWithReferences{
 		Main: jsonschema.Schema{
-			Name: "adventure_game_creature_instance.request.schema.json",
+			Name: "adventure_game_creature_instance.request.api.json",
 		},
 		References: referenceSchemas,
 	}
 
 	responseSchema := jsonschema.SchemaWithReferences{
 		Main: jsonschema.Schema{
-			Name: "adventure_game_creature_instance.response.schema.json",
+			Name: "adventure_game_creature_instance.response.api.json",
 		},
 		References: referenceSchemas,
 	}
@@ -213,7 +213,7 @@ func getManyAdventureGameCreatureInstancesHandler(w http.ResponseWriter, r *http
 
 	// Add filter for specific game
 	opts.Params = append(opts.Params, sql.Param{
-		Col: adventure_game_record.FieldAdventureGameCreatureInstanceAdventureGameInstanceID,
+		Col: adventure_game_record.FieldAdventureGameCreatureInstanceGameInstanceID,
 		Val: gameInstanceID,
 	})
 
@@ -250,7 +250,7 @@ func getOneAdventureGameCreatureInstanceHandler(w http.ResponseWriter, r *http.R
 
 	mm := m.(*domain.Domain)
 
-	gameInstanceRec, err := mm.GetAdventureGameInstanceRec(gameInstanceID, nil)
+	gameInstanceRec, err := mm.GetGameInstanceRec(gameInstanceID, nil)
 	if err != nil {
 		return err
 	}
@@ -262,8 +262,8 @@ func getOneAdventureGameCreatureInstanceHandler(w http.ResponseWriter, r *http.R
 	}
 
 	// Verify the creature instance belongs to the specified game
-	if rec.AdventureGameInstanceID != gameInstanceRec.ID {
-		l.Warn("creature instance does not belong to specified game instance >%s< != >%s<", rec.AdventureGameInstanceID, gameInstanceRec.ID)
+	if rec.GameInstanceID != gameInstanceRec.ID {
+		l.Warn("creature instance does not belong to specified game instance >%s< != >%s<", rec.GameInstanceID, gameInstanceRec.ID)
 		return coreerror.NewNotFoundError("creature instance", creatureInstanceID)
 	}
 
@@ -286,7 +286,7 @@ func createOneAdventureGameCreatureInstanceHandler(w http.ResponseWriter, r *htt
 		return coreerror.NewNotFoundError("game instance", gameInstanceID)
 	}
 
-	var req schema.AdventureGameCreatureInstanceRequest
+	var req api.AdventureGameCreatureInstanceRequest
 	if _, err := server.ReadRequest(l, r, &req); err != nil {
 		l.Warn("failed reading request >%v<", err)
 		return err
@@ -299,14 +299,14 @@ func createOneAdventureGameCreatureInstanceHandler(w http.ResponseWriter, r *htt
 
 	mm := m.(*domain.Domain)
 
-	gameInstanceRec, err := mm.GetAdventureGameInstanceRec(gameInstanceID, nil)
+	gameInstanceRec, err := mm.GetGameInstanceRec(gameInstanceID, nil)
 	if err != nil {
 		return err
 	}
 
 	// Set the game ID and game instance ID from game instance record
 	rec.GameID = gameInstanceRec.GameID
-	rec.AdventureGameInstanceID = gameInstanceRec.ID
+	rec.GameInstanceID = gameInstanceRec.ID
 
 	rec, err = mm.CreateAdventureGameCreatureInstanceRec(rec)
 	if err != nil {
@@ -341,7 +341,7 @@ func updateOneAdventureGameCreatureInstanceHandler(w http.ResponseWriter, r *htt
 
 	l.Info("updating adventure game creature instance record with path params >%#v<", pp)
 
-	var req schema.AdventureGameCreatureInstanceRequest
+	var req api.AdventureGameCreatureInstanceRequest
 	if _, err := server.ReadRequest(l, r, &req); err != nil {
 		l.Warn("failed reading request >%v<", err)
 		return err
@@ -349,7 +349,7 @@ func updateOneAdventureGameCreatureInstanceHandler(w http.ResponseWriter, r *htt
 
 	mm := m.(*domain.Domain)
 
-	gameInstanceRec, err := mm.GetAdventureGameInstanceRec(gameInstanceID, nil)
+	gameInstanceRec, err := mm.GetGameInstanceRec(gameInstanceID, nil)
 	if err != nil {
 		return err
 	}
@@ -360,8 +360,8 @@ func updateOneAdventureGameCreatureInstanceHandler(w http.ResponseWriter, r *htt
 	}
 
 	// Verify the creature instance belongs to the specified game
-	if rec.AdventureGameInstanceID != gameInstanceRec.ID {
-		l.Warn("creature instance does not belong to specified game instance >%s< != >%s<", rec.AdventureGameInstanceID, gameInstanceRec.ID)
+	if rec.GameInstanceID != gameInstanceRec.ID {
+		l.Warn("creature instance does not belong to specified game instance >%s< != >%s<", rec.GameInstanceID, gameInstanceRec.ID)
 		return coreerror.NewNotFoundError("creature instance", creatureInstanceID)
 	}
 
@@ -378,7 +378,7 @@ func updateOneAdventureGameCreatureInstanceHandler(w http.ResponseWriter, r *htt
 
 	data := mapper.AdventureGameCreatureInstanceRecordToResponseData(rec)
 
-	res := schema.AdventureGameCreatureInstanceResponse{
+	res := api.AdventureGameCreatureInstanceResponse{
 		Data: data,
 	}
 
@@ -411,7 +411,7 @@ func deleteOneAdventureGameCreatureInstanceHandler(w http.ResponseWriter, r *htt
 
 	mm := m.(*domain.Domain)
 
-	gameInstanceRec, err := mm.GetAdventureGameInstanceRec(gameInstanceID, nil)
+	gameInstanceRec, err := mm.GetGameInstanceRec(gameInstanceID, nil)
 	if err != nil {
 		return err
 	}
@@ -423,8 +423,8 @@ func deleteOneAdventureGameCreatureInstanceHandler(w http.ResponseWriter, r *htt
 	}
 
 	// Verify the creature instance belongs to the specified game
-	if rec.AdventureGameInstanceID != gameInstanceRec.ID {
-		l.Warn("creature instance does not belong to specified game instance >%s< != >%s<", rec.AdventureGameInstanceID, gameInstanceRec.ID)
+	if rec.GameInstanceID != gameInstanceRec.ID {
+		l.Warn("creature instance does not belong to specified game instance >%s< != >%s<", rec.GameInstanceID, gameInstanceRec.ID)
 		return coreerror.NewNotFoundError("creature instance", creatureInstanceID)
 	}
 

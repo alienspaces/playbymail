@@ -31,7 +31,7 @@ func TestCreateOne(t *testing.T) {
 				require.NoError(t, err)
 				return &adventure_game_record.AdventureGameLocationInstance{
 					GameID:                  game.ID,
-					AdventureGameInstanceID: gameInstance.ID,
+					GameInstanceID:          gameInstance.ID,
 					AdventureGameLocationID: location.ID,
 				}
 			},
@@ -42,7 +42,7 @@ func TestCreateOne(t *testing.T) {
 			rec: func(data *harness.Data, t *testing.T) *adventure_game_record.AdventureGameLocationInstance {
 				return &adventure_game_record.AdventureGameLocationInstance{
 					GameID:                  uuid.NewString(),
-					AdventureGameInstanceID: uuid.NewString(),
+					GameInstanceID:          uuid.NewString(),
 					AdventureGameLocationID: uuid.NewString(),
 				}
 			},

@@ -9,7 +9,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/harness"
 	"gitlab.com/alienspaces/playbymail/internal/runner/server/game"
 	"gitlab.com/alienspaces/playbymail/internal/utils/testutil"
-	"gitlab.com/alienspaces/playbymail/schema"
+	"gitlab.com/alienspaces/playbymail/schema/api"
 )
 
 func Test_gameSubscriptionHandler(t *testing.T) {
@@ -19,8 +19,8 @@ func Test_gameSubscriptionHandler(t *testing.T) {
 	require.NoError(t, err, "Test data setup returns without error")
 	defer func() { _ = th.Teardown() }()
 
-	collectionDecoder := testutil.TestCaseResponseDecoderGeneric[schema.GameSubscriptionCollectionResponse]
-	singleDecoder := testutil.TestCaseResponseDecoderGeneric[schema.GameSubscriptionResponse]
+	collectionDecoder := testutil.TestCaseResponseDecoderGeneric[api.GameSubscriptionCollectionResponse]
+	singleDecoder := testutil.TestCaseResponseDecoderGeneric[api.GameSubscriptionResponse]
 
 	testCases := []testutil.TestCase{
 		{
@@ -39,7 +39,7 @@ func Test_gameSubscriptionHandler(t *testing.T) {
 			RequestBody: func(d harness.Data) any {
 				gameRec, _ := d.GetGameRecByRef(harness.GameOneRef)
 				accountRec, _ := d.GetAccountRecByRef(harness.AccountTwoRef)
-				return schema.GameSubscriptionRequest{
+				return api.GameSubscriptionRequest{
 					GameID:           gameRec.ID,
 					AccountID:        accountRec.ID,
 					SubscriptionType: "Player",
@@ -69,7 +69,7 @@ func Test_gameSubscriptionHandler(t *testing.T) {
 				return map[string]string{":game_subscription_id": d.GameSubscriptionRecs[0].ID}
 			},
 			RequestBody: func(d harness.Data) any {
-				return schema.GameSubscriptionRequest{
+				return api.GameSubscriptionRequest{
 					GameID:           d.GameSubscriptionRecs[0].GameID,
 					AccountID:        d.GameSubscriptionRecs[0].AccountID,
 					SubscriptionType: "Manager",

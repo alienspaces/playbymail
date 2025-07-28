@@ -52,7 +52,7 @@ func WriteError(l logger.Logger, w http.ResponseWriter, errs ...error) {
 }
 
 func WriteMalformedError(l logger.Logger, w http.ResponseWriter, err error) {
-	e := coreerror.NewMalformedDataError(err.Error())
+	e := coreerror.NewMalformedDataError("%s", err.Error())
 	l.Warn("(core) malformed data >%v< >%v", err, e)
 	WriteError(l, w, e)
 }

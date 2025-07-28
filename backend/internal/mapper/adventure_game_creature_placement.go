@@ -4,11 +4,11 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/nulltime"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
-	"gitlab.com/alienspaces/playbymail/schema"
+	"gitlab.com/alienspaces/playbymail/schema/api"
 )
 
-func AdventureGameCreaturePlacementRecordToResponseData(l logger.Logger, rec *adventure_game_record.AdventureGameCreaturePlacement) (schema.AdventureGameCreaturePlacementResponseData, error) {
-	data := schema.AdventureGameCreaturePlacementResponseData{
+func AdventureGameCreaturePlacementRecordToResponseData(l logger.Logger, rec *adventure_game_record.AdventureGameCreaturePlacement) (api.AdventureGameCreaturePlacementResponseData, error) {
+	data := api.AdventureGameCreaturePlacementResponseData{
 		ID:                      rec.ID,
 		GameID:                  rec.GameID,
 		AdventureGameCreatureID: rec.AdventureGameCreatureID,
@@ -21,8 +21,8 @@ func AdventureGameCreaturePlacementRecordToResponseData(l logger.Logger, rec *ad
 	return data, nil
 }
 
-func AdventureGameCreaturePlacementRecordsToCollectionResponse(l logger.Logger, recs []*adventure_game_record.AdventureGameCreaturePlacement) (*schema.AdventureGameCreaturePlacementCollectionResponse, error) {
-	data := []*schema.AdventureGameCreaturePlacementResponseData{}
+func AdventureGameCreaturePlacementRecordsToCollectionResponse(l logger.Logger, recs []*adventure_game_record.AdventureGameCreaturePlacement) (*api.AdventureGameCreaturePlacementCollectionResponse, error) {
+	data := []*api.AdventureGameCreaturePlacementResponseData{}
 	for _, rec := range recs {
 		item, err := AdventureGameCreaturePlacementRecordToResponseData(l, rec)
 		if err != nil {
@@ -30,22 +30,22 @@ func AdventureGameCreaturePlacementRecordsToCollectionResponse(l logger.Logger, 
 		}
 		data = append(data, &item)
 	}
-	return &schema.AdventureGameCreaturePlacementCollectionResponse{
+	return &api.AdventureGameCreaturePlacementCollectionResponse{
 		Data: data,
 	}, nil
 }
 
-func AdventureGameCreaturePlacementRecordToResponse(l logger.Logger, rec *adventure_game_record.AdventureGameCreaturePlacement) (*schema.AdventureGameCreaturePlacementResponse, error) {
+func AdventureGameCreaturePlacementRecordToResponse(l logger.Logger, rec *adventure_game_record.AdventureGameCreaturePlacement) (*api.AdventureGameCreaturePlacementResponse, error) {
 	data, err := AdventureGameCreaturePlacementRecordToResponseData(l, rec)
 	if err != nil {
 		return nil, err
 	}
-	return &schema.AdventureGameCreaturePlacementResponse{
+	return &api.AdventureGameCreaturePlacementResponse{
 		Data: &data,
 	}, nil
 }
 
-func AdventureGameCreaturePlacementRequestToRecord(l logger.Logger, req *schema.AdventureGameCreaturePlacementRequest, rec *adventure_game_record.AdventureGameCreaturePlacement) (*adventure_game_record.AdventureGameCreaturePlacement, error) {
+func AdventureGameCreaturePlacementRequestToRecord(l logger.Logger, req *api.AdventureGameCreaturePlacementRequest, rec *adventure_game_record.AdventureGameCreaturePlacement) (*adventure_game_record.AdventureGameCreaturePlacement, error) {
 	if rec == nil {
 		rec = &adventure_game_record.AdventureGameCreaturePlacement{}
 	}

@@ -82,7 +82,7 @@ func validateParams(l logger.Logger, q url.Values, paramCfg *ValidateParamsConfi
 
 	if paramCfg.Schema.IsEmpty() {
 		for k := range q {
-			return coreerror.NewParamError(fmt.Sprintf("Parameter >%s< not allowed.", k))
+			return coreerror.NewParamError("Parameter >%s< not allowed.", k)
 		}
 	}
 

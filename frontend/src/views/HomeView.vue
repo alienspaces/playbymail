@@ -13,8 +13,8 @@
     </div>
     
     <div class="who-section">
-      <h2>Who is this site for?</h2>
-      <p>Our platform is designed for:</p>
+      <h2>Who is this platform for?</h2>
+      <p>This platform is designed for:</p>
       <div class="user-types">
         <div class="user-type">
           <div class="user-icon">

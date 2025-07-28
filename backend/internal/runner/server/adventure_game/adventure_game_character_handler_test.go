@@ -11,7 +11,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/runner/server/adventure_game"
 	"gitlab.com/alienspaces/playbymail/internal/utils/deps"
 	"gitlab.com/alienspaces/playbymail/internal/utils/testutil"
-	"gitlab.com/alienspaces/playbymail/schema"
+	"gitlab.com/alienspaces/playbymail/schema/api"
 )
 
 func Test_adventureGameCharacterHandler(t *testing.T) {
@@ -36,8 +36,8 @@ func Test_adventureGameCharacterHandler(t *testing.T) {
 	charRec, err := th.Data.GetGameCharacterRecByRef(harness.GameCharacterOneRef)
 	require.NoError(t, err, "GetGameCharacterRecByRef returns without error")
 
-	testCaseCollectionResponseDecoder := testutil.TestCaseResponseDecoderGeneric[schema.AdventureGameCharacterCollectionResponse]
-	testCaseResponseDecoder := testutil.TestCaseResponseDecoderGeneric[schema.AdventureGameCharacterResponse]
+	testCaseCollectionResponseDecoder := testutil.TestCaseResponseDecoderGeneric[api.AdventureGameCharacterCollectionResponse]
+	testCaseResponseDecoder := testutil.TestCaseResponseDecoderGeneric[api.AdventureGameCharacterResponse]
 
 	testCases := []struct {
 		testutil.TestCase
@@ -68,7 +68,7 @@ func Test_adventureGameCharacterHandler(t *testing.T) {
 					return rnr.GetHandlerConfig()[adventure_game.CreateOneAdventureGameCharacter]
 				},
 				RequestBody: func(d harness.Data) any {
-					return schema.AdventureGameCharacterRequest{
+					return api.AdventureGameCharacterRequest{
 						AccountID: accountRec.ID, // Use AccountTwoRef for uniqueness
 						Name:      "Test Character",
 					}

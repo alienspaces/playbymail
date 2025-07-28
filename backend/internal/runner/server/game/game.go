@@ -13,10 +13,10 @@ const (
 
 var referenceSchemas = []jsonschema.Schema{
 	{
-		Name: "query.schema.json",
+		Name: "query.api.json",
 	},
 	{
-		Name: "common.schema.json",
+		Name: "common.api.json",
 	},
 }
 
@@ -30,8 +30,11 @@ func GameHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error)
 	// Additional handler configurations are added here
 	handlerConfigFuncs := []func(logger.Logger) (map[string]server.HandlerConfig, error){
 		gameHandlerConfig,
+		gameConfigurationHandlerConfig,
 		gameSubscriptionHandlerConfig,
 		gameAdministrationHandlerConfig,
+		gameInstanceHandlerConfig,
+		gameInstanceConfigurationHandlerConfig,
 	}
 
 	for _, fn := range handlerConfigFuncs {

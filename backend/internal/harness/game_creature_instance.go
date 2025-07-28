@@ -5,9 +5,10 @@ import (
 
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
+	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 )
 
-func (t *Testing) createGameCreatureInstanceRec(cfg GameCreatureInstanceConfig, gameInstanceRec *adventure_game_record.AdventureGameInstance) (*adventure_game_record.AdventureGameCreatureInstance, error) {
+func (t *Testing) createGameCreatureInstanceRec(cfg GameCreatureInstanceConfig, gameInstanceRec *game_record.GameInstance) (*adventure_game_record.AdventureGameCreatureInstance, error) {
 	l := t.Logger("createGameCreatureInstanceRec")
 
 	if cfg.GameCreatureRef == "" {
@@ -28,7 +29,7 @@ func (t *Testing) createGameCreatureInstanceRec(cfg GameCreatureInstanceConfig, 
 	rec = t.applyGameCreatureInstanceRecDefaultValues(rec)
 
 	rec.GameID = gameInstanceRec.GameID
-	rec.AdventureGameInstanceID = gameInstanceRec.ID
+	rec.GameInstanceID = gameInstanceRec.ID
 
 	// Resolve foreign keys
 	creatureRec, err := t.Data.GetGameCreatureRecByRef(cfg.GameCreatureRef)

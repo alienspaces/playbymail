@@ -1,7 +1,6 @@
 package queryparam
 
 import (
-	"fmt"
 	"net/url"
 	"strconv"
 	"strings"
@@ -111,7 +110,7 @@ func extractPageSize(qp map[string][]string) (map[string][]string, int, error) {
 		return qp, 0, err
 	}
 	if pageSize < 1 {
-		return qp, 0, coreerror.NewParamError(fmt.Sprintf("Query parameter >%s< is less than 1 >%d<", PageSize, pageSize))
+		return qp, 0, coreerror.NewParamError("Query parameter >%s< is less than 1 >%d<", PageSize, pageSize)
 	}
 
 	return qp, pageSize, nil
@@ -124,7 +123,7 @@ func extractPageNumber(qp map[string][]string) (map[string][]string, int, error)
 		return qp, 0, err
 	}
 	if pageNumber < 1 {
-		return qp, 0, coreerror.NewParamError(fmt.Sprintf("Query parameter >%s< is less than 1 >%d<", PageNumber, pageNumber))
+		return qp, 0, coreerror.NewParamError("Query parameter >%s< is less than 1 >%d<", PageNumber, pageNumber)
 	}
 
 	return qp, pageNumber, nil
@@ -140,12 +139,12 @@ func extractIntQueryParam(qp map[string][]string, key string, defaultValue strin
 	}
 
 	if len(valueStr) != 1 {
-		return qp, 0, coreerror.NewParamError(fmt.Sprintf("query parameter >%s< should be a single value but is >%+v<", key, valueStr))
+		return qp, 0, coreerror.NewParamError("query parameter >%s< should be a single value but is >%+v<", key, valueStr)
 	}
 
 	valueInt, err := strconv.Atoi(valueStr[0])
 	if err != nil {
-		return qp, 0, coreerror.NewParamError(fmt.Sprintf("query parameter >%s< has an invalid value >%+v<", key, valueStr))
+		return qp, 0, coreerror.NewParamError("query parameter >%s< has an invalid value >%+v<", key, valueStr)
 	}
 
 	return qp, valueInt, nil

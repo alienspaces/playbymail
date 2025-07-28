@@ -1,0 +1,37 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "http://playbymail.dev/schema/game.param.api.json",
+    "title": "Game parameters",
+    "description": "Parameter schema for games",
+    "type": "object",
+    "additionalProperties": true,
+    "properties": {
+        "sort_column[]": {
+            "$ref": "../common/query.api.json#/$defs/sort_column[]"
+        },
+        "page_size": {
+            "$ref": "../common/query.api.json#/$defs/page_size"
+        },
+        "page_number": {
+            "$ref": "../common/query.api.json#/$defs/page_number"
+        },
+        "id": {
+            "$ref": "../common/client.api.json#/$defs/client_id"
+        },
+        "client_id": {
+            "$ref": "../common/client.api.json#/$defs/client_id"
+        },
+        "name": {
+            "$ref": "../common/client.api.json#/$defs/name"
+        },
+        "processed_message_at": {
+            "$ref": "../common/common.api.json#/$defs/processed_message_at"
+        },
+        "created_at": {
+            "$ref": "../common/common.api.json#/$defs/created_at"
+        },
+        "updated_at": {
+            "$ref": "../common/common.api.json#/$defs/updated_at"
+        }
+    }
+}

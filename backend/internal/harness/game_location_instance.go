@@ -1,13 +1,16 @@
 package harness
 
 import (
+	"database/sql"
 	"fmt"
+	"time"
 
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
+	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 )
 
-func (t *Testing) createGameLocationInstanceRec(cfg GameLocationInstanceConfig, gameInstanceRec *adventure_game_record.AdventureGameInstance) (*adventure_game_record.AdventureGameLocationInstance, error) {
+func (t *Testing) createGameLocationInstanceRec(cfg GameLocationInstanceConfig, gameInstanceRec *game_record.GameInstance) (*adventure_game_record.AdventureGameLocationInstance, error) {
 	l := t.Logger("createGameLocationInstanceRec")
 
 	if gameInstanceRec == nil {
@@ -30,7 +33,7 @@ func (t *Testing) createGameLocationInstanceRec(cfg GameLocationInstanceConfig, 
 
 	// Set game_id from parent game instance
 	rec.GameID = gameInstanceRec.GameID
-	rec.AdventureGameInstanceID = gameInstanceRec.ID
+	rec.GameInstanceID = gameInstanceRec.ID
 
 	// The game location is retrieved by reference
 	gameLocationRec, err := t.Data.GetGameLocationRecByRef(cfg.GameLocationRef)
@@ -67,5 +70,15 @@ func (t *Testing) applyGameLocationInstanceRecDefaultValues(rec *adventure_game_
 	if rec == nil {
 		rec = &adventure_game_record.AdventureGameLocationInstance{}
 	}
+
+	// Set timestamps if not already set
+	now := time.Now()
+	if rec.CreatedAt.IsZero() {
+		rec.CreatedAt = now
+	}
+	if !rec.UpdatedAt.Valid {
+		rec.UpdatedAt = sql.NullTime{Time: now, Valid: true}
+	}
+
 	return rec
 }

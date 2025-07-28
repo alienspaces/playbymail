@@ -18,7 +18,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/mapper"
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 	"gitlab.com/alienspaces/playbymail/internal/utils/logging"
-	"gitlab.com/alienspaces/playbymail/schema"
+	"gitlab.com/alienspaces/playbymail/schema/api"
 )
 
 // API Resource Search Path
@@ -54,21 +54,21 @@ func adventureGameCharacterHandlerConfig(l logger.Logger) (map[string]server.Han
 
 	collectionResponseSchema := jsonschema.SchemaWithReferences{
 		Main: jsonschema.Schema{
-			Name: "adventure_game_character.collection.response.schema.json",
+			Name: "adventure_game_character.collection.response.api.json",
 		},
 		References: referenceSchemas,
 	}
 
 	requestSchema := jsonschema.SchemaWithReferences{
 		Main: jsonschema.Schema{
-			Name: "adventure_game_character.request.schema.json",
+			Name: "adventure_game_character.request.api.json",
 		},
 		References: referenceSchemas,
 	}
 
 	responseSchema := jsonschema.SchemaWithReferences{
 		Main: jsonschema.Schema{
-			Name: "adventure_game_character.response.schema.json",
+			Name: "adventure_game_character.response.api.json",
 		},
 		References: referenceSchemas,
 	}
@@ -277,7 +277,7 @@ func createOneAdventureGameCharacterHandler(w http.ResponseWriter, r *http.Reque
 
 	gameID := pp.ByName("game_id")
 
-	var req schema.AdventureGameCharacterRequest
+	var req api.AdventureGameCharacterRequest
 	if _, err := server.ReadRequest(l, r, &req); err != nil {
 		l.Warn("failed reading request >%v<", err)
 		return err
@@ -320,7 +320,7 @@ func updateOneAdventureGameCharacterHandler(w http.ResponseWriter, r *http.Reque
 
 	l.Info("updating adventure game character record with path params >%#v<", pp)
 
-	var req schema.AdventureGameCharacterRequest
+	var req api.AdventureGameCharacterRequest
 	if _, err := server.ReadRequest(l, r, &req); err != nil {
 		l.Warn("failed reading request >%v<", err)
 		return err
@@ -355,7 +355,7 @@ func updateOneAdventureGameCharacterHandler(w http.ResponseWriter, r *http.Reque
 		return err
 	}
 
-	res := schema.AdventureGameCharacterResponse{
+	res := api.AdventureGameCharacterResponse{
 		Data: &data,
 	}
 

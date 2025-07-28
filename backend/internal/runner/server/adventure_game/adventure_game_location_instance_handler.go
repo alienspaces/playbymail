@@ -18,7 +18,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/mapper"
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 	"gitlab.com/alienspaces/playbymail/internal/utils/logging"
-	"gitlab.com/alienspaces/playbymail/schema"
+	"gitlab.com/alienspaces/playbymail/schema/api"
 )
 
 // API Resource Search Path
@@ -54,21 +54,21 @@ func adventureGameLocationInstanceHandlerConfig(l logger.Logger) (map[string]ser
 
 	collectionResponseSchema := jsonschema.SchemaWithReferences{
 		Main: jsonschema.Schema{
-			Name: "adventure_game_location_instance.collection.response.schema.json",
+			Name: "adventure_game_location_instance.collection.response.api.json",
 		},
 		References: referenceSchemas,
 	}
 
 	requestSchema := jsonschema.SchemaWithReferences{
 		Main: jsonschema.Schema{
-			Name: "adventure_game_location_instance.request.schema.json",
+			Name: "adventure_game_location_instance.request.api.json",
 		},
 		References: referenceSchemas,
 	}
 
 	responseSchema := jsonschema.SchemaWithReferences{
 		Main: jsonschema.Schema{
-			Name: "adventure_game_location_instance.response.schema.json",
+			Name: "adventure_game_location_instance.response.api.json",
 		},
 		References: referenceSchemas,
 	}
@@ -214,7 +214,7 @@ func getManyAdventureGameLocationInstancesHandler(w http.ResponseWriter, r *http
 
 	// Add filter for specific game
 	opts.Params = append(opts.Params, sql.Param{
-		Col: adventure_game_record.FieldAdventureGameLocationInstanceAdventureGameInstanceID,
+		Col: adventure_game_record.FieldAdventureGameLocationInstanceGameInstanceID,
 		Val: gameInstanceID,
 	})
 
@@ -256,7 +256,7 @@ func getOneAdventureGameLocationInstanceHandler(w http.ResponseWriter, r *http.R
 
 	mm := m.(*domain.Domain)
 
-	gameInstanceRec, err := mm.GetAdventureGameInstanceRec(gameInstanceID, nil)
+	gameInstanceRec, err := mm.GetGameInstanceRec(gameInstanceID, nil)
 	if err != nil {
 		return err
 	}
@@ -268,8 +268,8 @@ func getOneAdventureGameLocationInstanceHandler(w http.ResponseWriter, r *http.R
 	}
 
 	// Verify the location instance belongs to the specified game
-	if rec.AdventureGameInstanceID != gameInstanceRec.ID {
-		l.Warn("location instance does not belong to specified game instance >%s< != >%s<", rec.AdventureGameInstanceID, gameInstanceRec.ID)
+	if rec.GameInstanceID != gameInstanceRec.ID {
+		l.Warn("location instance does not belong to specified game instance >%s< != >%s<", rec.GameInstanceID, gameInstanceRec.ID)
 		return coreerror.NewNotFoundError("location instance", locationInstanceID)
 	}
 
@@ -296,7 +296,7 @@ func createOneAdventureGameLocationInstanceHandler(w http.ResponseWriter, r *htt
 		return coreerror.NewNotFoundError("game instance", gameInstanceID)
 	}
 
-	var req schema.AdventureGameLocationInstanceRequest
+	var req api.AdventureGameLocationInstanceRequest
 	if _, err := server.ReadRequest(l, r, &req); err != nil {
 		l.Warn("failed reading request >%v<", err)
 		return err
@@ -309,14 +309,14 @@ func createOneAdventureGameLocationInstanceHandler(w http.ResponseWriter, r *htt
 
 	mm := m.(*domain.Domain)
 
-	gameInstanceRec, err := mm.GetAdventureGameInstanceRec(gameInstanceID, nil)
+	gameInstanceRec, err := mm.GetGameInstanceRec(gameInstanceID, nil)
 	if err != nil {
 		return err
 	}
 
 	// Set the game ID and game instance ID from game instance record
 	rec.GameID = gameInstanceRec.GameID
-	rec.AdventureGameInstanceID = gameInstanceRec.ID
+	rec.GameInstanceID = gameInstanceRec.ID
 
 	l.Info("creating adventure game location instance record >%s<", spew.Sdump(rec))
 
@@ -356,7 +356,7 @@ func updateOneAdventureGameLocationInstanceHandler(w http.ResponseWriter, r *htt
 
 	l.Info("updating adventure game location instance record with path params >%#v<", pp)
 
-	var req schema.AdventureGameLocationInstanceRequest
+	var req api.AdventureGameLocationInstanceRequest
 	if _, err := server.ReadRequest(l, r, &req); err != nil {
 		l.Warn("failed reading request >%v<", err)
 		return err
@@ -364,7 +364,7 @@ func updateOneAdventureGameLocationInstanceHandler(w http.ResponseWriter, r *htt
 
 	mm := m.(*domain.Domain)
 
-	gameInstanceRec, err := mm.GetAdventureGameInstanceRec(gameInstanceID, nil)
+	gameInstanceRec, err := mm.GetGameInstanceRec(gameInstanceID, nil)
 	if err != nil {
 		return err
 	}
@@ -375,8 +375,8 @@ func updateOneAdventureGameLocationInstanceHandler(w http.ResponseWriter, r *htt
 	}
 
 	// Verify the location instance belongs to the specified game
-	if rec.AdventureGameInstanceID != gameInstanceRec.ID {
-		l.Warn("location instance does not belong to specified game instance >%s< != >%s<", rec.AdventureGameInstanceID, gameInstanceRec.ID)
+	if rec.GameInstanceID != gameInstanceRec.ID {
+		l.Warn("location instance does not belong to specified game instance >%s< != >%s<", rec.GameInstanceID, gameInstanceRec.ID)
 		return coreerror.NewNotFoundError("location instance", locationInstanceID)
 	}
 
@@ -396,7 +396,7 @@ func updateOneAdventureGameLocationInstanceHandler(w http.ResponseWriter, r *htt
 		return err
 	}
 
-	res := schema.AdventureGameLocationInstanceResponse{
+	res := api.AdventureGameLocationInstanceResponse{
 		Data: &data,
 	}
 
@@ -429,7 +429,7 @@ func deleteOneAdventureGameLocationInstanceHandler(w http.ResponseWriter, r *htt
 
 	mm := m.(*domain.Domain)
 
-	gameInstanceRec, err := mm.GetAdventureGameInstanceRec(gameInstanceID, nil)
+	gameInstanceRec, err := mm.GetGameInstanceRec(gameInstanceID, nil)
 	if err != nil {
 		return err
 	}
@@ -441,8 +441,8 @@ func deleteOneAdventureGameLocationInstanceHandler(w http.ResponseWriter, r *htt
 	}
 
 	// Verify the location instance belongs to the specified game
-	if rec.AdventureGameInstanceID != gameInstanceRec.ID {
-		l.Warn("location instance does not belong to specified game instance >%s< != >%s<", rec.AdventureGameInstanceID, gameInstanceRec.ID)
+	if rec.GameInstanceID != gameInstanceRec.ID {
+		l.Warn("location instance does not belong to specified game instance >%s< != >%s<", rec.GameInstanceID, gameInstanceRec.ID)
 		return coreerror.NewNotFoundError("location instance", locationInstanceID)
 	}
 

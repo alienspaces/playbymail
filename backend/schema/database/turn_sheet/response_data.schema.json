@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://playbymail.dev/schema/internal/turn_sheet/response_data.schema.json",
+  "title": "TurnSheetResponseData",
+  "type": "object",
+  "properties": {
+    "selected_options": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "text_input": {"type": "string"},
+    "number_input": {"type": "number"},
+    "inventory_changes": {
+      "type": "object",
+      "properties": {
+        "equipped": {"type": "array"},
+        "unequipped": {"type": "array"},
+        "dropped": {"type": "array"}
+      }
+    },
+    "combat_actions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "target_id": {"type": "string"},
+          "action_type": {"type": "string"}
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+} 

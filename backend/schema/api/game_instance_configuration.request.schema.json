@@ -1,0 +1,54 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "http://playbymail.dev/schema/game_instance_configuration.request.schema.json",
+    "title": "GameInstanceConfigurationRequest",
+    "type": "object",
+    "properties": {
+        "game_instance_id": {
+            "$ref": "common.schema.json#/$defs/id"
+        },
+        "config_key": {
+            "type": "string",
+            "maxLength": 100
+        },
+        "value_type": {
+            "type": "string",
+            "enum": [
+                "string",
+                "integer",
+                "boolean",
+                "json"
+            ]
+        },
+        "string_value": {
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "integer_value": {
+            "type": [
+                "integer",
+                "null"
+            ]
+        },
+        "boolean_value": {
+            "type": [
+                "boolean",
+                "null"
+            ]
+        },
+        "json_value": {
+            "type": [
+                "string",
+                "null"
+            ]
+        }
+    },
+    "required": [
+        "game_instance_id",
+        "config_key",
+        "value_type"
+    ],
+    "additionalProperties": false
+}

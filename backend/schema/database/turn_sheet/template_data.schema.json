@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://playbymail.dev/schema/internal/turn_sheet/template_data.schema.json",
+  "title": "TurnSheetTemplateData",
+  "type": "object",
+  "properties": {
+    "template_type": {
+      "type": "string",
+      "enum": ["multiple_choice", "combat_selection", "inventory_management", "conversation", "text_input", "number_input"]
+    },
+    "title": {
+      "type": "string",
+      "maxLength": 200
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000
+    },
+    "options": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {"type": "string"},
+          "text": {"type": "string"},
+          "description": {"type": "string"}
+        },
+        "required": ["id", "text"]
+      }
+    },
+    "validation": {
+      "type": "object",
+      "properties": {
+        "required": {"type": "boolean"},
+        "min_selections": {"type": "integer", "minimum": 0},
+        "max_selections": {"type": "integer", "minimum": 1}
+      }
+    }
+  },
+  "required": ["template_type", "title"],
+  "additionalProperties": false
+} 

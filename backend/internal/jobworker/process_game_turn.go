@@ -75,7 +75,7 @@ func (w *ProcessGameTurnWorker) DoWork(ctx context.Context, m *domain.Domain, c 
 	l.Info("processing game turn for instance >%s< turn >%d<", j.Args.GameInstanceID, j.Args.TurnNumber)
 
 	// Get the game instance
-	instance, err := m.GetAdventureGameInstanceRec(j.Args.GameInstanceID, nil)
+	instance, err := m.GetGameInstanceRec(j.Args.GameInstanceID, nil)
 	if err != nil {
 		l.Warn("failed to get game instance >%v<", err)
 		return nil, err

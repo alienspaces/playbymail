@@ -1,0 +1,45 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "http://playbymail.dev/schema/adventure_game_creature_instance.api.json",
+    "title": "AdventureGameCreatureInstance",
+    "type": "object",
+    "properties": {
+        "id": {
+            "$ref": "common.api.json#/$defs/id"
+        },
+        "game_id": {
+            "$ref": "common.api.json#/$defs/id"
+        },
+        "game_creature_id": {
+            "$ref": "common.api.json#/$defs/id"
+        },
+        "game_instance_id": {
+            "$ref": "common.api.json#/$defs/id"
+        },
+        "game_location_instance_id": {
+            "$ref": "common.api.json#/$defs/id"
+        },
+        "is_alive": {
+            "type": "boolean"
+        },
+        "created_at": {
+            "$ref": "common.api.json#/$defs/created_at"
+        },
+        "updated_at": {
+            "$ref": "common.api.json#/$defs/updated_at"
+        },
+        "deleted_at": {
+            "$ref": "common.api.json#/$defs/updated_at"
+        }
+    },
+    "required": [
+        "id",
+        "game_id",
+        "game_creature_id",
+        "game_instance_id",
+        "game_location_instance_id",
+        "is_alive",
+        "created_at"
+    ],
+    "additionalProperties": false
+}

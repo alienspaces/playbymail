@@ -35,7 +35,7 @@ func TestCreateOne(t *testing.T) {
 				return &adventure_game_record.AdventureGameItemInstance{
 					GameID:                          gameRec.ID,
 					AdventureGameItemID:             itemRec.ID,
-					AdventureGameInstanceID:         gameInstanceRec.ID,
+					GameInstanceID:                  gameInstanceRec.ID,
 					AdventureGameLocationInstanceID: nullstring.FromString(locationInstanceRec.ID),
 				}
 			},
@@ -55,7 +55,7 @@ func TestCreateOne(t *testing.T) {
 				rec := &adventure_game_record.AdventureGameItemInstance{
 					GameID:                          gameRec.ID,
 					AdventureGameItemID:             itemRec.ID,
-					AdventureGameInstanceID:         gameInstanceRec.ID,
+					GameInstanceID:                  gameInstanceRec.ID,
 					AdventureGameLocationInstanceID: nullstring.FromString(locationInstanceRec.ID),
 				}
 				id, _ := uuid.NewRandom()

@@ -1,0 +1,79 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "http://playbymail.dev/schema/game_configuration.api.json",
+    "title": "GameConfiguration",
+    "type": "object",
+    "properties": {
+        "id": {
+            "$ref": "common.api.json#/$defs/id"
+        },
+        "game_type": {
+            "type": "string",
+            "enum": [
+                "adventure",
+                "strategy",
+                "puzzle",
+                "simulation"
+            ]
+        },
+        "config_key": {
+            "type": "string",
+            "maxLength": 100
+        },
+        "value_type": {
+            "type": "string",
+            "enum": [
+                "string",
+                "integer",
+                "boolean",
+                "json"
+            ]
+        },
+        "default_value": {
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "is_required": {
+            "type": "boolean"
+        },
+        "description": {
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "ui_hint": {
+            "type": [
+                "string",
+                "null"
+            ],
+            "maxLength": 50
+        },
+        "validation_rules": {
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "created_at": {
+            "$ref": "common.api.json#/$defs/created_at"
+        },
+        "updated_at": {
+            "$ref": "common.api.json#/$defs/updated_at"
+        },
+        "deleted_at": {
+            "$ref": "common.api.json#/$defs/updated_at"
+        }
+    },
+    "required": [
+        "id",
+        "game_type",
+        "config_key",
+        "value_type",
+        "is_required",
+        "created_at"
+    ],
+    "additionalProperties": false
+}

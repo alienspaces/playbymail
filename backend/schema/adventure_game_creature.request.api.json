@@ -1,0 +1,23 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "AdventureGameCreatureRequest",
+    "type": "object",
+    "properties": {
+        "game_id": {
+            "$ref": "common.api.json#/$defs/id"
+        },
+        "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+        },
+        "description": {
+            "type": "string"
+        }
+    },
+    "required": [
+        "game_id",
+        "name"
+    ],
+    "additionalProperties": false
+}

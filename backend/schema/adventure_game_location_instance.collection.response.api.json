@@ -1,0 +1,22 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "AdventureGameLocationInstanceCollectionResponse",
+    "type": "object",
+    "properties": {
+        "data": {
+            "type": "array",
+            "items": {
+                "$ref": "./adventure_game_location_instance.api.json"
+            }
+        },
+        "error": {
+            "$ref": "common.api.json#/$defs/error"
+        },
+        "pagination": {
+            "$ref": "common.api.json#/$defs/pagination"
+        }
+    },
+    "required": [
+        "data"
+    ]
+}

@@ -1,7 +1,6 @@
 package server
 
 import (
-	"fmt"
 	"math"
 	"net/http"
 	"strconv"
@@ -54,7 +53,7 @@ func (rnr *Runner) WaitMiddleware(hc HandlerConfig, h Handle) (Handle, error) {
 			}
 
 			if err = m.SetTxLockTimeout(timeoutSecs); err != nil {
-				err = coreerror.NewInternalError(fmt.Sprintf("failed to set transaction lock timeout >%s<", err.Error()))
+				err = coreerror.NewInternalError("failed to set transaction lock timeout >%s<", err.Error())
 				l.Warn(err.Error())
 				return err
 			}

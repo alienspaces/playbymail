@@ -1,0 +1,57 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "AdventureGameItemInstanceRequest",
+    "type": "object",
+    "properties": {
+        "game_id": {
+            "$ref": "common.api.json#/$defs/id"
+        },
+        "game_item_id": {
+            "$ref": "common.api.json#/$defs/id"
+        },
+        "game_instance_id": {
+            "$ref": "common.api.json#/$defs/id"
+        },
+        "game_location_instance_id": {
+            "type": [
+                "string",
+                "null"
+            ],
+            "format": "uuid"
+        },
+        "game_character_instance_id": {
+            "type": [
+                "string",
+                "null"
+            ],
+            "format": "uuid"
+        },
+        "game_creature_instance_id": {
+            "type": [
+                "string",
+                "null"
+            ],
+            "format": "uuid"
+        },
+        "is_equipped": {
+            "type": "boolean"
+        },
+        "is_used": {
+            "type": "boolean"
+        },
+        "uses_remaining": {
+            "type": [
+                "integer",
+                "null"
+            ]
+        }
+    },
+    "required": [
+        "game_id",
+        "game_item_id",
+        "game_instance_id",
+        "is_equipped",
+        "is_used"
+    ],
+    "additionalProperties": false
+}

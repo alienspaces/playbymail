@@ -1,7 +1,6 @@
 package domain
 
 import (
-	"fmt"
 	"regexp"
 	"strings"
 
@@ -27,7 +26,7 @@ func databaseError(err error) error {
 		return coreerror.NewUnavailableError()
 	}
 
-	return Internal(fmt.Sprintf("database error >%s<", err.Error()))
+	return Internal("database error >%s<", err.Error())
 }
 
 const (

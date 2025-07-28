@@ -17,7 +17,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/mapper"
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 	"gitlab.com/alienspaces/playbymail/internal/utils/logging"
-	"gitlab.com/alienspaces/playbymail/schema"
+	"gitlab.com/alienspaces/playbymail/schema/api"
 )
 
 // API Resource Search Path
@@ -53,21 +53,21 @@ func adventureGameLocationLinkRequirementHandlerConfig(l logger.Logger) (map[str
 
 	collectionResponseSchema := jsonschema.SchemaWithReferences{
 		Main: jsonschema.Schema{
-			Name: "adventure_game_location_link_requirement.collection.response.schema.json",
+			Name: "adventure_game_location_link_requirement.collection.response.api.json",
 		},
 		References: referenceSchemas,
 	}
 
 	requestSchema := jsonschema.SchemaWithReferences{
 		Main: jsonschema.Schema{
-			Name: "adventure_game_location_link_requirement.request.schema.json",
+			Name: "adventure_game_location_link_requirement.request.api.json",
 		},
 		References: referenceSchemas,
 	}
 
 	responseSchema := jsonschema.SchemaWithReferences{
 		Main: jsonschema.Schema{
-			Name: "adventure_game_location_link_requirement.response.schema.json",
+			Name: "adventure_game_location_link_requirement.response.api.json",
 		},
 		References: referenceSchemas,
 	}
@@ -272,7 +272,7 @@ func createOneAdventureGameLocationLinkRequirementHandler(w http.ResponseWriter,
 
 	gameID := pp.ByName("game_id")
 
-	var req schema.AdventureGameLocationLinkRequirementRequest
+	var req api.AdventureGameLocationLinkRequirementRequest
 	if _, err := server.ReadRequest(l, r, &req); err != nil {
 		l.Warn("failed reading request >%v<", err)
 		return err
@@ -315,7 +315,7 @@ func updateOneAdventureGameLocationLinkRequirementHandler(w http.ResponseWriter,
 
 	l.Info("updating adventure game location link requirement record with path params >%#v<", pp)
 
-	var req schema.AdventureGameLocationLinkRequirementRequest
+	var req api.AdventureGameLocationLinkRequirementRequest
 	if _, err := server.ReadRequest(l, r, &req); err != nil {
 		l.Warn("failed reading request >%v<", err)
 		return err
@@ -350,7 +350,7 @@ func updateOneAdventureGameLocationLinkRequirementHandler(w http.ResponseWriter,
 		return err
 	}
 
-	res := schema.AdventureGameLocationLinkRequirementResponse{
+	res := api.AdventureGameLocationLinkRequirementResponse{
 		Data: &data,
 	}
 

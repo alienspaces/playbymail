@@ -1,0 +1,18 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "VerifyAuthRequest",
+    "type": "object",
+    "properties": {
+        "email": {
+            "type": "string",
+            "format": "email"
+        },
+        "verification_token": {
+            "type": "string"
+        }
+    },
+    "required": [
+        "email",
+        "verification_token"
+    ]
+}

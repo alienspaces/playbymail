@@ -20,7 +20,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/mapper"
 	"gitlab.com/alienspaces/playbymail/internal/record/account_record"
 	"gitlab.com/alienspaces/playbymail/internal/utils/logging"
-	"gitlab.com/alienspaces/playbymail/schema"
+	"gitlab.com/alienspaces/playbymail/schema/api"
 )
 
 const (
@@ -49,21 +49,21 @@ func accountHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, err
 
 	collectionResponseSchema := jsonschema.SchemaWithReferences{
 		Main: jsonschema.Schema{
-			Name: "account.collection.response.schema.json",
+			Name: "account.collection.response.api.json",
 		},
 		References: referenceSchemas,
 	}
 
 	requestSchema := jsonschema.SchemaWithReferences{
 		Main: jsonschema.Schema{
-			Name: "account.request.schema.json",
+			Name: "account.request.api.json",
 		},
 		References: referenceSchemas,
 	}
 
 	responseSchema := jsonschema.SchemaWithReferences{
 		Main: jsonschema.Schema{
-			Name: "account.response.schema.json",
+			Name: "account.response.api.json",
 		},
 		References: referenceSchemas,
 	}
@@ -229,12 +229,12 @@ func accountHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, err
 			},
 			ValidateRequestSchema: jsonschema.SchemaWithReferences{
 				Main: jsonschema.Schema{
-					Name: "account.request-auth.request.schema.json",
+					Name: "account.request-auth.request.api.json",
 				},
 			},
 			ValidateResponseSchema: jsonschema.SchemaWithReferences{
 				Main: jsonschema.Schema{
-					Name: "account.request-auth.response.schema.json",
+					Name: "account.request-auth.response.api.json",
 				},
 			},
 		},
@@ -254,12 +254,12 @@ func accountHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, err
 			},
 			ValidateRequestSchema: jsonschema.SchemaWithReferences{
 				Main: jsonschema.Schema{
-					Name: "account.verify-auth.request.schema.json",
+					Name: "account.verify-auth.request.api.json",
 				},
 			},
 			ValidateResponseSchema: jsonschema.SchemaWithReferences{
 				Main: jsonschema.Schema{
-					Name: "account.verify-auth.response.schema.json",
+					Name: "account.verify-auth.response.api.json",
 				},
 			},
 		},
@@ -438,7 +438,7 @@ func requestAuthHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Pa
 
 	l.Info("requesting authentication token for email >%s<", r.Header.Get("Authorization"))
 
-	var req schema.RequestAuthRequest
+	var req api.RequestAuthRequest
 	if _, err := server.ReadRequest(l, r, &req); err != nil {
 		l.Warn("failed reading request >%v<", err)
 		return server.WriteResponse(l, w, http.StatusOK, mapper.MapRequestAuthResponse("ok"))
@@ -463,7 +463,7 @@ func requestAuthHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Pa
 func verifyAuthHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = logging.LoggerWithFunctionContext(l, packageName, "verifyAuthHandler")
 
-	var req schema.VerifyAuthRequest
+	var req api.VerifyAuthRequest
 	if _, err := server.ReadRequest(l, r, &req); err != nil {
 		l.Warn("failed reading request >%v<", err)
 		return err

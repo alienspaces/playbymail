@@ -6,9 +6,10 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/nullstring"
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
+	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 )
 
-func (t *Testing) createGameItemInstanceRec(cfg GameItemInstanceConfig, gameInstanceRec *adventure_game_record.AdventureGameInstance) (*adventure_game_record.AdventureGameItemInstance, error) {
+func (t *Testing) createGameItemInstanceRec(cfg GameItemInstanceConfig, gameInstanceRec *game_record.GameInstance) (*adventure_game_record.AdventureGameItemInstance, error) {
 	l := t.Logger("createGameItemInstanceRec")
 
 	if gameInstanceRec == nil {
@@ -30,7 +31,7 @@ func (t *Testing) createGameItemInstanceRec(cfg GameItemInstanceConfig, gameInst
 	rec = t.applyGameItemInstanceRecDefaultValues(rec)
 
 	rec.GameID = gameInstanceRec.GameID
-	rec.AdventureGameInstanceID = gameInstanceRec.ID
+	rec.GameInstanceID = gameInstanceRec.ID
 
 	// The game item is retrieved by reference
 	gameItemRec, err := t.Data.GetGameItemRecByRef(cfg.GameItemRef)

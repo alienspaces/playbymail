@@ -9,7 +9,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/server"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
 	"gitlab.com/alienspaces/playbymail/internal/record/account_record"
-	"gitlab.com/alienspaces/playbymail/schema"
+	"gitlab.com/alienspaces/playbymail/schema/api"
 )
 
 // Account
@@ -17,7 +17,7 @@ import (
 func AccountRequestToRecord(l logger.Logger, r *http.Request, rec *account_record.Account) (*account_record.Account, error) {
 	l.Debug("mapping account request to record")
 
-	var req schema.AccountRequest
+	var req api.AccountRequest
 	_, err := server.ReadRequest(l, r, &req)
 	if err != nil {
 		return nil, err
@@ -37,10 +37,10 @@ func AccountRequestToRecord(l logger.Logger, r *http.Request, rec *account_recor
 	return rec, nil
 }
 
-func AccountRecordToResponseData(l logger.Logger, rec *account_record.Account) (schema.AccountResponseData, error) {
+func AccountRecordToResponseData(l logger.Logger, rec *account_record.Account) (api.AccountResponseData, error) {
 	l.Debug("mapping account record to response data")
 
-	data := schema.AccountResponseData{
+	data := api.AccountResponseData{
 		ID:        rec.ID,
 		Email:     rec.Email,
 		Name:      rec.Name,
@@ -51,44 +51,44 @@ func AccountRecordToResponseData(l logger.Logger, rec *account_record.Account) (
 	return data, nil
 }
 
-func AccountRecordToResponse(l logger.Logger, rec *account_record.Account) (schema.AccountResponse, error) {
+func AccountRecordToResponse(l logger.Logger, rec *account_record.Account) (api.AccountResponse, error) {
 	data, err := AccountRecordToResponseData(l, rec)
 	if err != nil {
-		return schema.AccountResponse{}, err
+		return api.AccountResponse{}, err
 	}
-	return schema.AccountResponse{
+	return api.AccountResponse{
 		Data: &data,
 	}, nil
 }
 
-func AccountRecordsToCollectionResponse(l logger.Logger, recs []*account_record.Account) (schema.AccountCollectionResponse, error) {
-	data := []*schema.AccountResponseData{}
+func AccountRecordsToCollectionResponse(l logger.Logger, recs []*account_record.Account) (api.AccountCollectionResponse, error) {
+	data := []*api.AccountResponseData{}
 	for _, rec := range recs {
 		d, err := AccountRecordToResponseData(l, rec)
 		if err != nil {
-			return schema.AccountCollectionResponse{}, err
+			return api.AccountCollectionResponse{}, err
 		}
 		data = append(data, &d)
 	}
-	return schema.AccountCollectionResponse{
+	return api.AccountCollectionResponse{
 		Data: data,
 	}, nil
 }
 
 // Authentication
 
-func MapRequestAuthRequestToDomain(req *schema.RequestAuthRequest) string {
+func MapRequestAuthRequestToDomain(req *api.RequestAuthRequest) string {
 	return req.Email
 }
 
-func MapRequestAuthResponse(status string) *schema.RequestAuthResponse {
-	return &schema.RequestAuthResponse{Status: status}
+func MapRequestAuthResponse(status string) *api.RequestAuthResponse {
+	return &api.RequestAuthResponse{Status: status}
 }
 
-func MapVerifyAuthRequestToDomain(req *schema.VerifyAuthRequest) (string, string) {
+func MapVerifyAuthRequestToDomain(req *api.VerifyAuthRequest) (string, string) {
 	return req.Email, req.VerificationToken
 }
 
-func MapVerifyAuthResponse(token string) *schema.VerifyAuthResponse {
-	return &schema.VerifyAuthResponse{SessionToken: token}
+func MapVerifyAuthResponse(token string) *api.VerifyAuthResponse {
+	return &api.VerifyAuthResponse{SessionToken: token}
 }

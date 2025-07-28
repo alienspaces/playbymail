@@ -1,0 +1,18 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "http://playbymail.dev/schema/game_instance_configuration.response.schema.json",
+    "title": "GameInstanceConfigurationResponse",
+    "type": "object",
+    "properties": {
+        "data": {
+            "$ref": "game_instance_configuration.schema.json"
+        },
+        "error": {
+            "$ref": "common.schema.json#/$defs/error"
+        },
+        "pagination": {
+            "$ref": "common.schema.json#/$defs/pagination"
+        }
+    },
+    "additionalProperties": false
+}

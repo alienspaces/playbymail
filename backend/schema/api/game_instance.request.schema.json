@@ -1,0 +1,53 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "http://playbymail.dev/schema/game_instance.request.schema.json",
+    "title": "GameInstanceRequest",
+    "type": "object",
+    "properties": {
+        "game_id": {
+            "$ref": "common.schema.json#/$defs/id"
+        },
+        "status": {
+            "type": "string",
+            "enum": [
+                "created",
+                "starting",
+                "running",
+                "paused",
+                "completed",
+                "cancelled"
+            ]
+        },
+        "current_turn": {
+            "type": "integer",
+            "minimum": 0
+        },
+        "max_turns": {
+            "type": [
+                "integer",
+                "null"
+            ],
+            "minimum": 1
+        },
+        "turn_deadline_hours": {
+            "type": "integer",
+            "minimum": 1
+        },
+        "last_turn_processed_at": {
+            "$ref": "common.schema.json#/$defs/updated_at"
+        },
+        "next_turn_deadline": {
+            "$ref": "common.schema.json#/$defs/updated_at"
+        },
+        "started_at": {
+            "$ref": "common.schema.json#/$defs/updated_at"
+        },
+        "completed_at": {
+            "$ref": "common.schema.json#/$defs/updated_at"
+        }
+    },
+    "required": [
+        "game_id"
+    ],
+    "additionalProperties": false
+}

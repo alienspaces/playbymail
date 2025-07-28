@@ -112,7 +112,7 @@ func ProcessParamError(err error) error {
 	}
 
 	if len(e.SchemaValidationErrors) == 0 {
-		return NewParamError(e.Error())
+		return NewParamError("%s", e.Error())
 	}
 
 	errStr := strings.Builder{}
@@ -128,5 +128,5 @@ func ProcessParamError(err error) error {
 	formattedErrString := errStr.String()
 	formattedErrString = formattedErrString[0 : len(formattedErrString)-2] // remove extra space and semicolon
 	formattedErrString += "."
-	return NewParamError(formattedErrString)
+	return NewParamError("%s", formattedErrString)
 }

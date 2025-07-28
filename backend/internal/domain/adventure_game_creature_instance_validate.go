@@ -17,7 +17,7 @@ func ValidateAdventureGameCreatureInstanceFields(ctx context.Context, rec *adven
 	if rec.AdventureGameCreatureID == "" {
 		return errors.New("adventure_game_creature_id is required")
 	}
-	if rec.AdventureGameInstanceID == "" {
+	if rec.GameInstanceID == "" {
 		return errors.New("game_instance_id is required")
 	}
 	if rec.AdventureGameLocationInstanceID == "" {

@@ -1,0 +1,23 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "AdventureGameLocationLinkRequirementRequest",
+    "type": "object",
+    "properties": {
+        "game_location_link_id": {
+            "$ref": "common.api.json#/$defs/id"
+        },
+        "game_item_id": {
+            "$ref": "common.api.json#/$defs/id"
+        },
+        "quantity": {
+            "type": "integer",
+            "minimum": 1
+        }
+    },
+    "required": [
+        "game_location_link_id",
+        "game_item_id",
+        "quantity"
+    ],
+    "additionalProperties": false
+}

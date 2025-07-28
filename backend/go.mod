@@ -1,8 +1,10 @@
 module gitlab.com/alienspaces/playbymail
 
-go 1.23.5
+go 1.24.5
 
 replace gitlab.com/alienspaces/playbymail/core => ./core
+
+replace gitlab.com/alienspaces/playbymail/schema => ./schema
 
 require (
 	github.com/brianvoe/gofakeit v3.18.0+incompatible

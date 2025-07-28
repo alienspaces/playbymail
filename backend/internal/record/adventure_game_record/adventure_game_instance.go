@@ -8,7 +8,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/record"
 )
 
-const TableAdventureGameInstance = "adventure_game_instance"
+const TableAdventureGameInstance = "game_instance"
 
 const (
 	FieldAdventureGameInstanceID                  = "id"

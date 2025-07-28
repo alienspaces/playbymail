@@ -5,7 +5,6 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/repository"
 	"gitlab.com/alienspaces/playbymail/core/type/domainer"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
-
 	"gitlab.com/alienspaces/playbymail/internal/record/account_record"
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
@@ -15,7 +14,6 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/repository/adventure_game_creature"
 	"gitlab.com/alienspaces/playbymail/internal/repository/adventure_game_creature_instance"
 	"gitlab.com/alienspaces/playbymail/internal/repository/adventure_game_creature_placement"
-	"gitlab.com/alienspaces/playbymail/internal/repository/adventure_game_instance"
 	"gitlab.com/alienspaces/playbymail/internal/repository/adventure_game_item"
 	"gitlab.com/alienspaces/playbymail/internal/repository/adventure_game_item_instance"
 	"gitlab.com/alienspaces/playbymail/internal/repository/adventure_game_item_placement"
@@ -25,6 +23,9 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/repository/adventure_game_location_link_requirement"
 	"gitlab.com/alienspaces/playbymail/internal/repository/game"
 	"gitlab.com/alienspaces/playbymail/internal/repository/game_administration"
+	"gitlab.com/alienspaces/playbymail/internal/repository/game_configuration"
+	"gitlab.com/alienspaces/playbymail/internal/repository/game_instance"
+	"gitlab.com/alienspaces/playbymail/internal/repository/game_instance_configuration"
 	"gitlab.com/alienspaces/playbymail/internal/repository/game_subscription"
 	"gitlab.com/alienspaces/playbymail/internal/utils/config"
 )
@@ -56,10 +57,12 @@ func NewDomain(l logger.Logger, cfg config.Config) (*Domain, error) {
 		adventure_game_item_placement.NewRepository,
 		adventure_game_creature_placement.NewRepository,
 		adventure_game_location_link_requirement.NewRepository,
-		adventure_game_instance.NewRepository,
 		adventure_game_location_instance.NewRepository,
 		adventure_game_creature_instance.NewRepository,
 		adventure_game_character_instance.NewRepository,
+		game_instance.NewRepository,
+		game_configuration.NewRepository,
+		game_instance_configuration.NewRepository,
 		game_subscription.NewRepository,
 		game_administration.NewRepository,
 	}
@@ -134,9 +137,9 @@ func (m *Domain) AdventureGameLocationLinkRequirementRepository() *repository.Ge
 	return m.Repositories[adventure_game_location_link_requirement.TableName].(*repository.Generic[adventure_game_record.AdventureGameLocationLinkRequirement, *adventure_game_record.AdventureGameLocationLinkRequirement])
 }
 
-// AdventureGameInstanceRepository -
-func (m *Domain) AdventureGameInstanceRepository() *repository.Generic[adventure_game_record.AdventureGameInstance, *adventure_game_record.AdventureGameInstance] {
-	return m.Repositories[adventure_game_instance.TableName].(*repository.Generic[adventure_game_record.AdventureGameInstance, *adventure_game_record.AdventureGameInstance])
+// GameInstanceRepository -
+func (m *Domain) GameInstanceRepository() *repository.Generic[game_record.GameInstance, *game_record.GameInstance] {
+	return m.Repositories[game_instance.TableName].(*repository.Generic[game_record.GameInstance, *game_record.GameInstance])
 }
 
 // AdventureGameLocationInstanceRepository -
@@ -162,6 +165,16 @@ func (m *Domain) GameSubscriptionRepository() *repository.Generic[game_record.Ga
 // GameAdministrationRepository -
 func (m *Domain) GameAdministrationRepository() *repository.Generic[game_record.GameAdministration, *game_record.GameAdministration] {
 	return m.Repositories[game_administration.TableName].(*repository.Generic[game_record.GameAdministration, *game_record.GameAdministration])
+}
+
+// GameConfigurationRepository -
+func (m *Domain) GameConfigurationRepository() *repository.Generic[game_record.GameConfiguration, *game_record.GameConfiguration] {
+	return m.Repositories[game_configuration.TableName].(*repository.Generic[game_record.GameConfiguration, *game_record.GameConfiguration])
+}
+
+// GameInstanceConfigurationRepository -
+func (m *Domain) GameInstanceConfigurationRepository() *repository.Generic[game_record.GameInstanceConfiguration, *game_record.GameInstanceConfiguration] {
+	return m.Repositories[game_instance_configuration.TableName].(*repository.Generic[game_record.GameInstanceConfiguration, *game_record.GameInstanceConfiguration])
 }
 
 // Logger - Returns a logger with package context and provided function context

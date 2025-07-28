@@ -11,7 +11,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/runner/server/adventure_game"
 	"gitlab.com/alienspaces/playbymail/internal/utils/deps"
 	"gitlab.com/alienspaces/playbymail/internal/utils/testutil"
-	"gitlab.com/alienspaces/playbymail/schema"
+	"gitlab.com/alienspaces/playbymail/schema/api"
 )
 
 func Test_adventureGameItemPlacementHandler(t *testing.T) {
@@ -36,8 +36,8 @@ func Test_adventureGameItemPlacementHandler(t *testing.T) {
 	locationRec, err := th.Data.GetGameLocationRecByRef(harness.GameLocationOneRef)
 	require.NoError(t, err, "GetGameLocationRecByRef returns without error")
 
-	testCaseCollectionResponseDecoder := testutil.TestCaseResponseDecoderGeneric[schema.AdventureGameItemPlacementCollectionResponse]
-	testCaseResponseDecoder := testutil.TestCaseResponseDecoderGeneric[schema.AdventureGameItemPlacementResponse]
+	testCaseCollectionResponseDecoder := testutil.TestCaseResponseDecoderGeneric[api.AdventureGameItemPlacementCollectionResponse]
+	testCaseResponseDecoder := testutil.TestCaseResponseDecoderGeneric[api.AdventureGameItemPlacementResponse]
 
 	testCases := []struct {
 		testutil.TestCase
@@ -65,7 +65,7 @@ func Test_adventureGameItemPlacementHandler(t *testing.T) {
 					return rnr.GetHandlerConfig()[adventure_game.CreateOneAdventureGameItemPlacement]
 				},
 				RequestBody: func(d harness.Data) any {
-					return schema.AdventureGameItemPlacementRequest{
+					return api.AdventureGameItemPlacementRequest{
 						AdventureGameItemID:     itemRec.ID,
 						AdventureGameLocationID: locationRec.ID,
 						InitialCount:            5,

@@ -1,0 +1,19 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "AdventureGameItemResponse",
+    "type": "object",
+    "properties": {
+        "data": {
+            "$ref": "./adventure_game_item.api.json"
+        },
+        "error": {
+            "$ref": "common.api.json#/$defs/error"
+        },
+        "pagination": {
+            "$ref": "common.api.json#/$defs/pagination"
+        }
+    },
+    "required": [
+        "data"
+    ]
+}

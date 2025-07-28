@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://playbymail.dev/schema/api/account.request-auth.request.schema.json",
+  "title": "AccountRequestAuthRequest",
+  "type": "object",
+  "properties": {
+    "email": {
+      "type": "string",
+      "format": "email",
+      "description": "Email address for authentication"
+    }
+  },
+  "required": ["email"],
+  "additionalProperties": false
+}

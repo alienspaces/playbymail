@@ -1,7 +1,6 @@
 package error
 
 import (
-	"fmt"
 	"strings"
 )
 
@@ -30,16 +29,15 @@ func CreateRegistry(et ValidationErrorType, subjects ...string) Registry {
 
 	for _, subject := range subjects {
 		errCode := CreateErrorCode(et, subject)
-		message := fmt.Sprintf("The property '%s' is %s.", subject, et)
 
 		var e Error
 		switch et {
 		case ValidationErrorInvalid:
-			e, _ = ToError(NewInvalidError(subject, message))
+			e, _ = ToError(NewInvalidError(subject, "The property '%s' is %s.", subject, et))
 		case ValidationErrorInvalidAction:
-			e, _ = ToError(NewInvalidActionError(subject, message))
+			e, _ = ToError(NewInvalidActionError(subject, "The property '%s' is %s.", subject, et))
 		case ValidationErrorUnsupported:
-			e, _ = ToError(NewUnsupportedError(subject, message))
+			e, _ = ToError(NewUnsupportedError(subject, "The property '%s' is %s.", subject, et))
 		}
 		errorCollection[errCode] = e
 	}
@@ -53,13 +51,12 @@ func CreateLinkedRegistry(et ValidationErrorType, linkedFields []LinkedFields) R
 	for _, f := range linkedFields {
 		errCode := CreateErrorCode(et, f.LinkedField)
 		combinationMsg := strings.Join(f.Fields, " & ")
-		message := fmt.Sprintf("The combination of %s is %s.", combinationMsg, et)
 
 		var e Error
 		if et == ValidationErrorInvalid {
-			e, _ = ToError(NewInvalidError(f.LinkedField, message))
+			e, _ = ToError(NewInvalidError(f.LinkedField, "The combination of %s is %s.", combinationMsg, et))
 		} else {
-			e, _ = ToError(NewUnsupportedError(f.LinkedField, message))
+			e, _ = ToError(NewUnsupportedError(f.LinkedField, "The combination of %s is %s.", combinationMsg, et))
 		}
 		errorCollection[errCode] = e
 	}

@@ -16,7 +16,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/harness"
 	"gitlab.com/alienspaces/playbymail/internal/runner/server/account"
 	"gitlab.com/alienspaces/playbymail/internal/utils/testutil"
-	"gitlab.com/alienspaces/playbymail/schema"
+	"gitlab.com/alienspaces/playbymail/schema/api"
 )
 
 func Test_getAccountHandler(t *testing.T) {
@@ -38,8 +38,8 @@ func Test_getAccountHandler(t *testing.T) {
 		collectionRecordCount int
 	}
 
-	testCaseCollectionResponseDecoder := testutil.TestCaseResponseDecoderGeneric[schema.AccountCollectionResponse]
-	testCaseResponseDecoder := testutil.TestCaseResponseDecoderGeneric[schema.AccountResponse]
+	testCaseCollectionResponseDecoder := testutil.TestCaseResponseDecoderGeneric[api.AccountCollectionResponse]
+	testCaseResponseDecoder := testutil.TestCaseResponseDecoderGeneric[api.AccountResponse]
 
 	// Setup: get an account for reference
 	accountRec, err := th.Data.GetAccountRecByRef(harness.AccountOneRef)
@@ -98,11 +98,11 @@ func Test_getAccountHandler(t *testing.T) {
 
 				require.NotNil(t, body, "Response body is not nil")
 
-				var responses []*schema.AccountResponseData
+				var responses []*api.AccountResponseData
 				if testCase.collectionRequest {
-					responses = body.(schema.AccountCollectionResponse).Data
+					responses = body.(api.AccountCollectionResponse).Data
 				} else {
-					responses = append(responses, body.(schema.AccountResponse).Data)
+					responses = append(responses, body.(api.AccountResponse).Data)
 				}
 
 				if testCase.collectionRequest {
@@ -141,10 +141,10 @@ func Test_createUpdateDeleteAccountHandler(t *testing.T) {
 
 	type testCase struct {
 		testutil.TestCase
-		expectResponse func(d harness.Data, req schema.AccountRequest) schema.AccountResponse
+		expectResponse func(d harness.Data, req api.AccountRequest) api.AccountResponse
 	}
 
-	testCaseResponseDecoder := testutil.TestCaseResponseDecoderGeneric[schema.AccountResponse]
+	testCaseResponseDecoder := testutil.TestCaseResponseDecoderGeneric[api.AccountResponse]
 
 	testCases := []testCase{
 		{
@@ -155,7 +155,7 @@ func Test_createUpdateDeleteAccountHandler(t *testing.T) {
 				},
 				RequestBody: func(d harness.Data) any {
 					email := gofakeit.Email()
-					return schema.AccountRequest{
+					return api.AccountRequest{
 						Email: &email,
 						Name:  gofakeit.Name(),
 					}
@@ -163,9 +163,9 @@ func Test_createUpdateDeleteAccountHandler(t *testing.T) {
 				ResponseDecoder: testCaseResponseDecoder,
 				ResponseCode:    http.StatusCreated,
 			},
-			expectResponse: func(d harness.Data, req schema.AccountRequest) schema.AccountResponse {
-				return schema.AccountResponse{
-					Data: &schema.AccountResponseData{
+			expectResponse: func(d harness.Data, req api.AccountRequest) api.AccountResponse {
+				return api.AccountResponse{
+					Data: &api.AccountResponseData{
 						Email: *req.Email,
 						Name:  req.Name,
 					},
@@ -188,7 +188,7 @@ func Test_createUpdateDeleteAccountHandler(t *testing.T) {
 				},
 				RequestBody: func(d harness.Data) any {
 					email := harness.UniqueEmail(gofakeit.Email())
-					return schema.AccountRequest{
+					return api.AccountRequest{
 						Email: &email,
 						Name:  gofakeit.Name(),
 					}
@@ -196,13 +196,13 @@ func Test_createUpdateDeleteAccountHandler(t *testing.T) {
 				ResponseDecoder: testCaseResponseDecoder,
 				ResponseCode:    http.StatusOK,
 			},
-			expectResponse: func(d harness.Data, req schema.AccountRequest) schema.AccountResponse {
+			expectResponse: func(d harness.Data, req api.AccountRequest) api.AccountResponse {
 				// Get the original account to get the original email (email cannot be updated)
 				accountRec, err := d.GetAccountRecByRef(harness.AccountOneRef)
 				require.NoError(t, err, "GetAccountRecByRef returns without error")
 
-				return schema.AccountResponse{
-					Data: &schema.AccountResponseData{
+				return api.AccountResponse{
+					Data: &api.AccountResponseData{
 						Email: accountRec.Email, // Email should remain unchanged
 						Name:  req.Name,
 					},
@@ -241,8 +241,8 @@ func Test_createUpdateDeleteAccountHandler(t *testing.T) {
 
 				require.NotNil(t, body, "Response body is not nil")
 				t.Logf("Actual response body: %#v", body)
-				resp, ok := body.(schema.AccountResponse)
-				require.True(t, ok, "Response body is of type schema.AccountResponse")
+				resp, ok := body.(api.AccountResponse)
+				require.True(t, ok, "Response body is of type api.AccountResponse")
 				aResp := resp.Data
 				require.NotNil(t, aResp, "AccountResponseData is not nil")
 				t.Logf("AccountResponseData: %#v", aResp)
@@ -250,7 +250,7 @@ func Test_createUpdateDeleteAccountHandler(t *testing.T) {
 				require.NotEmpty(t, aResp.Email, "Account Email is not empty")
 				xResp := testCase.expectResponse(
 					th.Data,
-					testCase.TestRequestBody(th.Data).(schema.AccountRequest),
+					testCase.TestRequestBody(th.Data).(api.AccountRequest),
 				).Data
 				require.Equal(t, xResp.Email, aResp.Email, "Account Email matches expected")
 				require.Equal(t, xResp.Name, aResp.Name, "Account Name equals expected")
@@ -276,7 +276,7 @@ func Test_accountMeHandler(t *testing.T) {
 		require.NoError(t, err, "Test data teardown returns without error")
 	}()
 
-	testCaseResponseDecoder := testutil.TestCaseResponseDecoderGeneric[schema.AccountResponse]
+	testCaseResponseDecoder := testutil.TestCaseResponseDecoderGeneric[api.AccountResponse]
 
 	// Setup: get an account for reference
 	accountRec, err := th.Data.GetAccountRecByRef(harness.AccountOneRef)
@@ -337,7 +337,7 @@ func Test_accountMeHandler(t *testing.T) {
 				return rnr.GetHandlerConfig()[account.UpdateMyAccount]
 			},
 			RequestBody: func(d harness.Data) any {
-				return schema.AccountRequest{
+				return api.AccountRequest{
 					Name: "Updated Name",
 				}
 			},
@@ -385,8 +385,8 @@ func Test_accountMeHandler(t *testing.T) {
 
 				require.NotNil(t, body, "Response body is not nil")
 				t.Logf("Actual response body: %#v", body)
-				resp, ok := body.(schema.AccountResponse)
-				require.True(t, ok, "Response body is of type schema.AccountResponse")
+				resp, ok := body.(api.AccountResponse)
+				require.True(t, ok, "Response body is of type api.AccountResponse")
 				aResp := resp.Data
 				require.NotNil(t, aResp, "AccountResponseData is not nil")
 				t.Logf("AccountResponseData: %#v", aResp)

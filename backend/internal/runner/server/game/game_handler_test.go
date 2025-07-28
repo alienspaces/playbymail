@@ -11,7 +11,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 	"gitlab.com/alienspaces/playbymail/internal/runner/server/game"
 	"gitlab.com/alienspaces/playbymail/internal/utils/testutil"
-	"gitlab.com/alienspaces/playbymail/schema"
+	"gitlab.com/alienspaces/playbymail/schema/api"
 )
 
 func Test_getGameHandler(t *testing.T) {
@@ -33,8 +33,8 @@ func Test_getGameHandler(t *testing.T) {
 		collectionRecordCount int
 	}
 
-	testCaseCollectionResponseDecoder := testutil.TestCaseResponseDecoderGeneric[schema.GameCollectionResponse]
-	testCaseResponseDecoder := testutil.TestCaseResponseDecoderGeneric[schema.GameResponse]
+	testCaseCollectionResponseDecoder := testutil.TestCaseResponseDecoderGeneric[api.GameCollectionResponse]
+	testCaseResponseDecoder := testutil.TestCaseResponseDecoderGeneric[api.GameResponse]
 
 	// Setup: get a game for reference
 	gameRec, err := th.Data.GetGameRecByRef(harness.GameOneRef)
@@ -93,11 +93,11 @@ func Test_getGameHandler(t *testing.T) {
 
 				require.NotNil(t, body, "Response body is not nil")
 
-				var responses []*schema.GameResponseData
+				var responses []*api.GameResponseData
 				if testCase.collectionRequest {
-					responses = body.(schema.GameCollectionResponse).Data
+					responses = body.(api.GameCollectionResponse).Data
 				} else {
-					responses = append(responses, body.(schema.GameResponse).Data)
+					responses = append(responses, body.(api.GameResponse).Data)
 				}
 
 				if testCase.collectionRequest {
@@ -137,10 +137,10 @@ func Test_createUpdateDeleteGameHandler(t *testing.T) {
 
 	type testCase struct {
 		testutil.TestCase
-		expectResponse func(d harness.Data, req schema.GameRequest) schema.GameResponse
+		expectResponse func(d harness.Data, req api.GameRequest) api.GameResponse
 	}
 
-	testCaseResponseDecoder := testutil.TestCaseResponseDecoderGeneric[schema.GameResponse]
+	testCaseResponseDecoder := testutil.TestCaseResponseDecoderGeneric[api.GameResponse]
 
 	testCases := []testCase{
 		{
@@ -150,7 +150,7 @@ func Test_createUpdateDeleteGameHandler(t *testing.T) {
 					return rnr.GetHandlerConfig()[game.CreateGame]
 				},
 				RequestBody: func(d harness.Data) any {
-					return schema.GameRequest{
+					return api.GameRequest{
 						Name:     "Test Game",
 						GameType: game_record.GameTypeAdventure,
 					}
@@ -158,9 +158,9 @@ func Test_createUpdateDeleteGameHandler(t *testing.T) {
 				ResponseDecoder: testCaseResponseDecoder,
 				ResponseCode:    http.StatusCreated,
 			},
-			expectResponse: func(d harness.Data, req schema.GameRequest) schema.GameResponse {
-				return schema.GameResponse{
-					Data: &schema.GameResponseData{
+			expectResponse: func(d harness.Data, req api.GameRequest) api.GameResponse {
+				return api.GameResponse{
+					Data: &api.GameResponseData{
 						Name: req.Name,
 					},
 				}
@@ -181,7 +181,7 @@ func Test_createUpdateDeleteGameHandler(t *testing.T) {
 					return params
 				},
 				RequestBody: func(d harness.Data) any {
-					return schema.GameRequest{
+					return api.GameRequest{
 						Name:     "Test Game",
 						GameType: game_record.GameTypeAdventure,
 					}
@@ -189,9 +189,9 @@ func Test_createUpdateDeleteGameHandler(t *testing.T) {
 				ResponseDecoder: testCaseResponseDecoder,
 				ResponseCode:    http.StatusOK,
 			},
-			expectResponse: func(d harness.Data, req schema.GameRequest) schema.GameResponse {
-				return schema.GameResponse{
-					Data: &schema.GameResponseData{
+			expectResponse: func(d harness.Data, req api.GameRequest) api.GameResponse {
+				return api.GameResponse{
+					Data: &api.GameResponseData{
 						Name: req.Name,
 					},
 				}
@@ -229,10 +229,10 @@ func Test_createUpdateDeleteGameHandler(t *testing.T) {
 
 				require.NotNil(t, body, "Response body is not nil")
 
-				aResp := body.(schema.GameResponse).Data
+				aResp := body.(api.GameResponse).Data
 				xResp := testCase.expectResponse(
 					th.Data,
-					testCase.TestRequestBody(th.Data).(schema.GameRequest),
+					testCase.TestRequestBody(th.Data).(api.GameRequest),
 				).Data
 
 				require.NotEmpty(t, aResp, "Response body is not empty")

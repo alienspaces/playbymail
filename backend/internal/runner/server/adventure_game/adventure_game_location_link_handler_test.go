@@ -11,7 +11,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/runner/server/adventure_game"
 	"gitlab.com/alienspaces/playbymail/internal/utils/deps"
 	"gitlab.com/alienspaces/playbymail/internal/utils/testutil"
-	"gitlab.com/alienspaces/playbymail/schema"
+	"gitlab.com/alienspaces/playbymail/schema/api"
 )
 
 func Test_adventureGameLocationLinkHandler(t *testing.T) {
@@ -44,8 +44,8 @@ func Test_adventureGameLocationLinkHandler(t *testing.T) {
 	linkRec, err := th.Data.GetGameLocationLinkRecByRef(harness.GameLocationLinkOneRef)
 	require.NoError(t, err, "GetGameLocationLinkRecByRef returns without error")
 
-	testCaseCollectionResponseDecoder := testutil.TestCaseResponseDecoderGeneric[schema.AdventureGameLocationLinkCollectionResponse]
-	testCaseResponseDecoder := testutil.TestCaseResponseDecoderGeneric[schema.AdventureGameLocationLinkResponse]
+	testCaseCollectionResponseDecoder := testutil.TestCaseResponseDecoderGeneric[api.AdventureGameLocationLinkCollectionResponse]
+	testCaseResponseDecoder := testutil.TestCaseResponseDecoderGeneric[api.AdventureGameLocationLinkResponse]
 
 	testCases := []struct {
 		testutil.TestCase
@@ -99,7 +99,7 @@ func Test_adventureGameLocationLinkHandler(t *testing.T) {
 					}
 				},
 				RequestBody: func(d harness.Data) any {
-					return schema.AdventureGameLocationLinkRequest{
+					return api.AdventureGameLocationLinkRequest{
 						Name:               "Test Link",
 						Description:        "Test Link Description",
 						FromGameLocationID: locationOneRec.ID,
@@ -123,7 +123,7 @@ func Test_adventureGameLocationLinkHandler(t *testing.T) {
 					}
 				},
 				RequestBody: func(d harness.Data) any {
-					return schema.AdventureGameLocationLinkRequest{
+					return api.AdventureGameLocationLinkRequest{
 						Name:               "Updated Test Link",
 						Description:        "Updated Test Description",
 						FromGameLocationID: linkRec.FromAdventureGameLocationID,

@@ -1,0 +1,30 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "AdventureGameCreatureInstanceRequest",
+    "type": "object",
+    "properties": {
+        "game_id": {
+            "$ref": "common.api.json#/$defs/id"
+        },
+        "game_creature_id": {
+            "$ref": "common.api.json#/$defs/id"
+        },
+        "game_instance_id": {
+            "$ref": "common.api.json#/$defs/id"
+        },
+        "game_location_instance_id": {
+            "$ref": "common.api.json#/$defs/id"
+        },
+        "is_alive": {
+            "type": "boolean"
+        }
+    },
+    "required": [
+        "game_id",
+        "game_creature_id",
+        "game_instance_id",
+        "game_location_instance_id",
+        "is_alive"
+    ],
+    "additionalProperties": false
+}

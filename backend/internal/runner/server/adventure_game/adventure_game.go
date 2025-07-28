@@ -13,10 +13,10 @@ const (
 
 var referenceSchemas = []jsonschema.Schema{
 	{
-		Name: "query.schema.json",
+		Name: "query.api.json",
 	},
 	{
-		Name: "common.schema.json",
+		Name: "common.api.json",
 	},
 }
 
@@ -29,7 +29,6 @@ func AdventureGameHandlerConfig(l logger.Logger) (map[string]server.HandlerConfi
 
 	// Additional handler configurations are added here
 	handlerConfigFuncs := []func(logger.Logger) (map[string]server.HandlerConfig, error){
-		adventureGameInstanceHandlerConfig,
 		adventureGameCharacterHandlerConfig,
 		adventureGameCreatureHandlerConfig,
 		adventureGameItemHandlerConfig,

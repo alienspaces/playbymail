@@ -8,14 +8,14 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/server"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
-	"gitlab.com/alienspaces/playbymail/schema"
+	"gitlab.com/alienspaces/playbymail/schema/api"
 )
 
 func GameRequestToRecord(l logger.Logger, r *http.Request, rec *game_record.Game) (*game_record.Game, error) {
 
 	l.Debug("mapping game request to record")
 
-	var req schema.GameRequest
+	var req api.GameRequest
 	_, err := server.ReadRequest(l, r, &req)
 	if err != nil {
 		return nil, err
@@ -35,11 +35,11 @@ func GameRequestToRecord(l logger.Logger, r *http.Request, rec *game_record.Game
 	return rec, nil
 }
 
-func GameRecordToResponseData(l logger.Logger, rec *game_record.Game) (schema.GameResponseData, error) {
+func GameRecordToResponseData(l logger.Logger, rec *game_record.Game) (api.GameResponseData, error) {
 
 	l.Debug("mapping game record to response data")
 
-	data := schema.GameResponseData{
+	data := api.GameResponseData{
 		ID:        rec.ID,
 		Name:      rec.Name,
 		GameType:  rec.GameType,
@@ -50,26 +50,26 @@ func GameRecordToResponseData(l logger.Logger, rec *game_record.Game) (schema.Ga
 	return data, nil
 }
 
-func GameRecordToResponse(l logger.Logger, rec *game_record.Game) (schema.GameResponse, error) {
+func GameRecordToResponse(l logger.Logger, rec *game_record.Game) (api.GameResponse, error) {
 	data, err := GameRecordToResponseData(l, rec)
 	if err != nil {
-		return schema.GameResponse{}, err
+		return api.GameResponse{}, err
 	}
-	return schema.GameResponse{
+	return api.GameResponse{
 		Data: &data,
 	}, nil
 }
 
-func GameRecordsToCollectionResponse(l logger.Logger, recs []*game_record.Game) (schema.GameCollectionResponse, error) {
-	data := []*schema.GameResponseData{}
+func GameRecordsToCollectionResponse(l logger.Logger, recs []*game_record.Game) (api.GameCollectionResponse, error) {
+	data := []*api.GameResponseData{}
 	for _, rec := range recs {
 		d, err := GameRecordToResponseData(l, rec)
 		if err != nil {
-			return schema.GameCollectionResponse{}, err
+			return api.GameCollectionResponse{}, err
 		}
 		data = append(data, &d)
 	}
-	return schema.GameCollectionResponse{
+	return api.GameCollectionResponse{
 		Data: data,
 	}, nil
 }
