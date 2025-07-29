@@ -7,7 +7,8 @@ describe('BuildInfo', () => {
     const wrapper = mount(BuildInfo)
     
     // Should contain commit info (either dev or actual commit)
-    expect(wrapper.text()).toContain('dev') // or actual commit hash
+    const text = wrapper.text()
+    expect(text).toMatch(/(dev|[a-f0-9]{7})/) // dev or 7-char commit hash
     // Should contain a date (any month)
     expect(wrapper.text()).toMatch(/\d{4}/) // year
   })
