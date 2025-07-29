@@ -57,6 +57,8 @@ test-backend:
 test-frontend:
   image: node:18-alpine
   stage: test
+  before_script:
+    - apk add --no-cache git
   script:
     - ./tools/test-frontend
   rules:
@@ -66,10 +68,13 @@ test-frontend:
 build-frontend:
   image: node:18-alpine
   stage: build
+  before_script:
+    - apk add --no-cache git
   script:
     - cd frontend
     - npm install
-    - npm run build
+    - node scripts/build-info.js
+    - npm run build-with-info
   artifacts:
     paths:
       - frontend/dist

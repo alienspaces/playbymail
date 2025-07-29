@@ -1,0 +1,12 @@
+#!/usr/bin/env sh
+
+# Build frontend with build info
+cd frontend
+
+# Generate build info
+node scripts/build-info.js
+
+# Build with the generated info
+npm run build-with-info
+
+echo "Frontend built with build info"

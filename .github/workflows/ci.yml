@@ -67,6 +67,8 @@ jobs:
     needs: test-frontend
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch full history for git commands
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
@@ -75,10 +77,14 @@ jobs:
         run: |
           cd frontend
           npm install
+      - name: Generate build info
+        run: |
+          cd frontend
+          node scripts/build-info.js
       - name: Build frontend
         run: |
           cd frontend
-          npm run build
+          npm run build-with-info
       - name: Upload frontend build
         uses: actions/upload-artifact@v4
         with:

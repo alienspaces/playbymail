@@ -6,6 +6,7 @@
     "scripts": {
         "dev": "vite",
         "build": "vite build",
+        "build-with-info": "node scripts/build-info.js && vite build",
         "preview": "vite preview",
         "test:unit": "vitest run",
         "lint": "eslint . --fix",

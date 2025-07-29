@@ -3,6 +3,7 @@ import { RouterLink, RouterView } from 'vue-router'
 import { useAuthStore } from './stores/auth';
 import { storeToRefs } from 'pinia';
 import { ref } from 'vue';
+import BuildInfo from './components/BuildInfo.vue';
 
 const authStore = useAuthStore();
 const { sessionToken } = storeToRefs(authStore);
@@ -72,12 +73,18 @@ function closeMobileMenu() {
       </div>
     </nav>
     <router-view />
+    <footer>
+      <BuildInfo />
+      <p>&copy; 2025 PlayByMail. All rights reserved.</p>
+    </footer>
   </div>
 </template>
 
 <style>
 #app {
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 .navbar {
   display: flex;
@@ -236,5 +243,24 @@ function closeMobileMenu() {
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(-10px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+/* Footer styling */
+footer {
+  margin-top: auto;
+  padding: var(--space-md) var(--space-lg);
+  background: var(--color-background-soft);
+  border-top: 1px solid var(--color-border);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+footer p {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
 }
 </style>
