@@ -81,10 +81,16 @@ jobs:
         run: |
           cd frontend
           node scripts/build-info.js
+          export VITE_COMMIT_REF=$(node -p "require('fs').readFileSync('.env.build', 'utf8').split('\n').find(line => line.startsWith('VITE_COMMIT_REF=')).split('=')[1]")
+          export VITE_BUILD_DATE=$(node -p "require('fs').readFileSync('.env.build', 'utf8').split('\n').find(line => line.startsWith('VITE_BUILD_DATE=')).split('=')[1]")
+          export VITE_BUILD_TIME=$(node -p "require('fs').readFileSync('.env.build', 'utf8').split('\n').find(line => line.startsWith('VITE_BUILD_TIME=')).split('=')[1]")
+          echo "VITE_COMMIT_REF=$VITE_COMMIT_REF" >> $GITHUB_ENV
+          echo "VITE_BUILD_DATE=$VITE_BUILD_DATE" >> $GITHUB_ENV
+          echo "VITE_BUILD_TIME=$VITE_BUILD_TIME" >> $GITHUB_ENV
       - name: Build frontend
         run: |
           cd frontend
-          npm run build-with-info
+          npm run build
       - name: Upload frontend build
         uses: actions/upload-artifact@v4
         with:

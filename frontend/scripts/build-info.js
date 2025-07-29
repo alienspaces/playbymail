@@ -25,7 +25,12 @@ const envVars = {
   VITE_BUILD_TIME: buildTime
 }
 
-// Write to .env.build file
+// Set environment variables for the current process
+Object.entries(envVars).forEach(([key, value]) => {
+  process.env[key] = value
+})
+
+// Write to .env.build file for reference
 const envContent = Object.entries(envVars)
   .map(([key, value]) => `${key}=${value}`)
   .join('\n')

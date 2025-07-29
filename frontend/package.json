@@ -6,7 +6,7 @@
     "scripts": {
         "dev": "vite",
         "build": "vite build",
-        "build-with-info": "node scripts/build-info.js && vite build",
+        "build-with-info": "node scripts/build-info.js && VITE_COMMIT_REF=$VITE_COMMIT_REF VITE_BUILD_DATE=$VITE_BUILD_DATE VITE_BUILD_TIME=$VITE_BUILD_TIME vite build",
         "preview": "vite preview",
         "test:unit": "vitest run",
         "lint": "eslint . --fix",

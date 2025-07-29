@@ -74,7 +74,10 @@ build-frontend:
     - cd frontend
     - npm install
     - node scripts/build-info.js
-    - npm run build-with-info
+    - export VITE_COMMIT_REF=$(node -p "require('fs').readFileSync('.env.build', 'utf8').split('\n').find(line => line.startsWith('VITE_COMMIT_REF=')).split('=')[1]")
+    - export VITE_BUILD_DATE=$(node -p "require('fs').readFileSync('.env.build', 'utf8').split('\n').find(line => line.startsWith('VITE_BUILD_DATE=')).split('=')[1]")
+    - export VITE_BUILD_TIME=$(node -p "require('fs').readFileSync('.env.build', 'utf8').split('\n').find(line => line.startsWith('VITE_BUILD_TIME=')).split('=')[1]")
+    - npm run build
   artifacts:
     paths:
       - frontend/dist
