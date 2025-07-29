@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /* eslint-env node */
-/* eslint-disable no-undef */
+ 
 
 import { execSync } from 'child_process'
 import { writeFileSync } from 'fs'
@@ -29,7 +29,9 @@ const envVars = {
 }
 
 // Set environment variables for the current process
+ 
 Object.entries(envVars).forEach(([key, value]) => {
+   
   process.env[key] = value
 })
 
