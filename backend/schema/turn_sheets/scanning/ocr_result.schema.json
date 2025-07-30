@@ -1,0 +1,60 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "http://playbymail.dev/schema/turn_sheets/scanning/ocr_result.schema.json",
+    "title": "OCRResult",
+    "type": "object",
+    "properties": {
+        "scan_id": {
+            "type": "string",
+            "description": "Unique identifier for this scan"
+        },
+        "scan_timestamp": {
+            "type": "string",
+            "format": "date-time"
+        },
+        "scanned_by": {
+            "type": "string",
+            "description": "User ID who performed the scan"
+        },
+        "scan_quality": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "description": "Overall scan quality score"
+        },
+        "ocr_confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "description": "OCR confidence score"
+        },
+        "extracted_data": {
+            "type": "object",
+            "description": "Extracted data from the scanned form"
+        },
+        "processing_notes": {
+            "type": "string",
+            "description": "Notes about the scanning/processing"
+        },
+        "error_details": {
+            "type": "object",
+            "properties": {
+                "error_type": {
+                    "type": "string"
+                },
+                "error_message": {
+                    "type": "string"
+                },
+                "suggested_action": {
+                    "type": "string"
+                }
+            }
+        }
+    },
+    "required": [
+        "scan_id",
+        "scan_timestamp",
+        "scan_quality"
+    ],
+    "additionalProperties": false
+}

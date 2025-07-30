@@ -29,28 +29,19 @@ CREATE TABLE IF NOT EXISTS player_turn_sheet (
     updated_at TIMESTAMPTZ
 );
 
--- Player turn sheet responses (submitted answers)
-CREATE TABLE IF NOT EXISTS player_turn_sheet_response (
+-- Player turn sheet results (scanned from physical turn sheets)
+CREATE TABLE IF NOT EXISTS player_turn_sheet_result (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     turn_sheet_id UUID NOT NULL REFERENCES player_turn_sheet(id),
-    response_data JSONB NOT NULL, -- Player's answers
-    submitted_at TIMESTAMPTZ DEFAULT NOW(),
+    result_data JSONB NOT NULL, -- Scanned and processed player responses
+    scanned_at TIMESTAMPTZ DEFAULT NOW(),
+    scanned_by UUID REFERENCES account(id), -- Who scanned the sheet
+    scan_quality DECIMAL(3,2), -- OCR confidence score (0.00-1.00)
+    processing_status VARCHAR(20) DEFAULT 'scanned', -- 'scanned', 'processed', 'error'
+    error_message TEXT,
     processed_at TIMESTAMPTZ,
-    error_message TEXT
-);
-
--- Turn sheet generation rules (when to generate which sheets)
-CREATE TABLE IF NOT EXISTS turn_sheet_generation_rule (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    game_instance_id UUID NOT NULL REFERENCES game_instance(id),
-    rule_name VARCHAR(100) NOT NULL,
-    trigger_condition JSONB NOT NULL, -- When to apply this rule
-    sheet_type VARCHAR(50) NOT NULL,
-    sheet_order INTEGER NOT NULL,
-    is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ,
-    deleted_at TIMESTAMPTZ
+    updated_at TIMESTAMPTZ
 );
 
 -- Add constraints for turn_sheet_template
@@ -73,12 +64,12 @@ ALTER TABLE player_turn_sheet ADD CONSTRAINT player_turn_sheet_sheet_order_check
 ALTER TABLE player_turn_sheet ADD CONSTRAINT player_turn_sheet_turn_number_check 
     CHECK (turn_number >= 0);
 
--- Add constraints for turn_sheet_generation_rule
-ALTER TABLE turn_sheet_generation_rule ADD CONSTRAINT turn_sheet_generation_rule_sheet_type_check 
-    CHECK (sheet_type IN ('multiple_choice', 'combat_selection', 'inventory_management', 'conversation', 'text_input', 'number_input'));
+-- Add constraints for player_turn_sheet_result
+ALTER TABLE player_turn_sheet_result ADD CONSTRAINT player_turn_sheet_result_processing_status_check 
+    CHECK (processing_status IN ('scanned', 'processed', 'error'));
 
-ALTER TABLE turn_sheet_generation_rule ADD CONSTRAINT turn_sheet_generation_rule_sheet_order_check 
-    CHECK (sheet_order > 0);
+ALTER TABLE player_turn_sheet_result ADD CONSTRAINT player_turn_sheet_result_scan_quality_check 
+    CHECK (scan_quality >= 0.00 AND scan_quality <= 1.00);
 
 -- Add indexes for performance
 CREATE INDEX IF NOT EXISTS idx_turn_sheet_template_game_type ON turn_sheet_template(game_type);
@@ -87,11 +78,10 @@ CREATE INDEX IF NOT EXISTS idx_player_turn_sheet_game_instance ON player_turn_sh
 CREATE INDEX IF NOT EXISTS idx_player_turn_sheet_player ON player_turn_sheet(player_id);
 CREATE INDEX IF NOT EXISTS idx_player_turn_sheet_turn ON player_turn_sheet(turn_number);
 CREATE INDEX IF NOT EXISTS idx_player_turn_sheet_completed ON player_turn_sheet(is_completed);
-CREATE INDEX IF NOT EXISTS idx_turn_sheet_response_sheet ON player_turn_sheet_response(turn_sheet_id);
-CREATE INDEX IF NOT EXISTS idx_turn_sheet_generation_rule_game_instance ON turn_sheet_generation_rule(game_instance_id);
+CREATE INDEX IF NOT EXISTS idx_player_turn_sheet_result_sheet ON player_turn_sheet_result(turn_sheet_id);
+CREATE INDEX IF NOT EXISTS idx_player_turn_sheet_result_status ON player_turn_sheet_result(processing_status);
 
 -- Add comments
 COMMENT ON TABLE turn_sheet_template IS 'Reusable turn sheet templates for different game types';
 COMMENT ON TABLE player_turn_sheet IS 'Generated turn sheets for specific players and turns';
-COMMENT ON TABLE player_turn_sheet_response IS 'Player responses to turn sheets';
-COMMENT ON TABLE turn_sheet_generation_rule IS 'Rules for when to generate which turn sheets';
+COMMENT ON TABLE player_turn_sheet_result IS 'Scanned and processed player responses from physical turn sheets';

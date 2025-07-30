@@ -1,0 +1,74 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "http://playbymail.dev/schema/turn_sheets/template_formats/multiple_choice.schema.json",
+    "title": "MultipleChoiceTemplate",
+    "type": "object",
+    "properties": {
+        "template_type": {
+            "type": "string",
+            "const": "multiple_choice"
+        },
+        "title": {
+            "type": "string",
+            "maxLength": 200
+        },
+        "description": {
+            "type": "string",
+            "maxLength": 1000
+        },
+        "options": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "text": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "enabled": {
+                        "type": "boolean",
+                        "default": true
+                    }
+                },
+                "required": [
+                    "id",
+                    "text"
+                ]
+            }
+        },
+        "validation": {
+            "type": "object",
+            "properties": {
+                "required": {
+                    "type": "boolean",
+                    "default": true
+                },
+                "min_selections": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "default": 1
+                },
+                "max_selections": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "default": 1
+                }
+            }
+        },
+        "print_layout": {
+            "type": "string",
+            "description": "Reference to print layout schema"
+        }
+    },
+    "required": [
+        "template_type",
+        "title",
+        "options"
+    ],
+    "additionalProperties": false
+}
