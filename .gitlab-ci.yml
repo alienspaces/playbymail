@@ -25,13 +25,13 @@ test-backend:
     APP_ENV: develop
     PORT: 8080
     LOG_LEVEL: debug
-    GO_VERSION: 1.23.5
+    GO_VERSION: 1.24.5
     EMAILER_FAKED: "true"
     JOBCLIENT_MAX_WORKERS: "10"
     TOKEN_HMAC_KEY: "changeme-super-secret-key"
     TEMPLATES_PATH: "${CI_PROJECT_DIR}/backend/templates"
     SCHEMA_PATH: "${CI_PROJECT_DIR}/backend/schema"
-  image: golang:1.23.5-alpine
+  image: golang:1.24.5-alpine
   stage: test
   services:
     - name: postgres:17.5-alpine
@@ -109,7 +109,7 @@ build-frontend:
 
 deploy-backend:
   stage: deploy
-  image: golang:1.23.5-alpine
+  image: golang:1.24.5-alpine
   dependencies:
     - build-frontend
   before_script:
