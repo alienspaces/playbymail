@@ -14,6 +14,7 @@ var nonRecurseTypeNames = set.New(
 	getTypeName(sql.NullString{}),
 	getTypeName(sql.NullInt32{}),
 	getTypeName(sql.NullInt64{}),
+	getTypeName(sql.NullFloat64{}),
 	getTypeName(sql.NullTime{}),
 	getTypeName(sql.NullBool{}),
 	getTypeName(time.Time{}),

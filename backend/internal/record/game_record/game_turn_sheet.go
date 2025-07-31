@@ -16,6 +16,7 @@ const (
 
 const (
 	FieldGameTurnSheetID               string = "id"
+	FieldGameTurnSheetGameID           string = "game_id"
 	FieldGameTurnSheetGameInstanceID   string = "game_instance_id"
 	FieldGameTurnSheetAccountID        string = "account_id"
 	FieldGameTurnSheetTurnNumber       string = "turn_number"
@@ -37,6 +38,7 @@ const (
 
 type GameTurnSheet struct {
 	record.Record
+	GameID           string          `db:"game_id"`
 	GameInstanceID   string          `db:"game_instance_id"`
 	AccountID        string          `db:"account_id"`
 	TurnNumber       int             `db:"turn_number"`
@@ -51,13 +53,11 @@ type GameTurnSheet struct {
 	ScanQuality      sql.NullFloat64 `db:"scan_quality"`
 	ProcessingStatus string          `db:"processing_status"`
 	ErrorMessage     sql.NullString  `db:"error_message"`
-	CreatedAt        sql.NullTime    `db:"created_at"`
-	UpdatedAt        sql.NullTime    `db:"updated_at"`
-	DeletedAt        sql.NullTime    `db:"deleted_at"`
 }
 
 func (r *GameTurnSheet) ToNamedArgs() pgx.NamedArgs {
 	args := r.Record.ToNamedArgs()
+	args[FieldGameTurnSheetGameID] = r.GameID
 	args[FieldGameTurnSheetGameInstanceID] = r.GameInstanceID
 	args[FieldGameTurnSheetAccountID] = r.AccountID
 	args[FieldGameTurnSheetTurnNumber] = r.TurnNumber
@@ -72,8 +72,5 @@ func (r *GameTurnSheet) ToNamedArgs() pgx.NamedArgs {
 	args[FieldGameTurnSheetScanQuality] = r.ScanQuality
 	args[FieldGameTurnSheetProcessingStatus] = r.ProcessingStatus
 	args[FieldGameTurnSheetErrorMessage] = r.ErrorMessage
-	args[FieldGameTurnSheetCreatedAt] = r.CreatedAt
-	args[FieldGameTurnSheetUpdatedAt] = r.UpdatedAt
-	args[FieldGameTurnSheetDeletedAt] = r.DeletedAt
 	return args
 }

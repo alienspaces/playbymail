@@ -21,12 +21,14 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/repository/adventure_game_location_instance"
 	"gitlab.com/alienspaces/playbymail/internal/repository/adventure_game_location_link"
 	"gitlab.com/alienspaces/playbymail/internal/repository/adventure_game_location_link_requirement"
+	"gitlab.com/alienspaces/playbymail/internal/repository/adventure_game_turn_sheet"
 	"gitlab.com/alienspaces/playbymail/internal/repository/game"
 	"gitlab.com/alienspaces/playbymail/internal/repository/game_administration"
 	"gitlab.com/alienspaces/playbymail/internal/repository/game_configuration"
 	"gitlab.com/alienspaces/playbymail/internal/repository/game_instance"
 	"gitlab.com/alienspaces/playbymail/internal/repository/game_instance_configuration"
 	"gitlab.com/alienspaces/playbymail/internal/repository/game_subscription"
+	"gitlab.com/alienspaces/playbymail/internal/repository/game_turn_sheet"
 	"gitlab.com/alienspaces/playbymail/internal/utils/config"
 )
 
@@ -60,11 +62,13 @@ func NewDomain(l logger.Logger, cfg config.Config) (*Domain, error) {
 		adventure_game_location_instance.NewRepository,
 		adventure_game_creature_instance.NewRepository,
 		adventure_game_character_instance.NewRepository,
+		adventure_game_turn_sheet.NewRepository,
 		game_instance.NewRepository,
 		game_configuration.NewRepository,
 		game_instance_configuration.NewRepository,
 		game_subscription.NewRepository,
 		game_administration.NewRepository,
+		game_turn_sheet.NewRepository,
 	}
 
 	cd, err := domain.NewDomain(l, repositoryConstructors)
@@ -175,6 +179,16 @@ func (m *Domain) GameConfigurationRepository() *repository.Generic[game_record.G
 // GameInstanceConfigurationRepository -
 func (m *Domain) GameInstanceConfigurationRepository() *repository.Generic[game_record.GameInstanceConfiguration, *game_record.GameInstanceConfiguration] {
 	return m.Repositories[game_instance_configuration.TableName].(*repository.Generic[game_record.GameInstanceConfiguration, *game_record.GameInstanceConfiguration])
+}
+
+// GameTurnSheetRepository -
+func (m *Domain) GameTurnSheetRepository() *repository.Generic[game_record.GameTurnSheet, *game_record.GameTurnSheet] {
+	return m.Repositories[game_turn_sheet.TableName].(*repository.Generic[game_record.GameTurnSheet, *game_record.GameTurnSheet])
+}
+
+// AdventureGameTurnSheetRepository -
+func (m *Domain) AdventureGameTurnSheetRepository() *repository.Generic[adventure_game_record.AdventureGameTurnSheet, *adventure_game_record.AdventureGameTurnSheet] {
+	return m.Repositories[adventure_game_turn_sheet.TableName].(*repository.Generic[adventure_game_record.AdventureGameTurnSheet, *adventure_game_record.AdventureGameTurnSheet])
 }
 
 // Logger - Returns a logger with package context and provided function context
