@@ -33,7 +33,7 @@ jobs:
       APP_ENV: develop
       PORT: 8080
       LOG_LEVEL: debug
-      GO_VERSION: 1.23.5
+      GO_VERSION: 1.24.5
       EMAILER_FAKED: "true"
       JOBCLIENT_MAX_WORKERS: 10
       TOKEN_HMAC_KEY: "changeme-super-secret-key"
@@ -45,7 +45,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: 1.23.5
+          go-version: 1.24.5
       - name: Install dependencies
         run: sudo apt-get update && sudo apt-get install -y build-essential git postgresql-client
       - name: Run backend tests
@@ -106,7 +106,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: 1.23.5
+          go-version: 1.24.5
       - name: Install dependencies
         run: sudo apt-get update && sudo apt-get install -y git bash
       - name: Download frontend build
