@@ -7,6 +7,7 @@ replace gitlab.com/alienspaces/playbymail/core => ./core
 replace gitlab.com/alienspaces/playbymail/schema => ./schema
 
 require (
+	github.com/OpenPrinting/goipp v1.2.0
 	github.com/brianvoe/gofakeit v3.18.0+incompatible
 	github.com/brianvoe/gofakeit/v6 v6.28.0
 	github.com/caarlos0/env/v10 v10.0.0
