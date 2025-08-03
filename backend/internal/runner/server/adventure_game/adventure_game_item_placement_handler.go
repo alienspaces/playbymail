@@ -17,7 +17,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/mapper"
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 	"gitlab.com/alienspaces/playbymail/internal/utils/logging"
-	"gitlab.com/alienspaces/playbymail/schema/api"
+	"gitlab.com/alienspaces/playbymail/schema/api/adventure_game_schema"
 )
 
 // API Resource Search Path
@@ -53,15 +53,20 @@ func adventureGameItemPlacementHandlerConfig(l logger.Logger) (map[string]server
 
 	collectionResponseSchema := jsonschema.SchemaWithReferences{
 		Main: jsonschema.Schema{
-			Location: "api",
+			Location: "api/adventure_game_schema",
 			Name:     "adventure_game_item_placement.collection.response.schema.json",
 		},
-		References: referenceSchemas,
+		References: append(referenceSchemas, []jsonschema.Schema{
+			{
+				Location: "api/adventure_game_schema",
+				Name:     "adventure_game_item_placement.schema.json",
+			},
+		}...),
 	}
 
 	requestSchema := jsonschema.SchemaWithReferences{
 		Main: jsonschema.Schema{
-			Location: "api",
+			Location: "api/adventure_game_schema",
 			Name:     "adventure_game_item_placement.request.schema.json",
 		},
 		References: referenceSchemas,
@@ -69,10 +74,15 @@ func adventureGameItemPlacementHandlerConfig(l logger.Logger) (map[string]server
 
 	responseSchema := jsonschema.SchemaWithReferences{
 		Main: jsonschema.Schema{
-			Location: "api",
+			Location: "api/adventure_game_schema",
 			Name:     "adventure_game_item_placement.response.schema.json",
 		},
-		References: referenceSchemas,
+		References: append(referenceSchemas, []jsonschema.Schema{
+			{
+				Location: "api/adventure_game_schema",
+				Name:     "adventure_game_item_placement.schema.json",
+			},
+		}...),
 	}
 
 	// New Adventure Game Item Placement API paths
@@ -278,7 +288,7 @@ func createOneAdventureGameItemPlacementHandler(w http.ResponseWriter, r *http.R
 	gameID := pp.ByName("game_id")
 	mm := m.(*domain.Domain)
 
-	var request api.AdventureGameItemPlacementRequest
+	var request adventure_game_schema.AdventureGameItemPlacementRequest
 	if _, err := server.ReadRequest(l, r, &request); err != nil {
 		l.Warn("failed reading request >%v<", err)
 		return err
@@ -320,7 +330,7 @@ func updateOneAdventureGameItemPlacementHandler(w http.ResponseWriter, r *http.R
 	placementID := pp.ByName("placement_id")
 	mm := m.(*domain.Domain)
 
-	var request api.AdventureGameItemPlacementRequest
+	var request adventure_game_schema.AdventureGameItemPlacementRequest
 	if _, err := server.ReadRequest(l, r, &request); err != nil {
 		l.Warn("failed reading request >%v<", err)
 		return err

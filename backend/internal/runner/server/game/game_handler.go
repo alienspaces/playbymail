@@ -38,15 +38,20 @@ func gameHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error)
 
 	collectionResponseSchema := jsonschema.SchemaWithReferences{
 		Main: jsonschema.Schema{
-			Location: "api",
+			Location: "api/game_schema",
 			Name:     "game.collection.response.schema.json",
 		},
-		References: referenceSchemas,
+		References: append(referenceSchemas, []jsonschema.Schema{
+			{
+				Location: "api/game_schema",
+				Name:     "game.schema.json",
+			},
+		}...),
 	}
 
 	requestSchema := jsonschema.SchemaWithReferences{
 		Main: jsonschema.Schema{
-			Location: "api",
+			Location: "api/game_schema",
 			Name:     "game.request.schema.json",
 		},
 		References: referenceSchemas,
@@ -54,10 +59,15 @@ func gameHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error)
 
 	responseSchema := jsonschema.SchemaWithReferences{
 		Main: jsonschema.Schema{
-			Location: "api",
+			Location: "api/game_schema",
 			Name:     "game.response.schema.json",
 		},
-		References: referenceSchemas,
+		References: append(referenceSchemas, []jsonschema.Schema{
+			{
+				Location: "api/game_schema",
+				Name:     "game.schema.json",
+			},
+		}...),
 	}
 
 	// Unnested routes

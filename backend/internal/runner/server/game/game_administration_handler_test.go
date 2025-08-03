@@ -9,7 +9,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/harness"
 	"gitlab.com/alienspaces/playbymail/internal/runner/server/game"
 	"gitlab.com/alienspaces/playbymail/internal/utils/testutil"
-	"gitlab.com/alienspaces/playbymail/schema/api"
+	"gitlab.com/alienspaces/playbymail/schema/api/game_schema"
 )
 
 func Test_gameAdministrationHandler(t *testing.T) {
@@ -19,8 +19,8 @@ func Test_gameAdministrationHandler(t *testing.T) {
 	require.NoError(t, err, "Test data setup returns without error")
 	defer func() { _ = th.Teardown() }()
 
-	collectionDecoder := testutil.TestCaseResponseDecoderGeneric[api.GameAdministrationCollectionResponse]
-	singleDecoder := testutil.TestCaseResponseDecoderGeneric[api.GameAdministrationResponse]
+	collectionDecoder := testutil.TestCaseResponseDecoderGeneric[game_schema.GameAdministrationCollectionResponse]
+	singleDecoder := testutil.TestCaseResponseDecoderGeneric[game_schema.GameAdministrationResponse]
 
 	testCases := []testutil.TestCase{
 		{
@@ -39,7 +39,7 @@ func Test_gameAdministrationHandler(t *testing.T) {
 			RequestBody: func(d harness.Data) any {
 				gameRec, _ := d.GetGameRecByRef(harness.GameOneRef)
 				accountRec, _ := d.GetAccountRecByRef(harness.AccountTwoRef)
-				return api.GameAdministrationRequest{
+				return game_schema.GameAdministrationRequest{
 					GameID:             gameRec.ID,
 					AccountID:          accountRec.ID,
 					GrantedByAccountID: accountRec.ID,
@@ -68,7 +68,7 @@ func Test_gameAdministrationHandler(t *testing.T) {
 				return map[string]string{":game_administration_id": d.GameAdministrationRecs[0].ID}
 			},
 			RequestBody: func(d harness.Data) any {
-				return api.GameAdministrationRequest{
+				return game_schema.GameAdministrationRequest{
 					GameID:             d.GameAdministrationRecs[0].GameID,
 					AccountID:          d.GameAdministrationRecs[0].AccountID,
 					GrantedByAccountID: d.GameAdministrationRecs[0].GrantedByAccountID,

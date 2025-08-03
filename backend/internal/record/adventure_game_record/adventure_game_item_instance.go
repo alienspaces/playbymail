@@ -34,7 +34,7 @@ type AdventureGameItemInstance struct {
 	AdventureGameCreatureInstanceID  sql.NullString `db:"adventure_game_creature_instance_id"`
 	IsEquipped                       bool           `db:"is_equipped"`
 	IsUsed                           bool           `db:"is_used"`
-	UsesRemaining                    *int           `db:"uses_remaining"`
+	UsesRemaining                    int            `db:"uses_remaining"`
 }
 
 func (r *AdventureGameItemInstance) ToNamedArgs() pgx.NamedArgs {

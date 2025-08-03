@@ -1,0 +1,23 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "http://playbymail.games/schema/adventure_game_schema/adventure_game_character.collection.response.schema.json",
+    "title": "AdventureGameCharacterCollectionResponse",
+    "type": "object",
+    "properties": {
+        "data": {
+            "items": {
+                "$ref": "http://playbymail.games/schema/adventure_game_schema/adventure_game_character.schema.json"
+            },
+            "type": "array"
+        },
+        "error": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/error"
+        },
+        "pagination": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/pagination"
+        }
+    },
+    "required": [
+        "data"
+    ]
+}

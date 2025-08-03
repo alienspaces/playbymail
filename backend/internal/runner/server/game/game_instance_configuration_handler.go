@@ -43,15 +43,20 @@ func gameInstanceConfigurationHandlerConfig(l logger.Logger) (map[string]server.
 
 	collectionResponseSchema := jsonschema.SchemaWithReferences{
 		Main: jsonschema.Schema{
-			Location: "api",
+			Location: "api/game_schema",
 			Name:     "game_instance_configuration.collection.response.schema.json",
 		},
-		References: referenceSchemas,
+		References: append(referenceSchemas, []jsonschema.Schema{
+			{
+				Location: "api/game_schema",
+				Name:     "game_instance_configuration.schema.json",
+			},
+		}...),
 	}
 
 	requestSchema := jsonschema.SchemaWithReferences{
 		Main: jsonschema.Schema{
-			Location: "api",
+			Location: "api/game_schema",
 			Name:     "game_instance_configuration.request.schema.json",
 		},
 		References: referenceSchemas,
@@ -59,10 +64,15 @@ func gameInstanceConfigurationHandlerConfig(l logger.Logger) (map[string]server.
 
 	responseSchema := jsonschema.SchemaWithReferences{
 		Main: jsonschema.Schema{
-			Location: "api",
+			Location: "api/game_schema",
 			Name:     "game_instance_configuration.response.schema.json",
 		},
-		References: referenceSchemas,
+		References: append(referenceSchemas, []jsonschema.Schema{
+			{
+				Location: "api/game_schema",
+				Name:     "game_instance_configuration.schema.json",
+			},
+		}...),
 	}
 
 	gameInstanceConfigurationConfig[getManyGameInstanceConfigurations] = server.HandlerConfig{

@@ -36,15 +36,20 @@ func gameAdministrationHandlerConfig(l logger.Logger) (map[string]server.Handler
 
 	collectionResponseSchema := jsonschema.SchemaWithReferences{
 		Main: jsonschema.Schema{
-			Location: "api",
+			Location: "api/game_schema",
 			Name:     "game_administration.collection.response.schema.json",
 		},
-		References: referenceSchemas,
+		References: append(referenceSchemas, []jsonschema.Schema{
+			{
+				Location: "api/game_schema",
+				Name:     "game_administration.schema.json",
+			},
+		}...),
 	}
 
 	requestSchema := jsonschema.SchemaWithReferences{
 		Main: jsonschema.Schema{
-			Location: "api",
+			Location: "api/game_schema",
 			Name:     "game_administration.request.schema.json",
 		},
 		References: referenceSchemas,
@@ -52,10 +57,15 @@ func gameAdministrationHandlerConfig(l logger.Logger) (map[string]server.Handler
 
 	responseSchema := jsonschema.SchemaWithReferences{
 		Main: jsonschema.Schema{
-			Location: "api",
+			Location: "api/game_schema",
 			Name:     "game_administration.response.schema.json",
 		},
-		References: referenceSchemas,
+		References: append(referenceSchemas, []jsonschema.Schema{
+			{
+				Location: "api/game_schema",
+				Name:     "game_administration.schema.json",
+			},
+		}...),
 	}
 
 	config[GetManyGameAdministrations] = server.HandlerConfig{

@@ -4,12 +4,12 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/nulltime"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
-	"gitlab.com/alienspaces/playbymail/schema/api"
+	"gitlab.com/alienspaces/playbymail/schema/api/adventure_game_schema"
 )
 
-func AdventureGameCreatureRecordToResponseData(l logger.Logger, rec *adventure_game_record.AdventureGameCreature) (api.AdventureGameCreatureResponseData, error) {
+func AdventureGameCreatureRecordToResponseData(l logger.Logger, rec *adventure_game_record.AdventureGameCreature) (adventure_game_schema.AdventureGameCreatureResponseData, error) {
 	l.Debug("mapping adventure_game_creature record to response data")
-	data := api.AdventureGameCreatureResponseData{
+	data := adventure_game_schema.AdventureGameCreatureResponseData{
 		ID:          rec.ID,
 		GameID:      rec.GameID,
 		Name:        rec.Name,
@@ -21,31 +21,31 @@ func AdventureGameCreatureRecordToResponseData(l logger.Logger, rec *adventure_g
 	return data, nil
 }
 
-func AdventureGameCreatureRecordToResponse(l logger.Logger, rec *adventure_game_record.AdventureGameCreature) (api.AdventureGameCreatureResponse, error) {
+func AdventureGameCreatureRecordToResponse(l logger.Logger, rec *adventure_game_record.AdventureGameCreature) (adventure_game_schema.AdventureGameCreatureResponse, error) {
 	data, err := AdventureGameCreatureRecordToResponseData(l, rec)
 	if err != nil {
-		return api.AdventureGameCreatureResponse{}, err
+		return adventure_game_schema.AdventureGameCreatureResponse{}, err
 	}
-	return api.AdventureGameCreatureResponse{
+	return adventure_game_schema.AdventureGameCreatureResponse{
 		Data: &data,
 	}, nil
 }
 
-func AdventureGameCreatureRecordsToCollectionResponse(l logger.Logger, recs []*adventure_game_record.AdventureGameCreature) (api.AdventureGameCreatureCollectionResponse, error) {
-	data := []*api.AdventureGameCreatureResponseData{}
+func AdventureGameCreatureRecordsToCollectionResponse(l logger.Logger, recs []*adventure_game_record.AdventureGameCreature) (adventure_game_schema.AdventureGameCreatureCollectionResponse, error) {
+	data := []*adventure_game_schema.AdventureGameCreatureResponseData{}
 	for _, rec := range recs {
 		d, err := AdventureGameCreatureRecordToResponseData(l, rec)
 		if err != nil {
-			return api.AdventureGameCreatureCollectionResponse{}, err
+			return adventure_game_schema.AdventureGameCreatureCollectionResponse{}, err
 		}
 		data = append(data, &d)
 	}
-	return api.AdventureGameCreatureCollectionResponse{
+	return adventure_game_schema.AdventureGameCreatureCollectionResponse{
 		Data: data,
 	}, nil
 }
 
-func AdventureGameCreatureRequestToRecord(l logger.Logger, req *api.AdventureGameCreatureRequest, rec *adventure_game_record.AdventureGameCreature) (*adventure_game_record.AdventureGameCreature, error) {
+func AdventureGameCreatureRequestToRecord(l logger.Logger, req *adventure_game_schema.AdventureGameCreatureRequest, rec *adventure_game_record.AdventureGameCreature) (*adventure_game_record.AdventureGameCreature, error) {
 	if rec == nil {
 		rec = &adventure_game_record.AdventureGameCreature{}
 	}

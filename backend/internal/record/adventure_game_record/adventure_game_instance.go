@@ -11,7 +11,7 @@ import (
 const TableAdventureGameInstance = "game_instance"
 
 const (
-	FieldAdventureGameInstanceID                  = "id"
+	FieldGameInstanceID                           = "id"
 	FieldAdventureGameInstanceGameID              = "game_id"
 	FieldAdventureGameInstanceCreatedAt           = "created_at"
 	FieldAdventureGameInstanceUpdatedAt           = "updated_at"

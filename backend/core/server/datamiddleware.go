@@ -59,6 +59,7 @@ func (rnr *Runner) DataMiddleware(hc HandlerConfig, h Handle) (Handle, error) {
 		}
 
 		l.Debug("(datamiddleware) schemas >%#v<", requestSchema)
+		l.Warn("(datamiddleware) data >%#v<", string(data))
 
 		result, err := jsonschema.Validate(requestSchema, data)
 		if err != nil {

@@ -11,7 +11,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/runner/server/adventure_game"
 	"gitlab.com/alienspaces/playbymail/internal/utils/deps"
 	"gitlab.com/alienspaces/playbymail/internal/utils/testutil"
-	"gitlab.com/alienspaces/playbymail/schema/api"
+	"gitlab.com/alienspaces/playbymail/schema/api/adventure_game_schema"
 )
 
 func Test_adventureGameLocationLinkHandler(t *testing.T) {
@@ -44,8 +44,8 @@ func Test_adventureGameLocationLinkHandler(t *testing.T) {
 	linkRec, err := th.Data.GetGameLocationLinkRecByRef(harness.GameLocationLinkOneRef)
 	require.NoError(t, err, "GetGameLocationLinkRecByRef returns without error")
 
-	testCaseCollectionResponseDecoder := testutil.TestCaseResponseDecoderGeneric[api.AdventureGameLocationLinkCollectionResponse]
-	testCaseResponseDecoder := testutil.TestCaseResponseDecoderGeneric[api.AdventureGameLocationLinkResponse]
+	testCaseCollectionResponseDecoder := testutil.TestCaseResponseDecoderGeneric[adventure_game_schema.AdventureGameLocationLinkCollectionResponse]
+	testCaseResponseDecoder := testutil.TestCaseResponseDecoderGeneric[adventure_game_schema.AdventureGameLocationLinkResponse]
 
 	testCases := []struct {
 		testutil.TestCase
@@ -99,11 +99,11 @@ func Test_adventureGameLocationLinkHandler(t *testing.T) {
 					}
 				},
 				RequestBody: func(d harness.Data) any {
-					return api.AdventureGameLocationLinkRequest{
-						Name:               "Test Link",
-						Description:        "Test Link Description",
-						FromGameLocationID: locationOneRec.ID,
-						ToGameLocationID:   locationThreeRec.ID,
+					return adventure_game_schema.AdventureGameLocationLinkRequest{
+						Name:                        "Test Link",
+						Description:                 "Test Link Description",
+						FromAdventureGameLocationID: locationOneRec.ID,
+						ToAdventureGameLocationID:   locationThreeRec.ID,
 					}
 				},
 				ResponseDecoder: testCaseResponseDecoder,
@@ -123,11 +123,11 @@ func Test_adventureGameLocationLinkHandler(t *testing.T) {
 					}
 				},
 				RequestBody: func(d harness.Data) any {
-					return api.AdventureGameLocationLinkRequest{
-						Name:               "Updated Test Link",
-						Description:        "Updated Test Description",
-						FromGameLocationID: linkRec.FromAdventureGameLocationID,
-						ToGameLocationID:   linkRec.ToAdventureGameLocationID,
+					return adventure_game_schema.AdventureGameLocationLinkRequest{
+						Name:                        "Updated Test Link",
+						Description:                 "Updated Test Description",
+						FromAdventureGameLocationID: linkRec.FromAdventureGameLocationID,
+						ToAdventureGameLocationID:   linkRec.ToAdventureGameLocationID,
 					}
 				},
 				ResponseDecoder: testCaseResponseDecoder,

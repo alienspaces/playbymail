@@ -1,33 +1,55 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "http://playbymail.dev/schema/internal/turn_sheet/sheet_data.schema.json",
-  "title": "TurnSheetData",
-  "type": "object",
-  "properties": {
-    "title": {"type": "string"},
-    "description": {"type": "string"},
-    "options": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "id": {"type": "string"},
-          "text": {"type": "string"},
-          "description": {"type": "string"},
-          "enabled": {"type": "boolean"}
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "http://playbymail.games/schema/internal/turn_sheet/sheet_data.schema.json",
+    "title": "TurnSheetData",
+    "type": "object",
+    "properties": {
+        "title": {
+            "type": "string"
+        },
+        "description": {
+            "type": "string"
+        },
+        "options": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "text": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "enabled": {
+                        "type": "boolean"
+                    }
+                }
+            }
+        },
+        "player_context": {
+            "type": "object",
+            "properties": {
+                "character_name": {
+                    "type": "string"
+                },
+                "current_location": {
+                    "type": "string"
+                },
+                "health": {
+                    "type": "integer"
+                },
+                "inventory": {
+                    "type": "array"
+                }
+            }
         }
-      }
     },
-    "player_context": {
-      "type": "object",
-      "properties": {
-        "character_name": {"type": "string"},
-        "current_location": {"type": "string"},
-        "health": {"type": "integer"},
-        "inventory": {"type": "array"}
-      }
-    }
-  },
-  "required": ["title"],
-  "additionalProperties": false
-} 
+    "required": [
+        "title"
+    ],
+    "additionalProperties": false
+}

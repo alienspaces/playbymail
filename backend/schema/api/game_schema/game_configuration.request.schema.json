@@ -1,0 +1,65 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "http://playbymail.games/schema/game_schema/game_configuration.request.schema.json",
+    "title": "GameConfigurationRequest",
+    "type": "object",
+    "properties": {
+        "config_key": {
+            "maxLength": 100,
+            "type": "string"
+        },
+        "default_value": {
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "description": {
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "game_type": {
+            "enum": [
+                "adventure",
+                "strategy",
+                "puzzle",
+                "simulation"
+            ],
+            "type": "string"
+        },
+        "is_required": {
+            "type": "boolean"
+        },
+        "ui_hint": {
+            "maxLength": 50,
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "validation_rules": {
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "value_type": {
+            "enum": [
+                "string",
+                "integer",
+                "boolean",
+                "json"
+            ],
+            "type": "string"
+        }
+    },
+    "required": [
+        "game_type",
+        "config_key",
+        "value_type",
+        "is_required"
+    ],
+    "additionalProperties": false
+}

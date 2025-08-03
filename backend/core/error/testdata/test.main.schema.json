@@ -1,8 +1,9 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "http://example.com/error/test.main.schema.json",
     "title": "Person",
     "additionalProperties": false,
-    "$def": {
+    "$defs": {
         "req1": {
             "required": [
                 "first_name",
@@ -43,19 +44,19 @@
             "type": "array",
             "minItems": 1,
             "items": {
-                "$ref": "#/$def/person"
+                "$ref": "#/$defs/person"
             }
         },
         "person": {
             "allOf": [
                 {
-                    "$ref": "#/$def/individual"
+                    "$ref": "#/$defs/individual"
                 },
                 {
-                    "$ref": "#/$def/req1"
+                    "$ref": "#/$defs/req1"
                 },
                 {
-                    "$ref": "#/$def/req2"
+                    "$ref": "#/$defs/req2"
                 }
             ]
         },
@@ -140,12 +141,12 @@
                     }
                 },
                 "contacts": {
-                    "$ref": "test.reference.schema.json#/$def/contact_types"
+                    "$ref": "http://example.com/error/test.reference.schema.json#/$defs/contact_types"
                 },
                 "primary_contact": {
                     "allOf": [
                         {
-                            "$ref": "test.reference.schema.json#/$def/contact_types"
+                            "$ref": "http://example.com/error/test.reference.schema.json#/$defs/contact_types"
                         },
                         {
                             "oneOf": [
@@ -171,7 +172,7 @@
                 "all_contacts": {
                     "allOf": [
                         {
-                            "$ref": "test.reference.schema.json#/$def/contact_types"
+                            "$ref": "http://example.com/error/test.reference.schema.json#/$defs/contact_types"
                         },
                         {
                             "required": [
@@ -204,5 +205,5 @@
             }
         }
     },
-    "$ref": "#/$def/person"
+    "$ref": "#/$defs/person"
 }

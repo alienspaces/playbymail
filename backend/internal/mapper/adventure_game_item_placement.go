@@ -4,17 +4,16 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/nulltime"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
-	"gitlab.com/alienspaces/playbymail/schema/api"
+	"gitlab.com/alienspaces/playbymail/schema/api/adventure_game_schema"
 )
 
-func AdventureGameItemPlacementRecordToResponseData(l logger.Logger, rec *adventure_game_record.AdventureGameItemPlacement) (api.AdventureGameItemPlacementResponseData, error) {
-	l.Debug("mapping adventure_game_item_placement record to response data")
-	data := api.AdventureGameItemPlacementResponseData{
+func AdventureGameItemPlacementRecordToResponseData(l logger.Logger, rec *adventure_game_record.AdventureGameItemPlacement) (adventure_game_schema.AdventureGameItemPlacementResponseData, error) {
+	data := adventure_game_schema.AdventureGameItemPlacementResponseData{
 		ID:                      rec.ID,
 		GameID:                  rec.GameID,
-		AdventureGameItemID:     rec.AdventureGameItemID,
-		AdventureGameLocationID: rec.AdventureGameLocationID,
-		InitialCount:            rec.InitialCount,
+		AdventureGameItemID:     rec.AdventureGameItemID,     // Map old field name to new
+		AdventureGameLocationID: rec.AdventureGameLocationID, // Map old field name to new
+		InitialCount:            rec.InitialCount,            // Map old field name to new
 		CreatedAt:               rec.CreatedAt,
 		UpdatedAt:               nulltime.ToTimePtr(rec.UpdatedAt),
 		DeletedAt:               nulltime.ToTimePtr(rec.DeletedAt),
@@ -22,38 +21,37 @@ func AdventureGameItemPlacementRecordToResponseData(l logger.Logger, rec *advent
 	return data, nil
 }
 
-func AdventureGameItemPlacementRecordToResponse(l logger.Logger, rec *adventure_game_record.AdventureGameItemPlacement) (api.AdventureGameItemPlacementResponse, error) {
-	data, err := AdventureGameItemPlacementRecordToResponseData(l, rec)
-	if err != nil {
-		return api.AdventureGameItemPlacementResponse{}, err
-	}
-	return api.AdventureGameItemPlacementResponse{
-		Data: &data,
-	}, nil
-}
-
-func AdventureGameItemPlacementRecordsToCollectionResponse(l logger.Logger, recs []*adventure_game_record.AdventureGameItemPlacement) (api.AdventureGameItemPlacementCollectionResponse, error) {
-	data := []*api.AdventureGameItemPlacementResponseData{}
+func AdventureGameItemPlacementRecordsToCollectionResponse(l logger.Logger, recs []*adventure_game_record.AdventureGameItemPlacement) (*adventure_game_schema.AdventureGameItemPlacementCollectionResponse, error) {
+	data := []*adventure_game_schema.AdventureGameItemPlacementResponseData{}
 	for _, rec := range recs {
-		d, err := AdventureGameItemPlacementRecordToResponseData(l, rec)
+		item, err := AdventureGameItemPlacementRecordToResponseData(l, rec)
 		if err != nil {
-			return api.AdventureGameItemPlacementCollectionResponse{}, err
+			return nil, err
 		}
-		data = append(data, &d)
+		data = append(data, &item)
 	}
-	return api.AdventureGameItemPlacementCollectionResponse{
+	return &adventure_game_schema.AdventureGameItemPlacementCollectionResponse{
 		Data: data,
 	}, nil
 }
 
-func AdventureGameItemPlacementRequestToRecord(l logger.Logger, req *api.AdventureGameItemPlacementRequest, rec *adventure_game_record.AdventureGameItemPlacement) (*adventure_game_record.AdventureGameItemPlacement, error) {
+func AdventureGameItemPlacementRecordToResponse(l logger.Logger, rec *adventure_game_record.AdventureGameItemPlacement) (*adventure_game_schema.AdventureGameItemPlacementResponse, error) {
+	data, err := AdventureGameItemPlacementRecordToResponseData(l, rec)
+	if err != nil {
+		return nil, err
+	}
+	return &adventure_game_schema.AdventureGameItemPlacementResponse{
+		Data: &data,
+	}, nil
+}
+
+func AdventureGameItemPlacementRequestToRecord(l logger.Logger, req *adventure_game_schema.AdventureGameItemPlacementRequest, rec *adventure_game_record.AdventureGameItemPlacement) (*adventure_game_record.AdventureGameItemPlacement, error) {
 	if rec == nil {
 		rec = &adventure_game_record.AdventureGameItemPlacement{}
 	}
 	if req == nil {
 		return nil, nil
 	}
-	l.Debug("mapping adventure_game_item_placement request to record")
 	rec.AdventureGameItemID = req.AdventureGameItemID
 	rec.AdventureGameLocationID = req.AdventureGameLocationID
 	rec.InitialCount = req.InitialCount

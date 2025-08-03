@@ -1,6 +1,6 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
-    "$id": "http://playbymail.dev/schema/internal/turn_sheet/result_data.schema.json",
+    "$id": "http://playbymail.games/schema/internal/turn_sheet/result_data.schema.json",
     "title": "TurnSheetResultData",
     "type": "object",
     "properties": {

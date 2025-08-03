@@ -8,14 +8,14 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/server"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
-	"gitlab.com/alienspaces/playbymail/schema/api"
+	"gitlab.com/alienspaces/playbymail/schema/api/game_schema"
 )
 
 func GameRequestToRecord(l logger.Logger, r *http.Request, rec *game_record.Game) (*game_record.Game, error) {
 
 	l.Debug("mapping game request to record")
 
-	var req api.GameRequest
+	var req game_schema.GameRequest
 	_, err := server.ReadRequest(l, r, &req)
 	if err != nil {
 		return nil, err
@@ -35,11 +35,11 @@ func GameRequestToRecord(l logger.Logger, r *http.Request, rec *game_record.Game
 	return rec, nil
 }
 
-func GameRecordToResponseData(l logger.Logger, rec *game_record.Game) (api.GameResponseData, error) {
+func GameRecordToResponseData(l logger.Logger, rec *game_record.Game) (game_schema.GameResponseData, error) {
 
 	l.Debug("mapping game record to response data")
 
-	data := api.GameResponseData{
+	data := game_schema.GameResponseData{
 		ID:        rec.ID,
 		Name:      rec.Name,
 		GameType:  rec.GameType,
@@ -50,26 +50,26 @@ func GameRecordToResponseData(l logger.Logger, rec *game_record.Game) (api.GameR
 	return data, nil
 }
 
-func GameRecordToResponse(l logger.Logger, rec *game_record.Game) (api.GameResponse, error) {
+func GameRecordToResponse(l logger.Logger, rec *game_record.Game) (game_schema.GameResponse, error) {
 	data, err := GameRecordToResponseData(l, rec)
 	if err != nil {
-		return api.GameResponse{}, err
+		return game_schema.GameResponse{}, err
 	}
-	return api.GameResponse{
+	return game_schema.GameResponse{
 		Data: &data,
 	}, nil
 }
 
-func GameRecordsToCollectionResponse(l logger.Logger, recs []*game_record.Game) (api.GameCollectionResponse, error) {
-	data := []*api.GameResponseData{}
+func GameRecordsToCollectionResponse(l logger.Logger, recs []*game_record.Game) (game_schema.GameCollectionResponse, error) {
+	data := []*game_schema.GameResponseData{}
 	for _, rec := range recs {
 		d, err := GameRecordToResponseData(l, rec)
 		if err != nil {
-			return api.GameCollectionResponse{}, err
+			return game_schema.GameCollectionResponse{}, err
 		}
 		data = append(data, &d)
 	}
-	return api.GameCollectionResponse{
+	return game_schema.GameCollectionResponse{
 		Data: data,
 	}, nil
 }

@@ -1,0 +1,201 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "http://playbymail.games/schema/common_schema/common.schema.json",
+    "title": "Common Schema Definitions",
+    "$defs": {
+        "correlation_id": {
+            "description": "The correlation ID of the API request that generated this resource.",
+            "example": "e86f4f0d-329d-42a7-be3e-f13ef305d111",
+            "maxLength": 1024,
+            "minLength": 1,
+            "type": "string"
+        },
+        "created_at": {
+            "description": "Date/time the resource was created. When used as a query parameter, only the formats in the examples are supported. If only a date is specified, the date timezone is assumed to be UTC.",
+            "examples": [
+                "2019-01-01",
+                "2019-01-01T23:59:59Z",
+                "2019-01-01T23:59:59.999Z"
+            ],
+            "format": "date-time",
+            "readOnly": true,
+            "type": "string"
+        },
+        "error": {
+            "additionalProperties": false,
+            "description": "API response error information",
+            "properties": {
+                "code": {
+                    "minLength": 1,
+                    "type": "string"
+                },
+                "detail": {
+                    "minLength": 1,
+                    "type": "string"
+                }
+            },
+            "required": [
+                "code",
+                "detail"
+            ],
+            "type": "object"
+        },
+        "error_at": {
+            "description": "Date/time the resource failed processing.",
+            "format": "date-time",
+            "type": "string"
+        },
+        "error_code": {
+            "description": "3Rivers API or CX internal error code.",
+            "minLength": 1,
+            "type": "string"
+        },
+        "error_description": {
+            "description": "3Rivers API or CX internal error message.",
+            "minLength": 1,
+            "type": "string"
+        },
+        "error_log": {
+            "description": "The error log is populated when the resource has a processing status of 'Error'. The log may hint at the cause of failure.",
+            "minLength": 1,
+            "type": "string"
+        },
+        "id": {
+            "description": "Unique identifier for this resource",
+            "example": "a87feca8-d6f0-4794-98c7-037b30219520",
+            "format": "uuid",
+            "type": "string"
+        },
+        "metadata_request": {
+            "description": "Additional metadata for the resource. The attribute name is always automatically prefixed with `meta-`, unless already prefixed with `meta-`. The metadata attribute name `meta-env` is reserved for integration testing.",
+            "oneOf": [
+                {
+                    "items": {
+                        "$ref": "#/$defs/metadata_request_item"
+                    },
+                    "maxItems": 5,
+                    "minItems": 0,
+                    "type": "array"
+                },
+                {
+                    "type": "null"
+                }
+            ]
+        },
+        "metadata_request_item": {
+            "additionalProperties": false,
+            "properties": {
+                "name": {
+                    "description": "The unique name of the key associated with the value.",
+                    "maxLength": 30,
+                    "minLength": 1,
+                    "pattern": "^\\.?([\\-\\w]+\\.?)*[\\-\\w]$",
+                    "type": "string"
+                },
+                "value": {
+                    "description": "The value associated with the name key.",
+                    "maxLength": 100,
+                    "minLength": 0,
+                    "type": "string"
+                }
+            },
+            "required": [
+                "name",
+                "value"
+            ],
+            "type": "object"
+        },
+        "metadata_response": {
+            "description": "Additional metadata for the resource. The attribute name is always automatically prefixed with `meta-`.",
+            "items": {
+                "$ref": "#/$defs/metadata_response_item"
+            },
+            "maxItems": 5,
+            "minItems": 1,
+            "type": "array"
+        },
+        "metadata_response_item": {
+            "additionalProperties": false,
+            "properties": {
+                "name": {
+                    "description": "The unique name of the key associated with the value.",
+                    "examples": [
+                        "meta-example-key"
+                    ],
+                    "maxLength": 35,
+                    "minLength": 1,
+                    "pattern": "^meta-\\.?([\\-\\w]+\\.?)*[\\-\\w]$",
+                    "type": "string"
+                },
+                "value": {
+                    "description": "The value associated with the name key.",
+                    "examples": [
+                        "example-value"
+                    ],
+                    "maxLength": 100,
+                    "minLength": 0,
+                    "type": "string"
+                }
+            },
+            "required": [
+                "name",
+                "value"
+            ],
+            "type": "object"
+        },
+        "pagination": {
+            "additionalProperties": false,
+            "description": "API response pagination information",
+            "properties": {
+                "page_count": {
+                    "minimum": 0,
+                    "type": "integer"
+                },
+                "page_number": {
+                    "minimum": 1,
+                    "type": "integer"
+                },
+                "page_size": {
+                    "minimum": 1,
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "page_number",
+                "page_size",
+                "page_count"
+            ],
+            "type": "object"
+        },
+        "updated_at": {
+            "description": "Date/time the resource was last updated. When used as a query parameter, only the formats in the examples are supported. If only a date is specified, the date timezone is assumed to be UTC.",
+            "examples": [
+                "2019-01-01",
+                "2019-01-01T23:59:59Z",
+                "2019-01-01T23:59:59.999Z"
+            ],
+            "format": "date-time",
+            "readOnly": true,
+            "type": "string"
+        },
+        "user_updated_at": {
+            "description": "Date/time the resource was last updated through public API. When used as a query parameter, only the formats in the examples are supported. If only a date is specified, the date timezone is assumed to be UTC.",
+            "examples": [
+                "2019-01-01",
+                "2019-01-01T23:59:59Z",
+                "2019-01-01T23:59:59.999Z"
+            ],
+            "format": "date-time",
+            "readOnly": true,
+            "type": "string"
+        },
+        "user_updated_by": {
+            "description": "The user name or API key the resource was last updated through public API.",
+            "examples": [
+                "Lauren Brandon",
+                "ReadOnlyAPIKey"
+            ],
+            "type": "string"
+        }
+    }
+}

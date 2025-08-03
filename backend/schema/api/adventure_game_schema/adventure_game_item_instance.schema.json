@@ -1,0 +1,72 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "http://playbymail.games/schema/adventure_game_schema/adventure_game_item_instance.schema.json",
+    "title": "AdventureGameItemInstance",
+    "type": "object",
+    "properties": {
+        "id": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
+        },
+        "game_id": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
+        },
+        "game_instance_id": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
+        },
+        "adventure_game_character_instance_id": {
+            "format": "uuid",
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "adventure_game_creature_instance_id": {
+            "format": "uuid",
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "adventure_game_location_instance_id": {
+            "format": "uuid",
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "adventure_game_item_id": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
+        },
+        "is_equipped": {
+            "type": "boolean"
+        },
+        "is_used": {
+            "type": "boolean"
+        },
+        "uses_remaining": {
+            "type": [
+                "integer",
+                "null"
+            ]
+        },
+        "created_at": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/created_at"
+        },
+        "updated_at": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/updated_at"
+        },
+        "deleted_at": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/updated_at"
+        }
+    },
+    "required": [
+        "id",
+        "game_id",
+        "game_instance_id",
+        "adventure_game_item_id",
+        "is_equipped",
+        "is_used",
+        "created_at"
+    ],
+    "additionalProperties": false
+}

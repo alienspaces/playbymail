@@ -1,6 +1,6 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema",
-    "$id": "http://vet.com/jsonschema/main.schema.json",
+    "$id": "http://example.com/jsonschema/main.schema.json",
     "title": "Test Main",
     "type": "object",
     "required": [
@@ -8,7 +8,7 @@
     ],
     "properties": {
         "data": {
-            "$ref": "http://vet.com/jsonschema/data.schema.json"
+            "$ref": "http://example.com/jsonschema/data.schema.json"
         }
     }
 }

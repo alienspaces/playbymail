@@ -1,0 +1,24 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "http://playbymail.games/schema/adventure_game_schema/adventure_game_item_placement.request.schema.json",
+    "title": "AdventureGameItemPlacementRequest",
+    "type": "object",
+    "properties": {
+        "adventure_game_item_id": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
+        },
+        "adventure_game_location_id": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
+        },
+        "initial_count": {
+            "minimum": 1,
+            "type": "integer"
+        }
+    },
+    "required": [
+        "adventure_game_item_id",
+        "adventure_game_location_id",
+        "initial_count"
+    ],
+    "additionalProperties": false
+}

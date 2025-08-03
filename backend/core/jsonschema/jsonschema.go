@@ -3,6 +3,7 @@ package jsonschema
 import (
 	"errors"
 	"fmt"
+	"os"
 	"strings"
 	"sync"
 
@@ -147,19 +148,27 @@ func compile(sr SchemaWithReferences) (*gojsonschema.Schema, error) {
 	sl.Draft = gojsonschema.Draft7
 
 	for _, ref := range sr.References {
-		refPath := fmt.Sprintf("file://%s", ref.GetFullPath())
-		loader := gojsonschema.NewReferenceLoader(refPath)
-		err := sl.AddSchemas(loader)
+		// Read the schema file content directly
+		content, err := os.ReadFile(ref.GetFullPath())
 		if err != nil {
-			return nil, fmt.Errorf("failed adding reference schema >%s< err >%w<", refPath, err)
+			return nil, fmt.Errorf("failed reading reference schema file >%s< err >%w<", ref.GetFullPath(), err)
+		}
+		loader := gojsonschema.NewStringLoader(string(content))
+		err = sl.AddSchemas(loader)
+		if err != nil {
+			return nil, fmt.Errorf("failed adding reference schema >%s< err >%w<", ref.GetFullPath(), err)
 		}
 	}
 
-	mainPath := fmt.Sprintf("file://%s", sr.Main.GetFullPath())
-	loader := gojsonschema.NewReferenceLoader(mainPath)
+	// Read the main schema file content directly
+	content, err := os.ReadFile(sr.Main.GetFullPath())
+	if err != nil {
+		return nil, fmt.Errorf("failed reading main schema file >%s< err >%w<", sr.Main.GetFullPath(), err)
+	}
+	loader := gojsonschema.NewStringLoader(string(content))
 	s, err := sl.Compile(loader)
 	if err != nil {
-		return nil, fmt.Errorf("failed adding main schema >%s< err >%w<, are you sure you've loaded all required reference schemas?", mainPath, err)
+		return nil, fmt.Errorf("failed adding main schema >%s< err >%w<, are you sure you've loaded all required reference schemas?", sr.Main.GetFullPath(), err)
 	}
 
 	return s, nil

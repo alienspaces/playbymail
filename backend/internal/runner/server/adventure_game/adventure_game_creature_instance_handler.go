@@ -18,7 +18,6 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/mapper"
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 	"gitlab.com/alienspaces/playbymail/internal/utils/logging"
-	"gitlab.com/alienspaces/playbymail/schema/api"
 )
 
 // API Resource Search Path
@@ -29,20 +28,16 @@ import (
 //
 // GET (collection)  /api/v1/adventure-game-instances/{game_instance_id}/creatures
 // GET (document)    /api/v1/adventure-game-instances/{game_instance_id}/creatures/{creature_instance_id}
-// POST (document)   /api/v1/adventure-game-instances/{game_instance_id}/creatures
-// PUT (document)    /api/v1/adventure-game-instances/{game_instance_id}/creatures/{creature_instance_id}
-// DELETE (document) /api/v1/adventure-game-instances/{game_instance_id}/creatures/{creature_instance_id}
+//
+// Creature instances are created and managed by the game engine and not through the public API.
 
 const (
 	// API Resource Search Path
 	searchManyAdventureGameCreatureInstances = "search-many-adventure-game-creature-instances"
 
 	// API Resource CRUD Paths
-	getManyAdventureGameCreatureInstances  = "get-many-adventure-game-creature-instances"
-	getOneAdventureGameCreatureInstance    = "get-one-adventure-game-creature-instance"
-	createOneAdventureGameCreatureInstance = "create-one-adventure-game-creature-instance"
-	updateOneAdventureGameCreatureInstance = "update-one-adventure-game-creature-instance"
-	deleteOneAdventureGameCreatureInstance = "delete-one-adventure-game-creature-instance"
+	getManyAdventureGameCreatureInstances = "get-many-adventure-game-creature-instances"
+	getOneAdventureGameCreatureInstance   = "get-one-adventure-game-creature-instance"
 )
 
 func adventureGameCreatureInstanceHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error) {
@@ -54,26 +49,28 @@ func adventureGameCreatureInstanceHandlerConfig(l logger.Logger) (map[string]ser
 
 	collectionResponseSchema := jsonschema.SchemaWithReferences{
 		Main: jsonschema.Schema{
-			Location: "api",
+			Location: "api/adventure_game_schema",
 			Name:     "adventure_game_creature_instance.collection.response.schema.json",
 		},
-		References: referenceSchemas,
-	}
-
-	requestSchema := jsonschema.SchemaWithReferences{
-		Main: jsonschema.Schema{
-			Location: "api",
-			Name:     "adventure_game_creature_instance.request.schema.json",
-		},
-		References: referenceSchemas,
+		References: append(referenceSchemas, []jsonschema.Schema{
+			{
+				Location: "api/adventure_game_schema",
+				Name:     "adventure_game_creature_instance.schema.json",
+			},
+		}...),
 	}
 
 	responseSchema := jsonschema.SchemaWithReferences{
 		Main: jsonschema.Schema{
-			Location: "api",
+			Location: "api/adventure_game_schema",
 			Name:     "adventure_game_creature_instance.response.schema.json",
 		},
-		References: referenceSchemas,
+		References: append(referenceSchemas, []jsonschema.Schema{
+			{
+				Location: "api/adventure_game_schema",
+				Name:     "adventure_game_creature_instance.schema.json",
+			},
+		}...),
 	}
 
 	// New Adventure Game Creature Instance API paths
@@ -127,54 +124,6 @@ func adventureGameCreatureInstanceHandlerConfig(l logger.Logger) (map[string]ser
 		},
 	}
 
-	gameCreatureInstanceConfig[createOneAdventureGameCreatureInstance] = server.HandlerConfig{
-		Method:      http.MethodPost,
-		Path:        "/api/v1/adventure-game-instances/:game_instance_id/creature-instances",
-		HandlerFunc: createOneAdventureGameCreatureInstanceHandler,
-		MiddlewareConfig: server.MiddlewareConfig{
-			AuthenTypes: []server.AuthenticationType{
-				server.AuthenticationTypeToken,
-			},
-			ValidateRequestSchema:  requestSchema,
-			ValidateResponseSchema: responseSchema,
-		},
-		DocumentationConfig: server.DocumentationConfig{
-			Document: true,
-			Title:    "Create adventure game creature instance",
-		},
-	}
-
-	gameCreatureInstanceConfig[updateOneAdventureGameCreatureInstance] = server.HandlerConfig{
-		Method:      http.MethodPut,
-		Path:        "/api/v1/adventure-game-instances/:game_instance_id/creature-instances/:creature_instance_id",
-		HandlerFunc: updateOneAdventureGameCreatureInstanceHandler,
-		MiddlewareConfig: server.MiddlewareConfig{
-			AuthenTypes: []server.AuthenticationType{
-				server.AuthenticationTypeToken,
-			},
-			ValidateRequestSchema:  requestSchema,
-			ValidateResponseSchema: responseSchema,
-		},
-		DocumentationConfig: server.DocumentationConfig{
-			Document: true,
-			Title:    "Update adventure game creature instance",
-		},
-	}
-
-	gameCreatureInstanceConfig[deleteOneAdventureGameCreatureInstance] = server.HandlerConfig{
-		Method:      http.MethodDelete,
-		Path:        "/api/v1/adventure-game-instances/:game_instance_id/creature-instances/:creature_instance_id",
-		HandlerFunc: deleteOneAdventureGameCreatureInstanceHandler,
-		MiddlewareConfig: server.MiddlewareConfig{
-			AuthenTypes: []server.AuthenticationType{
-				server.AuthenticationTypeToken,
-			},
-		},
-		DocumentationConfig: server.DocumentationConfig{
-			Document: true,
-			Title:    "Delete adventure game creature instance",
-		},
-	}
 	return gameCreatureInstanceConfig, nil
 }
 
@@ -273,170 +222,6 @@ func getOneAdventureGameCreatureInstanceHandler(w http.ResponseWriter, r *http.R
 	res := mapper.AdventureGameCreatureInstanceRecordToResponse(rec)
 
 	if err = server.WriteResponse(l, w, http.StatusOK, res); err != nil {
-		l.Warn("failed writing response >%v<", err)
-		return err
-	}
-
-	return nil
-}
-
-func createOneAdventureGameCreatureInstanceHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
-	l = logging.LoggerWithFunctionContext(l, packageName, "createOneAdventureGameCreatureInstanceHandler")
-
-	gameInstanceID := pp.ByName("game_instance_id")
-	if gameInstanceID == "" {
-		l.Warn("game instance id is required")
-		return coreerror.NewNotFoundError("game instance", gameInstanceID)
-	}
-
-	var req api.AdventureGameCreatureInstanceRequest
-	if _, err := server.ReadRequest(l, r, &req); err != nil {
-		l.Warn("failed reading request >%v<", err)
-		return err
-	}
-
-	rec, err := mapper.AdventureGameCreatureInstanceRequestToRecord(&req, nil)
-	if err != nil {
-		return err
-	}
-
-	mm := m.(*domain.Domain)
-
-	gameInstanceRec, err := mm.GetGameInstanceRec(gameInstanceID, nil)
-	if err != nil {
-		return err
-	}
-
-	// Set the game ID and game instance ID from game instance record
-	rec.GameID = gameInstanceRec.GameID
-	rec.GameInstanceID = gameInstanceRec.ID
-
-	rec, err = mm.CreateAdventureGameCreatureInstanceRec(rec)
-	if err != nil {
-		l.Warn("failed creating adventure game creature instance record >%v<", err)
-		return err
-	}
-
-	res := mapper.AdventureGameCreatureInstanceRecordToResponse(rec)
-
-	if err = server.WriteResponse(l, w, http.StatusCreated, res); err != nil {
-		l.Warn("failed writing response >%v<", err)
-		return err
-	}
-
-	return nil
-}
-
-func updateOneAdventureGameCreatureInstanceHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
-	l = logging.LoggerWithFunctionContext(l, packageName, "updateOneAdventureGameCreatureInstanceHandler")
-
-	gameInstanceID := pp.ByName("game_instance_id")
-	if gameInstanceID == "" {
-		l.Warn("game instance id is required")
-		return coreerror.NewNotFoundError("game instance", gameInstanceID)
-	}
-
-	creatureInstanceID := pp.ByName("creature_instance_id")
-	if creatureInstanceID == "" {
-		l.Warn("creature instance id is required")
-		return coreerror.NewNotFoundError("creature instance", creatureInstanceID)
-	}
-
-	l.Info("updating adventure game creature instance record with path params >%#v<", pp)
-
-	var req api.AdventureGameCreatureInstanceRequest
-	if _, err := server.ReadRequest(l, r, &req); err != nil {
-		l.Warn("failed reading request >%v<", err)
-		return err
-	}
-
-	mm := m.(*domain.Domain)
-
-	gameInstanceRec, err := mm.GetGameInstanceRec(gameInstanceID, nil)
-	if err != nil {
-		return err
-	}
-
-	rec, err := mm.GetAdventureGameCreatureInstanceRec(creatureInstanceID, nil)
-	if err != nil {
-		return err
-	}
-
-	// Verify the creature instance belongs to the specified game
-	if rec.GameInstanceID != gameInstanceRec.ID {
-		l.Warn("creature instance does not belong to specified game instance >%s< != >%s<", rec.GameInstanceID, gameInstanceRec.ID)
-		return coreerror.NewNotFoundError("creature instance", creatureInstanceID)
-	}
-
-	rec, err = mapper.AdventureGameCreatureInstanceRequestToRecord(&req, rec)
-	if err != nil {
-		return err
-	}
-
-	rec, err = mm.UpdateAdventureGameCreatureInstanceRec(rec)
-	if err != nil {
-		l.Warn("failed updating adventure game creature instance record >%v<", err)
-		return err
-	}
-
-	data := mapper.AdventureGameCreatureInstanceRecordToResponseData(rec)
-
-	res := api.AdventureGameCreatureInstanceResponse{
-		Data: data,
-	}
-
-	l.Info("responding with updated adventure game creature instance record id >%s<", rec.ID)
-
-	if err = server.WriteResponse(l, w, http.StatusOK, res); err != nil {
-		l.Warn("failed writing response >%v<", err)
-		return err
-	}
-
-	return nil
-}
-
-func deleteOneAdventureGameCreatureInstanceHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
-	l = logging.LoggerWithFunctionContext(l, packageName, "deleteOneAdventureGameCreatureInstanceHandler")
-
-	gameInstanceID := pp.ByName("game_instance_id")
-	if gameInstanceID == "" {
-		l.Warn("game instance id is required")
-		return coreerror.NewNotFoundError("game instance", gameInstanceID)
-	}
-
-	creatureInstanceID := pp.ByName("creature_instance_id")
-	if creatureInstanceID == "" {
-		l.Warn("creature instance id is required")
-		return coreerror.NewNotFoundError("creature instance", creatureInstanceID)
-	}
-
-	l.Info("deleting adventure game creature instance record with path params >%#v<", pp)
-
-	mm := m.(*domain.Domain)
-
-	gameInstanceRec, err := mm.GetGameInstanceRec(gameInstanceID, nil)
-	if err != nil {
-		return err
-	}
-
-	// First get the record to verify it belongs to the specified game
-	rec, err := mm.GetAdventureGameCreatureInstanceRec(creatureInstanceID, nil)
-	if err != nil {
-		return err
-	}
-
-	// Verify the creature instance belongs to the specified game
-	if rec.GameInstanceID != gameInstanceRec.ID {
-		l.Warn("creature instance does not belong to specified game instance >%s< != >%s<", rec.GameInstanceID, gameInstanceRec.ID)
-		return coreerror.NewNotFoundError("creature instance", creatureInstanceID)
-	}
-
-	if err := mm.DeleteAdventureGameCreatureInstanceRec(creatureInstanceID); err != nil {
-		l.Warn("failed deleting adventure game creature instance record >%v<", err)
-		return err
-	}
-
-	if err := server.WriteResponse(l, w, http.StatusNoContent, nil); err != nil {
 		l.Warn("failed writing response >%v<", err)
 		return err
 	}

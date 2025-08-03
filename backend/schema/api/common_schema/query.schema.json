@@ -1,0 +1,35 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "http://playbymail.games/schema/common_schema/query.schema.json",
+    "title": "Common Schema Definitions for Query parameters",
+    "$defs": {
+        "page_number": {
+            "default": 1,
+            "description": "If the requested page does not exist, an empty collection is returned.",
+            "example": 2,
+            "minimum": 1,
+            "type": "integer"
+        },
+        "page_size": {
+            "default": 10,
+            "description": "Number of records per page",
+            "example": 20,
+            "maximum": 250,
+            "minimum": 1,
+            "type": "integer"
+        },
+        "sort_column[]": {
+            "description": "Specify the resource property name to sort the API response in ascending order. To sort in descending order, prefix the resource property name with a `-`.",
+            "examples": [
+                "created_at",
+                "-updated_at"
+            ],
+            "items": {
+                "minLength": 1,
+                "type": "string"
+            },
+            "minItems": 1,
+            "type": "array"
+        }
+    }
+}

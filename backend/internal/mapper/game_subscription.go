@@ -8,13 +8,13 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/server"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
-	"gitlab.com/alienspaces/playbymail/schema/api"
+	"gitlab.com/alienspaces/playbymail/schema/api/game_schema"
 )
 
 func GameSubscriptionRequestToRecord(l logger.Logger, r *http.Request, rec *game_record.GameSubscription) (*game_record.GameSubscription, error) {
 	l.Debug("mapping game_subscription request to record")
 
-	var req api.GameSubscriptionRequest
+	var req game_schema.GameSubscriptionRequest
 	_, err := server.ReadRequest(l, r, &req)
 	if err != nil {
 		return nil, err
@@ -36,9 +36,9 @@ func GameSubscriptionRequestToRecord(l logger.Logger, r *http.Request, rec *game
 	return rec, nil
 }
 
-func GameSubscriptionRecordToResponseData(l logger.Logger, rec *game_record.GameSubscription) (api.GameSubscriptionResponseData, error) {
+func GameSubscriptionRecordToResponseData(l logger.Logger, rec *game_record.GameSubscription) (game_schema.GameSubscriptionResponseData, error) {
 	l.Debug("mapping game_subscription record to response data")
-	data := api.GameSubscriptionResponseData{
+	data := game_schema.GameSubscriptionResponseData{
 		ID:               rec.ID,
 		GameID:           rec.GameID,
 		AccountID:        rec.AccountID,
@@ -50,26 +50,26 @@ func GameSubscriptionRecordToResponseData(l logger.Logger, rec *game_record.Game
 	return data, nil
 }
 
-func GameSubscriptionRecordToResponse(l logger.Logger, rec *game_record.GameSubscription) (api.GameSubscriptionResponse, error) {
+func GameSubscriptionRecordToResponse(l logger.Logger, rec *game_record.GameSubscription) (game_schema.GameSubscriptionResponse, error) {
 	data, err := GameSubscriptionRecordToResponseData(l, rec)
 	if err != nil {
-		return api.GameSubscriptionResponse{}, err
+		return game_schema.GameSubscriptionResponse{}, err
 	}
-	return api.GameSubscriptionResponse{
+	return game_schema.GameSubscriptionResponse{
 		Data: &data,
 	}, nil
 }
 
-func GameSubscriptionRecordsToCollectionResponse(l logger.Logger, recs []*game_record.GameSubscription) (api.GameSubscriptionCollectionResponse, error) {
-	data := []*api.GameSubscriptionResponseData{}
+func GameSubscriptionRecordsToCollectionResponse(l logger.Logger, recs []*game_record.GameSubscription) (game_schema.GameSubscriptionCollectionResponse, error) {
+	data := []*game_schema.GameSubscriptionResponseData{}
 	for _, rec := range recs {
 		d, err := GameSubscriptionRecordToResponseData(l, rec)
 		if err != nil {
-			return api.GameSubscriptionCollectionResponse{}, err
+			return game_schema.GameSubscriptionCollectionResponse{}, err
 		}
 		data = append(data, &d)
 	}
-	return api.GameSubscriptionCollectionResponse{
+	return game_schema.GameSubscriptionCollectionResponse{
 		Data: data,
 	}, nil
 }

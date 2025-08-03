@@ -1,6 +1,6 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
-    "$id": "http://playbymail.dev/schema/turn_sheets/print_layouts/adventure_location_choice.schema.json",
+    "$id": "http://playbymail.games/schema/turn_sheets/print_layouts/adventure_location_choice.schema.json",
     "title": "AdventureLocationChoiceLayout",
     "type": "object",
     "properties": {

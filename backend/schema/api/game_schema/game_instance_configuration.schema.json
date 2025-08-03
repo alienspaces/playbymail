@@ -1,0 +1,68 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "http://playbymail.games/schema/game_schema/game_instance_configuration.schema.json",
+    "title": "GameInstanceConfiguration",
+    "type": "object",
+    "properties": {
+        "boolean_value": {
+            "type": [
+                "boolean",
+                "null"
+            ]
+        },
+        "config_key": {
+            "maxLength": 100,
+            "type": "string"
+        },
+        "created_at": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/created_at"
+        },
+        "deleted_at": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/updated_at"
+        },
+        "game_instance_id": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
+        },
+        "id": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
+        },
+        "integer_value": {
+            "type": [
+                "integer",
+                "null"
+            ]
+        },
+        "json_value": {
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "string_value": {
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "updated_at": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/updated_at"
+        },
+        "value_type": {
+            "enum": [
+                "string",
+                "integer",
+                "boolean",
+                "json"
+            ],
+            "type": "string"
+        }
+    },
+    "required": [
+        "id",
+        "game_instance_id",
+        "config_key",
+        "value_type",
+        "created_at"
+    ],
+    "additionalProperties": false
+}

@@ -1,0 +1,31 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "http://playbymail.games/schema/adventure_game_schema/adventure_game_location_link.request.schema.json",
+    "title": "AdventureGameLocationLinkRequest",
+    "type": "object",
+    "properties": {
+        "name": {
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+        },
+        "description": {
+            "maxLength": 255,
+            "minLength": 1,
+            "type": "string"
+        },
+        "from_adventure_game_location_id": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
+        },
+        "to_adventure_game_location_id": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
+        }
+    },
+    "required": [
+        "name",
+        "description",
+        "from_adventure_game_location_id",
+        "to_adventure_game_location_id"
+    ],
+    "additionalProperties": false
+}

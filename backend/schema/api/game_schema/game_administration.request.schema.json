@@ -1,0 +1,26 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "http://playbymail.games/schema/game_schema/game_administration.request.schema.json",
+    "title": "GameAdministrationRequest",
+    "type": "object",
+    "properties": {
+        "account_id": {
+            "format": "uuid",
+            "type": "string"
+        },
+        "game_id": {
+            "format": "uuid",
+            "type": "string"
+        },
+        "granted_by_account_id": {
+            "format": "uuid",
+            "type": "string"
+        }
+    },
+    "required": [
+        "game_id",
+        "account_id",
+        "granted_by_account_id"
+    ],
+    "additionalProperties": false
+}

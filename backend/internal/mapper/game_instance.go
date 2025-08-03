@@ -4,11 +4,11 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/nulltime"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
-	"gitlab.com/alienspaces/playbymail/schema/api"
+	"gitlab.com/alienspaces/playbymail/schema/api/game_schema"
 )
 
-func GameInstanceRecordToResponseData(l logger.Logger, rec *game_record.GameInstance) (api.GameInstance, error) {
-	data := api.GameInstance{
+func GameInstanceRecordToResponseData(l logger.Logger, rec *game_record.GameInstance) (game_schema.GameInstance, error) {
+	data := game_schema.GameInstance{
 		ID:                  rec.ID,
 		GameID:              rec.GameID,
 		Status:              rec.Status,
@@ -26,31 +26,31 @@ func GameInstanceRecordToResponseData(l logger.Logger, rec *game_record.GameInst
 	return data, nil
 }
 
-func GameInstanceRecordToResponse(l logger.Logger, rec *game_record.GameInstance) (api.GameInstanceResponse, error) {
+func GameInstanceRecordToResponse(l logger.Logger, rec *game_record.GameInstance) (game_schema.GameInstanceResponse, error) {
 	data, err := GameInstanceRecordToResponseData(l, rec)
 	if err != nil {
-		return api.GameInstanceResponse{}, err
+		return game_schema.GameInstanceResponse{}, err
 	}
-	return api.GameInstanceResponse{
+	return game_schema.GameInstanceResponse{
 		Data: &data,
 	}, nil
 }
 
-func GameInstanceRecordsToCollectionResponse(l logger.Logger, recs []*game_record.GameInstance) (api.GameInstanceCollectionResponse, error) {
-	data := []*api.GameInstance{}
+func GameInstanceRecordsToCollectionResponse(l logger.Logger, recs []*game_record.GameInstance) (game_schema.GameInstanceCollectionResponse, error) {
+	data := []*game_schema.GameInstance{}
 	for _, rec := range recs {
 		d, err := GameInstanceRecordToResponseData(l, rec)
 		if err != nil {
-			return api.GameInstanceCollectionResponse{}, err
+			return game_schema.GameInstanceCollectionResponse{}, err
 		}
 		data = append(data, &d)
 	}
-	return api.GameInstanceCollectionResponse{
+	return game_schema.GameInstanceCollectionResponse{
 		Data: data,
 	}, nil
 }
 
-func GameInstanceRequestToRecord(l logger.Logger, req *api.GameInstanceRequest, rec *game_record.GameInstance) (*game_record.GameInstance, error) {
+func GameInstanceRequestToRecord(l logger.Logger, req *game_schema.GameInstanceRequest, rec *game_record.GameInstance) (*game_record.GameInstance, error) {
 	if req.GameID != "" {
 		rec.GameID = req.GameID
 	}

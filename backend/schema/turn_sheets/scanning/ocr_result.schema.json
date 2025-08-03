@@ -1,6 +1,6 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
-    "$id": "http://playbymail.dev/schema/turn_sheets/scanning/ocr_result.schema.json",
+    "$id": "http://playbymail.games/schema/turn_sheets/scanning/ocr_result.schema.json",
     "title": "OCRResult",
     "type": "object",
     "properties": {

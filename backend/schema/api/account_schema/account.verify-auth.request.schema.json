@@ -1,0 +1,19 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "http://playbymail.games/schema/account_schema/account.verify-auth.request.schema.json",
+    "title": "VerifyAuthRequest",
+    "type": "object",
+    "properties": {
+        "email": {
+            "format": "email",
+            "type": "string"
+        },
+        "verification_token": {
+            "type": "string"
+        }
+    },
+    "required": [
+        "email",
+        "verification_token"
+    ]
+}

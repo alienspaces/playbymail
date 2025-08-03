@@ -3,7 +3,6 @@ package adventure_game
 import (
 	"net/http"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/jackc/pgx/v5"
 	"github.com/julienschmidt/httprouter"
 	"github.com/riverqueue/river"
@@ -18,7 +17,6 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/mapper"
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 	"gitlab.com/alienspaces/playbymail/internal/utils/logging"
-	"gitlab.com/alienspaces/playbymail/schema/api"
 )
 
 // API Resource Search Path
@@ -29,20 +27,16 @@ import (
 //
 // GET (collection)  /api/v1/adventure-game-instances/{game_instance_id}/location-instances
 // GET (document)    /api/v1/adventure-game-instances/{game_instance_id}/location-instances/{location_instance_id}
-// POST (document)   /api/v1/adventure-game-instances/{game_instance_id}/location-instances
-// PUT (document)    /api/v1/adventure-game-instances/{game_instance_id}/location-instances/{location_instance_id}
-// DELETE (document) /api/v1/adventure-game-instances/{game_instance_id}/location-instances/{location_instance_id}
+//
+// Game location instances are created and managed by the game engine and not through the public API.
 
 const (
 	// API Resource Search Path
 	SearchManyAdventureGameLocationInstances = "search-many-adventure-game-location-instances"
 
 	// API Resource CRUD Paths
-	GetManyAdventureGameLocationInstances  = "get-many-adventure-game-location-instances"
-	GetOneAdventureGameLocationInstance    = "get-one-adventure-game-location-instance"
-	CreateOneAdventureGameLocationInstance = "create-one-adventure-game-location-instance"
-	UpdateOneAdventureGameLocationInstance = "update-one-adventure-game-location-instance"
-	DeleteOneAdventureGameLocationInstance = "delete-one-adventure-game-location-instance"
+	GetManyAdventureGameLocationInstances = "get-many-adventure-game-location-instances"
+	GetOneAdventureGameLocationInstance   = "get-one-adventure-game-location-instance"
 )
 
 func adventureGameLocationInstanceHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error) {
@@ -54,26 +48,28 @@ func adventureGameLocationInstanceHandlerConfig(l logger.Logger) (map[string]ser
 
 	collectionResponseSchema := jsonschema.SchemaWithReferences{
 		Main: jsonschema.Schema{
-			Location: "api",
+			Location: "api/adventure_game_schema",
 			Name:     "adventure_game_location_instance.collection.response.schema.json",
 		},
-		References: referenceSchemas,
-	}
-
-	requestSchema := jsonschema.SchemaWithReferences{
-		Main: jsonschema.Schema{
-			Location: "api",
-			Name:     "adventure_game_location_instance.request.schema.json",
-		},
-		References: referenceSchemas,
+		References: append(referenceSchemas, []jsonschema.Schema{
+			{
+				Location: "api/adventure_game_schema",
+				Name:     "adventure_game_location_instance.schema.json",
+			},
+		}...),
 	}
 
 	responseSchema := jsonschema.SchemaWithReferences{
 		Main: jsonschema.Schema{
-			Location: "api",
+			Location: "api/adventure_game_schema",
 			Name:     "adventure_game_location_instance.response.schema.json",
 		},
-		References: referenceSchemas,
+		References: append(referenceSchemas, []jsonschema.Schema{
+			{
+				Location: "api/adventure_game_schema",
+				Name:     "adventure_game_location_instance.schema.json",
+			},
+		}...),
 	}
 
 	// New Adventure Game Location Instance API paths
@@ -124,55 +120,6 @@ func adventureGameLocationInstanceHandlerConfig(l logger.Logger) (map[string]ser
 		DocumentationConfig: server.DocumentationConfig{
 			Document: true,
 			Title:    "Get adventure game location instance",
-		},
-	}
-
-	gameLocationInstanceConfig[CreateOneAdventureGameLocationInstance] = server.HandlerConfig{
-		Method:      http.MethodPost,
-		Path:        "/api/v1/adventure-game-instances/:game_instance_id/location-instances",
-		HandlerFunc: createOneAdventureGameLocationInstanceHandler,
-		MiddlewareConfig: server.MiddlewareConfig{
-			AuthenTypes: []server.AuthenticationType{
-				server.AuthenticationTypeToken,
-			},
-			ValidateRequestSchema:  requestSchema,
-			ValidateResponseSchema: responseSchema,
-		},
-		DocumentationConfig: server.DocumentationConfig{
-			Document: true,
-			Title:    "Create adventure game location instance",
-		},
-	}
-
-	gameLocationInstanceConfig[UpdateOneAdventureGameLocationInstance] = server.HandlerConfig{
-		Method:      http.MethodPut,
-		Path:        "/api/v1/adventure-game-instances/:game_instance_id/location-instances/:location_instance_id",
-		HandlerFunc: updateOneAdventureGameLocationInstanceHandler,
-		MiddlewareConfig: server.MiddlewareConfig{
-			AuthenTypes: []server.AuthenticationType{
-				server.AuthenticationTypeToken,
-			},
-			ValidateRequestSchema:  requestSchema,
-			ValidateResponseSchema: responseSchema,
-		},
-		DocumentationConfig: server.DocumentationConfig{
-			Document: true,
-			Title:    "Update adventure game location instance",
-		},
-	}
-
-	gameLocationInstanceConfig[DeleteOneAdventureGameLocationInstance] = server.HandlerConfig{
-		Method:      http.MethodDelete,
-		Path:        "/api/v1/adventure-game-instances/:game_instance_id/location-instances/:location_instance_id",
-		HandlerFunc: deleteOneAdventureGameLocationInstanceHandler,
-		MiddlewareConfig: server.MiddlewareConfig{
-			AuthenTypes: []server.AuthenticationType{
-				server.AuthenticationTypeToken,
-			},
-		},
-		DocumentationConfig: server.DocumentationConfig{
-			Document: true,
-			Title:    "Delete adventure game location instance",
 		},
 	}
 
@@ -283,178 +230,6 @@ func getOneAdventureGameLocationInstanceHandler(w http.ResponseWriter, r *http.R
 	}
 
 	if err = server.WriteResponse(l, w, http.StatusOK, res); err != nil {
-		l.Warn("failed writing response >%v<", err)
-		return err
-	}
-
-	return nil
-}
-
-func createOneAdventureGameLocationInstanceHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
-	l = logging.LoggerWithFunctionContext(l, packageName, "createOneAdventureGameLocationInstanceHandler")
-
-	gameInstanceID := pp.ByName("game_instance_id")
-	if gameInstanceID == "" {
-		l.Warn("game instance id is required")
-		return coreerror.NewNotFoundError("game instance", gameInstanceID)
-	}
-
-	var req api.AdventureGameLocationInstanceRequest
-	if _, err := server.ReadRequest(l, r, &req); err != nil {
-		l.Warn("failed reading request >%v<", err)
-		return err
-	}
-
-	rec, err := mapper.AdventureGameLocationInstanceRequestToRecord(l, &req, &adventure_game_record.AdventureGameLocationInstance{})
-	if err != nil {
-		return err
-	}
-
-	mm := m.(*domain.Domain)
-
-	gameInstanceRec, err := mm.GetGameInstanceRec(gameInstanceID, nil)
-	if err != nil {
-		return err
-	}
-
-	// Set the game ID and game instance ID from game instance record
-	rec.GameID = gameInstanceRec.GameID
-	rec.GameInstanceID = gameInstanceRec.ID
-
-	l.Info("creating adventure game location instance record >%s<", spew.Sdump(rec))
-
-	rec, err = mm.CreateAdventureGameLocationInstanceRec(rec)
-	if err != nil {
-		l.Warn("failed creating adventure game location instance record >%v<", err)
-		return err
-	}
-
-	res, err := mapper.AdventureGameLocationInstanceRecordToResponse(l, rec)
-	if err != nil {
-		return err
-	}
-
-	if err = server.WriteResponse(l, w, http.StatusCreated, res); err != nil {
-		l.Warn("failed writing response >%v<", err)
-		return err
-	}
-
-	return nil
-}
-
-func updateOneAdventureGameLocationInstanceHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
-	l = logging.LoggerWithFunctionContext(l, packageName, "updateOneAdventureGameLocationInstanceHandler")
-
-	gameInstanceID := pp.ByName("game_instance_id")
-	if gameInstanceID == "" {
-		l.Warn("game instance id is required")
-		return coreerror.NewNotFoundError("game instance", gameInstanceID)
-	}
-
-	locationInstanceID := pp.ByName("location_instance_id")
-	if locationInstanceID == "" {
-		l.Warn("location instance id is required")
-		return coreerror.NewNotFoundError("location instance", locationInstanceID)
-	}
-
-	l.Info("updating adventure game location instance record with path params >%#v<", pp)
-
-	var req api.AdventureGameLocationInstanceRequest
-	if _, err := server.ReadRequest(l, r, &req); err != nil {
-		l.Warn("failed reading request >%v<", err)
-		return err
-	}
-
-	mm := m.(*domain.Domain)
-
-	gameInstanceRec, err := mm.GetGameInstanceRec(gameInstanceID, nil)
-	if err != nil {
-		return err
-	}
-
-	rec, err := mm.GetAdventureGameLocationInstanceRec(locationInstanceID, nil)
-	if err != nil {
-		return err
-	}
-
-	// Verify the location instance belongs to the specified game
-	if rec.GameInstanceID != gameInstanceRec.ID {
-		l.Warn("location instance does not belong to specified game instance >%s< != >%s<", rec.GameInstanceID, gameInstanceRec.ID)
-		return coreerror.NewNotFoundError("location instance", locationInstanceID)
-	}
-
-	rec, err = mapper.AdventureGameLocationInstanceRequestToRecord(l, &req, rec)
-	if err != nil {
-		return err
-	}
-
-	rec, err = mm.UpdateAdventureGameLocationInstanceRec(rec)
-	if err != nil {
-		l.Warn("failed updating adventure game location instance record >%v<", err)
-		return err
-	}
-
-	data, err := mapper.AdventureGameLocationInstanceRecordToResponseData(l, rec)
-	if err != nil {
-		return err
-	}
-
-	res := api.AdventureGameLocationInstanceResponse{
-		Data: &data,
-	}
-
-	l.Info("responding with updated adventure game location instance record id >%s<", rec.ID)
-
-	if err = server.WriteResponse(l, w, http.StatusOK, res); err != nil {
-		l.Warn("failed writing response >%v<", err)
-		return err
-	}
-
-	return nil
-}
-
-func deleteOneAdventureGameLocationInstanceHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
-	l = logging.LoggerWithFunctionContext(l, packageName, "deleteOneAdventureGameLocationInstanceHandler")
-
-	gameInstanceID := pp.ByName("game_instance_id")
-	if gameInstanceID == "" {
-		l.Warn("game instance id is required")
-		return coreerror.NewNotFoundError("game instance", gameInstanceID)
-	}
-
-	locationInstanceID := pp.ByName("location_instance_id")
-	if locationInstanceID == "" {
-		l.Warn("location instance id is required")
-		return coreerror.NewNotFoundError("location instance", locationInstanceID)
-	}
-
-	l.Info("deleting adventure game location instance record with path params >%#v<", pp)
-
-	mm := m.(*domain.Domain)
-
-	gameInstanceRec, err := mm.GetGameInstanceRec(gameInstanceID, nil)
-	if err != nil {
-		return err
-	}
-
-	// First get the record to verify it belongs to the specified game
-	rec, err := mm.GetAdventureGameLocationInstanceRec(locationInstanceID, nil)
-	if err != nil {
-		return err
-	}
-
-	// Verify the location instance belongs to the specified game
-	if rec.GameInstanceID != gameInstanceRec.ID {
-		l.Warn("location instance does not belong to specified game instance >%s< != >%s<", rec.GameInstanceID, gameInstanceRec.ID)
-		return coreerror.NewNotFoundError("location instance", locationInstanceID)
-	}
-
-	if err := mm.DeleteAdventureGameLocationInstanceRec(locationInstanceID); err != nil {
-		l.Warn("failed deleting adventure game location instance record >%v<", err)
-		return err
-	}
-
-	if err := server.WriteResponse(l, w, http.StatusNoContent, nil); err != nil {
 		l.Warn("failed writing response >%v<", err)
 		return err
 	}

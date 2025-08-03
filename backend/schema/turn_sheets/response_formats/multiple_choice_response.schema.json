@@ -1,6 +1,6 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
-    "$id": "http://playbymail.dev/schema/turn_sheets/response_formats/multiple_choice_response.schema.json",
+    "$id": "http://playbymail.games/schema/turn_sheets/response_formats/multiple_choice_response.schema.json",
     "title": "MultipleChoiceResponse",
     "type": "object",
     "properties": {

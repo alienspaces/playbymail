@@ -2,33 +2,16 @@ package mapper
 
 import (
 	"gitlab.com/alienspaces/playbymail/core/nulltime"
-	"gitlab.com/alienspaces/playbymail/schema/api"
+	"gitlab.com/alienspaces/playbymail/schema/api/adventure_game_schema"
 
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 )
 
-func AdventureGameCreatureInstanceRequestToRecord(req *api.AdventureGameCreatureInstanceRequest, rec *adventure_game_record.AdventureGameCreatureInstance) (*adventure_game_record.AdventureGameCreatureInstance, error) {
-	if req == nil {
-		return nil, nil
-	}
-
-	health := 0
-	if req.IsAlive {
-		health = 100 // Default health value when alive
-	}
-
-	rec.AdventureGameCreatureID = req.GameCreatureID
-	rec.AdventureGameLocationInstanceID = req.GameLocationInstanceID
-	rec.Health = health
-
-	return rec, nil
-}
-
-func AdventureGameCreatureInstanceRecordToResponseData(rec *adventure_game_record.AdventureGameCreatureInstance) *api.AdventureGameCreatureInstanceResponseData {
+func AdventureGameCreatureInstanceRecordToResponseData(rec *adventure_game_record.AdventureGameCreatureInstance) *adventure_game_schema.AdventureGameCreatureInstanceResponseData {
 	if rec == nil {
 		return nil
 	}
-	return &api.AdventureGameCreatureInstanceResponseData{
+	return &adventure_game_schema.AdventureGameCreatureInstanceResponseData{
 		ID:                     rec.ID,
 		GameID:                 rec.GameID,
 		GameCreatureID:         rec.AdventureGameCreatureID,
@@ -41,18 +24,18 @@ func AdventureGameCreatureInstanceRecordToResponseData(rec *adventure_game_recor
 	}
 }
 
-func AdventureGameCreatureInstanceRecordToResponse(rec *adventure_game_record.AdventureGameCreatureInstance) *api.AdventureGameCreatureInstanceResponse {
-	return &api.AdventureGameCreatureInstanceResponse{
+func AdventureGameCreatureInstanceRecordToResponse(rec *adventure_game_record.AdventureGameCreatureInstance) *adventure_game_schema.AdventureGameCreatureInstanceResponse {
+	return &adventure_game_schema.AdventureGameCreatureInstanceResponse{
 		Data: AdventureGameCreatureInstanceRecordToResponseData(rec),
 	}
 }
 
-func AdventureGameCreatureInstanceRecordsToCollectionResponse(recs []*adventure_game_record.AdventureGameCreatureInstance) *api.AdventureGameCreatureInstanceCollectionResponse {
-	data := []*api.AdventureGameCreatureInstanceResponseData{}
+func AdventureGameCreatureInstanceRecordsToCollectionResponse(recs []*adventure_game_record.AdventureGameCreatureInstance) *adventure_game_schema.AdventureGameCreatureInstanceCollectionResponse {
+	data := []*adventure_game_schema.AdventureGameCreatureInstanceResponseData{}
 	for _, rec := range recs {
 		data = append(data, AdventureGameCreatureInstanceRecordToResponseData(rec))
 	}
-	return &api.AdventureGameCreatureInstanceCollectionResponse{
+	return &adventure_game_schema.AdventureGameCreatureInstanceCollectionResponse{
 		Data: data,
 	}
 }

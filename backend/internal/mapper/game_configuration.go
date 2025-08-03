@@ -9,13 +9,13 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/server"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
-	"gitlab.com/alienspaces/playbymail/schema/api"
+	"gitlab.com/alienspaces/playbymail/schema/api/game_schema"
 )
 
 func GameConfigurationRequestToRecord(l logger.Logger, r *http.Request, rec *game_record.GameConfiguration) (*game_record.GameConfiguration, error) {
 	l.Debug("mapping game configuration request to record")
 
-	var req api.GameConfigurationRequest
+	var req game_schema.GameConfigurationRequest
 	_, err := server.ReadRequest(l, r, &req)
 	if err != nil {
 		return nil, err
@@ -71,10 +71,10 @@ func GameConfigurationRequestToRecord(l logger.Logger, r *http.Request, rec *gam
 	return rec, nil
 }
 
-func GameConfigurationRecordToResponseData(l logger.Logger, rec *game_record.GameConfiguration) (api.GameConfiguration, error) {
+func GameConfigurationRecordToResponseData(l logger.Logger, rec *game_record.GameConfiguration) (game_schema.GameConfiguration, error) {
 	l.Debug("mapping game configuration record to response data")
 
-	data := api.GameConfiguration{
+	data := game_schema.GameConfiguration{
 		ID:              rec.ID,
 		GameType:        rec.GameType,
 		ConfigKey:       rec.ConfigKey,
@@ -104,32 +104,32 @@ func GameConfigurationRecordToResponseData(l logger.Logger, rec *game_record.Gam
 	return data, nil
 }
 
-func GameConfigurationRecordToResponse(l logger.Logger, rec *game_record.GameConfiguration) (api.GameConfigurationResponse, error) {
+func GameConfigurationRecordToResponse(l logger.Logger, rec *game_record.GameConfiguration) (game_schema.GameConfigurationResponse, error) {
 	data, err := GameConfigurationRecordToResponseData(l, rec)
 	if err != nil {
-		return api.GameConfigurationResponse{}, err
+		return game_schema.GameConfigurationResponse{}, err
 	}
-	return api.GameConfigurationResponse{
+	return game_schema.GameConfigurationResponse{
 		Data: &data,
 	}, nil
 }
 
-func GameConfigurationRecordsToCollectionResponse(l logger.Logger, recs []*game_record.GameConfiguration) (api.GameConfigurationCollectionResponse, error) {
-	data := []*api.GameConfiguration{}
+func GameConfigurationRecordsToCollectionResponse(l logger.Logger, recs []*game_record.GameConfiguration) (game_schema.GameConfigurationCollectionResponse, error) {
+	data := []*game_schema.GameConfiguration{}
 	for _, rec := range recs {
 		d, err := GameConfigurationRecordToResponseData(l, rec)
 		if err != nil {
-			return api.GameConfigurationCollectionResponse{}, err
+			return game_schema.GameConfigurationCollectionResponse{}, err
 		}
 		data = append(data, &d)
 	}
-	return api.GameConfigurationCollectionResponse{
+	return game_schema.GameConfigurationCollectionResponse{
 		Data: data,
 	}, nil
 }
 
 // Convenience functions for the handler
-func MapGameConfigurationRequestToRecord(req *api.GameConfigurationRequest) *game_record.GameConfiguration {
+func MapGameConfigurationRequestToRecord(req *game_schema.GameConfigurationRequest) *game_record.GameConfiguration {
 	rec := &game_record.GameConfiguration{}
 	rec.GameType = req.GameType
 	rec.ConfigKey = req.ConfigKey
@@ -154,8 +154,8 @@ func MapGameConfigurationRequestToRecord(req *api.GameConfigurationRequest) *gam
 	return rec
 }
 
-func MapGameConfigurationResponse(rec *game_record.GameConfiguration) *api.GameConfigurationResponse {
-	data := api.GameConfiguration{
+func MapGameConfigurationResponse(rec *game_record.GameConfiguration) *game_schema.GameConfigurationResponse {
+	data := game_schema.GameConfiguration{
 		ID:              rec.ID,
 		GameType:        rec.GameType,
 		ConfigKey:       rec.ConfigKey,
@@ -182,15 +182,15 @@ func MapGameConfigurationResponse(rec *game_record.GameConfiguration) *api.GameC
 		data.ValidationRules = &rec.ValidationRules.String
 	}
 
-	return &api.GameConfigurationResponse{
+	return &game_schema.GameConfigurationResponse{
 		Data: &data,
 	}
 }
 
-func MapGameConfigurationCollectionResponse(recs []*game_record.GameConfiguration) *api.GameConfigurationCollectionResponse {
-	data := []*api.GameConfiguration{}
+func MapGameConfigurationCollectionResponse(recs []*game_record.GameConfiguration) *game_schema.GameConfigurationCollectionResponse {
+	data := []*game_schema.GameConfiguration{}
 	for _, rec := range recs {
-		d := api.GameConfiguration{
+		d := game_schema.GameConfiguration{
 			ID:              rec.ID,
 			GameType:        rec.GameType,
 			ConfigKey:       rec.ConfigKey,
@@ -219,7 +219,7 @@ func MapGameConfigurationCollectionResponse(recs []*game_record.GameConfiguratio
 
 		data = append(data, &d)
 	}
-	return &api.GameConfigurationCollectionResponse{
+	return &game_schema.GameConfigurationCollectionResponse{
 		Data: data,
 	}
 }

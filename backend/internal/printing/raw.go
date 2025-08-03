@@ -22,13 +22,13 @@ func NewRawPrinter(device Device) *RawPrinter {
 
 // Connect establishes a raw TCP connection to the printer
 func (p *RawPrinter) Connect(ctx context.Context, device Device) error {
-	conn, err := net.DialTimeout("tcp", 
-		fmt.Sprintf("%s:%d", device.Host, device.Port), 
+	conn, err := net.DialTimeout("tcp",
+		fmt.Sprintf("%s:%d", device.Host, device.Port),
 		device.Timeout)
 	if err != nil {
 		return fmt.Errorf("failed to connect to printer: %w", err)
 	}
-	
+
 	p.conn = conn
 	return nil
 }
@@ -46,13 +46,13 @@ func (p *RawPrinter) GetStatus() (*PrinterStatus, error) {
 	if p.conn == nil {
 		return nil, fmt.Errorf("not connected to printer")
 	}
-	
+
 	// Send status query command
 	// This would send printer-specific commands
 	return &PrinterStatus{
-		Name:  "Raw TCP Printer",
-		State: "idle",
-		Jobs:  0,
+		Name:         "Raw TCP Printer",
+		State:        "idle",
+		Jobs:         0,
 		Capabilities: []string{"print"},
 	}, nil
 }
@@ -67,14 +67,14 @@ func (p *RawPrinter) Print(ctx context.Context, data []byte, options PrintOption
 	if p.conn == nil {
 		return fmt.Errorf("not connected to printer")
 	}
-	
+
 	// Send raw data to printer
 	// This might need printer-specific formatting
 	_, err := p.conn.Write(data)
 	if err != nil {
 		return fmt.Errorf("failed to send data to printer: %w", err)
 	}
-	
+
 	return nil
 }
 
@@ -120,8 +120,8 @@ func (p *RawPrinter) GetSupplies() ([]Supply, error) {
 }
 
 // GetConfiguration returns printer configuration
-func (p *RawPrinter) GetConfiguration() (map[string]interface{}, error) {
-	return map[string]interface{}{
+func (p *RawPrinter) GetConfiguration() (map[string]any, error) {
+	return map[string]any{
 		"protocol": "raw",
 		"host":     p.device.Host,
 		"port":     p.device.Port,
@@ -139,4 +139,4 @@ func (p *RawPrinter) Discover() ([]Device, error) {
 			Timeout:  p.device.Timeout,
 		},
 	}, nil
-} 
+}

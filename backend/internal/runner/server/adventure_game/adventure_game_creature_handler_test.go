@@ -11,7 +11,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/runner/server/adventure_game"
 	"gitlab.com/alienspaces/playbymail/internal/utils/deps"
 	"gitlab.com/alienspaces/playbymail/internal/utils/testutil"
-	"gitlab.com/alienspaces/playbymail/schema/api"
+	"gitlab.com/alienspaces/playbymail/schema/api/adventure_game_schema"
 )
 
 func Test_gameCreatureHandler(t *testing.T) {
@@ -32,8 +32,8 @@ func Test_gameCreatureHandler(t *testing.T) {
 	creatureRec, err := th.Data.GetGameCreatureRecByRef(harness.GameCreatureOneRef)
 	require.NoError(t, err, "GetGameCreatureRecByRef returns without error")
 
-	testCaseCollectionResponseDecoder := testutil.TestCaseResponseDecoderGeneric[api.AdventureGameCreatureCollectionResponse]
-	testCaseResponseDecoder := testutil.TestCaseResponseDecoderGeneric[api.AdventureGameCreatureResponse]
+	testCaseCollectionResponseDecoder := testutil.TestCaseResponseDecoderGeneric[adventure_game_schema.AdventureGameCreatureCollectionResponse]
+	testCaseResponseDecoder := testutil.TestCaseResponseDecoderGeneric[adventure_game_schema.AdventureGameCreatureResponse]
 
 	testCases := []struct {
 		testutil.TestCase
@@ -71,7 +71,7 @@ func Test_gameCreatureHandler(t *testing.T) {
 					}
 				},
 				RequestBody: func(d harness.Data) any {
-					return api.AdventureGameCreatureRequest{
+					return adventure_game_schema.AdventureGameCreatureRequest{
 						Name: "Test Creature",
 					}
 				},

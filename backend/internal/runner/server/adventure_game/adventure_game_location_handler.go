@@ -17,7 +17,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/mapper"
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 	"gitlab.com/alienspaces/playbymail/internal/utils/logging"
-	"gitlab.com/alienspaces/playbymail/schema/api"
+	"gitlab.com/alienspaces/playbymail/schema/api/adventure_game_schema"
 )
 
 // API Resource Search Path
@@ -53,15 +53,20 @@ func adventureGameLocationHandlerConfig(l logger.Logger) (map[string]server.Hand
 
 	collectionResponseSchema := jsonschema.SchemaWithReferences{
 		Main: jsonschema.Schema{
-			Location: "api",
+			Location: "api/adventure_game_schema",
 			Name:     "adventure_game_location.collection.response.schema.json",
 		},
-		References: referenceSchemas,
+		References: append(referenceSchemas, []jsonschema.Schema{
+			{
+				Location: "api/adventure_game_schema",
+				Name:     "adventure_game_location.schema.json",
+			},
+		}...),
 	}
 
 	requestSchema := jsonschema.SchemaWithReferences{
 		Main: jsonschema.Schema{
-			Location: "api",
+			Location: "api/adventure_game_schema",
 			Name:     "adventure_game_location.request.schema.json",
 		},
 		References: referenceSchemas,
@@ -69,10 +74,15 @@ func adventureGameLocationHandlerConfig(l logger.Logger) (map[string]server.Hand
 
 	responseSchema := jsonschema.SchemaWithReferences{
 		Main: jsonschema.Schema{
-			Location: "api",
+			Location: "api/adventure_game_schema",
 			Name:     "adventure_game_location.response.schema.json",
 		},
-		References: referenceSchemas,
+		References: append(referenceSchemas, []jsonschema.Schema{
+			{
+				Location: "api/adventure_game_schema",
+				Name:     "adventure_game_location.schema.json",
+			},
+		}...),
 	}
 
 	// New Adventure Game Location API paths
@@ -283,7 +293,7 @@ func createOneAdventureGameLocationHandler(w http.ResponseWriter, r *http.Reques
 		return coreerror.NewNotFoundError("game", gameID)
 	}
 
-	var req api.AdventureGameLocationRequest
+	var req adventure_game_schema.AdventureGameLocationRequest
 	if _, err := server.ReadRequest(l, r, &req); err != nil {
 		l.Warn("failed reading request >%v<", err)
 		return err
@@ -335,7 +345,7 @@ func updateOneAdventureGameLocationHandler(w http.ResponseWriter, r *http.Reques
 
 	l.Info("updating adventure game location record with path params >%#v<", pp)
 
-	var req api.AdventureGameLocationRequest
+	var req adventure_game_schema.AdventureGameLocationRequest
 	if _, err := server.ReadRequest(l, r, &req); err != nil {
 		l.Warn("failed reading request >%v<", err)
 		return err
@@ -370,7 +380,7 @@ func updateOneAdventureGameLocationHandler(w http.ResponseWriter, r *http.Reques
 		return err
 	}
 
-	res := api.AdventureGameLocationResponse{
+	res := adventure_game_schema.AdventureGameLocationResponse{
 		Data: &data,
 	}
 

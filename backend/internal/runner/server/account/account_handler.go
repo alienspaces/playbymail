@@ -20,7 +20,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/mapper"
 	"gitlab.com/alienspaces/playbymail/internal/record/account_record"
 	"gitlab.com/alienspaces/playbymail/internal/utils/logging"
-	"gitlab.com/alienspaces/playbymail/schema/api"
+	"gitlab.com/alienspaces/playbymail/schema/api/account_schema"
 )
 
 const (
@@ -49,15 +49,20 @@ func accountHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, err
 
 	collectionResponseSchema := jsonschema.SchemaWithReferences{
 		Main: jsonschema.Schema{
-			Location: "api",
+			Location: "api/account_schema",
 			Name:     "account.collection.response.schema.json",
 		},
-		References: referenceSchemas,
+		References: append(referenceSchemas, []jsonschema.Schema{
+			{
+				Location: "api/account_schema",
+				Name:     "account.schema.json",
+			},
+		}...),
 	}
 
 	requestSchema := jsonschema.SchemaWithReferences{
 		Main: jsonschema.Schema{
-			Location: "api",
+			Location: "api/account_schema",
 			Name:     "account.request.schema.json",
 		},
 		References: referenceSchemas,
@@ -65,10 +70,15 @@ func accountHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, err
 
 	responseSchema := jsonschema.SchemaWithReferences{
 		Main: jsonschema.Schema{
-			Location: "api",
+			Location: "api/account_schema",
 			Name:     "account.response.schema.json",
 		},
-		References: referenceSchemas,
+		References: append(referenceSchemas, []jsonschema.Schema{
+			{
+				Location: "api/account_schema",
+				Name:     "account.schema.json",
+			},
+		}...),
 	}
 
 	// Register collection routes first
@@ -232,13 +242,13 @@ func accountHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, err
 			},
 			ValidateRequestSchema: jsonschema.SchemaWithReferences{
 				Main: jsonschema.Schema{
-					Location: "api",
+					Location: "api/account_schema",
 					Name:     "account.request-auth.request.schema.json",
 				},
 			},
 			ValidateResponseSchema: jsonschema.SchemaWithReferences{
 				Main: jsonschema.Schema{
-					Location: "api",
+					Location: "api/account_schema",
 					Name:     "account.request-auth.response.schema.json",
 				},
 			},
@@ -259,13 +269,13 @@ func accountHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, err
 			},
 			ValidateRequestSchema: jsonschema.SchemaWithReferences{
 				Main: jsonschema.Schema{
-					Location: "api",
+					Location: "api/account_schema",
 					Name:     "account.verify-auth.request.schema.json",
 				},
 			},
 			ValidateResponseSchema: jsonschema.SchemaWithReferences{
 				Main: jsonschema.Schema{
-					Location: "api",
+					Location: "api/account_schema",
 					Name:     "account.verify-auth.response.schema.json",
 				},
 			},
@@ -445,7 +455,7 @@ func requestAuthHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Pa
 
 	l.Info("requesting authentication token for email >%s<", r.Header.Get("Authorization"))
 
-	var req api.RequestAuthRequest
+	var req account_schema.RequestAuthRequest
 	if _, err := server.ReadRequest(l, r, &req); err != nil {
 		l.Warn("failed reading request >%v<", err)
 		return server.WriteResponse(l, w, http.StatusOK, mapper.MapRequestAuthResponse("ok"))
@@ -470,7 +480,7 @@ func requestAuthHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Pa
 func verifyAuthHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = logging.LoggerWithFunctionContext(l, packageName, "verifyAuthHandler")
 
-	var req api.VerifyAuthRequest
+	var req account_schema.VerifyAuthRequest
 	if _, err := server.ReadRequest(l, r, &req); err != nil {
 		l.Warn("failed reading request >%v<", err)
 		return err

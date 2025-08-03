@@ -1,0 +1,20 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "http://playbymail.games/schema/adventure_game_schema/adventure_game_creature.request.schema.json",
+    "title": "AdventureGameCreatureRequest",
+    "type": "object",
+    "properties": {
+        "description": {
+            "type": "string"
+        },
+        "name": {
+            "maxLength": 255,
+            "minLength": 1,
+            "type": "string"
+        }
+    },
+    "required": [
+        "name"
+    ],
+    "additionalProperties": false
+}

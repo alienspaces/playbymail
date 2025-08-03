@@ -4,12 +4,12 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/nulltime"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
-	"gitlab.com/alienspaces/playbymail/schema/api"
+	"gitlab.com/alienspaces/playbymail/schema/api/adventure_game_schema"
 )
 
-func AdventureGameLocationRecordToResponseData(l logger.Logger, rec *adventure_game_record.AdventureGameLocation) (api.AdventureGameLocationResponseData, error) {
+func AdventureGameLocationRecordToResponseData(l logger.Logger, rec *adventure_game_record.AdventureGameLocation) (adventure_game_schema.AdventureGameLocationResponseData, error) {
 	l.Debug("mapping adventure_game_location record to response data")
-	data := api.AdventureGameLocationResponseData{
+	data := adventure_game_schema.AdventureGameLocationResponseData{
 		ID:          rec.ID,
 		GameID:      rec.GameID,
 		Name:        rec.Name,
@@ -21,31 +21,31 @@ func AdventureGameLocationRecordToResponseData(l logger.Logger, rec *adventure_g
 	return data, nil
 }
 
-func AdventureGameLocationRecordToResponse(l logger.Logger, rec *adventure_game_record.AdventureGameLocation) (api.AdventureGameLocationResponse, error) {
+func AdventureGameLocationRecordToResponse(l logger.Logger, rec *adventure_game_record.AdventureGameLocation) (adventure_game_schema.AdventureGameLocationResponse, error) {
 	data, err := AdventureGameLocationRecordToResponseData(l, rec)
 	if err != nil {
-		return api.AdventureGameLocationResponse{}, err
+		return adventure_game_schema.AdventureGameLocationResponse{}, err
 	}
-	return api.AdventureGameLocationResponse{
+	return adventure_game_schema.AdventureGameLocationResponse{
 		Data: &data,
 	}, nil
 }
 
-func AdventureGameLocationRecordsToCollectionResponse(l logger.Logger, recs []*adventure_game_record.AdventureGameLocation) (api.AdventureGameLocationCollectionResponse, error) {
-	data := []*api.AdventureGameLocationResponseData{}
+func AdventureGameLocationRecordsToCollectionResponse(l logger.Logger, recs []*adventure_game_record.AdventureGameLocation) (adventure_game_schema.AdventureGameLocationCollectionResponse, error) {
+	data := []*adventure_game_schema.AdventureGameLocationResponseData{}
 	for _, rec := range recs {
 		d, err := AdventureGameLocationRecordToResponseData(l, rec)
 		if err != nil {
-			return api.AdventureGameLocationCollectionResponse{}, err
+			return adventure_game_schema.AdventureGameLocationCollectionResponse{}, err
 		}
 		data = append(data, &d)
 	}
-	return api.AdventureGameLocationCollectionResponse{
+	return adventure_game_schema.AdventureGameLocationCollectionResponse{
 		Data: data,
 	}, nil
 }
 
-func AdventureGameLocationRequestToRecord(l logger.Logger, req *api.AdventureGameLocationRequest, rec *adventure_game_record.AdventureGameLocation) (*adventure_game_record.AdventureGameLocation, error) {
+func AdventureGameLocationRequestToRecord(l logger.Logger, req *adventure_game_schema.AdventureGameLocationRequest, rec *adventure_game_record.AdventureGameLocation) (*adventure_game_record.AdventureGameLocation, error) {
 	if rec == nil {
 		rec = &adventure_game_record.AdventureGameLocation{}
 	}

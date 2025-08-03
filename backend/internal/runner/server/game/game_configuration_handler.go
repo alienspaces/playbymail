@@ -15,7 +15,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/mapper"
 	"gitlab.com/alienspaces/playbymail/internal/utils/logging"
-	"gitlab.com/alienspaces/playbymail/schema/api"
+	"gitlab.com/alienspaces/playbymail/schema/api/game_schema"
 )
 
 const (
@@ -37,15 +37,20 @@ func gameConfigurationHandlerConfig(l logger.Logger) (map[string]server.HandlerC
 
 	collectionResponseSchema := jsonschema.SchemaWithReferences{
 		Main: jsonschema.Schema{
-			Location: "api",
+			Location: "api/game_schema",
 			Name:     "game_configuration.collection.response.schema.json",
 		},
-		References: referenceSchemas,
+		References: append(referenceSchemas, []jsonschema.Schema{
+			{
+				Location: "api/game_schema",
+				Name:     "game_configuration.schema.json",
+			},
+		}...),
 	}
 
 	requestSchema := jsonschema.SchemaWithReferences{
 		Main: jsonschema.Schema{
-			Location: "api",
+			Location: "api/game_schema",
 			Name:     "game_configuration.request.schema.json",
 		},
 		References: referenceSchemas,
@@ -53,10 +58,15 @@ func gameConfigurationHandlerConfig(l logger.Logger) (map[string]server.HandlerC
 
 	responseSchema := jsonschema.SchemaWithReferences{
 		Main: jsonschema.Schema{
-			Location: "api",
+			Location: "api/game_schema",
 			Name:     "game_configuration.response.schema.json",
 		},
-		References: referenceSchemas,
+		References: append(referenceSchemas, []jsonschema.Schema{
+			{
+				Location: "api/game_schema",
+				Name:     "game_configuration.schema.json",
+			},
+		}...),
 	}
 
 	// Unnested routes
@@ -186,7 +196,7 @@ func createGameConfigurationHandler(w http.ResponseWriter, r *http.Request, pp h
 
 	l.Info("creating game configuration")
 
-	var request api.GameConfigurationRequest
+	var request game_schema.GameConfigurationRequest
 	_, err := server.ReadRequest(l, r, &request)
 	if err != nil {
 		l.Warn("failed reading request >%v<", err)
@@ -213,7 +223,7 @@ func updateGameConfigurationHandler(w http.ResponseWriter, r *http.Request, pp h
 
 	l.Info("updating game configuration with id >%s<", gameConfigurationID)
 
-	var request api.GameConfigurationRequest
+	var request game_schema.GameConfigurationRequest
 	_, err := server.ReadRequest(l, r, &request)
 	if err != nil {
 		l.Warn("failed reading request >%v<", err)

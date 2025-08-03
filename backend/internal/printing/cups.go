@@ -246,8 +246,8 @@ func (p *CUPSPrinter) GetSupplies() ([]Supply, error) {
 }
 
 // GetConfiguration returns printer configuration
-func (p *CUPSPrinter) GetConfiguration() (map[string]interface{}, error) {
-	return map[string]interface{}{
+func (p *CUPSPrinter) GetConfiguration() (map[string]any, error) {
+	return map[string]any{
 		"protocol": "cups",
 		"host":     p.device.Host,
 		"port":     p.device.Port,

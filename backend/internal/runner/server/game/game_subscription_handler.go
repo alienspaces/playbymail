@@ -36,15 +36,20 @@ func gameSubscriptionHandlerConfig(l logger.Logger) (map[string]server.HandlerCo
 
 	collectionResponseSchema := jsonschema.SchemaWithReferences{
 		Main: jsonschema.Schema{
-			Location: "api",
+			Location: "api/game_schema",
 			Name:     "game_subscription.collection.response.schema.json",
 		},
-		References: referenceSchemas,
+		References: append(referenceSchemas, []jsonschema.Schema{
+			{
+				Location: "api/game_schema",
+				Name:     "game_subscription.schema.json",
+			},
+		}...),
 	}
 
 	requestSchema := jsonschema.SchemaWithReferences{
 		Main: jsonschema.Schema{
-			Location: "api",
+			Location: "api/game_schema",
 			Name:     "game_subscription.request.schema.json",
 		},
 		References: referenceSchemas,
@@ -52,10 +57,15 @@ func gameSubscriptionHandlerConfig(l logger.Logger) (map[string]server.HandlerCo
 
 	responseSchema := jsonschema.SchemaWithReferences{
 		Main: jsonschema.Schema{
-			Location: "api",
+			Location: "api/game_schema",
 			Name:     "game_subscription.response.schema.json",
 		},
-		References: referenceSchemas,
+		References: append(referenceSchemas, []jsonschema.Schema{
+			{
+				Location: "api/game_schema",
+				Name:     "game_subscription.schema.json",
+			},
+		}...),
 	}
 
 	config[GetManyGameSubscriptions] = server.HandlerConfig{

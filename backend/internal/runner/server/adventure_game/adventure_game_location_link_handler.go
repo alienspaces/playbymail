@@ -18,6 +18,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/mapper"
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 	"gitlab.com/alienspaces/playbymail/internal/utils/logging"
+	"gitlab.com/alienspaces/playbymail/schema/api/adventure_game_schema"
 )
 
 // API Resource Search Path
@@ -53,15 +54,20 @@ func adventureGameLocationLinkHandlerConfig(l logger.Logger) (map[string]server.
 
 	collectionResponseSchema := jsonschema.SchemaWithReferences{
 		Main: jsonschema.Schema{
-			Location: "api",
+			Location: "api/adventure_game_schema",
 			Name:     "adventure_game_location_link.collection.response.schema.json",
 		},
-		References: referenceSchemas,
+		References: append(referenceSchemas, []jsonschema.Schema{
+			{
+				Location: "api/adventure_game_schema",
+				Name:     "adventure_game_location_link.schema.json",
+			},
+		}...),
 	}
 
 	requestSchema := jsonschema.SchemaWithReferences{
 		Main: jsonschema.Schema{
-			Location: "api",
+			Location: "api/adventure_game_schema",
 			Name:     "adventure_game_location_link.request.schema.json",
 		},
 		References: referenceSchemas,
@@ -69,10 +75,15 @@ func adventureGameLocationLinkHandlerConfig(l logger.Logger) (map[string]server.
 
 	responseSchema := jsonschema.SchemaWithReferences{
 		Main: jsonschema.Schema{
-			Location: "api",
+			Location: "api/adventure_game_schema",
 			Name:     "adventure_game_location_link.response.schema.json",
 		},
-		References: referenceSchemas,
+		References: append(referenceSchemas, []jsonschema.Schema{
+			{
+				Location: "api/adventure_game_schema",
+				Name:     "adventure_game_location_link.schema.json",
+			},
+		}...),
 	}
 
 	// New Adventure Game Location Link API paths
@@ -303,7 +314,13 @@ func createOneAdventureGameLocationLinkHandler(w http.ResponseWriter, r *http.Re
 		return coreerror.NewNotFoundError("game", gameID)
 	}
 
-	rec, err := mapper.AdventureGameLocationLinkRequestToRecord(l, r, &adventure_game_record.AdventureGameLocationLink{})
+	var request adventure_game_schema.AdventureGameLocationLinkRequest
+	if _, err := server.ReadRequest(l, r, &request); err != nil {
+		l.Warn("failed reading request >%v<", err)
+		return err
+	}
+
+	rec, err := mapper.AdventureGameLocationLinkRequestToRecord(l, &request, &adventure_game_record.AdventureGameLocationLink{})
 	if err != nil {
 		return err
 	}
@@ -360,7 +377,13 @@ func updateOneAdventureGameLocationLinkHandler(w http.ResponseWriter, r *http.Re
 		return coreerror.NewNotFoundError("location link", locationLinkID)
 	}
 
-	rec, err = mapper.AdventureGameLocationLinkRequestToRecord(l, r, rec)
+	var request adventure_game_schema.AdventureGameLocationLinkRequest
+	if _, err := server.ReadRequest(l, r, &request); err != nil {
+		l.Warn("failed reading request >%v<", err)
+		return err
+	}
+
+	rec, err = mapper.AdventureGameLocationLinkRequestToRecord(l, &request, rec)
 	if err != nil {
 		return err
 	}

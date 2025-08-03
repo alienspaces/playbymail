@@ -1,0 +1,34 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "http://playbymail.games/schema/game_schema/game.param.schema.json",
+    "title": "Game parameters",
+    "type": "object",
+    "properties": {
+        "id": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
+        },
+        "name": {
+            "description": "Name of the game",
+            "type": "string"
+        },
+        "page_number": {
+            "$ref": "http://playbymail.games/schema/common_schema/query.schema.json#/$defs/page_number"
+        },
+        "page_size": {
+            "$ref": "http://playbymail.games/schema/common_schema/query.schema.json#/$defs/page_size"
+        },
+        "processed_message_at": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/processed_message_at"
+        },
+        "sort_column[]": {
+            "$ref": "http://playbymail.games/schema/common_schema/query.schema.json#/$defs/sort_column[]"
+        },
+        "created_at": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/created_at"
+        },
+        "updated_at": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/updated_at"
+        }
+    },
+    "additionalProperties": true
+}
