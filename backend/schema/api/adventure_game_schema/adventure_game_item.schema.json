@@ -32,6 +32,7 @@
         "id",
         "game_id",
         "name",
+        "description",
         "created_at"
     ],
     "additionalProperties": false

@@ -72,7 +72,8 @@ func Test_gameCreatureHandler(t *testing.T) {
 				},
 				RequestBody: func(d harness.Data) any {
 					return adventure_game_schema.AdventureGameCreatureRequest{
-						Name: "Test Creature",
+						Name:        "Test Creature",
+						Description: "A test creature for testing purposes",
 					}
 				},
 				ResponseDecoder: testCaseResponseDecoder,

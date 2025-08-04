@@ -36,7 +36,7 @@
             </div>
             <div class="form-group">
               <label for="item-description">Description:</label>
-              <textarea v-model="modalForm.description" id="item-description" rows="4" maxlength="4096" />
+              <textarea v-model="modalForm.description" id="item-description" rows="4" maxlength="4096" required />
             </div>
             <div class="modal-actions">
               <button type="submit">{{ modalMode === 'create' ? 'Create' : 'Save' }}</button>
