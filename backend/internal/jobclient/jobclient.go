@@ -112,6 +112,7 @@ func addGamePeriodicJobs(l logger.Logger, s storer.Storer, p []*river.PeriodicJo
 func getWorkers(l logger.Logger, cfg config.Config, s storer.Storer, e emailer.Emailer) (*river.Workers, error) {
 	w := river.NewWorkers()
 
+	// Add account verification email worker
 	SendAccountVerificationEmailWorker, err := jobworker.NewSendAccountVerificationEmailWorker(l, cfg, s, e)
 	if err != nil {
 		return nil, fmt.Errorf("failed NewSendAccountVerificationEmailWorker worker: %w", err)
@@ -121,7 +122,7 @@ func getWorkers(l logger.Logger, cfg config.Config, s storer.Storer, e emailer.E
 		return nil, fmt.Errorf("failed to add NewSendAccountVerificationEmailWorker worker: %w", err)
 	}
 
-	// Add game processing workers
+	// Add game turn processing worker
 	ProcessGameTurnWorker, err := jobworker.NewProcessGameTurnWorker(l, cfg, s)
 	if err != nil {
 		return nil, fmt.Errorf("failed NewProcessGameTurnWorker worker: %w", err)
@@ -131,6 +132,7 @@ func getWorkers(l logger.Logger, cfg config.Config, s storer.Storer, e emailer.E
 		return nil, fmt.Errorf("failed to add NewProcessGameTurnWorker worker: %w", err)
 	}
 
+	// Add game deadline checking worker
 	CheckGameDeadlinesWorker, err := jobworker.NewCheckGameDeadlinesWorker(l, cfg, s)
 	if err != nil {
 		return nil, fmt.Errorf("failed NewCheckGameDeadlinesWorker worker: %w", err)

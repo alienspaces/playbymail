@@ -1,7 +1,5 @@
 # Play by Mail
 
-<!-- markdownlint-disable MD033-->
-
 A platform to revitalize play-by-mail (PBM) games for all ages, supporting a wide variety of genres (RPG, strategy, adventure, sports, and more).
 
 <img alt="logo" src="playbymail.png" height=400/>

@@ -1,14 +1,11 @@
 # Contributing to Playbymail
 
-<!-- markdownlint-disable MD034 -->
-
 Thank you for your interest in contributing to the Playbymail project! This document provides guidance for local development, troubleshooting, and manual operations.
 
 ## Project Structure Overview
 
 | Component | Location | Description |
 |-----------|----------|-------------|
-| AI / Cursor Rules | `./cursor/rules` | AI assistant configuration and rules |
 | Git Repository | `./playbymail` | Main project repository |
 | Frontend UI | `./playbymail/frontend` | User interface components |
 | Backend Server | `./playbymail/backend` | Server-side (Golang) |
@@ -124,6 +121,12 @@ The `tools/` directory contains scripts to help you set up and run the project l
   - **Export Table Data:**  
     `./tools/db-export-table-data`
   - **Test Helpers:**  
-    `./tools/test-backend-local`, `./tools/test-backend-ci`, `./tools/test-backend-core`, `./tools/test-backend-internal`, `./tools/test-frontend`
+    `./tools/test-backend`, `./tools/test-backend-ci`, `./tools/test-backend-core`, `./tools/test-backend-internal`, `./tools/test-frontend`
+  - **Build Tools:**  
+    `./tools/build-frontend`
+  - **Database Management:**  
+    `./tools/db-start`, `./tools/db-stop`
+  - **Development Utilities:**  
+    `./tools/retry`
 
 Refer to the comments at the top of each script in `tools/` for more details and additional utilities.
