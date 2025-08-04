@@ -44,8 +44,8 @@
  * @typedef {Object} GameLocationLink
  * @property {string} id
  * @property {string} game_id
- * @property {string} from_game_location_id
- * @property {string} to_game_location_id
+ * @property {string} from_adventure_game_location_id
+ * @property {string} to_adventure_game_location_id
  * @property {string} name
  * @property {string} description
  * @property {string} created_at

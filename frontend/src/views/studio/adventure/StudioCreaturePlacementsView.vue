@@ -11,7 +11,7 @@
       </div>
       <ResourceTable
         :columns="creaturePlacementColumns"
-        :rows="creaturePlacementsStore.creaturePlacements"
+        :rows="enhancedCreaturePlacements"
         :loading="creaturePlacementsStore.loading"
         :error="creaturePlacementsStore.error"
       >
@@ -52,6 +52,18 @@
                 <option v-for="loc in locationsStore.locations" :key="loc.id" :value="loc.id">{{ loc.name }}</option>
               </select>
             </div>
+            <div class="form-group">
+              <label for="initial_count">Initial Count:</label>
+              <input
+                id="initial_count"
+                v-model="creaturePlacementModalForm.initial_count"
+                type="number"
+                min="1"
+                required
+                class="form-input"
+                placeholder="How many creatures to place"
+              />
+            </div>
             <div class="modal-actions">
               <button type="submit">{{ creaturePlacementModalMode === 'create' ? 'Create' : 'Save' }}</button>
               <button type="button" @click="closeCreaturePlacementModal">Cancel</button>
@@ -78,7 +90,7 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
 import { useCreaturesStore } from '../../../stores/creatures';
 import { useLocationsStore } from '../../../stores/locations';
 import { useCreaturePlacementsStore } from '../../../stores/creaturePlacements';
@@ -92,15 +104,29 @@ const creaturePlacementsStore = useCreaturePlacementsStore();
 const gamesStore = useGamesStore();
 const { selectedGame } = storeToRefs(gamesStore);
 
+// Enhance creature placements with names for display
+const enhancedCreaturePlacements = computed(() => {
+  return creaturePlacementsStore.creaturePlacements.map(placement => {
+    const creature = creaturesStore.creatures.find(creature => creature.id === placement.adventure_game_creature_id);
+    const location = locationsStore.locations.find(loc => loc.id === placement.adventure_game_location_id);
+    return {
+      ...placement,
+      creature_name: creature?.name || 'Unknown Creature',
+      location_name: location?.name || 'Unknown Location'
+    };
+  });
+});
+
 const creaturePlacementColumns = [
-  { key: 'adventure_game_creature_id', label: 'Creature ID' },
-  { key: 'adventure_game_location_id', label: 'Location ID' },
+  { key: 'creature_name', label: 'Creature' },
+  { key: 'location_name', label: 'Location' },
+  { key: 'initial_count', label: 'Count' },
   { key: 'created_at', label: 'Created' }
 ];
 
 const showCreaturePlacementModal = ref(false);
 const creaturePlacementModalMode = ref('create');
-const creaturePlacementModalForm = ref({ adventure_game_creature_id: '', adventure_game_location_id: '' });
+const creaturePlacementModalForm = ref({ adventure_game_creature_id: '', adventure_game_location_id: '', initial_count: 1 });
 const creaturePlacementModalError = ref('');
 const showCreaturePlacementDeleteConfirm = ref(false);
 const creaturePlacementDeleteTarget = ref(null);
@@ -121,7 +147,7 @@ watch(
 
 function openCreaturePlacementCreate() {
   creaturePlacementModalMode.value = 'create';
-  creaturePlacementModalForm.value = { adventure_game_creature_id: '', adventure_game_location_id: '' };
+  creaturePlacementModalForm.value = { adventure_game_creature_id: '', adventure_game_location_id: '', initial_count: 1 };
   creaturePlacementModalError.value = '';
   showCreaturePlacementModal.value = true;
 }

@@ -116,8 +116,9 @@ describe('StudioCreaturePlacementsView', () => {
     const resourceTable = wrapper.findComponent({ name: 'ResourceTable' })
     expect(resourceTable.exists()).toBe(true)
     expect(resourceTable.props('columns')).toEqual([
-      { key: 'adventure_game_creature_id', label: 'Creature ID' },
-      { key: 'adventure_game_location_id', label: 'Location ID' },
+      { key: 'creature_name', label: 'Creature' },
+      { key: 'location_name', label: 'Location' },
+      { key: 'initial_count', label: 'Count' },
       { key: 'created_at', label: 'Created' }
     ])
   })

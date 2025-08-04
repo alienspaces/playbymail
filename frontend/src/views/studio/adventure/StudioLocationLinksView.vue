@@ -34,7 +34,7 @@
               <label for="fromLocation">From Location *</label>
               <select 
                 id="fromLocation" 
-                v-model="modalForm.from_game_location_id" 
+                v-model="modalForm.from_adventure_game_location_id" 
                 required
                 class="form-control"
               >
@@ -53,7 +53,7 @@
               <label for="toLocation">To Location *</label>
               <select 
                 id="toLocation" 
-                v-model="modalForm.to_game_location_id" 
+                v-model="modalForm.to_adventure_game_location_id" 
                 required
                 class="form-control"
               >
@@ -82,11 +82,12 @@
             </div>
             
             <div class="form-group">
-              <label for="description">Description</label>
+              <label for="description">Description *</label>
               <textarea 
                 id="description" 
                 v-model="modalForm.description" 
                 maxlength="255"
+                required
                 class="form-control"
                 placeholder="Describe the link between locations..."
                 rows="3"
@@ -165,8 +166,8 @@ watch(
 // Enhance location links with location names for display
 const enhancedLocationLinks = computed(() => {
   return locationLinksStore.locationLinks.map(link => {
-    const fromLocation = locationsStore.locations.find(loc => loc.id === link.from_game_location_id);
-    const toLocation = locationsStore.locations.find(loc => loc.id === link.to_game_location_id);
+    const fromLocation = locationsStore.locations.find(loc => loc.id === link.from_adventure_game_location_id);
+    const toLocation = locationsStore.locations.find(loc => loc.id === link.to_adventure_game_location_id);
     return {
       ...link,
       from_location_name: fromLocation?.name || 'Unknown',
@@ -178,8 +179,8 @@ const enhancedLocationLinks = computed(() => {
 function openCreate() {
   modalMode.value = 'create';
   modalForm.value = { 
-    from_game_location_id: '', 
-    to_game_location_id: '', 
+    from_adventure_game_location_id: '', 
+    to_adventure_game_location_id: '', 
     name: '', 
     description: '' 
   };
@@ -191,8 +192,8 @@ function openEdit(row) {
   modalMode.value = 'edit';
   modalForm.value = { 
     id: row.id,
-    from_game_location_id: row.from_game_location_id, 
-    to_game_location_id: row.to_game_location_id, 
+    from_adventure_game_location_id: row.from_adventure_game_location_id, 
+    to_adventure_game_location_id: row.to_adventure_game_location_id, 
     name: row.name, 
     description: row.description || '' 
   };

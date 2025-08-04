@@ -11,7 +11,7 @@
       </div>
       <ResourceTable
         :columns="itemPlacementColumns"
-        :rows="itemPlacementsStore.itemPlacements"
+        :rows="enhancedItemPlacements"
         :loading="itemPlacementsStore.loading"
         :error="itemPlacementsStore.error"
       >
@@ -52,6 +52,18 @@
                 <option v-for="loc in locationsStore.locations" :key="loc.id" :value="loc.id">{{ loc.name }}</option>
               </select>
             </div>
+            <div class="form-group">
+              <label for="initial_count">Initial Count:</label>
+              <input
+                id="initial_count"
+                v-model="itemPlacementModalForm.initial_count"
+                type="number"
+                min="1"
+                required
+                class="form-input"
+                placeholder="How many items to place"
+              />
+            </div>
             <div class="modal-actions">
               <button type="submit">{{ itemPlacementModalMode === 'create' ? 'Create' : 'Save' }}</button>
               <button type="button" @click="closeItemPlacementModal">Cancel</button>
@@ -78,7 +90,7 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
 import { useItemsStore } from '../../../stores/items';
 import { useLocationsStore } from '../../../stores/locations';
 import { useItemPlacementsStore } from '../../../stores/itemPlacements';
@@ -92,15 +104,29 @@ const itemPlacementsStore = useItemPlacementsStore();
 const gamesStore = useGamesStore();
 const { selectedGame } = storeToRefs(gamesStore);
 
+// Enhance item placements with names for display
+const enhancedItemPlacements = computed(() => {
+  return itemPlacementsStore.itemPlacements.map(placement => {
+    const item = itemsStore.items.find(item => item.id === placement.adventure_game_item_id);
+    const location = locationsStore.locations.find(loc => loc.id === placement.adventure_game_location_id);
+    return {
+      ...placement,
+      item_name: item?.name || 'Unknown Item',
+      location_name: location?.name || 'Unknown Location'
+    };
+  });
+});
+
 const itemPlacementColumns = [
-  { key: 'adventure_game_item_id', label: 'Item ID' },
-  { key: 'adventure_game_location_id', label: 'Location ID' },
+  { key: 'item_name', label: 'Item' },
+  { key: 'location_name', label: 'Location' },
+  { key: 'initial_count', label: 'Count' },
   { key: 'created_at', label: 'Created' }
 ];
 
 const showItemPlacementModal = ref(false);
 const itemPlacementModalMode = ref('create');
-const itemPlacementModalForm = ref({ adventure_game_item_id: '', adventure_game_location_id: '' });
+const itemPlacementModalForm = ref({ adventure_game_item_id: '', adventure_game_location_id: '', initial_count: 1 });
 const itemPlacementModalError = ref('');
 const showItemPlacementDeleteConfirm = ref(false);
 const itemPlacementDeleteTarget = ref(null);
@@ -121,7 +147,7 @@ watch(
 
 function openItemPlacementCreate() {
   itemPlacementModalMode.value = 'create';
-  itemPlacementModalForm.value = { adventure_game_item_id: '', adventure_game_location_id: '' };
+  itemPlacementModalForm.value = { adventure_game_item_id: '', adventure_game_location_id: '', initial_count: 1 };
   itemPlacementModalError.value = '';
   showItemPlacementModal.value = true;
 }
