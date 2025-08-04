@@ -91,7 +91,7 @@ describe('ResourceModalForm', () => {
 
     // Check labels
     const labels = wrapper.findAll('label')
-    expect(labels[0].text()).toBe('Name')
+    expect(labels[0].text()).toBe('Name *')
     expect(labels[1].text()).toBe('Description')
 
     // Check inputs

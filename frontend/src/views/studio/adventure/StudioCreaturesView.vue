@@ -25,27 +25,34 @@
         </template>
       </ResourceTable>
 
-      <!-- Create/Edit Modal -->
-      <div v-if="showModal" class="modal-overlay">
-        <div class="modal">
-          <h2>{{ modalMode === 'create' ? 'Create Creature' : 'Edit Creature' }}</h2>
-          <form @submit.prevent="handleSubmit(modalForm)">
-            <div class="form-group">
-              <label for="creature-name">Name:</label>
-              <input v-model="modalForm.name" id="creature-name" required maxlength="1024" />
-            </div>
-            <div class="form-group">
-              <label for="creature-description">Description:</label>
-              <textarea v-model="modalForm.description" id="creature-description" rows="4" maxlength="4096" required />
-            </div>
-            <div class="modal-actions">
-              <button type="submit">{{ modalMode === 'create' ? 'Create' : 'Save' }}</button>
-              <button type="button" @click="closeModal">Cancel</button>
-            </div>
-          </form>
-          <p v-if="modalError" class="error">{{ modalError }}</p>
-        </div>
-      </div>
+      <!-- Create/Edit Modal using ResourceModalForm -->
+      <ResourceModalForm
+        :visible="showModal"
+        :mode="modalMode"
+        title="Creature"
+        :fields="fields"
+        :modelValue="modalForm"
+        :error="modalError"
+        @submit="handleSubmit"
+        @cancel="closeModal"
+      >
+        <template v-slot:field="{ field }">
+          <textarea 
+            v-if="field.key === 'description'" 
+            v-model="modalForm[field.key]" 
+            :rows="4" 
+            :maxlength="field.maxlength" 
+            :required="field.required"
+          />
+          <input 
+            v-else 
+            v-model="modalForm[field.key]" 
+            :type="field.type || 'text'" 
+            :required="field.required" 
+            :maxlength="field.maxlength" 
+          />
+        </template>
+      </ResourceModalForm>
 
       <!-- Confirm Delete Dialog -->
       <div v-if="showDeleteConfirm" class="modal-overlay">
@@ -69,6 +76,7 @@ import { storeToRefs } from 'pinia';
 import { useCreaturesStore } from '../../../stores/creatures';
 import { useGamesStore } from '../../../stores/games';
 import ResourceTable from '../../../components/ResourceTable.vue';
+import ResourceModalForm from '../../../components/ResourceModalForm.vue';
 
 const creaturesStore = useCreaturesStore();
 const gamesStore = useGamesStore();
@@ -78,6 +86,12 @@ const columns = [
   { key: 'name', label: 'Name' },
   { key: 'description', label: 'Description' },
   { key: 'created_at', label: 'Created' }
+];
+
+// Field configuration for ResourceModalForm
+const fields = [
+  { key: 'name', label: 'Name', required: true, maxlength: 1024 },
+  { key: 'description', label: 'Description', required: true, maxlength: 4096, type: 'textarea' }
 ];
 
 const showModal = ref(false);

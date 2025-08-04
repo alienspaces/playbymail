@@ -4,7 +4,7 @@
       <h2>{{ mode === 'create' ? `Create ${title}` : `Edit ${title}` }}</h2>
       <form @submit.prevent="handleSubmit">
         <div v-for="field in fields" :key="field.key" class="form-group">
-          <label :for="field.key">{{ field.label }}</label>
+          <label :for="field.key">{{ field.label }}{{ field.required ? ' *' : '' }}</label>
           <slot name="field" :field="field" :value="form[field.key]" :update="val => form[field.key] = val">
             <input
               v-model="form[field.key]"

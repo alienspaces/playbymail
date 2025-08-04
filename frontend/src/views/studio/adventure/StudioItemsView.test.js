@@ -51,7 +51,7 @@ describe('StudioItemsView', () => {
     const headerTexts = ths.map(th => th.text());
     expect(headerTexts).toContain('Name');
     expect(headerTexts).toContain('Description');
-    expect(headerTexts).toContain('Created');
+    expect(headerTexts).toContain('Actions');
     // Check table row data
     const tds = wrapper.findAll('td');
     const cellTexts = tds.map(td => td.text());

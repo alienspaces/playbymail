@@ -35,4 +35,19 @@ defineProps({
 .resource-table-section {
   width: 100%;
 }
+
+/* Add spacing between action buttons */
+.resource-table-section td:last-child {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.resource-table-section td:last-child button {
+  margin-right: 8px;
+}
+
+.resource-table-section td:last-child button:last-child {
+  margin-right: 0;
+}
 </style> 

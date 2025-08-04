@@ -1,6 +1,6 @@
 <!--
   StudioLocationsView.vue
-  This component follows the same pattern as StudioItemsView.vue and StudioCreaturesView.vue.
+  This component follows the same pattern as StudioCreaturesView.vue and StudioItemsView.vue.
 -->
 <template>
   <div>
@@ -8,12 +8,11 @@
       <p>Select a game to manage locations.</p>
     </div>
     <div v-else class="game-table-section">
-      <GameContext :gameName="selectedGame.name" />
-      <SectionHeader 
-        title="Locations" 
-        resourceName="Location" 
-        @create="openCreate"
-      />
+      <p class="game-context-name">Game: {{ selectedGame.name }}</p>
+      <div class="section-header">
+        <h2>Locations</h2>
+        <button @click="openCreate">Create New Location</button>
+      </div>
       <ResourceTable
         :columns="columns"
         :rows="locationsStore.locations"
@@ -22,76 +21,61 @@
       >
         <template #actions="{ row }">
           <button @click="openEdit(row)">Edit</button>
-          <button @click="confirmDelete(row)">Delete</button>
+          <button @click="openDelete(row)">Delete</button>
         </template>
       </ResourceTable>
-
-      <!-- Create/Edit Modal -->
-      <div v-if="showModal" class="modal-overlay">
-        <div class="modal">
-          <h2>{{ modalMode === 'create' ? 'Create Location' : 'Edit Location' }}</h2>
-          <form @submit.prevent="handleSubmit(modalForm)">
-            <div class="form-group">
-              <label for="location-name">Name:</label>
-              <input v-model="modalForm.name" id="location-name" required maxlength="1024" />
-            </div>
-            <div class="form-group">
-              <label for="location-description">Description:</label>
-              <textarea v-model="modalForm.description" id="location-description" rows="4" maxlength="4096" required />
-            </div>
-            <div class="modal-actions">
-              <button type="submit">{{ modalMode === 'create' ? 'Create' : 'Save' }}</button>
-              <button type="button" @click="closeModal">Cancel</button>
-            </div>
-          </form>
-          <p v-if="modalError" class="error">{{ modalError }}</p>
-        </div>
-      </div>
-
-      <!-- Confirm Delete Dialog -->
-      <div v-if="showDeleteConfirm" class="modal-overlay">
-        <div class="modal">
-          <h2>Delete Location</h2>
-          <p>Are you sure you want to delete <b>{{ deleteTarget?.name }}</b>?</p>
-          <div class="modal-actions">
-            <button @click="deleteLocation">Delete</button>
-            <button @click="closeDelete">Cancel</button>
-          </div>
-          <p v-if="deleteError" class="error">{{ deleteError }}</p>
-        </div>
-      </div>
     </div>
+
+    <ResourceModalForm
+      :visible="showModal"
+      :mode="modalMode"
+      title="Location"
+      :fields="fields"
+      :modelValue="modalForm"
+      :error="modalError"
+      @submit="handleSubmit"
+      @cancel="closeModal"
+    />
+
+    <ConfirmationModal
+      :visible="showDeleteModal"
+      title="Delete Location"
+      :message="`Are you sure you want to delete '${locationToDelete?.name}'?`"
+      @confirm="handleDelete"
+      @cancel="closeDeleteModal"
+    />
   </div>
 </template>
 
 <script setup>
 import { ref, watch } from 'vue';
+import { storeToRefs } from 'pinia';
 import { useLocationsStore } from '../../../stores/locations';
 import { useGamesStore } from '../../../stores/games';
-import { storeToRefs } from 'pinia';
 import ResourceTable from '../../../components/ResourceTable.vue';
-import GameContext from '../../../components/GameContext.vue';
-import SectionHeader from '../../../components/SectionHeader.vue';
+import ResourceModalForm from '../../../components/ResourceModalForm.vue';
+import ConfirmationModal from '../../../components/ConfirmationModal.vue';
 
 const locationsStore = useLocationsStore();
 const gamesStore = useGamesStore();
 const { selectedGame } = storeToRefs(gamesStore);
 
-// Components are imported and used directly in template
-
 const columns = [
   { key: 'name', label: 'Name' },
-  { key: 'description', label: 'Description' },
-  { key: 'created_at', label: 'Created' }
+  { key: 'description', label: 'Description' }
+];
+
+const fields = [
+  { key: 'name', label: 'Name', required: true, maxlength: 1024 },
+  { key: 'description', label: 'Description', required: true, maxlength: 4096, type: 'textarea' }
 ];
 
 const showModal = ref(false);
 const modalMode = ref('create');
 const modalForm = ref({ name: '', description: '' });
 const modalError = ref('');
-const showDeleteConfirm = ref(false);
-const deleteTarget = ref(null);
-const deleteError = ref('');
+const showDeleteModal = ref(false);
+const locationToDelete = ref(null);
 
 // Watch for game selection changes
 watch(
@@ -110,64 +94,85 @@ function openCreate() {
   modalError.value = '';
   showModal.value = true;
 }
-function openEdit(row) {
+
+function openEdit(location) {
   modalMode.value = 'edit';
-  modalForm.value = { ...row };
+  modalForm.value = { ...location };
   modalError.value = '';
   showModal.value = true;
 }
+
+function openDelete(location) {
+  locationToDelete.value = location;
+  showDeleteModal.value = true;
+}
+
 function closeModal() {
   showModal.value = false;
+  modalForm.value = { name: '', description: '' };
   modalError.value = '';
 }
-async function handleSubmit(form) {
+
+function closeDeleteModal() {
+  showDeleteModal.value = false;
+  locationToDelete.value = null;
+}
+
+async function handleSubmit(formData) {
   modalError.value = '';
   try {
     if (modalMode.value === 'create') {
-      await locationsStore.createLocation(form);
+      await locationsStore.createLocation(formData);
     } else {
-      await locationsStore.updateLocation(modalForm.value.id, form);
+      await locationsStore.updateLocation(modalForm.value.id, formData);
     }
     closeModal();
-  } catch (err) {
-    modalError.value = err.message || 'Failed to save.';
+  } catch (error) {
+    modalError.value = error.message || 'Failed to save.';
   }
 }
-function confirmDelete(row) {
-  deleteTarget.value = row;
-  deleteError.value = '';
-  showDeleteConfirm.value = true;
-}
-function closeDelete() {
-  showDeleteConfirm.value = false;
-  deleteTarget.value = null;
-  deleteError.value = '';
-}
-async function deleteLocation() {
-  if (!deleteTarget.value) return;
-  deleteError.value = '';
+
+async function handleDelete() {
   try {
-    await locationsStore.deleteLocation(deleteTarget.value.id);
-    closeDelete();
-  } catch (err) {
-    deleteError.value = err.message || 'Failed to delete.';
+    await locationsStore.deleteLocation(locationToDelete.value.id);
+    closeDeleteModal();
+  } catch (error) {
+    console.error('Failed to delete location:', error);
   }
 }
 </script>
 
 <style scoped>
 .game-table-section {
+  margin-top: 20px;
+}
+
+.game-context-name {
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.section-header {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  margin-bottom: 20px;
 }
-button {
-  margin-right: var(--space-sm);
+
+.section-header h2 {
+  margin: 0 0 10px 0;
 }
-.game-context-name {
-  font-size: 1.1rem;
-  font-weight: 400;
-  color: #444;
-  margin-bottom: var(--space-sm);
+
+.section-header button {
+  padding: 8px 16px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.section-header button:hover {
+  background-color: #0056b3;
 }
 </style> 
