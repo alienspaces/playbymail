@@ -24,67 +24,26 @@
       </ResourceTable>
 
       <!-- Create/Edit Item Placement Modal -->
-      <div v-if="showItemPlacementModal" class="modal-overlay">
-        <div class="modal">
-          <h2>{{ itemPlacementModalMode === 'create' ? 'Create Item Placement' : 'Edit Item Placement' }}</h2>
-          <form @submit.prevent="handleItemPlacementSubmit(itemPlacementModalForm)">
-            <div class="form-group">
-              <label for="adventure_game_item_id">Item:</label>
-              <select
-                id="adventure_game_item_id"
-                v-model="itemPlacementModalForm.adventure_game_item_id"
-                required
-                class="form-select"
-              >
-                <option value="" disabled>Select an item...</option>
-                <option v-for="item in itemsStore.items" :key="item.id" :value="item.id">{{ item.name }}</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label for="adventure_game_location_id">Location:</label>
-              <select
-                id="adventure_game_location_id"
-                v-model="itemPlacementModalForm.adventure_game_location_id"
-                required
-                class="form-select"
-              >
-                <option value="" disabled>Select a location...</option>
-                <option v-for="loc in locationsStore.locations" :key="loc.id" :value="loc.id">{{ loc.name }}</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label for="initial_count">Initial Count:</label>
-              <input
-                id="initial_count"
-                v-model="itemPlacementModalForm.initial_count"
-                type="number"
-                min="1"
-                required
-                class="form-input"
-                placeholder="How many items to place"
-              />
-            </div>
-            <div class="modal-actions">
-              <button type="submit">{{ itemPlacementModalMode === 'create' ? 'Create' : 'Save' }}</button>
-              <button type="button" @click="closeItemPlacementModal">Cancel</button>
-            </div>
-          </form>
-          <p v-if="itemPlacementModalError" class="error">{{ itemPlacementModalError }}</p>
-        </div>
-      </div>
+      <ResourceModalForm
+        :visible="showItemPlacementModal"
+        :mode="itemPlacementModalMode"
+        title="Item Placement"
+        :fields="itemPlacementFields"
+        :modelValue="itemPlacementModalForm"
+        :error="itemPlacementModalError"
+        :options="itemPlacementOptions"
+        @submit="handleItemPlacementSubmit"
+        @cancel="closeItemPlacementModal"
+      />
 
       <!-- Confirm Delete Dialog -->
-      <div v-if="showItemPlacementDeleteConfirm" class="modal-overlay">
-        <div class="modal">
-          <h2>Delete Item Placement</h2>
-          <p>Are you sure you want to delete this item placement?</p>
-          <div class="modal-actions">
-            <button @click="deleteItemPlacement">Delete</button>
-            <button @click="closeItemPlacementDelete">Cancel</button>
-          </div>
-          <p v-if="itemPlacementDeleteError" class="error">{{ itemPlacementDeleteError }}</p>
-        </div>
-      </div>
+      <ConfirmationModal
+        :visible="showItemPlacementDeleteConfirm"
+        title="Delete Item Placement"
+        message="Are you sure you want to delete this item placement?"
+        @confirm="deleteItemPlacement"
+        @cancel="closeItemPlacementDelete"
+      />
     </div>
   </div>
 </template>
@@ -97,6 +56,8 @@ import { useItemPlacementsStore } from '../../../stores/itemPlacements';
 import { useGamesStore } from '../../../stores/games';
 import { storeToRefs } from 'pinia';
 import ResourceTable from '../../../components/ResourceTable.vue';
+import ResourceModalForm from '../../../components/ResourceModalForm.vue';
+import ConfirmationModal from '../../../components/ConfirmationModal.vue';
 
 const itemsStore = useItemsStore();
 const locationsStore = useLocationsStore();
@@ -124,13 +85,31 @@ const itemPlacementColumns = [
   { key: 'created_at', label: 'Created' }
 ];
 
+// Field configuration for ResourceModalForm
+const itemPlacementFields = [
+  { key: 'adventure_game_item_id', label: 'Item', type: 'select', required: true, placeholder: 'Select an item...' },
+  { key: 'adventure_game_location_id', label: 'Location', type: 'select', required: true, placeholder: 'Select a location...' },
+  { key: 'initial_count', label: 'Initial Count', type: 'number', required: true, min: 1 }
+];
+
+// Options for select fields
+const itemPlacementOptions = computed(() => ({
+  adventure_game_item_id: itemsStore.items.map(item => ({
+    value: item.id,
+    label: item.name
+  })),
+  adventure_game_location_id: locationsStore.locations.map(location => ({
+    value: location.id,
+    label: location.name
+  }))
+}));
+
 const showItemPlacementModal = ref(false);
 const itemPlacementModalMode = ref('create');
 const itemPlacementModalForm = ref({ adventure_game_item_id: '', adventure_game_location_id: '', initial_count: 1 });
 const itemPlacementModalError = ref('');
 const showItemPlacementDeleteConfirm = ref(false);
 const itemPlacementDeleteTarget = ref(null);
-const itemPlacementDeleteError = ref('');
 
 // Watch for game selection changes
 watch(
@@ -180,24 +159,21 @@ async function handleItemPlacementSubmit(form) {
 
 function confirmItemPlacementDelete(row) {
   itemPlacementDeleteTarget.value = row;
-  itemPlacementDeleteError.value = '';
   showItemPlacementDeleteConfirm.value = true;
 }
 
 function closeItemPlacementDelete() {
   showItemPlacementDeleteConfirm.value = false;
   itemPlacementDeleteTarget.value = null;
-  itemPlacementDeleteError.value = '';
 }
 
 async function deleteItemPlacement() {
   if (!itemPlacementDeleteTarget.value) return;
-  itemPlacementDeleteError.value = '';
   try {
     await itemPlacementsStore.deleteItemPlacement(itemPlacementDeleteTarget.value.id);
     closeItemPlacementDelete();
   } catch (err) {
-    itemPlacementDeleteError.value = err.message || 'Failed to delete.';
+    console.error('Failed to delete item placement:', err);
   }
 }
 </script>

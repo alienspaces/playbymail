@@ -25,98 +25,27 @@
         </template>
       </ResourceTable>
       
-      <!-- Custom Modal for Location Links -->
-      <div v-if="showModal" class="modal-overlay">
-        <div class="modal">
-          <h2>{{ modalMode === 'create' ? 'Create' : 'Edit' }} Location Link</h2>
-          <form @submit.prevent="handleSubmit" class="form">
-            <div class="form-group">
-              <label for="fromLocation">From Location *</label>
-              <select 
-                id="fromLocation" 
-                v-model="modalForm.from_adventure_game_location_id" 
-                required
-                class="form-control"
-              >
-                <option value="">Select a location...</option>
-                <option 
-                  v-for="location in locationsStore.locations" 
-                  :key="location.id" 
-                  :value="location.id"
-                >
-                  {{ location.name }}
-                </option>
-              </select>
-            </div>
-            
-            <div class="form-group">
-              <label for="toLocation">To Location *</label>
-              <select 
-                id="toLocation" 
-                v-model="modalForm.to_adventure_game_location_id" 
-                required
-                class="form-control"
-              >
-                <option value="">Select a location...</option>
-                <option 
-                  v-for="location in locationsStore.locations" 
-                  :key="location.id" 
-                  :value="location.id"
-                >
-                  {{ location.name }}
-                </option>
-              </select>
-            </div>
-            
-            <div class="form-group">
-              <label for="name">Link Name *</label>
-              <input 
-                id="name" 
-                v-model="modalForm.name" 
-                type="text" 
-                required 
-                maxlength="64"
-                class="form-control"
-                placeholder="e.g., North Path, Secret Door"
-              />
-            </div>
-            
-            <div class="form-group">
-              <label for="description">Description *</label>
-              <textarea 
-                id="description" 
-                v-model="modalForm.description" 
-                maxlength="255"
-                required
-                class="form-control"
-                placeholder="Describe the link between locations..."
-                rows="3"
-              ></textarea>
-            </div>
-            
-            <div class="modal-actions">
-              <button type="submit" :disabled="submitting">
-                {{ submitting ? 'Saving...' : (modalMode === 'create' ? 'Create' : 'Update') }}
-              </button>
-              <button type="button" @click="closeModal">Cancel</button>
-            </div>
-            
-            <p v-if="modalError" class="error">{{ modalError }}</p>
-          </form>
-        </div>
-      </div>
+      <!-- Create/Edit Location Link Modal -->
+      <ResourceModalForm
+        :visible="showModal"
+        :mode="modalMode"
+        title="Location Link"
+        :fields="locationLinkFields"
+        :modelValue="modalForm"
+        :error="modalError"
+        :options="locationLinkOptions"
+        @submit="handleSubmit"
+        @cancel="closeModal"
+      />
       
-      <div v-if="showDeleteConfirm" class="modal-overlay">
-        <div class="modal">
-          <h2>Delete Location Link</h2>
-          <p>Are you sure you want to delete the link <b>"{{ deleteTarget?.name }}"</b>?</p>
-          <div class="modal-actions">
-            <button @click="deleteLocationLink">Delete</button>
-            <button @click="closeDelete">Cancel</button>
-          </div>
-          <p v-if="deleteError" class="error">{{ deleteError }}</p>
-        </div>
-      </div>
+      <!-- Confirm Delete Dialog -->
+      <ConfirmationModal
+        :visible="showDeleteConfirm"
+        title="Delete Location Link"
+        :message="`Are you sure you want to delete the link '${deleteTarget?.name}'?`"
+        @confirm="deleteLocationLink"
+        @cancel="closeDelete"
+      />
     </div>
   </div>
 </template>
@@ -128,6 +57,8 @@ import { useLocationsStore } from '../../../stores/locations';
 import { useGamesStore } from '../../../stores/games';
 import { storeToRefs } from 'pinia';
 import ResourceTable from '../../../components/ResourceTable.vue';
+import ResourceModalForm from '../../../components/ResourceModalForm.vue';
+import ConfirmationModal from '../../../components/ConfirmationModal.vue';
 
 const locationLinksStore = useLocationLinksStore();
 const locationsStore = useLocationsStore();
@@ -142,14 +73,32 @@ const columns = [
   { key: 'created_at', label: 'Created' }
 ];
 
+// Field configuration for ResourceModalForm
+const locationLinkFields = [
+  { key: 'from_adventure_game_location_id', label: 'From Location', type: 'select', required: true, placeholder: 'Select a location...' },
+  { key: 'to_adventure_game_location_id', label: 'To Location', type: 'select', required: true, placeholder: 'Select a location...' },
+  { key: 'name', label: 'Link Name', type: 'text', required: true, maxlength: 64, placeholder: 'e.g., North Path, Secret Door' },
+  { key: 'description', label: 'Description', type: 'textarea', required: true, maxlength: 255, placeholder: 'Describe the link between locations...', rows: 3 }
+];
+
+// Options for select fields
+const locationLinkOptions = computed(() => ({
+  from_adventure_game_location_id: locationsStore.locations.map(location => ({
+    value: location.id,
+    label: location.name
+  })),
+  to_adventure_game_location_id: locationsStore.locations.map(location => ({
+    value: location.id,
+    label: location.name
+  }))
+}));
+
 const showModal = ref(false);
 const modalMode = ref('create');
 const modalForm = ref({});
 const modalError = ref('');
-const submitting = ref(false);
 const showDeleteConfirm = ref(false);
 const deleteTarget = ref(null);
-const deleteError = ref('');
 
 // Watch for game selection changes
 watch(
@@ -204,47 +153,39 @@ function openEdit(row) {
 function closeModal() {
   showModal.value = false;
   modalError.value = '';
-  submitting.value = false;
 }
 
-async function handleSubmit() {
+async function handleSubmit(formData) {
   modalError.value = '';
-  submitting.value = true;
-  
   try {
     if (modalMode.value === 'create') {
-      await locationLinksStore.createLocationLink(modalForm.value);
+      await locationLinksStore.createLocationLink(formData);
     } else {
-      await locationLinksStore.updateLocationLink(modalForm.value.id, modalForm.value);
+      await locationLinksStore.updateLocationLink(modalForm.value.id, formData);
     }
     closeModal();
   } catch (err) {
     modalError.value = err.message || 'Failed to save.';
-  } finally {
-    submitting.value = false;
   }
 }
 
 function confirmDelete(row) {
   deleteTarget.value = row;
-  deleteError.value = '';
   showDeleteConfirm.value = true;
 }
 
 function closeDelete() {
   showDeleteConfirm.value = false;
   deleteTarget.value = null;
-  deleteError.value = '';
 }
 
 async function deleteLocationLink() {
   if (!deleteTarget.value) return;
-  deleteError.value = '';
   try {
     await locationLinksStore.deleteLocationLink(deleteTarget.value.id);
     closeDelete();
   } catch (err) {
-    deleteError.value = err.message || 'Failed to delete.';
+    console.error('Failed to delete location link:', err);
   }
 }
 </script>
@@ -265,46 +206,5 @@ button {
   font-weight: 400;
   color: #444;
   margin-bottom: var(--space-sm);
-}
-
-.form {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-md);
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-xs);
-}
-
-.form-group label {
-  font-weight: 500;
-  color: var(--color-text);
-}
-
-.form-control {
-  padding: var(--space-sm);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  font-size: var(--font-size-md);
-  background: var(--color-bg);
-  color: var(--color-text);
-}
-
-.form-control:focus {
-  outline: none;
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 2px rgba(var(--color-primary-rgb), 0.2);
-}
-
-select.form-control {
-  cursor: pointer;
-}
-
-textarea.form-control {
-  resize: vertical;
-  min-height: 80px;
 }
 </style> 

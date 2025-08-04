@@ -243,8 +243,12 @@ describe('StudioCreaturePlacementsView', () => {
     wrapper.vm.showCreaturePlacementDeleteConfirm = true
     await wrapper.vm.$nextTick()
     
-    expect(wrapper.find('.modal h2').text()).toBe('Delete Creature Placement')
-    expect(wrapper.text()).toContain('Are you sure you want to delete this creature placement?')
+    // Check that ConfirmationModal is rendered with correct props
+    const confirmationModal = wrapper.findComponent({ name: 'ConfirmationModal' })
+    expect(confirmationModal.exists()).toBe(true)
+    expect(confirmationModal.props('visible')).toBe(true)
+    expect(confirmationModal.props('title')).toBe('Delete Creature Placement')
+    expect(confirmationModal.props('message')).toBe('Are you sure you want to delete this creature placement?')
   })
 
   it('has correct CSS classes for styling', async () => {

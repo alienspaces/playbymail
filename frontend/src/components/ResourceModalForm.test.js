@@ -13,6 +13,18 @@ describe('ResourceModalForm', () => {
     description: 'Test Description'
   }
 
+  const mockSelectFields = [
+    { key: 'category', label: 'Category', type: 'select', required: true, placeholder: 'Select a category...' },
+    { key: 'count', label: 'Count', type: 'number', required: true, min: 1 }
+  ]
+
+  const mockOptions = {
+    category: [
+      { value: 'option1', label: 'Option 1' },
+      { value: 'option2', label: 'Option 2' }
+    ]
+  }
+
   it('renders modal when visible is true', () => {
     const wrapper = mount(ResourceModalForm, {
       props: {
@@ -106,6 +118,34 @@ describe('ResourceModalForm', () => {
     
     expect(textareas[0].attributes('id')).toBe('description')
     expect(textareas[0].attributes('maxlength')).toBe('500')
+  })
+
+  it('renders select fields correctly', () => {
+    const wrapper = mount(ResourceModalForm, {
+      props: {
+        visible: true,
+        mode: 'create',
+        title: 'Item',
+        fields: mockSelectFields,
+        modelValue: {},
+        error: null,
+        options: mockOptions
+      }
+    })
+
+    const selects = wrapper.findAll('select')
+    const inputs = wrapper.findAll('input')
+    expect(selects).toHaveLength(1)
+    expect(inputs).toHaveLength(1)
+
+    expect(selects[0].attributes('id')).toBe('category')
+    expect(selects[0].attributes('required')).toBeDefined()
+    
+    const options = selects[0].findAll('option')
+    expect(options).toHaveLength(3) // placeholder + 2 options
+    expect(options[0].text()).toBe('Select a category...')
+    expect(options[1].text()).toBe('Option 1')
+    expect(options[2].text()).toBe('Option 2')
   })
 
   it('populates form with modelValue', async () => {

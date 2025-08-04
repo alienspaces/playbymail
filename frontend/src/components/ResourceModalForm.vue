@@ -6,9 +6,22 @@
         <div v-for="field in fields" :key="field.key" class="form-group">
           <label :for="field.key">{{ field.label }}{{ field.required ? ' *' : '' }}</label>
           <slot name="field" :field="field" :value="form[field.key]" :update="val => form[field.key] = val">
+            <!-- Render select for select type -->
+            <select
+              v-if="field.type === 'select'"
+              v-model="form[field.key]"
+              :id="field.key"
+              :required="field.required"
+              :placeholder="field.placeholder"
+            >
+              <option v-if="field.placeholder" value="" disabled>{{ field.placeholder }}</option>
+              <option v-for="option in getFieldOptions(field)" :key="option.value" :value="option.value">
+                {{ option.label }}
+              </option>
+            </select>
             <!-- Render textarea for textarea type -->
             <textarea
-              v-if="field.type === 'textarea'"
+              v-else-if="field.type === 'textarea'"
               v-model="form[field.key]"
               :id="field.key"
               :required="field.required"
@@ -48,10 +61,12 @@ const props = defineProps({
   title: String,
   fields: Array,
   modelValue: Object,
-  error: String
+  error: String,
+  options: Object // New prop for field options
 });
 const emit = defineEmits(['submit', 'cancel']);
 const form = reactive({});
+
 watch(
   () => props.modelValue,
   (val) => {
@@ -59,6 +74,17 @@ watch(
   },
   { immediate: true, deep: true }
 );
+
+function getFieldOptions(field) {
+  if (field.options) {
+    return field.options;
+  }
+  if (props.options && props.options[field.key]) {
+    return props.options[field.key];
+  }
+  return [];
+}
+
 function handleSubmit() {
   emit('submit', { ...form });
 }
