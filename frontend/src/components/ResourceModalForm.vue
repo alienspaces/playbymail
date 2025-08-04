@@ -28,6 +28,7 @@
               :maxlength="field.maxlength"
               :placeholder="field.placeholder"
               :rows="field.rows || 4"
+              autocomplete="off"
             />
             <!-- Render input for other types -->
             <input
@@ -40,6 +41,7 @@
               :placeholder="field.placeholder"
               :min="field.min"
               :max="field.max"
+              autocomplete="off"
             />
           </slot>
         </div>
