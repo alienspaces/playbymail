@@ -35,37 +35,16 @@
         :error="modalError"
         @submit="handleSubmit"
         @cancel="closeModal"
-      >
-        <template v-slot:field="{ field }">
-          <textarea 
-            v-if="field.key === 'description'" 
-            v-model="modalForm[field.key]" 
-            :rows="4" 
-            :maxlength="field.maxlength" 
-            :required="field.required"
-          />
-          <input 
-            v-else 
-            v-model="modalForm[field.key]" 
-            :type="field.type || 'text'" 
-            :required="field.required" 
-            :maxlength="field.maxlength" 
-          />
-        </template>
-      </ResourceModalForm>
+      />
 
       <!-- Confirm Delete Dialog -->
-      <div v-if="showDeleteConfirm" class="modal-overlay">
-        <div class="modal">
-          <h2>Delete Creature</h2>
-          <p>Are you sure you want to delete <b>{{ deleteTarget?.name }}</b>?</p>
-          <div class="modal-actions">
-            <button @click="deleteCreature">Delete</button>
-            <button @click="closeDelete">Cancel</button>
-          </div>
-          <p v-if="deleteError" class="error">{{ deleteError }}</p>
-        </div>
-      </div>
+      <ConfirmationModal
+        :visible="showDeleteConfirm"
+        title="Delete Creature"
+        :message="`Are you sure you want to delete '${deleteTarget?.name}'?`"
+        @confirm="deleteCreature"
+        @cancel="closeDelete"
+      />
     </div>
   </div>
 </template>
@@ -77,6 +56,7 @@ import { useCreaturesStore } from '../../../stores/creatures';
 import { useGamesStore } from '../../../stores/games';
 import ResourceTable from '../../../components/ResourceTable.vue';
 import ResourceModalForm from '../../../components/ResourceModalForm.vue';
+import ConfirmationModal from '../../../components/ConfirmationModal.vue';
 
 const creaturesStore = useCreaturesStore();
 const gamesStore = useGamesStore();
@@ -100,7 +80,6 @@ const modalForm = ref({ name: '', description: '' });
 const modalError = ref('');
 const showDeleteConfirm = ref(false);
 const deleteTarget = ref(null);
-const deleteError = ref('');
 
 // Watch for game selection changes
 watch(
@@ -144,22 +123,19 @@ async function handleSubmit(form) {
 }
 function confirmDelete(row) {
   deleteTarget.value = row;
-  deleteError.value = '';
   showDeleteConfirm.value = true;
 }
 function closeDelete() {
   showDeleteConfirm.value = false;
   deleteTarget.value = null;
-  deleteError.value = '';
 }
 async function deleteCreature() {
   if (!deleteTarget.value) return;
-  deleteError.value = '';
   try {
     await creaturesStore.deleteCreature(deleteTarget.value.id);
     closeDelete();
   } catch (err) {
-    deleteError.value = err.message || 'Failed to delete.';
+    console.error('Failed to delete creature:', err);
   }
 }
 </script>

@@ -94,13 +94,18 @@ describe('ResourceModalForm', () => {
     expect(labels[0].text()).toBe('Name *')
     expect(labels[1].text()).toBe('Description')
 
-    // Check inputs
+    // Check inputs and textareas
     const inputs = wrapper.findAll('input')
-    expect(inputs).toHaveLength(2)
+    const textareas = wrapper.findAll('textarea')
+    expect(inputs).toHaveLength(1)
+    expect(textareas).toHaveLength(1)
+    
     expect(inputs[0].attributes('id')).toBe('name')
     expect(inputs[0].attributes('required')).toBeDefined()
     expect(inputs[0].attributes('maxlength')).toBe('100')
-    expect(inputs[1].attributes('id')).toBe('description')
+    
+    expect(textareas[0].attributes('id')).toBe('description')
+    expect(textareas[0].attributes('maxlength')).toBe('500')
   })
 
   it('populates form with modelValue', async () => {

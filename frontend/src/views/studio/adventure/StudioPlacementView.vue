@@ -28,6 +28,8 @@
             <button @click="confirmItemPlacementDelete(row)">Delete</button>
           </template>
         </ResourceTable>
+
+        <!-- Create/Edit Modal using ResourceModalForm -->
         <ResourceModalForm
           :visible="showItemPlacementModal"
           :mode="itemPlacementModalMode"
@@ -48,6 +50,7 @@
             <input v-else v-model="itemPlacementModalForm[field.key]" :type="field.type || 'text'" :required="field.required" :maxlength="field.maxlength" :placeholder="field.placeholder" />
           </template>
         </ResourceModalForm>
+
         <div v-if="showItemPlacementDeleteConfirm" class="modal-overlay">
           <div class="modal">
             <h2>Delete Item Placement</h2>
