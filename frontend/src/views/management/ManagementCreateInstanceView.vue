@@ -34,29 +34,24 @@
 
         <div class="form-section">
           <h3>Instance Configuration</h3>
-          
-          <div class="form-group">
-            <label for="turn-deadline">Turn Deadline (hours)</label>
-            <input
-              id="turn-deadline"
-              v-model.number="form.turnDeadlineHours"
-              type="number"
-              min="1"
-              max="8760"
-              required
-            />
-            <p class="help-text">How many hours players have to submit their turn (1-8760 hours)</p>
-          </div>
+          <!-- TODO: Add per-instance configuration fields here -->          
+        </div>
 
-          <div class="form-group">
-            <label for="maxTurns">Max Turns (optional)</label>
-            <input
-              id="maxTurns"
-              v-model.number="form.maxTurns"
-              type="number"
-              min="1"
-              class="form-control"
-              placeholder="Leave empty for unlimited turns"
+        <!-- Game Type Configuration Section -->
+        <div v-if="gameConfigurations.length > 0" class="form-section">
+          <h3>Game Configuration</h3>
+          <p class="section-description">
+            Configure game-specific parameters for this instance
+          </p>
+          
+          <div class="configuration-fields">
+            <ConfigurationField
+              v-for="config in gameConfigurations"
+              :key="config.id"
+              :config="config"
+              :field-id="`config-${config.config_key}`"
+              v-model="form.configurations[config.config_key]"
+              @validation-error="handleConfigValidationError"
             />
           </div>
         </div>
@@ -84,26 +79,39 @@ import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useGamesStore } from '../../stores/games';
 import { useGameInstancesStore } from '../../stores/gameInstances';
+import { useGameConfigurationsStore } from '../../stores/gameConfigurations';
+import ConfigurationField from '../../components/ConfigurationField.vue';
 
 const route = useRoute();
 const router = useRouter();
 const gamesStore = useGamesStore();
 const gameInstancesStore = useGameInstancesStore();
+const gameConfigurationsStore = useGameConfigurationsStore();
 
 const gameId = computed(() => route.params.gameId);
 const selectedGame = computed(() => gamesStore.games.find(g => g.id === gameId.value));
+const gameConfigurations = computed(() => {
+  if (!selectedGame.value) return [];
+  return gameConfigurationsStore.getConfigurationsByGameType(selectedGame.value.game_type);
+});
 
 const loading = ref(false);
 const error = ref('');
 
 const form = ref({
-  turnDeadlineHours: 24,
-  maxTurns: null
+  configurations: {}
 });
+
+const configValidationErrors = ref({});
 
 onMounted(async () => {
   if (!selectedGame.value) {
     await gamesStore.fetchGames();
+  }
+  
+  // Fetch game configurations for the selected game type
+  if (selectedGame.value) {
+    await gameConfigurationsStore.fetchGameConfigurationsByGameType(selectedGame.value.game_type);
   }
 });
 
@@ -119,8 +127,7 @@ const createInstance = async () => {
   try {
     const instanceData = {
       game_id: gameId.value,
-      turn_deadline_hours: form.value.turnDeadlineHours,
-      max_turns: form.value.maxTurns || null
+      configurations: form.value.configurations
     };
 
     await gameInstancesStore.createGameInstance(gameId.value, instanceData);
@@ -129,6 +136,14 @@ const createInstance = async () => {
     error.value = err.message || 'Failed to create game instance';
   } finally {
     loading.value = false;
+  }
+};
+
+const handleConfigValidationError = (configKey, error) => {
+  if (error) {
+    configValidationErrors.value[configKey] = error;
+  } else {
+    delete configValidationErrors.value[configKey];
   }
 };
 
@@ -258,6 +273,17 @@ const goBack = () => {
   font-size: var(--font-size-xs);
   color: var(--color-text-muted);
   line-height: 1.4;
+}
+
+.section-description {
+  margin-bottom: var(--space-lg);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.configuration-fields {
+  display: grid;
+  gap: var(--space-md);
 }
 
 .form-actions {

@@ -1,7 +1,7 @@
 package game_record
 
 import (
-	"time"
+	"database/sql"
 
 	"github.com/jackc/pgx/v5"
 
@@ -18,10 +18,8 @@ const (
 	FieldGameInstanceGameID              string = "game_id"
 	FieldGameInstanceStatus              string = "status"
 	FieldGameInstanceCurrentTurn         string = "current_turn"
-	FieldGameInstanceMaxTurns            string = "max_turns"
-	FieldGameInstanceTurnDeadlineHours   string = "turn_deadline_hours"
 	FieldGameInstanceLastTurnProcessedAt string = "last_turn_processed_at"
-	FieldGameInstanceNextTurnDeadline    string = "next_turn_deadline"
+	FieldGameInstanceNextTurnDueAt       string = "next_turn_due_at"
 	FieldGameInstanceStartedAt           string = "started_at"
 	FieldGameInstanceCompletedAt         string = "completed_at"
 	FieldGameInstanceCreatedAt           string = "created_at"
@@ -41,15 +39,13 @@ const (
 
 type GameInstance struct {
 	record.Record
-	GameID              string     `db:"game_id"`
-	Status              string     `db:"status"`
-	CurrentTurn         int        `db:"current_turn"`
-	MaxTurns            *int       `db:"max_turns"`
-	TurnDeadlineHours   int        `db:"turn_deadline_hours"`
-	LastTurnProcessedAt *time.Time `db:"last_turn_processed_at"`
-	NextTurnDeadline    *time.Time `db:"next_turn_deadline"`
-	StartedAt           *time.Time `db:"started_at"`
-	CompletedAt         *time.Time `db:"completed_at"`
+	GameID              string       `db:"game_id"`
+	Status              string       `db:"status"`
+	CurrentTurn         int          `db:"current_turn"`
+	LastTurnProcessedAt sql.NullTime `db:"last_turn_processed_at"`
+	NextTurnDueAt       sql.NullTime `db:"next_turn_due_at"`
+	StartedAt           sql.NullTime `db:"started_at"`
+	CompletedAt         sql.NullTime `db:"completed_at"`
 }
 
 func (r *GameInstance) ToNamedArgs() pgx.NamedArgs {
@@ -57,11 +53,9 @@ func (r *GameInstance) ToNamedArgs() pgx.NamedArgs {
 	args[FieldGameInstanceGameID] = r.GameID
 	args[FieldGameInstanceStatus] = r.Status
 	args[FieldGameInstanceCurrentTurn] = r.CurrentTurn
-	args[FieldGameInstanceMaxTurns] = r.MaxTurns
-	args[FieldGameInstanceTurnDeadlineHours] = r.TurnDeadlineHours
 	args[FieldGameInstanceLastTurnProcessedAt] = r.LastTurnProcessedAt
-	args[FieldGameInstanceNextTurnDeadline] = r.NextTurnDeadline
+	args[FieldGameInstanceNextTurnDueAt] = r.NextTurnDueAt
 	args[FieldGameInstanceStartedAt] = r.StartedAt
 	args[FieldGameInstanceCompletedAt] = r.CompletedAt
 	return args
-} 
+}

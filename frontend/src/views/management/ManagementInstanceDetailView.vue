@@ -43,13 +43,9 @@
             <span class="label">Current Turn</span>
             <span class="value">{{ instance.current_turn }}</span>
           </div>
-          <div class="status-item">
-            <span class="label">Max Turns</span>
-            <span class="value">{{ instance.max_turns || 'Unlimited' }}</span>
-          </div>
-          <div class="status-item">
-            <span class="label">Turn Deadline</span>
-            <span class="value">{{ formatDeadline(instance.next_turn_deadline) }}</span>
+          <div class="status-item" v-if="instance.next_turn_due_at">
+            <span class="label">Next Turn Due</span>
+            <span class="value">{{ formatDeadline(instance.next_turn_due_at) }}</span>
           </div>
         </div>
       </div>

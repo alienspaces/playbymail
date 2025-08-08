@@ -30,21 +30,14 @@
             <label>Current Turn:</label>
             <span>{{ gameInstance.current_turn }}</span>
           </div>
-          <div class="status-item">
-            <label>Max Turns:</label>
-            <span>{{ gameInstance.max_turns || 'Unlimited' }}</span>
-          </div>
-          <div class="status-item">
-            <label>Turn Deadline:</label>
-            <span>{{ gameInstance.turn_deadline_hours }} hours</span>
-          </div>
+          
           <div class="status-item" v-if="gameInstance.started_at">
             <label>Started:</label>
             <span>{{ formatDate(gameInstance.started_at) }}</span>
           </div>
-          <div class="status-item" v-if="gameInstance.next_turn_deadline">
-            <label>Next Turn Deadline:</label>
-            <span>{{ formatDate(gameInstance.next_turn_deadline) }}</span>
+          <div class="status-item" v-if="gameInstance.next_turn_due_at">
+            <label>Next Turn Due:</label>
+            <span>{{ formatDate(gameInstance.next_turn_due_at) }}</span>
           </div>
         </div>
       </div>
@@ -96,8 +89,8 @@
           <p v-if="gameInstance.last_turn_processed_at">
             <strong>Last Turn Processed:</strong> {{ formatDate(gameInstance.last_turn_processed_at) }}
           </p>
-          <p v-if="gameInstance.next_turn_deadline">
-            <strong>Next Turn Deadline:</strong> {{ formatDate(gameInstance.next_turn_deadline) }}
+          <p v-if="gameInstance.next_turn_due_at">
+            <strong>Next Turn Due:</strong> {{ formatDate(gameInstance.next_turn_due_at) }}
           </p>
         </div>
       </div>

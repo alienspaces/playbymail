@@ -26,14 +26,7 @@
         "last_turn_processed_at": {
             "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/updated_at"
         },
-        "max_turns": {
-            "minimum": 1,
-            "type": [
-                "integer",
-                "null"
-            ]
-        },
-        "next_turn_deadline": {
+        "next_turn_due_at": {
             "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/updated_at"
         },
         "started_at": {
@@ -50,10 +43,6 @@
             ],
             "type": "string"
         },
-        "turn_deadline_hours": {
-            "minimum": 1,
-            "type": "integer"
-        },
         "updated_at": {
             "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/updated_at"
         }
@@ -63,7 +52,6 @@
         "game_id",
         "status",
         "current_turn",
-        "turn_deadline_hours",
         "created_at"
     ],
     "additionalProperties": false

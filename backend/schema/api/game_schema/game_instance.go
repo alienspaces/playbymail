@@ -11,10 +11,8 @@ type GameInstance struct {
 	GameID              string     `json:"game_id"`
 	Status              string     `json:"status"`
 	CurrentTurn         int        `json:"current_turn"`
-	MaxTurns            *int       `json:"max_turns,omitempty"`
-	TurnDeadlineHours   int        `json:"turn_deadline_hours"`
 	LastTurnProcessedAt *time.Time `json:"last_turn_processed_at,omitempty"`
-	NextTurnDeadline    *time.Time `json:"next_turn_deadline,omitempty"`
+	NextTurnDueAt       *time.Time `json:"next_turn_due_at,omitempty"`
 	StartedAt           *time.Time `json:"started_at,omitempty"`
 	CompletedAt         *time.Time `json:"completed_at,omitempty"`
 	CreatedAt           time.Time  `json:"created_at"`
@@ -39,10 +37,8 @@ type GameInstanceRequest struct {
 	GameID              string     `json:"game_id"`
 	Status              string     `json:"status,omitempty"`
 	CurrentTurn         int        `json:"current_turn,omitempty"`
-	MaxTurns            *int       `json:"max_turns,omitempty"`
-	TurnDeadlineHours   int        `json:"turn_deadline_hours,omitempty"`
 	LastTurnProcessedAt *time.Time `json:"last_turn_processed_at,omitempty"`
-	NextTurnDeadline    *time.Time `json:"next_turn_deadline,omitempty"`
+	NextTurnDueAt       *time.Time `json:"next_turn_due_at,omitempty"`
 	StartedAt           *time.Time `json:"started_at,omitempty"`
 	CompletedAt         *time.Time `json:"completed_at,omitempty"`
 }

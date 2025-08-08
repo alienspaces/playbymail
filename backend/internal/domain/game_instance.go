@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"time"
 
+	"gitlab.com/alienspaces/playbymail/core/nulltime"
+	"gitlab.com/alienspaces/playbymail/core/record"
 	"gitlab.com/alienspaces/playbymail/core/sql"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 )
@@ -27,9 +29,7 @@ func (m *Domain) CreateGameInstanceRec(rec *game_record.GameInstance) (*game_rec
 	if rec.CurrentTurn == 0 {
 		rec.CurrentTurn = 0
 	}
-	if rec.TurnDeadlineHours == 0 {
-		rec.TurnDeadlineHours = 168 // Default 7 days
-	}
+	// no per-instance turn deadline config here; configs are handled separately
 
 	var err error
 	rec, err = r.CreateOne(rec)
@@ -80,18 +80,16 @@ func (m *Domain) StartGameInstance(instanceID string) (*game_record.GameInstance
 		return nil, err
 	}
 
-	if instance.Status != "created" {
+	if instance.Status != game_record.GameInstanceStatusCreated {
 		return nil, fmt.Errorf("game instance must be in 'created' status to start")
 	}
 
 	now := time.Now()
-	instance.Status = "starting"
-	instance.StartedAt = &now
+	instance.Status = game_record.GameInstanceStatusStarting
+	instance.StartedAt = nulltime.FromTime(now)
 	instance.CurrentTurn = 0
 
-	// Set the first turn deadline
-	nextDeadline := now.Add(time.Duration(instance.TurnDeadlineHours) * time.Hour)
-	instance.NextTurnDeadline = &nextDeadline
+	// NOTE: The turn processing job will determine when the next turn is due.
 
 	instance, err = m.UpdateGameInstanceRec(instance)
 	if err != nil {
@@ -99,7 +97,8 @@ func (m *Domain) StartGameInstance(instanceID string) (*game_record.GameInstance
 		return nil, err
 	}
 
-	l.Info("started game instance >%s< with first turn deadline >%v<", instanceID, nextDeadline)
+	l.Info("started game instance >%s<", instanceID)
+
 	return instance, nil
 }
 
@@ -112,13 +111,13 @@ func (m *Domain) BeginTurnProcessing(instanceID string) (*game_record.GameInstan
 		return nil, err
 	}
 
-	if instance.Status != "running" && instance.Status != "starting" {
+	if instance.Status != game_record.GameInstanceStatusRunning && instance.Status != game_record.GameInstanceStatusStarting {
 		return nil, fmt.Errorf("game instance must be running or starting to process turns")
 	}
 
-	instance.Status = "running"
+	instance.Status = game_record.GameInstanceStatusRunning
 	now := time.Now()
-	instance.LastTurnProcessedAt = &now
+	instance.LastTurnProcessedAt = nulltime.FromTime(now)
 
 	instance, err = m.UpdateGameInstanceRec(instance)
 	if err != nil {
@@ -139,23 +138,23 @@ func (m *Domain) CompleteTurn(instanceID string) (*game_record.GameInstance, err
 		return nil, err
 	}
 
-	if instance.Status != "running" {
+	if instance.Status != game_record.GameInstanceStatusRunning {
 		return nil, fmt.Errorf("game instance must be running to complete turns")
 	}
 
 	// Check if we've reached max turns
-	if instance.MaxTurns != nil && instance.CurrentTurn >= *instance.MaxTurns {
-		instance.Status = "completed"
+	// max turns handled via configuration; not tracked directly on instance
+	if false {
+		instance.Status = game_record.GameInstanceStatusCompleted
 		now := time.Now()
-		instance.CompletedAt = &now
-		l.Info("game instance >%s< completed after reaching max turns >%d<", instanceID, *instance.MaxTurns)
+		instance.CompletedAt = nulltime.FromTime(now)
+		l.Info("game instance >%s< completed", instanceID)
 	} else {
 		// Advance to next turn
 		instance.CurrentTurn++
-		now := time.Now()
-		nextDeadline := now.Add(time.Duration(instance.TurnDeadlineHours) * time.Hour)
-		instance.NextTurnDeadline = &nextDeadline
-		l.Info("advanced game instance >%s< to turn >%d< with deadline >%v<", instanceID, instance.CurrentTurn, nextDeadline)
+		// next turn due at computed elsewhere
+		instance.NextTurnDueAt = record.NewRecordNullTimestamp()
+		l.Info("advanced game instance >%s< to turn >%d<", instanceID, instance.CurrentTurn)
 	}
 
 	instance, err = m.UpdateGameInstanceRec(instance)
@@ -171,81 +170,84 @@ func (m *Domain) CompleteTurn(instanceID string) (*game_record.GameInstance, err
 func (m *Domain) PauseGameInstance(instanceID string) (*game_record.GameInstance, error) {
 	l := m.Logger("PauseGameInstance")
 
-	instance, err := m.GetGameInstanceRec(instanceID, sql.ForUpdateNoWait)
+	instanceRec, err := m.GetGameInstanceRec(instanceID, sql.ForUpdateNoWait)
 	if err != nil {
 		return nil, err
 	}
 
-	if instance.Status != "running" {
+	if instanceRec.Status != game_record.GameInstanceStatusRunning {
 		return nil, fmt.Errorf("game instance must be running to pause")
 	}
 
-	instance.Status = "paused"
+	instanceRec.Status = game_record.GameInstanceStatusPaused
 
-	instance, err = m.UpdateGameInstanceRec(instance)
+	instanceRec, err = m.UpdateGameInstanceRec(instanceRec)
 	if err != nil {
 		l.Warn("failed updating game instance to paused status >%v<", err)
 		return nil, err
 	}
 
 	l.Info("paused game instance >%s<", instanceID)
-	return instance, nil
+	return instanceRec, nil
 }
 
 // ResumeGameInstance resumes a paused game instance
 func (m *Domain) ResumeGameInstance(instanceID string) (*game_record.GameInstance, error) {
 	l := m.Logger("ResumeGameInstance")
 
-	instance, err := m.GetGameInstanceRec(instanceID, sql.ForUpdateNoWait)
+	instanceRec, err := m.GetGameInstanceRec(instanceID, sql.ForUpdateNoWait)
 	if err != nil {
 		return nil, err
 	}
 
-	if instance.Status != "paused" {
+	if instanceRec.Status != game_record.GameInstanceStatusPaused {
 		return nil, fmt.Errorf("game instance must be paused to resume")
 	}
 
-	instance.Status = "running"
+	instanceRec.Status = game_record.GameInstanceStatusRunning
 
-	instance, err = m.UpdateGameInstanceRec(instance)
+	instanceRec, err = m.UpdateGameInstanceRec(instanceRec)
 	if err != nil {
 		l.Warn("failed updating game instance to running status >%v<", err)
 		return nil, err
 	}
 
 	l.Info("resumed game instance >%s<", instanceID)
-	return instance, nil
+	return instanceRec, nil
 }
 
 // CancelGameInstance cancels a game instance
 func (m *Domain) CancelGameInstance(instanceID string) (*game_record.GameInstance, error) {
 	l := m.Logger("CancelGameInstance")
 
-	instance, err := m.GetGameInstanceRec(instanceID, sql.ForUpdateNoWait)
+	instanceRec, err := m.GetGameInstanceRec(instanceID, sql.ForUpdateNoWait)
 	if err != nil {
 		return nil, err
 	}
 
-	if instance.Status == "completed" || instance.Status == "cancelled" {
+	if instanceRec.Status == game_record.GameInstanceStatusCompleted || instanceRec.Status == game_record.GameInstanceStatusCancelled {
 		return nil, fmt.Errorf("game instance is already completed or cancelled")
 	}
 
-	instance.Status = "cancelled"
-	now := time.Now()
-	instance.CompletedAt = &now
+	instanceRec.Status = game_record.GameInstanceStatusCancelled
+	instanceRec.CompletedAt = record.NewRecordNullTimestamp()
 
-	instance, err = m.UpdateGameInstanceRec(instance)
+	instanceRec, err = m.UpdateGameInstanceRec(instanceRec)
 	if err != nil {
 		l.Warn("failed updating game instance to cancelled status >%v<", err)
 		return nil, err
 	}
 
 	l.Info("cancelled game instance >%s<", instanceID)
-	return instance, nil
+	return instanceRec, nil
 }
 
-// GetGameInstancesByStatus gets all game instances with a specific status
-func (m *Domain) GetGameInstancesByStatus(status string) ([]*game_record.GameInstance, error) {
+// GetGameInstanceRecsByStatus gets all game instances with a specific status
+func (m *Domain) GetGameInstanceRecsByStatus(status string) ([]*game_record.GameInstance, error) {
+	l := m.Logger("GetGameInstanceRecsByStatus")
+
+	l.Info("getting game instances with status >%s<", status)
+
 	r := m.GameInstanceRepository()
 	opts := &sql.Options{
 		Params: []sql.Param{
@@ -255,34 +257,47 @@ func (m *Domain) GetGameInstancesByStatus(status string) ([]*game_record.GameIns
 			},
 		},
 	}
-	recs, err := r.GetMany(opts)
+	instanceRecs, err := r.GetMany(opts)
 	if err != nil {
+		l.Warn("failed to get game instances with status >%s< >%v<", status, err)
 		return nil, err
 	}
-	return recs, nil
+
+	l.Info("returning >%d< game instances with status >%s<", len(instanceRecs), status)
+
+	return instanceRecs, nil
 }
 
-// GetGameInstancesNeedingTurnProcessing gets game instances that need turn processing
-func (m *Domain) GetGameInstancesNeedingTurnProcessing() ([]*game_record.GameInstance, error) {
+// GetGameInstanceRecsNeedingTurnProcessing gets game instances that need turn processing
+func (m *Domain) GetGameInstanceRecsNeedingTurnProcessing() ([]*game_record.GameInstance, error) {
+	l := m.Logger("GetGameInstanceRecsNeedingTurnProcessing")
+
+	l.Info("getting game instances needing turn processing")
+
 	r := m.GameInstanceRepository()
-	now := time.Now()
+	now := time.Now().UTC()
 
 	opts := &sql.Options{
 		Params: []sql.Param{
 			{
-				Col: "status",
-				Val: "running",
+				Col: game_record.FieldGameInstanceStatus,
+				Val: game_record.GameInstanceStatusRunning,
 			},
 			{
-				Col: "next_turn_deadline",
-				Val: now,
+				Col: game_record.FieldGameInstanceNextTurnDueAt,
+				Val: nulltime.FromTime(now),
 				Op:  sql.OpLessThanEqual,
 			},
 		},
 	}
-	recs, err := r.GetMany(opts)
+
+	instanceRecs, err := r.GetMany(opts)
 	if err != nil {
+		l.Warn("failed to get game instances needing turn processing >%v<", err)
 		return nil, err
 	}
-	return recs, nil
+
+	l.Info("returning >%d< game instances needing turn processing", len(instanceRecs))
+
+	return instanceRecs, nil
 }

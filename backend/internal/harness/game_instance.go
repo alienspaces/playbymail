@@ -1,10 +1,10 @@
 package harness
 
 import (
-	"database/sql"
 	"fmt"
 	"time"
 
+	"gitlab.com/alienspaces/playbymail/core/nulltime"
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 )
@@ -60,18 +60,13 @@ func (t *Testing) applyGameInstanceRecDefaultValues(rec *game_record.GameInstanc
 		rec.Status = game_record.GameInstanceStatusCreated
 	}
 
-	// Set default turn deadline if not already set
-	if rec.TurnDeadlineHours == 0 {
-		rec.TurnDeadlineHours = 168 // 7 days default
-	}
-
 	// Set timestamps if not already set
 	now := time.Now()
 	if rec.CreatedAt.IsZero() {
 		rec.CreatedAt = now
 	}
 	if !rec.UpdatedAt.Valid {
-		rec.UpdatedAt = sql.NullTime{Time: now, Valid: true}
+		rec.UpdatedAt = nulltime.FromTime(now)
 	}
 
 	return rec

@@ -74,24 +74,24 @@ func (w *CheckGameDeadlinesWorker) DoWork(ctx context.Context, m *domain.Domain,
 	l.Info("checking for games that need turn processing")
 
 	// Get all game instances that need turn processing
-	instances, err := m.GetGameInstancesNeedingTurnProcessing()
+	instanceRecs, err := m.GetGameInstanceRecsNeedingTurnProcessing()
 	if err != nil {
 		l.Warn("failed to get game instances needing turn processing >%v<", err)
 		return nil, err
 	}
 
-	l.Info("found >%d< game instances needing turn processing", len(instances))
+	l.Info("found >%d< game instances needing turn processing", len(instanceRecs))
 
 	jobsQueued := 0
 
 	// Queue turn processing jobs for each instance
-	for _, instance := range instances {
-		l.Info("queueing turn processing for game instance >%s< turn >%d<", instance.ID, instance.CurrentTurn)
+	for _, instanceRec := range instanceRecs {
+		l.Info("queueing turn processing for game instance >%s< turn >%d<", instanceRec.ID, instanceRec.CurrentTurn)
 
 		// Create turn processing job
 		turnJob := ProcessGameTurnWorkerArgs{
-			GameInstanceID: instance.ID,
-			TurnNumber:     instance.CurrentTurn,
+			GameInstanceID: instanceRec.ID,
+			TurnNumber:     instanceRec.CurrentTurn,
 		}
 
 		// Queue the job
@@ -99,18 +99,18 @@ func (w *CheckGameDeadlinesWorker) DoWork(ctx context.Context, m *domain.Domain,
 			Queue: jobqueue.QueueGame,
 		})
 		if err != nil {
-			l.Warn("failed to queue turn processing job for instance >%s< >%v<", instance.ID, err)
+			l.Warn("failed to queue turn processing job for instance >%s< >%v<", instanceRec.ID, err)
 			continue
 		}
 
 		jobsQueued++
-		l.Info("queued turn processing job for game instance >%s< turn >%d<", instance.ID, instance.CurrentTurn)
+		l.Info("queued turn processing job for game instance >%s< turn >%d<", instanceRec.ID, instanceRec.CurrentTurn)
 	}
 
-	l.Info("completed deadline check: checked >%d< games, queued >%d< jobs", len(instances), jobsQueued)
+	l.Info("completed deadline check: checked >%d< games, queued >%d< jobs", len(instanceRecs), jobsQueued)
 
 	return &CheckGameDeadlinesDoWorkResult{
-		GamesChecked: len(instances),
+		GamesChecked: len(instanceRecs),
 		JobsQueued:   jobsQueued,
 		ProcessedAt:  time.Now(),
 	}, nil

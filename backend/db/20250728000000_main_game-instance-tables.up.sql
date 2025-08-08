@@ -1,16 +1,13 @@
 -- Create table for game instances (distinct play sessions of a game)
 CREATE TABLE IF NOT EXISTS game_instance (
-    id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    game_id    UUID NOT NULL REFERENCES game(id), -- The game this instance is based on
-    status     VARCHAR(50) NOT NULL DEFAULT 'created',
-    current_turn INTEGER NOT NULL DEFAULT 0,
-    max_turns  INTEGER,
-    turn_deadline_hours INTEGER DEFAULT 168, -- 7 days default
+    id                     UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    game_id                UUID NOT NULL REFERENCES game(id), -- The game this instance is based on
+    status                 VARCHAR(50) NOT NULL DEFAULT 'created',
+    current_turn           INTEGER NOT NULL DEFAULT 0,
     last_turn_processed_at TIMESTAMPTZ,
-    next_turn_deadline TIMESTAMPTZ,
-    started_at TIMESTAMPTZ,
-    completed_at TIMESTAMPTZ,
-    game_config JSONB, -- Flexible configuration for game-specific parameters
+    next_turn_due_at       TIMESTAMPTZ,
+    started_at             TIMESTAMPTZ,
+    completed_at           TIMESTAMPTZ,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), -- When this instance was created
     updated_at TIMESTAMPTZ, -- When this instance was last updated
     deleted_at TIMESTAMPTZ -- When this instance was deleted (soft delete)
@@ -23,24 +20,15 @@ ALTER TABLE game_instance ADD CONSTRAINT game_instance_status_check
 ALTER TABLE game_instance ADD CONSTRAINT game_instance_turn_check 
     CHECK (current_turn >= 0);
 
-ALTER TABLE game_instance ADD CONSTRAINT game_instance_max_turns_check 
-    CHECK (max_turns IS NULL OR max_turns > 0);
-
-ALTER TABLE game_instance ADD CONSTRAINT game_instance_turn_deadline_check 
-    CHECK (turn_deadline_hours > 0);
-
 COMMENT ON TABLE game_instance IS 'Tracks a specific play session or instance of a game.';
 COMMENT ON COLUMN game_instance.id IS 'Unique identifier for the game instance.';
 COMMENT ON COLUMN game_instance.game_id IS 'The game this instance is based on.';
 COMMENT ON COLUMN game_instance.status IS 'Current status of the game instance';
 COMMENT ON COLUMN game_instance.current_turn IS 'Current turn number (0-based)';
-COMMENT ON COLUMN game_instance.max_turns IS 'Maximum number of turns (NULL for unlimited)';
-COMMENT ON COLUMN game_instance.turn_deadline_hours IS 'Hours allowed for each turn';
 COMMENT ON COLUMN game_instance.last_turn_processed_at IS 'When the last turn was processed';
-COMMENT ON COLUMN game_instance.next_turn_deadline IS 'Deadline for the next turn submission';
+COMMENT ON COLUMN game_instance.next_turn_due_at IS 'When the next turn is due';
 COMMENT ON COLUMN game_instance.started_at IS 'When the game instance was started';
 COMMENT ON COLUMN game_instance.completed_at IS 'When the game instance was completed';
-COMMENT ON COLUMN game_instance.game_config IS 'Game-specific configuration parameters';
 COMMENT ON COLUMN game_instance.created_at IS 'When this instance was created.';
 COMMENT ON COLUMN game_instance.updated_at IS 'When this instance was last updated.';
 COMMENT ON COLUMN game_instance.deleted_at IS 'When this instance was deleted (soft delete).';

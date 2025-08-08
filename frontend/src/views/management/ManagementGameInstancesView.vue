@@ -51,8 +51,8 @@
               <span class="value">{{ instance.current_turn }}</span>
             </div>
             <div class="info-row">
-              <span class="label">Deadline:</span>
-              <span class="value">{{ formatDeadline(instance.next_turn_deadline) }}</span>
+              <span class="label">Next Turn Due:</span>
+              <span class="value">{{ formatDeadline(instance.next_turn_due_at) }}</span>
             </div>
             <div class="info-row">
               <span class="label">Started:</span>

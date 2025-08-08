@@ -13,12 +13,10 @@ func GameInstanceRecordToResponseData(l logger.Logger, rec *game_record.GameInst
 		GameID:              rec.GameID,
 		Status:              rec.Status,
 		CurrentTurn:         rec.CurrentTurn,
-		MaxTurns:            rec.MaxTurns,
-		TurnDeadlineHours:   rec.TurnDeadlineHours,
-		LastTurnProcessedAt: rec.LastTurnProcessedAt,
-		NextTurnDeadline:    rec.NextTurnDeadline,
-		StartedAt:           rec.StartedAt,
-		CompletedAt:         rec.CompletedAt,
+		LastTurnProcessedAt: nulltime.ToTimePtr(rec.LastTurnProcessedAt),
+		NextTurnDueAt:       nulltime.ToTimePtr(rec.NextTurnDueAt),
+		StartedAt:           nulltime.ToTimePtr(rec.StartedAt),
+		CompletedAt:         nulltime.ToTimePtr(rec.CompletedAt),
 		CreatedAt:           rec.CreatedAt,
 		UpdatedAt:           nulltime.ToTimePtr(rec.UpdatedAt),
 		DeletedAt:           nulltime.ToTimePtr(rec.DeletedAt),
@@ -60,23 +58,17 @@ func GameInstanceRequestToRecord(l logger.Logger, req *game_schema.GameInstanceR
 	if req.CurrentTurn > 0 {
 		rec.CurrentTurn = req.CurrentTurn
 	}
-	if req.MaxTurns != nil {
-		rec.MaxTurns = req.MaxTurns
-	}
-	if req.TurnDeadlineHours > 0 {
-		rec.TurnDeadlineHours = req.TurnDeadlineHours
-	}
 	if req.LastTurnProcessedAt != nil {
-		rec.LastTurnProcessedAt = req.LastTurnProcessedAt
+		rec.LastTurnProcessedAt = nulltime.FromTimePtr(req.LastTurnProcessedAt)
 	}
-	if req.NextTurnDeadline != nil {
-		rec.NextTurnDeadline = req.NextTurnDeadline
+	if req.NextTurnDueAt != nil {
+		rec.NextTurnDueAt = nulltime.FromTimePtr(req.NextTurnDueAt)
 	}
 	if req.StartedAt != nil {
-		rec.StartedAt = req.StartedAt
+		rec.StartedAt = nulltime.FromTimePtr(req.StartedAt)
 	}
 	if req.CompletedAt != nil {
-		rec.CompletedAt = req.CompletedAt
+		rec.CompletedAt = nulltime.FromTimePtr(req.CompletedAt)
 	}
 	return rec, nil
 }

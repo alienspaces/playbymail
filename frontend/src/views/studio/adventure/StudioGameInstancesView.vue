@@ -61,26 +61,32 @@ const gamesStore = useGamesStore();
 const { selectedGame } = storeToRefs(gamesStore);
 
 const columns = [
-  { key: 'name', label: 'Name' },
-  { key: 'description', label: 'Description' },
-  { key: 'max_turns', label: 'Max Turns' },
-  { key: 'turn_deadline_hours', label: 'Turn Deadline (hours)' }
+  { key: 'id', label: 'ID' },
+  { key: 'game_id', label: 'Game ID' },
+  { key: 'status', label: 'Status' },
+  { key: 'current_turn', label: 'Current Turn' },
+  { key: 'last_turn_processed_at', label: 'Last Turn Processed At' },
+  { key: 'next_turn_due_at', label: 'Next Turn Due At' },
+  { key: 'started_at', label: 'Started At' },
+  { key: 'completed_at', label: 'Completed At' },
 ];
 
-const fields = [
-  { key: 'name', label: 'Name', required: true, maxlength: 1024 },
-  { key: 'description', label: 'Description', required: false, maxlength: 4096, type: 'textarea' },
-  { key: 'max_turns', label: 'Max Turns (optional)', required: false, type: 'number', min: 1 },
-  { key: 'turn_deadline_hours', label: 'Turn Deadline (hours)', required: true, type: 'number', min: 1 }
+const fields = [      
+  { key: 'game_id', label: 'Game ID', required: true, maxlength: 1024 },
+  { key: 'status', label: 'Status', required: true, maxlength: 4096, type: 'select', options: [
+    { label: 'Created', value: 'created' },
+    { label: 'Starting', value: 'starting' },
+    { label: 'Running', value: 'running' },
+    { label: 'Paused', value: 'paused' },
+    { label: 'Completed', value: 'completed' },
+  ] }
 ];
 
 const showModal = ref(false);
 const modalMode = ref('create');
 const modalForm = ref({
   name: '',
-  description: '',
-  max_turns: null,
-  turn_deadline_hours: null
+  description: ''
 });
 const modalError = ref('');
 const showDeleteModal = ref(false);
@@ -101,9 +107,7 @@ function openCreate() {
   modalMode.value = 'create';
   modalForm.value = {
     name: '',
-    description: '',
-    max_turns: null,
-    turn_deadline_hours: null
+    description: ''
   };
   modalError.value = '';
   showModal.value = true;
@@ -125,9 +129,7 @@ function closeModal() {
   showModal.value = false;
   modalForm.value = {
     name: '',
-    description: '',
-    max_turns: null,
-    turn_deadline_hours: null
+    description: ''
   };
   modalError.value = '';
 }
