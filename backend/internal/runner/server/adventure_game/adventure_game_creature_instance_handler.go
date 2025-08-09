@@ -139,7 +139,10 @@ func searchManyAdventureGameCreatureInstancesHandler(w http.ResponseWriter, r *h
 		return err
 	}
 
-	res := mapper.AdventureGameCreatureInstanceRecordsToCollectionResponse(recs)
+	res, err := mapper.AdventureGameCreatureInstanceRecordsToCollectionResponse(l, recs)
+	if err != nil {
+		return err
+	}
 
 	if err = server.WriteResponse(l, w, http.StatusOK, res); err != nil {
 		l.Warn("failed writing response >%v<", err)
@@ -174,8 +177,10 @@ func getManyAdventureGameCreatureInstancesHandler(w http.ResponseWriter, r *http
 		l.Warn("failed getting adventure game creature instance records >%v<", err)
 		return err
 	}
-
-	res := mapper.AdventureGameCreatureInstanceRecordsToCollectionResponse(recs)
+	res, err := mapper.AdventureGameCreatureInstanceRecordsToCollectionResponse(l, recs)
+	if err != nil {
+		return err
+	}
 
 	if err = server.WriteResponse(l, w, http.StatusOK, res); err != nil {
 		l.Warn("failed writing response >%v<", err)
@@ -219,7 +224,11 @@ func getOneAdventureGameCreatureInstanceHandler(w http.ResponseWriter, r *http.R
 		return coreerror.NewNotFoundError("creature instance", creatureInstanceID)
 	}
 
-	res := mapper.AdventureGameCreatureInstanceRecordToResponse(rec)
+	res, err := mapper.AdventureGameCreatureInstanceRecordToResponse(l, rec)
+	if err != nil {
+		l.Warn("failed mapping adventure game creature instance record to response >%v<", err)
+		return err
+	}
 
 	if err = server.WriteResponse(l, w, http.StatusOK, res); err != nil {
 		l.Warn("failed writing response >%v<", err)

@@ -363,16 +363,10 @@ func updateOneAdventureGameCharacterHandler(w http.ResponseWriter, r *http.Reque
 		return err
 	}
 
-	data, err := mapper.AdventureGameCharacterRecordToResponseData(l, rec)
+	res, err := mapper.AdventureGameCharacterRecordToResponse(l, rec)
 	if err != nil {
 		return err
 	}
-
-	res := adventure_game_schema.AdventureGameCharacterResponse{
-		Data: &data,
-	}
-
-	l.Info("responding with updated adventure game character record id >%s<", rec.ID)
 
 	if err = server.WriteResponse(l, w, http.StatusOK, res); err != nil {
 		l.Warn("failed writing response >%v<", err)

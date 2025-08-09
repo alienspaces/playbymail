@@ -4,22 +4,6 @@
     "title": "GameConfigurationRequest",
     "type": "object",
     "properties": {
-        "config_key": {
-            "maxLength": 100,
-            "type": "string"
-        },
-        "default_value": {
-            "type": [
-                "string",
-                "null"
-            ]
-        },
-        "description": {
-            "type": [
-                "string",
-                "null"
-            ]
-        },
         "game_type": {
             "enum": [
                 "adventure",
@@ -29,17 +13,11 @@
             ],
             "type": "string"
         },
-        "is_required": {
-            "type": "boolean"
+        "config_key": {
+            "maxLength": 100,
+            "type": "string"
         },
-        "ui_hint": {
-            "maxLength": 50,
-            "type": [
-                "string",
-                "null"
-            ]
-        },
-        "validation_rules": {
+        "description": {
             "type": [
                 "string",
                 "null"
@@ -53,6 +31,18 @@
                 "json"
             ],
             "type": "string"
+        },
+        "default_value": {
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "is_required": {
+            "type": "boolean"
+        },
+        "is_global": {
+            "type": "boolean"
         }
     },
     "required": [

@@ -17,7 +17,6 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/mapper"
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 	"gitlab.com/alienspaces/playbymail/internal/utils/logging"
-	"gitlab.com/alienspaces/playbymail/schema/api/adventure_game_schema"
 )
 
 // API Resource Search Path
@@ -185,92 +184,6 @@ func adventureGameItemHandlerConfig(l logger.Logger) (map[string]server.HandlerC
 		},
 	}
 
-	// Legacy paths (do not modify)
-	// Legacy handlers commented out due to Adventure-prefixed naming alignment
-	/*
-		gameItemConfig[getManyGameItems] = server.HandlerConfig{
-			Method:      http.MethodGet,
-			Path:        "/v1/game-items",
-			HandlerFunc: getManyGameItemsHandler,
-			MiddlewareConfig: server.MiddlewareConfig{
-				AuthenTypes: []server.AuthenticationType{
-					server.AuthenticationTypeToken,
-				},
-				ValidateResponseSchema: collectionResponseSchema,
-			},
-			DocumentationConfig: server.DocumentationConfig{
-				Document:   true,
-				Collection: true,
-				Title:      "Get game_item collection",
-			},
-		}
-
-		gameItemConfig[getOneGameItem] = server.HandlerConfig{
-			Method:      http.MethodGet,
-			Path:        "/v1/game-items/:game_item_id",
-			HandlerFunc: getGameItemHandler,
-			MiddlewareConfig: server.MiddlewareConfig{
-				AuthenTypes: []server.AuthenticationType{
-					server.AuthenticationTypeToken,
-				},
-				ValidateResponseSchema: responseSchema,
-			},
-			DocumentationConfig: server.DocumentationConfig{
-				Document: true,
-				Title:    "Get game_item",
-			},
-		}
-
-		gameItemConfig[createGameItem] = server.HandlerConfig{
-			Method:      http.MethodPost,
-			Path:        "/v1/game-items",
-			HandlerFunc: createGameItemHandler,
-			MiddlewareConfig: server.MiddlewareConfig{
-				AuthenTypes: []server.AuthenticationType{
-					server.AuthenticationTypeToken,
-				},
-				ValidateRequestSchema:  requestSchema,
-				ValidateResponseSchema: responseSchema,
-			},
-			DocumentationConfig: server.DocumentationConfig{
-				Document: true,
-				Title:    "Create game_item",
-			},
-		}
-
-		gameItemConfig[updateGameItem] = server.HandlerConfig{
-			Method:      http.MethodPut,
-			Path:        "/v1/game-items/:game_item_id",
-			HandlerFunc: updateGameItemHandler,
-			MiddlewareConfig: server.MiddlewareConfig{
-				AuthenTypes: []server.AuthenticationType{
-					server.AuthenticationTypeToken,
-				},
-				ValidateRequestSchema:  requestSchema,
-				ValidateResponseSchema: responseSchema,
-			},
-			DocumentationConfig: server.DocumentationConfig{
-				Document: true,
-				Title:    "Update game_item",
-			},
-		}
-
-		gameItemConfig[deleteGameItem] = server.HandlerConfig{
-			Method:      http.MethodDelete,
-			Path:        "/v1/game-items/:game_item_id",
-			HandlerFunc: deleteGameItemHandler,
-			MiddlewareConfig: server.MiddlewareConfig{
-				AuthenTypes: []server.AuthenticationType{
-					server.AuthenticationTypeToken,
-				},
-			},
-			DocumentationConfig: server.DocumentationConfig{
-				Document: true,
-				Title:    "Delete game_item",
-			},
-		}
-	*/
-
 	return gameItemConfig, nil
 }
 
@@ -374,22 +287,22 @@ func createOneAdventureGameItemHandler(w http.ResponseWriter, r *http.Request, p
 	l = logging.LoggerWithFunctionContext(l, packageName, "createOneAdventureGameItemHandler")
 
 	gameID := pp.ByName("game_id")
+	mm := m.(*domain.Domain)
 
-	var req adventure_game_schema.AdventureGameItemRequest
-	if _, err := server.ReadRequest(l, r, &req); err != nil {
-		l.Warn("failed reading request >%v<", err)
+	gameRec, err := mm.GetGameRec(gameID, nil)
+	if err != nil {
+		l.Warn("failed getting game record >%v<", err)
 		return err
 	}
 
-	rec, err := mapper.AdventureGameItemRequestToRecord(l, &req, &adventure_game_record.AdventureGameItem{})
+	rec := &adventure_game_record.AdventureGameItem{
+		GameID: gameRec.ID,
+	}
+
+	rec, err = mapper.AdventureGameItemRequestToRecord(l, r, rec)
 	if err != nil {
 		return err
 	}
-
-	// Set the game ID from the path parameter
-	rec.GameID = gameID
-
-	mm := m.(*domain.Domain)
 
 	rec, err = mm.CreateAdventureGameItemRec(rec)
 	if err != nil {
@@ -415,18 +328,9 @@ func updateOneAdventureGameItemHandler(w http.ResponseWriter, r *http.Request, p
 
 	gameID := pp.ByName("game_id")
 	itemID := pp.ByName("item_id")
-
-	l.Info("updating adventure game item record with path params >%#v<", pp)
-
-	var req adventure_game_schema.AdventureGameItemRequest
-	if _, err := server.ReadRequest(l, r, &req); err != nil {
-		l.Warn("failed reading request >%v<", err)
-		return err
-	}
-
 	mm := m.(*domain.Domain)
 
-	rec, err := mm.GetAdventureGameItemRec(itemID, nil)
+	rec, err := mm.GetAdventureGameItemRec(itemID, sql.ForUpdateNoWait)
 	if err != nil {
 		return err
 	}
@@ -437,7 +341,7 @@ func updateOneAdventureGameItemHandler(w http.ResponseWriter, r *http.Request, p
 		return coreerror.NewNotFoundError("item", itemID)
 	}
 
-	rec, err = mapper.AdventureGameItemRequestToRecord(l, &req, rec)
+	rec, err = mapper.AdventureGameItemRequestToRecord(l, r, rec)
 	if err != nil {
 		return err
 	}
@@ -448,16 +352,10 @@ func updateOneAdventureGameItemHandler(w http.ResponseWriter, r *http.Request, p
 		return err
 	}
 
-	data, err := mapper.AdventureGameItemRecordToResponseData(l, rec)
+	res, err := mapper.AdventureGameItemRecordToResponse(l, rec)
 	if err != nil {
 		return err
 	}
-
-	res := adventure_game_schema.AdventureGameItemResponse{
-		Data: &data,
-	}
-
-	l.Info("responding with updated adventure game item record id >%s<", rec.ID)
 
 	if err = server.WriteResponse(l, w, http.StatusOK, res); err != nil {
 		l.Warn("failed writing response >%v<", err)
@@ -501,176 +399,3 @@ func deleteOneAdventureGameItemHandler(w http.ResponseWriter, r *http.Request, p
 
 	return nil
 }
-
-// Legacy handler - commented out due to Adventure-prefixed naming alignment
-/*
-func getManyGameItemsHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
-	l = logging.LoggerWithFunctionContext(l, "GetManyGameItemsHandler")
-
-	mm := m.(*domain.Domain)
-	opts := queryparam.ToSQLOptionsWithDefaults(qp)
-
-	recs, err := mm.GetManyGameItemRecs(opts)
-	if err != nil {
-		l.Warn("failed getting game_item records >%v<", err)
-		return err
-	}
-
-	res, err := mapper.GameItemRecordsToCollectionResponse(l, recs)
-	if err != nil {
-		return err
-	}
-
-	if err = server.WriteResponse(l, w, http.StatusOK, res); err != nil {
-		l.Warn("failed writing response >%v<", err)
-		return err
-	}
-
-	return nil
-}
-*/
-
-// Legacy handler - commented out due to Adventure-prefixed naming alignment
-/*
-func getGameItemHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
-	l = logging.LoggerWithFunctionContext(l, "GetGameItemHandler")
-
-	gameItemID := pp.ByName("game_item_id")
-	mm := m.(*domain.Domain)
-
-	rec, err := mm.GetGameItemRec(gameItemID, nil)
-	if err != nil {
-		l.Warn("failed getting game_item record >%v<", err)
-		return err
-	}
-
-	res, err := mapper.GameItemRecordToResponse(l, rec)
-	if err != nil {
-		l.Warn("failed mapping game_item record to response >%v<", err)
-		return err
-	}
-
-	if err = server.WriteResponse(l, w, http.StatusOK, res); err != nil {
-		l.Warn("failed writing response >%v<", err)
-		return err
-	}
-
-	return nil
-}
-*/
-
-// Legacy handler - commented out due to Adventure-prefixed naming alignment
-/*
-func createGameItemHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
-	l = logging.LoggerWithFunctionContext(l, "CreateGameItemHandler")
-
-	var req adventure_game.GameItemRequest
-	if _, err := server.ReadRequest(l, r, &req); err != nil {
-		l.Warn("failed reading request >%v<", err)
-		return err
-	}
-
-	rec, err := mapper.GameItemRequestToRecord(l, &req, &record.GameItem{})
-	if err != nil {
-		return err
-	}
-
-	mm := m.(*domain.Domain)
-
-	rec, err = mm.CreateGameItemRec(rec)
-	if err != nil {
-		l.Warn("failed creating game_item record >%v<", err)
-		return err
-	}
-
-	res, err := mapper.GameItemRecordToResponse(l, rec)
-	if err != nil {
-		return err
-	}
-
-	if err = server.WriteResponse(l, w, http.StatusCreated, res); err != nil {
-		l.Warn("failed writing response >%v<", err)
-		return err
-	}
-
-	return nil
-}
-*/
-
-// Legacy handler - commented out due to Adventure-prefixed naming alignment
-/*
-func updateGameItemHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
-	l = logging.LoggerWithFunctionContext(l, "UpdateGameItemHandler")
-
-	gameItemID := pp.ByName("game_item_id")
-
-	l.Info("updating game_item record with path params >%#v<", pp)
-
-	var req adventure_game.GameItemRequest
-	if _, err := server.ReadRequest(l, r, &req); err != nil {
-		l.Warn("failed reading request >%v<", err)
-		return err
-	}
-
-	mm := m.(*domain.Domain)
-
-	rec, err := mm.GetGameItemRec(gameItemID, nil)
-	if err != nil {
-		return err
-	}
-
-	rec, err = mapper.GameItemRequestToRecord(l, &req, rec)
-	if err != nil {
-		return err
-	}
-
-	rec, err = mm.UpdateGameItemRec(rec)
-	if err != nil {
-		l.Warn("failed updating game_item record >%v<", err)
-		return err
-	}
-
-	data, err := mapper.GameItemRecordToResponseData(l, rec)
-	if err != nil {
-		return err
-	}
-
-	res := adventure_game.GameItemResponse{
-		Data: &data,
-	}
-
-	l.Info("responding with updated game_item record id >%s<", rec.ID)
-
-	if err = server.WriteResponse(l, w, http.StatusOK, res); err != nil {
-		l.Warn("failed writing response >%v<", err)
-		return err
-	}
-
-	return nil
-}
-*/
-
-// Legacy handler - commented out due to Adventure-prefixed naming alignment
-/*
-func deleteGameItemHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer) error {
-	l = logging.LoggerWithFunctionContext(l, "DeleteGameItemHandler")
-
-	gameItemID := pp.ByName("game_item_id")
-
-	l.Info("deleting game_item record with path params >%#v<", pp)
-
-	mm := m.(*domain.Domain)
-
-	if err := mm.DeleteGameItemRec(gameItemID); err != nil {
-		l.Warn("failed deleting game_item record >%v<", err)
-		return err
-	}
-
-	if err := server.WriteResponse(l, w, http.StatusNoContent, nil); err != nil {
-		l.Warn("failed writing response >%v<", err)
-		return err
-	}
-
-	return nil
-}
-*/

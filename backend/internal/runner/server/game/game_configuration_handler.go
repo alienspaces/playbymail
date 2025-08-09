@@ -14,8 +14,8 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/mapper"
+	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 	"gitlab.com/alienspaces/playbymail/internal/utils/logging"
-	"gitlab.com/alienspaces/playbymail/schema/api/game_schema"
 )
 
 const (
@@ -168,7 +168,11 @@ func getManyGameConfigurationsHandler(w http.ResponseWriter, r *http.Request, pp
 		return err
 	}
 
-	response := mapper.MapGameConfigurationCollectionResponse(recs)
+	response, err := mapper.GameConfigurationRecordsToCollectionResponse(l, recs)
+	if err != nil {
+		l.Warn("failed mapping game configuration records to collection response >%v<", err)
+		return err
+	}
 
 	return server.WriteResponse(l, w, http.StatusOK, response)
 }
@@ -186,7 +190,11 @@ func getGameConfigurationHandler(w http.ResponseWriter, r *http.Request, pp http
 		return err
 	}
 
-	response := mapper.MapGameConfigurationResponse(rec)
+	response, err := mapper.GameConfigurationRecordToResponse(l, rec)
+	if err != nil {
+		l.Warn("failed mapping game configuration record to response >%v<", err)
+		return err
+	}
 
 	return server.WriteResponse(l, w, http.StatusOK, response)
 }
@@ -196,14 +204,12 @@ func createGameConfigurationHandler(w http.ResponseWriter, r *http.Request, pp h
 
 	l.Info("creating game configuration")
 
-	var request game_schema.GameConfigurationRequest
-	_, err := server.ReadRequest(l, r, &request)
+	rec := &game_record.GameConfiguration{}
+	rec, err := mapper.GameConfigurationRequestToRecord(l, r, rec)
 	if err != nil {
-		l.Warn("failed reading request >%v<", err)
+		l.Warn("failed mapping game configuration request to record >%v<", err)
 		return err
 	}
-
-	rec := mapper.MapGameConfigurationRequestToRecord(&request)
 
 	rec, err = m.(*domain.Domain).CreateGameConfigurationRec(rec)
 	if err != nil {
@@ -211,7 +217,11 @@ func createGameConfigurationHandler(w http.ResponseWriter, r *http.Request, pp h
 		return err
 	}
 
-	response := mapper.MapGameConfigurationResponse(rec)
+	response, err := mapper.GameConfigurationRecordToResponse(l, rec)
+	if err != nil {
+		l.Warn("failed mapping game configuration record to response >%v<", err)
+		return err
+	}
 
 	return server.WriteResponse(l, w, http.StatusCreated, response)
 }
@@ -223,15 +233,17 @@ func updateGameConfigurationHandler(w http.ResponseWriter, r *http.Request, pp h
 
 	l.Info("updating game configuration with id >%s<", gameConfigurationID)
 
-	var request game_schema.GameConfigurationRequest
-	_, err := server.ReadRequest(l, r, &request)
+	rec, err := m.(*domain.Domain).GetGameConfigurationRec(gameConfigurationID, nil)
 	if err != nil {
-		l.Warn("failed reading request >%v<", err)
+		l.Warn("failed getting game configuration >%v<", err)
 		return err
 	}
 
-	rec := mapper.MapGameConfigurationRequestToRecord(&request)
-	rec.ID = gameConfigurationID
+	rec, err = mapper.GameConfigurationRequestToRecord(l, r, rec)
+	if err != nil {
+		l.Warn("failed mapping game configuration request to record >%v<", err)
+		return err
+	}
 
 	rec, err = m.(*domain.Domain).UpdateGameConfigurationRec(rec)
 	if err != nil {
@@ -239,7 +251,11 @@ func updateGameConfigurationHandler(w http.ResponseWriter, r *http.Request, pp h
 		return err
 	}
 
-	response := mapper.MapGameConfigurationResponse(rec)
+	response, err := mapper.GameConfigurationRecordToResponse(l, rec)
+	if err != nil {
+		l.Warn("failed mapping game configuration record to response >%v<", err)
+		return err
+	}
 
 	return server.WriteResponse(l, w, http.StatusOK, response)
 }
@@ -251,7 +267,13 @@ func deleteGameConfigurationHandler(w http.ResponseWriter, r *http.Request, pp h
 
 	l.Info("deleting game configuration with id >%s<", gameConfigurationID)
 
-	err := m.(*domain.Domain).DeleteGameConfigurationRec(gameConfigurationID)
+	_, err := m.(*domain.Domain).GetGameConfigurationRec(gameConfigurationID, nil)
+	if err != nil {
+		l.Warn("failed getting game configuration >%v<", err)
+		return err
+	}
+
+	err = m.(*domain.Domain).DeleteGameConfigurationRec(gameConfigurationID)
 	if err != nil {
 		l.Warn("failed deleting game configuration >%v<", err)
 		return err

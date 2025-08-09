@@ -36,9 +36,9 @@ func GameSubscriptionRequestToRecord(l logger.Logger, r *http.Request, rec *game
 	return rec, nil
 }
 
-func GameSubscriptionRecordToResponseData(l logger.Logger, rec *game_record.GameSubscription) (game_schema.GameSubscriptionResponseData, error) {
+func GameSubscriptionRecordToResponseData(l logger.Logger, rec *game_record.GameSubscription) (*game_schema.GameSubscriptionResponseData, error) {
 	l.Debug("mapping game_subscription record to response data")
-	data := game_schema.GameSubscriptionResponseData{
+	return &game_schema.GameSubscriptionResponseData{
 		ID:               rec.ID,
 		GameID:           rec.GameID,
 		AccountID:        rec.AccountID,
@@ -46,28 +46,29 @@ func GameSubscriptionRecordToResponseData(l logger.Logger, rec *game_record.Game
 		CreatedAt:        rec.CreatedAt,
 		UpdatedAt:        nulltime.ToTimePtr(rec.UpdatedAt),
 		DeletedAt:        nulltime.ToTimePtr(rec.DeletedAt),
-	}
-	return data, nil
+	}, nil
 }
 
-func GameSubscriptionRecordToResponse(l logger.Logger, rec *game_record.GameSubscription) (game_schema.GameSubscriptionResponse, error) {
+func GameSubscriptionRecordToResponse(l logger.Logger, rec *game_record.GameSubscription) (*game_schema.GameSubscriptionResponse, error) {
+	l.Debug("mapping game_subscription record to response")
 	data, err := GameSubscriptionRecordToResponseData(l, rec)
 	if err != nil {
-		return game_schema.GameSubscriptionResponse{}, err
+		return nil, err
 	}
-	return game_schema.GameSubscriptionResponse{
-		Data: &data,
+	return &game_schema.GameSubscriptionResponse{
+		Data: data,
 	}, nil
 }
 
 func GameSubscriptionRecordsToCollectionResponse(l logger.Logger, recs []*game_record.GameSubscription) (game_schema.GameSubscriptionCollectionResponse, error) {
+	l.Debug("mapping game_subscription records to collection response")
 	data := []*game_schema.GameSubscriptionResponseData{}
 	for _, rec := range recs {
 		d, err := GameSubscriptionRecordToResponseData(l, rec)
 		if err != nil {
 			return game_schema.GameSubscriptionCollectionResponse{}, err
 		}
-		data = append(data, &d)
+		data = append(data, d)
 	}
 	return game_schema.GameSubscriptionCollectionResponse{
 		Data: data,

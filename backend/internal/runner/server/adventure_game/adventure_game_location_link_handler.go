@@ -18,7 +18,6 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/mapper"
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 	"gitlab.com/alienspaces/playbymail/internal/utils/logging"
-	"gitlab.com/alienspaces/playbymail/schema/api/adventure_game_schema"
 )
 
 // API Resource Search Path
@@ -314,13 +313,8 @@ func createOneAdventureGameLocationLinkHandler(w http.ResponseWriter, r *http.Re
 		return coreerror.NewNotFoundError("game", gameID)
 	}
 
-	var request adventure_game_schema.AdventureGameLocationLinkRequest
-	if _, err := server.ReadRequest(l, r, &request); err != nil {
-		l.Warn("failed reading request >%v<", err)
-		return err
-	}
-
-	rec, err := mapper.AdventureGameLocationLinkRequestToRecord(l, &request, &adventure_game_record.AdventureGameLocationLink{})
+	rec := &adventure_game_record.AdventureGameLocationLink{}
+	rec, err := mapper.AdventureGameLocationLinkRequestToRecord(l, r, rec)
 	if err != nil {
 		return err
 	}
@@ -377,13 +371,7 @@ func updateOneAdventureGameLocationLinkHandler(w http.ResponseWriter, r *http.Re
 		return coreerror.NewNotFoundError("location link", locationLinkID)
 	}
 
-	var request adventure_game_schema.AdventureGameLocationLinkRequest
-	if _, err := server.ReadRequest(l, r, &request); err != nil {
-		l.Warn("failed reading request >%v<", err)
-		return err
-	}
-
-	rec, err = mapper.AdventureGameLocationLinkRequestToRecord(l, &request, rec)
+	rec, err = mapper.AdventureGameLocationLinkRequestToRecord(l, r, rec)
 	if err != nil {
 		return err
 	}

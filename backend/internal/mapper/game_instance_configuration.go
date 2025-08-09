@@ -1,14 +1,56 @@
 package mapper
 
 import (
+	"fmt"
+	"net/http"
+
+	"gitlab.com/alienspaces/playbymail/core/nullbool"
+	"gitlab.com/alienspaces/playbymail/core/nullint32"
+	"gitlab.com/alienspaces/playbymail/core/nullstring"
 	"gitlab.com/alienspaces/playbymail/core/nulltime"
+	"gitlab.com/alienspaces/playbymail/core/server"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 	"gitlab.com/alienspaces/playbymail/schema/api/game_schema"
 )
 
-func GameInstanceConfigurationRecordToResponseData(l logger.Logger, rec *game_record.GameInstanceConfiguration) (game_schema.GameInstanceConfiguration, error) {
-	data := game_schema.GameInstanceConfiguration{
+// GameInstanceConfigurationRequestToRecord maps a request to a record for consistency
+func GameInstanceConfigurationRequestToRecord(l logger.Logger, r *http.Request, rec *game_record.GameInstanceConfiguration) (*game_record.GameInstanceConfiguration, error) {
+	l.Debug("mapping game_instance_configuration request to record")
+
+	var req game_schema.GameInstanceConfigurationRequest
+	_, err := server.ReadRequest(l, r, &req)
+	if err != nil {
+		return nil, err
+	}
+
+	switch server.HttpMethod(r.Method) {
+	case server.HttpMethodPost:
+		rec.GameInstanceID = req.GameInstanceID
+		rec.ConfigKey = req.ConfigKey
+		rec.ValueType = req.ValueType
+		rec.StringValue = nullstring.FromStringPtr(req.StringValue)
+		rec.IntegerValue = nullint32.FromInt32Ptr(req.IntegerValue)
+		rec.BooleanValue = nullbool.FromBoolPtr(req.BooleanValue)
+		rec.JSONValue = nullstring.FromStringPtr(req.JSONValue)
+	case server.HttpMethodPut, server.HttpMethodPatch:
+		rec.GameInstanceID = req.GameInstanceID
+		rec.ConfigKey = req.ConfigKey
+		rec.ValueType = req.ValueType
+		rec.StringValue = nullstring.FromStringPtr(req.StringValue)
+		rec.IntegerValue = nullint32.FromInt32Ptr(req.IntegerValue)
+		rec.BooleanValue = nullbool.FromBoolPtr(req.BooleanValue)
+		rec.JSONValue = nullstring.FromStringPtr(req.JSONValue)
+	default:
+		return nil, fmt.Errorf("unsupported HTTP method")
+	}
+
+	return rec, nil
+}
+
+func GameInstanceConfigurationRecordToResponseData(l logger.Logger, rec *game_record.GameInstanceConfiguration) (*game_schema.GameInstanceConfiguration, error) {
+	l.Debug("mapping game_instance_configuration record to response data")
+	data := &game_schema.GameInstanceConfiguration{
 		ID:             rec.ID,
 		GameInstanceID: rec.GameInstanceID,
 		ConfigKey:      rec.ConfigKey,
@@ -22,72 +64,42 @@ func GameInstanceConfigurationRecordToResponseData(l logger.Logger, rec *game_re
 		DeletedAt:      nulltime.ToTimePtr(rec.DeletedAt),
 	}
 
-	if rec.StringValue.Valid {
-		data.StringValue = &rec.StringValue.String
+	data.StringValue = nullstring.ToStringPtr(rec.StringValue)
+
+	intValue, err := nullint32.ToInt32Ptr(rec.IntegerValue)
+	if err != nil {
+		return nil, err
 	}
-	if rec.IntegerValue.Valid {
-		value := int(rec.IntegerValue.Int32)
-		data.IntegerValue = &value
-	}
-	if rec.BooleanValue.Valid {
-		data.BooleanValue = &rec.BooleanValue.Bool
-	}
-	if rec.JSONValue.Valid {
-		data.JSONValue = &rec.JSONValue.String
-	}
+
+	data.IntegerValue = intValue
+	data.BooleanValue = nullbool.ToBoolPtr(rec.BooleanValue)
+	data.JSONValue = nullstring.ToStringPtr(rec.JSONValue)
 
 	return data, nil
 }
 
-func GameInstanceConfigurationRecordToResponse(l logger.Logger, rec *game_record.GameInstanceConfiguration) (game_schema.GameInstanceConfigurationResponse, error) {
+func GameInstanceConfigurationRecordToResponse(l logger.Logger, rec *game_record.GameInstanceConfiguration) (*game_schema.GameInstanceConfigurationResponse, error) {
+	l.Debug("mapping game_instance_configuration record to response")
 	data, err := GameInstanceConfigurationRecordToResponseData(l, rec)
 	if err != nil {
-		return game_schema.GameInstanceConfigurationResponse{}, err
+		return nil, err
 	}
-	return game_schema.GameInstanceConfigurationResponse{
-		Data: &data,
+	return &game_schema.GameInstanceConfigurationResponse{
+		Data: data,
 	}, nil
 }
 
 func GameInstanceConfigurationRecsToCollectionResponse(l logger.Logger, recs []*game_record.GameInstanceConfiguration) (game_schema.GameInstanceConfigurationCollectionResponse, error) {
+	l.Debug("mapping game_instance_configuration records to collection response")
 	data := []*game_schema.GameInstanceConfiguration{}
 	for _, rec := range recs {
 		d, err := GameInstanceConfigurationRecordToResponseData(l, rec)
 		if err != nil {
 			return game_schema.GameInstanceConfigurationCollectionResponse{}, err
 		}
-		data = append(data, &d)
+		data = append(data, d)
 	}
 	return game_schema.GameInstanceConfigurationCollectionResponse{
 		Data: data,
 	}, nil
-}
-
-func GameInstanceConfigurationRequestToRecord(l logger.Logger, req *game_schema.GameInstanceConfigurationRequest, rec *game_record.GameInstanceConfiguration) (*game_record.GameInstanceConfiguration, error) {
-	if req.GameInstanceID != "" {
-		rec.GameInstanceID = req.GameInstanceID
-	}
-	if req.ConfigKey != "" {
-		rec.ConfigKey = req.ConfigKey
-	}
-	if req.ValueType != "" {
-		rec.ValueType = req.ValueType
-	}
-	if req.StringValue != nil {
-		rec.StringValue.String = *req.StringValue
-		rec.StringValue.Valid = true
-	}
-	if req.IntegerValue != nil {
-		rec.IntegerValue.Int32 = int32(*req.IntegerValue)
-		rec.IntegerValue.Valid = true
-	}
-	if req.BooleanValue != nil {
-		rec.BooleanValue.Bool = *req.BooleanValue
-		rec.BooleanValue.Valid = true
-	}
-	if req.JSONValue != nil {
-		rec.JSONValue.String = *req.JSONValue
-		rec.JSONValue.Valid = true
-	}
-	return rec, nil
 }

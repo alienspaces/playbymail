@@ -1,15 +1,43 @@
 package mapper
 
 import (
+	"fmt"
+	"net/http"
+
 	"gitlab.com/alienspaces/playbymail/core/nulltime"
+	"gitlab.com/alienspaces/playbymail/core/server"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 	"gitlab.com/alienspaces/playbymail/schema/api/adventure_game_schema"
 )
 
-func AdventureGameLocationRecordToResponseData(l logger.Logger, rec *adventure_game_record.AdventureGameLocation) (adventure_game_schema.AdventureGameLocationResponseData, error) {
+// AdventureGameLocationRequestToRecord maps a request to a record for consistency
+func AdventureGameLocationRequestToRecord(l logger.Logger, r *http.Request, rec *adventure_game_record.AdventureGameLocation) (*adventure_game_record.AdventureGameLocation, error) {
+	l.Debug("mapping adventure_game_location request to record")
+
+	var req adventure_game_schema.AdventureGameLocationRequest
+	_, err := server.ReadRequest(l, r, &req)
+	if err != nil {
+		return nil, err
+	}
+
+	switch server.HttpMethod(r.Method) {
+	case server.HttpMethodPost:
+		rec.Name = req.Name
+		rec.Description = req.Description
+	case server.HttpMethodPut, server.HttpMethodPatch:
+		rec.Name = req.Name
+		rec.Description = req.Description
+	default:
+		return nil, fmt.Errorf("unsupported HTTP method")
+	}
+
+	return rec, nil
+}
+
+func AdventureGameLocationRecordToResponseData(l logger.Logger, rec *adventure_game_record.AdventureGameLocation) (*adventure_game_schema.AdventureGameLocationResponseData, error) {
 	l.Debug("mapping adventure_game_location record to response data")
-	data := adventure_game_schema.AdventureGameLocationResponseData{
+	return &adventure_game_schema.AdventureGameLocationResponseData{
 		ID:          rec.ID,
 		GameID:      rec.GameID,
 		Name:        rec.Name,
@@ -17,46 +45,31 @@ func AdventureGameLocationRecordToResponseData(l logger.Logger, rec *adventure_g
 		CreatedAt:   rec.CreatedAt,
 		UpdatedAt:   nulltime.ToTimePtr(rec.UpdatedAt),
 		DeletedAt:   nulltime.ToTimePtr(rec.DeletedAt),
-	}
-	return data, nil
+	}, nil
 }
 
-func AdventureGameLocationRecordToResponse(l logger.Logger, rec *adventure_game_record.AdventureGameLocation) (adventure_game_schema.AdventureGameLocationResponse, error) {
+func AdventureGameLocationRecordToResponse(l logger.Logger, rec *adventure_game_record.AdventureGameLocation) (*adventure_game_schema.AdventureGameLocationResponse, error) {
+	l.Debug("mapping adventure_game_location record to response")
 	data, err := AdventureGameLocationRecordToResponseData(l, rec)
 	if err != nil {
-		return adventure_game_schema.AdventureGameLocationResponse{}, err
+		return nil, err
 	}
-	return adventure_game_schema.AdventureGameLocationResponse{
-		Data: &data,
+	return &adventure_game_schema.AdventureGameLocationResponse{
+		Data: data,
 	}, nil
 }
 
 func AdventureGameLocationRecordsToCollectionResponse(l logger.Logger, recs []*adventure_game_record.AdventureGameLocation) (adventure_game_schema.AdventureGameLocationCollectionResponse, error) {
+	l.Debug("mapping adventure_game_location records to collection response")
 	data := []*adventure_game_schema.AdventureGameLocationResponseData{}
 	for _, rec := range recs {
 		d, err := AdventureGameLocationRecordToResponseData(l, rec)
 		if err != nil {
 			return adventure_game_schema.AdventureGameLocationCollectionResponse{}, err
 		}
-		data = append(data, &d)
+		data = append(data, d)
 	}
 	return adventure_game_schema.AdventureGameLocationCollectionResponse{
 		Data: data,
 	}, nil
-}
-
-func AdventureGameLocationRequestToRecord(l logger.Logger, req *adventure_game_schema.AdventureGameLocationRequest, rec *adventure_game_record.AdventureGameLocation) (*adventure_game_record.AdventureGameLocation, error) {
-	if rec == nil {
-		rec = &adventure_game_record.AdventureGameLocation{}
-	}
-	if req == nil {
-		return nil, nil
-	}
-
-	l.Debug("mapping adventure_game_location request to record")
-
-	rec.Name = req.Name
-	rec.Description = req.Description
-
-	return rec, nil
 }

@@ -35,39 +35,37 @@ func GameRequestToRecord(l logger.Logger, r *http.Request, rec *game_record.Game
 	return rec, nil
 }
 
-func GameRecordToResponseData(l logger.Logger, rec *game_record.Game) (game_schema.GameResponseData, error) {
-
+func GameRecordToResponseData(l logger.Logger, rec *game_record.Game) (*game_schema.GameResponseData, error) {
 	l.Debug("mapping game record to response data")
-
-	data := game_schema.GameResponseData{
+	return &game_schema.GameResponseData{
 		ID:        rec.ID,
 		Name:      rec.Name,
 		GameType:  rec.GameType,
 		CreatedAt: rec.CreatedAt,
 		UpdatedAt: nulltime.ToTimePtr(rec.UpdatedAt),
-	}
-
-	return data, nil
+	}, nil
 }
 
-func GameRecordToResponse(l logger.Logger, rec *game_record.Game) (game_schema.GameResponse, error) {
+func GameRecordToResponse(l logger.Logger, rec *game_record.Game) (*game_schema.GameResponse, error) {
+	l.Debug("mapping game record to response")
 	data, err := GameRecordToResponseData(l, rec)
 	if err != nil {
-		return game_schema.GameResponse{}, err
+		return nil, err
 	}
-	return game_schema.GameResponse{
-		Data: &data,
+	return &game_schema.GameResponse{
+		Data: data,
 	}, nil
 }
 
 func GameRecordsToCollectionResponse(l logger.Logger, recs []*game_record.Game) (game_schema.GameCollectionResponse, error) {
+	l.Debug("mapping game records to collection response")
 	data := []*game_schema.GameResponseData{}
 	for _, rec := range recs {
 		d, err := GameRecordToResponseData(l, rec)
 		if err != nil {
 			return game_schema.GameCollectionResponse{}, err
 		}
-		data = append(data, &d)
+		data = append(data, d)
 	}
 	return game_schema.GameCollectionResponse{
 		Data: data,

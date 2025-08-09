@@ -285,13 +285,8 @@ func createOneAdventureGameLocationLinkRequirementHandler(w http.ResponseWriter,
 
 	gameID := pp.ByName("game_id")
 
-	var req adventure_game_schema.AdventureGameLocationLinkRequirementRequest
-	if _, err := server.ReadRequest(l, r, &req); err != nil {
-		l.Warn("failed reading request >%v<", err)
-		return err
-	}
-
-	rec, err := mapper.AdventureGameLocationLinkRequirementRequestToRecord(l, &req, &adventure_game_record.AdventureGameLocationLinkRequirement{})
+	rec := &adventure_game_record.AdventureGameLocationLinkRequirement{}
+	rec, err := mapper.AdventureGameLocationLinkRequirementRequestToRecord(l, r, rec)
 	if err != nil {
 		return err
 	}
@@ -347,7 +342,7 @@ func updateOneAdventureGameLocationLinkRequirementHandler(w http.ResponseWriter,
 		return coreerror.NewNotFoundError("location link requirement", locationLinkRequirementID)
 	}
 
-	rec, err = mapper.AdventureGameLocationLinkRequirementRequestToRecord(l, &req, rec)
+	rec, err = mapper.AdventureGameLocationLinkRequirementRequestToRecord(l, r, rec)
 	if err != nil {
 		return err
 	}
@@ -364,7 +359,7 @@ func updateOneAdventureGameLocationLinkRequirementHandler(w http.ResponseWriter,
 	}
 
 	res := adventure_game_schema.AdventureGameLocationLinkRequirementResponse{
-		Data: &data,
+		Data: data,
 	}
 
 	l.Info("responding with updated adventure game location link requirement record id >%s<", rec.ID)

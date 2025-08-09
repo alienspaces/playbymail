@@ -6,7 +6,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/schema/api/common_schema"
 )
 
-type GameInstance struct {
+type GameInstanceResponseData struct {
 	ID                  string     `json:"id"`
 	GameID              string     `json:"game_id"`
 	Status              string     `json:"status"`
@@ -21,13 +21,13 @@ type GameInstance struct {
 }
 
 type GameInstanceResponse struct {
-	Data       *GameInstance                     `json:"data"`
+	Data       *GameInstanceResponseData         `json:"data"`
 	Error      *common_schema.ResponseError      `json:"error,omitempty"`
 	Pagination *common_schema.ResponsePagination `json:"pagination,omitempty"`
 }
 
 type GameInstanceCollectionResponse struct {
-	Data       []*GameInstance                   `json:"data"`
+	Data       []*GameInstanceResponseData       `json:"data"`
 	Error      *common_schema.ResponseError      `json:"error,omitempty"`
 	Pagination *common_schema.ResponsePagination `json:"pagination,omitempty"`
 }

@@ -7,18 +7,17 @@ import (
 )
 
 type GameConfiguration struct {
-	ID              string     `json:"id"`
-	GameType        string     `json:"game_type"`
-	ConfigKey       string     `json:"config_key"`
-	ValueType       string     `json:"value_type"`
-	DefaultValue    *string    `json:"default_value,omitempty"`
-	IsRequired      bool       `json:"is_required"`
-	Description     *string    `json:"description,omitempty"`
-	UIHint          *string    `json:"ui_hint,omitempty"`
-	ValidationRules *string    `json:"validation_rules,omitempty"`
-	CreatedAt       time.Time  `json:"created_at"`
-	UpdatedAt       *time.Time `json:"updated_at,omitempty"`
-	DeletedAt       *time.Time `json:"deleted_at,omitempty"`
+	ID           string     `json:"id"`
+	GameType     string     `json:"game_type"`
+	ConfigKey    string     `json:"config_key"`
+	Description  string     `json:"description,omitempty"`
+	ValueType    string     `json:"value_type"`
+	DefaultValue *string    `json:"default_value,omitempty"`
+	IsRequired   bool       `json:"is_required"`
+	IsGlobal     bool       `json:"is_global"`
+	CreatedAt    time.Time  `json:"created_at"`
+	UpdatedAt    *time.Time `json:"updated_at,omitempty"`
+	DeletedAt    *time.Time `json:"deleted_at,omitempty"`
 }
 
 type GameConfigurationResponse struct {
@@ -35,12 +34,11 @@ type GameConfigurationCollectionResponse struct {
 
 type GameConfigurationRequest struct {
 	common_schema.Request
-	GameType        string  `json:"game_type"`
-	ConfigKey       string  `json:"config_key"`
-	ValueType       string  `json:"value_type"`
-	DefaultValue    *string `json:"default_value,omitempty"`
-	IsRequired      bool    `json:"is_required"`
-	Description     *string `json:"description,omitempty"`
-	UIHint          *string `json:"ui_hint,omitempty"`
-	ValidationRules *string `json:"validation_rules,omitempty"`
+	GameType     string  `json:"game_type"`
+	ConfigKey    string  `json:"config_key"`
+	Description  string  `json:"description,omitempty"`
+	ValueType    string  `json:"value_type"`
+	DefaultValue *string `json:"default_value,omitempty"`
+	IsRequired   bool    `json:"is_required"`
+	IsGlobal     bool    `json:"is_global"`
 }

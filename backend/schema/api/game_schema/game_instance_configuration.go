@@ -12,7 +12,7 @@ type GameInstanceConfiguration struct {
 	ConfigKey      string     `json:"config_key"`
 	ValueType      string     `json:"value_type"`
 	StringValue    *string    `json:"string_value,omitempty"`
-	IntegerValue   *int       `json:"integer_value,omitempty"`
+	IntegerValue   *int32     `json:"integer_value,omitempty"`
 	BooleanValue   *bool      `json:"boolean_value,omitempty"`
 	JSONValue      *string    `json:"json_value,omitempty"`
 	CreatedAt      time.Time  `json:"created_at"`
@@ -38,7 +38,7 @@ type GameInstanceConfigurationRequest struct {
 	ConfigKey      string  `json:"config_key"`
 	ValueType      string  `json:"value_type"`
 	StringValue    *string `json:"string_value,omitempty"`
-	IntegerValue   *int    `json:"integer_value,omitempty"`
+	IntegerValue   *int32  `json:"integer_value,omitempty"`
 	BooleanValue   *bool   `json:"boolean_value,omitempty"`
 	JSONValue      *string `json:"json_value,omitempty"`
 }

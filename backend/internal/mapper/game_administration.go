@@ -36,9 +36,9 @@ func GameAdministrationRequestToRecord(l logger.Logger, r *http.Request, rec *ga
 	return rec, nil
 }
 
-func GameAdministrationRecordToResponseData(l logger.Logger, rec *game_record.GameAdministration) (game_schema.GameAdministrationResponseData, error) {
+func GameAdministrationRecordToResponseData(l logger.Logger, rec *game_record.GameAdministration) (*game_schema.GameAdministrationResponseData, error) {
 	l.Debug("mapping game_administration record to response data")
-	data := game_schema.GameAdministrationResponseData{
+	return &game_schema.GameAdministrationResponseData{
 		ID:                 rec.ID,
 		GameID:             rec.GameID,
 		AccountID:          rec.AccountID,
@@ -46,28 +46,29 @@ func GameAdministrationRecordToResponseData(l logger.Logger, rec *game_record.Ga
 		CreatedAt:          rec.CreatedAt,
 		UpdatedAt:          nulltime.ToTimePtr(rec.UpdatedAt),
 		DeletedAt:          nulltime.ToTimePtr(rec.DeletedAt),
-	}
-	return data, nil
+	}, nil
 }
 
-func GameAdministrationRecordToResponse(l logger.Logger, rec *game_record.GameAdministration) (game_schema.GameAdministrationResponse, error) {
+func GameAdministrationRecordToResponse(l logger.Logger, rec *game_record.GameAdministration) (*game_schema.GameAdministrationResponse, error) {
+	l.Debug("mapping game_administration record to response")
 	data, err := GameAdministrationRecordToResponseData(l, rec)
 	if err != nil {
-		return game_schema.GameAdministrationResponse{}, err
+		return nil, err
 	}
-	return game_schema.GameAdministrationResponse{
-		Data: &data,
+	return &game_schema.GameAdministrationResponse{
+		Data: data,
 	}, nil
 }
 
 func GameAdministrationRecordsToCollectionResponse(l logger.Logger, recs []*game_record.GameAdministration) (game_schema.GameAdministrationCollectionResponse, error) {
+	l.Debug("mapping game_administration records to collection response")
 	data := []*game_schema.GameAdministrationResponseData{}
 	for _, rec := range recs {
 		d, err := GameAdministrationRecordToResponseData(l, rec)
 		if err != nil {
 			return game_schema.GameAdministrationCollectionResponse{}, err
 		}
-		data = append(data, &d)
+		data = append(data, d)
 	}
 	return game_schema.GameAdministrationCollectionResponse{
 		Data: data,

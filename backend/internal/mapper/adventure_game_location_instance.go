@@ -7,9 +7,12 @@ import (
 	"gitlab.com/alienspaces/playbymail/schema/api/adventure_game_schema"
 )
 
-func AdventureGameLocationInstanceRecordToResponseData(l logger.Logger, rec *adventure_game_record.AdventureGameLocationInstance) (adventure_game_schema.AdventureGameLocationInstanceResponseData, error) {
+// NOTE: Adventure game location instance records are created by the game instance creation process
+// and are not created or updated by the user.
+
+func AdventureGameLocationInstanceRecordToResponseData(l logger.Logger, rec *adventure_game_record.AdventureGameLocationInstance) (*adventure_game_schema.AdventureGameLocationInstanceResponseData, error) {
 	l.Debug("mapping adventure_game_location_instance record to response data")
-	data := adventure_game_schema.AdventureGameLocationInstanceResponseData{
+	return &adventure_game_schema.AdventureGameLocationInstanceResponseData{
 		ID:                      rec.ID,
 		GameID:                  rec.GameID,
 		GameInstanceID:          rec.GameInstanceID,
@@ -17,17 +20,17 @@ func AdventureGameLocationInstanceRecordToResponseData(l logger.Logger, rec *adv
 		CreatedAt:               rec.CreatedAt,
 		UpdatedAt:               nulltime.ToTimePtr(rec.UpdatedAt),
 		DeletedAt:               nulltime.ToTimePtr(rec.DeletedAt),
-	}
-	return data, nil
+	}, nil
 }
 
-func AdventureGameLocationInstanceRecordToResponse(l logger.Logger, rec *adventure_game_record.AdventureGameLocationInstance) (adventure_game_schema.AdventureGameLocationInstanceResponse, error) {
+func AdventureGameLocationInstanceRecordToResponse(l logger.Logger, rec *adventure_game_record.AdventureGameLocationInstance) (*adventure_game_schema.AdventureGameLocationInstanceResponse, error) {
+	l.Debug("mapping adventure_game_location_instance record to response")
 	data, err := AdventureGameLocationInstanceRecordToResponseData(l, rec)
 	if err != nil {
-		return adventure_game_schema.AdventureGameLocationInstanceResponse{}, err
+		return nil, err
 	}
-	return adventure_game_schema.AdventureGameLocationInstanceResponse{
-		Data: &data,
+	return &adventure_game_schema.AdventureGameLocationInstanceResponse{
+		Data: data,
 	}, nil
 }
 
@@ -39,7 +42,7 @@ func AdventureGameLocationInstanceRecordsToCollectionResponse(l logger.Logger, r
 		if err != nil {
 			return adventure_game_schema.AdventureGameLocationInstanceCollectionResponse{}, err
 		}
-		data = append(data, &d)
+		data = append(data, d)
 	}
 	return adventure_game_schema.AdventureGameLocationInstanceCollectionResponse{
 		Data: data,

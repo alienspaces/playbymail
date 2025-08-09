@@ -18,7 +18,6 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/mapper"
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 	"gitlab.com/alienspaces/playbymail/internal/utils/logging"
-	"gitlab.com/alienspaces/playbymail/schema/api/adventure_game_schema"
 )
 
 const (
@@ -182,47 +181,6 @@ func searchManyAdventureGameCreaturePlacementsHandler(w http.ResponseWriter, r *
 	return nil
 }
 
-// createOneAdventureGameCreaturePlacementHandler -
-func createOneAdventureGameCreaturePlacementHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
-	l = logging.LoggerWithFunctionContext(l, packageName, "createOneAdventureGameCreaturePlacementHandler")
-
-	gameID := pp.ByName("game_id")
-	mm := m.(*domain.Domain)
-
-	var request adventure_game_schema.AdventureGameCreaturePlacementRequest
-	if _, err := server.ReadRequest(l, r, &request); err != nil {
-		l.Warn("failed reading request >%v<", err)
-		return err
-	}
-
-	rec, err := mapper.AdventureGameCreaturePlacementRequestToRecord(l, &request, &adventure_game_record.AdventureGameCreaturePlacement{})
-	if err != nil {
-		return err
-	}
-
-	// Set the game ID from the path parameter
-	rec.GameID = gameID
-
-	rec, err = mm.CreateAdventureGameCreaturePlacementRec(rec)
-	if err != nil {
-		l.Warn("failed creating adventure game creature placement record >%v<", err)
-		return err
-	}
-
-	res, err := mapper.AdventureGameCreaturePlacementRecordToResponse(l, rec)
-	if err != nil {
-		l.Warn("failed mapping adventure game creature placement record to response >%v<", err)
-		return err
-	}
-
-	if err = server.WriteResponse(l, w, http.StatusCreated, res); err != nil {
-		l.Warn("failed writing response >%v<", err)
-		return err
-	}
-
-	return nil
-}
-
 // getOneAdventureGameCreaturePlacementHandler -
 func getOneAdventureGameCreaturePlacementHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = logging.LoggerWithFunctionContext(l, packageName, "getOneAdventureGameCreaturePlacementHandler")
@@ -257,6 +215,49 @@ func getOneAdventureGameCreaturePlacementHandler(w http.ResponseWriter, r *http.
 	return nil
 }
 
+// createOneAdventureGameCreaturePlacementHandler -
+func createOneAdventureGameCreaturePlacementHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
+	l = logging.LoggerWithFunctionContext(l, packageName, "createOneAdventureGameCreaturePlacementHandler")
+
+	gameID := pp.ByName("game_id")
+	mm := m.(*domain.Domain)
+
+	// RLS constraints will be applied by the repository
+	gameRec, err := mm.GetGameRec(gameID, nil)
+	if err != nil {
+		l.Warn("failed getting adventure game record >%v<", err)
+		return err
+	}
+
+	rec := &adventure_game_record.AdventureGameCreaturePlacement{
+		GameID: gameRec.ID,
+	}
+
+	rec, err = mapper.AdventureGameCreaturePlacementRequestToRecord(l, r, rec)
+	if err != nil {
+		return err
+	}
+
+	rec, err = mm.CreateAdventureGameCreaturePlacementRec(rec)
+	if err != nil {
+		l.Warn("failed creating adventure game creature placement record >%v<", err)
+		return err
+	}
+
+	res, err := mapper.AdventureGameCreaturePlacementRecordToResponse(l, rec)
+	if err != nil {
+		l.Warn("failed mapping adventure game creature placement record to response >%v<", err)
+		return err
+	}
+
+	if err = server.WriteResponse(l, w, http.StatusCreated, res); err != nil {
+		l.Warn("failed writing response >%v<", err)
+		return err
+	}
+
+	return nil
+}
+
 // updateOneAdventureGameCreaturePlacementHandler -
 func updateOneAdventureGameCreaturePlacementHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = logging.LoggerWithFunctionContext(l, packageName, "updateOneAdventureGameCreaturePlacementHandler")
@@ -264,12 +265,6 @@ func updateOneAdventureGameCreaturePlacementHandler(w http.ResponseWriter, r *ht
 	gameID := pp.ByName("game_id")
 	placementID := pp.ByName("placement_id")
 	mm := m.(*domain.Domain)
-
-	var request adventure_game_schema.AdventureGameCreaturePlacementRequest
-	if _, err := server.ReadRequest(l, r, &request); err != nil {
-		l.Warn("failed reading request >%v<", err)
-		return err
-	}
 
 	rec, err := mm.GetAdventureGameCreaturePlacementRec(placementID, sql.ForUpdateNoWait)
 	if err != nil {
@@ -283,10 +278,10 @@ func updateOneAdventureGameCreaturePlacementHandler(w http.ResponseWriter, r *ht
 		return coreerror.NewNotFoundError("creature_placement", placementID)
 	}
 
-	// Update fields
-	rec.AdventureGameCreatureID = request.AdventureGameCreatureID
-	rec.AdventureGameLocationID = request.AdventureGameLocationID
-	rec.InitialCount = request.InitialCount
+	rec, err = mapper.AdventureGameCreaturePlacementRequestToRecord(l, r, rec)
+	if err != nil {
+		return err
+	}
 
 	rec, err = mm.UpdateAdventureGameCreaturePlacementRec(rec)
 	if err != nil {

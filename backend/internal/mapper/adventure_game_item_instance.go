@@ -8,9 +8,12 @@ import (
 	"gitlab.com/alienspaces/playbymail/schema/api/adventure_game_schema"
 )
 
-func AdventureGameItemInstanceRecordToResponseData(l logger.Logger, rec *adventure_game_record.AdventureGameItemInstance) (adventure_game_schema.AdventureGameItemInstanceResponseData, error) {
+// NOTE: Adventure game item instance records are created by the game instance creation process
+// and are not created or updated by the user.
+
+func AdventureGameItemInstanceRecordToResponseData(l logger.Logger, rec *adventure_game_record.AdventureGameItemInstance) (*adventure_game_schema.AdventureGameItemInstanceResponseData, error) {
 	l.Debug("mapping adventure_game_item_instance record to response data")
-	data := adventure_game_schema.AdventureGameItemInstanceResponseData{
+	return &adventure_game_schema.AdventureGameItemInstanceResponseData{
 		ID:                               rec.ID,
 		GameID:                           rec.GameID,
 		GameInstanceID:                   rec.GameInstanceID,
@@ -24,28 +27,29 @@ func AdventureGameItemInstanceRecordToResponseData(l logger.Logger, rec *adventu
 		CreatedAt:                        rec.CreatedAt,
 		UpdatedAt:                        nulltime.ToTimePtr(rec.UpdatedAt),
 		DeletedAt:                        nulltime.ToTimePtr(rec.DeletedAt),
-	}
-	return data, nil
+	}, nil
 }
 
-func AdventureGameItemInstanceRecordToResponse(l logger.Logger, rec *adventure_game_record.AdventureGameItemInstance) (adventure_game_schema.AdventureGameItemInstanceResponse, error) {
+func AdventureGameItemInstanceRecordToResponse(l logger.Logger, rec *adventure_game_record.AdventureGameItemInstance) (*adventure_game_schema.AdventureGameItemInstanceResponse, error) {
+	l.Debug("mapping adventure_game_item_instance record to response")
 	data, err := AdventureGameItemInstanceRecordToResponseData(l, rec)
 	if err != nil {
-		return adventure_game_schema.AdventureGameItemInstanceResponse{}, err
+		return nil, err
 	}
-	return adventure_game_schema.AdventureGameItemInstanceResponse{
-		Data: &data,
+	return &adventure_game_schema.AdventureGameItemInstanceResponse{
+		Data: data,
 	}, nil
 }
 
 func AdventureGameItemInstanceRecordsToCollectionResponse(l logger.Logger, recs []*adventure_game_record.AdventureGameItemInstance) (adventure_game_schema.AdventureGameItemInstanceCollectionResponse, error) {
+	l.Debug("mapping adventure_game_item_instance records to collection response")
 	data := []*adventure_game_schema.AdventureGameItemInstanceResponseData{}
 	for _, rec := range recs {
 		d, err := AdventureGameItemInstanceRecordToResponseData(l, rec)
 		if err != nil {
 			return adventure_game_schema.AdventureGameItemInstanceCollectionResponse{}, err
 		}
-		data = append(data, &d)
+		data = append(data, d)
 	}
 	return adventure_game_schema.AdventureGameItemInstanceCollectionResponse{
 		Data: data,

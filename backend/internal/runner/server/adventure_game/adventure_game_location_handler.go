@@ -17,7 +17,6 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/mapper"
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 	"gitlab.com/alienspaces/playbymail/internal/utils/logging"
-	"gitlab.com/alienspaces/playbymail/schema/api/adventure_game_schema"
 )
 
 // API Resource Search Path
@@ -293,13 +292,8 @@ func createOneAdventureGameLocationHandler(w http.ResponseWriter, r *http.Reques
 		return coreerror.NewNotFoundError("game", gameID)
 	}
 
-	var req adventure_game_schema.AdventureGameLocationRequest
-	if _, err := server.ReadRequest(l, r, &req); err != nil {
-		l.Warn("failed reading request >%v<", err)
-		return err
-	}
-
-	rec, err := mapper.AdventureGameLocationRequestToRecord(l, &req, &adventure_game_record.AdventureGameLocation{})
+	rec := &adventure_game_record.AdventureGameLocation{}
+	rec, err := mapper.AdventureGameLocationRequestToRecord(l, r, rec)
 	if err != nil {
 		return err
 	}
@@ -343,17 +337,9 @@ func updateOneAdventureGameLocationHandler(w http.ResponseWriter, r *http.Reques
 		return coreerror.NewNotFoundError("location", locationID)
 	}
 
-	l.Info("updating adventure game location record with path params >%#v<", pp)
-
-	var req adventure_game_schema.AdventureGameLocationRequest
-	if _, err := server.ReadRequest(l, r, &req); err != nil {
-		l.Warn("failed reading request >%v<", err)
-		return err
-	}
-
 	mm := m.(*domain.Domain)
 
-	rec, err := mm.GetAdventureGameLocationRec(locationID, nil)
+	rec, err := mm.GetAdventureGameLocationRec(locationID, sql.ForUpdateNoWait)
 	if err != nil {
 		return err
 	}
@@ -364,7 +350,7 @@ func updateOneAdventureGameLocationHandler(w http.ResponseWriter, r *http.Reques
 		return coreerror.NewNotFoundError("location", locationID)
 	}
 
-	rec, err = mapper.AdventureGameLocationRequestToRecord(l, &req, rec)
+	rec, err = mapper.AdventureGameLocationRequestToRecord(l, r, rec)
 	if err != nil {
 		return err
 	}
@@ -375,16 +361,10 @@ func updateOneAdventureGameLocationHandler(w http.ResponseWriter, r *http.Reques
 		return err
 	}
 
-	data, err := mapper.AdventureGameLocationRecordToResponseData(l, rec)
+	res, err := mapper.AdventureGameLocationRecordToResponse(l, rec)
 	if err != nil {
 		return err
 	}
-
-	res := adventure_game_schema.AdventureGameLocationResponse{
-		Data: &data,
-	}
-
-	l.Info("responding with updated adventure game location record id >%s<", rec.ID)
 
 	if err = server.WriteResponse(l, w, http.StatusOK, res); err != nil {
 		l.Warn("failed writing response >%v<", err)

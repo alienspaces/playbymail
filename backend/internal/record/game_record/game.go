@@ -14,6 +14,7 @@ const (
 const (
 	FieldGameID   string = "id"
 	FieldGameName string = "name"
+	FieldGameType string = "game_type"
 )
 
 const GameTypeAdventure = "adventure"
@@ -27,6 +28,6 @@ type Game struct {
 func (r *Game) ToNamedArgs() pgx.NamedArgs {
 	args := r.Record.ToNamedArgs()
 	args[FieldGameName] = r.Name
-	args["game_type"] = r.GameType
+	args[FieldGameType] = r.GameType
 	return args
 }

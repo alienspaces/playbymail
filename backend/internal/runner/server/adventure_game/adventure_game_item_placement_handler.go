@@ -17,7 +17,6 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/mapper"
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 	"gitlab.com/alienspaces/playbymail/internal/utils/logging"
-	"gitlab.com/alienspaces/playbymail/schema/api/adventure_game_schema"
 )
 
 // API Resource Search Path
@@ -288,19 +287,20 @@ func createOneAdventureGameItemPlacementHandler(w http.ResponseWriter, r *http.R
 	gameID := pp.ByName("game_id")
 	mm := m.(*domain.Domain)
 
-	var request adventure_game_schema.AdventureGameItemPlacementRequest
-	if _, err := server.ReadRequest(l, r, &request); err != nil {
-		l.Warn("failed reading request >%v<", err)
+	gameRec, err := mm.GetGameRec(gameID, nil)
+	if err != nil {
+		l.Warn("failed getting game record >%v<", err)
 		return err
 	}
 
-	rec, err := mapper.AdventureGameItemPlacementRequestToRecord(l, &request, &adventure_game_record.AdventureGameItemPlacement{})
+	rec := &adventure_game_record.AdventureGameItemPlacement{
+		GameID: gameRec.ID,
+	}
+
+	rec, err = mapper.AdventureGameItemPlacementRequestToRecord(l, r, rec)
 	if err != nil {
 		return err
 	}
-
-	// Set the game ID from the path parameter
-	rec.GameID = gameID
 
 	rec, err = mm.CreateAdventureGameItemPlacementRec(rec)
 	if err != nil {
@@ -330,12 +330,6 @@ func updateOneAdventureGameItemPlacementHandler(w http.ResponseWriter, r *http.R
 	placementID := pp.ByName("placement_id")
 	mm := m.(*domain.Domain)
 
-	var request adventure_game_schema.AdventureGameItemPlacementRequest
-	if _, err := server.ReadRequest(l, r, &request); err != nil {
-		l.Warn("failed reading request >%v<", err)
-		return err
-	}
-
 	rec, err := mm.GetAdventureGameItemPlacementRec(placementID, sql.ForUpdateNoWait)
 	if err != nil {
 		l.Warn("failed getting adventure game item placement record >%v<", err)
@@ -348,7 +342,7 @@ func updateOneAdventureGameItemPlacementHandler(w http.ResponseWriter, r *http.R
 		return coreerror.NewNotFoundError("item_placement", placementID)
 	}
 
-	rec, err = mapper.AdventureGameItemPlacementRequestToRecord(l, &request, rec)
+	rec, err = mapper.AdventureGameItemPlacementRequestToRecord(l, r, rec)
 	if err != nil {
 		return err
 	}

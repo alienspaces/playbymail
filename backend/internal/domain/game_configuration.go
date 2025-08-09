@@ -5,6 +5,44 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 )
 
+// GameConfiguration - Different types of games may require different configurations.
+// Rather than creating a new table for each game type, we use a single table and
+// use the game_type column to differentiate between different game types.
+//
+// Supported configuration per game type is defined in code.
+type GameConfiguration struct {
+	GameType     string
+	ConfigKey    string
+	Description  string
+	ValueType    string
+	DefaultValue string
+	IsRequired   bool
+	IsGlobal     bool
+}
+
+const (
+	GameConfigurationValueTypeString  = "string"
+	GameConfigurationValueTypeInteger = "integer"
+	GameConfigurationValueTypeBoolean = "boolean"
+	GameConfigurationValueTypeJSON    = "json"
+)
+
+const (
+	AdventureGameConfigurationCharacterLives = "character_lives"
+)
+
+var gameConfigurations = []GameConfiguration{
+	{
+		GameType:     game_record.GameTypeAdventure,
+		ConfigKey:    AdventureGameConfigurationCharacterLives,
+		Description:  "The number of lives a character has.",
+		ValueType:    GameConfigurationValueTypeInteger,
+		DefaultValue: "3",
+		IsRequired:   true,
+		IsGlobal:     true,
+	},
+}
+
 func (m *Domain) GetGameConfigurationRec(recID string, lock *sql.Lock) (*game_record.GameConfiguration, error) {
 	r := m.GameConfigurationRepository()
 	rec, err := r.GetOne(recID, lock)
