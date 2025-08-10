@@ -1,92 +1,73 @@
 import { defineStore } from 'pinia';
-import { ref } from 'vue';
-import * as locationLinksApi from '../api/locationLinks';
+import { fetchLocationLinks as apiFetchLocationLinks, createLocationLink as apiCreateLocationLink, updateLocationLink as apiUpdateLocationLink, deleteLocationLink as apiDeleteLocationLink } from '../api/locationLinks';
 
-export const useLocationLinksStore = defineStore('locationLinks', () => {
-  const locationLinks = ref([]);
-  const loading = ref(false);
-  const error = ref('');
-
-  const currentGameId = ref(null);
-
-  return {
-    locationLinks,
-    loading,
-    error,
-    currentGameId,
-
+export const useLocationLinksStore = defineStore('locationLinks', {
+  state: () => ({
+    locationLinks: [],
+    loading: false,
+    error: null,
+    gameId: null,
+  }),
+  actions: {
     async fetchLocationLinks(gameId) {
-      loading.value = true;
-      error.value = '';
+      this.loading = true;
+      this.error = null;
+      this.gameId = gameId;
       try {
-        const data = await locationLinksApi.fetchLocationLinks(gameId);
-        locationLinks.value = data;
-        currentGameId.value = gameId;
+        this.locationLinks = await apiFetchLocationLinks(gameId);
       } catch (err) {
-        error.value = err.message || 'Failed to fetch location links';
+        this.error = err.message;
         throw err;
       } finally {
-        loading.value = false;
+        this.loading = false;
       }
     },
 
     async createLocationLink(data) {
-      if (!currentGameId.value) throw new Error('No game selected');
-      loading.value = true;
-      error.value = '';
+      this.loading = true;
+      this.error = null;
       try {
-        const newLink = await locationLinksApi.createLocationLink(currentGameId.value, data);
-        locationLinks.value.push(newLink);
+        const newLink = await apiCreateLocationLink(this.gameId, data);
+        this.locationLinks.push(newLink);
         return newLink;
       } catch (err) {
-        error.value = err.message || 'Failed to create location link';
+        this.error = err.message;
         throw err;
       } finally {
-        loading.value = false;
+        this.loading = false;
       }
     },
 
     async updateLocationLink(locationLinkId, data) {
-      if (!currentGameId.value) throw new Error('No game selected');
-      loading.value = true;
-      error.value = '';
+      this.loading = true;
+      this.error = null;
       try {
-        const updatedLink = await locationLinksApi.updateLocationLink(currentGameId.value, locationLinkId, data);
-        const index = locationLinks.value.findIndex(link => link.id === locationLinkId);
+        const updatedLink = await apiUpdateLocationLink(this.gameId, locationLinkId, data);
+        const index = this.locationLinks.findIndex(link => link.id === locationLinkId);
         if (index !== -1) {
-          locationLinks.value[index] = updatedLink;
+          this.locationLinks[index] = updatedLink;
         }
         return updatedLink;
       } catch (err) {
-        error.value = err.message || 'Failed to update location link';
+        this.error = err.message;
         throw err;
       } finally {
-        loading.value = false;
+        this.loading = false;
       }
     },
 
     async deleteLocationLink(locationLinkId) {
-      if (!currentGameId.value) throw new Error('No game selected');
-      loading.value = true;
-      error.value = '';
+      this.loading = true;
+      this.error = null;
       try {
-        await locationLinksApi.deleteLocationLink(currentGameId.value, locationLinkId);
-        const index = locationLinks.value.findIndex(link => link.id === locationLinkId);
-        if (index !== -1) {
-          locationLinks.value.splice(index, 1);
-        }
+        await apiDeleteLocationLink(this.gameId, locationLinkId);
+        this.locationLinks = this.locationLinks.filter(link => link.id !== locationLinkId);
       } catch (err) {
-        error.value = err.message || 'Failed to delete location link';
+        this.error = err.message;
         throw err;
       } finally {
-        loading.value = false;
+        this.loading = false;
       }
-    },
-
-    clearLocationLinks() {
-      locationLinks.value = [];
-      currentGameId.value = null;
-      error.value = '';
     }
-  };
+  }
 }); 

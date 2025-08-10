@@ -25,10 +25,13 @@ export const useCreaturePlacementsStore = defineStore('creaturePlacements', {
       this.loading = true;
       this.error = null;
       try {
-        await apiCreateCreaturePlacement(this.gameId, data);
-        await this.fetchCreaturePlacements(this.gameId);
+        const res = await apiCreateCreaturePlacement(this.gameId, data);
+        const placement = res.data || res;
+        this.creaturePlacements.push(placement);
+        return placement;
       } catch (e) {
         this.error = e.message;
+        throw e;
       } finally {
         this.loading = false;
       }
@@ -37,10 +40,14 @@ export const useCreaturePlacementsStore = defineStore('creaturePlacements', {
       this.loading = true;
       this.error = null;
       try {
-        await apiUpdateCreaturePlacement(this.gameId, placementId, data);
-        await this.fetchCreaturePlacements(this.gameId);
+        const res = await apiUpdateCreaturePlacement(this.gameId, placementId, data);
+        const updated = res.data || res;
+        const idx = this.creaturePlacements.findIndex(p => p.id === placementId);
+        if (idx !== -1) this.creaturePlacements[idx] = updated;
+        return updated;
       } catch (e) {
         this.error = e.message;
+        throw e;
       } finally {
         this.loading = false;
       }
@@ -50,9 +57,10 @@ export const useCreaturePlacementsStore = defineStore('creaturePlacements', {
       this.error = null;
       try {
         await apiDeleteCreaturePlacement(this.gameId, placementId);
-        await this.fetchCreaturePlacements(this.gameId);
+        this.creaturePlacements = this.creaturePlacements.filter(p => p.id !== placementId);
       } catch (e) {
         this.error = e.message;
+        throw e;
       } finally {
         this.loading = false;
       }

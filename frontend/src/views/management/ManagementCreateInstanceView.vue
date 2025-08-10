@@ -38,19 +38,19 @@
         </div>
 
         <!-- Game Type Configuration Section -->
-        <div v-if="gameConfigurations.length > 0" class="form-section">
-          <h3>Game Configuration</h3>
+        <div v-if="gameParameters.length > 0" class="form-section">
+          <h3>Game Parameters</h3>
           <p class="section-description">
             Configure game-specific parameters for this instance
           </p>
           
           <div class="configuration-fields">
             <ConfigurationField
-              v-for="config in gameConfigurations"
+              v-for="config in gameParameters"
               :key="config.id"
               :config="config"
               :field-id="`config-${config.config_key}`"
-              v-model="form.configurations[config.config_key]"
+              v-model="form.parameters[config.config_key]"
               @validation-error="handleConfigValidationError"
             />
           </div>
@@ -79,27 +79,27 @@ import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useGamesStore } from '../../stores/games';
 import { useGameInstancesStore } from '../../stores/gameInstances';
-import { useGameConfigurationsStore } from '../../stores/gameConfigurations';
+import { useGameParametersStore } from '../../stores/gameParameters';
 import ConfigurationField from '../../components/ConfigurationField.vue';
 
 const route = useRoute();
 const router = useRouter();
 const gamesStore = useGamesStore();
 const gameInstancesStore = useGameInstancesStore();
-const gameConfigurationsStore = useGameConfigurationsStore();
+const gameParametersStore = useGameParametersStore();
 
 const gameId = computed(() => route.params.gameId);
 const selectedGame = computed(() => gamesStore.games.find(g => g.id === gameId.value));
-const gameConfigurations = computed(() => {
+const gameParameters = computed(() => {
   if (!selectedGame.value) return [];
-  return gameConfigurationsStore.getConfigurationsByGameType(selectedGame.value.game_type);
+  return gameParametersStore.getParametersByGameType(selectedGame.value.game_type);
 });
 
 const loading = ref(false);
 const error = ref('');
 
 const form = ref({
-  configurations: {}
+  parameters: {}
 });
 
 const configValidationErrors = ref({});
@@ -109,9 +109,9 @@ onMounted(async () => {
     await gamesStore.fetchGames();
   }
   
-  // Fetch game configurations for the selected game type
+  // Fetch game parameters for the selected game type
   if (selectedGame.value) {
-    await gameConfigurationsStore.fetchGameConfigurationsByGameType(selectedGame.value.game_type);
+    await gameParametersStore.fetchGameParametersByGameType(selectedGame.value.game_type);
   }
 });
 
@@ -127,7 +127,7 @@ const createInstance = async () => {
   try {
     const instanceData = {
       game_id: gameId.value,
-      configurations: form.value.configurations
+      parameters: form.value.parameters
     };
 
     await gameInstancesStore.createGameInstance(gameId.value, instanceData);

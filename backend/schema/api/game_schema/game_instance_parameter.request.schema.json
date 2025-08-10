@@ -1,7 +1,7 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
-    "$id": "http://playbymail.games/schema/game_schema/game_instance_configuration.request.schema.json",
-    "title": "GameInstanceConfigurationRequest",
+    "$id": "http://playbymail.games/schema/game_schema/game_instance_parameter.request.schema.json",
+    "title": "GameInstanceParameterRequest",
     "type": "object",
     "properties": {
         "boolean_value": {

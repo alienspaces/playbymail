@@ -32,11 +32,11 @@ func GameHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error)
 	// Additional handler configurations are added here
 	handlerConfigFuncs := []func(logger.Logger) (map[string]server.HandlerConfig, error){
 		gameHandlerConfig,
-		gameConfigurationHandlerConfig,
+		gameParameterHandlerConfig,
 		gameSubscriptionHandlerConfig,
 		gameAdministrationHandlerConfig,
 		gameInstanceHandlerConfig,
-		gameInstanceConfigurationHandlerConfig,
+		gameInstanceParameterHandlerConfig,
 	}
 
 	for _, fn := range handlerConfigFuncs {

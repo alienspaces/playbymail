@@ -14,11 +14,11 @@ import (
 	"gitlab.com/alienspaces/playbymail/schema/api/game_schema"
 )
 
-// GameInstanceConfigurationRequestToRecord maps a request to a record for consistency
-func GameInstanceConfigurationRequestToRecord(l logger.Logger, r *http.Request, rec *game_record.GameInstanceConfiguration) (*game_record.GameInstanceConfiguration, error) {
-	l.Debug("mapping game_instance_configuration request to record")
+// GameInstanceParameterRequestToRecord maps a request to a record for consistency
+func GameInstanceParameterRequestToRecord(l logger.Logger, r *http.Request, rec *game_record.GameInstanceParameter) (*game_record.GameInstanceParameter, error) {
+	l.Debug("mapping game_instance_parameter request to record")
 
-	var req game_schema.GameInstanceConfigurationRequest
+	var req game_schema.GameInstanceParameterRequest
 	_, err := server.ReadRequest(l, r, &req)
 	if err != nil {
 		return nil, err
@@ -48,9 +48,9 @@ func GameInstanceConfigurationRequestToRecord(l logger.Logger, r *http.Request, 
 	return rec, nil
 }
 
-func GameInstanceConfigurationRecordToResponseData(l logger.Logger, rec *game_record.GameInstanceConfiguration) (*game_schema.GameInstanceConfiguration, error) {
-	l.Debug("mapping game_instance_configuration record to response data")
-	data := &game_schema.GameInstanceConfiguration{
+func GameInstanceParameterRecordToResponseData(l logger.Logger, rec *game_record.GameInstanceParameter) (*game_schema.GameInstanceParameter, error) {
+	l.Debug("mapping game_instance_parameter record to response data")
+	data := &game_schema.GameInstanceParameter{
 		ID:             rec.ID,
 		GameInstanceID: rec.GameInstanceID,
 		ConfigKey:      rec.ConfigKey,
@@ -78,28 +78,28 @@ func GameInstanceConfigurationRecordToResponseData(l logger.Logger, rec *game_re
 	return data, nil
 }
 
-func GameInstanceConfigurationRecordToResponse(l logger.Logger, rec *game_record.GameInstanceConfiguration) (*game_schema.GameInstanceConfigurationResponse, error) {
-	l.Debug("mapping game_instance_configuration record to response")
-	data, err := GameInstanceConfigurationRecordToResponseData(l, rec)
+func GameInstanceParameterRecordToResponse(l logger.Logger, rec *game_record.GameInstanceParameter) (*game_schema.GameInstanceParameterResponse, error) {
+	l.Debug("mapping game_instance_parameter record to response")
+	data, err := GameInstanceParameterRecordToResponseData(l, rec)
 	if err != nil {
 		return nil, err
 	}
-	return &game_schema.GameInstanceConfigurationResponse{
+	return &game_schema.GameInstanceParameterResponse{
 		Data: data,
 	}, nil
 }
 
-func GameInstanceConfigurationRecsToCollectionResponse(l logger.Logger, recs []*game_record.GameInstanceConfiguration) (game_schema.GameInstanceConfigurationCollectionResponse, error) {
-	l.Debug("mapping game_instance_configuration records to collection response")
-	data := []*game_schema.GameInstanceConfiguration{}
+func GameInstanceParameterRecsToCollectionResponse(l logger.Logger, recs []*game_record.GameInstanceParameter) (game_schema.GameInstanceParameterCollectionResponse, error) {
+	l.Debug("mapping game_instance_parameter records to collection response")
+	data := []*game_schema.GameInstanceParameter{}
 	for _, rec := range recs {
-		d, err := GameInstanceConfigurationRecordToResponseData(l, rec)
+		d, err := GameInstanceParameterRecordToResponseData(l, rec)
 		if err != nil {
-			return game_schema.GameInstanceConfigurationCollectionResponse{}, err
+			return game_schema.GameInstanceParameterCollectionResponse{}, err
 		}
 		data = append(data, d)
 	}
-	return game_schema.GameInstanceConfigurationCollectionResponse{
+	return game_schema.GameInstanceParameterCollectionResponse{
 		Data: data,
 	}, nil
 }

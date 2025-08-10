@@ -112,6 +112,23 @@
         </div>
       </div>
 
+      <!-- Game Parameters Section -->
+      <div class="detail-section">
+        <h3>Game Parameters</h3>
+        <div v-if="instanceParametersLoading" class="loading-content">
+          <p>Loading parameters...</p>
+        </div>
+        <div v-else-if="instanceParameters.length === 0" class="placeholder-content">
+          <p>No parameters configured for this instance.</p>
+        </div>
+        <div v-else class="parameters-grid">
+          <div v-for="param in instanceParameters" :key="param.id" class="parameter-item">
+            <span class="label">{{ param.config_key }}</span>
+            <span class="value">{{ formatParameterValue(param) }}</span>
+          </div>
+        </div>
+      </div>
+
       <!-- Player Activity Section (placeholder for future) -->
       <div class="detail-section">
         <h3>Player Activity</h3>
@@ -135,11 +152,13 @@ import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useGamesStore } from '../../stores/games';
 import { useGameInstancesStore } from '../../stores/gameInstances';
+import { useGameInstanceParametersStore } from '../../stores/gameInstanceParameters';
 
 const route = useRoute();
 const router = useRouter();
 const gamesStore = useGamesStore();
 const gameInstancesStore = useGameInstancesStore();
+const gameInstanceParametersStore = useGameInstanceParametersStore();
 
 const gameId = computed(() => route.params.gameId);
 const instanceId = computed(() => route.params.instanceId);
@@ -147,11 +166,14 @@ const selectedGame = computed(() => gamesStore.games.find(g => g.id === gameId.v
 
 const loading = ref(false);
 const controlLoading = ref(false);
+const instanceParametersLoading = ref(false);
 const error = ref('');
 const instance = ref(null);
+const instanceParameters = ref([]);
 
 onMounted(async () => {
   await loadInstance();
+  await loadInstanceParameters();
 });
 
 const loadInstance = async () => {
@@ -170,6 +192,34 @@ const loadInstance = async () => {
   } finally {
     loading.value = false;
   }
+};
+
+const loadInstanceParameters = async () => {
+  if (!instanceId.value) return;
+  
+  instanceParametersLoading.value = true;
+  try {
+    await gameInstanceParametersStore.fetchGameInstanceParameters(instanceId.value);
+    instanceParameters.value = gameInstanceParametersStore.getParametersByGameInstanceId(instanceId.value);
+  } catch (err) {
+    console.error('Failed to load instance parameters:', err);
+  } finally {
+    instanceParametersLoading.value = false;
+  }
+};
+
+const formatParameterValue = (param) => {
+  if (param.value_type === 'boolean') {
+    return param.value === 'true' ? 'Yes' : 'No';
+  }
+  if (param.value_type === 'json') {
+    try {
+      return JSON.stringify(JSON.parse(param.value), null, 2);
+    } catch {
+      return param.value;
+    }
+  }
+  return param.value;
 };
 
 const getStatusLabel = (status) => {
@@ -316,6 +366,22 @@ const goBack = () => {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: var(--space-md);
+}
+
+.parameters-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: var(--space-md);
+}
+
+.parameter-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  padding: var(--space-md);
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
 }
 
 .status-item,

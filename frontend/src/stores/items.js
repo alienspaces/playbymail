@@ -25,10 +25,13 @@ export const useItemsStore = defineStore('items', {
       this.loading = true;
       this.error = null;
       try {
-        await apiCreateItem(this.gameId, data);
-        await this.fetchItems(this.gameId);
+        const res = await apiCreateItem(this.gameId, data);
+        const item = res.data || res;
+        this.items.push(item);
+        return item;
       } catch (e) {
         this.error = e.message;
+        throw e;
       } finally {
         this.loading = false;
       }
@@ -37,10 +40,14 @@ export const useItemsStore = defineStore('items', {
       this.loading = true;
       this.error = null;
       try {
-        await apiUpdateItem(this.gameId, itemId, data);
-        await this.fetchItems(this.gameId);
+        const res = await apiUpdateItem(this.gameId, itemId, data);
+        const updated = res.data || res;
+        const idx = this.items.findIndex(i => i.id === itemId);
+        if (idx !== -1) this.items[idx] = updated;
+        return updated;
       } catch (e) {
         this.error = e.message;
+        throw e;
       } finally {
         this.loading = false;
       }
@@ -50,9 +57,10 @@ export const useItemsStore = defineStore('items', {
       this.error = null;
       try {
         await apiDeleteItem(this.gameId, itemId);
-        await this.fetchItems(this.gameId);
+        this.items = this.items.filter(i => i.id !== itemId);
       } catch (e) {
         this.error = e.message;
+        throw e;
       } finally {
         this.loading = false;
       }

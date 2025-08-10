@@ -24,9 +24,9 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/repository/adventure_game_turn_sheet"
 	"gitlab.com/alienspaces/playbymail/internal/repository/game"
 	"gitlab.com/alienspaces/playbymail/internal/repository/game_administration"
-	"gitlab.com/alienspaces/playbymail/internal/repository/game_configuration"
 	"gitlab.com/alienspaces/playbymail/internal/repository/game_instance"
-	"gitlab.com/alienspaces/playbymail/internal/repository/game_instance_configuration"
+	"gitlab.com/alienspaces/playbymail/internal/repository/game_instance_parameter"
+	"gitlab.com/alienspaces/playbymail/internal/repository/game_parameter"
 	"gitlab.com/alienspaces/playbymail/internal/repository/game_subscription"
 	"gitlab.com/alienspaces/playbymail/internal/repository/game_turn_sheet"
 	"gitlab.com/alienspaces/playbymail/internal/utils/config"
@@ -64,8 +64,8 @@ func NewDomain(l logger.Logger, cfg config.Config) (*Domain, error) {
 		adventure_game_character_instance.NewRepository,
 		adventure_game_turn_sheet.NewRepository,
 		game_instance.NewRepository,
-		game_configuration.NewRepository,
-		game_instance_configuration.NewRepository,
+		game_parameter.NewRepository,
+		game_instance_parameter.NewRepository,
 		game_subscription.NewRepository,
 		game_administration.NewRepository,
 		game_turn_sheet.NewRepository,
@@ -171,14 +171,14 @@ func (m *Domain) GameAdministrationRepository() *repository.Generic[game_record.
 	return m.Repositories[game_administration.TableName].(*repository.Generic[game_record.GameAdministration, *game_record.GameAdministration])
 }
 
-// GameConfigurationRepository -
-func (m *Domain) GameConfigurationRepository() *repository.Generic[game_record.GameConfiguration, *game_record.GameConfiguration] {
-	return m.Repositories[game_configuration.TableName].(*repository.Generic[game_record.GameConfiguration, *game_record.GameConfiguration])
+// GameParameterRepository -
+func (m *Domain) GameParameterRepository() *repository.Generic[game_record.GameParameter, *game_record.GameParameter] {
+	return m.Repositories[game_parameter.TableName].(*repository.Generic[game_record.GameParameter, *game_record.GameParameter])
 }
 
-// GameInstanceConfigurationRepository -
-func (m *Domain) GameInstanceConfigurationRepository() *repository.Generic[game_record.GameInstanceConfiguration, *game_record.GameInstanceConfiguration] {
-	return m.Repositories[game_instance_configuration.TableName].(*repository.Generic[game_record.GameInstanceConfiguration, *game_record.GameInstanceConfiguration])
+// GameInstanceParameterRepository -
+func (m *Domain) GameInstanceParameterRepository() *repository.Generic[game_record.GameInstanceParameter, *game_record.GameInstanceParameter] {
+	return m.Repositories[game_instance_parameter.TableName].(*repository.Generic[game_record.GameInstanceParameter, *game_record.GameInstanceParameter])
 }
 
 // GameTurnSheetRepository -

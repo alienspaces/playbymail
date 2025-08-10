@@ -25,10 +25,13 @@ export const useCreaturesStore = defineStore('creatures', {
       this.loading = true;
       this.error = null;
       try {
-        await apiCreateCreature(this.gameId, data);
-        await this.fetchCreatures(this.gameId);
+        const res = await apiCreateCreature(this.gameId, data);
+        const creature = res.data || res;
+        this.creatures.push(creature);
+        return creature;
       } catch (e) {
         this.error = e.message;
+        throw e;
       } finally {
         this.loading = false;
       }
@@ -37,10 +40,14 @@ export const useCreaturesStore = defineStore('creatures', {
       this.loading = true;
       this.error = null;
       try {
-        await apiUpdateCreature(this.gameId, creatureId, data);
-        await this.fetchCreatures(this.gameId);
+        const res = await apiUpdateCreature(this.gameId, creatureId, data);
+        const updated = res.data || res;
+        const idx = this.creatures.findIndex(c => c.id === creatureId);
+        if (idx !== -1) this.creatures[idx] = updated;
+        return updated;
       } catch (e) {
         this.error = e.message;
+        throw e;
       } finally {
         this.loading = false;
       }
@@ -50,9 +57,10 @@ export const useCreaturesStore = defineStore('creatures', {
       this.error = null;
       try {
         await apiDeleteCreature(this.gameId, creatureId);
-        await this.fetchCreatures(this.gameId);
+        this.creatures = this.creatures.filter(c => c.id !== creatureId);
       } catch (e) {
         this.error = e.message;
+        throw e;
       } finally {
         this.loading = false;
       }

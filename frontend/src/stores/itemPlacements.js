@@ -25,10 +25,13 @@ export const useItemPlacementsStore = defineStore('itemPlacements', {
       this.loading = true;
       this.error = null;
       try {
-        await apiCreateItemPlacement(this.gameId, data);
-        await this.fetchItemPlacements(this.gameId);
+        const res = await apiCreateItemPlacement(this.gameId, data);
+        const placement = res.data || res;
+        this.itemPlacements.push(placement);
+        return placement;
       } catch (e) {
         this.error = e.message;
+        throw e;
       } finally {
         this.loading = false;
       }
@@ -37,10 +40,14 @@ export const useItemPlacementsStore = defineStore('itemPlacements', {
       this.loading = true;
       this.error = null;
       try {
-        await apiUpdateItemPlacement(this.gameId, placementId, data);
-        await this.fetchItemPlacements(this.gameId);
+        const res = await apiUpdateItemPlacement(this.gameId, placementId, data);
+        const updated = res.data || res;
+        const idx = this.itemPlacements.findIndex(p => p.id === placementId);
+        if (idx !== -1) this.itemPlacements[idx] = updated;
+        return updated;
       } catch (e) {
         this.error = e.message;
+        throw e;
       } finally {
         this.loading = false;
       }
@@ -50,9 +57,10 @@ export const useItemPlacementsStore = defineStore('itemPlacements', {
       this.error = null;
       try {
         await apiDeleteItemPlacement(this.gameId, placementId);
-        await this.fetchItemPlacements(this.gameId);
+        this.itemPlacements = this.itemPlacements.filter(p => p.id !== placementId);
       } catch (e) {
         this.error = e.message;
+        throw e;
       } finally {
         this.loading = false;
       }

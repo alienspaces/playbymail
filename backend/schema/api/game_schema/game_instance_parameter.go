@@ -6,7 +6,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/schema/api/common_schema"
 )
 
-type GameInstanceConfiguration struct {
+type GameInstanceParameter struct {
 	ID             string     `json:"id"`
 	GameInstanceID string     `json:"game_instance_id"`
 	ConfigKey      string     `json:"config_key"`
@@ -20,19 +20,19 @@ type GameInstanceConfiguration struct {
 	DeletedAt      *time.Time `json:"deleted_at,omitempty"`
 }
 
-type GameInstanceConfigurationResponse struct {
-	Data       *GameInstanceConfiguration        `json:"data"`
+type GameInstanceParameterResponse struct {
+	Data       *GameInstanceParameter            `json:"data"`
 	Error      *common_schema.ResponseError      `json:"error,omitempty"`
 	Pagination *common_schema.ResponsePagination `json:"pagination,omitempty"`
 }
 
-type GameInstanceConfigurationCollectionResponse struct {
-	Data       []*GameInstanceConfiguration      `json:"data"`
+type GameInstanceParameterCollectionResponse struct {
+	Data       []*GameInstanceParameter          `json:"data"`
 	Error      *common_schema.ResponseError      `json:"error,omitempty"`
 	Pagination *common_schema.ResponsePagination `json:"pagination,omitempty"`
 }
 
-type GameInstanceConfigurationRequest struct {
+type GameInstanceParameterRequest struct {
 	common_schema.Request
 	GameInstanceID string  `json:"game_instance_id"`
 	ConfigKey      string  `json:"config_key"`

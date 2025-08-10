@@ -1,11 +1,14 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
-    "$id": "http://playbymail.games/schema/game_schema/game_instance_configuration.response.schema.json",
-    "title": "GameInstanceConfigurationResponse",
+    "$id": "http://playbymail.games/schema/game_schema/game_parameter.collection.response.schema.json",
+    "title": "GameParameterCollectionResponse",
     "type": "object",
     "properties": {
         "data": {
-            "$ref": "game_instance_configuration.schema.json"
+            "items": {
+                "$ref": "game_parameter.schema.json"
+            },
+            "type": "array"
         },
         "error": {
             "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/error"

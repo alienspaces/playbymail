@@ -1,9 +1,10 @@
 // Standard Store Method Naming Conventions:
-// - fetch<ResourcePlural>(gameId?)
-// - create<ResourceSingular>(data)
-// - update<ResourceSingular>(id, data)
-// - delete<ResourceSingular>(id)
-// Example: fetchLocations, createLocation, updateLocation, deleteLocation
+// - fetch<ResourcePlural>(contextId?) - contextId when resources belong to parent
+// - create<ResourceSingular>(contextId?, data) - contextId when resources belong to parent
+// - update<ResourceSingular>(contextId?, id, data) - contextId when resources belong to parent  
+// - delete<ResourceSingular>(contextId?, id) - contextId when resources belong to parent
+// - For top-level resources: fetch*, create*, update*, delete* without contextId
+// - For game-scoped resources: fetch*, create*, update*, delete* with gameId
 
 import { defineStore } from 'pinia';
 import { listGames, createGame as apiCreateGame, updateGame as apiUpdateGame, deleteGame as apiDeleteGame } from '../api/games';
