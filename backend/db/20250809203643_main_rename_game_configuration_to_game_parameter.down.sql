@@ -22,6 +22,13 @@ ALTER TABLE game_configuration ADD CONSTRAINT game_configuration_value_type_chec
 ALTER TABLE game_configuration ADD CONSTRAINT game_configuration_unique_key_per_type 
     UNIQUE (game_type, config_key);
 
+-- Remove the column that was added in the up migration
+ALTER TABLE game_configuration DROP COLUMN IF EXISTS is_global;
+
+-- Add back the columns that were removed in the up migration
+ALTER TABLE game_configuration ADD COLUMN ui_hint VARCHAR(50);
+ALTER TABLE game_configuration ADD COLUMN validation_rules TEXT;
+
 -- Recreate indexes with original names
 CREATE INDEX idx_game_configuration_game_type ON game_configuration(game_type);
 CREATE INDEX idx_game_configuration_config_key ON game_configuration(config_key);

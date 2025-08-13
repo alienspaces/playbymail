@@ -26,6 +26,13 @@ ALTER TABLE game_parameter ADD CONSTRAINT game_parameter_unique_key_per_type
 CREATE INDEX idx_game_parameter_game_type ON game_parameter(game_type);
 CREATE INDEX idx_game_parameter_config_key ON game_parameter(config_key);
 
+-- Remove columns that don't exist in Go record
+ALTER TABLE game_parameter DROP COLUMN IF EXISTS ui_hint;
+ALTER TABLE game_parameter DROP COLUMN IF EXISTS validation_rules;
+
+-- Add column that exists in Go record but missing from DB
+ALTER TABLE game_parameter ADD COLUMN is_global BOOLEAN NOT NULL DEFAULT false;
+
 -- Update comments
 COMMENT ON TABLE game_parameter IS 'Defines available parameters for different game types';
 COMMENT ON COLUMN game_parameter.id IS 'Unique identifier for the game parameter';
@@ -35,5 +42,4 @@ COMMENT ON COLUMN game_parameter.value_type IS 'Data type for this parameter val
 COMMENT ON COLUMN game_parameter.default_value IS 'Default value for this parameter';
 COMMENT ON COLUMN game_parameter.is_required IS 'Whether this parameter is required';
 COMMENT ON COLUMN game_parameter.description IS 'Description of this parameter option';
-COMMENT ON COLUMN game_parameter.ui_hint IS 'UI hint for form generation';
-COMMENT ON COLUMN game_parameter.validation_rules IS 'JSON validation rules for this parameter';
+COMMENT ON COLUMN game_parameter.is_global IS 'Whether this parameter applies globally across all instances';

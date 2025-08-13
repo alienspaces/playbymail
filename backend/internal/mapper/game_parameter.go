@@ -29,8 +29,7 @@ func GameParameterRequestToRecord(l logger.Logger, r *http.Request, rec *game_re
 		rec.DefaultValue = nullstring.FromStringPtr(req.DefaultValue)
 		rec.IsRequired = req.IsRequired
 		rec.Description = nullstring.FromStringPtr(req.Description)
-		rec.UIHint = nullstring.FromStringPtr(req.UIHint)
-		rec.ValidationRules = nullstring.FromStringPtr(req.ValidationRules)
+		rec.IsGlobal = req.IsGlobal
 	case server.HttpMethodPut, server.HttpMethodPatch:
 		rec.GameType = req.GameType
 		rec.ConfigKey = req.ConfigKey
@@ -38,8 +37,7 @@ func GameParameterRequestToRecord(l logger.Logger, r *http.Request, rec *game_re
 		rec.DefaultValue = nullstring.FromStringPtr(req.DefaultValue)
 		rec.IsRequired = req.IsRequired
 		rec.Description = nullstring.FromStringPtr(req.Description)
-		rec.UIHint = nullstring.FromStringPtr(req.UIHint)
-		rec.ValidationRules = nullstring.FromStringPtr(req.ValidationRules)
+		rec.IsGlobal = req.IsGlobal
 	default:
 		return nil, fmt.Errorf("unsupported HTTP method")
 	}
@@ -50,17 +48,16 @@ func GameParameterRequestToRecord(l logger.Logger, r *http.Request, rec *game_re
 func GameParameterRecordToResponseData(l logger.Logger, rec *game_record.GameParameter) (*game_schema.GameParameter, error) {
 	l.Debug("mapping game parameter record to response data")
 	return &game_schema.GameParameter{
-		ID:              rec.ID,
-		GameType:        rec.GameType,
-		ConfigKey:       rec.ConfigKey,
-		ValueType:       rec.ValueType,
-		DefaultValue:    nullstring.ToStringPtr(rec.DefaultValue),
-		IsRequired:      rec.IsRequired,
-		Description:     nullstring.ToStringPtr(rec.Description),
-		UIHint:          nullstring.ToStringPtr(rec.UIHint),
-		ValidationRules: nullstring.ToStringPtr(rec.ValidationRules),
-		CreatedAt:       rec.CreatedAt,
-		UpdatedAt:       nulltime.ToTimePtr(rec.UpdatedAt),
+		ID:           rec.ID,
+		GameType:     rec.GameType,
+		ConfigKey:    rec.ConfigKey,
+		Description:  nullstring.ToStringPtr(rec.Description),
+		ValueType:    rec.ValueType,
+		DefaultValue: nullstring.ToStringPtr(rec.DefaultValue),
+		IsRequired:   rec.IsRequired,
+		IsGlobal:     rec.IsGlobal,
+		CreatedAt:    rec.CreatedAt,
+		UpdatedAt:    nulltime.ToTimePtr(rec.UpdatedAt),
 	}, nil
 }
 
