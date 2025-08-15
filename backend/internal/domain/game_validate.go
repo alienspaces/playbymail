@@ -61,6 +61,10 @@ func validateGameRec(args *validateGameArgs) error {
 		return InvalidFieldValue("game_type")
 	}
 
+	if rec.TurnDurationHours <= 0 {
+		return InvalidFieldValue("turn_duration_hours")
+	}
+
 	return nil
 }
 

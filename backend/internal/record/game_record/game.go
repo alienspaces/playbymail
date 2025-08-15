@@ -12,22 +12,25 @@ const (
 )
 
 const (
-	FieldGameID   string = "id"
-	FieldGameName string = "name"
-	FieldGameType string = "game_type"
+	FieldGameID                string = "id"
+	FieldGameName              string = "name"
+	FieldGameType              string = "game_type"
+	FieldGameTurnDurationHours string = "turn_duration_hours"
 )
 
 const GameTypeAdventure = "adventure"
 
 type Game struct {
 	record.Record
-	Name     string `db:"name"`
-	GameType string `db:"game_type"`
+	Name              string `db:"name"`
+	GameType          string `db:"game_type"`
+	TurnDurationHours int    `db:"turn_duration_hours"`
 }
 
 func (r *Game) ToNamedArgs() pgx.NamedArgs {
 	args := r.Record.ToNamedArgs()
 	args[FieldGameName] = r.Name
 	args[FieldGameType] = r.GameType
+	args[FieldGameTurnDurationHours] = r.TurnDurationHours
 	return args
 }

@@ -24,7 +24,8 @@ const (
 )
 
 const (
-	AdventureGameParameterCharacterLives = "character_lives"
+	AdventureGameParameterCharacterLives    = "character_lives"
+	AdventureGameParameterTurnDurationHours = "turn_duration_hours"
 )
 
 var gameParameterConfigurations = []game_record.GameParameter{
@@ -33,6 +34,12 @@ var gameParameterConfigurations = []game_record.GameParameter{
 		GameType:    game_record.GameTypeAdventure,
 		ConfigKey:   AdventureGameParameterCharacterLives,
 		Description: nullstring.FromString("The number of lives a character has."),
+		ValueType:   GameParameterValueTypeInteger,
+	},
+	{
+		GameType:    game_record.GameTypeAdventure,
+		ConfigKey:   AdventureGameParameterTurnDurationHours,
+		Description: nullstring.FromString("Duration of each turn in hours."),
 		ValueType:   GameParameterValueTypeInteger,
 	},
 }

@@ -20,13 +20,17 @@ func GameConfig() []harness.GameConfig {
 		{
 			Reference: "game-one",
 			Record: &game_record.Game{
-				Name: "Test Game One",
+				Name:              "Test Game One",
+				GameType:          game_record.GameTypeAdventure,
+				TurnDurationHours: 168, // 1 week
 			},
 		},
 		{
 			Reference: "game-two",
 			Record: &game_record.Game{
-				Name: "Test Game Two",
+				Name:              "Test Game Two",
+				GameType:          game_record.GameTypeAdventure,
+				TurnDurationHours: 336, // 2 weeks
 			},
 		},
 	}

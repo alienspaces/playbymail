@@ -11,6 +11,7 @@
           <tr>
             <th>Name</th>
             <th>Type</th>
+            <th>Turn Duration</th>
             <th>Created</th>
             <th>Actions</th>
           </tr>
@@ -19,6 +20,7 @@
           <tr v-for="game in games" :key="game.id">
             <td>{{ game.name }}</td>
             <td>{{ game.game_type }}</td>
+            <td>{{ formatTurnDuration(game.turn_duration_hours) }}</td>
             <td>{{ formatDate(game.created_at) }}</td>
             <td>
               <button @click="openEdit(game)">Edit</button>
@@ -38,13 +40,24 @@
         <form @submit.prevent="modalMode === 'create' ? createGame() : updateGame()">
           <div class="form-group">
             <label for="game-name">Name:</label>
-            <input v-model="modalForm.name" id="game-name" required maxlength="1024" />
+            <input v-model="modalForm.name" id="game-name" required maxlength="1024" autocomplete="off" />
           </div>
           <div class="form-group">
             <label for="game-type">Type:</label>
             <select v-model="modalForm.game_type" id="game-type" required>
               <option value="adventure">Adventure</option>
             </select>
+          </div>
+          <div class="form-group">
+            <label for="turn-duration">Turn Duration (hours):</label>
+            <input 
+              v-model.number="modalForm.turn_duration_hours" 
+              id="turn-duration" 
+              type="number" 
+              min="1" 
+              required 
+              placeholder="168 (1 week)"
+            />
           </div>
           <div class="modal-actions">
             <button type="submit">{{ modalMode === 'create' ? 'Create' : 'Save' }}</button>
@@ -86,7 +99,8 @@ export default {
       modalForm: {
         id: '',
         name: '',
-        game_type: 'adventure'
+        game_type: 'adventure',
+        turn_duration_hours: 168 // Default to 1 week
       },
       modalError: '',
       showDeleteConfirm: false,
@@ -115,15 +129,32 @@ export default {
       const d = new Date(dateStr)
       return d.toLocaleDateString()
     },
+    formatTurnDuration(hours) {
+      if (!hours) return 'Not set'
+      if (hours % (24 * 7) === 0) {
+        const weeks = hours / (24 * 7)
+        return `${weeks} week${weeks === 1 ? '' : 's'}`
+      }
+      if (hours % 24 === 0) {
+        const days = hours / 24
+        return `${days} day${days === 1 ? '' : 's'}`
+      }
+      return `${hours} hour${hours === 1 ? '' : 's'}`
+    },
     openCreate() {
       this.modalMode = 'create'
-      this.modalForm = { id: '', name: '', game_type: 'adventure' }
+      this.modalForm = { id: '', name: '', game_type: 'adventure', turn_duration_hours: 168 }
       this.modalError = ''
       this.showModal = true
     },
     openEdit(game) {
       this.modalMode = 'edit'
-      this.modalForm = { id: game.id, name: game.name, game_type: game.game_type }
+      this.modalForm = { 
+        id: game.id, 
+        name: game.name, 
+        game_type: game.game_type, 
+        turn_duration_hours: game.turn_duration_hours || 168 
+      }
       this.modalError = ''
       this.showModal = true
     },
@@ -134,7 +165,11 @@ export default {
     async createGame() {
       this.modalError = ''
       try {
-        const created = await this.gamesStore.createGame({ name: this.modalForm.name, game_type: this.modalForm.game_type });
+        const created = await this.gamesStore.createGame({ 
+          name: this.modalForm.name, 
+          game_type: this.modalForm.game_type,
+          turn_duration_hours: this.modalForm.turn_duration_hours
+        });
         this.closeModal();
         if (created && created.id) {
           this.selectGame(created);
@@ -146,7 +181,11 @@ export default {
     async updateGame() {
       this.modalError = ''
       try {
-        await this.gamesStore.updateGame(this.modalForm.id, { name: this.modalForm.name, game_type: this.modalForm.game_type });
+        await this.gamesStore.updateGame(this.modalForm.id, { 
+          name: this.modalForm.name, 
+          game_type: this.modalForm.game_type,
+          turn_duration_hours: this.modalForm.turn_duration_hours
+        });
         this.closeModal();
       } catch (err) {
         this.modalError = err.message;

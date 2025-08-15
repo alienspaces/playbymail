@@ -151,8 +151,9 @@ func Test_createUpdateDeleteGameHandler(t *testing.T) {
 				},
 				RequestBody: func(d harness.Data) any {
 					return game_schema.GameRequest{
-						Name:     "Test Game",
-						GameType: game_record.GameTypeAdventure,
+						Name:              "Test Game",
+						GameType:          game_record.GameTypeAdventure,
+						TurnDurationHours: 168, // 1 week
 					}
 				},
 				ResponseDecoder: testCaseResponseDecoder,
@@ -182,8 +183,9 @@ func Test_createUpdateDeleteGameHandler(t *testing.T) {
 				},
 				RequestBody: func(d harness.Data) any {
 					return game_schema.GameRequest{
-						Name:     "Test Game",
-						GameType: game_record.GameTypeAdventure,
+						Name:              "Test Game",
+						GameType:          game_record.GameTypeAdventure,
+						TurnDurationHours: 336, // 2 weeks
 					}
 				},
 				ResponseDecoder: testCaseResponseDecoder,

@@ -29,6 +29,10 @@
               <span class="label">Type:</span>
               <span class="value">{{ selectedGame?.game_type }}</span>
             </div>
+            <div class="info-item">
+              <span class="label">Default Turn Duration:</span>
+              <span class="value">{{ formatTurnDuration(selectedGame?.turn_duration_hours) }}</span>
+            </div>
           </div>
         </div>
 
@@ -103,6 +107,20 @@ const form = ref({
 });
 
 const configValidationErrors = ref({});
+
+// Helper function to format turn duration
+const formatTurnDuration = (hours) => {
+  if (!hours) return 'Not set'
+  if (hours % (24 * 7) === 0) {
+    const weeks = hours / (24 * 7)
+    return `${weeks} week${weeks === 1 ? '' : 's'}`
+  }
+  if (hours % 24 === 0) {
+    const days = hours / 24
+    return `${days} day${days === 1 ? '' : 's'}`
+  }
+  return `${hours} hour${hours === 1 ? '' : 's'}`
+};
 
 onMounted(async () => {
   if (!selectedGame.value) {

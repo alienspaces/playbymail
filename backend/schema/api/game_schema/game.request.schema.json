@@ -21,11 +21,17 @@
             "maxLength": 1024,
             "minLength": 1,
             "type": "string"
+        },
+        "turn_duration_hours": {
+            "description": "Duration of each turn in hours.",
+            "minimum": 1,
+            "type": "integer"
         }
     },
     "required": [
         "name",
-        "game_type"
+        "game_type",
+        "turn_duration_hours"
     ],
     "additionalProperties": false
 }

@@ -178,8 +178,9 @@ func DefaultDataConfig() DataConfig {
 			{
 				Reference: GameOneRef,
 				Record: &game_record.Game{
-					Name:     UniqueName("Default Game One"),
-					GameType: game_record.GameTypeAdventure,
+					Name:              UniqueName("Default Game One"),
+					GameType:          game_record.GameTypeAdventure,
+					TurnDurationHours: 168, // 1 week
 				},
 				GameItemConfigs: []GameItemConfig{
 					{

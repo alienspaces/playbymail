@@ -29,8 +29,9 @@ func TestCreateOne(t *testing.T) {
 			name: "Without ID",
 			rec: func(d harness.Data, t *testing.T) *game_record.Game {
 				return &game_record.Game{
-					Name:     fmt.Sprintf("%s %s", gofakeit.Name(), gofakeit.Name()),
-					GameType: game_record.GameTypeAdventure,
+					Name:              fmt.Sprintf("%s %s", gofakeit.Name(), gofakeit.Name()),
+					GameType:          game_record.GameTypeAdventure,
+					TurnDurationHours: 168, // 1 week
 				}
 			},
 			err: false,
@@ -39,8 +40,9 @@ func TestCreateOne(t *testing.T) {
 			name: "With ID",
 			rec: func(d harness.Data, t *testing.T) *game_record.Game {
 				rec := &game_record.Game{
-					Name:     fmt.Sprintf("%s %s", gofakeit.Name(), gofakeit.Name()),
-					GameType: game_record.GameTypeAdventure,
+					Name:              fmt.Sprintf("%s %s", gofakeit.Name(), gofakeit.Name()),
+					GameType:          game_record.GameTypeAdventure,
+					TurnDurationHours: 336, // 2 weeks
 				}
 				id, _ := uuid.NewRandom()
 				rec.ID = id.String()

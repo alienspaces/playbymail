@@ -57,5 +57,9 @@ func (t *Testing) applyGameRecDefaultValues(rec *game_record.Game) *game_record.
 		rec.GameType = game_record.GameTypeAdventure
 	}
 
+	if rec.TurnDurationHours == 0 {
+		rec.TurnDurationHours = 168 // Default to 1 week
+	}
+
 	return rec
 }

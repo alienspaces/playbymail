@@ -21,11 +21,11 @@ import (
 
 // API Resource CRUD Paths
 //
-// GET (collection)  /api/v1/game-instances/{game_instance_id}/parameters
-// GET (document)    /api/v1/game-instances/{game_instance_id}/parameters/{parameter_id}
-// POST (document)   /api/v1/game-instances/{game_instance_id}/parameters
-// PUT (document)    /api/v1/game-instances/{game_instance_id}/parameters/{parameter_id}
-// DELETE (document) /api/v1/game-instances/{game_instance_id}/parameters/{parameter_id}
+// GET (collection)  /api/v1/games/{game_id}/instances/{instance_id}/parameters
+// GET (document)    /api/v1/games/{game_id}/instances/{instance_id}/parameters/{parameter_id}
+// POST (document)   /api/v1/games/{game_id}/instances/{instance_id}/parameters
+// PUT (document)    /api/v1/games/{game_id}/instances/{instance_id}/parameters/{parameter_id}
+// DELETE (document) /api/v1/games/{game_id}/instances/{instance_id}/parameters/{parameter_id}
 
 const (
 	getManyGameInstanceParameters  = "get-many-game-instance-parameters"
@@ -78,7 +78,7 @@ func gameInstanceParameterHandlerConfig(l logger.Logger) (map[string]server.Hand
 
 	gameInstanceParameterConfig[getManyGameInstanceParameters] = server.HandlerConfig{
 		Method:      http.MethodGet,
-		Path:        "/api/v1/game-instances/:game_instance_id/parameters",
+		Path:        "/api/v1/games/:game_id/instances/:instance_id/parameters",
 		HandlerFunc: getManyGameInstanceParametersHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
@@ -95,7 +95,7 @@ func gameInstanceParameterHandlerConfig(l logger.Logger) (map[string]server.Hand
 
 	gameInstanceParameterConfig[getOneGameInstanceParameter] = server.HandlerConfig{
 		Method:      http.MethodGet,
-		Path:        "/api/v1/game-instances/:game_instance_id/parameters/:parameter_id",
+		Path:        "/api/v1/games/:game_id/instances/:instance_id/parameters/:parameter_id",
 		HandlerFunc: getOneGameInstanceParameterHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
@@ -111,7 +111,7 @@ func gameInstanceParameterHandlerConfig(l logger.Logger) (map[string]server.Hand
 
 	gameInstanceParameterConfig[createOneGameInstanceParameter] = server.HandlerConfig{
 		Method:      http.MethodPost,
-		Path:        "/api/v1/game-instances/:game_instance_id/parameters",
+		Path:        "/api/v1/games/:game_id/instances/:instance_id/parameters",
 		HandlerFunc: createOneGameInstanceParameterHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
@@ -128,7 +128,7 @@ func gameInstanceParameterHandlerConfig(l logger.Logger) (map[string]server.Hand
 
 	gameInstanceParameterConfig[updateOneGameInstanceParameter] = server.HandlerConfig{
 		Method:      http.MethodPut,
-		Path:        "/api/v1/game-instances/:game_instance_id/parameters/:parameter_id",
+		Path:        "/api/v1/games/:game_id/instances/:instance_id/parameters/:parameter_id",
 		HandlerFunc: updateOneGameInstanceParameterHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
@@ -145,7 +145,7 @@ func gameInstanceParameterHandlerConfig(l logger.Logger) (map[string]server.Hand
 
 	gameInstanceParameterConfig[deleteOneGameInstanceParameter] = server.HandlerConfig{
 		Method:      http.MethodDelete,
-		Path:        "/api/v1/game-instances/:game_instance_id/parameters/:parameter_id",
+		Path:        "/api/v1/games/:game_id/instances/:instance_id/parameters/:parameter_id",
 		HandlerFunc: deleteOneGameInstanceParameterHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
@@ -164,14 +164,27 @@ func gameInstanceParameterHandlerConfig(l logger.Logger) (map[string]server.Hand
 func getManyGameInstanceParametersHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = logging.LoggerWithFunctionContext(l, packageName, "getManyGameInstanceParametersHandler")
 
-	gameInstanceID := pp.ByName("game_instance_id")
+	gameID := pp.ByName("game_id")
+	instanceID := pp.ByName("instance_id")
 
-	l.Info("getting many game instance parameters for game instance >%s<", gameInstanceID)
+	l.Info("getting many game instance parameters for game >%s< instance >%s<", gameID, instanceID)
+
+	// Validate that the instance belongs to the specified game
+	gameInstance, err := m.(*domain.Domain).GetGameInstanceRec(instanceID, nil)
+	if err != nil {
+		l.Warn("failed getting game instance >%v<", err)
+		return err
+	}
+
+	if gameInstance.GameID != gameID {
+		l.Warn("game instance >%s< does not belong to game >%s<", instanceID, gameID)
+		return coreerror.NewNotFoundError("game instance", instanceID)
+	}
 
 	opts := queryparam.ToSQLOptionsWithDefaults(qp)
 	opts.Params = append(opts.Params, sql.Param{
 		Col: game_record.FieldGameInstanceParameterGameInstanceID,
-		Val: gameInstanceID,
+		Val: instanceID,
 	})
 
 	recs, err := m.(*domain.Domain).GetGameInstanceParameterRecs(opts)
@@ -192,10 +205,23 @@ func getManyGameInstanceParametersHandler(w http.ResponseWriter, r *http.Request
 func getOneGameInstanceParameterHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = logging.LoggerWithFunctionContext(l, packageName, "getOneGameInstanceParameterHandler")
 
-	gameInstanceID := pp.ByName("game_instance_id")
+	gameID := pp.ByName("game_id")
+	instanceID := pp.ByName("instance_id")
 	parameterID := pp.ByName("parameter_id")
 
-	l.Info("getting game instance parameter >%s< for game instance >%s<", parameterID, gameInstanceID)
+	l.Info("getting game instance parameter >%s< for game >%s< instance >%s<", parameterID, gameID, instanceID)
+
+	// Validate that the instance belongs to the specified game
+	gameInstance, err := m.(*domain.Domain).GetGameInstanceRec(instanceID, nil)
+	if err != nil {
+		l.Warn("failed getting game instance >%v<", err)
+		return err
+	}
+
+	if gameInstance.GameID != gameID {
+		l.Warn("game instance >%s< does not belong to game >%s<", instanceID, gameID)
+		return coreerror.NewNotFoundError("game instance", instanceID)
+	}
 
 	rec, err := m.(*domain.Domain).GetGameInstanceParameterRec(parameterID, nil)
 	if err != nil {
@@ -204,8 +230,8 @@ func getOneGameInstanceParameterHandler(w http.ResponseWriter, r *http.Request, 
 	}
 
 	// Validate the parameter belongs to the game instance
-	if rec.GameInstanceID != gameInstanceID {
-		l.Warn("parameter >%s< does not belong to game instance >%s<", parameterID, gameInstanceID)
+	if rec.GameInstanceID != instanceID {
+		l.Warn("parameter >%s< does not belong to game instance >%s<", parameterID, instanceID)
 		return coreerror.NewNotFoundError("parameter", parameterID)
 	}
 
@@ -221,22 +247,34 @@ func getOneGameInstanceParameterHandler(w http.ResponseWriter, r *http.Request, 
 func createOneGameInstanceParameterHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = logging.LoggerWithFunctionContext(l, packageName, "createOneGameInstanceParameterHandler")
 
-	gameInstanceID := pp.ByName("game_instance_id")
+	gameID := pp.ByName("game_id")
+	instanceID := pp.ByName("instance_id")
 
-	l.Info("creating game instance parameter for game instance >%s<", gameInstanceID)
+	l.Info("creating game instance parameter for game >%s< instance >%s<", gameID, instanceID)
 
-	rec := &game_record.GameInstanceParameter{}
-	rec, err := mapper.GameInstanceParameterRequestToRecord(l, r, rec)
+	// Validate that the instance belongs to the specified game
+	gameInstance, err := m.(*domain.Domain).GetGameInstanceRec(instanceID, nil)
+	if err != nil {
+		l.Warn("failed getting game instance >%v<", err)
+		return err
+	}
+
+	if gameInstance.GameID != gameID {
+		l.Warn("game instance >%s< does not belong to game >%s<", instanceID, gameID)
+		return coreerror.NewNotFoundError("game instance", instanceID)
+	}
+
+	rec := &game_record.GameInstanceParameter{
+		GameInstanceID: instanceID,
+	}
+	rec, err = mapper.GameInstanceParameterRequestToRecord(l, r, rec)
 	if err != nil {
 		l.Warn("failed mapping game instance parameter request to record >%v<", err)
 		return err
 	}
 
-	// Validate the game_instance_id matches the URL parameter
-	if rec.GameInstanceID != gameInstanceID {
-		l.Warn("game_instance_id in body >%s< does not match URL parameter >%s<", rec.GameInstanceID, gameInstanceID)
-		return coreerror.NewInvalidError("game_instance_id", "game_instance_id mismatch")
-	}
+	// Ensure the game_instance_id matches the URL parameter
+	rec.GameInstanceID = instanceID
 
 	rec, err = m.(*domain.Domain).CreateGameInstanceParameterRec(rec)
 	if err != nil {
@@ -256,10 +294,23 @@ func createOneGameInstanceParameterHandler(w http.ResponseWriter, r *http.Reques
 func updateOneGameInstanceParameterHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = logging.LoggerWithFunctionContext(l, packageName, "updateOneGameInstanceParameterHandler")
 
-	gameInstanceID := pp.ByName("game_instance_id")
+	gameID := pp.ByName("game_id")
+	instanceID := pp.ByName("instance_id")
 	parameterID := pp.ByName("parameter_id")
 
-	l.Info("updating game instance parameter >%s< for game instance >%s<", parameterID, gameInstanceID)
+	l.Info("updating game instance parameter >%s< for game >%s< instance >%s<", parameterID, gameID, instanceID)
+
+	// Validate that the instance belongs to the specified game
+	gameInstance, err := m.(*domain.Domain).GetGameInstanceRec(instanceID, nil)
+	if err != nil {
+		l.Warn("failed getting game instance >%v<", err)
+		return err
+	}
+
+	if gameInstance.GameID != gameID {
+		l.Warn("game instance >%s< does not belong to game >%s<", instanceID, gameID)
+		return coreerror.NewNotFoundError("game instance", instanceID)
+	}
 
 	rec, err := m.(*domain.Domain).GetGameInstanceParameterRec(parameterID, nil)
 	if err != nil {
@@ -268,8 +319,8 @@ func updateOneGameInstanceParameterHandler(w http.ResponseWriter, r *http.Reques
 	}
 
 	// Validate the parameter belongs to the game instance
-	if rec.GameInstanceID != gameInstanceID {
-		l.Warn("parameter >%s< does not belong to game instance >%s<", parameterID, gameInstanceID)
+	if rec.GameInstanceID != instanceID {
+		l.Warn("parameter >%s< does not belong to game instance >%s<", parameterID, instanceID)
 		return coreerror.NewNotFoundError("parameter", parameterID)
 	}
 
@@ -278,6 +329,9 @@ func updateOneGameInstanceParameterHandler(w http.ResponseWriter, r *http.Reques
 		l.Warn("failed mapping game instance parameter request to record >%v<", err)
 		return err
 	}
+
+	// Ensure the game_instance_id doesn't change
+	rec.GameInstanceID = instanceID
 
 	rec, err = m.(*domain.Domain).UpdateGameInstanceParameterRec(rec)
 	if err != nil {
@@ -297,10 +351,23 @@ func updateOneGameInstanceParameterHandler(w http.ResponseWriter, r *http.Reques
 func deleteOneGameInstanceParameterHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = logging.LoggerWithFunctionContext(l, packageName, "deleteOneGameInstanceParameterHandler")
 
-	gameInstanceID := pp.ByName("game_instance_id")
+	gameID := pp.ByName("game_id")
+	instanceID := pp.ByName("instance_id")
 	parameterID := pp.ByName("parameter_id")
 
-	l.Info("deleting game instance parameter >%s< for game instance >%s<", parameterID, gameInstanceID)
+	l.Info("deleting game instance parameter >%s< for game >%s< instance >%s<", parameterID, gameID, instanceID)
+
+	// Validate that the instance belongs to the specified game
+	gameInstance, err := m.(*domain.Domain).GetGameInstanceRec(instanceID, nil)
+	if err != nil {
+		l.Warn("failed getting game instance >%v<", err)
+		return err
+	}
+
+	if gameInstance.GameID != gameID {
+		l.Warn("game instance >%s< does not belong to game >%s<", instanceID, gameID)
+		return coreerror.NewNotFoundError("game instance", instanceID)
+	}
 
 	rec, err := m.(*domain.Domain).GetGameInstanceParameterRec(parameterID, nil)
 	if err != nil {
@@ -309,8 +376,8 @@ func deleteOneGameInstanceParameterHandler(w http.ResponseWriter, r *http.Reques
 	}
 
 	// Validate the parameter belongs to the game instance
-	if rec.GameInstanceID != gameInstanceID {
-		l.Warn("parameter >%s< does not belong to game instance >%s<", parameterID, gameInstanceID)
+	if rec.GameInstanceID != instanceID {
+		l.Warn("parameter >%s< does not belong to game instance >%s<", parameterID, instanceID)
 		return coreerror.NewNotFoundError("parameter", parameterID)
 	}
 

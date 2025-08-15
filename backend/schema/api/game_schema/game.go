@@ -8,12 +8,12 @@ import (
 
 // GameResponseData -
 type GameResponseData struct {
-	ID                 string     `json:"id"`
-	Name               string     `json:"name"`
-	GameType           string     `json:"game_type"`
-	ProcessedMessageAt *time.Time `json:"processed_message_at,omitempty"`
-	CreatedAt          time.Time  `json:"created_at"`
-	UpdatedAt          *time.Time `json:"updated_at,omitempty"`
+	ID                string     `json:"id"`
+	Name              string     `json:"name"`
+	GameType          string     `json:"game_type"`
+	TurnDurationHours int        `json:"turn_duration_hours"`
+	CreatedAt         time.Time  `json:"created_at"`
+	UpdatedAt         *time.Time `json:"updated_at,omitempty"`
 }
 
 type GameResponse struct {
@@ -30,8 +30,9 @@ type GameCollectionResponse struct {
 
 type GameRequest struct {
 	common_schema.Request
-	Name     string `json:"name"`
-	GameType string `json:"game_type"`
+	Name              string `json:"name"`
+	GameType          string `json:"game_type"`
+	TurnDurationHours int    `json:"turn_duration_hours"`
 }
 
 type GameQueryParams struct {

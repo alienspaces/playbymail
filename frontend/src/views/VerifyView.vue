@@ -4,7 +4,7 @@
     <form @submit.prevent="onSubmit" class="verify-form">
       <div class="form-group">
         <label for="code">Verification code</label>
-        <input v-model="code" id="code" type="text" required autofocus />
+        <input v-model="code" id="code" type="text" required autofocus autocomplete="off" />
       </div>
       <div class="form-actions">
         <button type="submit" :disabled="loading">Verify</button>

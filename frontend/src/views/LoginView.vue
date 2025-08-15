@@ -4,7 +4,7 @@
     <form @submit.prevent="onSubmit" class="login-form">
       <div class="form-group">
         <label for="email">Email address</label>
-        <input v-model="email" id="email" type="email" required autofocus />
+        <input v-model="email" id="email" type="email" required autofocus autocomplete="off" />
       </div>
       <div class="form-actions">
         <button type="submit" :disabled="loading">Send Code</button>

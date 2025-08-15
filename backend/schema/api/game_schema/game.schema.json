@@ -33,6 +33,11 @@
             "minLength": 1,
             "type": "string"
         },
+        "turn_duration_hours": {
+            "description": "Duration of each turn in hours.",
+            "minimum": 1,
+            "type": "integer"
+        },
         "updated_at": {
             "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/updated_at"
         }
@@ -41,6 +46,7 @@
         "id",
         "name",
         "game_type",
+        "turn_duration_hours",
         "created_at"
     ],
     "additionalProperties": false
