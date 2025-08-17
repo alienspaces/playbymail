@@ -252,7 +252,7 @@ func (m *Domain) GetGameInstanceRecsByStatus(status string) ([]*game_record.Game
 	opts := &sql.Options{
 		Params: []sql.Param{
 			{
-				Col: "status",
+				Col: game_record.FieldGameInstanceStatus,
 				Val: status,
 			},
 		},

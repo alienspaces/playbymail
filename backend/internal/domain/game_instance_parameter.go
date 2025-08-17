@@ -155,7 +155,7 @@ func (m *Domain) GetGameInstanceParameterRecsByGameInstanceID(gameInstanceID str
 	opts := &sql.Options{
 		Params: []sql.Param{
 			{
-				Col: "game_instance_id",
+				Col: game_record.FieldGameInstanceParameterGameInstanceID,
 				Val: gameInstanceID,
 			},
 		},
