@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { extractVerificationToken } from './utils/log-parser.js'
+import { extractVerificationToken } from '../utils/log-parser.js'
 
 test.describe('Log Monitoring', () => {
   test('should parse verification tokens from log patterns', () => {

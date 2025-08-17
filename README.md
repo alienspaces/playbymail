@@ -1,432 +1,353 @@
-# Playwright End-to-End Tests
+# PlayByMail
 
-This directory contains a well-organized set of Playwright tests for end-to-end testing of the PlayByMail application. The tests are designed to provide high-level coverage while being maintainable and easy to update as the UI evolves.
+A platform to revitalize play-by-mail (PBM) games for children, teenagers, and young adults, supporting a wide variety of genres through **physical printed materials** mailed to players.
 
-## 🏗️ Test Organization
+## What is PlayByMail?
 
-### Directory Structure
+PlayByMail is a **physical play-by-mail gaming platform** that:
 
-```
-playwright/
-├── core/                    # Core functionality tests
-│   ├── navigation.spec.js   # Page navigation and routing
-│   └── authentication.spec.js # Login and verification flows
-├── ui/                      # UI component tests
-│   └── components.spec.js   # Buttons, forms, responsive design
-├── workflows/               # User workflow tests
-│   ├── game-creation.spec.js # Game creation flows
-│   └── admin-workflows.spec.js # Admin dashboard workflows
-├── integration/             # Integration tests (future)
-│   ├── api.spec.js         # API integration testing
-│   └── database.spec.js    # Database integration testing
-├── utils/                   # Test utilities and helpers
-│   ├── test-helpers.js     # Common test functions
-│   └── log-parser.js       # Log parsing utilities
-├── legacy/                  # Existing test files (for reference)
-├── playwright.config.js    # Playwright configuration
-└── README.md               # This file
-```
+- **Generates printed game materials** (maps, forms, puzzles, story content) to be mailed to players
+- **Processes returned materials** from players via prepaid envelopes
+- **Automates turn processing** based on returned materials with minimal human intervention
+- **Supports multiple game genres** including RPGs, strategy games, adventure games, and more
+- **Focuses on age-appropriate content** with parental controls and moderation
 
-### Test Categories
+## How It Works
 
-- **Core**: Basic functionality, navigation, authentication
-- **UI**: Component behavior, responsive design, accessibility
-- **Workflows**: User journey testing, game creation, admin flows
-- **Integration**: API testing, database operations
-- **Legacy**: Existing tests (maintained for compatibility)
+1. **Game Design**: Game designers create games using the Studio tools
+2. **Game Management**: Game managers launch game instances and manage players
+3. **Print Generation**: The system generates personalized print packs for each player
+4. **Physical Mailing**: Materials are printed and mailed to players on a schedule (weekly/fortnightly)
+5. **Player Response**: Players complete forms, solve puzzles, and return materials via prepaid envelopes
+6. **Automated Processing**: The system scans and processes returned materials to update game state
+7. **Next Turn**: New print packs are generated and mailed for the next turn
 
-## 🚀 Running Tests
+## Game Genres Supported
+
+- **Role-Playing Games (RPGs)**: Character-driven adventures and storytelling
+- **Wargames & Strategy**: Military campaigns, diplomacy, and resource management
+- **Adventure & Exploration**: Dungeon crawls, space exploration, treasure hunting
+- **Economic Games**: Empire building, trading, and resource management
+- **Sports Management**: Team management and strategic decision-making
+- **Science Fiction**: Space opera, colonization, and interstellar conflict
+- **Fantasy Kingdom Management**: Medieval fantasy world building and conquest
+- **Mystery & Detective**: Puzzle-solving and crime investigation
+- **Collaborative Storytelling**: Group narrative building and shared adventures
+- **Board Game Adaptations**: Classic games adapted for PBM format
+
+## Platform Architecture
+
+### 1. **Game Designer Studio** (`/studio`)
+Tools for creating and managing play-by-mail games:
+- Game design and creation tools
+- Storyline and narrative development
+- Map and visual content creation
+- Form and puzzle design
+- Game rule configuration
+- Content testing and preview
+- Game publishing and version management
+
+### 2. **Game Management** (`/management`)
+Tools for operating and administering running games:
+- Subscribe to or purchase games to run
+- Configure game runtime parameters
+- Launch and manage game instances
+- Process player turns and game state updates
+- Review running game states and player progress
+- Handle player communications and support
+- Generate and manage print/mail operations
+
+### 3. **Platform Administration** (`/admin`)
+Platform-level administration and business operations:
+- User account management and moderation
+- Customer support and ticket management
+- Platform-wide analytics and reporting
+- Billing and subscription management
+- System configuration and maintenance
+- Content moderation and policy enforcement
+- Platform announcements and communications
+
+## Key Features
+
+- **Physical Print & Mail**: All game content delivered via printed materials
+- **Automated Turn Processing**: Minimal human intervention required
+- **Personalized Content**: Each player receives customized materials
+- **Return Processing**: Automated scanning and processing of returned materials
+- **Age-Appropriate Content**: Built-in moderation and parental controls
+- **Privacy-First**: Complete data removal available upon request
+- **Accessibility**: Designed for players with disabilities
+- **AI Integration**: AI-generated content with human review safeguards
+
+## Tech Stack
+
+- **Frontend**: Vue.js with Vite (for admin/management interfaces)
+- **Backend**: Go with Gin framework (game engine and processing)
+- **Database**: PostgreSQL with Row Level Security (RLS)
+- **Print Generation**: PDF generation and print-ready output
+- **Testing**: Playwright for end-to-end testing, Vitest for unit testing
+- **Deployment**: Heroku
+
+## Quick Start
 
 ### Prerequisites
 
-1. **Backend must be running** with test data loaded
-2. **Frontend must be accessible** at `http://localhost:3000`
-3. **Test user account** must exist in the database
+- Node.js 18+ (use `nvm` if available)
+- Go 1.21+
+- PostgreSQL 15+
+- Git
 
-### Quick Start
+### Installation
 
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd playbymail
+   ```
+
+2. **Install dependencies**
+   ```bash
+   # Install Node.js dependencies
+   npm install
+   
+   # Install Go dependencies
+   cd backend
+   go mod download
+   cd ..
+   ```
+
+3. **Environment setup**
+   ```bash
+   # Copy environment template
+   cp .env.example .env
+   
+   # Edit .env with your configuration
+   # Database connection, API keys, etc.
+   ```
+
+4. **Database setup**
+   ```bash
+   # Start database
+   ./tools/db-start
+   
+   # Run migrations and load test data
+   ./tools/db-setup
+   ```
+
+### Running the Application
+
+#### Start Everything (Recommended for development)
 ```bash
-# Start backend with test data
-cd playbymail
+# Start backend, frontend, and database
+./tools/start
+```
+
+#### Start Individual Services
+```bash
+# Start only backend (includes database setup)
 ./tools/start-backend
 
+# Start only frontend
+./tools/start-frontend
+
+# Start only database
+./tools/db-start
+```
+
+#### Stop Services
+```bash
+# Stop all services
+./tools/stop
+
+# Stop specific services
+./tools/stop-backend
+./tools/stop-frontend
+./tools/db-stop
+```
+
+### Access the Application
+
+- **Frontend**: http://localhost:3000
+- **Backend API**: http://localhost:8080
+- **Database**: localhost:5432 (if using local PostgreSQL)
+
+## Development
+
+### Project Structure
+
+```
+playbymail/
+├── frontend/              # Vue.js admin/management interfaces
+├── backend/               # Go backend (game engine + processing)
+├── tools/                 # Development and deployment scripts
+├── playwright/            # End-to-end tests
+├── .env                   # Environment configuration
+├── .env.example           # Environment template
+└── README.md              # This file
+```
+
+### Available Tools
+
+The `./tools/` directory contains scripts for common development tasks:
+
+#### Application Management
+- `./tools/start` - Start complete application stack
+- `./tools/stop` - Stop all services
+- `./tools/start-backend` - Start backend with database
+- `./tools/start-frontend` - Start frontend development server
+
+#### Database Management
+- `./tools/db-setup` - Complete database setup (migrations + test data)
+- `./tools/db-start` - Start database service
+- `./tools/db-stop` - Stop database service
+- `./tools/db-connect` - Connect to local database
+- `./tools/db-query` - Execute SQL queries
+- `./tools/db-migrate-create [name]` - Create new migration
+
+#### Testing
+- `./tools/test-all` - Run all tests (frontend + backend)
+- `./tools/test-frontend` - Run frontend tests
+- `./tools/test-backend` - Run backend tests
+- `./tools/test-playwright` - Run end-to-end tests
+
+### Database Development
+
+```bash
+# Create new migration
+./tools/db-migrate-create add_new_feature
+
+# Apply migrations
+./tools/db-migrate-up
+
+# Rollback migrations
+./tools/db-migrate-down
+
+# Load test data
+./tools/db-load-test-data
+```
+
+### Frontend Development
+
+```bash
+# Start development server
+./tools/start-frontend
+
+# Build for production
+./tools/build-frontend
+
+# Run tests
+./tools/test-frontend
+```
+
+### Backend Development
+
+```bash
+# Start backend server
+./tools/start-backend
+
+# Run tests
+./tools/test-backend
+
+# Run specific test categories
+./tools/test-backend-core
+./tools/test-backend-internal
+```
+
+## Testing
+
+### Running Tests
+
+```bash
 # Run all tests
-npm run test:e2e
+./tools/test-all
 
-# Run specific test category
-npm run test:e2e:core
-npm run test:e2e:ui
-npm run test:e2e:workflows
+# Run specific test suites
+./tools/test-frontend      # Frontend unit tests
+./tools/test-backend       # Backend tests
+./tools/test-playwright    # End-to-end tests
 ```
 
-### Using npm Scripts
+### Playwright End-to-End Testing
 
-Package.json provides convenient test execution:
+For comprehensive UI testing, see the [Playwright documentation](playwright/README.md).
 
 ```bash
-# Run all Playwright tests
-npm run test:e2e
-
-# Run specific categories
-npm run test:e2e:core
-npm run test:e2e:ui
-npm run test:e2e:workflows
-
-# Run with options
-npm run test:e2e:ui      # Interactive UI
-npm run test:e2e:headed  # Visible browser
-npm run test:e2e:debug   # Debug mode
+# Prerequisites: Backend running, database setup, frontend built
+./tools/start-backend
+./tools/build-frontend
+./tools/test-playwright
 ```
 
-### Direct Playwright Commands
+## Deployment
+
+### Heroku Deployment
 
 ```bash
-# Run all tests
-npx playwright test
+# Set Heroku app name
+heroku git:remote -a playbymail
 
-# Run specific test category
-npx playwright test core/
-npx playwright test ui/
-npx playwright test workflows/
+# Deploy
+git push heroku main
 
-# Run specific test file
-npx playwright test core/navigation.spec.js
-
-# Run tests with UI (interactive)
-npx playwright test --ui
-
-# Run tests in headed mode (see browser)
-npx playwright test --headed
-
-# Run tests in debug mode
-npx playwright test --debug
-
-# Run tests matching pattern
-npx playwright test --grep "login"
-
-# Run tests for specific browser
-npx playwright test --project chromium
-
-# Run tests with specific file pattern
-npx playwright test "**/*.spec.js"
-npx playwright test "**/core/**/*.spec.js"
+# Check logs
+heroku logs --tail
 ```
 
-## 🧪 Test Design Principles
-
-### 1. High-Level Coverage
-- Focus on user workflows, not implementation details
-- Test what users see and do, not internal code structure
-- Cover main user journeys and edge cases
-
-### 2. Maintainability
-- Use common test utilities and helpers
-- Avoid hardcoded selectors when possible
-- Keep tests independent and isolated
-
-### 3. Reusability
-- Common setup and teardown procedures
-- Shared test utilities and helper functions
-- Consistent test patterns across suites
-
-### 4. Flexibility
-- Tests adapt to UI changes gracefully
-- Use multiple selector strategies for robustness
-- Handle optional UI elements appropriately
-
-## 🛠️ Test Utilities
-
-### Common Helper Functions
-
-```javascript
-import { 
-  navigateTo,           // Navigate to page and wait for ready
-  waitForPageReady,      // Wait for page to be fully loaded
-  checkElementVisible,   // Verify element is visible
-  checkElementContainsText, // Verify element contains text
-  safeClick,            // Click element safely with scrolling
-  fillFormField,        // Fill form field safely
-  takeScreenshot,       // Take screenshot for debugging
-  waitForText,          // Wait for text to appear
-  checkPageTitle,       // Verify page title
-  checkPageURL          // Verify page URL
-} from '../utils/test-helpers.js'
-```
-
-### Using Test Helpers
-
-```javascript
-test('should handle form submission', async ({ page }) => {
-  // Navigate and wait for page to be ready
-  await navigateTo(page, '/login')
-  
-  // Fill form field safely
-  await fillFormField(page, 'input[type="email"]', 'test@example.com')
-  
-  // Click button safely
-  await safeClick(page, 'button:has-text("Send Code")')
-  
-  // Verify navigation
-  await checkPageURL(page, /\/verify/)
-  
-  // Take screenshot for debugging
-  await takeScreenshot(page, 'form-submitted')
-})
-```
-
-## 📱 Testing Responsiveness
-
-### Viewport Testing
-
-```javascript
-test('should adapt to mobile viewport', async ({ page }) => {
-  // Set mobile viewport
-  await page.setViewportSize({ width: 375, height: 667 })
-  
-  await navigateTo(page, '/')
-  await takeScreenshot(page, 'mobile-view')
-  
-  // Reset to desktop
-  await page.setViewportSize({ width: 1280, height: 720 })
-})
-```
-
-### Browser Testing
-
-Tests run in multiple browsers by default:
-- **Chromium** (Chrome/Edge)
-- **Firefox**
-- **WebKit** (Safari)
-- **Mobile Chrome**
-- **Mobile Safari**
-
-## 🔍 Debugging Tests
-
-### Screenshots and Videos
-
-- **Screenshots**: Automatically captured on test failure
-- **Videos**: Recorded for failed tests
-- **Traces**: Generated for retried tests
-
-### Debug Mode
+### Environment Configuration
 
 ```bash
-# Run single test in debug mode
-npx playwright test --debug core/navigation.spec.js
+# Set environment variables
+heroku config:set DATABASE_URL=your_database_url
+heroku config:set JWT_SECRET=your_jwt_secret
 
-# Run with UI for step-by-step debugging
-npx playwright test --ui
+# View current config
+heroku config
 ```
 
-### Common Debugging Patterns
+## Contributing
 
-```javascript
-test('should debug element visibility', async ({ page }) => {
-  await navigateTo(page, '/login')
-  
-  // Debug: log page content
-  const content = await page.textContent('body')
-  console.log('Page content:', content)
-  
-  // Debug: take screenshot
-  await takeScreenshot(page, 'debug-login-page')
-  
-  // Debug: check element state
-  const emailInput = page.locator('input[type="email"]')
-  console.log('Email input visible:', await emailInput.isVisible())
-  console.log('Email input enabled:', await emailInput.isEnabled())
-})
-```
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Make your changes
+4. Run tests to ensure everything works
+5. Commit your changes (`git commit -m 'Add amazing feature'`)
+6. Push to the branch (`git push origin feature/amazing-feature`)
+7. Open a Pull Request
 
-## 🚨 Error Handling
+### Development Guidelines
 
-### Network Error Testing
+- Follow existing code patterns and conventions
+- Write tests for new functionality
+- Update documentation as needed
+- Use the provided tools for common tasks
+- Keep commits focused and descriptive
 
-```javascript
-test('should handle network errors gracefully', async ({ page }) => {
-  // Block API calls to simulate network failure
-  await page.route('**/api/**', route => {
-    route.abort('failed')
-  })
-  
-  // Test error handling
-  await navigateTo(page, '/login')
-  await fillFormField(page, 'input[type="email"]', 'test@example.com')
-  await safeClick(page, 'button:has-text("Send Code")')
-  
-  // Should show error message
-  await page.waitForTimeout(2000)
-  const content = await page.textContent('body')
-  expect(content).toMatch(/error|failed|network/i)
-})
-```
-
-### Server Error Testing
-
-```javascript
-test('should handle server errors gracefully', async ({ page }) => {
-  // Mock server error response
-  await page.route('**/api/**', route => {
-    route.fulfill({
-      status: 500,
-      contentType: 'application/json',
-      body: JSON.stringify({ error: 'Internal Server Error' })
-    })
-  })
-  
-  // Test error handling
-  // ... test implementation
-})
-```
-
-## 📊 Test Reporting
-
-### HTML Report
-
-```bash
-# Generate HTML report
-npm run test:e2e:report
-
-# Or use direct command
-npx playwright show-report
-
-# Or open from playwright-report directory
-open playwright-report/index.html
-```
-
-### JUnit Report
-
-```bash
-# Generate JUnit XML report
-npx playwright test --reporter=junit
-
-# Report will be in test-results/results.xml
-```
-
-### Custom Reporting
-
-```bash
-# Multiple reporters
-npx playwright test --reporter=html,junit,json
-
-# Custom reporter configuration
-npx playwright test --reporter=html --reporter=junit
-```
-
-## 🔧 Configuration
-
-### Environment Variables
-
-```bash
-# Override base URL for tests
-export TEST_BASE_URL=http://localhost:3000
-
-# Run in CI mode
-export CI=true
-
-# Custom timeout
-export PLAYWRIGHT_TIMEOUT=30000
-```
-
-### Playwright Config
-
-The `playwright.config.js` file configures:
-- Test directories and patterns
-- Browser projects and viewports
-- Timeouts and retries
-- Screenshot and video capture
-- Global setup and teardown
-- Web server for testing
-
-## 🚀 CI/CD Integration
-
-### GitHub Actions Example
-
-```yaml
-name: Playwright Tests
-on: [push, pull_request]
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 18
-      - run: npm ci
-      - run: npx playwright install-deps
-      - run: npx playwright test
-      - uses: actions/upload-artifact@v3
-        if: always()
-        with:
-          name: playwright-report
-          path: playwright-report/
-```
-
-## 📝 Writing New Tests
-
-### Test Structure
-
-```javascript
-import { test, expect } from '@playwright/test'
-import { 
-  navigateTo, 
-  checkElementVisible,
-  safeClick 
-} from '../utils/test-helpers.js'
-
-test.describe('Feature Name', () => {
-  test.beforeEach(async ({ page }) => {
-    // Setup for each test
-    await page.context().clearCookies()
-  })
-
-  test('should do something specific', async ({ page }) => {
-    // Test implementation
-    await navigateTo(page, '/path')
-    await checkElementVisible(page, '.selector')
-    await safeClick(page, 'button')
-    
-    // Assertions
-    await expect(page).toHaveURL('/expected-path')
-  })
-})
-```
-
-### Best Practices
-
-1. **Use descriptive test names** that explain what is being tested
-2. **Keep tests independent** - no shared state between tests
-3. **Use test helpers** for common operations
-4. **Take screenshots** for debugging complex failures
-5. **Test user workflows** not implementation details
-6. **Handle errors gracefully** in tests
-7. **Use appropriate timeouts** for different operations
-
-## 🐛 Troubleshooting
+## Troubleshooting
 
 ### Common Issues
 
-1. **Backend not running**: Ensure `./tools/start-backend` is running
-2. **Test data missing**: Run `./tools/db-load-test-data`
-3. **Port conflicts**: Check if ports 3000 and 8080 are available
-4. **Browser dependencies**: Run `npx playwright install-deps`
+1. **Port conflicts**: Ensure ports 3000, 8080, and 5432 are available
+2. **Database connection**: Check `.env` configuration and database status
+3. **Node version**: Use `nvm` to ensure correct Node.js version
+4. **Go modules**: Run `go mod download` in backend directory
 
 ### Getting Help
 
-- Check test output for detailed error messages
-- Use `--headed` mode to see what's happening
-- Review screenshots and videos in test output
-- Check browser console for JavaScript errors
-- Use `--ui` mode for interactive debugging
+- Check the logs: `./tools/start-backend` shows backend logs
+- Review environment configuration in `.env`
+- Check database status: `./tools/db-connect`
+- Run tests to identify issues: `./tools/test-all`
 
-## 📚 Additional Resources
+## License
 
-- [Playwright Documentation](https://playwright.dev/)
-- [Playwright Testing Best Practices](https://playwright.dev/docs/best-practices)
-- [Playwright Configuration](https://playwright.dev/docs/configuration)
-- [Playwright API Reference](https://playwright.dev/docs/api/class-playwright)
+[ISC License](LICENSE)
+
+## Support
+
+For issues and questions:
+- Create an issue in the repository
+- Check existing documentation
+- Review test output for debugging information
 
 ---
 
-**Note**: This test suite is designed to be maintainable and provide good coverage without being overly comprehensive. Focus on testing user workflows and critical functionality rather than every possible edge case.
+**Important**: PlayByMail is a **physical play-by-mail gaming platform**, not a web-based game. The web interface is for game designers, managers, and administrators to create and manage games that are physically mailed to players.

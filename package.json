@@ -18,7 +18,7 @@
         "test:e2e:core": "playwright test core/",
         "test:e2e:ui-components": "playwright test ui/",
         "test:e2e:workflows": "playwright test workflows/",
-        "test:e2e:legacy": "playwright test *.spec.js",
+        "test:e2e:legacy": "playwright test legacy/",
         "test:e2e:install": "playwright install",
         "test:e2e:install-deps": "playwright install-deps"
     },
