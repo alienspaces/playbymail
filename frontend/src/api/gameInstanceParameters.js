@@ -1,11 +1,11 @@
 import { baseUrl, getAuthHeaders, apiFetch } from './baseUrl';
 
 // Get all parameters for a specific game instance
-export async function listGameInstanceParameters(gameInstanceId, params = {}) {
+export async function listGameInstanceParameters(gameId, gameInstanceId, params = {}) {
   const queryParams = new URLSearchParams();
   if (params.configKey) queryParams.append('config_key', params.configKey);
   
-  const url = `${baseUrl}/api/v1/game-instances/${gameInstanceId}/parameters${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+  const url = `${baseUrl}/api/v1/games/${gameId}/instances/${gameInstanceId}/parameters${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
   const res = await apiFetch(url, {
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
   });
@@ -14,8 +14,8 @@ export async function listGameInstanceParameters(gameInstanceId, params = {}) {
 }
 
 // Get a specific game instance parameter by ID
-export async function getGameInstanceParameter(gameInstanceId, parameterId) {
-  const res = await apiFetch(`${baseUrl}/api/v1/game-instances/${gameInstanceId}/parameters/${parameterId}`, {
+export async function getGameInstanceParameter(gameId, gameInstanceId, parameterId) {
+  const res = await apiFetch(`${baseUrl}/api/v1/games/${gameId}/instances/${gameInstanceId}/parameters/${parameterId}`, {
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
   });
   if (!res.ok) throw new Error('Failed to fetch game instance parameter');
@@ -23,8 +23,8 @@ export async function getGameInstanceParameter(gameInstanceId, parameterId) {
 }
 
 // Create a new game instance parameter
-export async function createGameInstanceParameter(gameInstanceId, data) {
-  const res = await apiFetch(`${baseUrl}/api/v1/game-instances/${gameInstanceId}/parameters`, {
+export async function createGameInstanceParameter(gameId, gameInstanceId, data) {
+  const res = await apiFetch(`${baseUrl}/api/v1/games/${gameId}/instances/${gameInstanceId}/parameters`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
     body: JSON.stringify(data),
@@ -34,8 +34,8 @@ export async function createGameInstanceParameter(gameInstanceId, data) {
 }
 
 // Update an existing game instance parameter
-export async function updateGameInstanceParameter(gameInstanceId, parameterId, data) {
-  const res = await apiFetch(`${baseUrl}/api/v1/game-instances/${gameInstanceId}/parameters/${parameterId}`, {
+export async function updateGameInstanceParameter(gameId, gameInstanceId, parameterId, data) {
+  const res = await apiFetch(`${baseUrl}/api/v1/games/${gameId}/instances/${gameInstanceId}/parameters/${parameterId}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
     body: JSON.stringify(data),
@@ -45,8 +45,8 @@ export async function updateGameInstanceParameter(gameInstanceId, parameterId, d
 }
 
 // Delete a game instance parameter
-export async function deleteGameInstanceParameter(gameInstanceId, parameterId) {
-  const res = await apiFetch(`${baseUrl}/api/v1/game-instances/${gameInstanceId}/parameters/${parameterId}`, {
+export async function deleteGameInstanceParameter(gameId, gameInstanceId, parameterId) {
+  const res = await apiFetch(`${baseUrl}/api/v1/games/${gameId}/instances/${gameInstanceId}/parameters/${parameterId}`, {
     method: 'DELETE',
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
   });
@@ -55,8 +55,8 @@ export async function deleteGameInstanceParameter(gameInstanceId, parameterId) {
 }
 
 // Bulk update game instance parameters
-export async function bulkUpdateGameInstanceParameters(gameInstanceId, parameters) {
-  const res = await apiFetch(`${baseUrl}/api/v1/game-instances/${gameInstanceId}/parameters/bulk`, {
+export async function bulkUpdateGameInstanceParameters(gameId, gameInstanceId, parameters) {
+  const res = await apiFetch(`${baseUrl}/api/v1/games/${gameId}/instances/${gameInstanceId}/parameters/bulk`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
     body: JSON.stringify({ parameters }),

@@ -1,6 +1,8 @@
 package domain
 
 import (
+	"fmt"
+
 	"gitlab.com/alienspaces/playbymail/core/domain"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 )
@@ -58,11 +60,11 @@ func validateGameRec(args *validateGameArgs) error {
 	}
 
 	if rec.GameType != game_record.GameTypeAdventure {
-		return InvalidFieldValue("game_type")
+		return InvalidField(game_record.FieldGameType, rec.GameType, "game type is not valid")
 	}
 
 	if rec.TurnDurationHours <= 0 {
-		return InvalidFieldValue("turn_duration_hours")
+		return InvalidField(game_record.FieldGameTurnDurationHours, fmt.Sprintf("%d", rec.TurnDurationHours), "turn duration hours must be greater than 0")
 	}
 
 	return nil

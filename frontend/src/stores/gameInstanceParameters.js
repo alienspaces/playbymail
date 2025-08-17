@@ -44,11 +44,11 @@ export const useGameInstanceParametersStore = defineStore('gameInstanceParameter
       this.selectedGameInstanceParameter = null;
     },
 
-    async fetchGameInstanceParameters(gameInstanceId, params = {}) {
+    async fetchGameInstanceParameters(gameId, gameInstanceId, params = {}) {
       this.loading = true;
       this.error = null;
       try {
-        const res = await listGameInstanceParameters(gameInstanceId, params);
+        const res = await listGameInstanceParameters(gameId, gameInstanceId, params);
         this.gameInstanceParameters = res.data || [];
       } catch (err) {
         this.error = err.message;
@@ -57,11 +57,11 @@ export const useGameInstanceParametersStore = defineStore('gameInstanceParameter
       }
     },
 
-    async getGameInstanceParameter(gameInstanceId, parameterId) {
+    async getGameInstanceParameter(gameId, gameInstanceId, parameterId) {
       this.loading = true;
       this.error = null;
       try {
-        const res = await getGameInstanceParameter(gameInstanceId, parameterId);
+        const res = await getGameInstanceParameter(gameId, gameInstanceId, parameterId);
         const parameter = res.data;
         
         // Update the parameter in our state if it exists
@@ -81,11 +81,11 @@ export const useGameInstanceParametersStore = defineStore('gameInstanceParameter
       }
     },
 
-    async createGameInstanceParameter(gameInstanceId, data) {
+    async createGameInstanceParameter(gameId, gameInstanceId, data) {
       this.loading = true;
       this.error = null;
       try {
-        const res = await apiCreateGameInstanceParameter(gameInstanceId, data);
+        const res = await apiCreateGameInstanceParameter(gameId, gameInstanceId, data);
         const parameter = res.data;
         this.gameInstanceParameters.push(parameter);
         return parameter;
@@ -97,11 +97,11 @@ export const useGameInstanceParametersStore = defineStore('gameInstanceParameter
       }
     },
 
-    async updateGameInstanceParameter(gameInstanceId, parameterId, data) {
+    async updateGameInstanceParameter(gameId, gameInstanceId, parameterId, data) {
       this.loading = true;
       this.error = null;
       try {
-        const res = await apiUpdateGameInstanceParameter(gameInstanceId, parameterId, data);
+        const res = await apiUpdateGameInstanceParameter(gameId, gameInstanceId, parameterId, data);
         const parameter = res.data;
         
         const index = this.gameInstanceParameters.findIndex(p => p.id === parameter.id);
@@ -118,11 +118,11 @@ export const useGameInstanceParametersStore = defineStore('gameInstanceParameter
       }
     },
 
-    async deleteGameInstanceParameter(gameInstanceId, parameterId) {
+    async deleteGameInstanceParameter(gameId, gameInstanceId, parameterId) {
       this.loading = true;
       this.error = null;
       try {
-        await apiDeleteGameInstanceParameter(gameInstanceId, parameterId);
+        await apiDeleteGameInstanceParameter(gameId, gameInstanceId, parameterId);
         this.gameInstanceParameters = this.gameInstanceParameters.filter(p => p.id !== parameterId);
       } catch (err) {
         this.error = err.message;
@@ -132,11 +132,11 @@ export const useGameInstanceParametersStore = defineStore('gameInstanceParameter
       }
     },
 
-    async bulkUpdateGameInstanceParameters(gameInstanceId, parameters) {
+    async bulkUpdateGameInstanceParameters(gameId, gameInstanceId, parameters) {
       this.loading = true;
       this.error = null;
       try {
-        const res = await apiBulkUpdateGameInstanceParameters(gameInstanceId, parameters);
+        const res = await apiBulkUpdateGameInstanceParameters(gameId, gameInstanceId, parameters);
         const updatedParameters = res.data;
         
         // Update our state with the new parameters

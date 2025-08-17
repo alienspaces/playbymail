@@ -294,3 +294,5 @@ func (m *Domain) VerifyAccountSessionToken(token string) (*account_record.Accoun
 
 	return rec, nil
 }
+
+

@@ -283,7 +283,7 @@ func getManyGameInstancesHandler(w http.ResponseWriter, r *http.Request, pp http
 	gameID := pp.ByName("game_id")
 	if gameID == "" {
 		l.Warn("game id is required")
-		return coreerror.NewNotFoundError("game", gameID)
+		return coreerror.RequiredPathParameter("game_id")
 	}
 
 	mm := m.(*domain.Domain)
@@ -317,9 +317,13 @@ func getOneGameInstanceHandler(w http.ResponseWriter, r *http.Request, pp httpro
 
 	gameID := pp.ByName("game_id")
 	instanceID := pp.ByName("instance_id")
-	if gameID == "" || instanceID == "" {
-		l.Warn("game id and instance id are required")
-		return coreerror.NewNotFoundError("game instance", instanceID)
+	if gameID == "" {
+		l.Warn("game id is required")
+		return coreerror.RequiredPathParameter("game_id")
+	}
+	if instanceID == "" {
+		l.Warn("instance id is required")
+		return coreerror.RequiredPathParameter("instance_id")
 	}
 
 	mm := m.(*domain.Domain)
@@ -353,7 +357,7 @@ func createOneGameInstanceHandler(w http.ResponseWriter, r *http.Request, pp htt
 	gameID := pp.ByName("game_id")
 	if gameID == "" {
 		l.Warn("game id is required")
-		return coreerror.NewNotFoundError("game", gameID)
+		return coreerror.RequiredPathParameter("game_id")
 	}
 
 	// Create record with just the GameID - domain layer will set defaults

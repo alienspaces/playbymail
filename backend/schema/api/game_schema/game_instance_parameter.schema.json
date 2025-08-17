@@ -4,64 +4,34 @@
     "title": "GameInstanceParameter",
     "type": "object",
     "properties": {
-        "boolean_value": {
-            "type": [
-                "boolean",
-                "null"
-            ]
+        "id": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
         },
-        "config_key": {
+        "game_instance_id": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
+        },
+        "parameter_key": {
             "maxLength": 100,
+            "type": "string"
+        },
+        "parameter_value": {
             "type": "string"
         },
         "created_at": {
             "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/created_at"
         },
-        "deleted_at": {
-            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/updated_at"
-        },
-        "game_instance_id": {
-            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
-        },
-        "id": {
-            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
-        },
-        "integer_value": {
-            "type": [
-                "integer",
-                "null"
-            ]
-        },
-        "json_value": {
-            "type": [
-                "string",
-                "null"
-            ]
-        },
-        "string_value": {
-            "type": [
-                "string",
-                "null"
-            ]
-        },
         "updated_at": {
             "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/updated_at"
         },
-        "value_type": {
-            "enum": [
-                "string",
-                "integer",
-                "boolean",
-                "json"
-            ],
-            "type": "string"
+        "deleted_at": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/deleted_at"
         }
     },
     "required": [
         "id",
         "game_instance_id",
-        "config_key",
-        "value_type",
+        "parameter_key",
+        "parameter_value",
         "created_at"
     ],
     "additionalProperties": false

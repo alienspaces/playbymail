@@ -75,3 +75,10 @@ docker-compose.override.yml
 
 # Task
 TASK.md
+
+# Playwright
+test-results/
+playwright-report/
+playwright/.auth/
+playwright/*.png
+playwright/*.mp4

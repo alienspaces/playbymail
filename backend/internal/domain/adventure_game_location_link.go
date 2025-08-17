@@ -58,7 +58,7 @@ func (m *Domain) validateAdventureGameLocationLinkRecForCreate(rec *adventure_ga
 		return err
 	}
 	if len(rec.Name) > 64 {
-		return InvalidFieldValue("name")
+		return InvalidField(adventure_game_record.FieldAdventureGameLocationLinkName, rec.Name, "name is too long")
 	}
 	return nil
 }

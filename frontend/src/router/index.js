@@ -19,7 +19,6 @@ const routes = [
     children: [
       { path: '', name: 'StudioGames', component: GameView },
       // Adventure game type studio views
-      { path: ':gameId/parameters', component: () => import('../views/studio/adventure/StudioGameParametersView.vue') },
       { path: ':gameId/locations', component: () => import('../views/studio/adventure/StudioLocationsView.vue') },
       { path: ':gameId/location-links', component: () => import('../views/studio/adventure/StudioLocationLinksView.vue') },
       { path: ':gameId/items', component: () => import('../views/studio/adventure/StudioItemsView.vue') },

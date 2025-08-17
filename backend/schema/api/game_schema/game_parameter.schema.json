@@ -4,73 +4,35 @@
     "title": "GameParameter",
     "type": "object",
     "properties": {
-        "config_key": {
-            "maxLength": 100,
-            "type": "string"
-        },
-        "created_at": {
-            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/created_at"
-        },
-        "default_value": {
-            "type": [
-                "string",
-                "null"
-            ]
-        },
-        "deleted_at": {
-            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/updated_at"
-        },
-        "description": {
-            "type": [
-                "string",
-                "null"
-            ]
-        },
         "game_type": {
             "enum": [
                 "adventure"
             ],
             "type": "string"
         },
-        "id": {
-            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
+        "config_key": {
+            "maxLength": 100,
+            "type": "string"
         },
-        "is_required": {
-            "type": "boolean"
-        },
-        "ui_hint": {
-            "maxLength": 50,
-            "type": [
-                "string",
-                "null"
-            ]
-        },
-        "updated_at": {
-            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/updated_at"
-        },
-        "validation_rules": {
-            "type": [
-                "string",
-                "null"
-            ]
+        "description": {
+            "type": "string"
         },
         "value_type": {
             "enum": [
                 "string",
                 "integer",
-                "boolean",
-                "json"
+                "boolean"
             ],
+            "type": "string"
+        },
+        "default_value": {
             "type": "string"
         }
     },
     "required": [
-        "id",
         "game_type",
         "config_key",
-        "value_type",
-        "is_required",
-        "created_at"
+        "value_type"
     ],
     "additionalProperties": false
 }

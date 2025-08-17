@@ -7,6 +7,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"github.com/riverqueue/river"
 
+	coreerror "gitlab.com/alienspaces/playbymail/core/error"
 	"gitlab.com/alienspaces/playbymail/core/jsonschema"
 	"gitlab.com/alienspaces/playbymail/core/queryparam"
 	"gitlab.com/alienspaces/playbymail/core/server"
@@ -212,6 +213,10 @@ func getGameHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params
 	mm := m.(*domain.Domain)
 
 	recID := pp.ByName("game_id")
+	if recID == "" {
+		l.Warn("game ID is empty")
+		return coreerror.RequiredPathParameter("game_id")
+	}
 
 	rec, err := mm.GetGameRec(recID, coresql.ForUpdateNoWait)
 	if err != nil {
@@ -277,6 +282,10 @@ func updateGameHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Par
 	mm := m.(*domain.Domain)
 
 	recID := pp.ByName("game_id")
+	if recID == "" {
+		l.Warn("game ID is empty")
+		return coreerror.RequiredPathParameter("game_id")
+	}
 	rec, err := mm.GetGameRec(recID, coresql.ForUpdateNoWait)
 	if err != nil {
 		return err
@@ -316,6 +325,10 @@ func deleteGameHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Par
 	mm := m.(*domain.Domain)
 
 	recID := pp.ByName("game_id")
+	if recID == "" {
+		l.Warn("game ID is empty")
+		return coreerror.RequiredPathParameter("game_id")
+	}
 	rec, err := mm.GetGameRec(recID, coresql.ForUpdateNoWait)
 	if err != nil {
 		return err

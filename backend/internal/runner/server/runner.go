@@ -16,6 +16,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/jobclient"
 	"gitlab.com/alienspaces/playbymail/internal/jobqueue"
+	"gitlab.com/alienspaces/playbymail/internal/record/account_record"
 	"gitlab.com/alienspaces/playbymail/internal/runner/server/account"
 	"gitlab.com/alienspaces/playbymail/internal/runner/server/adventure_game"
 	"gitlab.com/alienspaces/playbymail/internal/runner/server/game"
@@ -145,6 +146,43 @@ func (rnr *Runner) authenticateRequestTokenFunc(l logger.Logger, m domainer.Doma
 	l.Info("(playbymail) authenticateRequestTokenFunc called")
 
 	mm := m.(*domain.Domain)
+
+	// Check for development mode authentication bypass
+	if rnr.Config.AppEnv == "develop" {
+		if bypassEmail := r.Header.Get("X-Bypass-Authentication"); bypassEmail != "" {
+			l.Info("(playbymail) development mode: using bypass authentication for email >%s<", bypassEmail)
+
+			// In development mode, query the actual account record by email
+			// This bypasses the need for actual session tokens but uses real account data
+			accountRecs, err := mm.GetManyAccountRecs(&coresql.Options{
+				Params: []coresql.Param{
+					{Col: account_record.FieldAccountEmail, Val: bypassEmail},
+				},
+				Limit: 1,
+			})
+			if err != nil {
+				l.Warn("(playbymail) development mode: failed to get account by email >%s< >%v<", bypassEmail, err)
+				return server.AuthenData{}, err
+			}
+
+			if len(accountRecs) == 0 {
+				l.Warn("(playbymail) development mode: no account found for email >%s<", bypassEmail)
+				return server.AuthenData{}, nil
+			}
+
+			accountRec := accountRecs[0]
+			l.Info("(playbymail) development mode: found account ID >%s< for email >%s<", accountRec.ID, bypassEmail)
+
+			return server.AuthenData{
+				Type: server.AuthenticatedTypeToken,
+				Account: server.AuthenticatedAccount{
+					ID:    accountRec.ID,
+					Name:  accountRec.Name,
+					Email: accountRec.Email,
+				},
+			}, nil
+		}
+	}
 
 	// Extract token from Authorization header
 	authHeader := r.Header.Get("Authorization")

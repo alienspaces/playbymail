@@ -4,51 +4,21 @@
     "title": "GameInstanceParameterRequest",
     "type": "object",
     "properties": {
-        "boolean_value": {
-            "type": [
-                "boolean",
-                "null"
-            ]
-        },
-        "config_key": {
-            "maxLength": 100,
-            "type": "string"
-        },
         "game_instance_id": {
             "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
         },
-        "integer_value": {
-            "type": [
-                "integer",
-                "null"
-            ]
+        "parameter_key": {
+            "maxLength": 100,
+            "type": "string"
         },
-        "json_value": {
-            "type": [
-                "string",
-                "null"
-            ]
-        },
-        "string_value": {
-            "type": [
-                "string",
-                "null"
-            ]
-        },
-        "value_type": {
-            "enum": [
-                "string",
-                "integer",
-                "boolean",
-                "json"
-            ],
+        "parameter_value": {
             "type": "string"
         }
     },
     "required": [
         "game_instance_id",
-        "config_key",
-        "value_type"
+        "parameter_key",
+        "parameter_value"
     ],
     "additionalProperties": false
 }

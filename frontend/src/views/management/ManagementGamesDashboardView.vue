@@ -45,12 +45,12 @@
         </div>
 
         <div class="game-actions">
-          <button @click="viewGameInstances(game)" class="btn-primary">
-            Manage Instances
-          </button>
-          <button @click="createGameInstance(game)" class="btn-secondary">
-            Create Instance
-          </button>
+          <Button @click="viewGameInstances(game)" variant="primary" size="small">
+            Manage
+          </Button>
+          <Button @click="createGameInstance(game)" variant="secondary" size="small">
+            Create
+          </Button>
         </div>
       </div>
     </div>
@@ -68,6 +68,7 @@ import { computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useGamesStore } from '../../stores/games';
 import { useGameInstancesStore } from '../../stores/gameInstances';
+import Button from '../../components/Button.vue'; // Added import for Button
 
 const router = useRouter();
 const gamesStore = useGamesStore();
@@ -82,6 +83,7 @@ onMounted(async () => {
 const loadGames = async () => {
   try {
     await gamesStore.fetchGames();
+    await gameInstancesStore.fetchAllGameInstances();
   } catch (error) {
     console.error('Failed to load games:', error);
   }
@@ -167,7 +169,7 @@ const createGameInstance = (game) => {
 
 .games-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
   gap: var(--space-lg);
 }
 
@@ -178,11 +180,14 @@ const createGameInstance = (game) => {
   padding: var(--space-lg);
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
   transition: transform 0.2s, box-shadow 0.2s;
+  display: flex;
+  flex-direction: column;
+  min-height: 280px;
 }
 
 .game-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
 }
 
 .game-header {
@@ -196,6 +201,8 @@ const createGameInstance = (game) => {
   margin: 0;
   font-size: var(--font-size-lg);
   color: var(--color-text);
+  flex: 1;
+  margin-right: var(--space-sm);
 }
 
 .game-type {
@@ -206,10 +213,16 @@ const createGameInstance = (game) => {
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-bold);
   text-transform: uppercase;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .game-info {
   margin-bottom: var(--space-lg);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
 }
 
 .game-description {
@@ -217,11 +230,13 @@ const createGameInstance = (game) => {
   color: var(--color-text-muted);
   font-size: var(--font-size-sm);
   line-height: 1.4;
+  flex: 1;
 }
 
 .game-stats {
   display: flex;
   gap: var(--space-lg);
+  margin-top: auto;
 }
 
 .stat {
@@ -246,36 +261,15 @@ const createGameInstance = (game) => {
 .game-actions {
   display: flex;
   gap: var(--space-sm);
+  flex-direction: column;
+  width: 100%;
 }
 
-.btn-primary,
-.btn-secondary {
-  flex: 1;
+.game-actions .btn {
+  width: 100%;
+  justify-content: center;
   padding: var(--space-sm) var(--space-md);
-  border: none;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
   font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
-  transition: background 0.2s;
-}
-
-.btn-primary {
-  background: var(--color-primary);
-  color: var(--color-text-light);
-}
-
-.btn-primary:hover {
-  background: var(--color-primary-dark);
-}
-
-.btn-secondary {
-  background: var(--color-bg-light);
-  color: var(--color-text);
-  border: 1px solid var(--color-border);
-}
-
-.btn-secondary:hover {
-  background: var(--color-border);
+  min-height: 44px;
 }
 </style> 

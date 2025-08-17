@@ -1,0 +1,28 @@
+{
+    "name": "playbymail",
+    "version": "1.0.0",
+    "description": "A platform to revitalize play-by-mail (PBM) games for all ages, supporting a wide variety of genres (RPG, strategy, adventure, sports, and more).",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "test:e2e": "playwright test",
+        "test:e2e:ui": "playwright test --ui",
+        "test:e2e:headed": "playwright test --headed",
+        "test:e2e:debug": "playwright test --debug",
+        "test:e2e:report": "playwright show-report"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+ssh://git@gitlab.com/alienspaces/playbymail.git"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://gitlab.com/alienspaces/playbymail/issues"
+    },
+    "homepage": "https://gitlab.com/alienspaces/playbymail#readme",
+    "devDependencies": {
+        "@playwright/test": "^1.42.1"
+    }
+}

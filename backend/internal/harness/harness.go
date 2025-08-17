@@ -183,6 +183,16 @@ func (t *Testing) CreateData() error {
 			}
 			l.Debug("created game_instance record ID >%s<", gameInstanceRec.ID)
 
+			// Create instance parameters for this game instance
+			for _, instanceParameterConfig := range gameInstanceConfig.GameInstanceParameterConfigs {
+				instanceParameterRec, err := t.createGameInstanceParameterRec(instanceParameterConfig, gameInstanceRec)
+				if err != nil {
+					l.Warn("failed creating game_instance_parameter record >%v<", err)
+					return err
+				}
+				l.Debug("created game_instance_parameter record ID >%s<", instanceParameterRec.ID)
+			}
+
 			// Create location instances for this game instance
 			for _, locationInstanceConfig := range gameInstanceConfig.GameLocationInstanceConfigs {
 				locationInstanceRec, err := t.createGameLocationInstanceRec(locationInstanceConfig, gameInstanceRec)

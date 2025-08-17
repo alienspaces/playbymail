@@ -1,84 +1,62 @@
 package domain
 
 import (
-	"gitlab.com/alienspaces/playbymail/core/sql"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 )
 
-func (m *Domain) GetGameParameterRec(recID string, lock *sql.Lock) (*game_record.GameParameter, error) {
-	r := m.GameParameterRepository()
-	rec, err := r.GetOne(recID, lock)
-	if err != nil {
-		return nil, err
+// GameParameter - Different types of games may require different parameters.
+// Rather than creating a new table for each game type, we can manage the
+// available parameters per game type in code.
+//
+// Available parameters do not set the default values, whether the parameter is
+// required or whether the paramter is global and cannot be overriden at the
+// instance level. Those values are set when the parameters are set for the
+// specific game and then potentially overriden when an instance is created.
+//
+// The majority of available game parmeters should have default values applied
+// by the specific game type engine when not otherwise provided as best practice.
+const (
+	GameParameterValueTypeString  = "string"
+	GameParameterValueTypeInteger = "integer"
+	GameParameterValueTypeBoolean = "boolean"
+)
+
+const (
+	AdventureGameParameterCharacterLives    = "character_lives"
+	AdventureGameParameterTurnDurationHours = "turn_duration_hours"
+)
+
+var gameParameters = []game_record.GameParameter{
+	// Adventure game parameters
+	{
+		GameType:     game_record.GameTypeAdventure,
+		ConfigKey:    AdventureGameParameterCharacterLives,
+		Description:  "The number of lives a character has.",
+		ValueType:    GameParameterValueTypeInteger,
+		DefaultValue: "3",
+	},
+}
+
+// GetGameParameters returns all game parameters
+func GetGameParameters() []*game_record.GameParameter {
+	configs := make([]*game_record.GameParameter, len(gameParameters))
+	for i, config := range gameParameters {
+		// Create a copy to avoid modifying the original
+		configCopy := config
+		configs[i] = &configCopy
 	}
-	return rec, nil
+	return configs
 }
 
-func (m *Domain) CreateGameParameterRec(rec *game_record.GameParameter) (*game_record.GameParameter, error) {
-	r := m.GameParameterRepository()
-	var err error
-	rec, err = r.CreateOne(rec)
-	if err != nil {
-		return rec, err
+// GetGameParametersByGameType returns parameters filtered by game type
+func GetGameParametersByGameType(gameType string) []*game_record.GameParameter {
+	var filtered []*game_record.GameParameter
+	for _, config := range gameParameters {
+		if config.GameType == gameType {
+			// Create a copy to avoid modifying the original
+			configCopy := config
+			filtered = append(filtered, &configCopy)
+		}
 	}
-	return rec, nil
-}
-
-func (m *Domain) UpdateGameParameterRec(next *game_record.GameParameter) (*game_record.GameParameter, error) {
-	r := m.GameParameterRepository()
-	rec, err := r.UpdateOne(next)
-	if err != nil {
-		return nil, err
-	}
-	return rec, nil
-}
-
-func (m *Domain) DeleteGameParameterRec(recID string) error {
-	r := m.GameParameterRepository()
-	return r.DeleteOne(recID)
-}
-
-func (m *Domain) GetGameParameterRecs(opts *sql.Options) ([]*game_record.GameParameter, error) {
-	r := m.GameParameterRepository()
-	recs, err := r.GetMany(opts)
-	if err != nil {
-		return nil, err
-	}
-	return recs, nil
-}
-
-func (m *Domain) ValidateGameParameter(rec *game_record.GameParameter) error {
-	// Add validation logic as needed
-	return nil
-}
-
-func (m *Domain) RemoveGameParameterRec(recID string) error {
-	r := m.GameParameterRepository()
-	if err := r.RemoveOne(recID); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (m *Domain) GetManyGameParameterRecs(opts *sql.Options) ([]*game_record.GameParameter, error) {
-	r := m.GameParameterRepository()
-	recs, err := r.GetMany(opts)
-	if err != nil {
-		return nil, err
-	}
-	return recs, nil
-}
-
-// GetGameParametersByGameType gets all parameters for a specific game type
-func (m *Domain) GetGameParametersByGameType(gameType string) ([]*game_record.GameParameter, error) {
-	r := m.GameParameterRepository()
-	opts := &sql.Options{
-		Params: []sql.Param{
-			{
-				Col: "game_type",
-				Val: gameType,
-			},
-		},
-	}
-	return r.GetMany(opts)
+	return filtered
 }

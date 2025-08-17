@@ -1,0 +1,25 @@
+#!/usr/bin/env sh
+
+# db-query - Execute SQL queries against the database
+# Usage: ./tools/db-query "SELECT * FROM table_name"
+
+set -e
+
+# Copy .env.develop to .env and source environment
+cp .env.develop .env
+. "$(dirname "$0")"/environment || exit $?
+
+# Check if query is provided
+if [ $# -eq 0 ]; then
+    echo "Usage: ./tools/db-query \"SQL_QUERY\""
+    echo "Example: ./tools/db-query \"SELECT * FROM game_instance_parameter\""
+    exit 1
+fi
+
+QUERY="$1"
+
+echo "Executing query: $QUERY"
+echo "----------------------------------------"
+
+# Execute the query using psql
+psql "$DATABASE_URL" -c "$QUERY"

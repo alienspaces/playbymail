@@ -7,6 +7,7 @@
 
 import { defineStore } from 'pinia';
 import { 
+  listAllGameInstances,
   listGameInstances, 
   getGameInstance,
   createGameInstance as apiCreateGameInstance, 
@@ -37,6 +38,18 @@ export const useGameInstancesStore = defineStore('gameInstances', {
       this.error = null;
       try {
         const res = await listGameInstances(gameId);
+        this.gameInstances = res.data || [];
+      } catch (err) {
+        this.error = err.message;
+      } finally {
+        this.loading = false;
+      }
+    },
+    async fetchAllGameInstances() {
+      this.loading = true;
+      this.error = null;
+      try {
+        const res = await listAllGameInstances();
         this.gameInstances = res.data || [];
       } catch (err) {
         this.error = err.message;

@@ -92,4 +92,24 @@
  * @property {string} created_at
  * @property {string} [updated_at]
  * @property {string} [deleted_at]
+ */
+
+/**
+ * @typedef {Object} GameInstanceParameter
+ * @property {string} id
+ * @property {string} game_instance_id
+ * @property {string} parameter_key
+ * @property {string} parameter_value
+ * @property {string} created_at
+ * @property {string} [updated_at]
+ * @property {string} [deleted_at]
+ */
+
+/**
+ * @typedef {Object} GameParameter
+ * @property {string} game_type
+ * @property {string} config_key
+ * @property {string} description
+ * @property {string} value_type
+ * @property {string} [default_value]
  */ 

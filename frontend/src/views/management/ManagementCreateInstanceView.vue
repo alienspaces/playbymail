@@ -10,9 +10,9 @@
         <p>Configure settings for a new game session</p>
       </div>
       <div class="header-actions">
-        <button @click="goBack" class="btn-secondary">
+        <Button @click="goBack" variant="secondary">
           Cancel
-        </button>
+        </Button>
       </div>
     </div>
 
@@ -38,36 +38,23 @@
 
         <div class="form-section">
           <h3>Instance Configuration</h3>
-          <!-- TODO: Add per-instance configuration fields here -->          
+          <p class="section-description">
+            Basic instance settings. Game-specific parameters can be configured after the instance is created.
+          </p>
+          <!-- TODO: Add basic instance configuration fields here (e.g., name, description) -->
         </div>
 
-        <!-- Game Type Configuration Section -->
-        <div v-if="gameParameters.length > 0" class="form-section">
-          <h3>Game Parameters</h3>
-          <p class="section-description">
-            Configure game-specific parameters for this instance
-          </p>
-          
-          <div class="configuration-fields">
-            <ConfigurationField
-              v-for="config in gameParameters"
-              :key="config.id"
-              :config="config"
-              :field-id="`config-${config.config_key}`"
-              v-model="form.parameters[config.config_key]"
-              @validation-error="handleConfigValidationError"
-            />
-          </div>
-        </div>
+        <!-- Game Type Configuration Section - REMOVED -->
+        <!-- Game parameters are now configured after instance creation, not during creation -->
 
         <div class="form-actions">
-          <button type="submit" :disabled="loading" class="btn-primary">
+          <Button type="submit" :disabled="loading" variant="primary">
             <span v-if="loading">Creating...</span>
             <span v-else>Create Instance</span>
-          </button>
-          <button type="button" @click="goBack" class="btn-secondary">
+          </Button>
+          <Button type="button" @click="goBack" variant="secondary">
             Cancel
-          </button>
+          </Button>
         </div>
 
         <div v-if="error" class="error-message">
@@ -83,30 +70,34 @@ import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useGamesStore } from '../../stores/games';
 import { useGameInstancesStore } from '../../stores/gameInstances';
-import { useGameParametersStore } from '../../stores/gameParameters';
-import ConfigurationField from '../../components/ConfigurationField.vue';
+import Button from '../../components/Button.vue';
+// Removed: import { useGameParametersStore } from '../../stores/gameParameters';
+// Removed: import ConfigurationField from '../../components/ConfigurationField.vue';
 
 const route = useRoute();
 const router = useRouter();
 const gamesStore = useGamesStore();
 const gameInstancesStore = useGameInstancesStore();
-const gameParametersStore = useGameParametersStore();
+// Removed: const gameParametersStore = useGameParametersStore();
 
 const gameId = computed(() => route.params.gameId);
 const selectedGame = computed(() => gamesStore.games.find(g => g.id === gameId.value));
-const gameParameters = computed(() => {
-  if (!selectedGame.value) return [];
-  return gameParametersStore.getParametersByGameType(selectedGame.value.game_type);
-});
+// Removed: const gameParameters = computed(() => {
+//   if (!selectedGame.value) return [];
+//   return gameParametersStore.getParametersByGameType(selectedGame.value.game_type);
+// });
 
 const loading = ref(false);
 const error = ref('');
 
-const form = ref({
-  parameters: {}
-});
+// Removed: const form = ref({
+//   // Basic instance configuration
+//   name: '',
+//   description: '',
+//   // Removed: parameters: {} // Game parameters are now configured after instance creation
+// });
 
-const configValidationErrors = ref({});
+// Removed: const configValidationErrors = ref({});
 
 // Helper function to format turn duration
 const formatTurnDuration = (hours) => {
@@ -129,7 +120,7 @@ onMounted(async () => {
   
   // Fetch game parameters for the selected game type
   if (selectedGame.value) {
-    await gameParametersStore.fetchGameParametersByGameType(selectedGame.value.game_type);
+    // Removed: await gameParametersStore.fetchGameParametersByGameType(selectedGame.value.game_type);
   }
 });
 
@@ -145,25 +136,35 @@ const createInstance = async () => {
   try {
     const instanceData = {
       game_id: gameId.value,
-      parameters: form.value.parameters
+      // Game parameters are now configured after instance creation
     };
 
-    await gameInstancesStore.createGameInstance(gameId.value, instanceData);
-    router.push(`/management/games/${gameId.value}/instances`);
+    const createdInstance = await gameInstancesStore.createGameInstance(gameId.value, instanceData);
+    
+    // Redirect to the instance details page instead of the instances list
+    if (createdInstance && createdInstance.id) {
+      console.log('Instance created successfully, redirecting to:', createdInstance.id);
+      router.push(`/admin/games/${gameId.value}/instances/${createdInstance.id}`);
+    } else {
+      console.warn('Instance created but no ID returned, falling back to instances list');
+      // Fallback to instances list if we don't get the instance ID
+      router.push(`/admin/games/${gameId.value}/instances`);
+    }
   } catch (err) {
+    console.error('Failed to create instance:', err);
     error.value = err.message || 'Failed to create game instance';
   } finally {
     loading.value = false;
   }
 };
 
-const handleConfigValidationError = (configKey, error) => {
-  if (error) {
-    configValidationErrors.value[configKey] = error;
-  } else {
-    delete configValidationErrors.value[configKey];
-  }
-};
+// Removed: const handleConfigValidationError = (configKey, error) => {
+//   if (error) {
+//     configValidationErrors.value[configKey] = error;
+//   } else {
+//     delete configValidationErrors.value[configKey];
+//   }
+// };
 
 const goBack = () => {
   router.push(`/admin/games/${gameId.value}/instances`);
@@ -308,43 +309,6 @@ const goBack = () => {
   display: flex;
   gap: var(--space-md);
   margin-top: var(--space-xl);
-  padding-top: var(--space-lg);
-  border-top: 1px solid var(--color-border);
-}
-
-.btn-primary,
-.btn-secondary {
-  padding: var(--space-sm) var(--space-lg);
-  border: none;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
-  transition: background 0.2s;
-}
-
-.btn-primary {
-  background: var(--color-primary);
-  color: var(--color-text-light);
-}
-
-.btn-primary:hover:not(:disabled) {
-  background: var(--color-primary-dark);
-}
-
-.btn-primary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.btn-secondary {
-  background: var(--color-bg-light);
-  color: var(--color-text);
-  border: 1px solid var(--color-border);
-}
-
-.btn-secondary:hover {
-  background: var(--color-border);
 }
 
 .error-message {

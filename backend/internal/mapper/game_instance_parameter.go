@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"gitlab.com/alienspaces/playbymail/core/nullbool"
-	"gitlab.com/alienspaces/playbymail/core/nullint32"
 	"gitlab.com/alienspaces/playbymail/core/nullstring"
 	"gitlab.com/alienspaces/playbymail/core/nulltime"
 	"gitlab.com/alienspaces/playbymail/core/server"
@@ -27,20 +25,12 @@ func GameInstanceParameterRequestToRecord(l logger.Logger, r *http.Request, rec 
 	switch server.HttpMethod(r.Method) {
 	case server.HttpMethodPost:
 		rec.GameInstanceID = req.GameInstanceID
-		rec.ConfigKey = req.ConfigKey
-		rec.ValueType = req.ValueType
-		rec.StringValue = nullstring.FromStringPtr(req.StringValue)
-		rec.IntegerValue = nullint32.FromInt32Ptr(req.IntegerValue)
-		rec.BooleanValue = nullbool.FromBoolPtr(req.BooleanValue)
-		rec.JSONValue = nullstring.FromStringPtr(req.JSONValue)
+		rec.ParameterKey = req.ParameterKey
+		rec.ParameterValue = nullstring.FromStringPtr(req.ParameterValue)
 	case server.HttpMethodPut, server.HttpMethodPatch:
 		rec.GameInstanceID = req.GameInstanceID
-		rec.ConfigKey = req.ConfigKey
-		rec.ValueType = req.ValueType
-		rec.StringValue = nullstring.FromStringPtr(req.StringValue)
-		rec.IntegerValue = nullint32.FromInt32Ptr(req.IntegerValue)
-		rec.BooleanValue = nullbool.FromBoolPtr(req.BooleanValue)
-		rec.JSONValue = nullstring.FromStringPtr(req.JSONValue)
+		rec.ParameterKey = req.ParameterKey
+		rec.ParameterValue = nullstring.FromStringPtr(req.ParameterValue)
 	default:
 		return nil, fmt.Errorf("unsupported HTTP method")
 	}
@@ -53,27 +43,12 @@ func GameInstanceParameterRecordToResponseData(l logger.Logger, rec *game_record
 	data := &game_schema.GameInstanceParameter{
 		ID:             rec.ID,
 		GameInstanceID: rec.GameInstanceID,
-		ConfigKey:      rec.ConfigKey,
-		ValueType:      rec.ValueType,
-		StringValue:    nil,
-		IntegerValue:   nil,
-		BooleanValue:   nil,
-		JSONValue:      nil,
+		ParameterKey:   rec.ParameterKey,
+		ParameterValue: nullstring.ToString(rec.ParameterValue),
 		CreatedAt:      rec.CreatedAt,
 		UpdatedAt:      nulltime.ToTimePtr(rec.UpdatedAt),
 		DeletedAt:      nulltime.ToTimePtr(rec.DeletedAt),
 	}
-
-	data.StringValue = nullstring.ToStringPtr(rec.StringValue)
-
-	intValue, err := nullint32.ToInt32Ptr(rec.IntegerValue)
-	if err != nil {
-		return nil, err
-	}
-
-	data.IntegerValue = intValue
-	data.BooleanValue = nullbool.ToBoolPtr(rec.BooleanValue)
-	data.JSONValue = nullstring.ToStringPtr(rec.JSONValue)
 
 	return data, nil
 }

@@ -27,6 +27,10 @@ func (rnr *Runner) loadMainTestReferenceData(c *cli.Context) error {
 		return err
 	}
 
+	// We want to commit data so that it is available for other commands
+	// that need to use the data.
+	testHarness.ShouldCommitData = true
+
 	_, err = testHarness.Setup()
 	if err != nil {
 		l.Warn("failed harness setup >%v<", err)

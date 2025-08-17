@@ -94,7 +94,7 @@ func (m *Domain) validateAdventureGameCharacterRecForCreate(rec *adventure_game_
 		return err
 	}
 	if len(rec.Name) > 128 {
-		return InvalidFieldValue("name")
+		return InvalidField(adventure_game_record.FieldAdventureGameCharacterName, rec.Name, "name is too long")
 	}
 	return nil
 }

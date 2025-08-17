@@ -8,6 +8,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"github.com/riverqueue/river"
 
+	coreerror "gitlab.com/alienspaces/playbymail/core/error"
 	"gitlab.com/alienspaces/playbymail/core/jsonschema"
 	"gitlab.com/alienspaces/playbymail/core/queryparam"
 	"gitlab.com/alienspaces/playbymail/core/server"
@@ -323,6 +324,10 @@ func getAccountHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Par
 	l = logging.LoggerWithFunctionContext(l, packageName, "getAccountHandler")
 
 	accountID := pp.ByName("account_id")
+	if accountID == "" {
+		l.Warn("account ID is empty")
+		return coreerror.RequiredPathParameter("account_id")
+	}
 	l.Info("querying account record with id >%s<", accountID)
 
 	mm := m.(*domain.Domain)
@@ -392,6 +397,10 @@ func updateAccountHandler(w http.ResponseWriter, r *http.Request, pp httprouter.
 	mm := m.(*domain.Domain)
 
 	accountID := pp.ByName("account_id")
+	if accountID == "" {
+		l.Warn("account ID is empty")
+		return coreerror.RequiredPathParameter("account_id")
+	}
 	rec, err := mm.GetAccountRec(accountID, coresql.ForUpdateNoWait)
 	if err != nil {
 		l.Warn("failed getting account record >%v<", err)

@@ -119,6 +119,7 @@ type GameLocationLinkRequirementConfig struct {
 type GameInstanceConfig struct {
 	Reference                    string // Reference to the game_instance record
 	Record                       *game_record.GameInstance
+	GameInstanceParameterConfigs []GameInstanceParameterConfig
 	GameLocationInstanceConfigs  []GameLocationInstanceConfig
 	GameItemInstanceConfigs      []GameItemInstanceConfig
 	GameCreatureInstanceConfigs  []GameCreatureInstanceConfig

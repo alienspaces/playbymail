@@ -179,18 +179,6 @@ func InvalidUUID(field, value string) Error {
 	return NewInvalidError(field, "%s >%s< is invalid, not a UUID", field, value)
 }
 
-// RequiredField is a convenience function for empty field errors that
-// provides a standard formatted error message.
-func RequiredField(field string) Error {
-	return NewInvalidError(field, "%s should not be empty", field)
-}
-
-// ImmutableField is a convenience function for immutable field errors that
-// provides a standard formatted error message.
-func ImmutableField(field string) Error {
-	return NewInvalidError(field, "%s cannot be modified", field)
-}
-
 // InvalidField is a convenience function for invalid field errors that
 // provides a standard formatted error message.
 func InvalidField(fieldName, fieldValue, reason string) error {
@@ -207,6 +195,24 @@ func InvalidAction(actionType, reason string) error {
 		return NewInvalidActionError(actionType, "%s could not be completed, %s", actionType, reason)
 	}
 	return NewInvalidActionError(actionType, "%s could not be completed", actionType)
+}
+
+// RequiredField is a convenience function for empty field errors that
+// provides a standard formatted error message.
+func RequiredField(field string) Error {
+	return NewInvalidError(field, "%s should not be empty", field)
+}
+
+// RequiredPathParameter is a convenience function for missing path parameter errors that
+// provides a standard formatted error message.
+func RequiredPathParameter(parameter string) Error {
+	return NewInvalidError(parameter, "Path parameter '%s' is required", parameter)
+}
+
+// ImmutableField is a convenience function for immutable field errors that
+// provides a standard formatted error message.
+func ImmutableField(field string) Error {
+	return NewInvalidError(field, "%s cannot be modified", field)
 }
 
 func CreateErrorCode(errorType ValidationErrorType, field string) Code {

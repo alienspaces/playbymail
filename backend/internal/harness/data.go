@@ -25,7 +25,6 @@ type Data struct {
 	GameCharacterInstanceRecs       []*adventure_game_record.AdventureGameCharacterInstance
 	GameSubscriptionRecs            []*game_record.GameSubscription
 	GameAdministrationRecs          []*game_record.GameAdministration
-	GameParameterRecs               []*game_record.GameParameter
 	GameInstanceParameterRecs       []*game_record.GameInstanceParameter
 	// Data references
 	Refs DataRefs
@@ -51,7 +50,6 @@ type DataRefs struct {
 	GameCharacterInstanceRefs       map[string]string // Map of refs to game_character_instance records
 	GameSubscriptionRefs            map[string]string // Map of refs to game_subscription records
 	GameAdministrationRefs          map[string]string // Map of refs to game_administration records
-	GameParameterRefs               map[string]string // Map of refs to game_parameter records
 	GameInstanceParameterRefs       map[string]string // Map of refs to game_instance_parameter records
 }
 
@@ -76,7 +74,6 @@ func initialiseDataStores() Data {
 			GameCharacterInstanceRefs:       map[string]string{},
 			GameSubscriptionRefs:            map[string]string{},
 			GameAdministrationRefs:          map[string]string{},
-			GameParameterRefs:               map[string]string{},
 			GameInstanceParameterRefs:       map[string]string{},
 		},
 	}
@@ -554,34 +551,6 @@ func (d *Data) GetGameAdministrationRecByID(id string) (*game_record.GameAdminis
 		}
 	}
 	return nil, fmt.Errorf("game administration record not found for id >%s<", id)
-}
-
-// GameParameter
-func (d *Data) AddGameParameterRec(rec *game_record.GameParameter) {
-	for idx := range d.GameParameterRecs {
-		if d.GameParameterRecs[idx].ID == rec.ID {
-			d.GameParameterRecs[idx] = rec
-			return
-		}
-	}
-	d.GameParameterRecs = append(d.GameParameterRecs, rec)
-}
-
-func (d *Data) GetGameParameterRecByID(id string) (*game_record.GameParameter, error) {
-	for _, rec := range d.GameParameterRecs {
-		if rec.ID == id {
-			return rec, nil
-		}
-	}
-	return nil, fmt.Errorf("game parameter record not found for id >%s<", id)
-}
-
-func (d *Data) GetGameParameterRecByRef(ref string) (*game_record.GameParameter, error) {
-	id, exists := d.Refs.GameParameterRefs[ref]
-	if !exists {
-		return nil, fmt.Errorf("game parameter reference not found for ref >%s<", ref)
-	}
-	return d.GetGameParameterRecByID(id)
 }
 
 // GameInstanceParameter

@@ -33,7 +33,6 @@ func GameHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error)
 	handlerConfigFuncs := []func(logger.Logger) (map[string]server.HandlerConfig, error){
 		gameHandlerConfig,
 		gameParameterHandlerConfig,
-		gameParameterConfigurationHandlerConfig,
 		gameSubscriptionHandlerConfig,
 		gameAdministrationHandlerConfig,
 		gameInstanceHandlerConfig,

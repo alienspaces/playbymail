@@ -1,0 +1,159 @@
+#!/usr/bin/env sh
+
+# Playwright End-to-End Test Runner
+# Run from project root: ./tools/test-playwright
+
+set -e
+
+# Change to project root directory
+cd "$(dirname "$0")/.."
+
+echo "🔍 Checking Playwright setup..."
+
+# Check if Node.js and npm are available
+if ! command -v node >/dev/null 2>&1; then
+    echo "❌ Error: Node.js not found. Please install Node.js first."
+    exit 1
+fi
+
+if ! command -v npm >/dev/null 2>&1; then
+    echo "❌ Error: npm not found. Please install npm first."
+    exit 1
+fi
+
+# Check if Playwright is installed
+if [ ! -f "package.json" ]; then
+    echo "❌ Error: package.json not found. Please run this from the project root."
+    exit 1
+fi
+
+# Check if Playwright is installed
+if ! npm list @playwright/test >/dev/null 2>&1; then
+    echo "❌ Error: Playwright not installed. Running 'npm install'..."
+    npm install
+fi
+
+# Check if Playwright browsers are installed
+if [ ! -d "node_modules/.cache/playwright" ]; then
+    echo "📦 Installing Playwright browsers..."
+    npx playwright install
+fi
+
+# Check if Playwright configuration exists
+if [ ! -f "playwright.config.js" ]; then
+    echo "❌ Error: playwright.config.js not found."
+    exit 1
+fi
+
+# Check if playwright directory exists
+if [ ! -d "playwright" ]; then
+    echo "❌ Error: playwright directory not found."
+    exit 1
+fi
+
+echo "✅ Playwright setup verified"
+
+# Default to running all tests
+TEST_COMMAND="test:e2e"
+DIRECT_PLAYWRIGHT=false
+
+# Parse command line arguments
+while [ $# -gt 0 ]; do
+    case $1 in
+        --ui)
+            TEST_COMMAND="test:e2e:ui"
+            shift
+            ;;
+        --headed)
+            TEST_COMMAND="test:e2e:headed"
+            shift
+            ;;
+        --debug)
+            TEST_COMMAND="test:e2e:debug"
+            shift
+            ;;
+        --report)
+            echo "📊 Opening Playwright test report..."
+            npm run test:e2e:report
+            exit 0
+            ;;
+        --grep)
+            if [ -n "$2" ]; then
+                DIRECT_PLAYWRIGHT=true
+                GREP_PATTERN="$2"
+                shift 2
+            else
+                echo "❌ Error: --grep requires a pattern"
+                exit 1
+            fi
+            ;;
+        --project)
+            if [ -n "$2" ]; then
+                DIRECT_PLAYWRIGHT=true
+                PROJECT_NAME="$2"
+                shift 2
+            else
+                echo "❌ Error: --project requires a project name"
+                exit 1
+            fi
+            ;;
+        --help|-h)
+            echo "Usage: $0 [OPTIONS]"
+            echo ""
+            echo "Options:"
+            echo "  --ui       Run tests with interactive UI"
+            echo "  --headed   Run tests in headed mode (see browser)"
+            echo "  --debug    Run tests in debug mode"
+            echo "  --report   Show test report"
+            echo "  --grep     Run tests matching pattern"
+            echo "  --project  Run specific project (e.g., chromium)"
+            echo "  --help     Show this help message"
+            echo ""
+            echo "Examples:"
+            echo "  $0                    # Run all tests"
+            echo "  $0 --ui              # Run with interactive UI"
+            echo "  $0 --headed          # Run with visible browser"
+            echo "  $0 --debug           # Run in debug mode"
+            echo "  $0 --grep 'auth'     # Run only auth tests"
+            echo "  $0 --project chromium # Run only Chromium tests"
+            echo "  $0 --report          # Show test report"
+            exit 0
+            ;;
+        *)
+            echo "❌ Unknown option: $1"
+            echo "Use --help for usage information"
+            exit 1
+            ;;
+    esac
+done
+
+echo ""
+echo "🚀 Running Playwright end-to-end tests..."
+
+# Run the tests
+if [ "$DIRECT_PLAYWRIGHT" = true ]; then
+    # If we have extra args, run playwright directly with them
+    if [ -n "$GREP_PATTERN" ]; then
+        echo "Command: npx playwright test --grep \"$GREP_PATTERN\""
+        echo ""
+        npx playwright test --grep "$GREP_PATTERN"
+    elif [ -n "$PROJECT_NAME" ]; then
+        echo "Command: npx playwright test --project \"$PROJECT_NAME\""
+        echo ""
+        npx playwright test --project "$PROJECT_NAME"
+    fi
+else
+    # Otherwise use the npm script
+    echo "Command: npm run $TEST_COMMAND"
+    echo ""
+    npm run "$TEST_COMMAND"
+fi
+
+echo ""
+echo "✅ Playwright tests completed!"
+echo ""
+echo "💡 Tips:"
+echo "  - Use --ui for interactive debugging"
+echo "  - Use --headed to see the browser"
+echo "  - Use --report to view detailed results"
+echo "  - Check test-results/ for screenshots and videos"

@@ -10,12 +10,12 @@
         <p>Manage active game sessions and monitor player activity</p>
       </div>
       <div class="header-actions">
-        <button @click="createInstance" class="btn-primary">
+        <Button @click="createInstance" variant="primary">
           <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
             <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
           </svg>
           Create Instance
-        </button>
+        </Button>
       </div>
     </div>
 
@@ -30,25 +30,30 @@
       <button @click="loadGameInstances">Retry</button>
     </div>
 
-    <!-- Instances list -->
-    <div v-else class="instances-section">
-      <div class="instances-header">
-        <h3>Active Instances ({{ activeInstances.length }})</h3>
+    <!-- Active Instances Section -->
+    <div class="instances-section">
+      <h3>
+        Active Instances
+        <span class="count">({{ activeInstances.length }})</span>
+      </h3>
+      
+      <div v-if="activeInstances.length === 0" class="empty-state">
+        <h4>No Active Instances</h4>
+        <p>Create a new game instance to get started.</p>
       </div>
       
-      <div v-if="activeInstances.length > 0" class="instances-grid">
+      <div v-else class="instances-grid">
         <div v-for="instance in activeInstances" :key="instance.id" class="instance-card">
-          <div class="instance-header">
-            <h4>Instance #{{ instance.id.slice(-8) }}</h4>
-            <span :class="['status-badge', `status-${instance.status}`]">
-              {{ getStatusLabel(instance.status) }}
-            </span>
-          </div>
-          
           <div class="instance-info">
+            <div class="instance-header">
+              <h4>Instance #{{ instance.id.slice(0, 8) }}</h4>
+              <span class="status-badge status-{{ instance.status }}">
+                {{ getStatusLabel(instance.status) }}
+              </span>
+            </div>
             <div class="info-row">
               <span class="label">Turn:</span>
-              <span class="value">{{ instance.current_turn }}</span>
+              <span class="value">{{ instance.current_turn || 0 }}</span>
             </div>
             <div class="info-row">
               <span class="label">Next Turn Due:</span>
@@ -61,61 +66,81 @@
           </div>
 
           <div class="instance-actions">
-            <button @click="viewInstance(instance)" class="btn-secondary">
+            <Button @click="viewInstance(instance)" variant="secondary" size="small">
               View Details
-            </button>
-            <button v-if="instance.status === 'created'" @click="startInstance(instance)" class="btn-primary">
+            </Button>
+            <Button 
+              v-if="instance.status === 'created'" 
+              @click="startInstance(instance)" 
+              variant="primary" 
+              size="small"
+            >
               Start
-            </button>
-            <button v-if="instance.status === 'running'" @click="pauseInstance(instance)" class="btn-warning">
+            </Button>
+            <Button 
+              v-if="instance.status === 'running'" 
+              @click="pauseInstance(instance)" 
+              variant="warning" 
+              size="small"
+            >
               Pause
-            </button>
-            <button v-if="instance.status === 'paused'" @click="resumeInstance(instance)" class="btn-success">
+            </Button>
+            <Button 
+              v-if="instance.status === 'paused'" 
+              @click="resumeInstance(instance)" 
+              variant="success" 
+              size="small"
+            >
               Resume
-            </button>
-            <button v-if="['created', 'running', 'paused'].includes(instance.status)" @click="cancelInstance(instance)" class="btn-danger">
+            </Button>
+            <Button 
+              v-if="['created', 'running', 'paused'].includes(instance.status)" 
+              @click="cancelInstance(instance)" 
+              variant="danger" 
+              size="small"
+            >
               Cancel
-            </button>
+            </Button>
           </div>
         </div>
       </div>
+    </div>
 
-      <div v-else class="empty-state">
-        <h4>No Active Instances</h4>
-        <p>Create a new game instance to get started.</p>
+    <!-- Completed Instances Section -->
+    <div class="instances-section">
+      <h3>
+        Completed Instances
+        <span class="count">({{ completedInstances.length }})</span>
+      </h3>
+      
+      <div v-if="completedInstances.length === 0" class="empty-state">
+        <h4>No Completed Instances</h4>
+        <p>Completed games will appear here.</p>
       </div>
-
-      <!-- Completed instances -->
-      <div v-if="completedInstances.length > 0" class="instances-section">
-        <div class="instances-header">
-          <h3>Completed Instances ({{ completedInstances.length }})</h3>
-        </div>
-        
-        <div class="instances-grid">
-          <div v-for="instance in completedInstances" :key="instance.id" class="instance-card completed">
+      
+      <div v-else class="instances-grid">
+        <div v-for="instance in completedInstances" :key="instance.id" class="instance-card">
+          <div class="instance-info">
             <div class="instance-header">
-              <h4>Instance #{{ instance.id.slice(-8) }}</h4>
-              <span class="status-badge status-completed">
+              <h4>Instance #{{ instance.id.slice(0, 8) }}</h4>
+              <span class="status-badge status-{{ instance.status }}">
                 {{ getStatusLabel(instance.status) }}
               </span>
             </div>
-            
-            <div class="instance-info">
-              <div class="info-row">
-                <span class="label">Final Turn:</span>
-                <span class="value">{{ instance.current_turn }}</span>
-              </div>
-              <div class="info-row">
-                <span class="label">Completed:</span>
-                <span class="value">{{ formatDate(instance.completed_at) }}</span>
-              </div>
+            <div class="info-row">
+              <span class="label">Final Turn:</span>
+              <span class="value">{{ instance.current_turn || 0 }}</span>
             </div>
+            <div class="info-row">
+              <span class="label">Completed:</span>
+              <span class="value">{{ formatDate(instance.completed_at) }}</span>
+            </div>
+          </div>
 
-            <div class="instance-actions">
-              <button @click="viewInstance(instance)" class="btn-secondary">
-                View Details
-              </button>
-            </div>
+          <div class="instance-actions">
+            <Button @click="viewInstance(instance)" variant="secondary" size="small">
+              View Details
+            </Button>
           </div>
         </div>
       </div>
@@ -124,10 +149,11 @@
 </template>
 
 <script setup>
-import { computed, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useGamesStore } from '../../stores/games';
 import { useGameInstancesStore } from '../../stores/gameInstances';
+import Button from '../../components/Button.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -152,6 +178,10 @@ const completedInstances = computed(() =>
 );
 
 onMounted(async () => {
+  // Load games first so selectedGame can be populated
+  if (!gamesStore.games.length) {
+    await gamesStore.fetchGames();
+  }
   await loadGameInstances();
 });
 
@@ -244,6 +274,7 @@ const cancelInstance = async (instance) => {
 .game-instances-view {
   max-width: 1200px;
   margin: 0 auto;
+  padding: var(--space-lg);
 }
 
 .view-header {
@@ -319,34 +350,41 @@ const cancelInstance = async (instance) => {
   margin-bottom: var(--space-xl);
 }
 
-.instances-header {
-  margin-bottom: var(--space-lg);
-}
-
-.instances-header h3 {
-  margin: 0;
+.instances-section h3 {
+  margin: 0 0 var(--space-md) 0;
   font-size: var(--font-size-lg);
   color: var(--color-text);
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.instances-section h3 .count {
+  background: var(--color-primary);
+  color: var(--color-text-light);
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-normal);
 }
 
 .instances-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: var(--space-lg);
+  gap: var(--space-md);
+  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
 }
 
 .instance-card {
   background: var(--color-bg);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   padding: var(--space-lg);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.2s ease;
 }
 
 .instance-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
 }
 
 .instance-card.completed {
@@ -364,6 +402,7 @@ const cancelInstance = async (instance) => {
   margin: 0;
   font-size: var(--font-size-md);
   color: var(--color-text);
+  font-weight: var(--font-weight-bold);
 }
 
 .status-badge {
@@ -372,36 +411,31 @@ const cancelInstance = async (instance) => {
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-bold);
   text-transform: uppercase;
+  color: var(--color-text-light);
 }
 
 .status-created {
-  background: var(--color-bg-light);
-  color: var(--color-text-muted);
+  background: var(--color-info);
 }
 
 .status-starting {
-  background: var(--color-warning-light);
-  color: var(--color-warning);
+  background: var(--color-warning);
 }
 
 .status-running {
-  background: var(--color-success-light);
-  color: var(--color-success);
+  background: var(--color-success);
 }
 
 .status-paused {
-  background: var(--color-warning-light);
-  color: var(--color-warning);
+  background: var(--color-warning);
 }
 
 .status-completed {
-  background: var(--color-success-light);
-  color: var(--color-success);
+  background: var(--color-success);
 }
 
 .status-cancelled {
-  background: var(--color-danger-light);
-  color: var(--color-danger);
+  background: var(--color-danger);
 }
 
 .instance-info {
@@ -435,64 +469,13 @@ const cancelInstance = async (instance) => {
   flex-wrap: wrap;
 }
 
-.btn-secondary,
-.btn-warning,
-.btn-success,
-.btn-danger {
-  flex: 1;
-  min-width: 80px;
-  padding: var(--space-xs) var(--space-sm);
-  border: none;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-medium);
-  transition: background 0.2s;
-}
-
-.btn-secondary {
-  background: var(--color-bg-light);
-  color: var(--color-text);
-  border: 1px solid var(--color-border);
-}
-
-.btn-secondary:hover {
-  background: var(--color-border);
-}
-
-.btn-warning {
-  background: var(--color-warning);
-  color: var(--color-text-light);
-}
-
-.btn-warning:hover {
-  background: var(--color-warning-dark);
-}
-
-.btn-success {
-  background: var(--color-success);
-  color: var(--color-text-light);
-}
-
-.btn-success:hover {
-  background: var(--color-success-dark);
-}
-
-.btn-danger {
-  background: var(--color-danger);
-  color: var(--color-text-light);
-}
-
-.btn-danger:hover {
-  background: var(--color-danger-dark);
-}
-
 .empty-state {
   text-align: center;
   padding: var(--space-xl);
   background: var(--color-bg);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .empty-state h4 {

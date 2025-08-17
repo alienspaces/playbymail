@@ -12,11 +12,28 @@
   --color-primary-light: #64b5f6; /* New lighter blue for sub-headings */
   --color-bg: #fff;
   --color-bg-alt: #f7f7f7;
+  --color-bg-light: #f5f5f5;
   --color-border: #ddd;
+  --color-border-light: #eee;
   --color-text: #222;
   --color-text-light: #fff;
+  --color-text-muted: #666;
   --color-accent: #1976d2;
   --color-error: #d32f2f;
+  
+  /* Status colors */
+  --color-success: #388e3c;
+  --color-success-dark: #2e7d32;
+  --color-success-light: #e8f5e8;
+  --color-warning: #f57c00;
+  --color-warning-dark: #ef6c00;
+  --color-warning-light: #fff3e0;
+  --color-danger: #d32f2f;
+  --color-danger-dark: #c62828;
+  --color-danger-light: #ffebee;
+  --color-info: #1976d2;
+  --color-info-dark: #1565c0;
+  --color-info-light: #e3f2fd;
 
   /* Typography */
   --font-family-base: 'Inter', Arial, sans-serif;

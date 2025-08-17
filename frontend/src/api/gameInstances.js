@@ -1,5 +1,13 @@
 import { baseUrl, getAuthHeaders, apiFetch } from './baseUrl';
 
+export async function listAllGameInstances() {
+  const res = await apiFetch(`${baseUrl}/api/v1/game-instances`, {
+    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+  });
+  if (!res.ok) throw new Error('Failed to fetch all game instances');
+  return await res.json();
+}
+
 export async function listGameInstances(gameId) {
   const res = await apiFetch(`${baseUrl}/api/v1/games/${gameId}/instances`, {
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },

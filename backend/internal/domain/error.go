@@ -55,8 +55,12 @@ func InternalInvalidArgumentOrProperty(l logger.Logger, arg string) error {
 	return err
 }
 
-func InvalidFieldValue(fieldName string) error {
-	return coreerror.NewInvalidError(fieldName, "field %s contains an invalid value", fieldName)
+func RequiredField(fieldName string) error {
+	return coreerror.RequiredField(fieldName)
+}
+
+func InvalidField(fieldName string, fieldValue string, reason string) error {
+	return coreerror.InvalidField(fieldName, fieldValue, reason)
 }
 
 func Internal(reason string, args ...any) error {
