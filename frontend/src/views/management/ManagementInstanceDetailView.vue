@@ -392,12 +392,6 @@ const loadGameParameters = async () => {
   }
 };
 
-const formatParameterValue = (param) => {
-  // For game instance parameters, we only have parameter_value as a string
-  // The type validation is handled by the backend
-  return param.parameter_value || 'No value set';
-};
-
 const getStatusLabel = (status) => {
   const labels = {
     'created': 'Created',
@@ -472,10 +466,6 @@ const getParameterPlaceholder = () => {
     return 'Enter a value';
   }
   return 'Enter a value';
-};
-
-const isParameterAlreadyConfigured = (key) => {
-  return instanceParameters.value.some(p => p.parameter_key === key);
 };
 
 const editParameterInline = (param) => {

@@ -42,6 +42,7 @@ const (
 	GameCharacterThreeRef = "game-character-three"
 
 	GameInstanceOneRef = "game-instance-one"
+	GameInstanceTwoRef = "game-instance-two"
 
 	GameItemInstanceOneRef = "game-item-instance-one"
 
