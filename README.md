@@ -1,91 +1,22 @@
-# PlayByMail
+# Play by Mail
 
-A platform to revitalize play-by-mail (PBM) games for children, teenagers, and young adults, supporting a wide variety of genres through **physical printed materials** mailed to players.
+<!-- markdownlint-disable MD033-->
 
-## What is PlayByMail?
+A platform to revitalize play-by-mail (PBM) games for all ages, supporting a wide variety of genres (RPG, strategy, adventure, sports, and more).
 
-PlayByMail is a **physical play-by-mail gaming platform** that:
+<img alt="logo" src="playbymail.png" height=400/>
 
-- **Generates printed game materials** (maps, forms, puzzles, story content) to be mailed to players
-- **Processes returned materials** from players via prepaid envelopes
-- **Automates turn processing** based on returned materials with minimal human intervention
-- **Supports multiple game genres** including RPGs, strategy games, adventure games, and more
-- **Focuses on age-appropriate content** with parental controls and moderation
+All game content, communication, and visuals are delivered via printed materials mailed to players, with automated turn processing and game state updates.
 
-## How It Works
+Players return completed forms and puzzles by mail for processing, with human review only when needed.
 
-1. **Game Design**: Game designers create games using the Studio tools
-2. **Game Management**: Game managers launch game instances and manage players
-3. **Print Generation**: The system generates personalized print packs for each player
-4. **Physical Mailing**: Materials are printed and mailed to players on a schedule (weekly/fortnightly)
-5. **Player Response**: Players complete forms, solve puzzles, and return materials via prepaid envelopes
-6. **Automated Processing**: The system scans and processes returned materials to update game state
-7. **Next Turn**: New print packs are generated and mailed for the next turn
+Game writers have tools to create, manage, and publish new games, storylines, maps, and puzzles, all optimized for print.
 
-## Game Genres Supported
+Privacy, security, age-appropriateness, and inclusivity are core principles, with support for parental controls and accessibility.
 
-- **Role-Playing Games (RPGs)**: Character-driven adventures and storytelling
-- **Wargames & Strategy**: Military campaigns, diplomacy, and resource management
-- **Adventure & Exploration**: Dungeon crawls, space exploration, treasure hunting
-- **Economic Games**: Empire building, trading, and resource management
-- **Sports Management**: Team management and strategic decision-making
-- **Science Fiction**: Space opera, colonization, and interstellar conflict
-- **Fantasy Kingdom Management**: Medieval fantasy world building and conquest
-- **Mystery & Detective**: Puzzle-solving and crime investigation
-- **Collaborative Storytelling**: Group narrative building and shared adventures
-- **Board Game Adaptations**: Classic games adapted for PBM format
+AI is integrated where appropriate, always subject to human review for narrative and safety.
 
-## Platform Architecture
-
-### 1. **Game Designer Studio** (`/studio`)
-Tools for creating and managing play-by-mail games:
-- Game design and creation tools
-- Storyline and narrative development
-- Map and visual content creation
-- Form and puzzle design
-- Game rule configuration
-- Content testing and preview
-- Game publishing and version management
-
-### 2. **Game Management** (`/management`)
-Tools for operating and administering running games:
-- Subscribe to or purchase games to run
-- Configure game runtime parameters
-- Launch and manage game instances
-- Process player turns and game state updates
-- Review running game states and player progress
-- Handle player communications and support
-- Generate and manage print/mail operations
-
-### 3. **Platform Administration** (`/admin`)
-Platform-level administration and business operations:
-- User account management and moderation
-- Customer support and ticket management
-- Platform-wide analytics and reporting
-- Billing and subscription management
-- System configuration and maintenance
-- Content moderation and policy enforcement
-- Platform announcements and communications
-
-## Key Features
-
-- **Physical Print & Mail**: All game content delivered via printed materials
-- **Automated Turn Processing**: Minimal human intervention required
-- **Personalized Content**: Each player receives customized materials
-- **Return Processing**: Automated scanning and processing of returned materials
-- **Age-Appropriate Content**: Built-in moderation and parental controls
-- **Privacy-First**: Complete data removal available upon request
-- **Accessibility**: Designed for players with disabilities
-- **AI Integration**: AI-generated content with human review safeguards
-
-## Tech Stack
-
-- **Frontend**: Vue.js with Vite (for admin/management interfaces)
-- **Backend**: Go with Gin framework (game engine and processing)
-- **Database**: PostgreSQL with Row Level Security (RLS)
-- **Print Generation**: PDF generation and print-ready output
-- **Testing**: Playwright for end-to-end testing, Vitest for unit testing
-- **Deployment**: Heroku
+The system is designed for flexibility, supporting diverse PBM game types and print-and-mail workflows.
 
 ## Quick Start
 
