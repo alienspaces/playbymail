@@ -4,12 +4,23 @@
     "description": "A platform to revitalize play-by-mail (PBM) games for all ages, supporting a wide variety of genres (RPG, strategy, adventure, sports, and more).",
     "main": "index.js",
     "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1",
+        "dev": "vite",
+        "build": "vite build",
+        "preview": "vite preview",
+        "test": "vitest",
+        "test:ui": "vitest --ui",
+        "test:run": "vitest run",
         "test:e2e": "playwright test",
         "test:e2e:ui": "playwright test --ui",
         "test:e2e:headed": "playwright test --headed",
         "test:e2e:debug": "playwright test --debug",
-        "test:e2e:report": "playwright show-report"
+        "test:e2e:report": "playwright show-report",
+        "test:e2e:core": "playwright test core/",
+        "test:e2e:ui-components": "playwright test ui/",
+        "test:e2e:workflows": "playwright test workflows/",
+        "test:e2e:legacy": "playwright test *.spec.js",
+        "test:e2e:install": "playwright install",
+        "test:e2e:install-deps": "playwright install-deps"
     },
     "repository": {
         "type": "git",
