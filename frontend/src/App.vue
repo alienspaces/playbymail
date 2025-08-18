@@ -4,6 +4,7 @@ import { useAuthStore } from './stores/auth';
 import { storeToRefs } from 'pinia';
 import { ref } from 'vue';
 import BuildInfo from './components/BuildInfo.vue';
+import ComingSoonBanner from './components/ComingSoonBanner.vue';
 
 const authStore = useAuthStore();
 const { sessionToken } = storeToRefs(authStore);
@@ -24,6 +25,7 @@ function closeMobileMenu() {
 
 <template>
   <div id="app">
+    <ComingSoonBanner />
     <nav class="navbar">
       <div class="nav-links">
         <router-link to="/" class="logo">
