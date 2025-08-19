@@ -13,7 +13,7 @@
 
 <style scoped>
 .coming-soon-banner {
-  position: fixed;
+  position: absolute;
   top: 72px; /* desktop offset */
   left: 20px;
   z-index: 9999;
