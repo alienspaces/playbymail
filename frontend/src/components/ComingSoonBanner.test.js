@@ -7,27 +7,29 @@ describe('ComingSoonBanner', () => {
     const wrapper = mount(ComingSoonBanner)
     
     expect(wrapper.find('.coming-soon-banner').exists()).toBe(true)
-    expect(wrapper.find('.banner-content').exists()).toBe(true)
-    expect(wrapper.find('.banner-text').text()).toBe('Coming Soon')
-    expect(wrapper.find('.banner-date').text()).toBe('Late 2025')
+    expect(wrapper.find('.envelope').exists()).toBe(true)
+    expect(wrapper.find('.stamp').exists()).toBe(true)
+    expect(wrapper.find('.address').exists()).toBe(true)
   })
 
   it('has correct CSS classes', () => {
     const wrapper = mount(ComingSoonBanner)
     
     expect(wrapper.classes()).toContain('coming-soon-banner')
-    expect(wrapper.find('.banner-content').classes()).toContain('banner-content')
-    expect(wrapper.find('.banner-text').classes()).toContain('banner-text')
-    expect(wrapper.find('.banner-date').classes()).toContain('banner-date')
+    expect(wrapper.find('.envelope').classes()).toContain('envelope')
+    expect(wrapper.find('.stamp').classes()).toContain('stamp')
+    expect(wrapper.find('.address').classes()).toContain('address')
   })
 
-  it('displays banner text correctly', () => {
+  it('displays envelope content correctly', () => {
     const wrapper = mount(ComingSoonBanner)
     
-    const bannerText = wrapper.find('.banner-text')
-    const bannerDate = wrapper.find('.banner-date')
+    const addressLines = wrapper.findAll('.address-line')
+    expect(addressLines).toHaveLength(2)
+    expect(addressLines[0].text()).toBe('Coming Soon')
+    expect(addressLines[1].text()).toBe('Late 2025')
     
-    expect(bannerText.text()).toBe('Coming Soon')
-    expect(bannerDate.text()).toBe('Late 2025')
+    const stampText = wrapper.find('.stamp-text')
+    expect(stampText.text()).toBe('2025')
   })
 })
