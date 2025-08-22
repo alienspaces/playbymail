@@ -25,32 +25,44 @@
 
 <style scoped>
 .coming-soon-banner {
-  position: absolute;
-  top: 72px; /* desktop offset */
-  left: 20px;
-  z-index: 9999;
+  /* Footer banner styling */
+  display: flex;
+  align-items: center;
   pointer-events: none;
 }
 
+/* Alternative layout option: Top-right corner positioning
+   Uncomment this and comment out the above .coming-soon-banner styles
+   if you prefer the banner in the top-right corner instead of integrated in navbar
+
+.coming-soon-banner {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+  pointer-events: none;
+}
+*/
+
 .envelope {
   position: relative;
-  width: 140px; /* narrower, more envelope-like */
-  height: 90px; /* taller for envelope proportions */
+  width: 120px; /* narrower for header integration */
+  height: 70px; /* shorter for header height */
   background: linear-gradient(135deg, #fef3c7, #fde68a); /* subdued yellow envelope color */
-  border: 2px solid #d97706; /* warm brown-orange border */
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  padding: 12px;
+  border: 1px solid #e8c547; /* very subtle border, almost matching envelope */
+  border-radius: 6px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  padding: 8px;
   box-sizing: border-box;
 }
 
 .stamp {
   position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 24px;
-  height: 28px;
-  background: linear-gradient(135deg, #dc3545, #c82333);
+  top: 6px;
+  right: 6px;
+  width: 20px;
+  height: 24px;
+  background: linear-gradient(135deg, #dc6545, #c8533f);
   border-radius: 3px;
   display: flex;
   align-items: center;
@@ -60,7 +72,7 @@
 
 .stamp-text {
   color: white;
-  font-size: 8px;
+  font-size: 7px;
   font-weight: 700;
   text-align: center;
   line-height: 1;
@@ -68,8 +80,8 @@
 
 .address {
   position: absolute;
-  top: 20px;
-  left: 12px;
+  top: 16px;
+  left: 8px;
   text-align: left;
 }
 
@@ -79,7 +91,7 @@
   font-size: 11px;
   font-weight: 600;
   line-height: 1.3;
-  margin-bottom: 2px;
+  margin-bottom: 1px;
 }
 
 .fold-line {
@@ -89,36 +101,32 @@
 }
 
 .fold-line-1 {
-  top: 45px;
-  left: 8px;
-  right: 8px;
+  top: 35px;
+  left: 6px;
+  right: 6px;
   height: 1px;
 }
 
 .fold-line-2 {
-  top: 8px;
-  bottom: 8px;
-  left: 45px;
+  top: 6px;
+  bottom: 6px;
+  left: 35px;
   width: 1px;
 }
 
+/* Mobile responsive adjustments */
 @media (max-width: 768px) {
-  .coming-soon-banner {
-    top: 73px; /* mobile offset */
-    left: 15px;
-  }
-  
   .envelope {
     width: 120px;
-    height: 80px;
-    padding: 10px;
+    height: 70px;
+    padding: 4px;
   }
   
   .stamp {
     width: 20px;
     height: 24px;
-    top: 6px;
-    right: 6px;
+    top: 2px;
+    right: 2px;
   }
   
   .stamp-text {
@@ -126,16 +134,16 @@
   }
   
   .address {
-    top: 18px;
-    left: 10px;
+    top: 16px;
+    left: 8px;
   }
   
   .address-line {
-    font-size: 10px;
+    font-size: 11px;
   }
   
   .fold-line-1 {
-    top: 40px;
+    top: 35px;
     left: 6px;
     right: 6px;
   }
@@ -143,7 +151,68 @@
   .fold-line-2 {
     top: 6px;
     bottom: 6px;
-    left: 40px;
+    left: 35px;
+  }
+}
+
+/* Extra small mobile adjustments */
+@media (max-width: 480px) {
+  .envelope {
+    width: 120px;
+    height: 70px;
+    padding: 4px;
+  }
+  
+  .stamp {
+    width: 20px;
+    height: 24px;
+    top: 2px;
+    right: 2px;
+  }
+  
+  .stamp-text {
+    font-size: 7px;
+  }
+  
+  .address {
+    top: 16px;
+    left: 8px;
+  }
+  
+  .address-line {
+    font-size: 11px;
+  }
+  
+  .fold-line-1 {
+    top: 35px;
+    left: 6px;
+    right: 6px;
+  }
+  
+  .fold-line-2 {
+    top: 6px;
+    bottom: 6px;
+    left: 35px;
+  }
+}
+
+/* Hide banner on very small screens to prevent crowding */
+@media (max-width: 360px) {
+  .coming-soon-banner {
+    display: none;
+  }
+}
+
+/* Ensure banner doesn't interfere with touch targets on mobile */
+@media (max-width: 768px) {
+  .coming-soon-banner {
+    pointer-events: none;
+  }
+  
+  .envelope {
+    /* Ensure minimum touch target size */
+    min-width: 44px;
+    min-height: 44px;
   }
 }
 </style>

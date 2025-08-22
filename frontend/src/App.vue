@@ -25,7 +25,6 @@ function closeMobileMenu() {
 
 <template>
   <div id="app">
-    <ComingSoonBanner />
     <nav class="navbar">
       <div class="nav-links">
         <router-link to="/" class="logo">
@@ -75,10 +74,13 @@ function closeMobileMenu() {
       </div>
     </nav>
     <router-view />
-    <footer>
-      <BuildInfo />
-      <p>&copy; 2025 PlayByMail. All rights reserved.</p>
-    </footer>
+          <footer>
+        <ComingSoonBanner class="footer-banner" />
+        <div class="footer-center">
+          <BuildInfo />
+          <p>&copy; 2025 PlayByMail. All rights reserved.</p>
+        </div>
+      </footer>
   </div>
 </template>
 
@@ -99,8 +101,18 @@ function closeMobileMenu() {
 }
 .nav-links {
   display: flex;
-  gap: var(--space-lg);
   align-items: center;
+  gap: var(--space-lg);
+}
+
+.nav-links .coming-soon-banner {
+  margin: 0 var(--space-md);
+}
+
+.navbar-link {
+  color: var(--color-text-light);
+  text-decoration: underline;
+  font-weight: 500;
 }
 .logo {
   font-weight: var(--font-weight-bold);
@@ -185,6 +197,11 @@ function closeMobileMenu() {
   box-shadow: 0 4px 16px rgba(0,0,0,0.15);
   animation: fadeIn 0.2s;
 }
+
+
+
+
+
 .mobile-menu a {
   color: var(--color-text-light);
   text-decoration: none;
@@ -215,9 +232,19 @@ function closeMobileMenu() {
 .mobile-logo {
   display: none;
 }
+
+
+
+
+
+
+
 @media (max-width: 768px) {
-  .nav-links,
   .nav-actions {
+    display: none;
+  }
+  
+  .nav-links {
     display: none;
   }
   .burger {
@@ -226,12 +253,22 @@ function closeMobileMenu() {
   .mobile-logo {
     display: block;
     color: var(--color-text-light);
-    font-size: var(--font-size-xl);
+    font-size: var(--font-size-lg); /* Reduced from xl to lg */
     line-height: 1.1;
-    margin-right: var(--space-md);
+    margin-right: var(--space-sm); /* Reduced from md to sm */
     margin-left: var(--space-sm);
     user-select: none;
     align-self: center;
+    flex-shrink: 1; /* Allow logo to shrink if needed */
+  }
+  
+
+  
+
+
+  /* Ensure navbar has proper spacing */
+  .navbar {
+    padding: var(--space-md) var(--space-sm); /* Reduced horizontal padding on mobile */
   }
 }
 @media (min-width: 769px) {
@@ -241,28 +278,69 @@ function closeMobileMenu() {
   .mobile-logo {
     display: none;
   }
+
 }
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(-10px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
+
+
 /* Footer styling */
 footer {
-  margin-top: auto;
-  padding: var(--space-md) var(--space-lg);
+  margin-top: 0;
+  padding: var(--space-sm) var(--space-lg);
   background: var(--color-background-soft);
   border-top: 1px solid var(--color-border);
-  text-align: center;
+  position: relative;
+}
+
+.footer-banner {
+  position: absolute;
+  left: var(--space-lg);
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.footer-center {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: var(--space-sm);
+  text-align: center;
+  padding: var(--space-md) 0;
 }
 
 footer p {
   margin: 0;
   color: var(--color-text-muted);
   font-size: var(--font-size-sm);
+}
+
+/* Mobile footer adjustments */
+@media (max-width: 768px) {
+  footer {
+    padding: var(--space-xs) var(--space-md);
+  }
+  
+  .footer-banner {
+    position: relative;
+    left: auto;
+    top: auto;
+    transform: none;
+    margin-bottom: var(--space-sm);
+  }
+  
+  .footer-center {
+    padding: 0;
+  }
+  
+  footer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
 }
 </style>
