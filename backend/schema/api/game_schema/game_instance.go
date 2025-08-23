@@ -17,7 +17,6 @@ type GameInstanceResponseData struct {
 	CompletedAt         *time.Time `json:"completed_at,omitempty"`
 	CreatedAt           time.Time  `json:"created_at"`
 	UpdatedAt           *time.Time `json:"updated_at,omitempty"`
-	DeletedAt           *time.Time `json:"deleted_at,omitempty"`
 }
 
 type GameInstanceResponse struct {

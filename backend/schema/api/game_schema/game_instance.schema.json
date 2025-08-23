@@ -14,9 +14,6 @@
             "minimum": 0,
             "type": "integer"
         },
-        "deleted_at": {
-            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/updated_at"
-        },
         "game_id": {
             "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
         },

@@ -1,6 +1,8 @@
 package harness
 
 import (
+	"gitlab.com/alienspaces/playbymail/core/nullstring"
+	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/record/account_record"
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
@@ -41,8 +43,11 @@ const (
 	GameCharacterTwoRef   = "game-character-two"
 	GameCharacterThreeRef = "game-character-three"
 
-	GameInstanceOneRef = "game-instance-one"
-	GameInstanceTwoRef = "game-instance-two"
+	GameInstanceOneRef   = "game-instance-one"
+	GameInstanceTwoRef   = "game-instance-two"
+	GameInstanceCleanRef = "game-instance-clean"
+
+	GameInstanceParameterOneRef = "game-instance-parameter-one"
 
 	GameItemInstanceOneRef = "game-item-instance-one"
 
@@ -287,6 +292,15 @@ func DefaultDataConfig() DataConfig {
 					{
 						Reference: GameInstanceOneRef,
 						Record:    &game_record.GameInstance{},
+						GameInstanceParameterConfigs: []GameInstanceParameterConfig{
+							{
+								Reference: GameInstanceParameterOneRef,
+								Record: &game_record.GameInstanceParameter{
+									ParameterKey:   domain.AdventureGameParameterCharacterLives,
+									ParameterValue: nullstring.FromString("3"),
+								},
+							},
+						},
 						GameLocationInstanceConfigs: []GameLocationInstanceConfig{
 							{
 								Reference:       GameLocationInstanceOneRef,
@@ -323,6 +337,12 @@ func DefaultDataConfig() DataConfig {
 								Record:           &adventure_game_record.AdventureGameCharacterInstance{},
 							},
 						},
+					},
+					// Clean game instance with no parameters for testing
+					{
+						Reference: GameInstanceCleanRef,
+						Record:    &game_record.GameInstance{},
+						// No parameters, no instances - clean slate for testing
 					},
 				},
 			},

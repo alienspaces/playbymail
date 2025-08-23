@@ -57,7 +57,6 @@ func GameInstanceRecordToResponseData(l logger.Logger, rec *game_record.GameInst
 		CompletedAt:         nulltime.ToTimePtr(rec.CompletedAt),
 		CreatedAt:           rec.CreatedAt,
 		UpdatedAt:           nulltime.ToTimePtr(rec.UpdatedAt),
-		DeletedAt:           nulltime.ToTimePtr(rec.DeletedAt),
 	}, nil
 }
 

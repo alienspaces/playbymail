@@ -22,8 +22,7 @@ const (
 )
 
 const (
-	AdventureGameParameterCharacterLives    = "character_lives"
-	AdventureGameParameterTurnDurationHours = "turn_duration_hours"
+	AdventureGameParameterCharacterLives = "character_lives"
 )
 
 var gameParameters = []game_record.GameParameter{

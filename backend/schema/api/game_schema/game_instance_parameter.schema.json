@@ -22,9 +22,6 @@
         },
         "updated_at": {
             "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/updated_at"
-        },
-        "deleted_at": {
-            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/deleted_at"
         }
     },
     "required": [

@@ -2,6 +2,7 @@ package maintestdata
 
 import (
 	"gitlab.com/alienspaces/playbymail/core/nullstring"
+	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/harness"
 	"gitlab.com/alienspaces/playbymail/internal/record/account_record"
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
@@ -257,7 +258,7 @@ func GameConfig() []harness.GameConfig {
 						{
 							Reference: "game-instance-parameter-one",
 							Record: &game_record.GameInstanceParameter{
-								ParameterKey:   "character_lives",
+								ParameterKey:   domain.AdventureGameParameterCharacterLives,
 								ParameterValue: nullstring.FromString("5"),
 							},
 						},
@@ -355,7 +356,7 @@ func GameConfig() []harness.GameConfig {
 						{
 							Reference: "game-instance-parameter-three",
 							Record: &game_record.GameInstanceParameter{
-								ParameterKey:   "character_lives",
+								ParameterKey:   domain.AdventureGameParameterCharacterLives,
 								ParameterValue: nullstring.FromString("3"),
 							},
 						},

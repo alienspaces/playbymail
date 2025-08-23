@@ -4,19 +4,32 @@
     "title": "GameInstanceParameterRequest",
     "type": "object",
     "properties": {
-        "game_instance_id": {
-            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
-        },
         "parameter_key": {
             "maxLength": 100,
             "type": "string"
         },
         "parameter_value": {
-            "type": "string"
+            "description": "Parameter value - can be any JSON type (string, number, boolean, object, array)",
+            "oneOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "number"
+                },
+                {
+                    "type": "boolean"
+                },
+                {
+                    "type": "object"
+                },
+                {
+                    "type": "array"
+                }
+            ]
         }
     },
     "required": [
-        "game_instance_id",
         "parameter_key",
         "parameter_value"
     ],

@@ -13,7 +13,6 @@ type GameInstanceParameter struct {
 	ParameterValue string     `json:"parameter_value"`
 	CreatedAt      time.Time  `json:"created_at"`
 	UpdatedAt      *time.Time `json:"updated_at,omitempty"`
-	DeletedAt      *time.Time `json:"deleted_at,omitempty"`
 }
 
 type GameInstanceParameterResponse struct {
@@ -30,7 +29,6 @@ type GameInstanceParameterCollectionResponse struct {
 
 type GameInstanceParameterRequest struct {
 	common_schema.Request
-	GameInstanceID string  `json:"game_instance_id"`
-	ParameterKey   string  `json:"parameter_key"`
-	ParameterValue *string `json:"parameter_value,omitempty"`
+	ParameterKey   string `json:"parameter_key"`
+	ParameterValue any    `json:"parameter_value"`
 }

@@ -24,13 +24,17 @@ func GameInstanceParameterRequestToRecord(l logger.Logger, r *http.Request, rec 
 
 	switch server.HttpMethod(r.Method) {
 	case server.HttpMethodPost:
-		rec.GameInstanceID = req.GameInstanceID
 		rec.ParameterKey = req.ParameterKey
-		rec.ParameterValue = nullstring.FromStringPtr(req.ParameterValue)
+		// Convert any type to string for database storage
+		if req.ParameterValue != nil {
+			rec.ParameterValue = nullstring.FromString(fmt.Sprintf("%v", req.ParameterValue))
+		}
 	case server.HttpMethodPut, server.HttpMethodPatch:
-		rec.GameInstanceID = req.GameInstanceID
 		rec.ParameterKey = req.ParameterKey
-		rec.ParameterValue = nullstring.FromStringPtr(req.ParameterValue)
+		// Convert any type to string for database storage
+		if req.ParameterValue != nil {
+			rec.ParameterValue = nullstring.FromString(fmt.Sprintf("%v", req.ParameterValue))
+		}
 	default:
 		return nil, fmt.Errorf("unsupported HTTP method")
 	}
@@ -47,7 +51,6 @@ func GameInstanceParameterRecordToResponseData(l logger.Logger, rec *game_record
 		ParameterValue: nullstring.ToString(rec.ParameterValue),
 		CreatedAt:      rec.CreatedAt,
 		UpdatedAt:      nulltime.ToTimePtr(rec.UpdatedAt),
-		DeletedAt:      nulltime.ToTimePtr(rec.DeletedAt),
 	}
 
 	return data, nil

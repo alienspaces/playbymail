@@ -28,11 +28,11 @@ import (
 // DELETE (document) /api/v1/games/{game_id}/instances/{instance_id}/parameters/{parameter_id}
 
 const (
-	getManyGameInstanceParameters  = "get-many-game-instance-parameters"
-	getOneGameInstanceParameter    = "get-one-game-instance-parameter"
-	createOneGameInstanceParameter = "create-one-game-instance-parameter"
-	updateOneGameInstanceParameter = "update-one-game-instance-parameter"
-	deleteOneGameInstanceParameter = "delete-one-game-instance-parameter"
+	GetManyGameInstanceParameters  = "get-many-game-instance-parameters"
+	GetOneGameInstanceParameter    = "get-one-game-instance-parameter"
+	CreateOneGameInstanceParameter = "create-one-game-instance-parameter"
+	UpdateOneGameInstanceParameter = "update-one-game-instance-parameter"
+	DeleteOneGameInstanceParameter = "delete-one-game-instance-parameter"
 )
 
 func gameInstanceParameterHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error) {
@@ -76,7 +76,7 @@ func gameInstanceParameterHandlerConfig(l logger.Logger) (map[string]server.Hand
 		}...),
 	}
 
-	gameInstanceParameterConfig[getManyGameInstanceParameters] = server.HandlerConfig{
+	gameInstanceParameterConfig[GetManyGameInstanceParameters] = server.HandlerConfig{
 		Method:      http.MethodGet,
 		Path:        "/api/v1/games/:game_id/instances/:instance_id/parameters",
 		HandlerFunc: getManyGameInstanceParametersHandler,
@@ -93,7 +93,7 @@ func gameInstanceParameterHandlerConfig(l logger.Logger) (map[string]server.Hand
 		},
 	}
 
-	gameInstanceParameterConfig[getOneGameInstanceParameter] = server.HandlerConfig{
+	gameInstanceParameterConfig[GetOneGameInstanceParameter] = server.HandlerConfig{
 		Method:      http.MethodGet,
 		Path:        "/api/v1/games/:game_id/instances/:instance_id/parameters/:parameter_id",
 		HandlerFunc: getOneGameInstanceParameterHandler,
@@ -109,7 +109,7 @@ func gameInstanceParameterHandlerConfig(l logger.Logger) (map[string]server.Hand
 		},
 	}
 
-	gameInstanceParameterConfig[createOneGameInstanceParameter] = server.HandlerConfig{
+	gameInstanceParameterConfig[CreateOneGameInstanceParameter] = server.HandlerConfig{
 		Method:      http.MethodPost,
 		Path:        "/api/v1/games/:game_id/instances/:instance_id/parameters",
 		HandlerFunc: createOneGameInstanceParameterHandler,
@@ -126,7 +126,7 @@ func gameInstanceParameterHandlerConfig(l logger.Logger) (map[string]server.Hand
 		},
 	}
 
-	gameInstanceParameterConfig[updateOneGameInstanceParameter] = server.HandlerConfig{
+	gameInstanceParameterConfig[UpdateOneGameInstanceParameter] = server.HandlerConfig{
 		Method:      http.MethodPut,
 		Path:        "/api/v1/games/:game_id/instances/:instance_id/parameters/:parameter_id",
 		HandlerFunc: updateOneGameInstanceParameterHandler,
@@ -143,7 +143,7 @@ func gameInstanceParameterHandlerConfig(l logger.Logger) (map[string]server.Hand
 		},
 	}
 
-	gameInstanceParameterConfig[deleteOneGameInstanceParameter] = server.HandlerConfig{
+	gameInstanceParameterConfig[DeleteOneGameInstanceParameter] = server.HandlerConfig{
 		Method:      http.MethodDelete,
 		Path:        "/api/v1/games/:game_id/instances/:instance_id/parameters/:parameter_id",
 		HandlerFunc: deleteOneGameInstanceParameterHandler,

@@ -50,6 +50,11 @@ func (m *Domain) DeleteGameInstanceParameterRec(recID string) error {
 	return r.DeleteOne(recID)
 }
 
+func (m *Domain) RemoveGameInstanceParameterRec(recID string) error {
+	r := m.GameInstanceParameterRepository()
+	return r.RemoveOne(recID)
+}
+
 func (m *Domain) GetGameInstanceParameterRecs(opts *sql.Options) ([]*game_record.GameInstanceParameter, error) {
 	r := m.GameInstanceParameterRepository()
 	recs, err := r.GetMany(opts)

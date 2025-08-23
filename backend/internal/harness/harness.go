@@ -309,6 +309,21 @@ func (t *Testing) RemoveData() error {
 		}
 	}
 
+	// Remove game instance parameter records before game instances to avoid FK errors
+	l.Debug("removing >%d< game instance parameter records", len(t.teardownData.GameInstanceParameterRecs))
+	for _, parameterRec := range t.teardownData.GameInstanceParameterRecs {
+		l.Debug("[teardown] game instance parameter ID: >%s<", parameterRec.ID)
+		if parameterRec.ID == "" {
+			l.Warn("[teardown] skipping game instance parameter with empty ID")
+			continue
+		}
+		err := t.Domain.(*domain.Domain).RemoveGameInstanceParameterRec(parameterRec.ID)
+		if err != nil {
+			l.Warn("failed removing game instance parameter record >%v<", err)
+			return err
+		}
+	}
+
 	// Remove game instance records before games to avoid FK errors
 	l.Debug("removing >%d< game instance records", len(t.teardownData.GameInstanceRecs))
 	for _, instanceRec := range t.teardownData.GameInstanceRecs {

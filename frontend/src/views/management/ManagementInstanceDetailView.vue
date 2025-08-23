@@ -515,14 +515,12 @@ const saveParameter = async () => {
         parameter_key: parameterForm.value.parameter_key,
         parameter_value: parameterForm.value.parameter_value
       });
-      alert('Parameter updated successfully!');
     } else {
       // Create new parameter
       await gameInstanceParametersStore.createGameInstanceParameter(gameId.value, instanceId.value, {
         parameter_key: parameterForm.value.parameter_key,
         parameter_value: parameterForm.value.parameter_value
       });
-      alert('Parameter added successfully!');
     }
     
     await loadInstanceParameters(); // Reload parameters after save
@@ -542,11 +540,11 @@ const removeParameterByKey = async (key) => {
     const parameterToRemove = instanceParameters.value.find(p => p.parameter_key === key);
     if (parameterToRemove) {
       await gameInstanceParametersStore.deleteGameInstanceParameter(gameId.value, instanceId.value, parameterToRemove.id);
-      alert('Parameter removed successfully!');
       await loadInstanceParameters();
     }
   } catch (err) {
-    alert('Failed to remove parameter: ' + err.message);
+    // Handle error silently since the user can see if the operation failed
+    console.error('Failed to remove parameter:', err);
   }
 };
 
