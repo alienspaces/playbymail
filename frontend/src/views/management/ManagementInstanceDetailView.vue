@@ -86,7 +86,7 @@
             Start Game
           </Button>
           <Button 
-            v-if="instance.status === 'running'" 
+            v-if="instance.status === 'started'" 
             @click="pauseInstance" 
             variant="warning"
             :disabled="controlLoading"
@@ -102,7 +102,7 @@
             Resume Game
           </Button>
           <Button 
-            v-if="['created', 'running', 'paused'].includes(instance.status)" 
+            v-if="['created', 'started', 'paused'].includes(instance.status)" 
             @click="cancelInstance" 
             variant="danger"
             :disabled="controlLoading"
@@ -266,20 +266,6 @@
         </div>
       </div>
 
-      <!-- Player Activity Section (placeholder for future) -->
-      <div class="detail-section">
-        <h3>Player Activity</h3>
-        <div class="placeholder-content">
-          <p>Player activity monitoring will be implemented in future updates.</p>
-          <p>This will include:</p>
-          <ul>
-            <li>Player turn submissions</li>
-            <li>Turn processing status</li>
-            <li>Player queries and support requests</li>
-            <li>Game state changes</li>
-          </ul>
-        </div>
-      </div>
     </div>
   </div>
 </template>
@@ -395,8 +381,7 @@ const loadGameParameters = async () => {
 const getStatusLabel = (status) => {
   const labels = {
     'created': 'Created',
-    'starting': 'Starting',
-    'running': 'Running',
+    'started': 'Started',
     'paused': 'Paused',
     'completed': 'Completed',
     'cancelled': 'Cancelled'
@@ -714,7 +699,7 @@ const getEditingParameterDefault = () => {
   color: var(--color-warning);
 }
 
-.status-running {
+.status-started {
   background: var(--color-success-light);
   color: var(--color-success);
 }

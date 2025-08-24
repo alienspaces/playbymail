@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS game_instance (
 
 -- Add constraints for game_instance
 ALTER TABLE game_instance ADD CONSTRAINT game_instance_status_check 
-    CHECK (status IN ('created', 'starting', 'running', 'paused', 'completed', 'cancelled'));
+    CHECK (status IN ('created', 'started', 'paused', 'completed', 'cancelled'));
 
 ALTER TABLE game_instance ADD CONSTRAINT game_instance_turn_check 
     CHECK (current_turn >= 0);

@@ -23,14 +23,20 @@ import (
 //
 // GET (collection) /api/v1/game-instances
 //
-// API Resource CRUD Paths
+// # API Resource CRUD Paths
 //
 // GET (collection)  /api/v1/games/{game_id}/instances
 // GET (document)    /api/v1/games/{game_id}/instances/{instance_id}
 // POST (document)   /api/v1/games/{game_id}/instances
 // PUT (document)    /api/v1/games/{game_id}/instances/{instance_id}
 // DELETE (document) /api/v1/games/{game_id}/instances/{instance_id}
-
+//
+// # Runtime Management Endpoints
+//
+// POST (document)   /api/v1/games/{game_id}/instances/{instance_id}/start
+// POST (document)   /api/v1/games/{game_id}/instances/{instance_id}/pause
+// POST (document)   /api/v1/games/{game_id}/instances/{instance_id}/resume
+// POST (document)   /api/v1/games/{game_id}/instances/{instance_id}/cancel
 const (
 	searchManyGameInstances = "search-many-game-instances"
 	getManyGameInstances    = "get-many-game-instances"

@@ -30,8 +30,7 @@ const (
 // Game instance status constants
 const (
 	GameInstanceStatusCreated   = "created"
-	GameInstanceStatusStarting  = "starting"
-	GameInstanceStatusRunning   = "running"
+	GameInstanceStatusStarted   = "started"
 	GameInstanceStatusPaused    = "paused"
 	GameInstanceStatusCompleted = "completed"
 	GameInstanceStatusCancelled = "cancelled"

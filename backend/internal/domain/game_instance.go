@@ -85,7 +85,7 @@ func (m *Domain) StartGameInstance(instanceID string) (*game_record.GameInstance
 	}
 
 	now := time.Now()
-	instance.Status = game_record.GameInstanceStatusStarting
+	instance.Status = game_record.GameInstanceStatusStarted
 	instance.StartedAt = nulltime.FromTime(now)
 	instance.CurrentTurn = 0
 
@@ -111,11 +111,11 @@ func (m *Domain) BeginTurnProcessing(instanceID string) (*game_record.GameInstan
 		return nil, err
 	}
 
-	if instance.Status != game_record.GameInstanceStatusRunning && instance.Status != game_record.GameInstanceStatusStarting {
-		return nil, fmt.Errorf("game instance must be running or starting to process turns")
+	if instance.Status != game_record.GameInstanceStatusStarted {
+		return nil, fmt.Errorf("game instance must be started to process turns")
 	}
 
-	instance.Status = game_record.GameInstanceStatusRunning
+	instance.Status = game_record.GameInstanceStatusStarted
 	now := time.Now()
 	instance.LastTurnProcessedAt = nulltime.FromTime(now)
 
@@ -138,8 +138,8 @@ func (m *Domain) CompleteTurn(instanceID string) (*game_record.GameInstance, err
 		return nil, err
 	}
 
-	if instance.Status != game_record.GameInstanceStatusRunning {
-		return nil, fmt.Errorf("game instance must be running to complete turns")
+	if instance.Status != game_record.GameInstanceStatusStarted {
+		return nil, fmt.Errorf("game instance must be started to complete turns")
 	}
 
 	// Check if we've reached max turns
@@ -175,8 +175,8 @@ func (m *Domain) PauseGameInstance(instanceID string) (*game_record.GameInstance
 		return nil, err
 	}
 
-	if instanceRec.Status != game_record.GameInstanceStatusRunning {
-		return nil, fmt.Errorf("game instance must be running to pause")
+	if instanceRec.Status != game_record.GameInstanceStatusStarted {
+		return nil, fmt.Errorf("game instance must be started to pause")
 	}
 
 	instanceRec.Status = game_record.GameInstanceStatusPaused
@@ -204,11 +204,11 @@ func (m *Domain) ResumeGameInstance(instanceID string) (*game_record.GameInstanc
 		return nil, fmt.Errorf("game instance must be paused to resume")
 	}
 
-	instanceRec.Status = game_record.GameInstanceStatusRunning
+	instanceRec.Status = game_record.GameInstanceStatusStarted
 
 	instanceRec, err = m.UpdateGameInstanceRec(instanceRec)
 	if err != nil {
-		l.Warn("failed updating game instance to running status >%v<", err)
+		l.Warn("failed updating game instance to started status >%v<", err)
 		return nil, err
 	}
 
@@ -281,7 +281,7 @@ func (m *Domain) GetGameInstanceRecsNeedingTurnProcessing() ([]*game_record.Game
 		Params: []sql.Param{
 			{
 				Col: game_record.FieldGameInstanceStatus,
-				Val: game_record.GameInstanceStatusRunning,
+				Val: game_record.GameInstanceStatusStarted,
 			},
 			{
 				Col: game_record.FieldGameInstanceNextTurnDueAt,

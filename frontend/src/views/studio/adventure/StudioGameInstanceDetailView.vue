@@ -55,7 +55,7 @@
             Start Game
           </button>
           <button 
-            v-if="gameInstance.status === 'running'"
+            v-if="gameInstance.status === 'started'"
             @click="pauseGame"
             :disabled="gameInstancesStore.loading"
             class="control-btn pause-btn"
@@ -71,7 +71,7 @@
             Resume Game
           </button>
           <button 
-            v-if="['created', 'starting', 'running', 'paused'].includes(gameInstance.status)"
+            v-if="['created', 'started', 'paused'].includes(gameInstance.status)"
             @click="cancelGame"
             :disabled="gameInstancesStore.loading"
             class="control-btn cancel-btn"
@@ -202,8 +202,7 @@ async function cancelGame() {
 function getStatusClass(status) {
   const statusClasses = {
     'created': 'status-created',
-    'starting': 'status-starting',
-    'running': 'status-running',
+    'started': 'status-started',
     'paused': 'status-paused',
     'completed': 'status-completed',
     'cancelled': 'status-cancelled'
@@ -294,12 +293,7 @@ onMounted(async () => {
   color: #1976d2;
 }
 
-.status-starting {
-  background: #fff3e0;
-  color: #f57c00;
-}
-
-.status-running {
+.status-started {
   background: #e8f5e8;
   color: #388e3c;
 }

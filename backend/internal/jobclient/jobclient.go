@@ -113,32 +113,38 @@ func getWorkers(l logger.Logger, cfg config.Config, s storer.Storer, e emailer.E
 	w := river.NewWorkers()
 
 	// Add account verification email worker
-	SendAccountVerificationEmailWorker, err := jobworker.NewSendAccountVerificationEmailWorker(l, cfg, s, e)
+	// Sends verification emails to users when they sign up or request email verification.
+	// Handles email delivery and tracks verification status.
+	sendAccountVerificationEmailWorker, err := jobworker.NewSendAccountVerificationEmailWorker(l, cfg, s, e)
 	if err != nil {
 		return nil, fmt.Errorf("failed NewSendAccountVerificationEmailWorker worker: %w", err)
 	}
 
-	if err := river.AddWorkerSafely(w, SendAccountVerificationEmailWorker); err != nil {
+	if err := river.AddWorkerSafely(w, sendAccountVerificationEmailWorker); err != nil {
 		return nil, fmt.Errorf("failed to add NewSendAccountVerificationEmailWorker worker: %w", err)
 	}
 
 	// Add game turn processing worker
-	ProcessGameTurnWorker, err := jobworker.NewProcessGameTurnWorker(l, cfg, s)
+	// Processes game turns by executing game logic, updating game state, and handling player actions.
+	// Manages turn progression, game rules enforcement, and state transitions.
+	processGameTurnWorker, err := jobworker.NewProcessGameTurnWorker(l, cfg, s)
 	if err != nil {
 		return nil, fmt.Errorf("failed NewProcessGameTurnWorker worker: %w", err)
 	}
 
-	if err := river.AddWorkerSafely(w, ProcessGameTurnWorker); err != nil {
+	if err := river.AddWorkerSafely(w, processGameTurnWorker); err != nil {
 		return nil, fmt.Errorf("failed to add NewProcessGameTurnWorker worker: %w", err)
 	}
 
 	// Add game deadline checking worker
-	CheckGameDeadlinesWorker, err := jobworker.NewCheckGameDeadlinesWorker(l, cfg, s)
+	// Assesses whether a game's turn should be processed based on deadlines and timing.
+	// If processing is needed, instantiates a process game turn worker job.
+	checkGameDeadlinesWorker, err := jobworker.NewCheckGameDeadlinesWorker(l, cfg, s)
 	if err != nil {
 		return nil, fmt.Errorf("failed NewCheckGameDeadlinesWorker worker: %w", err)
 	}
 
-	if err := river.AddWorkerSafely(w, CheckGameDeadlinesWorker); err != nil {
+	if err := river.AddWorkerSafely(w, checkGameDeadlinesWorker); err != nil {
 		return nil, fmt.Errorf("failed to add NewCheckGameDeadlinesWorker worker: %w", err)
 	}
 

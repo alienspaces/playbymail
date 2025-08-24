@@ -73,15 +73,15 @@
               v-if="instance.status === 'created'" 
               @click="startInstance(instance)" 
               variant="primary" 
-              size="small"
+              size="sm"
             >
               Start
             </Button>
             <Button 
-              v-if="instance.status === 'running'" 
+              v-if="instance.status === 'started'" 
               @click="pauseInstance(instance)" 
               variant="warning" 
-              size="small"
+              size="sm"
             >
               Pause
             </Button>
@@ -89,15 +89,15 @@
               v-if="instance.status === 'paused'" 
               @click="resumeInstance(instance)" 
               variant="success" 
-              size="small"
+              size="sm"
             >
               Resume
             </Button>
             <Button 
-              v-if="['created', 'running', 'paused'].includes(instance.status)" 
+              v-if="['created', 'started', 'paused'].includes(instance.status)" 
               @click="cancelInstance(instance)" 
               variant="danger" 
-              size="small"
+              size="sm"
             >
               Cancel
             </Button>
@@ -167,7 +167,7 @@ const gameInstances = computed(() => gameInstancesStore.gameInstances);
 const activeInstances = computed(() => 
   gameInstances.value.filter(instance => 
     instance.game_id === gameId.value && 
-    ['created', 'starting', 'running', 'paused'].includes(instance.status)
+    ['created', 'started', 'paused'].includes(instance.status)
   )
 );
 const completedInstances = computed(() => 
@@ -196,8 +196,7 @@ const loadGameInstances = async () => {
 const getStatusLabel = (status) => {
   const labels = {
     'created': 'Created',
-    'starting': 'Starting',
-    'running': 'Running',
+    'started': 'Running',
     'paused': 'Paused',
     'completed': 'Completed',
     'cancelled': 'Cancelled'
@@ -418,12 +417,9 @@ const cancelInstance = async (instance) => {
   background: var(--color-info);
 }
 
-.status-starting {
-  background: var(--color-warning);
-}
-
-.status-running {
-  background: var(--color-success);
+.status-started {
+  background: var(--color-success-light);
+  color: var(--color-success);
 }
 
 .status-paused {

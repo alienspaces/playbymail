@@ -75,8 +75,7 @@ const fields = [
   { key: 'game_id', label: 'Game ID', required: true, maxlength: 1024 },
   { key: 'status', label: 'Status', required: true, maxlength: 4096, type: 'select', options: [
     { label: 'Created', value: 'created' },
-    { label: 'Starting', value: 'starting' },
-    { label: 'Running', value: 'running' },
+    { label: 'Started', value: 'started' },
     { label: 'Paused', value: 'paused' },
     { label: 'Completed', value: 'completed' },
   ] }

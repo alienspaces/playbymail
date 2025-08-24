@@ -111,7 +111,7 @@ const getActiveInstanceCount = (gameId) => {
   // For now, return a placeholder
   return gameInstancesStore.gameInstances.filter(instance => 
     instance.game_id === gameId && 
-    ['running', 'starting'].includes(instance.status)
+    ['started'].includes(instance.status)
   ).length;
 };
 
