@@ -38,16 +38,16 @@ import (
 // POST (document)   /api/v1/games/{game_id}/instances/{instance_id}/resume
 // POST (document)   /api/v1/games/{game_id}/instances/{instance_id}/cancel
 const (
-	searchManyGameInstances = "search-many-game-instances"
-	getManyGameInstances    = "get-many-game-instances"
-	getOneGameInstance      = "get-one-game-instance"
-	createOneGameInstance   = "create-one-game-instance"
-	updateOneGameInstance   = "update-one-game-instance"
-	deleteOneGameInstance   = "delete-one-game-instance"
-	startGameInstance       = "start-game-instance"
-	pauseGameInstance       = "pause-game-instance"
-	resumeGameInstance      = "resume-game-instance"
-	cancelGameInstance      = "cancel-game-instance"
+	SearchManyGameInstances = "search-many-game-instances"
+	GetManyGameInstances    = "get-many-game-instances"
+	GetOneGameInstance      = "get-one-game-instance"
+	CreateOneGameInstance   = "create-one-game-instance"
+	UpdateOneGameInstance   = "update-one-game-instance"
+	DeleteOneGameInstance   = "delete-one-game-instance"
+	StartGameInstance       = "start-game-instance"
+	PauseGameInstance       = "pause-game-instance"
+	ResumeGameInstance      = "resume-game-instance"
+	CancelGameInstance      = "cancel-game-instance"
 )
 
 func gameInstanceHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error) {
@@ -91,7 +91,7 @@ func gameInstanceHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig
 		}...),
 	}
 
-	gameInstanceConfig[searchManyGameInstances] = server.HandlerConfig{
+	gameInstanceConfig[SearchManyGameInstances] = server.HandlerConfig{
 		Method:      http.MethodGet,
 		Path:        "/api/v1/game-instances",
 		HandlerFunc: searchManyGameInstancesHandler,
@@ -108,7 +108,7 @@ func gameInstanceHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig
 		},
 	}
 
-	gameInstanceConfig[getManyGameInstances] = server.HandlerConfig{
+	gameInstanceConfig[GetManyGameInstances] = server.HandlerConfig{
 		Method:      http.MethodGet,
 		Path:        "/api/v1/games/:game_id/instances",
 		HandlerFunc: getManyGameInstancesHandler,
@@ -125,7 +125,7 @@ func gameInstanceHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig
 		},
 	}
 
-	gameInstanceConfig[getOneGameInstance] = server.HandlerConfig{
+	gameInstanceConfig[GetOneGameInstance] = server.HandlerConfig{
 		Method:      http.MethodGet,
 		Path:        "/api/v1/games/:game_id/instances/:instance_id",
 		HandlerFunc: getOneGameInstanceHandler,
@@ -141,7 +141,7 @@ func gameInstanceHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig
 		},
 	}
 
-	gameInstanceConfig[createOneGameInstance] = server.HandlerConfig{
+	gameInstanceConfig[CreateOneGameInstance] = server.HandlerConfig{
 		Method:      http.MethodPost,
 		Path:        "/api/v1/games/:game_id/instances",
 		HandlerFunc: createOneGameInstanceHandler,
@@ -158,7 +158,7 @@ func gameInstanceHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig
 		},
 	}
 
-	gameInstanceConfig[updateOneGameInstance] = server.HandlerConfig{
+	gameInstanceConfig[UpdateOneGameInstance] = server.HandlerConfig{
 		Method:      http.MethodPut,
 		Path:        "/api/v1/games/:game_id/instances/:instance_id",
 		HandlerFunc: updateOneGameInstanceHandler,
@@ -175,7 +175,7 @@ func gameInstanceHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig
 		},
 	}
 
-	gameInstanceConfig[deleteOneGameInstance] = server.HandlerConfig{
+	gameInstanceConfig[DeleteOneGameInstance] = server.HandlerConfig{
 		Method:      http.MethodDelete,
 		Path:        "/api/v1/games/:game_id/instances/:instance_id",
 		HandlerFunc: deleteOneGameInstanceHandler,
@@ -191,7 +191,7 @@ func gameInstanceHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig
 	}
 
 	// Runtime management endpoints
-	gameInstanceConfig[startGameInstance] = server.HandlerConfig{
+	gameInstanceConfig[StartGameInstance] = server.HandlerConfig{
 		Method:      http.MethodPost,
 		Path:        "/api/v1/games/:game_id/instances/:instance_id/start",
 		HandlerFunc: startGameInstanceHandler,
@@ -207,7 +207,7 @@ func gameInstanceHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig
 		},
 	}
 
-	gameInstanceConfig[pauseGameInstance] = server.HandlerConfig{
+	gameInstanceConfig[PauseGameInstance] = server.HandlerConfig{
 		Method:      http.MethodPost,
 		Path:        "/api/v1/games/:game_id/instances/:instance_id/pause",
 		HandlerFunc: pauseGameInstanceHandler,
@@ -223,7 +223,7 @@ func gameInstanceHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig
 		},
 	}
 
-	gameInstanceConfig[resumeGameInstance] = server.HandlerConfig{
+	gameInstanceConfig[ResumeGameInstance] = server.HandlerConfig{
 		Method:      http.MethodPost,
 		Path:        "/api/v1/games/:game_id/instances/:instance_id/resume",
 		HandlerFunc: resumeGameInstanceHandler,
@@ -239,7 +239,7 @@ func gameInstanceHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig
 		},
 	}
 
-	gameInstanceConfig[cancelGameInstance] = server.HandlerConfig{
+	gameInstanceConfig[CancelGameInstance] = server.HandlerConfig{
 		Method:      http.MethodPost,
 		Path:        "/api/v1/games/:game_id/instances/:instance_id/cancel",
 		HandlerFunc: cancelGameInstanceHandler,
@@ -407,12 +407,15 @@ func updateOneGameInstanceHandler(w http.ResponseWriter, r *http.Request, pp htt
 		return err
 	}
 
-	if rec.GameID != gameID {
-		l.Warn("instance does not belong to specified game >%s< != >%s<", rec.GameID, gameID)
-		return coreerror.NewNotFoundError("game instance", instanceID)
+	// Read and parse request body and apply updates using mapper
+	updatedRec, err := mapper.GameInstanceRequestToRecord(l, r, rec)
+	if err != nil {
+		l.Warn("failed mapping request to record >%v<", err)
+		return coreerror.NewInvalidDataError("invalid request data")
 	}
 
-	rec, err = mm.UpdateGameInstanceRec(rec)
+	// Update the record
+	rec, err = mm.UpdateGameInstanceRec(updatedRec)
 	if err != nil {
 		l.Warn("failed updating game instance record >%v<", err)
 		return err

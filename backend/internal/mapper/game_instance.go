@@ -30,9 +30,12 @@ func GameInstanceRequestToRecord(l logger.Logger, r *http.Request, rec *game_rec
 		rec.StartedAt = nulltime.FromTimePtr(req.StartedAt)
 		rec.CompletedAt = nulltime.FromTimePtr(req.CompletedAt)
 	case server.HttpMethodPut, server.HttpMethodPatch:
-		rec.GameID = req.GameID
-		rec.Status = req.Status
-		rec.CurrentTurn = req.CurrentTurn
+		if req.Status != "" {
+			rec.Status = req.Status
+		}
+		if req.CurrentTurn != 0 {
+			rec.CurrentTurn = req.CurrentTurn
+		}
 		rec.LastTurnProcessedAt = nulltime.FromTimePtr(req.LastTurnProcessedAt)
 		rec.NextTurnDueAt = nulltime.FromTimePtr(req.NextTurnDueAt)
 		rec.StartedAt = nulltime.FromTimePtr(req.StartedAt)
