@@ -21,12 +21,12 @@ import (
 )
 
 const (
-	GetManyGames     = "get-games"
-	GetOneGame       = "get-game"
-	CreateGame       = "create-game"
+	GetManyGames     = "get-many-games"
+	GetOneGame       = "get-one-game"
+	CreateOneGame    = "create-one-game"
 	CreateGameWithID = "create-game-with-id"
-	UpdateGame       = "update-game"
-	DeleteGame       = "delete-game"
+	UpdateOneGame    = "update-one-game"
+	DeleteOneGame    = "delete-one-game"
 )
 
 func gameHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error) {
@@ -105,7 +105,7 @@ func gameHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error)
 		},
 	}
 
-	gameConfig[CreateGame] = server.HandlerConfig{
+	gameConfig[CreateOneGame] = server.HandlerConfig{
 		Method:      http.MethodPost,
 		Path:        "/api/v1/games",
 		HandlerFunc: createGameHandler,
@@ -139,7 +139,7 @@ func gameHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error)
 		},
 	}
 
-	gameConfig[UpdateGame] = server.HandlerConfig{
+	gameConfig[UpdateOneGame] = server.HandlerConfig{
 		Method:      http.MethodPut,
 		Path:        "/api/v1/games/:game_id",
 		HandlerFunc: updateGameHandler,
@@ -156,7 +156,7 @@ func gameHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error)
 		},
 	}
 
-	gameConfig[DeleteGame] = server.HandlerConfig{
+	gameConfig[DeleteOneGame] = server.HandlerConfig{
 		Method:      http.MethodDelete,
 		Path:        "/api/v1/games/:game_id",
 		HandlerFunc: deleteGameHandler,

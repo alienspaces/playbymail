@@ -124,28 +124,28 @@ func getWorkers(l logger.Logger, cfg config.Config, s storer.Storer, e emailer.E
 		return nil, fmt.Errorf("failed to add NewSendAccountVerificationEmailWorker worker: %w", err)
 	}
 
-	// Add game turn processing worker
-	// Processes game turns by executing game logic, updating game state, and handling player actions.
+	// Add game turn processing execution worker
+	// Executes game turn processing by running game logic, updating game state, and handling player actions.
 	// Manages turn progression, game rules enforcement, and state transitions.
-	processGameTurnWorker, err := jobworker.NewProcessGameTurnWorker(l, cfg, s)
+	executeGameTurnProcessingWorker, err := jobworker.NewExecuteGameTurnProcessingWorker(l, cfg, s)
 	if err != nil {
-		return nil, fmt.Errorf("failed NewProcessGameTurnWorker worker: %w", err)
+		return nil, fmt.Errorf("failed NewExecuteGameTurnProcessingWorker worker: %w", err)
 	}
 
-	if err := river.AddWorkerSafely(w, processGameTurnWorker); err != nil {
-		return nil, fmt.Errorf("failed to add NewProcessGameTurnWorker worker: %w", err)
+	if err := river.AddWorkerSafely(w, executeGameTurnProcessingWorker); err != nil {
+		return nil, fmt.Errorf("failed to add NewExecuteGameTurnProcessingWorker worker: %w", err)
 	}
 
-	// Add game deadline checking worker
-	// Assesses whether a game's turn should be processed based on deadlines and timing.
+	// Add game turn processing queue worker
+	// Queues turn processing jobs for games that need them based on deadlines and timing.
 	// If processing is needed, instantiates a process game turn worker job.
-	checkGameDeadlinesWorker, err := jobworker.NewCheckGameDeadlinesWorker(l, cfg, s)
+	queueGameTurnProcessingWorker, err := jobworker.NewQueueGameTurnProcessingWorker(l, cfg, s)
 	if err != nil {
-		return nil, fmt.Errorf("failed NewCheckGameDeadlinesWorker worker: %w", err)
+		return nil, fmt.Errorf("failed NewQueueGameTurnProcessingWorker worker: %w", err)
 	}
 
-	if err := river.AddWorkerSafely(w, checkGameDeadlinesWorker); err != nil {
-		return nil, fmt.Errorf("failed to add NewCheckGameDeadlinesWorker worker: %w", err)
+	if err := river.AddWorkerSafely(w, queueGameTurnProcessingWorker); err != nil {
+		return nil, fmt.Errorf("failed to add NewQueueGameTurnProcessingWorker worker: %w", err)
 	}
 
 	return w, nil

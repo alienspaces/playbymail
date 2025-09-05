@@ -151,7 +151,7 @@ func Test_createUpdateDeleteAccountHandler(t *testing.T) {
 			TestCase: testutil.TestCase{
 				Name: "API key with open access \\ create account with valid properties \\ returns created account",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
-					return rnr.GetHandlerConfig()[account.CreateAccount]
+					return rnr.GetHandlerConfig()[account.CreateOneAccount]
 				},
 				RequestBody: func(d harness.Data) any {
 					email := gofakeit.Email()
@@ -176,7 +176,7 @@ func Test_createUpdateDeleteAccountHandler(t *testing.T) {
 			TestCase: testutil.TestCase{
 				Name: "API key with open access \\ update account with valid properties \\ returns updated account",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
-					return rnr.GetHandlerConfig()[account.UpdateAccount]
+					return rnr.GetHandlerConfig()[account.UpdateOneAccount]
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					accountRec, err := d.GetAccountRecByRef(harness.AccountOneRef)
@@ -213,7 +213,7 @@ func Test_createUpdateDeleteAccountHandler(t *testing.T) {
 			TestCase: testutil.TestCase{
 				Name: "API key with open access \\ delete account with valid account ID \\ returns no content",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
-					return rnr.GetHandlerConfig()[account.DeleteAccount]
+					return rnr.GetHandlerConfig()[account.DeleteOneAccount]
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					accountRec, err := d.GetAccountRecByRef(harness.AccountOneRef)

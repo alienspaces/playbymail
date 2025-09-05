@@ -13,36 +13,38 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
 	"gitlab.com/alienspaces/playbymail/core/type/storer"
 	"gitlab.com/alienspaces/playbymail/internal/domain"
+	"gitlab.com/alienspaces/playbymail/internal/jobworker/adventure"
+	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 	"gitlab.com/alienspaces/playbymail/internal/utils/config"
 )
 
-// ProcessGameTurnWorkerArgs defines the arguments for processing a game turn
-type ProcessGameTurnWorkerArgs struct {
+// ExecuteGameTurnProcessingWorkerArgs defines the arguments for executing game turn processing
+type ExecuteGameTurnProcessingWorkerArgs struct {
 	GameInstanceID string `json:"game_instance_id"`
 	TurnNumber     int    `json:"turn_number"`
 }
 
-func (ProcessGameTurnWorkerArgs) Kind() string { return "process_game_turn" }
+func (ExecuteGameTurnProcessingWorkerArgs) Kind() string { return "execute_game_turn_processing" }
 
-// ProcessGameTurnWorker processes a single game turn
-type ProcessGameTurnWorker struct {
-	river.WorkerDefaults[ProcessGameTurnWorkerArgs]
+// ExecuteGameTurnProcessingWorker executes a single game turn processing
+type ExecuteGameTurnProcessingWorker struct {
+	river.WorkerDefaults[ExecuteGameTurnProcessingWorkerArgs]
 	JobWorker
 }
 
-func NewProcessGameTurnWorker(l logger.Logger, cfg config.Config, s storer.Storer) (*ProcessGameTurnWorker, error) {
+func NewExecuteGameTurnProcessingWorker(l logger.Logger, cfg config.Config, s storer.Storer) (*ExecuteGameTurnProcessingWorker, error) {
 	jw, err := NewJobWorker(l, cfg, s)
 	if err != nil {
 		return nil, err
 	}
 
-	return &ProcessGameTurnWorker{
+	return &ExecuteGameTurnProcessingWorker{
 		JobWorker: *jw,
 	}, nil
 }
 
-func (w *ProcessGameTurnWorker) Work(ctx context.Context, j *river.Job[ProcessGameTurnWorkerArgs]) error {
-	l := w.JobWorker.Log.WithFunctionContext("ProcessGameTurnWorker/Work")
+func (w *ExecuteGameTurnProcessingWorker) Work(ctx context.Context, j *river.Job[ExecuteGameTurnProcessingWorkerArgs]) error {
+	l := w.JobWorker.Log.WithFunctionContext("ExecuteGameTurnProcessingWorker/Work")
 
 	l.Info("running job ID >%s< Args >%#v<", strconv.FormatInt(j.ID, 10), j.Args)
 
@@ -56,21 +58,21 @@ func (w *ProcessGameTurnWorker) Work(ctx context.Context, j *river.Job[ProcessGa
 
 	_, err = w.DoWork(ctx, m, c, j)
 	if err != nil {
-		l.Error("ProcessGameTurnWorker job ID >%s< Args >%#v< failed >%v<", strconv.FormatInt(j.ID, 10), j.Args, err)
+		l.Error("ExecuteGameTurnProcessingWorker job ID >%s< Args >%#v< failed >%v<", strconv.FormatInt(j.ID, 10), j.Args, err)
 		return err
 	}
 
 	return corejobworker.CompleteJob(ctx, m.Tx, j)
 }
 
-type ProcessGameTurnDoWorkResult struct {
+type ExecuteGameTurnProcessingDoWorkResult struct {
 	GameInstanceID string
 	TurnNumber     int
 	ProcessedAt    time.Time
 }
 
-func (w *ProcessGameTurnWorker) DoWork(ctx context.Context, m *domain.Domain, c *river.Client[pgx.Tx], j *river.Job[ProcessGameTurnWorkerArgs]) (*ProcessGameTurnDoWorkResult, error) {
-	l := w.JobWorker.Log.WithFunctionContext("ProcessGameTurnWorker/DoWork")
+func (w *ExecuteGameTurnProcessingWorker) DoWork(ctx context.Context, m *domain.Domain, c *river.Client[pgx.Tx], j *river.Job[ExecuteGameTurnProcessingWorkerArgs]) (*ExecuteGameTurnProcessingDoWorkResult, error) {
+	l := w.JobWorker.Log.WithFunctionContext("ExecuteGameTurnProcessingWorker/DoWork")
 
 	l.Info("processing game turn for instance >%s< turn >%d<", j.Args.GameInstanceID, j.Args.TurnNumber)
 
@@ -94,14 +96,29 @@ func (w *ProcessGameTurnWorker) DoWork(ctx context.Context, m *domain.Domain, c 
 		return nil, err
 	}
 
-	// TODO: Process player turns here
-	// This would involve:
-	// 1. Getting all player submissions for this turn
-	// 2. Processing the game logic based on the game type
-	// 3. Updating game state (character positions, items, etc.)
-	// 4. Generating turn results for each player
-
+	// Process player turns based on game type
 	l.Info("processing turn logic for game instance >%s< turn >%d<", j.Args.GameInstanceID, j.Args.TurnNumber)
+
+	// Get the game to determine the game type
+	game, err := m.GetGameRec(instance.GameID, nil)
+	if err != nil {
+		l.Warn("failed to get game >%v<", err)
+		return nil, err
+	}
+
+	// Route to appropriate game type processor
+	switch game.GameType {
+	case game_record.GameTypeAdventure:
+		adventureProcessor := adventure.NewAdventureTurnProcessor(l, m)
+		err = adventureProcessor.ProcessTurn(ctx, j.Args.GameInstanceID, j.Args.TurnNumber)
+		if err != nil {
+			l.Warn("failed to process adventure game turn >%v<", err)
+			return nil, err
+		}
+	default:
+		l.Warn("unsupported game type >%s<", game.GameType)
+		return nil, fmt.Errorf("unsupported game type: %s", game.GameType)
+	}
 
 	// For now, we'll just complete the turn
 	instance, err = m.CompleteTurn(j.Args.GameInstanceID)
@@ -117,7 +134,7 @@ func (w *ProcessGameTurnWorker) DoWork(ctx context.Context, m *domain.Domain, c 
 
 	l.Info("completed turn processing for game instance >%s< turn >%d<", j.Args.GameInstanceID, j.Args.TurnNumber)
 
-	return &ProcessGameTurnDoWorkResult{
+	return &ExecuteGameTurnProcessingDoWorkResult{
 		GameInstanceID: j.Args.GameInstanceID,
 		TurnNumber:     j.Args.TurnNumber,
 		ProcessedAt:    time.Now(),

@@ -16,32 +16,32 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/utils/config"
 )
 
-// CheckGameDeadlinesWorkerArgs defines the arguments for checking game deadlines
-type CheckGameDeadlinesWorkerArgs struct {
+// QueueGameTurnProcessingWorkerArgs defines the arguments for queuing game turn processing
+type QueueGameTurnProcessingWorkerArgs struct {
 	// No arguments needed - this is a periodic job
 }
 
-func (CheckGameDeadlinesWorkerArgs) Kind() string { return "check_game_deadlines" }
+func (QueueGameTurnProcessingWorkerArgs) Kind() string { return "queue_game_turn_processing" }
 
-// CheckGameDeadlinesWorker checks for games that need turn processing
-type CheckGameDeadlinesWorker struct {
-	river.WorkerDefaults[CheckGameDeadlinesWorkerArgs]
+// QueueGameTurnProcessingWorker queues turn processing jobs for games that need them
+type QueueGameTurnProcessingWorker struct {
+	river.WorkerDefaults[QueueGameTurnProcessingWorkerArgs]
 	JobWorker
 }
 
-func NewCheckGameDeadlinesWorker(l logger.Logger, cfg config.Config, s storer.Storer) (*CheckGameDeadlinesWorker, error) {
+func NewQueueGameTurnProcessingWorker(l logger.Logger, cfg config.Config, s storer.Storer) (*QueueGameTurnProcessingWorker, error) {
 	jw, err := NewJobWorker(l, cfg, s)
 	if err != nil {
 		return nil, err
 	}
 
-	return &CheckGameDeadlinesWorker{
+	return &QueueGameTurnProcessingWorker{
 		JobWorker: *jw,
 	}, nil
 }
 
-func (w *CheckGameDeadlinesWorker) Work(ctx context.Context, j *river.Job[CheckGameDeadlinesWorkerArgs]) error {
-	l := w.JobWorker.Log.WithFunctionContext("CheckGameDeadlinesWorker/Work")
+func (w *QueueGameTurnProcessingWorker) Work(ctx context.Context, j *river.Job[QueueGameTurnProcessingWorkerArgs]) error {
+	l := w.JobWorker.Log.WithFunctionContext("QueueGameTurnProcessingWorker/Work")
 
 	l.Info("running job ID >%s<", strconv.FormatInt(j.ID, 10))
 
@@ -55,21 +55,21 @@ func (w *CheckGameDeadlinesWorker) Work(ctx context.Context, j *river.Job[CheckG
 
 	_, err = w.DoWork(ctx, m, c, j)
 	if err != nil {
-		l.Error("CheckGameDeadlinesWorker job ID >%s< failed >%v<", strconv.FormatInt(j.ID, 10), err)
+		l.Error("QueueGameTurnProcessingWorker job ID >%s< failed >%v<", strconv.FormatInt(j.ID, 10), err)
 		return err
 	}
 
 	return corejobworker.CompleteJob(ctx, m.Tx, j)
 }
 
-type CheckGameDeadlinesDoWorkResult struct {
+type QueueGameTurnProcessingDoWorkResult struct {
 	GamesChecked int
 	JobsQueued   int
 	ProcessedAt  time.Time
 }
 
-func (w *CheckGameDeadlinesWorker) DoWork(ctx context.Context, m *domain.Domain, c *river.Client[pgx.Tx], j *river.Job[CheckGameDeadlinesWorkerArgs]) (*CheckGameDeadlinesDoWorkResult, error) {
-	l := w.JobWorker.Log.WithFunctionContext("CheckGameDeadlinesWorker/DoWork")
+func (w *QueueGameTurnProcessingWorker) DoWork(ctx context.Context, m *domain.Domain, c *river.Client[pgx.Tx], j *river.Job[QueueGameTurnProcessingWorkerArgs]) (*QueueGameTurnProcessingDoWorkResult, error) {
+	l := w.JobWorker.Log.WithFunctionContext("QueueGameTurnProcessingWorker/DoWork")
 
 	l.Info("checking for games that need turn processing")
 
@@ -88,8 +88,8 @@ func (w *CheckGameDeadlinesWorker) DoWork(ctx context.Context, m *domain.Domain,
 	for _, instanceRec := range instanceRecs {
 		l.Info("queueing turn processing for game instance >%s< turn >%d<", instanceRec.ID, instanceRec.CurrentTurn)
 
-		// Create turn processing job
-		turnJob := ProcessGameTurnWorkerArgs{
+		// Create execute game turn processing job for this instance
+		turnJob := ExecuteGameTurnProcessingWorkerArgs{
 			GameInstanceID: instanceRec.ID,
 			TurnNumber:     instanceRec.CurrentTurn,
 		}
@@ -107,9 +107,9 @@ func (w *CheckGameDeadlinesWorker) DoWork(ctx context.Context, m *domain.Domain,
 		l.Info("queued turn processing job for game instance >%s< turn >%d<", instanceRec.ID, instanceRec.CurrentTurn)
 	}
 
-	l.Info("completed deadline check: checked >%d< games, queued >%d< jobs", len(instanceRecs), jobsQueued)
+	l.Info("completed turn processing queue check: checked >%d< games, queued >%d< jobs", len(instanceRecs), jobsQueued)
 
-	return &CheckGameDeadlinesDoWorkResult{
+	return &QueueGameTurnProcessingDoWorkResult{
 		GamesChecked: len(instanceRecs),
 		JobsQueued:   jobsQueued,
 		ProcessedAt:  time.Now(),

@@ -20,11 +20,11 @@ import (
 )
 
 const (
-	GetManyGameAdministrations = "get-game-administrations"
-	GetOneGameAdministration   = "get-game-administration"
-	CreateGameAdministration   = "create-game-administration"
-	UpdateGameAdministration   = "update-game-administration"
-	DeleteGameAdministration   = "delete-game-administration"
+	GetManyGameAdministrations  = "get-game-administrations"
+	GetOneGameAdministration    = "get-game-administration"
+	CreateOneGameAdministration = "create-one-game-administration"
+	UpdateOneGameAdministration = "update-one-game-administration"
+	DeleteOneGameAdministration = "delete-one-game-administration"
 )
 
 func gameAdministrationHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error) {
@@ -95,7 +95,7 @@ func gameAdministrationHandlerConfig(l logger.Logger) (map[string]server.Handler
 			Title:    "Get game administration",
 		},
 	}
-	config[CreateGameAdministration] = server.HandlerConfig{
+	config[CreateOneGameAdministration] = server.HandlerConfig{
 		Method:      http.MethodPost,
 		Path:        "/api/v1/game-administrations",
 		HandlerFunc: createGameAdministrationHandler,
@@ -109,7 +109,7 @@ func gameAdministrationHandlerConfig(l logger.Logger) (map[string]server.Handler
 			Title:    "Create game administration",
 		},
 	}
-	config[UpdateGameAdministration] = server.HandlerConfig{
+	config[UpdateOneGameAdministration] = server.HandlerConfig{
 		Method:      http.MethodPut,
 		Path:        "/api/v1/game-administrations/:game_administration_id",
 		HandlerFunc: updateGameAdministrationHandler,
@@ -123,7 +123,7 @@ func gameAdministrationHandlerConfig(l logger.Logger) (map[string]server.Handler
 			Title:    "Update game administration",
 		},
 	}
-	config[DeleteGameAdministration] = server.HandlerConfig{
+	config[DeleteOneGameAdministration] = server.HandlerConfig{
 		Method:      http.MethodDelete,
 		Path:        "/api/v1/game-administrations/:game_administration_id",
 		HandlerFunc: deleteGameAdministrationHandler,

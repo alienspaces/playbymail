@@ -147,7 +147,7 @@ func Test_createUpdateDeleteGameHandler(t *testing.T) {
 			TestCase: testutil.TestCase{
 				Name: "API key with open access \\ create game with valid properties \\ returns created game",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
-					return rnr.GetHandlerConfig()[game.CreateGame]
+					return rnr.GetHandlerConfig()[game.CreateOneGame]
 				},
 				RequestBody: func(d harness.Data) any {
 					return game_schema.GameRequest{
@@ -171,7 +171,7 @@ func Test_createUpdateDeleteGameHandler(t *testing.T) {
 			TestCase: testutil.TestCase{
 				Name: "API key with open access \\ update game with valid properties \\ returns updated game",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
-					return rnr.GetHandlerConfig()[game.UpdateGame]
+					return rnr.GetHandlerConfig()[game.UpdateOneGame]
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					gameRec, err := d.GetGameRecByRef(harness.GameOneRef)
@@ -203,7 +203,7 @@ func Test_createUpdateDeleteGameHandler(t *testing.T) {
 			TestCase: testutil.TestCase{
 				Name: "API key with open access \\ delete game with valid game ID \\ returns no content",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
-					return rnr.GetHandlerConfig()[game.DeleteGame]
+					return rnr.GetHandlerConfig()[game.DeleteOneGame]
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					gameRec, err := d.GetGameRecByRef(harness.GameOneRef)

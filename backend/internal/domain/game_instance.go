@@ -269,6 +269,12 @@ func (m *Domain) GetGameInstanceRecsByStatus(status string) ([]*game_record.Game
 }
 
 // GetGameInstanceRecsNeedingTurnProcessing gets game instances that need turn processing
+//
+// Returns game instances that meet both criteria:
+// 1. Status is "started" (active games only)
+// 2. NextTurnDueAt <= current time (deadline has passed)
+//
+// Used by the queue worker to create individual turn processing jobs.
 func (m *Domain) GetGameInstanceRecsNeedingTurnProcessing() ([]*game_record.GameInstance, error) {
 	l := m.Logger("GetGameInstanceRecsNeedingTurnProcessing")
 

@@ -1,9 +1,14 @@
-# Environment files
+# =============================
+# Environment Files
+# =============================
 .env
 .env.*
 !.env.develop
 
-# Go build artifacts
+# =============================
+# Go Workspace & Build Artifacts
+# =============================
+go.work
 *.exe
 *.exe~
 *.dll
@@ -11,19 +16,19 @@
 *.dylib
 *.test
 *.out
-go.work
 
-# Go workspace file
-go.work
-
-# IDE files
+# =============================
+# IDE Files
+# =============================
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
 
-# OS generated files
+# =============================
+# OS Generated Files
+# =============================
 .DS_Store
 .DS_Store?
 ._*
@@ -32,25 +37,35 @@ go.work
 ehthumbs.db
 Thumbs.db
 
+# =============================
 # Logs
+# =============================
 *.log
 logs/
 
-# Database files
+# =============================
+# Database Files
+# =============================
 *.db
 *.sqlite
 *.sqlite3
 
-# Temporary files
+# =============================
+# Temporary Files
+# =============================
 tmp/
 temp/
 *.tmp
 
-# Coverage reports
+# =============================
+# Coverage Reports
+# =============================
 coverage.out
 coverage.html
 
-# Binary files
+# =============================
+# Binary Files
+# =============================
 bin/
 !bin/
 backend/bin/
@@ -63,20 +78,36 @@ playbymail-server
 backend/.backend.pid
 frontend/.frontend.pid
 
-# Node modules (if any frontend dependencies)
+# =============================
+# Node Modules & Package Logs
+# =============================
 node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# =============================
 # Docker
+# =============================
 .dockerignore
-docker-compose.override.yml 
+docker-compose.override.yml
 
-# Task
+# =============================
+# Markdown Documents
+# =============================
+*.md
+!README.md
+!DEPLOYMENT.md
+!CONTRIBUTING.md
+
+# =============================
+# Task Files
+# =============================
 TASK.md
 
+# =============================
 # Playwright
+# =============================
 test-results/
 playwright-report/
 playwright/.auth/

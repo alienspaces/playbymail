@@ -20,11 +20,11 @@ import (
 )
 
 const (
-	GetManyGameSubscriptions = "get-game-subscriptions"
-	GetOneGameSubscription   = "get-game-subscription"
-	CreateGameSubscription   = "create-game-subscription"
-	UpdateGameSubscription   = "update-game-subscription"
-	DeleteGameSubscription   = "delete-game-subscription"
+	GetManyGameSubscriptions  = "get-many-game-subscriptions"
+	GetOneGameSubscription    = "get-one-game-subscription"
+	CreateOneGameSubscription = "create-one-game-subscription"
+	UpdateOneGameSubscription = "update-one-game-subscription"
+	DeleteOneGameSubscription = "delete-one-game-subscription"
 )
 
 func gameSubscriptionHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error) {
@@ -86,7 +86,7 @@ func gameSubscriptionHandlerConfig(l logger.Logger) (map[string]server.HandlerCo
 			ValidateResponseSchema: responseSchema,
 		},
 	}
-	config[CreateGameSubscription] = server.HandlerConfig{
+	config[CreateOneGameSubscription] = server.HandlerConfig{
 		Method:      http.MethodPost,
 		Path:        "/api/v1/game-subscriptions",
 		HandlerFunc: createGameSubscriptionHandler,
@@ -96,7 +96,7 @@ func gameSubscriptionHandlerConfig(l logger.Logger) (map[string]server.HandlerCo
 			ValidateResponseSchema: responseSchema,
 		},
 	}
-	config[UpdateGameSubscription] = server.HandlerConfig{
+	config[UpdateOneGameSubscription] = server.HandlerConfig{
 		Method:      http.MethodPut,
 		Path:        "/api/v1/game-subscriptions/:game_subscription_id",
 		HandlerFunc: updateGameSubscriptionHandler,
@@ -106,7 +106,7 @@ func gameSubscriptionHandlerConfig(l logger.Logger) (map[string]server.HandlerCo
 			ValidateResponseSchema: responseSchema,
 		},
 	}
-	config[DeleteGameSubscription] = server.HandlerConfig{
+	config[DeleteOneGameSubscription] = server.HandlerConfig{
 		Method:      http.MethodDelete,
 		Path:        "/api/v1/game-subscriptions/:game_subscription_id",
 		HandlerFunc: deleteGameSubscriptionHandler,

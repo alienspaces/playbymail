@@ -34,7 +34,7 @@ func Test_gameAdministrationHandler(t *testing.T) {
 		{
 			Name: "POST create game administration",
 			HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
-				return rnr.GetHandlerConfig()[game.CreateGameAdministration]
+				return rnr.GetHandlerConfig()[game.CreateOneGameAdministration]
 			},
 			RequestBody: func(d harness.Data) any {
 				gameRec, _ := d.GetGameRecByRef(harness.GameOneRef)
@@ -62,7 +62,7 @@ func Test_gameAdministrationHandler(t *testing.T) {
 		{
 			Name: "PUT update game administration",
 			HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
-				return rnr.GetHandlerConfig()[game.UpdateGameAdministration]
+				return rnr.GetHandlerConfig()[game.UpdateOneGameAdministration]
 			},
 			RequestPathParams: func(d harness.Data) map[string]string {
 				return map[string]string{":game_administration_id": d.GameAdministrationRecs[0].ID}
@@ -80,7 +80,7 @@ func Test_gameAdministrationHandler(t *testing.T) {
 		{
 			Name: "DELETE game administration",
 			HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
-				return rnr.GetHandlerConfig()[game.DeleteGameAdministration]
+				return rnr.GetHandlerConfig()[game.DeleteOneGameAdministration]
 			},
 			RequestPathParams: func(d harness.Data) map[string]string {
 				return map[string]string{":game_administration_id": d.GameAdministrationRecs[0].ID}

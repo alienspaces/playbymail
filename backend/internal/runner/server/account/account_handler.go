@@ -25,14 +25,14 @@ import (
 )
 
 const (
-	GetManyAccounts     = "get-accounts"
-	GetOneAccount       = "get-account"
+	GetManyAccounts     = "get-many-accounts"
+	GetOneAccount       = "get-one-account"
 	GetMyAccount        = "get-my-account"
-	CreateAccount       = "create-account"
+	CreateOneAccount    = "create-one-account"
 	CreateAccountWithID = "create-account-with-id"
-	UpdateAccount       = "update-account"
+	UpdateOneAccount    = "update-one-account"
 	UpdateMyAccount     = "update-my-account"
-	DeleteAccount       = "delete-account"
+	DeleteOneAccount    = "delete-one-account"
 	DeleteMyAccount     = "delete-my-account"
 )
 
@@ -100,7 +100,7 @@ func accountHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, err
 		},
 	}
 
-	accountConfig[CreateAccount] = server.HandlerConfig{
+	accountConfig[CreateOneAccount] = server.HandlerConfig{
 		Method:      http.MethodPost,
 		Path:        "/api/v1/accounts",
 		HandlerFunc: createAccountHandler,
@@ -151,7 +151,7 @@ func accountHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, err
 		},
 	}
 
-	accountConfig[UpdateAccount] = server.HandlerConfig{
+	accountConfig[UpdateOneAccount] = server.HandlerConfig{
 		Method:      http.MethodPut,
 		Path:        "/api/v1/accounts/:account_id",
 		HandlerFunc: updateAccountHandler,
@@ -168,7 +168,7 @@ func accountHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, err
 		},
 	}
 
-	accountConfig[DeleteAccount] = server.HandlerConfig{
+	accountConfig[DeleteOneAccount] = server.HandlerConfig{
 		Method:      http.MethodDelete,
 		Path:        "/api/v1/accounts/:account_id",
 		HandlerFunc: deleteAccountHandler,

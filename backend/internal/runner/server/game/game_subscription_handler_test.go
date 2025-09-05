@@ -34,7 +34,7 @@ func Test_gameSubscriptionHandler(t *testing.T) {
 		{
 			Name: "POST create game subscription",
 			HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
-				return rnr.GetHandlerConfig()[game.CreateGameSubscription]
+				return rnr.GetHandlerConfig()[game.CreateOneGameSubscription]
 			},
 			RequestBody: func(d harness.Data) any {
 				gameRec, _ := d.GetGameRecByRef(harness.GameOneRef)
@@ -63,7 +63,7 @@ func Test_gameSubscriptionHandler(t *testing.T) {
 		{
 			Name: "PUT update game subscription",
 			HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
-				return rnr.GetHandlerConfig()[game.UpdateGameSubscription]
+				return rnr.GetHandlerConfig()[game.UpdateOneGameSubscription]
 			},
 			RequestPathParams: func(d harness.Data) map[string]string {
 				return map[string]string{":game_subscription_id": d.GameSubscriptionRecs[0].ID}
@@ -81,7 +81,7 @@ func Test_gameSubscriptionHandler(t *testing.T) {
 		{
 			Name: "DELETE game subscription",
 			HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
-				return rnr.GetHandlerConfig()[game.DeleteGameSubscription]
+				return rnr.GetHandlerConfig()[game.DeleteOneGameSubscription]
 			},
 			RequestPathParams: func(d harness.Data) map[string]string {
 				return map[string]string{":game_subscription_id": d.GameSubscriptionRecs[0].ID}
