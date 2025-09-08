@@ -109,7 +109,7 @@ func (w *ExecuteGameTurnProcessingWorker) DoWork(ctx context.Context, m *domain.
 	// Route to appropriate game type processor
 	switch game.GameType {
 	case game_record.GameTypeAdventure:
-		adventureProcessor := adventure.NewAdventureTurnProcessor(l, m)
+		adventureProcessor := adventure.NewAdventureGameTurnProcessor(l, m)
 		err = adventureProcessor.ProcessTurn(ctx, j.Args.GameInstanceID, j.Args.TurnNumber)
 		if err != nil {
 			l.Warn("failed to process adventure game turn >%v<", err)

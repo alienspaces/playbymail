@@ -3,6 +3,7 @@ package adventure_game_record
 import (
 	"github.com/jackc/pgx/v5"
 
+	"gitlab.com/alienspaces/playbymail/core/collection/set"
 	"gitlab.com/alienspaces/playbymail/core/record"
 )
 
@@ -16,6 +17,17 @@ const (
 	FieldAdventureGameTurnSheetCreatedAt                        = "created_at"
 	FieldAdventureGameTurnSheetUpdatedAt                        = "updated_at"
 	FieldAdventureGameTurnSheetDeletedAt                        = "deleted_at"
+)
+
+// Turn sheet type constants for different game types
+const (
+	// Adventure game sheet types
+	AdventureSheetTypeLocationChoice = "location_choice"
+)
+
+// GetAdventureGameSheetTypes returns the sheet types for adventure games
+var AdventureGameSheetTypes = set.New(
+	AdventureSheetTypeLocationChoice,
 )
 
 type AdventureGameTurnSheet struct {

@@ -46,6 +46,8 @@ func NewDomain(l logger.Logger, cfg config.Config) (*Domain, error) {
 		return nil, err
 	}
 
+	l = l.WithPackageContext("domain")
+
 	repositoryConstructors := []domain.RepositoryConstructor{
 		account.NewRepository,
 		game.NewRepository,

@@ -7,25 +7,25 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 )
 
-// AdventureTurnProcessor coordinates turn processing for adventure games
-type AdventureTurnProcessor struct {
+// AdventureGameTurnProcessor coordinates turn processing for adventure games
+type AdventureGameTurnProcessor struct {
 	Logger                  logger.Logger
 	Domain                  *domain.Domain
-	LocationChoiceProcessor *LocationChoiceProcessor
+	LocationChoiceProcessor *AdventureGameLocationChoiceProcessor
 }
 
-// NewAdventureTurnProcessor creates a new adventure turn processor
-func NewAdventureTurnProcessor(l logger.Logger, d *domain.Domain) *AdventureTurnProcessor {
-	return &AdventureTurnProcessor{
+// NewAdventureGameTurnProcessor creates a new adventure game turn processor
+func NewAdventureGameTurnProcessor(l logger.Logger, d *domain.Domain) *AdventureGameTurnProcessor {
+	return &AdventureGameTurnProcessor{
 		Logger:                  l,
 		Domain:                  d,
-		LocationChoiceProcessor: NewLocationChoiceProcessor(l, d),
+		LocationChoiceProcessor: NewAdventureGameLocationChoiceProcessor(l, d),
 	}
 }
 
 // ProcessTurn processes all turn sheets for an adventure game turn
-func (p *AdventureTurnProcessor) ProcessTurn(ctx context.Context, gameInstanceID string, turnNumber int) error {
-	l := p.Logger.WithFunctionContext("AdventureTurnProcessor/ProcessTurn")
+func (p *AdventureGameTurnProcessor) ProcessTurn(ctx context.Context, gameInstanceID string, turnNumber int) error {
+	l := p.Logger.WithFunctionContext("AdventureGameTurnProcessor/ProcessTurn")
 
 	l.Info("processing adventure game turn for instance >%s< turn >%d<", gameInstanceID, turnNumber)
 

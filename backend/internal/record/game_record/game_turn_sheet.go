@@ -36,14 +36,6 @@ const (
 	FieldGameTurnSheetDeletedAt        string = "deleted_at"
 )
 
-// Turn sheet type constants for different game types
-const (
-	// Adventure game sheet types
-	AdventureSheetTypeLocationChoice = "location_choice"
-	AdventureSheetTypeCombat         = "combat"
-	AdventureSheetTypeInventory      = "inventory"
-)
-
 type GameTurnSheet struct {
 	record.Record
 	GameID           string          `db:"game_id"`
@@ -81,13 +73,4 @@ func (r *GameTurnSheet) ToNamedArgs() pgx.NamedArgs {
 	args[FieldGameTurnSheetProcessingStatus] = r.ProcessingStatus
 	args[FieldGameTurnSheetErrorMessage] = r.ErrorMessage
 	return args
-}
-
-// GetAdventureGameSheetTypes returns the sheet types for adventure games
-func GetAdventureGameSheetTypes() []string {
-	return []string{
-		AdventureSheetTypeLocationChoice, // Always required for adventure games
-		AdventureSheetTypeCombat,         // Optional - only when combat occurs
-		AdventureSheetTypeInventory,      // Optional - only when inventory changes
-	}
 }

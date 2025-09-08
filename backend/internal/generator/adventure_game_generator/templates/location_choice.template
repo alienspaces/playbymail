@@ -1,0 +1,48 @@
+{{template "base.template" .}}
+
+{{define "content"}}
+<div class="turn-sheet">
+    <div class="header">
+        <h1>{{.GameRec.Name}} - Turn {{.GameInstanceRec.CurrentTurn}}</h1>
+        <h2>Location Choice</h2>
+        <p>Player: {{.AccountRec.Name}}</p>
+    </div>
+
+    <div class="current-location-section">
+        <h3>Current Location</h3>
+        <div class="current-location">
+            <h4>{{.TurnSheetData.CurrentLocationRec.Name}}</h4>
+            <p>{{.TurnSheetData.CurrentLocationRec.Description}}</p>
+        </div>
+    </div>
+
+    <div class="location-choice-section">
+        <h3>Choose Your Next Location</h3>
+        <p>Select where you would like to go next from the available paths:</p>
+        
+        {{if .TurnSheetData.AvailableLocationLinkRecs}}
+        <div class="location-options">
+            {{range .TurnSheetData.AvailableLocationLinkRecs}}
+            <div class="location-option">
+                <label class="location-radio">
+                    <input type="radio" name="location_choice" value="{{.ToAdventureGameLocationID}}">
+                    <span class="location-name">{{.Name}}</span>
+                </label>
+                <p class="location-description">{{.Description}}</p>
+            </div>
+            {{end}}
+        </div>
+        {{else}}
+        <div class="no-options">
+            <p>No available paths from this location.</p>
+        </div>
+        {{end}}
+    </div>
+
+    <div class="turn-info">
+        <p><strong>Turn Deadline:</strong> {{if .TurnSheetData.NextTurnDeadline}}{{.TurnSheetData.NextTurnDeadline}}{{else}}Next Friday at 5:00 PM{{end}}</p>
+        <p><strong>Instructions:</strong> Select your next location and return this form by the deadline to continue your adventure.</p>
+    </div>
+</div>
+{{end}}
+

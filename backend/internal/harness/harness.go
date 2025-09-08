@@ -21,6 +21,8 @@ type Testing struct {
 	teardownData Data
 	DataConfig   DataConfig
 	Config       config.Config
+	// Note: Log property from embedded harness.Testing should be considered private.
+	// Use Logger() method for external access to logging functionality.
 }
 
 // NewTesting -
@@ -494,7 +496,8 @@ func (t *Testing) RemoveData() error {
 	return nil
 }
 
-// Logger - Returns a logger with package context and provided function context
+// Logger - Returns a logger with package context and provided function context.
+// This is the preferred way to access logging functionality.
 func (t *Testing) Logger(functionName string) logger.Logger {
 	return t.Log.WithPackageContext("harness").WithFunctionContext(functionName)
 }
