@@ -103,14 +103,6 @@ The `tools/` directory contains scripts to help you set up and run the project l
 
   Runs all backend and frontend tests.
 
-- **Heroku Configuration Test:**
-
-  ```sh
-  ./tools/heroku-config-test
-  ```
-
-  Checks that your Heroku app is configured correctly for deployment.
-
 - **Other Utilities:**
   - **Database Migration:**  
     `./tools/db-migrate-up`, `./tools/db-migrate-down`, `./tools/db-migrate-create`
