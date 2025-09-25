@@ -1,0 +1,10 @@
+# DO NOT IGNORE THE FOLLOWING FILES
+!.env
+!.env.private
+!.env.develop
+!.env.test
+!.env.production
+
+!.gitignore
+!.gitlab-ci.yml
+!.github/workflows/ci.yml
