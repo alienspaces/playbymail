@@ -6,6 +6,8 @@ A platform to revitalize play-by-mail (PBM) games for all ages, supporting a wid
 
 <img alt="logo" src="playbymail.png" height=400/>
 
+<a href="https://playbymail.games">playbymail.games</a>
+
 All game content, communication, and visuals are delivered via printed materials mailed to players, with automated turn processing and game state updates.
 
 Players return completed forms and puzzles by mail for processing, with human review only when needed.
