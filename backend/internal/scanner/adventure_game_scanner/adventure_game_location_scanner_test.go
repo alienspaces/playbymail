@@ -85,12 +85,12 @@ func TestAdventureGameLocationScanner_ScanLocationChoiceSheet(t *testing.T) {
 			expectError: false,
 			validate: func(t *testing.T, result *game_record.GameTurnSheet) {
 				require.NotNil(t, result, "Result should not be nil")
-				require.NotNil(t, result.ResultData, "ResultData should be set")
+				require.NotNil(t, result.ScannedData, "ScannedData should be set")
 
 				// Verify the result data contains player choices
 				var playerChoices map[string]interface{}
-				err := json.Unmarshal(result.ResultData, &playerChoices)
-				require.NoError(t, err, "Should unmarshal ResultData")
+				err := json.Unmarshal(result.ScannedData, &playerChoices)
+				require.NoError(t, err, "Should unmarshal ScannedData")
 				require.Contains(t, playerChoices, "a", "Should contain choices")
 
 				// Verify the choices are properly extracted
@@ -131,12 +131,12 @@ func TestAdventureGameLocationScanner_ScanLocationChoiceSheet(t *testing.T) {
 			expectError: false,
 			validate: func(t *testing.T, result *game_record.GameTurnSheet) {
 				require.NotNil(t, result, "Result should not be nil")
-				require.NotNil(t, result.ResultData, "ResultData should be set even with empty image")
+				require.NotNil(t, result.ScannedData, "ScannedData should be set even with empty image")
 
 				// Verify the result data contains player choices
 				var playerChoices map[string]interface{}
-				err := json.Unmarshal(result.ResultData, &playerChoices)
-				require.NoError(t, err, "Should unmarshal ResultData")
+				err := json.Unmarshal(result.ScannedData, &playerChoices)
+				require.NoError(t, err, "Should unmarshal ScannedData")
 				require.Contains(t, playerChoices, "a", "Should contain choices")
 			},
 		},

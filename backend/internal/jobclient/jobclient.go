@@ -127,25 +127,25 @@ func getWorkers(l logger.Logger, cfg config.Config, s storer.Storer, e emailer.E
 	// Add game turn processing execution worker
 	// Executes game turn processing by running game logic, updating game state, and handling player actions.
 	// Manages turn progression, game rules enforcement, and state transitions.
-	executeGameTurnProcessingWorker, err := jobworker.NewExecuteGameTurnProcessingWorker(l, cfg, s)
+	GameTurnProcessingWorker, err := jobworker.NewGameTurnProcessingWorker(l, cfg, s)
 	if err != nil {
-		return nil, fmt.Errorf("failed NewExecuteGameTurnProcessingWorker worker: %w", err)
+		return nil, fmt.Errorf("failed NewGameTurnProcessingWorker worker: %w", err)
 	}
 
-	if err := river.AddWorkerSafely(w, executeGameTurnProcessingWorker); err != nil {
-		return nil, fmt.Errorf("failed to add NewExecuteGameTurnProcessingWorker worker: %w", err)
+	if err := river.AddWorkerSafely(w, GameTurnProcessingWorker); err != nil {
+		return nil, fmt.Errorf("failed to add NewGameTurnProcessingWorker worker: %w", err)
 	}
 
 	// Add game turn processing queue worker
 	// Queues turn processing jobs for games that need them based on deadlines and timing.
 	// If processing is needed, instantiates a process game turn worker job.
-	queueGameTurnProcessingWorker, err := jobworker.NewQueueGameTurnProcessingWorker(l, cfg, s)
+	GameTurnQueueingWorker, err := jobworker.NewGameTurnQueueingWorker(l, cfg, s)
 	if err != nil {
-		return nil, fmt.Errorf("failed NewQueueGameTurnProcessingWorker worker: %w", err)
+		return nil, fmt.Errorf("failed NewGameTurnQueueingWorker worker: %w", err)
 	}
 
-	if err := river.AddWorkerSafely(w, queueGameTurnProcessingWorker); err != nil {
-		return nil, fmt.Errorf("failed to add NewQueueGameTurnProcessingWorker worker: %w", err)
+	if err := river.AddWorkerSafely(w, GameTurnQueueingWorker); err != nil {
+		return nil, fmt.Errorf("failed to add NewGameTurnQueueingWorker worker: %w", err)
 	}
 
 	return w, nil

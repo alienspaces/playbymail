@@ -17,7 +17,6 @@ test.describe('Authentication Flow', () => {
   test.beforeEach(async ({ page }) => {
     // Clear any existing state before each test
     await page.context().clearCookies()
-    await page.context().clearStorageState()
   })
 
   test.describe('Login Process', () => {

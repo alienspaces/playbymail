@@ -18,7 +18,7 @@ CREATE TABLE game_turn_sheet (
     completed_at TIMESTAMPTZ,
     
     -- Result fields (NULL until scanned)
-    result_data JSONB,
+    scanned_data JSONB,
     scanned_at TIMESTAMPTZ,
     scanned_by UUID REFERENCES account(id),
     scan_quality DECIMAL(3,2) CHECK (scan_quality >= 0 AND scan_quality <= 1),

@@ -48,13 +48,13 @@ func (s *AdventureGameLocationScanner) ScanLocationChoiceSheet(ctx context.Conte
 		"a": scanData.Choices,
 	}
 
-	resultData, err := json.Marshal(playerChoices)
+	ScannedData, err := json.Marshal(playerChoices)
 	if err != nil {
 		l.Warn("failed to marshal player choices >%v<", err)
 		return nil, err
 	}
 
-	turnSheetRec.ResultData = resultData
+	turnSheetRec.ScannedData = ScannedData
 
 	return turnSheetRec, nil
 }

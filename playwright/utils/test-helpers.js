@@ -1,4 +1,5 @@
 // Common test utilities for Playwright tests
+import { expect } from '@playwright/test'
 export async function waitForElement(page, selector, timeout = 5000) {
   await page.waitForSelector(selector, { timeout })
   return page.locator(selector)

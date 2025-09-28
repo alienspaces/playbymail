@@ -49,44 +49,49 @@ func (m *Domain) DeleteGameTurnSheetRec(recID string) error {
 
 // GetGameTurnSheetRecsByGameInstance retrieves all turn sheets for a game instance
 func (m *Domain) GetGameTurnSheetRecsByGameInstance(gameInstanceID string, turnNumber int) ([]*game_record.GameTurnSheet, error) {
+
 	r := m.GameTurnSheetRepository()
-	recs, err := r.GetMany(nil)
+	recs, err := r.GetMany(&coresql.Options{
+		Params: []coresql.Param{
+			{
+				Col: game_record.FieldGameTurnSheetGameInstanceID,
+				Val: gameInstanceID,
+			},
+			{
+				Col: game_record.FieldGameTurnSheetTurnNumber,
+				Val: turnNumber,
+			},
+		},
+	})
 	if err != nil {
 		return nil, err
 	}
 
-	// Filter by game instance ID and turn number
-	var filteredRecs []*game_record.GameTurnSheet
-	for _, rec := range recs {
-		if rec.GameInstanceID == gameInstanceID && rec.TurnNumber == turnNumber {
-			filteredRecs = append(filteredRecs, rec)
-		}
-	}
-
-	return filteredRecs, nil
+	return recs, nil
 }
 
 // GetGameTurnSheetRecsByAccount retrieves all turn sheets for an account
 func (m *Domain) GetGameTurnSheetRecsByAccount(accountID string) ([]*game_record.GameTurnSheet, error) {
+
 	r := m.GameTurnSheetRepository()
-	recs, err := r.GetMany(nil)
+	recs, err := r.GetMany(&coresql.Options{
+		Params: []coresql.Param{
+			{
+				Col: game_record.FieldGameTurnSheetAccountID,
+				Val: accountID,
+			},
+		},
+	})
 	if err != nil {
 		return nil, err
 	}
 
-	// Filter by account ID
-	var filteredRecs []*game_record.GameTurnSheet
-	for _, rec := range recs {
-		if rec.AccountID == accountID {
-			filteredRecs = append(filteredRecs, rec)
-		}
-	}
-
-	return filteredRecs, nil
+	return recs, nil
 }
 
 // MarkGameTurnSheetAsScanned marks a turn sheet as scanned with quality score
 func (m *Domain) MarkGameTurnSheetAsScanned(turnSheetID string, scanQuality float64, scannedBy string) error {
+
 	rec, err := m.GetGameTurnSheetRec(turnSheetID, nil)
 	if err != nil {
 		return err
@@ -103,7 +108,7 @@ func (m *Domain) MarkGameTurnSheetAsScanned(turnSheetID string, scanQuality floa
 }
 
 // MarkGameTurnSheetAsCompleted marks a turn sheet as completed with result data
-func (m *Domain) MarkGameTurnSheetAsCompleted(turnSheetID string, resultData []byte) error {
+func (m *Domain) MarkGameTurnSheetAsCompleted(turnSheetID string, ScannedData []byte) error {
 	rec, err := m.GetGameTurnSheetRec(turnSheetID, nil)
 	if err != nil {
 		return err
@@ -112,7 +117,7 @@ func (m *Domain) MarkGameTurnSheetAsCompleted(turnSheetID string, resultData []b
 	now := time.Now()
 	rec.IsCompleted = true
 	rec.CompletedAt = sql.NullTime{Time: now, Valid: true}
-	rec.ResultData = resultData
+	rec.ScannedData = ScannedData
 	rec.ProcessingStatus = "completed"
 
 	_, err = m.UpdateGameTurnSheetRec(rec)

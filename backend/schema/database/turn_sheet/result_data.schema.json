@@ -1,7 +1,7 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
-    "$id": "http://playbymail.games/schema/internal/turn_sheet/result_data.schema.json",
-    "title": "TurnSheetResultData",
+    "$id": "http://playbymail.games/schema/internal/turn_sheet/scanned_data.schema.json",
+    "title": "TurnSheetScannedData",
     "type": "object",
     "properties": {
         "selected_options": {

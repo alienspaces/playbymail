@@ -16,32 +16,32 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/utils/config"
 )
 
-// QueueGameTurnProcessingWorkerArgs defines the arguments for queuing game turn processing
-type QueueGameTurnProcessingWorkerArgs struct {
+// GameTurnQueueingWorkerArgs defines the arguments for queuing game turn processing
+type GameTurnQueueingWorkerArgs struct {
 	// No arguments needed - this is a periodic job
 }
 
-func (QueueGameTurnProcessingWorkerArgs) Kind() string { return "queue_game_turn_processing" }
+func (GameTurnQueueingWorkerArgs) Kind() string { return "queue_game_turn_processing" }
 
-// QueueGameTurnProcessingWorker queues turn processing jobs for games that need them
-type QueueGameTurnProcessingWorker struct {
-	river.WorkerDefaults[QueueGameTurnProcessingWorkerArgs]
+// GameTurnQueueingWorker queues turn processing jobs for games that need them
+type GameTurnQueueingWorker struct {
+	river.WorkerDefaults[GameTurnQueueingWorkerArgs]
 	JobWorker
 }
 
-func NewQueueGameTurnProcessingWorker(l logger.Logger, cfg config.Config, s storer.Storer) (*QueueGameTurnProcessingWorker, error) {
+func NewGameTurnQueueingWorker(l logger.Logger, cfg config.Config, s storer.Storer) (*GameTurnQueueingWorker, error) {
 	jw, err := NewJobWorker(l, cfg, s)
 	if err != nil {
 		return nil, err
 	}
 
-	return &QueueGameTurnProcessingWorker{
+	return &GameTurnQueueingWorker{
 		JobWorker: *jw,
 	}, nil
 }
 
-func (w *QueueGameTurnProcessingWorker) Work(ctx context.Context, j *river.Job[QueueGameTurnProcessingWorkerArgs]) error {
-	l := w.JobWorker.Log.WithFunctionContext("QueueGameTurnProcessingWorker/Work")
+func (w *GameTurnQueueingWorker) Work(ctx context.Context, j *river.Job[GameTurnQueueingWorkerArgs]) error {
+	l := w.JobWorker.Log.WithFunctionContext("GameTurnQueueingWorker/Work")
 
 	l.Info("running job ID >%s<", strconv.FormatInt(j.ID, 10))
 
@@ -55,21 +55,21 @@ func (w *QueueGameTurnProcessingWorker) Work(ctx context.Context, j *river.Job[Q
 
 	_, err = w.DoWork(ctx, m, c, j)
 	if err != nil {
-		l.Error("QueueGameTurnProcessingWorker job ID >%s< failed >%v<", strconv.FormatInt(j.ID, 10), err)
+		l.Error("GameTurnQueueingWorker job ID >%s< failed >%v<", strconv.FormatInt(j.ID, 10), err)
 		return err
 	}
 
 	return corejobworker.CompleteJob(ctx, m.Tx, j)
 }
 
-type QueueGameTurnProcessingDoWorkResult struct {
+type GameTurnQueueingDoWorkResult struct {
 	GamesChecked int
 	JobsQueued   int
 	ProcessedAt  time.Time
 }
 
-func (w *QueueGameTurnProcessingWorker) DoWork(ctx context.Context, m *domain.Domain, c *river.Client[pgx.Tx], j *river.Job[QueueGameTurnProcessingWorkerArgs]) (*QueueGameTurnProcessingDoWorkResult, error) {
-	l := w.JobWorker.Log.WithFunctionContext("QueueGameTurnProcessingWorker/DoWork")
+func (w *GameTurnQueueingWorker) DoWork(ctx context.Context, m *domain.Domain, c *river.Client[pgx.Tx], j *river.Job[GameTurnQueueingWorkerArgs]) (*GameTurnQueueingDoWorkResult, error) {
+	l := w.JobWorker.Log.WithFunctionContext("GameTurnQueueingWorker/DoWork")
 
 	l.Info("checking for games that need turn processing")
 
@@ -84,18 +84,18 @@ func (w *QueueGameTurnProcessingWorker) DoWork(ctx context.Context, m *domain.Do
 
 	jobsQueued := 0
 
-	// Queue turn processing jobs for each instance
+	// Queue turn processing jobs for each game instance
 	for _, instanceRec := range instanceRecs {
 		l.Info("queueing turn processing for game instance >%s< turn >%d<", instanceRec.ID, instanceRec.CurrentTurn)
 
-		// Create execute game turn processing job for this instance
-		turnJob := ExecuteGameTurnProcessingWorkerArgs{
+		// Create execute game turn processing job for this game instance
+		turnProcessingJob := GameTurnProcessingWorkerArgs{
 			GameInstanceID: instanceRec.ID,
 			TurnNumber:     instanceRec.CurrentTurn,
 		}
 
 		// Queue the job
-		_, err := c.Insert(ctx, turnJob, &river.InsertOpts{
+		_, err := c.Insert(ctx, turnProcessingJob, &river.InsertOpts{
 			Queue: jobqueue.QueueGame,
 		})
 		if err != nil {
@@ -109,7 +109,7 @@ func (w *QueueGameTurnProcessingWorker) DoWork(ctx context.Context, m *domain.Do
 
 	l.Info("completed turn processing queue check: checked >%d< games, queued >%d< jobs", len(instanceRecs), jobsQueued)
 
-	return &QueueGameTurnProcessingDoWorkResult{
+	return &GameTurnQueueingDoWorkResult{
 		GamesChecked: len(instanceRecs),
 		JobsQueued:   jobsQueued,
 		ProcessedAt:  time.Now(),

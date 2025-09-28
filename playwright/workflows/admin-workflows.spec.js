@@ -17,7 +17,6 @@ test.describe('Admin Workflows', () => {
   test.beforeEach(async ({ page }) => {
     // Clear any existing state before each test
     await page.context().clearCookies()
-    await page.context().clearStorageState()
   })
 
   test.describe('Admin Dashboard Access', () => {

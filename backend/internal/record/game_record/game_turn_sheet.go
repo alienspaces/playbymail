@@ -25,7 +25,7 @@ const (
 	FieldGameTurnSheetSheetData        string = "sheet_data"
 	FieldGameTurnSheetIsCompleted      string = "is_completed"
 	FieldGameTurnSheetCompletedAt      string = "completed_at"
-	FieldGameTurnSheetResultData       string = "result_data"
+	FieldGameTurnSheetScannedData      string = "scanned_data"
 	FieldGameTurnSheetScannedAt        string = "scanned_at"
 	FieldGameTurnSheetScannedBy        string = "scanned_by"
 	FieldGameTurnSheetScanQuality      string = "scan_quality"
@@ -47,7 +47,7 @@ type GameTurnSheet struct {
 	SheetData        json.RawMessage `db:"sheet_data"`
 	IsCompleted      bool            `db:"is_completed"`
 	CompletedAt      sql.NullTime    `db:"completed_at"`
-	ResultData       json.RawMessage `db:"result_data"`
+	ScannedData      json.RawMessage `db:"scanned_data"`
 	ScannedAt        sql.NullTime    `db:"scanned_at"`
 	ScannedBy        sql.NullString  `db:"scanned_by"`
 	ScanQuality      sql.NullFloat64 `db:"scan_quality"`
@@ -66,7 +66,7 @@ func (r *GameTurnSheet) ToNamedArgs() pgx.NamedArgs {
 	args[FieldGameTurnSheetSheetData] = r.SheetData
 	args[FieldGameTurnSheetIsCompleted] = r.IsCompleted
 	args[FieldGameTurnSheetCompletedAt] = r.CompletedAt
-	args[FieldGameTurnSheetResultData] = r.ResultData
+	args[FieldGameTurnSheetScannedData] = r.ScannedData
 	args[FieldGameTurnSheetScannedAt] = r.ScannedAt
 	args[FieldGameTurnSheetScannedBy] = r.ScannedBy
 	args[FieldGameTurnSheetScanQuality] = r.ScanQuality
