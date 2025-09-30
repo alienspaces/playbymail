@@ -57,7 +57,7 @@ func (p *AdventureGame) GenerateTurnSheets(ctx context.Context, gameInstanceRec 
 func (p *AdventureGame) generateCharacterTurnSheets(ctx context.Context, gameInstanceRec *game_record.GameInstance, characterInstance *adventure_game_record.AdventureGameCharacterInstance) error {
 	l := p.Logger.WithFunctionContext("AdventureGame/processCharacterTurnSheets")
 
-	l.Info("processing turn sheets for character >%s< turn >%d<", characterInstance.ID, gameInstanceRec.CurrentTurn)
+	l.Info("generating turn sheets for game instance ID >%s< character instance ID >%s< turn >%d<", gameInstanceRec.ID, characterInstance.ID, gameInstanceRec.CurrentTurn)
 
 	// For each turn sheet type supported by the game generate a turn sheet for this character
 	for _, turnSheetType := range adventure_game_record.AdventureGameSheetTypes.ToSlice() {
@@ -78,14 +78,15 @@ func (p *AdventureGame) generateCharacterTurnSheets(ctx context.Context, gameIns
 func (p *AdventureGame) generateTurnSheet(ctx context.Context, gameInstanceRec *game_record.GameInstance, characterInstance *adventure_game_record.AdventureGameCharacterInstance, turnSheetType string) (*game_record.GameTurnSheet, error) {
 	l := p.Logger.WithFunctionContext("AdventureGame/generateTurnSheet")
 
-	l.Info("generating turn sheet type >%s< for character >%s<", turnSheetType, characterInstance.ID)
+	l.Info("generating turn sheet type >%s< for game instance ID >%s< character instance ID >%s<", turnSheetType, gameInstanceRec.ID, characterInstance.ID)
 
-	// Route to appropriate generator based on sheet type
-	switch turnSheetType {
-	case adventure_game_record.AdventureSheetTypeLocationChoice:
-		return p.LocationChoiceProcessor.GenerateLocationChoice(ctx, gameInstanceRec, characterInstance)
-	default:
-		l.Warn("unknown sheet type >%s< for character >%s<", turnSheetType, characterInstance.ID)
-		return nil, fmt.Errorf("unknown sheet type: %s", turnSheetType)
+	// Get the appropriate processor for this sheet type
+	processor, exists := p.Processors[turnSheetType]
+	if !exists {
+		l.Warn("unsupported sheet type >%s< for character >%s<", turnSheetType, characterInstance.ID)
+		return nil, fmt.Errorf("unsupported sheet type: %s", turnSheetType)
 	}
+
+	// Generate turn sheet using the sheet-specific processor
+	return processor.GenerateTurnSheet(ctx, characterInstance)
 }

@@ -30,7 +30,7 @@ func main() {
 		os.Exit(0)
 	}
 
-	svc, err := server.NewServer(l, s, r)
+	app, err := server.NewServer(l, s, r)
 	if err != nil {
 		fmt.Printf("(cmd) failed new server >%v<\n", err)
 		os.Exit(0)
@@ -38,7 +38,7 @@ func main() {
 
 	args := make(map[string]any)
 
-	err = svc.Run(args)
+	err = app.Run(args)
 	if err != nil {
 		fmt.Printf("(cmd) failed server run >%v<\n", err)
 		os.Exit(0)

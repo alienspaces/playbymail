@@ -86,6 +86,23 @@ func (p *AdventureGame) processCharacterTurnSheets(ctx context.Context, characte
 	return nil
 }
 
+// processTurnSheet processes a single turn sheet for a character
+func (p *AdventureGame) processTurnSheet(ctx context.Context, characterInstance *adventure_game_record.AdventureGameCharacterInstance, turnSheet *game_record.GameTurnSheet) error {
+	l := p.Logger.WithFunctionContext("AdventureGame/processTurnSheet")
+
+	l.Info("processing turn sheet >%s< type >%s< for character >%s<", turnSheet.ID, turnSheet.SheetType, characterInstance.ID)
+
+	// Get the appropriate processor for this sheet type
+	processor, exists := p.Processors[turnSheet.SheetType]
+	if !exists {
+		l.Warn("unsupported sheet type >%s< for turn sheet >%s<", turnSheet.SheetType, turnSheet.ID)
+		return fmt.Errorf("unsupported sheet type: %s", turnSheet.SheetType)
+	}
+
+	// Process turn sheet using the sheet-specific processor
+	return processor.ProcessTurnSheet(ctx, turnSheet)
+}
+
 // getTurnSheetsForCharacter retrieves turn sheets for a specific character and turn
 func (p *AdventureGame) getTurnSheetsForCharacter(characterInstance *adventure_game_record.AdventureGameCharacterInstance, turnNumber int) ([]*game_record.GameTurnSheet, error) {
 	l := p.Logger.WithFunctionContext("AdventureGame/getTurnSheetsForCharacter")
@@ -116,20 +133,4 @@ func (p *AdventureGame) getTurnSheetsForCharacter(characterInstance *adventure_g
 	}
 
 	return turnSheetRecs, nil
-}
-
-// processTurnSheet processes a single turn sheet for a character
-func (p *AdventureGame) processTurnSheet(ctx context.Context, characterInstance *adventure_game_record.AdventureGameCharacterInstance, turnSheet *game_record.GameTurnSheet) error {
-	l := p.Logger.WithFunctionContext("AdventureGame/processTurnSheet")
-
-	l.Info("processing turn sheet >%s< type >%s< for character >%s<", turnSheet.ID, turnSheet.SheetType, characterInstance.ID)
-
-	// Route to appropriate processor based on sheet type
-	switch turnSheet.SheetType {
-	case adventure_game_record.AdventureSheetTypeLocationChoice:
-		return p.LocationChoiceProcessor.ProcessLocationChoice(ctx, turnSheet)
-	default:
-		l.Warn("unknown sheet type >%s< for turn sheet >%s<", turnSheet.SheetType, turnSheet.ID)
-		return nil
-	}
 }
