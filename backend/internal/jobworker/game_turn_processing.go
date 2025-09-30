@@ -26,6 +26,15 @@ type GameTurnProcessingWorkerArgs struct {
 
 func (GameTurnProcessingWorkerArgs) Kind() string { return "game_turn_processing" }
 
+// GameTurnProcessor defines the interface for processing and generating turn sheets for different game types
+type GameTurnProcessor interface {
+	// ProcessTurnSheets processes all turn sheets for a game instance
+	ProcessTurnSheets(ctx context.Context, gameInstanceRec *game_record.GameInstance) error
+
+	// GenerateTurnSheets generates all turn sheets for a game instance
+	GenerateTurnSheets(ctx context.Context, gameInstanceRec *game_record.GameInstance) error
+}
+
 // GameTurnProcessingWorker processes a game instance turn
 type GameTurnProcessingWorker struct {
 	river.WorkerDefaults[GameTurnProcessingWorkerArgs]
@@ -43,26 +52,41 @@ func NewGameTurnProcessingWorker(l logger.Logger, cfg config.Config, s storer.St
 	}, nil
 }
 
+// initializeProcessors creates and registers all available game type processors
+func (w *GameTurnProcessingWorker) initializeProcessors(l logger.Logger, d *domain.Domain) map[string]GameTurnProcessor {
+	processors := make(map[string]GameTurnProcessor)
+
+	// Register adventure game processor
+	adventureProcessor := adventure_game.NewAdventureGame(l, d)
+	processors[game_record.GameTypeAdventure] = adventureProcessor
+
+	// Future game types can be registered here
+	// processors[game_record.GameTypeStrategy] = strategyProcessor
+	// processors[game_record.GameTypePuzzle] = puzzleProcessor
+
+	return processors
+}
+
 func (w *GameTurnProcessingWorker) Work(ctx context.Context, j *river.Job[GameTurnProcessingWorkerArgs]) error {
 	l := w.JobWorker.Log.WithFunctionContext("GameTurnProcessingWorker/Work")
 
 	l.Info("running job ID >%s< Args >%#v<", strconv.FormatInt(j.ID, 10), j.Args)
 
-	c, m, err := w.beginJob(ctx)
+	c, d, err := w.beginJob(ctx)
 	if err != nil {
 		return err
 	}
 	defer func() {
-		m.Tx.Rollback(context.Background())
+		d.Tx.Rollback(context.Background())
 	}()
 
-	_, err = w.DoWork(ctx, m, c, j)
+	_, err = w.DoWork(ctx, d, c, j)
 	if err != nil {
 		l.Error("GameTurnProcessingWorker job ID >%s< Args >%#v< failed >%v<", strconv.FormatInt(j.ID, 10), j.Args, err)
 		return err
 	}
 
-	return corejobworker.CompleteJob(ctx, m.Tx, j)
+	return corejobworker.CompleteJob(ctx, d.Tx, j)
 }
 
 type GameTurnProcessingDoWorkResult struct {
@@ -75,6 +99,9 @@ func (w *GameTurnProcessingWorker) DoWork(ctx context.Context, m *domain.Domain,
 	l := w.JobWorker.Log.WithFunctionContext("GameTurnProcessingWorker/DoWork")
 
 	l.Info("processing game turn for instance >%s< turn >%d<", j.Args.GameInstanceID, j.Args.TurnNumber)
+
+	// Initialize processors for this job
+	processors := w.initializeProcessors(l, m)
 
 	// Get the game instance
 	gameInstanceRec, err := m.GetGameInstanceRec(j.Args.GameInstanceID, nil)
@@ -106,18 +133,18 @@ func (w *GameTurnProcessingWorker) DoWork(ctx context.Context, m *domain.Domain,
 		return nil, err
 	}
 
-	// Route to appropriate game type processor and process the turn for all players
-	switch gameRec.GameType {
-	case game_record.GameTypeAdventure:
-		adventureProcessor := adventure_game.NewAdventureGame(l, m)
-		err = adventureProcessor.ProcessTurnSheets(ctx, gameInstanceRec)
-		if err != nil {
-			l.Warn("failed to process adventure game turn for game instance ID >%s< turn >%d<; cannot process game turn >%v<", j.Args.GameInstanceID, j.Args.TurnNumber, err)
-			return nil, err
-		}
-	default:
+	// Get the appropriate processor for this game type
+	processor, exists := processors[gameRec.GameType]
+	if !exists {
 		l.Warn("unsupported game type >%s< for game instance ID >%s<; cannot process game turn >%v<", gameRec.GameType, j.Args.GameInstanceID, err)
 		return nil, fmt.Errorf("unsupported game type: %s for game instance ID >%s<", gameRec.GameType, j.Args.GameInstanceID)
+	}
+
+	// Process turn sheets using the game-specific processor
+	err = processor.ProcessTurnSheets(ctx, gameInstanceRec)
+	if err != nil {
+		l.Warn("failed to process game turn for game instance ID >%s< turn >%d<; cannot process game turn >%v<", j.Args.GameInstanceID, j.Args.TurnNumber, err)
+		return nil, err
 	}
 
 	// TODO: Generate post run processing jobs such as notifications, etc.
@@ -134,18 +161,11 @@ func (w *GameTurnProcessingWorker) DoWork(ctx context.Context, m *domain.Domain,
 	// Generate new turn sheets for the next turn
 	l.Info("generating new turn sheets for game instance >%s< turn >%d<", gameInstanceRec.ID, gameInstanceRec.CurrentTurn)
 
-	// Route to appropriate game type processor and process the turn for all players
-	switch gameRec.GameType {
-	case game_record.GameTypeAdventure:
-		adventureProcessor := adventure_game.NewAdventureGame(l, m)
-		err = adventureProcessor.GenerateTurnSheets(ctx, gameInstanceRec)
-		if err != nil {
-			l.Warn("failed to generate new turn sheets for game instance ID >%s< turn >%d<; cannot process game turn >%v<", j.Args.GameInstanceID, j.Args.TurnNumber, err)
-			return nil, err
-		}
-	default:
-		l.Warn("unsupported game type >%s< for game instance ID >%s<; cannot generate new turn sheets >%v<", gameRec.GameType, j.Args.GameInstanceID, err)
-		return nil, fmt.Errorf("unsupported game type: %s for game instance ID >%s<", gameRec.GameType, j.Args.GameInstanceID)
+	// Generate turn sheets using the same processor
+	err = processor.GenerateTurnSheets(ctx, gameInstanceRec)
+	if err != nil {
+		l.Warn("failed to generate new turn sheets for game instance ID >%s< turn >%d<; cannot process game turn >%v<", j.Args.GameInstanceID, j.Args.TurnNumber, err)
+		return nil, err
 	}
 
 	return &GameTurnProcessingDoWorkResult{

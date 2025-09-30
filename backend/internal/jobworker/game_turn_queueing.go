@@ -9,10 +9,13 @@ import (
 	"github.com/riverqueue/river"
 
 	corejobworker "gitlab.com/alienspaces/playbymail/core/jobworker"
+	nulltime "gitlab.com/alienspaces/playbymail/core/nulltime"
+	coresql "gitlab.com/alienspaces/playbymail/core/sql"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
 	"gitlab.com/alienspaces/playbymail/core/type/storer"
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/jobqueue"
+	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 	"gitlab.com/alienspaces/playbymail/internal/utils/config"
 )
 
@@ -74,7 +77,7 @@ func (w *GameTurnQueueingWorker) DoWork(ctx context.Context, m *domain.Domain, c
 	l.Info("checking for games that need turn processing")
 
 	// Get all game instances that need turn processing
-	instanceRecs, err := m.GetGameInstanceRecsNeedingTurnProcessing()
+	instanceRecs, err := w.getGameInstanceRecsNeedingTurnProcessing(m)
 	if err != nil {
 		l.Warn("failed to get game instances needing turn processing >%v<", err)
 		return nil, err
@@ -114,4 +117,44 @@ func (w *GameTurnQueueingWorker) DoWork(ctx context.Context, m *domain.Domain, c
 		JobsQueued:   jobsQueued,
 		ProcessedAt:  time.Now(),
 	}, nil
+}
+
+// getGameInstanceRecsNeedingTurnProcessing gets game instances that need turn processing
+//
+// Returns game instances that meet both criteria:
+// 1. Status is "started" (active games only)
+// 2. NextTurnDueAt <= current time (deadline has passed)
+//
+// Used by the queue worker to create individual turn processing jobs.
+func (w *GameTurnQueueingWorker) getGameInstanceRecsNeedingTurnProcessing(m *domain.Domain) ([]*game_record.GameInstance, error) {
+	l := w.JobWorker.Log.WithFunctionContext("GameTurnQueueingWorker/getGameInstanceRecsNeedingTurnProcessing")
+
+	l.Info("getting game instances needing turn processing")
+
+	r := m.GameInstanceRepository()
+	now := time.Now().UTC()
+
+	opts := &coresql.Options{
+		Params: []coresql.Param{
+			{
+				Col: game_record.FieldGameInstanceStatus,
+				Val: game_record.GameInstanceStatusStarted,
+			},
+			{
+				Col: game_record.FieldGameInstanceNextTurnDueAt,
+				Val: nulltime.FromTime(now),
+				Op:  coresql.OpLessThanEqual,
+			},
+		},
+	}
+
+	instanceRecs, err := r.GetMany(opts)
+	if err != nil {
+		l.Warn("failed to get game instances needing turn processing >%v<", err)
+		return nil, err
+	}
+
+	l.Info("returning >%d< game instances needing turn processing", len(instanceRecs))
+
+	return instanceRecs, nil
 }
