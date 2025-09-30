@@ -53,18 +53,21 @@ func NewGameTurnProcessingWorker(l logger.Logger, cfg config.Config, s storer.St
 }
 
 // initializeProcessors creates and registers all available game type processors
-func (w *GameTurnProcessingWorker) initializeProcessors(l logger.Logger, d *domain.Domain) map[string]GameTurnProcessor {
+func (w *GameTurnProcessingWorker) initializeProcessors(l logger.Logger, d *domain.Domain) (map[string]GameTurnProcessor, error) {
 	processors := make(map[string]GameTurnProcessor)
 
 	// Register adventure game processor
-	adventureProcessor := adventure_game.NewAdventureGame(l, d)
+	adventureProcessor, err := adventure_game.NewAdventureGame(l, d)
+	if err != nil {
+		return nil, err
+	}
 	processors[game_record.GameTypeAdventure] = adventureProcessor
 
 	// Future game types can be registered here
 	// processors[game_record.GameTypeStrategy] = strategyProcessor
 	// processors[game_record.GameTypePuzzle] = puzzleProcessor
 
-	return processors
+	return processors, nil
 }
 
 func (w *GameTurnProcessingWorker) Work(ctx context.Context, j *river.Job[GameTurnProcessingWorkerArgs]) error {
@@ -101,7 +104,11 @@ func (w *GameTurnProcessingWorker) DoWork(ctx context.Context, m *domain.Domain,
 	l.Info("processing game turn for instance >%s< turn >%d<", j.Args.GameInstanceID, j.Args.TurnNumber)
 
 	// Initialize processors for this job
-	processors := w.initializeProcessors(l, m)
+	processors, err := w.initializeProcessors(l, m)
+	if err != nil {
+		l.Warn("failed to initialize processors >%v<", err)
+		return nil, err
+	}
 
 	// Get the game instance
 	gameInstanceRec, err := m.GetGameInstanceRec(j.Args.GameInstanceID, nil)

@@ -19,23 +19,33 @@ type AdventureGame struct {
 
 // TurnSheetProcessor defines the interface for processing individual turn sheets in adventure games
 type TurnSheetProcessor interface {
+	// GetSheetType returns the sheet type this processor handles
+	GetSheetType() string
+
 	// ProcessTurnSheet processes a single turn sheet of a specific type
 	ProcessTurnSheet(ctx context.Context, turnSheet *game_record.GameTurnSheet) error
 
 	// GenerateTurnSheet generates a turn sheet of a specific type for a character
 	GenerateTurnSheet(ctx context.Context, characterInstance *adventure_game_record.AdventureGameCharacterInstance) (*game_record.GameTurnSheet, error)
-
-	// GetSheetType returns the sheet type this processor handles
-	GetSheetType() string
 }
 
 // NewAdventureGame creates a new adventure game turn processor
-func NewAdventureGame(l logger.Logger, d *domain.Domain) *AdventureGame {
-	return &AdventureGame{
-		Logger:     l,
-		Domain:     d,
-		Processors: initializeTurnSheetProcessors(l),
+func NewAdventureGame(l logger.Logger, d *domain.Domain) (*AdventureGame, error) {
+	l = l.WithFunctionContext("NewAdventureGame")
+
+	g := &AdventureGame{
+		Logger: l,
+		Domain: d,
 	}
+
+	p, err := g.initializeTurnSheetProcessors()
+	if err != nil {
+		l.Warn("failed to initialize turn sheet processors >%v<", err)
+		return nil, err
+	}
+	g.Processors = p
+
+	return g, nil
 }
 
 // getCharacterInstancesForGameInstance retrieves all character instances for a game instance
@@ -61,11 +71,17 @@ func (p *AdventureGame) getCharacterInstancesForGameInstance(_ context.Context, 
 }
 
 // initializeTurnSheetProcessors creates and registers all available adventure game turn sheet processors
-func initializeTurnSheetProcessors(l logger.Logger) map[string]TurnSheetProcessor {
+func (p *AdventureGame) initializeTurnSheetProcessors() (map[string]TurnSheetProcessor, error) {
+	l := p.Logger.WithFunctionContext("AdventureGame/initializeTurnSheetProcessors")
+
 	processors := make(map[string]TurnSheetProcessor)
 
 	// Register location choice processor
-	locationChoiceProcessor := NewAdventureGameLocationChoiceProcessor(l)
+	locationChoiceProcessor, err := NewAdventureGameLocationChoiceProcessor(l, p.Domain)
+	if err != nil {
+		l.Warn("failed to initialize location choice processor >%v<", err)
+		return nil, err
+	}
 	processors[adventure_game_record.AdventureSheetTypeLocationChoice] = locationChoiceProcessor
 
 	// Future turn sheet types can be registered here
@@ -73,5 +89,5 @@ func initializeTurnSheetProcessors(l logger.Logger) map[string]TurnSheetProcesso
 	// processors[adventure_game_record.AdventureSheetTypeInventory] = inventoryProcessor
 	// processors[adventure_game_record.AdventureSheetTypeDialogue] = dialogueProcessor
 
-	return processors
+	return processors, nil
 }

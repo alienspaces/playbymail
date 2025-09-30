@@ -5,25 +5,39 @@ import (
 	"fmt"
 
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
+	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 )
 
+// Asserts that AdventureGameLocationChoiceProcessor implements the TurnSheetProcessor interface
+var _ TurnSheetProcessor = (*AdventureGameLocationChoiceProcessor)(nil)
+
 // AdventureGameLocationChoiceProcessor processes location choice turn sheets for adventure games
 type AdventureGameLocationChoiceProcessor struct {
 	Logger logger.Logger
+	Domain *domain.Domain
 }
 
 // NewAdventureGameLocationChoiceProcessor creates a new adventure game location choice processor
-func NewAdventureGameLocationChoiceProcessor(l logger.Logger) *AdventureGameLocationChoiceProcessor {
-	return &AdventureGameLocationChoiceProcessor{
+func NewAdventureGameLocationChoiceProcessor(l logger.Logger, d *domain.Domain) (*AdventureGameLocationChoiceProcessor, error) {
+	l = l.WithFunctionContext("NewAdventureGameLocationChoiceProcessor")
+
+	p := &AdventureGameLocationChoiceProcessor{
 		Logger: l,
+		Domain: d,
 	}
+	return p, nil
+}
+
+// GetSheetType returns the sheet type this processor handles (implements TurnSheetProcessor interface)
+func (p *AdventureGameLocationChoiceProcessor) GetSheetType() string {
+	return adventure_game_record.AdventureSheetTypeLocationChoice
 }
 
 // ProcessTurnSheet processes a single turn sheet (implements TurnSheetProcessor interface)
 func (p *AdventureGameLocationChoiceProcessor) ProcessTurnSheet(ctx context.Context, turnSheet *game_record.GameTurnSheet) error {
-	l := p.Logger.WithFunctionContext("AdventureGameLocationChoiceProcessor/ProcessLocationChoice")
+	l := p.Logger.WithFunctionContext("AdventureGameLocationChoiceProcessor/ProcessTurnSheet")
 
 	l.Info("processing location choice for turn sheet >%s<", turnSheet.ID)
 
@@ -59,9 +73,4 @@ func (p *AdventureGameLocationChoiceProcessor) GenerateTurnSheet(ctx context.Con
 	// For now, return nil to indicate no turn sheet generated
 	// This is a placeholder implementation
 	return nil, fmt.Errorf("not implemented")
-}
-
-// GetSheetType returns the sheet type this processor handles (implements TurnSheetProcessor interface)
-func (p *AdventureGameLocationChoiceProcessor) GetSheetType() string {
-	return adventure_game_record.AdventureSheetTypeLocationChoice
 }
