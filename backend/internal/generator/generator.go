@@ -58,29 +58,34 @@ func NewPDFGenerator(l *log.Log, templateDir, outputDir string) *PDFGenerator {
 
 // GenerateHTML generates HTML from a template
 func (g *PDFGenerator) GenerateHTML(ctx context.Context, templatePath string, data TemplateData) (string, error) {
-	g.logger.Debug("generating HTML template=%s", templatePath)
+	l := g.logger.WithFunctionContext("PDFGenerator/GenerateHTML")
+
+	l.Debug("generating HTML template=%s", templatePath)
 
 	// Load and parse HTML template
 	tmpl, err := g.loadTemplate(templatePath)
 	if err != nil {
-		g.logger.Error("failed to load template template=%s error=%v", templatePath, err)
+		l.Warn("failed to load template template=%s error=%v", templatePath, err)
 		return "", fmt.Errorf("failed to load template: %w", err)
 	}
 
 	// Execute template with data
 	var html bytes.Buffer
 	if err := tmpl.Execute(&html, data); err != nil {
-		g.logger.Error("failed to execute template template=%s error=%v", templatePath, err)
+		l.Warn("failed to execute template template=%s error=%v", templatePath, err)
 		return "", fmt.Errorf("failed to execute template: %w", err)
 	}
 
-	g.logger.Debug("HTML generated successfully template=%s size=%d", templatePath, html.Len())
+	l.Debug("HTML generated successfully template=%s size=%d", templatePath, html.Len())
+
 	return html.String(), nil
 }
 
 // GeneratePDF creates a PDF from an HTML template
 func (g *PDFGenerator) GeneratePDF(ctx context.Context, templatePath string, data TemplateData) ([]byte, error) {
-	g.logger.Info("starting PDF generation template=%s game=%s turn=%d account=%s", templatePath, data.GameRec.Name, data.GameInstanceRec.CurrentTurn, data.AccountRec.Name)
+	l := g.logger.WithFunctionContext("PDFGenerator/GeneratePDF")
+
+	l.Info("starting PDF generation template=%s game=%s turn=%d account=%s", templatePath, data.GameRec.Name, data.GameInstanceRec.CurrentTurn, data.AccountRec.Name)
 
 	// Generate HTML using the existing method
 	html, err := g.GenerateHTML(ctx, templatePath, data)
@@ -161,7 +166,9 @@ func (g *PDFGenerator) loadTemplate(templatePath string) (*template.Template, er
 
 // htmlToPDF converts HTML to PDF using chromedp
 func (g *PDFGenerator) htmlToPDF(ctx context.Context, html string) ([]byte, error) {
-	g.logger.Debug("starting HTML to PDF conversion html_size=%d", len(html))
+	l := g.logger.WithFunctionContext("PDFGenerator/htmlToPDF")
+
+	l.Debug("starting HTML to PDF conversion html_size=%d", len(html))
 
 	// Create a new context with Chrome options - minimal for reliability
 	opts := []chromedp.ExecAllocatorOption{
@@ -177,12 +184,12 @@ func (g *PDFGenerator) htmlToPDF(ctx context.Context, html string) ([]byte, erro
 		chromedp.Flag("disable-features", "TranslateUI"),
 		chromedp.Flag("disable-ipc-flooding-protection", true),
 	}
-	g.logger.Debug("Chrome options configured options_count=%d", len(opts))
+	l.Debug("chrome options configured options_count=%d", len(opts))
 
 	// Check if Chrome is available
 	chromePath := os.Getenv("GOOGLE_CHROME_SHIM")
 	if chromePath == "" {
-		g.logger.Debug("GOOGLE_CHROME_SHIM not set, searching for Chrome in common locations")
+		l.Debug("GOOGLE_CHROME_SHIM not set, searching for Chrome in common locations")
 		// Try to find Chrome in common locations
 		commonPaths := []string{
 			"/usr/bin/google-chrome",
@@ -195,27 +202,27 @@ func (g *PDFGenerator) htmlToPDF(ctx context.Context, html string) ([]byte, erro
 		for _, path := range commonPaths {
 			if _, err := os.Stat(path); err == nil {
 				chromePath = path
-				g.logger.Debug("found Chrome at path chrome_path=%s", chromePath)
+				l.Debug("found Chrome at path chrome_path=%s", chromePath)
 				break
 			}
 		}
 	} else {
-		g.logger.Debug("using Chrome from GOOGLE_CHROME_SHIM chrome_path=%s", chromePath)
+		l.Debug("using Chrome from GOOGLE_CHROME_SHIM chrome_path=%s", chromePath)
 	}
 
 	if chromePath == "" {
 		// In test environment, return a mock PDF instead of failing
 		if os.Getenv("TESTING") == "true" {
-			g.logger.Info("Chrome not found, returning mock PDF for testing")
+			l.Warn("chrome not found, returning mock PDF for testing")
 			return []byte("mock-pdf-data-for-testing"), nil
 		}
-		g.logger.Error("Chrome not found in any common locations")
-		return nil, fmt.Errorf("Chrome not found. Please install Chrome or set GOOGLE_CHROME_SHIM environment variable")
+		l.Warn("chrome not found in any common locations")
+		return nil, fmt.Errorf("chrome not found. Please install Chrome or set GOOGLE_CHROME_SHIM environment variable")
 	}
 
 	// Set Chrome executable path
 	opts = append(opts, chromedp.ExecPath(chromePath))
-	g.logger.Debug("Chrome executable path set chrome_path=%s", chromePath)
+	l.Debug("chrome executable path set chrome_path=%s", chromePath)
 
 	// Create allocator without timeout (browser needs time to start)
 	allocCtx, cancel := chromedp.NewExecAllocator(ctx, opts...)
@@ -224,40 +231,40 @@ func (g *PDFGenerator) htmlToPDF(ctx context.Context, html string) ([]byte, erro
 	// Create a new context for the run (no timeout on first Run call)
 	runCtx, runCancel := chromedp.NewContext(allocCtx)
 	defer runCancel()
-	g.logger.Debug("Chrome context created")
+	l.Debug("chrome context created")
 
 	// Write HTML to temporary file for Chrome to load
 	tmpFile, err := os.CreateTemp("", "pdf_generation_*.html")
 	if err != nil {
-		g.logger.Error("failed to create temp file error=%v", err)
+		l.Warn("failed to create temp file error=%v", err)
 		return nil, fmt.Errorf("failed to create temp file: %w", err)
 	}
 	defer os.Remove(tmpFile.Name())
 	defer tmpFile.Close()
 
 	if _, err := tmpFile.WriteString(html); err != nil {
-		g.logger.Error("failed to write HTML to temp file error=%v", err)
+		l.Warn("failed to write HTML to temp file error=%v", err)
 		return nil, fmt.Errorf("failed to write HTML to temp file: %w", err)
 	}
 	tmpFile.Close()
 
 	// Generate PDF using Chrome's print to PDF
-	g.logger.Debug("starting Chrome PDF generation")
+	l.Debug("starting Chrome PDF generation")
 	var pdfData []byte
 
 	err = chromedp.Run(runCtx,
 		chromedp.ActionFunc(func(ctx context.Context) error {
-			g.logger.Debug("Chrome browser started, navigating to HTML file")
+			l.Debug("chrome browser started, navigating to HTML file")
 			return chromedp.Navigate("file://" + tmpFile.Name()).Do(ctx)
 		}),
 		chromedp.ActionFunc(func(ctx context.Context) error {
-			g.logger.Debug("waiting for page to load and render")
+			l.Debug("waiting for page to load and render")
 			// Simple wait for page to load - no specific element waiting
 			time.Sleep(3 * time.Second)
 			return nil
 		}),
 		chromedp.ActionFunc(func(ctx context.Context) error {
-			g.logger.Debug("calling Chrome PrintToPDF")
+			l.Debug("calling Chrome PrintToPDF")
 			var err error
 			pdfData, _, err = page.PrintToPDF().
 				WithPrintBackground(true).
@@ -269,19 +276,19 @@ func (g *PDFGenerator) htmlToPDF(ctx context.Context, html string) ([]byte, erro
 				WithMarginRight(0.5).
 				Do(ctx)
 			if err != nil {
-				g.logger.Error("Chrome PrintToPDF failed error=%v", err)
+				l.Warn("chrome PrintToPDF failed error=%v", err)
 			} else {
-				g.logger.Debug("Chrome PrintToPDF completed successfully pdf_size=%d", len(pdfData))
+				l.Debug("chrome PrintToPDF completed successfully pdf_size=%d", len(pdfData))
 			}
 			return err
 		}),
 	)
 
 	if err != nil {
-		g.logger.Error("failed to generate PDF with Chrome error=%v", err)
+		l.Warn("failed to generate PDF with Chrome error=%v", err)
 		return nil, fmt.Errorf("failed to generate PDF: %w", err)
 	}
 
-	g.logger.Debug("PDF generation completed successfully pdf_size=%d", len(pdfData))
+	l.Debug("PDF generation completed successfully pdf_size=%d", len(pdfData))
 	return pdfData, nil
 }

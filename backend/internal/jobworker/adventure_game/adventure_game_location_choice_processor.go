@@ -48,6 +48,7 @@ func (p *AdventureGameLocationChoiceProcessor) ProcessTurnSheet(ctx context.Cont
 	}
 
 	// TODO: Implement actual location choice processing logic
+
 	// This will involve:
 	// 1. Parse the player's location choice from turnSheet.SheetData
 	// 2. Validate the choice is valid for the character's current location
@@ -64,13 +65,12 @@ func (p *AdventureGameLocationChoiceProcessor) GenerateTurnSheet(ctx context.Con
 	l.Info("generating location choice turn sheet for character >%s<", characterInstance.ID)
 
 	// TODO: Implement actual location choice turn sheet generation logic
+
 	// This will involve:
 	// 1. Get character's current location and available choices
 	// 2. Generate turn sheet data with location options
 	// 3. Create GameTurnSheet record with appropriate data
 	// 4. Link it to the character via AdventureGameTurnSheet
 
-	// For now, return nil to indicate no turn sheet generated
-	// This is a placeholder implementation
 	return nil, fmt.Errorf("not implemented")
 }
