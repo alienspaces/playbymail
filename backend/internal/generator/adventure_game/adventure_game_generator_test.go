@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"gitlab.com/alienspaces/playbymail/core/config"
 	"gitlab.com/alienspaces/playbymail/core/log"
 	"gitlab.com/alienspaces/playbymail/core/record"
 	"gitlab.com/alienspaces/playbymail/internal/domain"
@@ -15,6 +14,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/record/account_record"
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
+	"gitlab.com/alienspaces/playbymail/internal/utils/config"
 )
 
 // createValidTemplateData creates a valid TemplateData struct for testing
@@ -79,19 +79,21 @@ func getExpectedHTMLContains() []string {
 }
 
 func TestAdventureGameLocationGenerator(t *testing.T) {
-	// Use actual templates directory
-	templateDir := "."
+
+	cfg, err := config.Parse()
+	require.NoError(t, err, "Failed to parse config")
 
 	// Create logger for testing
-	cfg := config.Config{
-		LogLevel:    "debug",
-		LogIsPretty: true,
-	}
-	logger, err := log.NewLogger(cfg)
+	logger, err := log.NewLogger(cfg.Config)
 	require.NoError(t, err, "Failed to create logger")
 
 	// Create domain for testing
 	domain := &domain.Domain{}
+
+	// Tests are run from the backend directory, so templates are at ./templates
+	templateDir := cfg.TemplatesPath
+
+	t.Logf("Template directory: %s", templateDir)
 
 	// Create generator with temporary output directory
 	tempOutputDir := t.TempDir()

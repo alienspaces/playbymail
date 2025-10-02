@@ -57,25 +57,22 @@ fi
 
 
 # go present?
-if command -v go >/dev/null 2>&1; then
-    version=$(go version)
-    case "$version" in
-        *"go${APP_SERVER_GO_VERSION}"*)
-            # correct version
-            ;;
-        *)
-            go_version=go$APP_SERVER_GO_VERSION
-            if command -v gvm >/dev/null 2>&1; then
-                . ~/.gvm/scripts/gvm
-                echo "=> (env) Using Go version ${go_version}"
-                gvm use "$go_version" || exit 1
-            else
-                echo "=> (env) Go version ${APP_SERVER_GO_VERSION} is required, please check your Go version and try again"
-                exit 1
-            fi
-            ;;
-    esac
+if ! command -v go >/dev/null 2>&1; then
+    echo "=> (env) Go is not available, please install Go and try again"
+    exit 1
 fi
+
+version=$(go version)
+case "$version" in
+    *"go${GO_VERSION}"*)
+        echo "=> (env) Go version ${GO_VERSION} is correct"
+        # correct version
+        ;;
+    *)
+        echo "=> (env) Go version ${GO_VERSION} is required, please check your Go version and try again"
+        exit 1
+        ;;
+esac
 
 # verify environment
 verify_env

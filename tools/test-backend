@@ -12,35 +12,14 @@ cp .env.develop .env
 # environment
 . ./tools/environment || exit $?
 
-echo "DEBUG: APP_SERVER_SMTP_HOST is '$APP_SERVER_SMTP_HOST'"
-
-if [ -z "$GO_VERSION" ]; then
-    echo "=> (test) Missing GO_VERSION"
-    exit 1
-fi
-
-go_version=go$GO_VERSION
-# Only attempt to source gvm if running under bash, otherwise skip with a warning
-if [ "$(command -v gvm)" ] && [ -f "$HOME/.gvm/scripts/gvm" ]; then
-    if [ -n "$BASH_VERSION" ]; then
-        . "$HOME/.gvm/scripts/gvm"
-        echo "Using ${go_version}"
-        gvm use "$go_version"
-    else
-        echo "gvm is installed but not running under bash; skipping gvm use to avoid shell errors."
-    fi
-else
-    echo "gvm not found or not installed at $HOME/.gvm/scripts/gvm, skipping Go version switch"
-fi
-
-# start database
+# setup test database
 . ./tools/db-setup-test || exit $?
 
 # test core
 . ./tools/test-backend-core || exit $?
 
-# test service
+# test internal
 . ./tools/test-backend-internal || exit $?
 
-# stop services
+# stop test database
 . ./tools/db-stop || exit $?

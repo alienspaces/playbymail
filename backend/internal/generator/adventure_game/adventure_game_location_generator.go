@@ -47,7 +47,7 @@ func (g *AdventureGameLocationGenerator) GenerateLocationChoiceTurnSheet(ctx con
 	// Add the code to the template data
 	data.TurnSheetCode = turnSheetCode
 
-	templatePath := "templates/location_choice.template"
+	templatePath := "turn_sheet/adventure_game/location_choice.template"
 	return g.PDFGenerator.GeneratePDF(ctx, templatePath, data)
 }
 
@@ -62,7 +62,7 @@ func (g *AdventureGameLocationGenerator) GenerateLocationChoiceTurnSheetToFile(c
 	// Add the code to the template data
 	data.TurnSheetCode = turnSheetCode
 
-	templatePath := "templates/location_choice.template"
+	templatePath := "turn_sheet/adventure_game/location_choice.template"
 	return g.PDFGenerator.GeneratePDFToFile(ctx, templatePath, data, filename)
 }
 
@@ -77,6 +77,6 @@ func (g *AdventureGameLocationGenerator) GenerateLocationChoiceTurnSheetHTML(ctx
 	// Add the code to the template data
 	data.TurnSheetCode = turnSheetCode
 
-	templatePath := "templates/location_choice.template"
+	templatePath := "turn_sheet/adventure_game/location_choice.template"
 	return g.PDFGenerator.GenerateHTML(ctx, templatePath, data)
 }

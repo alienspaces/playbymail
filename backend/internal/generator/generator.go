@@ -60,7 +60,7 @@ func NewPDFGenerator(l *log.Log, templateDir, outputDir string) *PDFGenerator {
 func (g *PDFGenerator) GenerateHTML(ctx context.Context, templatePath string, data TemplateData) (string, error) {
 	l := g.logger.WithFunctionContext("PDFGenerator/GenerateHTML")
 
-	l.Debug("generating HTML template=%s", templatePath)
+	l.Info("generating HTML template=%s", templatePath)
 
 	// Load and parse HTML template
 	tmpl, err := g.loadTemplate(templatePath)
@@ -76,7 +76,7 @@ func (g *PDFGenerator) GenerateHTML(ctx context.Context, templatePath string, da
 		return "", fmt.Errorf("failed to execute template: %w", err)
 	}
 
-	l.Debug("HTML generated successfully template=%s size=%d", templatePath, html.Len())
+	l.Info("HTML generated successfully template=%s size=%d", templatePath, html.Len())
 
 	return html.String(), nil
 }
@@ -87,28 +87,32 @@ func (g *PDFGenerator) GeneratePDF(ctx context.Context, templatePath string, dat
 
 	l.Info("starting PDF generation template=%s game=%s turn=%d account=%s", templatePath, data.GameRec.Name, data.GameInstanceRec.CurrentTurn, data.AccountRec.Name)
 
-	// Generate HTML using the existing method
+	// Generate HTML from template
 	html, err := g.GenerateHTML(ctx, templatePath, data)
 	if err != nil {
-		g.logger.Error("failed to generate HTML template=%s error=%v", templatePath, err)
+		l.Warn("failed to generate HTML template=%s error=%v", templatePath, err)
 		return nil, fmt.Errorf("failed to generate HTML: %w", err)
 	}
 
 	// Convert HTML to PDF using chromedp
-	g.logger.Debug("converting HTML to PDF html_size=%d", len(html))
+	l.Debug("converting HTML to PDF html_size=%d", len(html))
+
 	pdfData, err := g.htmlToPDF(ctx, html)
 	if err != nil {
-		g.logger.Error("failed to convert HTML to PDF error=%v", err)
+		l.Warn("failed to convert HTML to PDF error=%v", err)
 		return nil, fmt.Errorf("failed to convert HTML to PDF: %w", err)
 	}
-	g.logger.Info("PDF generated successfully template=%s pdf_size=%d game=%s turn=%d account=%s", templatePath, len(pdfData), data.GameRec.Name, data.GameInstanceRec.CurrentTurn, data.AccountRec.Name)
+
+	l.Info("PDF generated successfully template=%s pdf_size=%d game=%s turn=%d account=%s", templatePath, len(pdfData), data.GameRec.Name, data.GameInstanceRec.CurrentTurn, data.AccountRec.Name)
 
 	return pdfData, nil
 }
 
 // GeneratePDFToFile creates a PDF and saves it to a file
 func (g *PDFGenerator) GeneratePDFToFile(ctx context.Context, templatePath string, data TemplateData, filename string) error {
-	g.logger.Info("starting PDF generation to file template=%s filename=%s game=%s turn=%d account=%s", templatePath, filename, data.GameRec.Name, data.GameInstanceRec.CurrentTurn, data.AccountRec.Name)
+	l := g.logger.WithFunctionContext("PDFGenerator/GeneratePDFToFile")
+
+	l.Info("starting PDF generation to file template=%s filename=%s game=%s turn=%d account=%s", templatePath, filename, data.GameRec.Name, data.GameInstanceRec.CurrentTurn, data.AccountRec.Name)
 
 	pdfData, err := g.GeneratePDF(ctx, templatePath, data)
 	if err != nil {
@@ -117,30 +121,36 @@ func (g *PDFGenerator) GeneratePDFToFile(ctx context.Context, templatePath strin
 	}
 
 	// Ensure output directory exists
-	g.logger.Debug("ensuring output directory exists output_dir=%s", g.outputDir)
+	l.Debug("ensuring output directory exists output_dir=%s", g.outputDir)
+
 	if err := os.MkdirAll(g.outputDir, 0755); err != nil {
-		g.logger.Error("failed to create output directory output_dir=%s error=%v", g.outputDir, err)
+		l.Warn("failed to create output directory output_dir=%s error=%v", g.outputDir, err)
 		return fmt.Errorf("failed to create output directory: %w", err)
 	}
 
 	// Write PDF to file
 	filepath := filepath.Join(g.outputDir, filename)
-	g.logger.Debug("writing PDF to file filepath=%s pdf_size=%d", filepath, len(pdfData))
+
+	l.Debug("writing PDF to file filepath=%s pdf_size=%d", filepath, len(pdfData))
+
 	if err := os.WriteFile(filepath, pdfData, 0644); err != nil {
-		g.logger.Error("failed to write PDF file filepath=%s error=%v", filepath, err)
+		l.Warn("failed to write PDF file filepath=%s error=%v", filepath, err)
 		return fmt.Errorf("failed to write PDF file: %w", err)
 	}
-	g.logger.Info("PDF saved to file successfully filepath=%s pdf_size=%d game=%s turn=%d account=%s", filepath, len(pdfData), data.GameRec.Name, data.GameInstanceRec.CurrentTurn, data.AccountRec.Name)
+
+	l.Info("PDF saved to file successfully filepath=%s pdf_size=%d game=%s turn=%d account=%s", filepath, len(pdfData), data.GameRec.Name, data.GameInstanceRec.CurrentTurn, data.AccountRec.Name)
 
 	return nil
 }
 
 // loadTemplate loads and parses an HTML template
 func (g *PDFGenerator) loadTemplate(templatePath string) (*template.Template, error) {
+	l := g.logger.WithFunctionContext("PDFGenerator/loadTemplate")
+
 	fullPath := filepath.Join(g.templateDir, templatePath)
 	templateDir := filepath.Dir(fullPath)
 
-	g.logger.Debug("loading template from path template_path=%s full_path=%s template_dir=%s", templatePath, fullPath, templateDir)
+	l.Info("loading template from path template_path=%s full_path=%s template_dir=%s", templatePath, fullPath, templateDir)
 
 	// Parse template with custom functions
 	tmpl := template.New(filepath.Base(templatePath)).Funcs(template.FuncMap{
@@ -152,15 +162,17 @@ func (g *PDFGenerator) loadTemplate(templatePath string) (*template.Template, er
 
 	// Parse all templates in the directory to support includes
 	globPattern := filepath.Join(templateDir, "*.template")
-	g.logger.Debug("parsing template glob pattern glob_pattern=%s", globPattern)
+
+	l.Debug("parsing template glob pattern glob_pattern=%s", globPattern)
 
 	tmpl, err := tmpl.ParseGlob(globPattern)
 	if err != nil {
-		g.logger.Error("failed to parse template glob glob_pattern=%s error=%v", globPattern, err)
+		l.Warn("failed to parse template glob glob_pattern=%s error=%v", globPattern, err)
 		return nil, err
 	}
 
-	g.logger.Debug("template parsed successfully template_path=%s", templatePath)
+	l.Info("template parsed successfully template_path=%s", templatePath)
+
 	return tmpl, nil
 }
 
@@ -168,7 +180,7 @@ func (g *PDFGenerator) loadTemplate(templatePath string) (*template.Template, er
 func (g *PDFGenerator) htmlToPDF(ctx context.Context, html string) ([]byte, error) {
 	l := g.logger.WithFunctionContext("PDFGenerator/htmlToPDF")
 
-	l.Debug("starting HTML to PDF conversion html_size=%d", len(html))
+	l.Info("starting HTML to PDF conversion html_size=%d", len(html))
 
 	// Create a new context with Chrome options - minimal for reliability
 	opts := []chromedp.ExecAllocatorOption{
@@ -184,6 +196,7 @@ func (g *PDFGenerator) htmlToPDF(ctx context.Context, html string) ([]byte, erro
 		chromedp.Flag("disable-features", "TranslateUI"),
 		chromedp.Flag("disable-ipc-flooding-protection", true),
 	}
+
 	l.Debug("chrome options configured options_count=%d", len(opts))
 
 	// Check if Chrome is available
@@ -231,6 +244,7 @@ func (g *PDFGenerator) htmlToPDF(ctx context.Context, html string) ([]byte, erro
 	// Create a new context for the run (no timeout on first Run call)
 	runCtx, runCancel := chromedp.NewContext(allocCtx)
 	defer runCancel()
+
 	l.Debug("chrome context created")
 
 	// Write HTML to temporary file for Chrome to load
@@ -250,6 +264,7 @@ func (g *PDFGenerator) htmlToPDF(ctx context.Context, html string) ([]byte, erro
 
 	// Generate PDF using Chrome's print to PDF
 	l.Debug("starting Chrome PDF generation")
+
 	var pdfData []byte
 
 	err = chromedp.Run(runCtx,
@@ -289,6 +304,7 @@ func (g *PDFGenerator) htmlToPDF(ctx context.Context, html string) ([]byte, erro
 		return nil, fmt.Errorf("failed to generate PDF: %w", err)
 	}
 
-	l.Debug("PDF generation completed successfully pdf_size=%d", len(pdfData))
+	l.Info("PDF generation completed successfully pdf_size=%d", len(pdfData))
+
 	return pdfData, nil
 }

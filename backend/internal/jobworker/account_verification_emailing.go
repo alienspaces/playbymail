@@ -127,7 +127,7 @@ func (w *SendAccountVerificationEmailWorker) DoWork(ctx context.Context, m *doma
 	}
 
 	// Render the HTML email template
-	tmplPath := filepath.Join(w.Config.TemplatesPath, "account_verification.email.html")
+	tmplPath := filepath.Join(w.Config.TemplatesPath, "email", "account_verification.email.html")
 	tmpl, err := template.ParseFiles(tmplPath)
 	if err != nil {
 		l.Warn("failed to parse email template >%v<", err)
