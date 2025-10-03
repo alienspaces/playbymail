@@ -13,6 +13,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/utils/config"
 )
 
+// JobWorker provides the base functionality for all job workers in the system
 type JobWorker struct {
 	corejobworker.JobWorker
 	Config config.Config

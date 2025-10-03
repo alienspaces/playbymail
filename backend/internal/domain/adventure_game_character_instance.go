@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/jackc/pgx/v5"
+
 	"gitlab.com/alienspaces/playbymail/core/domain"
 	coreerror "gitlab.com/alienspaces/playbymail/core/error"
 	coresql "gitlab.com/alienspaces/playbymail/core/sql"

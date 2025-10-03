@@ -3,9 +3,6 @@ stages:
   - build
   - deploy
 
-variables:
-  GITLAB_PROJECT_ID: 71011306
-
 test-backend:
   variables:
     # Postgres variables for Gitlab CI postgres service

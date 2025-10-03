@@ -1,3 +1,15 @@
+// Game turn processing job workers handle the processing of game turns for all game types.
+//
+// IMPORTANT: This system assumes all players have already joined the game and have game assets created.
+// New player onboarding (join game) should be handled separately through API endpoints, not job workers.
+//
+// To add new game types:
+//  1. Create processor in internal/jobworker/[game_type]/
+//  2. Register in initializeProcessors() function below
+//
+// To add new turn sheet types (per game type):
+//  1. Create processor in internal/jobworker/[game_type]/turn_sheet_processor/
+//  2. Register in that game type's initializeTurnSheetProcessors() function
 package jobworker
 
 import (
@@ -63,9 +75,9 @@ func (w *GameTurnProcessingWorker) initializeProcessors(l logger.Logger, d *doma
 	}
 	processors[game_record.GameTypeAdventure] = adventureProcessor
 
-	// Future game types can be registered here
-	// processors[game_record.GameTypeStrategy] = strategyProcessor
-	// processors[game_record.GameTypePuzzle] = puzzleProcessor
+	// TODO: Add new game type processors here
+	// Example: processors[game_record.GameTypeStrategy] = strategyProcessor
+	// Example: processors[game_record.GameTypePuzzle] = puzzleProcessor
 
 	return processors, nil
 }

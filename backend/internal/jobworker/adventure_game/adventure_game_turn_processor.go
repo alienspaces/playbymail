@@ -10,12 +10,14 @@ import (
 )
 
 // ProcessTurn processes all turn sheets for an adventure game turn
+// NOTE: Assumes only existing character instances are present - new players not added during processing
 func (p *AdventureGame) ProcessTurnSheets(ctx context.Context, gameInstanceRec *game_record.GameInstance) error {
 	l := p.Logger.WithFunctionContext("AdventureGame/ProcessTurn")
 
 	l.Info("processing adventure game turn for instance >%s< turn >%d<", gameInstanceRec.ID, gameInstanceRec.CurrentTurn)
 
 	// Get all character instances for this game instance
+	// NOTE: This only retrieves existing character instances - new players are not added during turn processing
 	characterInstanceRecs, err := p.getCharacterInstancesForGameInstance(ctx, gameInstanceRec)
 	if err != nil {
 		l.Error("failed to get character instances for game instance >%s< error >%v<", gameInstanceRec.ID, err)

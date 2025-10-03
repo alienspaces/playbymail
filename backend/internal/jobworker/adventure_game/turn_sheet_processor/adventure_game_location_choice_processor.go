@@ -1,4 +1,4 @@
-package adventure_game
+package turn_sheet_processor
 
 import (
 	"context"
@@ -10,8 +10,8 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 )
 
-// Asserts that AdventureGameLocationChoiceProcessor implements the TurnSheetProcessor interface
-var _ TurnSheetProcessor = (*AdventureGameLocationChoiceProcessor)(nil)
+// AdventureGameLocationChoiceProcessor implements the TurnSheetProcessor interface
+// (defined in the parent adventure_game package)
 
 // AdventureGameLocationChoiceProcessor processes location choice turn sheets for adventure games
 type AdventureGameLocationChoiceProcessor struct {
