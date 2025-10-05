@@ -1,0 +1,46 @@
+{{template "base.template" .}}
+
+{{define "content"}}
+<div class="turn-sheet">
+    <div class="header">
+        <h2>Location Choice</h2>
+    </div>
+
+    <div class="current-location-section">
+        <h3>Current Location</h3>
+        <div class="current-location">
+            <h4>{{.LocationName}}</h4>
+            <p>{{.LocationDescription}}</p>
+        </div>
+    </div>
+
+    <div class="location-choice-section">
+        <h3>Choose Your Next Location</h3>
+        <p>Select where you would like to go next from the available paths:</p>
+        
+        {{if .LocationOptions}}
+        <div class="location-options">
+            {{range .LocationOptions}}
+            <div class="location-option">
+                <label class="location-radio">
+                    <input type="radio" name="location_choice" value="{{.LocationID}}">
+                    <span class="location-name">{{.LocationLinkName}}</span>
+                </label>
+                <p class="location-description">{{.LocationLinkDescription}}</p>
+            </div>
+            {{end}}
+        </div>
+        {{else}}
+        <div class="no-options">
+            <p>No available paths from this location.</p>
+        </div>
+        {{end}}
+    </div>
+
+    <div class="turn-info">
+        <p><strong>Turn Deadline:</strong> {{if .TurnDeadline}}{{.TurnDeadline}}{{else}}Next Friday at 5:00 PM{{end}}</p>
+        <p><strong>Instructions:</strong> Select your next location and return this form by the deadline to continue your adventure.</p>
+    </div>
+</div>
+{{end}}
+
