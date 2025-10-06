@@ -8,7 +8,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 )
 
-// GenerateTurnSheets generates all turn sheets for an adventure game turn
+// GenerateTurnSheets generates all turn sheet records for an adventure game turn
 func (p *AdventureGame) GenerateTurnSheets(ctx context.Context, gameInstanceRec *game_record.GameInstance) error {
 	l := p.Logger.WithFunctionContext("AdventureGame/GenerateTurnSheets")
 

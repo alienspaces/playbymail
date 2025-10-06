@@ -3,45 +3,62 @@
 {{define "content"}}
 <div class="turn-sheet">
     <div class="header">
-        <h1>{{.GameRec.Name}} - Turn {{.GameInstanceRec.CurrentTurn}}</h1>
-        <h2>Location Choice</h2>
-        <p>Player: {{.AccountRec.Name}}</p>
+        <h2>Join Game</h2>
+        <p>Welcome to {{.GameName}}!</p>
     </div>
 
-    <div class="current-location-section">
-        <h3>Current Location</h3>
-        <div class="current-location">
-            <h4>{{.TurnSheetData.CurrentLocationRec.Name}}</h4>
-            <p>{{.TurnSheetData.CurrentLocationRec.Description}}</p>
-        </div>
-    </div>
-
-    <div class="location-choice-section">
-        <h3>Choose Your Next Location</h3>
-        <p>Select where you would like to go next from the available paths:</p>
-        
-        {{if .TurnSheetData.AvailableLocationLinkRecs}}
-        <div class="location-options">
-            {{range .TurnSheetData.AvailableLocationLinkRecs}}
-            <div class="location-option">
-                <label class="location-radio">
-                    <input type="radio" name="location_choice" value="{{.ToAdventureGameLocationID}}">
-                    <span class="location-name">{{.Name}}</span>
-                </label>
-                <p class="location-description">{{.Description}}</p>
+    <div class="account-info-section">
+        <h3>Your PlayByMail Account</h3>
+        <div class="account-details">
+            <div class="form-group">
+                <label for="email">Email Address:</label>
+                <input type="email" id="email" name="email" required>
             </div>
-            {{end}}
+
+            <div class="form-group">
+                <label for="postal_attention">Attention:</label>
+                <input type="text" id="postal_attention" name="postal_attention" required>
+            </div>
+
+            <div class="form-group">
+                <label for="postal_address_line1">Address Line 1:</label>
+                <input type="text" id="postal_address_line1" name="postal_address_line1" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="postal_address_line2">Address Line 2:</label>
+                <input type="text" id="postal_address_line2" name="postal_address_line2">
+            </div>
+            
+            <div class="form-group">
+                <label for="state_province">State / Province:</label>
+                <input type="text" id="state_province" name="state_province" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="country">Country:</label>
+                <input type="text" id="country" name="country" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="area_code">Area Code:</label>
+                <input type="text" id="area_code" name="area_code" required>
+            </div>
         </div>
-        {{else}}
-        <div class="no-options">
-            <p>No available paths from this location.</p>
+    </div>
+
+    <div class="character-info-section">
+        <h3>Your Adventure Game Character</h3>
+        <div class="character-details">
+            <div class="form-group">
+                <label for="character_name">Character Name:</label>
+                <input type="text" id="character_name" name="character_name" required>
+            </div>
         </div>
-        {{end}}
     </div>
 
     <div class="turn-info">
-        <p><strong>Turn Deadline:</strong> {{if .TurnSheetData.NextTurnDeadline}}{{.TurnSheetData.NextTurnDeadline}}{{else}}Next Friday at 5:00 PM{{end}}</p>
-        <p><strong>Instructions:</strong> Select your next location and return this form by the deadline to continue your adventure.</p>
+        <p><strong>Instructions:</strong> Fill out your account information and character name, then return this form to join the game.</p>
     </div>
 </div>
 {{end}}

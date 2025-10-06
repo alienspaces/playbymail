@@ -9,8 +9,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 )
 
-// ProcessTurn processes all turn sheets for an adventure game turn
-// NOTE: Assumes only existing character instances are present - new players not added during processing
+// ProcessTurnSheets processes all turn sheet records for an adventure game turn
 func (p *AdventureGame) ProcessTurnSheets(ctx context.Context, gameInstanceRec *game_record.GameInstance) error {
 	l := p.Logger.WithFunctionContext("AdventureGame/ProcessTurn")
 

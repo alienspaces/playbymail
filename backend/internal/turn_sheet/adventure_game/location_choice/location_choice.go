@@ -1,8 +1,6 @@
 package location_choice
 
 import (
-	"time"
-
 	"gitlab.com/alienspaces/playbymail/internal/turn_sheet"
 )
 
@@ -22,7 +20,4 @@ type LocationChoiceData struct {
 
 	// Available location options
 	LocationOptions []LocationOption
-
-	// Turn deadline information
-	TurnDeadline *time.Time
 }

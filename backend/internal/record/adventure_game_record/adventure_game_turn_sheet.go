@@ -23,11 +23,13 @@ const (
 const (
 	// Adventure game sheet types
 	AdventureSheetTypeLocationChoice = "location_choice"
+	AdventureSheetTypeJoinGame       = "join_game"
 )
 
 // GetAdventureGameSheetTypes returns the sheet types for adventure games
 var AdventureGameSheetTypes = set.New(
 	AdventureSheetTypeLocationChoice,
+	AdventureSheetTypeJoinGame,
 )
 
 type AdventureGameTurnSheet struct {

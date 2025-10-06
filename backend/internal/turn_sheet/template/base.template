@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{.GameRec.Name}} - Turn {{.GameInstanceRec.CurrentTurn}}</title>
+    <title>{{.GameName}} - Turn {{.TurnNumber}}</title>
     <style>
         /* Base styles for PDF generation */
         body {
@@ -135,7 +135,7 @@
             color: #7f8c8d;
         }
         
-        .turn-sheet-code {
+        .turn-sheet-deadline {
             margin-top: 15px;
             padding: 10px;
             background-color: #f8f9fa;
@@ -146,6 +146,27 @@
             word-break: break-all;
         }
         
+        .turn-sheet-deadline-label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #495057;
+        }
+        
+        .turn-sheet-deadline-value {
+            color: #6c757d;
+        }
+
+        .turn-sheet-code {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 10px;
+            word-break: break-all;
+        }
+
         .turn-sheet-code-label {
             font-weight: bold;
             margin-bottom: 5px;
@@ -154,6 +175,36 @@
         
         .turn-sheet-code-value {
             color: #6c757d;
+        }
+        
+        /* Form styling */
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .form-group input[type="text"],
+        .form-group input[type="email"] {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+            font-family: 'Times New Roman', serif;
+            font-size: 14px;
+            background-color: white;
+        }
+        
+        .form-group input[type="text"]:focus,
+        .form-group input[type="email"]:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
         }
         
         @media print {
@@ -216,6 +267,14 @@
                 {{end}}
             {{end}}
             
+            <!-- Turn Sheet Deadline -->
+            {{if .TurnSheetDeadline}}
+            <div class="turn-sheet-deadline">
+                <div class="turn-sheet-deadline-label">Turn Sheet Deadline:</div>
+                <div class="turn-sheet-deadline-value">{{.TurnSheetDeadline}}</div>
+            </div>
+            {{end}}
+
             <!-- Turn Sheet Identification Code -->
             {{if .TurnSheetCode}}
             <div class="turn-sheet-code">

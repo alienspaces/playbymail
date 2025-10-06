@@ -1,5 +1,7 @@
 package turn_sheet
 
+import "time"
+
 type TurnSheetData struct {
 	// Game data
 	GameName *string
@@ -20,6 +22,7 @@ type TurnSheetData struct {
 	Header map[string]string
 	Footer map[string]string
 
-	// Turn sheet identification
-	TurnSheetCode *string
+	// Turn sheet
+	TurnSheetDeadline *time.Time
+	TurnSheetCode     *string
 }
