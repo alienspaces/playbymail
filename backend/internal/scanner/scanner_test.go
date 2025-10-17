@@ -40,6 +40,60 @@ func TestNewScanner(t *testing.T) {
 	}
 }
 
+func TestScanner_ExtractTextFromImage(t *testing.T) {
+	tests := []struct {
+		name        string
+		imageData   []byte
+		expectError bool
+		validate    func(t *testing.T, text string, err error)
+	}{
+		{
+			name:        "returns error for unimplemented OCR",
+			imageData:   []byte("mock image data"),
+			expectError: true,
+			validate: func(t *testing.T, text string, err error) {
+				require.Empty(t, text, "Text should be empty on error")
+				require.Error(t, err, "Should return error for unimplemented OCR")
+				require.Contains(t, err.Error(), "OCR not implemented", "Error should mention OCR not implemented")
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Setup harness
+			dcfg := harness.DefaultDataConfig()
+			cfg, err := config.Parse()
+			require.NoError(t, err, "Parse returns without error")
+
+			l, s, j, err := deps.NewDefaultDependencies(cfg)
+			require.NoError(t, err, "Default dependencies returns without error")
+
+			h, err := harness.NewTesting(l, s, j, cfg, dcfg)
+			require.NoError(t, err, "NewTesting returns without error")
+
+			_, err = h.Setup()
+			require.NoError(t, err, "Setup returns without error")
+			defer func() {
+				err = h.Teardown()
+				require.NoError(t, err, "Teardown returns without error")
+			}()
+
+			// Get domain
+			d := h.Domain.(*domain.Domain)
+
+			// Create scanner
+			scanner := NewScanner(l, d)
+
+			// Execute test
+			text, err := scanner.ExtractTextFromImage(context.Background(), tt.imageData)
+
+			// Verify results
+			tt.validate(t, text, err)
+		})
+	}
+}
+
 func TestScanner_ParseTurnSheetCodeFromImage(t *testing.T) {
 	tests := []struct {
 		name        string
