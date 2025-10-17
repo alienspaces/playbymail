@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{.GameName}} - Turn {{.TurnNumber}}</title>
+    <title>{{.GameRec.Name}} - Turn {{.GameInstanceRec.CurrentTurn}}</title>
     <style>
         /* Base styles for PDF generation */
         body {
@@ -215,8 +215,8 @@
     <div class="content">
         <!-- Header section -->
         <div class="header">
-            <h1>{{.GameName}}</h1>
-            <h2>Turn {{.TurnNumber}} - {{.AccountName}}</h2>
+            <h1>{{.GameRec.Name}}</h1>
+            <h2>Turn {{.GameInstanceRec.CurrentTurn}} - {{.AccountRec.Name}}</h2>
             {{if .Header}}
                 {{range $key, $value := .Header}}
                     <div class="header-{{$key}}">{{$value}}</div>
@@ -226,7 +226,7 @@
 
         <!-- Main content area -->
         <div class="main-content">
-            {{template "content" .}}
+            {{template "content" .TurnSheetData}}
         </div>
 
         <!-- Footer section -->
@@ -238,10 +238,10 @@
             {{end}}
             
             <!-- Turn Sheet Deadline -->
-            {{if .TurnSheetDeadline}}
+            {{if and .TurnSheetData .TurnSheetData.TurnSheetDeadline}}
             <div class="turn-sheet-deadline">
                 <div class="turn-sheet-deadline-label">Turn Sheet Deadline:</div>
-                <div class="turn-sheet-deadline-value">{{.TurnSheetDeadline}}</div>
+                <div class="turn-sheet-deadline-value">{{.TurnSheetData.TurnSheetDeadline}}</div>
             </div>
             {{end}}
 

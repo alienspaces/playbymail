@@ -153,7 +153,7 @@
     </div>
 
     <div class="turn-info">
-        <p><strong>Turn Deadline:</strong> {{if .TurnDeadline}}{{.TurnDeadline}}{{else}}Next Friday at 5:00 PM{{end}}</p>
+        <p><strong>Turn Deadline:</strong> {{if .TurnSheetDeadline}}{{.TurnSheetDeadline}}{{else}}Next Friday at 5:00 PM{{end}}</p>
         <p><strong>Instructions:</strong> Select your next location and return this form by the deadline to continue your adventure.</p>
     </div>
 </div>

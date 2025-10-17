@@ -4,7 +4,7 @@
 <div class="turn-sheet">
     <div class="header">
         <h2>Join Game</h2>
-        <p>Welcome to {{.GameName}}!</p>
+        <p>Welcome to {{.GameRec.Name}}!</p>
     </div>
 
     <div class="account-info-section">
