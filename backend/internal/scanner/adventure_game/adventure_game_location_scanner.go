@@ -8,6 +8,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
+	"gitlab.com/alienspaces/playbymail/internal/turn_sheet/adventure_game/location_choice"
 )
 
 // AdventureGameLocationScanner handles scanning of location choice turn sheets
@@ -38,7 +39,7 @@ func (s *AdventureGameLocationScanner) ScanLocationChoiceSheet(ctx context.Conte
 	// For now, we'll mock the OCR extraction process
 	extractedChoice := "The dark alley" // Mock extracted choice from OCR
 
-	scanData := &LocationChoiceScanData{
+	scanData := &location_choice.LocationChoiceScanData{
 		// OCR extracted data
 		Choices: []string{extractedChoice},
 	}

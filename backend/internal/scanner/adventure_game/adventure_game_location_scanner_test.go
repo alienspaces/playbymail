@@ -11,6 +11,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/harness"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
+	"gitlab.com/alienspaces/playbymail/internal/turn_sheet/adventure_game/location_choice"
 	"gitlab.com/alienspaces/playbymail/internal/utils/config"
 	"gitlab.com/alienspaces/playbymail/internal/utils/deps"
 )
@@ -205,19 +206,19 @@ func TestAdventureGameLocationScanner_ScanLocationChoiceSheet(t *testing.T) {
 func TestLocationChoiceScanData_JSONSerialization(t *testing.T) {
 	tests := []struct {
 		name     string
-		scanData *LocationChoiceScanData
+		scanData *location_choice.LocationChoiceScanData
 		validate func(t *testing.T, jsonData []byte)
 	}{
 		{
 			name: "serializes valid scan data",
-			scanData: &LocationChoiceScanData{
+			scanData: &location_choice.LocationChoiceScanData{
 				Choices: []string{"The dark alley", "The bright path"},
 			},
 			validate: func(t *testing.T, jsonData []byte) {
 				require.NotEmpty(t, jsonData, "JSON data should not be empty")
 
 				// Verify we can unmarshal it back
-				var unmarshaled LocationChoiceScanData
+				var unmarshaled location_choice.LocationChoiceScanData
 				err := json.Unmarshal(jsonData, &unmarshaled)
 				require.NoError(t, err, "Should unmarshal without error")
 				require.Len(t, unmarshaled.Choices, 2, "Should have two choices")
@@ -227,14 +228,14 @@ func TestLocationChoiceScanData_JSONSerialization(t *testing.T) {
 		},
 		{
 			name: "serializes empty scan data",
-			scanData: &LocationChoiceScanData{
+			scanData: &location_choice.LocationChoiceScanData{
 				Choices: []string{},
 			},
 			validate: func(t *testing.T, jsonData []byte) {
 				require.NotEmpty(t, jsonData, "JSON data should not be empty")
 
 				// Verify we can unmarshal it back
-				var unmarshaled LocationChoiceScanData
+				var unmarshaled location_choice.LocationChoiceScanData
 				err := json.Unmarshal(jsonData, &unmarshaled)
 				require.NoError(t, err, "Should unmarshal without error")
 				require.Len(t, unmarshaled.Choices, 0, "Should have no choices")
@@ -242,14 +243,14 @@ func TestLocationChoiceScanData_JSONSerialization(t *testing.T) {
 		},
 		{
 			name: "serializes nil choices",
-			scanData: &LocationChoiceScanData{
+			scanData: &location_choice.LocationChoiceScanData{
 				Choices: nil,
 			},
 			validate: func(t *testing.T, jsonData []byte) {
 				require.NotEmpty(t, jsonData, "JSON data should not be empty")
 
 				// Verify we can unmarshal it back
-				var unmarshaled LocationChoiceScanData
+				var unmarshaled location_choice.LocationChoiceScanData
 				err := json.Unmarshal(jsonData, &unmarshaled)
 				require.NoError(t, err, "Should unmarshal without error")
 				require.Nil(t, unmarshaled.Choices, "Choices should be nil")
