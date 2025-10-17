@@ -160,15 +160,24 @@ func (g *PDFGenerator) loadTemplate(templatePath string) (*template.Template, er
 		"div": func(a, b int) int { return a / b },
 	})
 
-	// Parse all templates in the directory to support includes
-	globPattern := filepath.Join(templateDir, "*.template")
+	// Parse base template first (located in turn_sheet/template/)
+	baseTemplatePath := filepath.Join(g.templateDir, "template", "*.template")
+	l.Debug("parsing base templates glob_pattern=%s", baseTemplatePath)
 
-	l.Debug("parsing template glob pattern glob_pattern=%s", globPattern)
-
-	tmpl, err := tmpl.ParseGlob(globPattern)
+	tmpl, err := tmpl.ParseGlob(baseTemplatePath)
 	if err != nil {
-		l.Warn("failed to parse template glob glob_pattern=%s error=%v", globPattern, err)
-		return nil, err
+		l.Warn("failed to parse base templates glob_pattern=%s error=%v", baseTemplatePath, err)
+		return nil, fmt.Errorf("failed to parse base templates: %w", err)
+	}
+
+	// Parse specific template directory to support type-specific includes
+	globPattern := filepath.Join(templateDir, "*.template")
+	l.Debug("parsing specific templates glob_pattern=%s", globPattern)
+
+	tmpl, err = tmpl.ParseGlob(globPattern)
+	if err != nil {
+		l.Warn("failed to parse specific templates glob_pattern=%s error=%v", globPattern, err)
+		return nil, fmt.Errorf("failed to parse specific templates: %w", err)
 	}
 
 	l.Info("template parsed successfully template_path=%s", templatePath)
