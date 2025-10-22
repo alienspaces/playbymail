@@ -259,7 +259,7 @@ func TestLocationChoiceScan(t *testing.T) {
 			cfg := config.Config{}
 			logger, err := log.NewLogger(cfg)
 			require.NoError(t, err)
-			
+
 			// create minimal domain for scanner
 			domain := &domain.Domain{}
 			s := scanner.NewScanner(logger, domain)

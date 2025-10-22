@@ -4,7 +4,7 @@ This directory contains test fixtures for location choice turn sheet testing.
 
 ## Generated PDF
 
-- `location_choice_test_sheet.pdf` - Generated PDF for physical testing (120KB)
+- `location_choice_test_sheet.pdf` - Generated PDF for physical testing (95KB, 1 page)
 
 ## Test Images
 
@@ -50,7 +50,7 @@ Test images should be:
 
 ## Testing Status
 
-- **PDF Generation**: ✅ Working (120KB PDF generated)
+- **PDF Generation**: ✅ Working (95KB PDF generated, fits on 1 page)
 - **Image Loading**: ✅ Working (8.8MB image loaded successfully)
 - **Scanner Framework**: ✅ Ready (expects OCR implementation)
 - **OCR Implementation**: ⏳ Pending
