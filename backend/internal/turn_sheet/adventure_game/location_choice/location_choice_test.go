@@ -153,17 +153,17 @@ func TestGenerateLocationChoicePDF(t *testing.T) {
 					{
 						LocationID:              "crystal_caverns",
 						LocationLinkName:        "Crystal Caverns",
-						LocationLinkDescription: "Deep underground caves filled with glowing crystals.",
+						LocationLinkDescription: "A dusty passageway leads east from the grove to a room with flickering lights.",
 					},
 					{
 						LocationID:              "floating_islands",
 						LocationLinkName:        "Floating Islands",
-						LocationLinkDescription: "Mysterious islands suspended in the sky above the clouds.",
+						LocationLinkDescription: "An ancient stone bridge arches upward into the clouds above.",
 					},
 					{
 						LocationID:              "shadow_valley",
 						LocationLinkName:        "Shadow Valley",
-						LocationLinkDescription: "A dark valley shrouded in perpetual twilight.",
+						LocationLinkDescription: "A narrow, overgrown path winds down into the valley below.",
 					},
 				},
 			},
