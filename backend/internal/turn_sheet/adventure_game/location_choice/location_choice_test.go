@@ -9,6 +9,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"gitlab.com/alienspaces/playbymail/core/config"
 	"gitlab.com/alienspaces/playbymail/core/log"
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/generator"
@@ -172,21 +173,15 @@ func TestGenerateLocationChoicePDF(t *testing.T) {
 
 			ctx := context.Background()
 
-			// setup test harness
-			h := deps.NewHarness(t)
-			_, err := h.Setup()
-			require.NoError(t, err)
-			defer func() {
-				err = h.Teardown()
-				require.NoError(t, err)
-			}()
-
 			// setup test directories
 			templateDir := getTemplateDir(t)
 			outputDir := t.TempDir()
 
-			// create generator
-			gen := generator.NewPDFGenerator(h.Log.(*log.Log), templateDir, outputDir)
+			// create generator with simple logger (no harness)
+			cfg := config.Config{}
+			logger, err := log.NewLogger(cfg)
+			require.NoError(t, err)
+			gen := generator.NewPDFGenerator(logger, templateDir, outputDir)
 
 			// prepare template data
 			templateData := createTestTemplateData(t, tt.data)
@@ -201,6 +196,26 @@ func TestGenerateLocationChoicePDF(t *testing.T) {
 
 			require.NoError(t, err)
 
+			// Save PDF for physical testing when flag is enabled
+			if os.Getenv("SAVE_PDF_FOR_TESTING") == "true" {
+				testDataDir := filepath.Join("testdata")
+				err = os.MkdirAll(testDataDir, 0755)
+				require.NoError(t, err)
+
+				pdfPath := filepath.Join(testDataDir, "location_choice_test_sheet.pdf")
+				err = os.WriteFile(pdfPath, pdfData, 0644)
+				require.NoError(t, err)
+
+				t.Logf("Saved PDF for physical testing: %s", pdfPath)
+				t.Logf("PDF size: %d bytes", len(pdfData))
+				t.Logf("Instructions:")
+				t.Logf("1. Print the PDF")
+				t.Logf("2. Fill out the turn sheet by hand")
+				t.Logf("3. Take a photo of the completed sheet")
+				t.Logf("4. Save the photo as 'location_choice_filled.jpg' in testdata/")
+				t.Logf("5. Use the photo for OCR testing")
+			}
+
 			if tt.validate != nil {
 				tt.validate(t, pdfData)
 			}
@@ -209,7 +224,7 @@ func TestGenerateLocationChoicePDF(t *testing.T) {
 }
 
 // TestScanLocationChoice tests scanning completed location choice turn sheets
-func TestScanLocationChoice(t *testing.T) {
+func TestLocationChoiceScan(t *testing.T) {
 	tests := []struct {
 		name         string
 		imageFile    string
@@ -266,8 +281,6 @@ func TestScanLocationChoice(t *testing.T) {
 // TestLocationChoiceIntegration tests the complete workflow of generating
 // and scanning location choice turn sheets
 func TestLocationChoiceIntegration(t *testing.T) {
-	t.Skip("integration test - requires OCR implementation")
-
 	h := deps.NewHarness(t)
 	_, err := h.Setup()
 	require.NoError(t, err)
@@ -328,12 +341,23 @@ func TestLocationChoiceIntegration(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEmpty(t, pdfData)
 
-	// TODO: When OCR is implemented:
-	// 1. Simulate player filling out turn sheet
-	// 2. Scan the completed turn sheet
-	// 3. Update scanned_data field
-	// 4. Verify scanned_data structure
-	// 5. Process scanned data to update game state
+	// Save PDF to testdata directory for physical testing
+	testDataDir := filepath.Join("testdata")
+	err = os.MkdirAll(testDataDir, 0755)
+	require.NoError(t, err)
+
+	pdfPath := filepath.Join(testDataDir, "location_choice_test_sheet.pdf")
+	err = os.WriteFile(pdfPath, pdfData, 0644)
+	require.NoError(t, err)
+
+	t.Logf("Generated test PDF: %s", pdfPath)
+	t.Logf("PDF size: %d bytes", len(pdfData))
+	t.Logf("Instructions:")
+	t.Logf("1. Print the PDF")
+	t.Logf("2. Fill out the turn sheet by hand")
+	t.Logf("3. Take a photo of the completed sheet")
+	t.Logf("4. Save the photo as 'location_choice_filled.jpg' in testdata/")
+	t.Logf("5. Use the photo for OCR testing")
 }
 
 // Helper functions
