@@ -242,12 +242,12 @@ func TestLocationChoiceScan(t *testing.T) {
 		expectError  bool
 	}{
 		{
-			name:      "scan not implemented yet",
-			imageFile: "valid_location_choice.png",
+			name:      "scan real filled turn sheet",
+			imageFile: "location_choice_test_sheet.jpg",
 			expectedData: &location_choice.LocationChoiceScanData{
-				Choices: []string{"loc-1"},
+				Choices: []string{"crystal_caverns"}, // Player selected Crystal Caverns
 			},
-			expectError: true, // OCR not implemented yet
+			expectError: true, // OCR not implemented yet, but we have real test data
 		},
 	}
 
@@ -255,26 +255,25 @@ func TestLocationChoiceScan(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			ctx := context.Background()
 
-			// setup test harness
-			h := deps.NewHarness(t)
-			_, err := h.Setup()
+			// create scanner with simple logger and domain (no harness)
+			cfg := config.Config{}
+			logger, err := log.NewLogger(cfg)
 			require.NoError(t, err)
-			defer func() {
-				err = h.Teardown()
-				require.NoError(t, err)
-			}()
-
-			// setup scanner
-			s := scanner.NewScanner(h.Logger("TestScanLocationChoice"), h.Domain.(*domain.Domain))
+			
+			// create minimal domain for scanner
+			domain := &domain.Domain{}
+			s := scanner.NewScanner(logger, domain)
 
 			// load test image
 			imageData := loadTestImage(t, tt.imageFile)
+			t.Logf("Loaded test image: %s (%d bytes)", tt.imageFile, len(imageData))
 
 			// extract text from image
 			_, err = s.ExtractTextFromImage(ctx, imageData)
 
 			if tt.expectError {
 				require.Error(t, err)
+				t.Logf("Expected error (OCR not implemented): %v", err)
 				return
 			}
 
@@ -429,7 +428,11 @@ func getTemplateDir(t *testing.T) string {
 func loadTestImage(t *testing.T, filename string) []byte {
 	t.Helper()
 
-	// for now, return mock image data since we don't have real test images yet
-	// TODO: Add real test images to testdata/ when OCR is implemented
-	return []byte("mock-image-data-for-testing")
+	imagePath := filepath.Join("testdata", filename)
+	imageData, err := os.ReadFile(imagePath)
+	if err != nil {
+		t.Skipf("test image not found: %s", imagePath)
+	}
+
+	return imageData
 }

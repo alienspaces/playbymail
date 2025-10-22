@@ -8,9 +8,9 @@ This directory contains test fixtures for location choice turn sheet testing.
 
 ## Test Images
 
-When OCR scanning is implemented, add test images here:
-
-- `location_choice_filled.jpg` - Sample scanned turn sheet image (to be added)
+- `location_choice_test_sheet.jpg` - Real scanned turn sheet image (8.8MB) ✅
+  - Player selected "Crystal Caverns" 
+  - High-quality photo ready for OCR testing
 - `valid_location_choice.png` - Clean scan with all fields filled correctly
 - `poor_quality_scan.png` - Low quality scan to test error handling
 - `missing_code_scan.png` - Scan with missing turn sheet code
@@ -40,11 +40,18 @@ Test images should be:
 
 ## Adding Test Images
 
-When adding new test images:
+✅ **COMPLETED**: Real test image added!
 
-1. Print the generated PDF
-2. Fill out the turn sheet by hand
-3. Take a high-quality photo of the completed sheet
-4. Save as `location_choice_filled.jpg` in this directory
-5. Update the corresponding expected result JSON file
+1. ✅ Print the generated PDF
+2. ✅ Fill out the turn sheet by hand (selected "Crystal Caverns")
+3. ✅ Take a high-quality photo of the completed sheet
+4. ✅ Save as `location_choice_test_sheet.jpg` in this directory
+5. ✅ Test framework ready for OCR implementation
+
+## Testing Status
+
+- **PDF Generation**: ✅ Working (120KB PDF generated)
+- **Image Loading**: ✅ Working (8.8MB image loaded successfully)
+- **Scanner Framework**: ✅ Ready (expects OCR implementation)
+- **OCR Implementation**: ⏳ Pending
 
