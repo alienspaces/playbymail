@@ -4,7 +4,7 @@ This directory contains test fixtures for location choice turn sheet testing.
 
 ## Generated PDF
 
-- `location_choice_test_sheet.pdf` - Generated PDF for physical testing (105KB)
+- `location_choice_test_sheet.pdf` - Generated PDF for physical testing (120KB)
 
 ## Test Images
 

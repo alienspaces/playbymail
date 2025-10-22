@@ -147,13 +147,23 @@ func TestGenerateLocationChoicePDF(t *testing.T) {
 		{
 			name: "generate PDF with location options",
 			data: &location_choice.LocationChoiceData{
-				LocationName:        "Crystal Caverns",
-				LocationDescription: "A vast network of glittering caves.",
+				LocationName:        "Mystic Grove",
+				LocationDescription: "A peaceful forest clearing with ancient trees and magical energy.",
 				LocationOptions: []location_choice.LocationOption{
 					{
-						LocationID:              "loc-2",
+						LocationID:              "crystal_caverns",
+						LocationLinkName:        "Crystal Caverns",
+						LocationLinkDescription: "Deep underground caves filled with glowing crystals.",
+					},
+					{
+						LocationID:              "floating_islands",
 						LocationLinkName:        "Floating Islands",
-						LocationLinkDescription: "Sky islands connected by bridges.",
+						LocationLinkDescription: "Mysterious islands suspended in the sky above the clouds.",
+					},
+					{
+						LocationID:              "shadow_valley",
+						LocationLinkName:        "Shadow Valley",
+						LocationLinkDescription: "A dark valley shrouded in perpetual twilight.",
 					},
 				},
 			},
