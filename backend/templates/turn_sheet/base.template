@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{if .GameName}}{{.GameName}}{{else}}Turn Sheet{{end}} - Turn {{if .TurnNumber}}{{.TurnNumber}}{{else}}0{{end}}</title>
+    <style>
+        /* Base styles for PDF generation */
+        body {
+            font-family: 'Times New Roman', serif;
+            margin: 0;
+            padding: 0 0 100px 0;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        
+        .background-container {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .background-top {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            z-index: 0;
+        }
+        
+        .background-middle {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            z-index: 1;
+        }
+        
+        .background-bottom {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            z-index: 0;
+        }
+        
+        .content {
+            position: relative;
+            z-index: 2;
+            padding: 20px;
+            padding-bottom: 60px; /* Space for fixed turn sheet code */
+            background-color: rgba(255, 255, 255, 0.9);
+            margin: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #333;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            color: #2c3e50;
+        }
+        
+        .header h2 {
+            margin: 5px 0 0 0;
+            font-size: 18px;
+            color: #7f8c8d;
+        }
+        
+        .turn-sheet {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 10px;
+            border-top: 1px solid #bdc3c7;
+            font-size: 12px;
+            color: #7f8c8d;
+        }
+        
+        .turn-sheet-info {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 10px;
+            word-break: break-all;
+        }
+        
+        .turn-sheet-info-label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #495057;
+        }
+        
+        .turn-sheet-info-value {
+            color: #6c757d;
+        }
+
+        .turn-sheet-footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            margin: 0;
+            padding: 0 20px;
+            background-color: #f8f9fa;
+            border-top: 1px solid #dee2e6;
+            z-index: 1000;
+        }
+
+        .turn-sheet-footer-item {
+            padding: 8px 0;
+            border-bottom: 1px solid #dee2e6;
+            font-family: 'Courier New', monospace;
+            font-size: 10px;
+            word-break: break-all;
+        }
+
+        .turn-sheet-footer-item:last-child {
+            border-bottom: none;
+        }
+
+        .turn-sheet-footer-label {
+            font-weight: bold;
+            margin-bottom: 3px;
+            color: #495057;
+        }
+        
+        .turn-sheet-footer-value {
+            color: #6c757d;
+        }
+        
+        /* Form styling */
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .form-group input[type="text"],
+        .form-group input[type="email"] {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+            font-family: 'Times New Roman', serif;
+            font-size: 14px;
+            background-color: white;
+        }
+        
+        .form-group input[type="text"]:focus,
+        .form-group input[type="email"]:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
+        }
+        
+        @media print {
+            body {
+                background-color: white;
+            }
+            
+            .background-container {
+                display: none;
+            }
+            
+            .content {
+                background-color: white;
+                box-shadow: none;
+                margin: 0;
+                padding: 0;
+            }
+        }
+    </style>
+    
+    <!-- Child template styles -->
+    {{block "styles" .}}{{end}}
+</head>
+<body>
+    <!-- Background image container -->
+    <div class="background-container">
+        {{if .BackgroundTop}}
+        <div class="background-top" style="background-image: url('{{.BackgroundTop}}');"></div>
+        {{end}}
+        
+        {{if .BackgroundMiddle}}
+        <div class="background-middle" style="background-image: url('{{.BackgroundMiddle}}');"></div>
+        {{end}}
+        
+        {{if .BackgroundBottom}}
+        <div class="background-bottom" style="background-image: url('{{.BackgroundBottom}}');"></div>
+        {{end}}
+    </div>
+
+    <!-- Main content -->
+    <div class="content">
+        <!-- Header section -->
+        <div class="header">
+            <h1>{{if .GameName}}{{.GameName}}{{else}}Game{{end}}</h1>
+            <h2>Turn {{if .TurnNumber}}{{.TurnNumber}}{{else}}0{{end}}{{if .AccountName}} - {{.AccountName}}{{end}}</h2>
+        </div>
+
+        <!-- Main content area -->
+        <div class="main-content">
+            {{template "content" .}}
+        </div>
+
+        <!-- Footer section -->
+        <div class="footer">
+            <!-- Placeholder for fixed footer spacing -->
+        </div>
+
+        <!-- Fixed footer at bottom of page -->
+        {{if or .TurnSheetDeadline .TurnSheetCode}}
+        <div class="turn-sheet-footer">
+            <!-- Turn Sheet Deadline -->
+            {{if .TurnSheetDeadline}}
+            <div class="turn-sheet-footer-item">
+                <div class="turn-sheet-footer-label">Turn Sheet Deadline:</div>
+                <div class="turn-sheet-footer-value">{{.TurnSheetDeadline}}</div>
+            </div>
+            {{end}}
+
+            <!-- Turn Sheet Identification Code -->
+            {{if .TurnSheetCode}}
+            <div class="turn-sheet-footer-item">
+                <div class="turn-sheet-footer-label">Turn Sheet Code:</div>
+                <div class="turn-sheet-footer-value">{{.TurnSheetCode}}</div>
+            </div>
+            {{end}}
+        </div>
+        {{end}}
+    </div>
+</body>
+</html>

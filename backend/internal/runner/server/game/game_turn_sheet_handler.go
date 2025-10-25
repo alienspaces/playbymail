@@ -20,7 +20,6 @@ import (
 
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/turn_sheet"
-	"gitlab.com/alienspaces/playbymail/internal/turn_sheet/base"
 	"gitlab.com/alienspaces/playbymail/internal/utils/logging"
 	"gitlab.com/alienspaces/playbymail/internal/utils/turnsheet"
 )
@@ -104,7 +103,11 @@ func uploadTurnSheetHandler(w http.ResponseWriter, r *http.Request, pp httproute
 		return coreerror.NewInvalidDataError("empty image data provided")
 	}
 
-	baseProcessor := base.NewBaseProcessor(l)
+	// Get config from runner (via domain)
+	// Note: config is available in the runner but handlers don't get it directly
+	// We'll need to get it through the domain or create a new processor without config
+	// For now, we'll create a base processor without config for scanning
+	baseProcessor := turn_sheet.NewBaseProcessor(l, nil)
 
 	// Step 1: Extract turn sheet code from image
 	turnSheetCode, err := baseProcessor.ParseTurnSheetCodeFromImage(r.Context(), imageData)
@@ -134,7 +137,8 @@ func uploadTurnSheetHandler(w http.ResponseWriter, r *http.Request, pp httproute
 	}
 
 	// Step 5: Get the appropriate document processor for this turn sheet type
-	processor, err := turn_sheet.GetDocumentProcessor(l, turnSheetRec.SheetType)
+	// Note: processor is used for scanning only, so config is not needed here
+	processor, err := turn_sheet.GetDocumentProcessor(l, nil, turnSheetRec.SheetType)
 	if err != nil {
 		l.Warn("failed to get processor for turn sheet type >%s< >%v<", turnSheetRec.SheetType, err)
 		return coreerror.NewInvalidDataError("unsupported turn sheet type: %s", turnSheetRec.SheetType)

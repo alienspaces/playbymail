@@ -1,9 +1,0 @@
-# Processing
-
-The abstraction from the domain modeller layer and the job and API handler layer where
-pure functions exists that accept a logger, a modeller and a job client and process
-complicated business processes while avoiding circular dependencies.
-
-The functions may be called from job code or API handler code.
-
-The domain model continue to ensure that data integrity and rules are maintained.

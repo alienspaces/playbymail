@@ -16,9 +16,9 @@ import (
 
 // PDFGenerator handles PDF generation from HTML templates
 type PDFGenerator struct {
-	logger      logger.Logger
-	templateDir string
-	outputDir   string
+	logger       logger.Logger
+	templatePath string
+	outputDir    string
 }
 
 // NewPDFGenerator creates a new PDF generator
@@ -26,6 +26,16 @@ func NewPDFGenerator(l logger.Logger) *PDFGenerator {
 	return &PDFGenerator{
 		logger: l,
 	}
+}
+
+// SetTemplatePath sets the template path
+func (g *PDFGenerator) SetTemplatePath(path string) {
+	g.templatePath = path
+}
+
+// SetOutputDir sets the output directory
+func (g *PDFGenerator) SetOutputDir(dir string) {
+	g.outputDir = dir
 }
 
 // GenerateHTML generates HTML from a template
@@ -119,7 +129,13 @@ func (g *PDFGenerator) GeneratePDFToFile(ctx context.Context, templatePath strin
 func (g *PDFGenerator) loadTemplate(templatePath string) (*template.Template, error) {
 	l := g.logger.WithFunctionContext("PDFGenerator/loadTemplate")
 
-	fullPath := filepath.Join(g.templateDir, templatePath)
+	// If templatePath is empty, assume we're running from backend/ directory
+	templateBase := g.templatePath
+	if templateBase == "" {
+		templateBase = "."
+	}
+
+	fullPath := filepath.Join(templateBase, templatePath)
 	templateDir := filepath.Dir(fullPath)
 
 	l.Info("loading template from path template_path=%s full_path=%s template_dir=%s", templatePath, fullPath, templateDir)
@@ -132,24 +148,32 @@ func (g *PDFGenerator) loadTemplate(templatePath string) (*template.Template, er
 		"div": func(a, b int) int { return a / b },
 	})
 
-	// Parse base template first (located in turn_sheet/base/template/)
-	baseTemplatePath := filepath.Join(g.templateDir, "base", "template", "*.template")
-	l.Debug("parsing base templates glob_pattern=%s", baseTemplatePath)
+	// Parse base template first (located in turn_sheet/)
+	// Make path absolute to avoid issues with working directory
+	var baseTemplatePath string
+	if templateBase != "" && templateBase != "." {
+		baseTemplatePath = filepath.Join(templateBase, "turn_sheet", "base.template")
+	} else {
+		// We're running from backend/, so use relative path from there
+		baseTemplatePath = filepath.Join("templates", "turn_sheet", "base.template")
+	}
+	l.Info("parsing base template path=%s", baseTemplatePath)
 
-	tmpl, err := tmpl.ParseGlob(baseTemplatePath)
+	var err error
+	tmpl, err = tmpl.ParseFiles(baseTemplatePath)
 	if err != nil {
-		l.Warn("failed to parse base templates glob_pattern=%s error=%v", baseTemplatePath, err)
-		return nil, fmt.Errorf("failed to parse base templates: %w", err)
+		l.Warn("failed to parse base template path=%s error=%v", baseTemplatePath, err)
+		return nil, fmt.Errorf("failed to parse base template: %w", err)
 	}
 
 	// Parse specific template directory to support type-specific includes
-	globPattern := filepath.Join(templateDir, "*.template")
-	l.Debug("parsing specific templates glob_pattern=%s", globPattern)
+	specificTemplatePath := fullPath
+	l.Debug("parsing specific template path=%s", specificTemplatePath)
 
-	tmpl, err = tmpl.ParseGlob(globPattern)
+	tmpl, err = tmpl.ParseFiles(specificTemplatePath)
 	if err != nil {
-		l.Warn("failed to parse specific templates glob_pattern=%s error=%v", globPattern, err)
-		return nil, fmt.Errorf("failed to parse specific templates: %w", err)
+		l.Warn("failed to parse specific template path=%s error=%v", specificTemplatePath, err)
+		return nil, fmt.Errorf("failed to parse specific template: %w", err)
 	}
 
 	l.Info("template parsed successfully template_path=%s", templatePath)

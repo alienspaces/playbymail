@@ -1,0 +1,135 @@
+{{template "base.template" .}}
+
+{{define "styles"}}
+<style>
+    /* Compact location choice styles */
+    .current-location {
+        margin-bottom: 20px;
+        padding: 10px;
+        background-color: #f8f9fa;
+        border-left: 3px solid #3498db;
+        font-size: 14px;
+    }
+    
+    .current-location h4 {
+        margin: 0 0 5px 0;
+        font-size: 16px;
+        color: #2c3e50;
+    }
+    
+    .current-location p {
+        margin: 0;
+        color: #555;
+        line-height: 1.4;
+    }
+    
+    .location-choice-section {
+        margin-bottom: 20px;
+    }
+    
+    .location-choice-section h3 {
+        margin: 0 0 8px 0;
+        font-size: 16px;
+        color: #2c3e50;
+    }
+    
+    .location-choice-section > p {
+        margin: 0 0 12px 0;
+        font-size: 13px;
+        color: #666;
+    }
+    
+    .location-options {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .location-option {
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        padding: 8px;
+        background-color: #ffffff;
+    }
+    
+    .location-radio {
+        display: flex;
+        align-items: flex-start;
+        cursor: pointer;
+        gap: 8px;
+    }
+    
+    .location-radio input[type="radio"] {
+        margin-top: 2px;
+        cursor: pointer;
+    }
+    
+    .location-name {
+        font-weight: bold;
+        color: #2c3e50;
+        font-size: 14px;
+    }
+    
+    .location-description {
+        margin: 4px 0 0 20px;
+        color: #555;
+        font-size: 12px;
+        line-height: 1.3;
+    }
+    
+    .turn-info {
+        margin-top: 15px;
+        padding: 8px;
+        background-color: #e7f3ff;
+        border-radius: 4px;
+        border-left: 3px solid #0066cc;
+        font-size: 12px;
+    }
+    
+    .turn-info p {
+        margin: 2px 0;
+        line-height: 1.3;
+    }
+    
+    .turn-info strong {
+        color: #2c3e50;
+    }
+</style>
+{{end}}
+
+{{define "content"}}
+<div class="turn-sheet">
+    <div class="current-location">
+        <h4>{{.LocationName}}</h4>
+        <p>{{.LocationDescription}}</p>
+    </div>
+
+    <div class="location-choice-section">
+        <h3>Choose Your Next Location</h3>
+        <p>Select where you would like to go next from the available paths:</p>
+        
+        {{if .LocationOptions}}
+        <div class="location-options">
+            {{range .LocationOptions}}
+            <div class="location-option">
+                <label class="location-radio">
+                    <input type="radio" name="location_choice" value="{{.LocationID}}">
+                    <span class="location-name">{{.LocationLinkName}}</span>
+                </label>
+                <p class="location-description">{{.LocationLinkDescription}}</p>
+            </div>
+            {{end}}
+        </div>
+        {{else}}
+        <div class="no-options">
+            <p>No available paths from this location.</p>
+        </div>
+        {{end}}
+    </div>
+
+    <div class="turn-info">
+        <p><strong>Instructions:</strong> Select your next location and return this form by the deadline to continue your adventure.</p>
+    </div>
+</div>
+{{end}}
+
