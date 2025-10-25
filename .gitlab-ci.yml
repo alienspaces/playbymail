@@ -21,7 +21,7 @@ test-backend:
     # Environment variables for backend Go servers
     APP_ENV: develop
     PORT: 8080
-    LOG_LEVEL: debug
+    LOG_LEVEL: info
     GO_VERSION: 1.24.5
     EMAILER_FAKED: "true"
     JOBCLIENT_MAX_WORKERS: "10"
