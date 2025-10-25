@@ -125,6 +125,12 @@ func (rnr *Runner) domainFunc(l logger.Logger) (domainer.Domainer, error) {
 		l.Warn("(playbymail) failed new domain >%v<", err)
 		return nil, err
 	}
+
+	// Initialize turn sheet processors
+	l.Info("(playbymail) initializing turn sheet processors")
+
+	l.Info("(playbymail) successfully initialized turn sheet processors")
+
 	return m, nil
 }
 

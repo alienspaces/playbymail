@@ -100,8 +100,8 @@ func (p *AdventureGame) processTurnSheet(ctx context.Context, characterInstance 
 		return fmt.Errorf("unsupported sheet type: %s", turnSheet.SheetType)
 	}
 
-	// Process turn sheet using the sheet-specific processor
-	return processor.ProcessTurnSheet(ctx, turnSheet)
+	// Process turn sheet response using the sheet-specific processor
+	return processor.ProcessTurnSheetResponse(ctx, turnSheet)
 }
 
 // getTurnSheetsForCharacter retrieves turn sheets for a specific character and turn

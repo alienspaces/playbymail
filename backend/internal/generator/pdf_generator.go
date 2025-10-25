@@ -11,53 +11,25 @@ import (
 
 	"github.com/chromedp/cdproto/page"
 	"github.com/chromedp/chromedp"
-	"gitlab.com/alienspaces/playbymail/core/log"
-	"gitlab.com/alienspaces/playbymail/internal/record/account_record"
-	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
+	"gitlab.com/alienspaces/playbymail/core/type/logger"
 )
 
 // PDFGenerator handles PDF generation from HTML templates
 type PDFGenerator struct {
-	logger      *log.Log
+	logger      logger.Logger
 	templateDir string
 	outputDir   string
 }
 
-// TemplateData represents the data structure for templates
-type TemplateData struct {
-	// Core context records - always present for every turn
-	AccountRec      *account_record.Account
-	GameRec         *game_record.Game
-	GameInstanceRec *game_record.GameInstance
-
-	// Background images
-	BackgroundTop    string
-	BackgroundMiddle string
-	BackgroundBottom string
-
-	// Content sections
-	Header  map[string]any
-	Content map[string]any
-	Footer  map[string]any
-
-	// Turn sheet specific data - can be cast to specific types per turn sheet type
-	TurnSheetData any
-
-	// Unique identification code for scanning
-	TurnSheetCode string
-}
-
 // NewPDFGenerator creates a new PDF generator
-func NewPDFGenerator(l *log.Log, templateDir, outputDir string) *PDFGenerator {
+func NewPDFGenerator(l logger.Logger) *PDFGenerator {
 	return &PDFGenerator{
-		logger:      l,
-		templateDir: templateDir,
-		outputDir:   outputDir,
+		logger: l,
 	}
 }
 
 // GenerateHTML generates HTML from a template
-func (g *PDFGenerator) GenerateHTML(ctx context.Context, templatePath string, data TemplateData) (string, error) {
+func (g *PDFGenerator) GenerateHTML(ctx context.Context, templatePath string, data any) (string, error) {
 	l := g.logger.WithFunctionContext("PDFGenerator/GenerateHTML")
 
 	l.Info("generating HTML template=%s", templatePath)
@@ -82,10 +54,10 @@ func (g *PDFGenerator) GenerateHTML(ctx context.Context, templatePath string, da
 }
 
 // GeneratePDF creates a PDF from an HTML template
-func (g *PDFGenerator) GeneratePDF(ctx context.Context, templatePath string, data TemplateData) ([]byte, error) {
+func (g *PDFGenerator) GeneratePDF(ctx context.Context, templatePath string, data any) ([]byte, error) {
 	l := g.logger.WithFunctionContext("PDFGenerator/GeneratePDF")
 
-	l.Info("starting PDF generation template=%s game=%s turn=%d account=%s", templatePath, data.GameRec.Name, data.GameInstanceRec.CurrentTurn, data.AccountRec.Name)
+	l.Info("starting PDF generation template=%s", templatePath)
 
 	// Generate HTML from template
 	html, err := g.GenerateHTML(ctx, templatePath, data)
@@ -103,16 +75,16 @@ func (g *PDFGenerator) GeneratePDF(ctx context.Context, templatePath string, dat
 		return nil, fmt.Errorf("failed to convert HTML to PDF: %w", err)
 	}
 
-	l.Info("PDF generated successfully template=%s pdf_size=%d game=%s turn=%d account=%s", templatePath, len(pdfData), data.GameRec.Name, data.GameInstanceRec.CurrentTurn, data.AccountRec.Name)
+	l.Info("PDF generated successfully template=%s pdf_size=%d", templatePath, len(pdfData))
 
 	return pdfData, nil
 }
 
 // GeneratePDFToFile creates a PDF and saves it to a file
-func (g *PDFGenerator) GeneratePDFToFile(ctx context.Context, templatePath string, data TemplateData, filename string) error {
+func (g *PDFGenerator) GeneratePDFToFile(ctx context.Context, templatePath string, data any, filename string) error {
 	l := g.logger.WithFunctionContext("PDFGenerator/GeneratePDFToFile")
 
-	l.Info("starting PDF generation to file template=%s filename=%s game=%s turn=%d account=%s", templatePath, filename, data.GameRec.Name, data.GameInstanceRec.CurrentTurn, data.AccountRec.Name)
+	l.Info("starting PDF generation to file template=%s filename=%s", templatePath, filename)
 
 	pdfData, err := g.GeneratePDF(ctx, templatePath, data)
 	if err != nil {
@@ -138,7 +110,7 @@ func (g *PDFGenerator) GeneratePDFToFile(ctx context.Context, templatePath strin
 		return fmt.Errorf("failed to write PDF file: %w", err)
 	}
 
-	l.Info("PDF saved to file successfully filepath=%s pdf_size=%d game=%s turn=%d account=%s", filepath, len(pdfData), data.GameRec.Name, data.GameInstanceRec.CurrentTurn, data.AccountRec.Name)
+	l.Info("PDF saved to file successfully filepath=%s pdf_size=%d", filepath, len(pdfData))
 
 	return nil
 }
@@ -160,8 +132,8 @@ func (g *PDFGenerator) loadTemplate(templatePath string) (*template.Template, er
 		"div": func(a, b int) int { return a / b },
 	})
 
-	// Parse base template first (located in turn_sheet/template/)
-	baseTemplatePath := filepath.Join(g.templateDir, "template", "*.template")
+	// Parse base template first (located in turn_sheet/base/template/)
+	baseTemplatePath := filepath.Join(g.templateDir, "base", "template", "*.template")
 	l.Debug("parsing base templates glob_pattern=%s", baseTemplatePath)
 
 	tmpl, err := tmpl.ParseGlob(baseTemplatePath)

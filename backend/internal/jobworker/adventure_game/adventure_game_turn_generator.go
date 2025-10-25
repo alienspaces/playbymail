@@ -87,6 +87,6 @@ func (p *AdventureGame) generateTurnSheet(ctx context.Context, gameInstanceRec *
 		return nil, fmt.Errorf("unsupported sheet type: %s", turnSheetType)
 	}
 
-	// Generate turn sheet using the sheet-specific processor
-	return processor.GenerateTurnSheet(ctx, characterInstance)
+	// Create next turn sheet using the sheet-specific processor
+	return processor.CreateNextTurnSheet(ctx, characterInstance)
 }

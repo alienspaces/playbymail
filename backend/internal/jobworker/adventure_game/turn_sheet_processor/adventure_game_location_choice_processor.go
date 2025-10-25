@@ -10,10 +10,10 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 )
 
-// AdventureGameLocationChoiceProcessor implements the TurnSheetProcessor interface
+// AdventureGameLocationChoiceProcessor implements the TurnSheetBusinessProcessor interface
 // (defined in the parent adventure_game package)
 
-// AdventureGameLocationChoiceProcessor processes location choice turn sheets for adventure games
+// AdventureGameLocationChoiceProcessor processes location choice turn sheet business logic for adventure games
 type AdventureGameLocationChoiceProcessor struct {
 	Logger logger.Logger
 	Domain *domain.Domain
@@ -30,14 +30,14 @@ func NewAdventureGameLocationChoiceProcessor(l logger.Logger, d *domain.Domain) 
 	return p, nil
 }
 
-// GetSheetType returns the sheet type this processor handles (implements TurnSheetProcessor interface)
+// GetSheetType returns the sheet type this processor handles (implements TurnSheetBusinessProcessor interface)
 func (p *AdventureGameLocationChoiceProcessor) GetSheetType() string {
 	return adventure_game_record.AdventureSheetTypeLocationChoice
 }
 
-// ProcessTurnSheet processes a single turn sheet (implements TurnSheetProcessor interface)
-func (p *AdventureGameLocationChoiceProcessor) ProcessTurnSheet(ctx context.Context, turnSheet *game_record.GameTurnSheet) error {
-	l := p.Logger.WithFunctionContext("AdventureGameLocationChoiceProcessor/ProcessTurnSheet")
+// ProcessTurnSheetResponse processes a single turn sheet response (implements TurnSheetBusinessProcessor interface)
+func (p *AdventureGameLocationChoiceProcessor) ProcessTurnSheetResponse(ctx context.Context, turnSheet *game_record.GameTurnSheet) error {
+	l := p.Logger.WithFunctionContext("AdventureGameLocationChoiceProcessor/ProcessTurnSheetResponse")
 
 	l.Info("processing location choice for turn sheet >%s<", turnSheet.ID)
 
@@ -58,11 +58,11 @@ func (p *AdventureGameLocationChoiceProcessor) ProcessTurnSheet(ctx context.Cont
 	return nil
 }
 
-// GenerateTurnSheet generates a turn sheet for a character (implements TurnSheetProcessor interface)
-func (p *AdventureGameLocationChoiceProcessor) GenerateTurnSheet(ctx context.Context, characterInstance *adventure_game_record.AdventureGameCharacterInstance) (*game_record.GameTurnSheet, error) {
-	l := p.Logger.WithFunctionContext("AdventureGameLocationChoiceProcessor/GenerateTurnSheet")
+// CreateNextTurnSheet creates a new turn sheet for a character (implements TurnSheetBusinessProcessor interface)
+func (p *AdventureGameLocationChoiceProcessor) CreateNextTurnSheet(ctx context.Context, characterInstance *adventure_game_record.AdventureGameCharacterInstance) (*game_record.GameTurnSheet, error) {
+	l := p.Logger.WithFunctionContext("AdventureGameLocationChoiceProcessor/CreateNextTurnSheet")
 
-	l.Info("generating location choice turn sheet for character >%s<", characterInstance.ID)
+	l.Info("creating location choice turn sheet for character >%s<", characterInstance.ID)
 
 	// TODO: Implement actual location choice turn sheet generation logic
 

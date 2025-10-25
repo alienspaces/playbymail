@@ -37,6 +37,7 @@ func GameHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error)
 		gameAdministrationHandlerConfig,
 		gameInstanceHandlerConfig,
 		gameInstanceParameterHandlerConfig,
+		gameTurnSheetHandlerConfig,
 	}
 
 	for _, fn := range handlerConfigFuncs {
