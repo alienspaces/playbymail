@@ -61,14 +61,27 @@ Heroku app manifest for review apps and add-on provisioning.
     { "plan": "heroku-postgresql:mini" }
   ],
   "buildpacks": [
+    { "url": "https://github.com/heroku/heroku-buildpack-apt" },
     { "url": "heroku/go" }
   ]
 }
 ```
 - **Add-ons**: Provisions a Heroku Postgres database.
-- **Buildpacks**: Uses the official Go buildpack.
+- **Buildpacks**: Uses the Apt buildpack to install OCR dependencies, then the official Go buildpack.
 
-### 4. `backend/go.mod`
+### 4. `backend/Aptfile`
+
+Specifies system packages to install via the Apt buildpack.
+
+```
+tesseract-ocr
+tesseract-ocr-dev
+libtesseract-dev
+libleptonica-dev
+```
+- **OCR Dependencies**: Installs Tesseract OCR and Leptonica libraries required for turn sheet scanning.
+
+### 5. `backend/go.mod`
 
 Defines Go module dependencies and the main module path.  
 **Heroku uses this to detect and build your Go app.**
