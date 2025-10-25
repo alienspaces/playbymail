@@ -38,6 +38,9 @@ test-backend:
     - apk add git
     - apk add bash
     - apk add postgresql-client
+    - apk add tesseract-ocr
+    - apk add tesseract-ocr-dev
+    - apk add leptonica-dev
   script:
     - ./tools/test-backend-ci
   cache:
