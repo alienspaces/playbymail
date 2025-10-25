@@ -12,6 +12,8 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/scanner"
 )
 
+// Trigger CI backend tests
+
 // BaseProcessor provides common functionality for all turn sheet processors
 type BaseProcessor struct {
 	Scanner      *scanner.ImageScanner
