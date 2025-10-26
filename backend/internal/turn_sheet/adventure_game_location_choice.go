@@ -104,7 +104,7 @@ func (p *LocationChoiceProcessor) ScanTurnSheet(ctx context.Context, l logger.Lo
 	}
 
 	// Parse location choices from extracted text using the sheet data
-	log.Debug("full OCR text extracted: >%s<", text)
+	log.Info("full OCR text extracted: >%s<", text)
 	choices, err := p.parseLocationChoicesWithSheetData(text, sheetDataMap)
 	if err != nil {
 		log.Warn("failed to parse location choices >%v<", err)
@@ -161,13 +161,15 @@ func (p *LocationChoiceProcessor) parseLocationChoicesWithSheetData(text string,
 		`✓\s*([A-Za-z][A-Za-z\s]+?)(?:\n|$)`,
 	}
 
-	for _, pattern := range patterns {
+	for i, pattern := range patterns {
 		re := regexp.MustCompile(pattern)
 		matches := re.FindAllStringSubmatch(text, -1)
+		log.Info("pattern %d (%s) found %d matches", i, pattern, len(matches))
 
 		for _, match := range matches {
 			if len(match) > 1 {
 				choice := strings.TrimSpace(match[1])
+				log.Info("considering choice: >%s<", choice)
 
 				// Only accept choices that look like location names (2+ words or single capitalized word)
 				// Filter out common false matches
