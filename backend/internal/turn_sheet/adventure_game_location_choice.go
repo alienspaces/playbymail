@@ -155,24 +155,48 @@ func (p *LocationChoiceProcessor) parseLocationChoicesWithSheetData(l logger.Log
 	seen := make(map[string]bool)
 
 	// Look for checked/marked location options using OCR patterns
-	patterns := []string{
-		// OCR variations - checked boxes from real scanned images
-		`\(O\s*([A-Za-z][A-Za-z\s]+?)(?:\n|$)`, // OCR reads filled checkbox as (O
-		`Q/([A-Za-z][A-Za-z\s]+?)(?:\n|$)`,     // OCR reads filled checkbox as Q/ (no space)
-		`O/\s*([A-Za-z][A-Za-z\s]+?)(?:\n|$)`,  // OCR reads filled checkbox as O/
+	// Priority order: selected patterns first, then unselected patterns
+	selectedPatterns := []string{
+		// Selected checkbox patterns (higher priority)
+		`Q/([A-Za-z][A-Za-z\s:]+?)(?:\n|$)`,     // OCR reads selected checkbox as Q/ (no space, includes colon)
+		`☑\s*([A-Za-z][A-Za-z\s]+?)(?:\n|$)`,    // Standard selected checkbox
+		`\[X\]\s*([A-Za-z][A-Za-z\s]+?)(?:\n|$)`, // X in brackets
+		`✓\s*([A-Za-z][A-Za-z\s]+?)(?:\n|$)`,    // Checkmark
+	}
+
+	unselectedPatterns := []string{
+		// Unselected checkbox patterns (lower priority)
+		`\(O\s*([A-Za-z][A-Za-z\s]+?)(?:\n|$)`, // OCR reads unselected checkbox as (O
+		`O/\s*([A-Za-z][A-Za-z\s]+?)(?:\n|$)`,  // OCR reads unselected checkbox as O/
 		`Sf\s*([A-Za-z][A-Za-z\s]+?)(?:\n|$)`,  // OCR reads ☑ as Sf
 		`S\s*([A-Za-z][A-Za-z\s]+?)(?:\n|$)`,   // OCR reads ☑ as S
+	}
 
-		// Original patterns - checked boxes
-		`☑\s*([A-Za-z][A-Za-z\s]+?)(?:\n|$)`,
-		`\[X\]\s*([A-Za-z][A-Za-z\s]+?)(?:\n|$)`,
-		`✓\s*([A-Za-z][A-Za-z\s]+?)(?:\n|$)`,
+	// First try selected patterns
+	patterns := selectedPatterns
+	patternType := "selected"
+	
+	// Check if any selected patterns match
+	hasSelectedMatches := false
+	for _, pattern := range selectedPatterns {
+		re := regexp.MustCompile(pattern)
+		matches := re.FindAllStringSubmatch(text, -1)
+		if len(matches) > 0 {
+			hasSelectedMatches = true
+			break
+		}
+	}
+	
+	// If no selected patterns match, fall back to unselected patterns
+	if !hasSelectedMatches {
+		patterns = unselectedPatterns
+		patternType = "unselected"
 	}
 
 	for i, pattern := range patterns {
 		re := regexp.MustCompile(pattern)
 		matches := re.FindAllStringSubmatch(text, -1)
-		l.Info("pattern %d (%s) found %d matches", i, pattern, len(matches))
+		l.Info("pattern %d (%s) found %d matches [%s]", i, pattern, len(matches), patternType)
 
 		for _, match := range matches {
 			if len(match) > 1 {
