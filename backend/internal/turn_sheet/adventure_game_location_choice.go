@@ -158,7 +158,7 @@ func (p *LocationChoiceProcessor) parseLocationChoicesWithSheetData(l logger.Log
 	patterns := []string{
 		// OCR variations - checked boxes from real scanned images
 		`\(O\s*([A-Za-z][A-Za-z\s]+?)(?:\n|$)`, // OCR reads filled checkbox as (O
-		`Q/\s*([A-Za-z][A-Za-z\s]+?)(?:\n|$)`,  // OCR reads filled checkbox as Q/
+		`Q/([A-Za-z][A-Za-z\s]+?)(?:\n|$)`,     // OCR reads filled checkbox as Q/ (no space)
 		`O/\s*([A-Za-z][A-Za-z\s]+?)(?:\n|$)`,  // OCR reads filled checkbox as O/
 		`Sf\s*([A-Za-z][A-Za-z\s]+?)(?:\n|$)`,  // OCR reads ☑ as Sf
 		`S\s*([A-Za-z][A-Za-z\s]+?)(?:\n|$)`,   // OCR reads ☑ as S
