@@ -11,7 +11,3 @@ libwebp-dev
 build-essential
 pkg-config
 libc6-dev
-libcairo2-dev
-libpango1.0-dev
-libglib2.0-dev
-libgobject-2.0-dev
