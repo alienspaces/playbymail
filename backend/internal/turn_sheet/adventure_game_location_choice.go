@@ -157,9 +157,11 @@ func (p *LocationChoiceProcessor) parseLocationChoicesWithSheetData(l logger.Log
 	// Look for checked/marked location options using OCR patterns
 	patterns := []string{
 		// OCR variations - checked boxes from real scanned images
-		`O/\s*([A-Za-z][A-Za-z\s]+?)(?:\n|$)`, // OCR reads filled checkbox as O/
-		`Sf\s*([A-Za-z][A-Za-z\s]+?)(?:\n|$)`, // OCR reads ☑ as Sf
-		`S\s*([A-Za-z][A-Za-z\s]+?)(?:\n|$)`,  // OCR reads ☑ as S
+		`\(O\s*([A-Za-z][A-Za-z\s]+?)(?:\n|$)`, // OCR reads filled checkbox as (O
+		`Q/\s*([A-Za-z][A-Za-z\s]+?)(?:\n|$)`,  // OCR reads filled checkbox as Q/
+		`O/\s*([A-Za-z][A-Za-z\s]+?)(?:\n|$)`,  // OCR reads filled checkbox as O/
+		`Sf\s*([A-Za-z][A-Za-z\s]+?)(?:\n|$)`,  // OCR reads ☑ as Sf
+		`S\s*([A-Za-z][A-Za-z\s]+?)(?:\n|$)`,   // OCR reads ☑ as S
 
 		// Original patterns - checked boxes
 		`☑\s*([A-Za-z][A-Za-z\s]+?)(?:\n|$)`,
