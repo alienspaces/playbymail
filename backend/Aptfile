@@ -1,10 +1,8 @@
 # Enhanced Tesseract OCR dependencies for gosseract
 tesseract-ocr
-tesseract-ocr-dev
 tesseract-ocr-eng
 libtesseract-dev
 libleptonica-dev
-libleptonica-dev-dev
 libpng-dev
 libjpeg-dev
 libtiff-dev
