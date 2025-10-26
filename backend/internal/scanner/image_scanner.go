@@ -3,8 +3,9 @@ package scanner
 import (
 	"context"
 	"fmt"
+	"strings"
 
-	// "github.com/otiai10/gosseract/v2" // Temporarily disabled due to Heroku compilation issues
+	"github.com/otiai10/gosseract/v2"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
 )
 
@@ -71,7 +72,7 @@ func (s *ImageScanner) performBasicOCR(imageData []byte) (string, error) {
 	// TODO: Re-enable Gosseract once Heroku compilation issues are resolved
 	// For now, return a mock response that allows the application to deploy
 	s.logger.Warn("OCR functionality temporarily disabled due to Heroku compilation issues")
-	
+
 	// Return mock OCR text that matches the expected format for testing
 	mockText := `Turn Sheet Code: ABC123
 Location Choices:

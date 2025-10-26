@@ -1,13 +1,4 @@
-tesseract-ocr
-tesseract-ocr-dev
-tesseract-ocr-eng
-libtesseract-dev
-libleptonica-dev
-libpng-dev
-libjpeg-dev
-libtiff-dev
-libgif-dev
-libwebp-dev
+# Tesseract OCR is now provided by the dedicated buildpack
+# Only keep essential build tools that might be needed
 build-essential
 pkg-config
-libc6-dev
