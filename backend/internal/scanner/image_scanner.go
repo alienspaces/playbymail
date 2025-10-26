@@ -58,7 +58,6 @@ func (s *ImageScanner) ExtractTextFromImage(ctx context.Context, imageData []byt
 }
 
 // performBasicOCR performs OCR on image data using Gosseract
-// TEMPORARILY DISABLED: Using mock implementation due to Heroku compilation issues
 func (s *ImageScanner) performBasicOCR(imageData []byte) (string, error) {
 	// Basic validation of image data
 	if len(imageData) == 0 {
@@ -69,21 +68,6 @@ func (s *ImageScanner) performBasicOCR(imageData []byte) (string, error) {
 		return "", fmt.Errorf("image data too small for OCR processing")
 	}
 
-	// TODO: Re-enable Gosseract once Heroku compilation issues are resolved
-	// For now, return a mock response that allows the application to deploy
-	s.logger.Warn("OCR functionality temporarily disabled due to Heroku compilation issues")
-
-	// Return mock OCR text that matches the expected format for testing
-	mockText := `Turn Sheet Code: ABC123
-Location Choices:
-☑ Dark Tower
-☐ Mystic Grove
-☐ Crystal Caverns
-☐ Floating Islands`
-
-	return mockText, nil
-
-	/* ORIGINAL GOSSERACT IMPLEMENTATION - DISABLED
 	// Create Gosseract client
 	client := gosseract.NewClient()
 	defer client.Close()
@@ -122,5 +106,4 @@ Location Choices:
 	}
 
 	return cleanedText, nil
-	*/
 }
