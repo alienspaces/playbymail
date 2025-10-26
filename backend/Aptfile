@@ -6,3 +6,8 @@ libleptonica-dev
 libpng-dev
 libjpeg-dev
 libtiff-dev
+libgif-dev
+libwebp-dev
+build-essential
+pkg-config
+libc6-dev
