@@ -29,7 +29,7 @@ func (t *Testing) createGameLocationRec(gameLocationConfig GameLocationConfig, g
 	rec.GameID = gameRec.ID
 
 	// Create record
-	l.Info("creating game location record >%#v<", rec)
+	l.Debug("creating game location record >%#v<", rec)
 
 	rec, err := t.Domain.(*domain.Domain).CreateAdventureGameLocationRec(rec)
 	if err != nil {

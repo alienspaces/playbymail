@@ -44,7 +44,7 @@ func (t *Testing) createGameSubscriptionRec(subscriptionConfig GameSubscriptionC
 	}
 
 	// Create record
-	l.Info("creating game_subscription record >%#v<", rec)
+	l.Debug("creating game_subscription record >%#v<", rec)
 
 	rec, err = t.Domain.(*domain.Domain).CreateGameSubscriptionRec(rec)
 	if err != nil {

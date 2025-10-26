@@ -22,7 +22,7 @@ func (t *Testing) createGameRec(gameConfig GameConfig) (*game_record.Game, error
 	rec = t.applyGameRecDefaultValues(rec)
 
 	// Create record
-	l.Info("creating game record >%#v<", rec)
+	l.Debug("creating game record >%#v<", rec)
 
 	rec, err := t.Domain.(*domain.Domain).CreateGameRec(rec)
 	if err != nil {

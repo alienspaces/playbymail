@@ -21,7 +21,7 @@ func (t *Testing) createAccountRec(accountConfig AccountConfig) (*account_record
 
 	rec = t.applyAccountRecDefaultValues(rec)
 
-	l.Info("creating account record >%#v<", rec)
+	l.Debug("creating account record >%#v<", rec)
 
 	rec, err := t.Domain.(*domain.Domain).CreateAccountRec(rec)
 	if err != nil {

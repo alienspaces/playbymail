@@ -28,7 +28,7 @@ func (t *Testing) createGameInstanceRec(cfg GameInstanceConfig, gameRec *game_re
 
 	rec.GameID = gameRec.ID
 
-	l.Info("creating game_instance record >%#v<", rec)
+	l.Debug("creating game_instance record >%#v<", rec)
 
 	// Create record
 	createdRec, err := t.Domain.(*domain.Domain).CreateGameInstanceRec(rec)

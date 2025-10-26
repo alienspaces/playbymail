@@ -37,7 +37,7 @@ func (t *Testing) createGameLocationLinkRequirementRec(cfg GameLocationLinkRequi
 	}
 
 	// Create record
-	l.Info("creating game_location_link_requirement record >%#v<", rec)
+	l.Debug("creating game_location_link_requirement record >%#v<", rec)
 
 	rec, err := t.Domain.(*domain.Domain).CreateAdventureGameLocationLinkRequirementRec(rec)
 	if err != nil {

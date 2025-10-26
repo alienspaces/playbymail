@@ -29,7 +29,7 @@ func (t *Testing) createGameItemRec(itemConfig GameItemConfig, gameRec *game_rec
 	rec.GameID = gameRec.ID
 
 	// Create record
-	l.Info("creating game_item record >%#v<", rec)
+	l.Debug("creating game_item record >%#v<", rec)
 
 	rec, err := t.Domain.(*domain.Domain).CreateAdventureGameItemRec(rec)
 	if err != nil {

@@ -47,7 +47,7 @@ func (t *Testing) createGameCharacterInstanceRec(cfg GameCharacterInstanceConfig
 	rec.AdventureGameLocationInstanceID = locationInstanceRec.ID
 
 	// Create record
-	l.Info("creating game_character_instance record >%#v<", rec)
+	l.Debug("creating game_character_instance record >%#v<", rec)
 
 	createdRec, err := t.Domain.(*domain.Domain).CreateAdventureGameCharacterInstanceRec(rec)
 	if err != nil {

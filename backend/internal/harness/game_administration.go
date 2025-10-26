@@ -51,7 +51,7 @@ func (t *Testing) createGameAdministrationRec(administrationConfig GameAdministr
 	rec.GrantedByAccountID = grantedByAccountRec.ID
 
 	// Create record
-	l.Info("creating game_administration record >%#v<", rec)
+	l.Debug("creating game_administration record >%#v<", rec)
 
 	rec, err = t.Domain.(*domain.Domain).CreateGameAdministrationRec(rec)
 	if err != nil {

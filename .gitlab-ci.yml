@@ -113,7 +113,7 @@ build-frontend:
 deploy-backend:
   image: golang:1.24.5-alpine
   stage: deploy
-  interruptible: false
+  interruptible: false # This job should not be interrupted
   dependencies:
     - build-frontend
   before_script:

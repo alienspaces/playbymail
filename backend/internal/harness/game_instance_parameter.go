@@ -30,7 +30,7 @@ func (t *Testing) createGameInstanceParameterRec(cfg GameInstanceParameterConfig
 	rec.GameInstanceID = gameInstanceRec.ID
 
 	// Create record
-	l.Info("creating game instance parameter record >%#v<", rec)
+	l.Debug("creating game instance parameter record >%#v<", rec)
 
 	rec, err := t.Domain.(*domain.Domain).CreateGameInstanceParameterRec(rec)
 	if err != nil {
