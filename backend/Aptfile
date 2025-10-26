@@ -3,3 +3,6 @@ tesseract-ocr-dev
 tesseract-ocr-eng
 libtesseract-dev
 libleptonica-dev
+libpng-dev
+libjpeg-dev
+libtiff-dev
