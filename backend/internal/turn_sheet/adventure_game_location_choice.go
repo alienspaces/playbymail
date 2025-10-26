@@ -86,9 +86,9 @@ func (p *LocationChoiceProcessor) GenerateTurnSheet(ctx context.Context, l logge
 
 // ScanTurnSheet scans a location choice turn sheet and extracts player choices
 func (p *LocationChoiceProcessor) ScanTurnSheet(ctx context.Context, l logger.Logger, imageData []byte, sheetData any) (any, error) {
-	log := l.WithFunctionContext("LocationChoiceProcessor/ScanTurnSheet")
+	l = l.WithFunctionContext("LocationChoiceProcessor/ScanTurnSheet")
 
-	log.Info("scanning location choice turn sheet")
+	l.Info("scanning location choice turn sheet")
 
 	// Parse sheet data to get location information
 	sheetDataMap, ok := sheetData.(map[string]any)
@@ -99,19 +99,19 @@ func (p *LocationChoiceProcessor) ScanTurnSheet(ctx context.Context, l logger.Lo
 	// Extract text from image using base processor
 	text, err := p.ExtractTextFromImage(ctx, imageData)
 	if err != nil {
-		log.Warn("failed to extract text from image >%v<", err)
+		l.Warn("failed to extract text from image >%v<", err)
 		return nil, fmt.Errorf("text extraction failed: %w", err)
 	}
 
 	// Parse location choices from extracted text using the sheet data
-	log.Info("full OCR text extracted: >%s<", text)
-	choices, err := p.parseLocationChoicesWithSheetData(text, sheetDataMap)
+	l.Info("full OCR text extracted: >%s<", text)
+	choices, err := p.parseLocationChoicesWithSheetData(l, text, sheetDataMap)
 	if err != nil {
-		log.Warn("failed to parse location choices >%v<", err)
+		l.Warn("failed to parse location choices >%v<", err)
 		return nil, fmt.Errorf("location choice parsing failed: %w", err)
 	}
 
-	log.Info("extracted %d location choices", len(choices))
+	l.Info("extracted %d location choices", len(choices))
 
 	return &LocationChoiceScanData{
 		Choices: choices,
@@ -119,9 +119,13 @@ func (p *LocationChoiceProcessor) ScanTurnSheet(ctx context.Context, l logger.Lo
 }
 
 // ParseLocationChoicesWithSheetData parses location choices using the actual sheet data
-func (p *LocationChoiceProcessor) parseLocationChoicesWithSheetData(text string, sheetData map[string]any) ([]string, error) {
+func (p *LocationChoiceProcessor) parseLocationChoicesWithSheetData(l logger.Logger, text string, sheetData map[string]any) ([]string, error) {
+	l = l.WithFunctionContext("LocationChoiceProcessor/parseLocationChoicesWithSheetData")
+
+	l.Info("parsing location choices with sheet data")
+
 	// Extract location data from sheet data
-	locations, ok := sheetData["locations"].([]interface{})
+	locations, ok := sheetData["locations"].([]any)
 	if !ok {
 		return nil, fmt.Errorf("no locations found in sheet data")
 	}
@@ -134,7 +138,7 @@ func (p *LocationChoiceProcessor) parseLocationChoicesWithSheetData(text string,
 	// Create a map of location names for validation
 	locationNames := make(map[string]string)
 	for _, loc := range locations {
-		if locMap, ok := loc.(map[string]interface{}); ok {
+		if locMap, ok := loc.(map[string]any); ok {
 			if name, exists := locMap["name"]; exists {
 				if nameStr, ok := name.(string); ok {
 					locationNames[nameStr] = nameStr
@@ -144,6 +148,8 @@ func (p *LocationChoiceProcessor) parseLocationChoicesWithSheetData(text string,
 			}
 		}
 	}
+
+	l.Info("location names: %v", locationNames)
 
 	var choices []string
 	seen := make(map[string]bool)
@@ -164,12 +170,12 @@ func (p *LocationChoiceProcessor) parseLocationChoicesWithSheetData(text string,
 	for i, pattern := range patterns {
 		re := regexp.MustCompile(pattern)
 		matches := re.FindAllStringSubmatch(text, -1)
-		log.Info("pattern %d (%s) found %d matches", i, pattern, len(matches))
+		l.Info("pattern %d (%s) found %d matches", i, pattern, len(matches))
 
 		for _, match := range matches {
 			if len(match) > 1 {
 				choice := strings.TrimSpace(match[1])
-				log.Info("considering choice: >%s<", choice)
+				l.Info("considering choice: >%s<", choice)
 
 				// Only accept choices that look like location names (2+ words or single capitalized word)
 				// Filter out common false matches

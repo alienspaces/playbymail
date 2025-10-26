@@ -22,6 +22,7 @@ require (
 	github.com/klauspost/compress v1.18.0
 	github.com/leekchan/accounting v1.0.0
 	github.com/lib/pq v1.10.9
+	github.com/otiai10/gosseract/v2 v2.4.1
 	github.com/r3labs/diff/v3 v3.0.1
 	github.com/riverqueue/river v0.23.1
 	github.com/riverqueue/river/riverdriver/riverpgxv5 v0.23.1
@@ -48,7 +49,6 @@ require (
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
-	github.com/otiai10/gosseract/v2 v2.4.1 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/riverqueue/river/riverdriver v0.23.1 // indirect

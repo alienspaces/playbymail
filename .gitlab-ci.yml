@@ -30,6 +30,7 @@ test-backend:
     SCHEMA_PATH: "${CI_PROJECT_DIR}/backend/schema"
   image: golang:1.24.5-alpine
   stage: test
+  interruptible: true
   services:
     - name: postgres:17.5-alpine
       alias: postgres
@@ -58,6 +59,7 @@ test-backend:
 test-frontend:
   image: node:18-alpine
   stage: test
+  interruptible: true
   before_script:
     - apk add --no-cache git
   script:
@@ -109,8 +111,9 @@ build-frontend:
 #      clean and avoid clutter from temporary deployment branches.
 
 deploy-backend:
-  stage: deploy
   image: golang:1.24.5-alpine
+  stage: deploy
+  interruptible: false
   dependencies:
     - build-frontend
   before_script:
