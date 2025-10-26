@@ -22,7 +22,6 @@ require (
 	github.com/klauspost/compress v1.18.0
 	github.com/leekchan/accounting v1.0.0
 	github.com/lib/pq v1.10.9
-	github.com/otiai10/gosseract/v2 v2.4.1
 	github.com/r3labs/diff/v3 v3.0.1
 	github.com/riverqueue/river v0.23.1
 	github.com/riverqueue/river/riverdriver/riverpgxv5 v0.23.1
