@@ -1,4 +1,19 @@
-# Tesseract OCR is now provided by the dedicated buildpack
-# Only keep essential build tools that might be needed
+# Enhanced Tesseract OCR dependencies for gosseract
+tesseract-ocr
+tesseract-ocr-dev
+tesseract-ocr-eng
+libtesseract-dev
+libleptonica-dev
+libleptonica-dev-dev
+libpng-dev
+libjpeg-dev
+libtiff-dev
+libgif-dev
+libwebp-dev
 build-essential
 pkg-config
+libc6-dev
+libcairo2-dev
+libpango1.0-dev
+libglib2.0-dev
+libgobject-2.0-dev
