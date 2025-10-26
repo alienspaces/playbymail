@@ -1,11 +1,6 @@
 <template>
   <div class="home-view card">
     <div class="hero-section">
-      <div class="hero-decoration">
-        <svg class="hero-icon" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-        </svg>
-      </div>
       <h1>Welcome to PlayByMail</h1>
       <p>
         <strong>PlayByMail</strong> is a platform for designing, managing, and running play-by-mail games—games played entirely through physical mail, not online.
@@ -104,25 +99,6 @@
   position: relative;
   margin-bottom: var(--space-lg);
   text-align: center;
-}
-.hero-decoration {
-  position: absolute;
-  top: -50px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100px;
-  height: 100px;
-  background: var(--color-primary);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: -1;
-}
-.hero-icon {
-  width: 50px;
-  height: 50px;
-  color: var(--color-text-light);
 }
 .who-section {
   margin: var(--space-lg) 0;
@@ -242,17 +218,6 @@
   .sections {
     grid-template-columns: 1fr;
     gap: var(--space-lg);
-  }
-  
-  .hero-decoration {
-    top: -30px;
-    width: 80px;
-    height: 80px;
-  }
-  
-  .hero-icon {
-    width: 40px;
-    height: 40px;
   }
 }
 </style>
