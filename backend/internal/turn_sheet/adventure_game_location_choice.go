@@ -158,10 +158,10 @@ func (p *LocationChoiceProcessor) parseLocationChoicesWithSheetData(l logger.Log
 	// Priority order: selected patterns first, then unselected patterns
 	selectedPatterns := []string{
 		// Selected checkbox patterns (higher priority)
-		`Q/([A-Za-z][A-Za-z\s:]+?)(?:\n|$)`,     // OCR reads selected checkbox as Q/ (no space, includes colon)
-		`☑\s*([A-Za-z][A-Za-z\s]+?)(?:\n|$)`,    // Standard selected checkbox
+		`Q/([A-Za-z][A-Za-z\s:]+?)(?:\n|$)`,      // OCR reads selected checkbox as Q/ (no space, includes colon)
+		`☑\s*([A-Za-z][A-Za-z\s]+?)(?:\n|$)`,     // Standard selected checkbox
 		`\[X\]\s*([A-Za-z][A-Za-z\s]+?)(?:\n|$)`, // X in brackets
-		`✓\s*([A-Za-z][A-Za-z\s]+?)(?:\n|$)`,    // Checkmark
+		`✓\s*([A-Za-z][A-Za-z\s]+?)(?:\n|$)`,     // Checkmark
 	}
 
 	unselectedPatterns := []string{
@@ -175,7 +175,7 @@ func (p *LocationChoiceProcessor) parseLocationChoicesWithSheetData(l logger.Log
 	// First try selected patterns
 	patterns := selectedPatterns
 	patternType := "selected"
-	
+
 	// Check if any selected patterns match
 	hasSelectedMatches := false
 	for _, pattern := range selectedPatterns {
@@ -186,7 +186,7 @@ func (p *LocationChoiceProcessor) parseLocationChoicesWithSheetData(l logger.Log
 			break
 		}
 	}
-	
+
 	// If no selected patterns match, fall back to unselected patterns
 	if !hasSelectedMatches {
 		patterns = unselectedPatterns
@@ -201,6 +201,9 @@ func (p *LocationChoiceProcessor) parseLocationChoicesWithSheetData(l logger.Log
 		for _, match := range matches {
 			if len(match) > 1 {
 				choice := strings.TrimSpace(match[1])
+				// Clean up OCR artifacts like colons at the end
+				choice = strings.TrimSuffix(choice, ":")
+				choice = strings.TrimSpace(choice)
 				l.Info("considering choice: >%s<", choice)
 
 				// Only accept choices that look like location names (2+ words or single capitalized word)
