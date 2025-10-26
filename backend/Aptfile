@@ -8,6 +8,7 @@ libjpeg-dev
 libtiff-dev
 libgif-dev
 libwebp-dev
+libarchive13
 build-essential
 pkg-config
 libc6-dev
