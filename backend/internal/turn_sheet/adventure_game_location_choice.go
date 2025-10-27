@@ -162,10 +162,10 @@ func (p *LocationChoiceProcessor) parseLocationChoicesWithSheetData(l logger.Log
 		`vs\s+([A-Za-z][A-Za-z\s]+?)(?:\n|$)`,      // OCR reads X as "vs"
 		`✓\s*([A-Za-z][A-Za-z\s]+?)(?:\n|$)`,       // Checkmark
 		// Unselected patterns
-		`\(O\s*([A-Za-z][A-Za-z\s]+?)(?:\n|$)`,     // OCR reads unselected checkbox as (O
-		`O/\s*([A-Za-z][A-Za-z\s]+?)(?:\n|$)`,      // OCR reads unselected checkbox as O/
-		`Sf\s*([A-Za-z][A-Za-z\s]+?)(?:\n|$)`,      // OCR misreads ☑ as Sf
-		`S\s*([A-Za-z][A-Za-z\s]+?)(?:\n|$)`,       // OCR misreads ☑ as S
+		`\(O\s*([A-Za-z][A-Za-z\s]+?)(?:\n|$)`, // OCR reads unselected checkbox as (O
+		`O/\s*([A-Za-z][A-Za-z\s]+?)(?:\n|$)`,  // OCR reads unselected checkbox as O/
+		`Sf\s*([A-Za-z][A-Za-z\s]+?)(?:\n|$)`,  // OCR misreads ☑ as Sf
+		`S\s*([A-Za-z][A-Za-z\s]+?)(?:\n|$)`,   // OCR misreads ☑ as S
 	}
 
 	// Collect all matches with their pattern index
@@ -187,13 +187,7 @@ func (p *LocationChoiceProcessor) parseLocationChoicesWithSheetData(l logger.Log
 				location = strings.TrimSuffix(location, ":")
 				location = strings.TrimSpace(location)
 				
-				// Filter out common false matches
-				if len(location) > 0 &&
-					!strings.Contains(strings.ToLower(location), "submit") &&
-					!strings.Contains(strings.ToLower(location), "deadline") &&
-					!strings.Contains(strings.ToLower(location), "turn") &&
-					!strings.Contains(strings.ToLower(location), "sheet") &&
-					!strings.Contains(strings.ToLower(location), "code") {
+				if len(location) > 0 {
 					allMatches = append(allMatches, matchResult{
 						patternIdx: i,
 						location:   location,
