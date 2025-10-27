@@ -99,6 +99,7 @@ docker-compose.override.yml
 !README.md
 !DEPLOYMENT.md
 !CONTRIBUTING.md
+!backend/internal/turn_sheet/TESTING.md
 
 # =============================
 # Task Files
