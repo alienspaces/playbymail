@@ -158,10 +158,13 @@ func (p *LocationChoiceProcessor) parseLocationChoicesWithSheetData(l logger.Log
 	// Priority order: selected patterns first, then unselected patterns
 	selectedPatterns := []string{
 		// Selected checkbox patterns (higher priority)
-		`Q/([A-Za-z][A-Za-z\s:]+?)(?:\n|$)`,      // OCR reads selected checkbox as Q/ (no space, includes colon)
-		`☑\s*([A-Za-z][A-Za-z\s]+?)(?:\n|$)`,     // Standard selected checkbox
-		`\[X\]\s*([A-Za-z][A-Za-z\s]+?)(?:\n|$)`, // X in brackets
-		`✓\s*([A-Za-z][A-Za-z\s]+?)(?:\n|$)`,     // Checkmark
+		`Q/([A-Za-z][A-Za-z\s:]+?)(?:\n|$)`,        // OCR reads selected checkbox as Q/ (no space, includes colon)
+		`☑\s*([A-Za-z][A-Za-z\s]+?)(?:\n|$)`,       // Standard selected checkbox
+		`\[X\]\s*([A-Za-z][A-Za-z\s]+?)(?:\n|$)`,   // X in brackets
+		`X\s+([A-Za-z][A-Za-z\s]+?)(?:\n|$)`,       // Just an X mark
+		`\\(X\\)\s*([A-Za-z][A-Za-z\s]+?)(?:\n|$)`, // X in parentheses
+		`vs\s+([A-Za-z][A-Za-z\s]+?)(?:\n|$)`,      // OCR reads X as "vs"
+		`✓\s*([A-Za-z][A-Za-z\s]+?)(?:\n|$)`,       // Checkmark
 	}
 
 	unselectedPatterns := []string{

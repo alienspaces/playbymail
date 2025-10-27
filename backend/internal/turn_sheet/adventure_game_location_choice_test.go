@@ -159,9 +159,9 @@ func TestLocationChoiceProcessor_ScanTurnSheet(t *testing.T) {
 			errorMsg:    "text extraction failed",
 		},
 		{
-			name: "given real scanned turn sheet image when scanning then turn sheet code and location choices are extracted correctly",
+			name: "given real scanned turn sheet image with tick mark when scanning then turn sheet code and location choices are extracted correctly",
 			imageDataFn: func() ([]byte, error) {
-				return os.ReadFile("testdata/adventure_game_location_choice_turn_sheet_scan.jpg")
+				return os.ReadFile("testdata/adventure_game_location_choice_turn_sheet_scan_tick.jpg")
 			},
 			sheetData: map[string]any{
 				"locations": []any{
@@ -182,6 +182,31 @@ func TestLocationChoiceProcessor_ScanTurnSheet(t *testing.T) {
 			expectError:           false,
 			expectedTurnSheetCode: "ABC123XYZ",
 			expectedChoices:       []string{"dark_tower"},
+		},
+		{
+			name: "given real scanned turn sheet image with cross mark when scanning then turn sheet code and location choices are extracted correctly",
+			imageDataFn: func() ([]byte, error) {
+				return os.ReadFile("testdata/adventure_game_location_choice_turn_sheet_scan_cross.jpg")
+			},
+			sheetData: map[string]any{
+				"locations": []any{
+					map[string]any{
+						"name": "Crystal Caverns",
+					},
+					map[string]any{
+						"name": "Dark Tower",
+					},
+					map[string]any{
+						"name": "Sunset Plains",
+					},
+					map[string]any{
+						"name": "Mermaid Lagoon",
+					},
+				},
+			},
+			expectError:           false,
+			expectedTurnSheetCode: "ABC123XYZ",
+			expectedChoices:       []string{"mermaid_lagoon"},
 		},
 	}
 
