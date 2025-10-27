@@ -186,7 +186,7 @@ func (p *LocationChoiceProcessor) parseLocationChoicesWithSheetData(l logger.Log
 				// Clean up OCR artifacts like colons at the end
 				location = strings.TrimSuffix(location, ":")
 				location = strings.TrimSpace(location)
-				
+
 				if len(location) > 0 {
 					allMatches = append(allMatches, matchResult{
 						patternIdx: i,
