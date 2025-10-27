@@ -151,13 +151,9 @@ func (p *LocationChoiceProcessor) parseLocationChoicesWithSheetData(l logger.Log
 
 	l.Info("location names: %v", locationNames)
 
-	var choices []string
-	seen := make(map[string]bool)
-
-	// Look for checked/marked location options using OCR patterns
-	// Priority order: selected patterns first, then unselected patterns
-	selectedPatterns := []string{
-		// Selected checkbox patterns (higher priority)
+	// All possible checkbox patterns (both selected and unselected)
+	allPatterns := []string{
+		// Selected patterns
 		`Q/([A-Za-z][A-Za-z\s:]+?)(?:\n|$)`,        // OCR reads selected checkbox as Q/ (no space, includes colon)
 		`☑\s*([A-Za-z][A-Za-z\s]+?)(?:\n|$)`,       // Standard selected checkbox
 		`\[X\]\s*([A-Za-z][A-Za-z\s]+?)(?:\n|$)`,   // X in brackets
@@ -165,93 +161,106 @@ func (p *LocationChoiceProcessor) parseLocationChoicesWithSheetData(l logger.Log
 		`\\(X\\)\s*([A-Za-z][A-Za-z\s]+?)(?:\n|$)`, // X in parentheses
 		`vs\s+([A-Za-z][A-Za-z\s]+?)(?:\n|$)`,      // OCR reads X as "vs"
 		`✓\s*([A-Za-z][A-Za-z\s]+?)(?:\n|$)`,       // Checkmark
+		// Unselected patterns
+		`\(O\s*([A-Za-z][A-Za-z\s]+?)(?:\n|$)`,     // OCR reads unselected checkbox as (O
+		`O/\s*([A-Za-z][A-Za-z\s]+?)(?:\n|$)`,      // OCR reads unselected checkbox as O/
+		`Sf\s*([A-Za-z][A-Za-z\s]+?)(?:\n|$)`,      // OCR misreads ☑ as Sf
+		`S\s*([A-Za-z][A-Za-z\s]+?)(?:\n|$)`,       // OCR misreads ☑ as S
 	}
 
-	unselectedPatterns := []string{
-		// Unselected checkbox patterns (lower priority)
-		`\(O\s*([A-Za-z][A-Za-z\s]+?)(?:\n|$)`, // OCR reads unselected checkbox as (O
-		`O/\s*([A-Za-z][A-Za-z\s]+?)(?:\n|$)`,  // OCR reads unselected checkbox as O/
-		`Sf\s*([A-Za-z][A-Za-z\s]+?)(?:\n|$)`,  // OCR reads ☑ as Sf
-		`S\s*([A-Za-z][A-Za-z\s]+?)(?:\n|$)`,   // OCR reads ☑ as S
+	// Collect all matches with their pattern index
+	type matchResult struct {
+		patternIdx int
+		location   string
 	}
+	var allMatches []matchResult
 
-	// First try selected patterns
-	patterns := selectedPatterns
-	patternType := "selected"
-
-	// Check if any selected patterns match
-	hasSelectedMatches := false
-	for _, pattern := range selectedPatterns {
+	for i, pattern := range allPatterns {
 		re := regexp.MustCompile(pattern)
 		matches := re.FindAllStringSubmatch(text, -1)
-		if len(matches) > 0 {
-			hasSelectedMatches = true
-			break
-		}
-	}
-
-	// If no selected patterns match, fall back to unselected patterns
-	if !hasSelectedMatches {
-		patterns = unselectedPatterns
-		patternType = "unselected"
-	}
-
-	for i, pattern := range patterns {
-		re := regexp.MustCompile(pattern)
-		matches := re.FindAllStringSubmatch(text, -1)
-		l.Info("pattern %d (%s) found %d matches [%s]", i, pattern, len(matches), patternType)
+		l.Info("pattern %d (%s) found %d matches", i, pattern, len(matches))
 
 		for _, match := range matches {
 			if len(match) > 1 {
-				choice := strings.TrimSpace(match[1])
+				location := strings.TrimSpace(match[1])
 				// Clean up OCR artifacts like colons at the end
-				choice = strings.TrimSuffix(choice, ":")
-				choice = strings.TrimSpace(choice)
-				l.Info("considering choice: >%s<", choice)
-
-				// Only accept choices that look like location names (2+ words or single capitalized word)
+				location = strings.TrimSuffix(location, ":")
+				location = strings.TrimSpace(location)
+				
 				// Filter out common false matches
-				if len(choice) > 0 &&
-					(strings.Contains(choice, " ") || (len(choice) > 3 && choice[0] >= 'A' && choice[0] <= 'Z')) &&
-					!strings.Contains(strings.ToLower(choice), "submit") &&
-					!strings.Contains(strings.ToLower(choice), "deadline") &&
-					!strings.Contains(strings.ToLower(choice), "turn") &&
-					!strings.Contains(strings.ToLower(choice), "sheet") &&
-					!strings.Contains(strings.ToLower(choice), "code") &&
-					!strings.HasPrefix(strings.ToLower(choice), "f ") &&
-					!strings.HasPrefix(strings.ToLower(choice), "f_") &&
-					!strings.HasPrefix(strings.ToLower(choice), "h") &&
-					!strings.HasPrefix(strings.ToLower(choice), "u") {
+				if len(location) > 0 &&
+					!strings.Contains(strings.ToLower(location), "submit") &&
+					!strings.Contains(strings.ToLower(location), "deadline") &&
+					!strings.Contains(strings.ToLower(location), "turn") &&
+					!strings.Contains(strings.ToLower(location), "sheet") &&
+					!strings.Contains(strings.ToLower(location), "code") {
+					allMatches = append(allMatches, matchResult{
+						patternIdx: i,
+						location:   location,
+					})
+					l.Info("found potential location: >%s< with pattern %d", location, i)
+				}
+			}
+		}
+	}
 
-					// Check if this choice matches any of the actual location names (case-insensitive)
-					var matchedLocation string
-					var exists bool
+	if len(allMatches) == 0 {
+		return nil, fmt.Errorf("no valid location choices found in text")
+	}
 
-					// First try exact match
-					if matchedLocation, exists = locationNames[choice]; !exists {
-						// Then try case-insensitive match
-						if matchedLocation, exists = locationNames[strings.ToLower(choice)]; !exists {
-							// Finally try case-insensitive match with original case
-							for originalName := range locationNames {
-								if strings.EqualFold(originalName, choice) {
-									matchedLocation = originalName
-									exists = true
-									break
-								}
-							}
+	// If we have N location options and found N-1 matches with one pattern and 1 match with another,
+	// the pattern with only 1 match is likely the selection
+	// Count pattern frequencies
+	patternCounts := make(map[int]int)
+	for _, match := range allMatches {
+		patternCounts[match.patternIdx]++
+	}
+
+	// Find the minority pattern (the one that appears least often)
+	minorityPatternIdx := -1
+	minCount := len(allMatches) // Start with max possible count
+	for patternIdx, count := range patternCounts {
+		if count < minCount && count > 0 {
+			minCount = count
+			minorityPatternIdx = patternIdx
+		}
+	}
+
+	l.Info("pattern counts: %v, minority pattern: %d (count: %d)", patternCounts, minorityPatternIdx, minCount)
+
+	// Extract choices from matches using the minority pattern
+	var choices []string
+	seen := make(map[string]bool)
+
+	for _, match := range allMatches {
+		if match.patternIdx == minorityPatternIdx {
+			// Try to match this location name to our known locations
+			var matchedLocation string
+			var exists bool
+
+			// First try exact match
+			if matchedLocation, exists = locationNames[match.location]; !exists {
+				// Then try case-insensitive match
+				if matchedLocation, exists = locationNames[strings.ToLower(match.location)]; !exists {
+					// Finally try case-insensitive match with original case
+					for originalName := range locationNames {
+						if strings.EqualFold(originalName, match.location) {
+							matchedLocation = originalName
+							exists = true
+							break
 						}
 					}
+				}
+			}
 
-					if exists {
-						// Convert to location ID format (lowercase, spaces to underscores)
-						locationID := strings.ToLower(strings.ReplaceAll(matchedLocation, " ", "_"))
+			if exists {
+				// Convert to location ID format (lowercase, spaces to underscores)
+				locationID := strings.ToLower(strings.ReplaceAll(matchedLocation, " ", "_"))
 
-						// Only add if we haven't seen this location before
-						if !seen[locationID] {
-							choices = append(choices, locationID)
-							seen[locationID] = true
-						}
-					}
+				// Only add if we haven't seen this location before
+				if !seen[locationID] {
+					choices = append(choices, locationID)
+					seen[locationID] = true
 				}
 			}
 		}
