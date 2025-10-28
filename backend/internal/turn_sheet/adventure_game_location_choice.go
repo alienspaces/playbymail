@@ -92,8 +92,8 @@ func (p *LocationChoiceProcessor) ScanTurnSheet(ctx context.Context, l logger.Lo
 	l.Info("scanning location choice turn sheet")
 
 	// Unmarshal sheet data to get location information
-	var sheetDataMap map[string]any
-	if err := json.Unmarshal(sheetData, &sheetDataMap); err != nil {
+	var locationChoiceData LocationChoiceData
+	if err := json.Unmarshal(sheetData, &locationChoiceData); err != nil {
 		l.Warn("failed to unmarshal sheet data >%v<", err)
 		return nil, fmt.Errorf("failed to parse sheet data: %w", err)
 	}
@@ -107,7 +107,7 @@ func (p *LocationChoiceProcessor) ScanTurnSheet(ctx context.Context, l logger.Lo
 
 	// Parse location choices from extracted text using the sheet data
 	l.Info("full OCR text extracted: >%s<", text)
-	choices, err := p.parseLocationChoicesWithSheetData(l, text, sheetDataMap)
+	choices, err := p.parseLocationChoicesWithSheetData(l, text, &locationChoiceData)
 	if err != nil {
 		l.Warn("failed to parse location choices >%v<", err)
 		return nil, fmt.Errorf("location choice parsing failed: %w", err)
@@ -130,54 +130,24 @@ func (p *LocationChoiceProcessor) ScanTurnSheet(ctx context.Context, l logger.Lo
 }
 
 // ParseLocationChoicesWithSheetData parses location choices using the actual sheet data
-func (p *LocationChoiceProcessor) parseLocationChoicesWithSheetData(l logger.Logger, text string, sheetData map[string]any) ([]string, error) {
+func (p *LocationChoiceProcessor) parseLocationChoicesWithSheetData(l logger.Logger, text string, sheetData *LocationChoiceData) ([]string, error) {
 	l = l.WithFunctionContext("LocationChoiceProcessor/parseLocationChoicesWithSheetData")
 
 	l.Info("parsing location choices with sheet data")
 
-	// Extract location data from sheet data (try both "location_options" and "locations" for backwards compatibility)
-	var locations []any
-
-	if locationOptions, exists := sheetData["location_options"].([]any); exists {
-		locations = locationOptions
-	} else if locationsFromLegacy, exists := sheetData["locations"].([]any); exists {
-		locations = locationsFromLegacy
-	} else {
-		return nil, fmt.Errorf("no location options found in sheet data")
-	}
-
-	if len(locations) == 0 {
+	// Validate location options
+	if len(sheetData.LocationOptions) == 0 {
 		return nil, fmt.Errorf("no location options found in sheet data")
 	}
 
 	// Create a map of location names for validation
 	// Key: location name (as shown on the turn sheet), Value: location ID
 	locationNames := make(map[string]string)
-	for _, loc := range locations {
-		if locMap, ok := loc.(map[string]any); ok {
-			// Try location_link_name first (from LocationOption), then name (for backward compatibility)
-			var name string
-			var locationID string
-
-			if linkName, exists := locMap["location_link_name"].(string); exists {
-				name = linkName
-			} else if nameOnly, exists := locMap["name"].(string); exists {
-				name = nameOnly
-			}
-
-			// Get location_id if available (from LocationOption)
-			if id, exists := locMap["location_id"].(string); exists {
-				locationID = id
-			} else if name != "" {
-				// Fallback: convert name to location ID format
-				locationID = strings.ToLower(strings.ReplaceAll(name, " ", "_"))
-			}
-
-			if name != "" {
-				locationNames[name] = locationID
-				// Also add lowercase version for matching
-				locationNames[strings.ToLower(name)] = locationID
-			}
+	for _, loc := range sheetData.LocationOptions {
+		if loc.LocationLinkName != "" {
+			locationNames[loc.LocationLinkName] = loc.LocationID
+			// Also add lowercase version for matching
+			locationNames[strings.ToLower(loc.LocationLinkName)] = loc.LocationID
 		}
 	}
 

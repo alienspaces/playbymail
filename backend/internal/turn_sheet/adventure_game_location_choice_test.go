@@ -107,7 +107,7 @@ func TestLocationChoiceProcessor_ScanTurnSheet(t *testing.T) {
 	tests := []struct {
 		name                  string
 		imageDataFn           func() ([]byte, error)
-		sheetData             turn_sheet.LocationChoiceData
+		sheetDataFn           func() ([]byte, error)
 		expectError           bool
 		errorMsg              string
 		expectedTurnSheetCode string
@@ -118,7 +118,9 @@ func TestLocationChoiceProcessor_ScanTurnSheet(t *testing.T) {
 			imageDataFn: func() ([]byte, error) {
 				return []byte{}, nil
 			},
-			sheetData: turn_sheet.LocationChoiceData{},
+			sheetDataFn: func() ([]byte, error) {
+				return []byte(`{}`), nil
+			},
 			expectError: true,
 			errorMsg:    "empty image data",
 		},
@@ -127,7 +129,9 @@ func TestLocationChoiceProcessor_ScanTurnSheet(t *testing.T) {
 			imageDataFn: func() ([]byte, error) {
 				return nil, nil
 			},
-			sheetData: turn_sheet.LocationChoiceData{},
+			sheetDataFn: func() ([]byte, error) {
+				return []byte(`{"invalid":"data"}`), nil
+			},
 			expectError: true,
 			errorMsg:    "empty image data",
 		},
@@ -136,23 +140,28 @@ func TestLocationChoiceProcessor_ScanTurnSheet(t *testing.T) {
 			imageDataFn: func() ([]byte, error) {
 				return []byte("fake image data"), nil
 			},
-			sheetData: turn_sheet.LocationChoiceData{},
+			sheetDataFn: func() ([]byte, error) {
+				return []byte(`{}`), nil
+			},
 			expectError: true,
-			errorMsg:    "no location options found",
+			errorMsg:    "text extraction failed",
 		},
 		{
 			name: "given valid sheet data when scanning fake image then OCR extraction error is returned",
 			imageDataFn: func() ([]byte, error) {
 				return []byte("fake image data"), nil
 			},
-			sheetData: turn_sheet.LocationChoiceData{
-				LocationOptions: []turn_sheet.LocationOption{
-					{
-						LocationID:              "crystal_caverns",
-						LocationLinkName:        "Crystal Caverns",
-						LocationLinkDescription: "Enter the glowing caverns",
+			sheetDataFn: func() ([]byte, error) {
+				data := turn_sheet.LocationChoiceData{
+					LocationOptions: []turn_sheet.LocationOption{
+						{
+							LocationID:              "crystal_caverns",
+							LocationLinkName:        "Crystal Caverns",
+							LocationLinkDescription: "Enter the glowing caverns",
+						},
 					},
-				},
+				}
+				return json.Marshal(data)
 			},
 			expectError: true, // Will fail at OCR extraction, but should get past sheet data validation
 			errorMsg:    "text extraction failed",
@@ -162,29 +171,32 @@ func TestLocationChoiceProcessor_ScanTurnSheet(t *testing.T) {
 			imageDataFn: func() ([]byte, error) {
 				return os.ReadFile("testdata/adventure_game_location_choice_turn_sheet_scan_tick.jpg")
 			},
-			sheetData: turn_sheet.LocationChoiceData{
-				LocationOptions: []turn_sheet.LocationOption{
-					{
-						LocationID:              "crystal_caverns",
-						LocationLinkName:        "Crystal Caverns",
-						LocationLinkDescription: "Enter the glowing caverns",
+			sheetDataFn: func() ([]byte, error) {
+				data := turn_sheet.LocationChoiceData{
+					LocationOptions: []turn_sheet.LocationOption{
+						{
+							LocationID:              "crystal_caverns",
+							LocationLinkName:        "Crystal Caverns",
+							LocationLinkDescription: "Enter the glowing caverns",
+						},
+						{
+							LocationID:              "dark_tower",
+							LocationLinkName:        "Dark Tower",
+							LocationLinkDescription: "Climb the mysterious tower",
+						},
+						{
+							LocationID:              "sunset_plains",
+							LocationLinkName:        "Sunset Plains",
+							LocationLinkDescription: "Venture into the vast plains",
+						},
+						{
+							LocationID:              "mermaid_lagoon",
+							LocationLinkName:        "Mermaid Lagoon",
+							LocationLinkDescription: "Dive into the hidden lagoon",
+						},
 					},
-					{
-						LocationID:              "dark_tower",
-						LocationLinkName:        "Dark Tower",
-						LocationLinkDescription: "Climb the mysterious tower",
-					},
-					{
-						LocationID:              "sunset_plains",
-						LocationLinkName:        "Sunset Plains",
-						LocationLinkDescription: "Venture into the vast plains",
-					},
-					{
-						LocationID:              "mermaid_lagoon",
-						LocationLinkName:        "Mermaid Lagoon",
-						LocationLinkDescription: "Dive into the hidden lagoon",
-					},
-				},
+				}
+				return json.Marshal(data)
 			},
 			expectError:           false,
 			expectedTurnSheetCode: "ABC123XYZ",
@@ -195,29 +207,32 @@ func TestLocationChoiceProcessor_ScanTurnSheet(t *testing.T) {
 			imageDataFn: func() ([]byte, error) {
 				return os.ReadFile("testdata/adventure_game_location_choice_turn_sheet_scan_cross.jpg")
 			},
-			sheetData: turn_sheet.LocationChoiceData{
-				LocationOptions: []turn_sheet.LocationOption{
-					{
-						LocationID:              "crystal_caverns",
-						LocationLinkName:        "Crystal Caverns",
-						LocationLinkDescription: "Enter the glowing caverns",
+			sheetDataFn: func() ([]byte, error) {
+				data := turn_sheet.LocationChoiceData{
+					LocationOptions: []turn_sheet.LocationOption{
+						{
+							LocationID:              "crystal_caverns",
+							LocationLinkName:        "Crystal Caverns",
+							LocationLinkDescription: "Enter the glowing caverns",
+						},
+						{
+							LocationID:              "dark_tower",
+							LocationLinkName:        "Dark Tower",
+							LocationLinkDescription: "Climb the mysterious tower",
+						},
+						{
+							LocationID:              "sunset_plains",
+							LocationLinkName:        "Sunset Plains",
+							LocationLinkDescription: "Venture into the vast plains",
+						},
+						{
+							LocationID:              "mermaid_lagoon",
+							LocationLinkName:        "Mermaid Lagoon",
+							LocationLinkDescription: "Dive into the hidden lagoon",
+						},
 					},
-					{
-						LocationID:              "dark_tower",
-						LocationLinkName:        "Dark Tower",
-						LocationLinkDescription: "Climb the mysterious tower",
-					},
-					{
-						LocationID:              "sunset_plains",
-						LocationLinkName:        "Sunset Plains",
-						LocationLinkDescription: "Venture into the vast plains",
-					},
-					{
-						LocationID:              "mermaid_lagoon",
-						LocationLinkName:        "Mermaid Lagoon",
-						LocationLinkDescription: "Dive into the hidden lagoon",
-					},
-				},
+				}
+				return json.Marshal(data)
 			},
 			expectError:           false,
 			expectedTurnSheetCode: "ABC123XYZ",
@@ -257,9 +272,11 @@ func TestLocationChoiceProcessor_ScanTurnSheet(t *testing.T) {
 				}
 			}
 
-			// Marshal sheetData to bytes
-			sheetDataBytes, err := json.Marshal(tt.sheetData)
-			require.NoError(t, err, "Should marshal sheet data")
+			// Get sheet data bytes
+			sheetDataBytes, err := tt.sheetDataFn()
+			if err != nil {
+				t.Fatalf("Failed to get sheet data: %v", err)
+			}
 
 			// Test location choice scanning
 			resultBytes, err := processor.ScanTurnSheet(ctx, l, imageData, sheetDataBytes)
