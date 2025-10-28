@@ -2,6 +2,7 @@ package turn_sheet_test
 
 import (
 	"context"
+	"encoding/json"
 	"os"
 	"testing"
 	"time"
@@ -74,8 +75,16 @@ func TestLocationChoiceProcessor_GenerateTurnSheet(t *testing.T) {
 
 			processor := turn_sheet.NewLocationChoiceProcessor(l, cfg)
 
+			// Marshal test data to JSON bytes
+			var sheetDataBytes []byte
+			if tt.data != nil {
+				var err error
+				sheetDataBytes, err = json.Marshal(tt.data)
+				require.NoError(t, err, "Should marshal test data")
+			}
+
 			ctx := context.Background()
-			pdfData, err := processor.GenerateTurnSheet(ctx, l, tt.data)
+			pdfData, err := processor.GenerateTurnSheet(ctx, l, sheetDataBytes)
 
 			if tt.expectError {
 				require.Error(t, err, "Should return error")
@@ -242,23 +251,32 @@ func TestLocationChoiceProcessor_ScanTurnSheet(t *testing.T) {
 				}
 			}
 
+			// Marshal sheetData to bytes
+			var sheetDataBytes []byte
+			if tt.sheetData != nil {
+				var marshalErr error
+				sheetDataBytes, marshalErr = json.Marshal(tt.sheetData)
+				require.NoError(t, marshalErr, "Should marshal sheet data")
+			}
+
 			// Test location choice scanning
-			result, err := processor.ScanTurnSheet(ctx, l, imageData, tt.sheetData)
+			resultBytes, err := processor.ScanTurnSheet(ctx, l, imageData, sheetDataBytes)
 
 			if tt.expectError {
 				require.Error(t, err, "Should return error")
 				if tt.errorMsg != "" {
 					require.Contains(t, err.Error(), tt.errorMsg, "Error message should contain expected text")
 				}
-				require.Nil(t, result, "Result should be nil on error")
+				require.Nil(t, resultBytes, "Result should be nil on error")
 			} else {
 				require.NoError(t, err, "Should not return error")
-				require.NotNil(t, result, "Result should not be nil")
+				require.NotNil(t, resultBytes, "Result should not be nil")
 
 				// Verify expected choices
 				if len(tt.expectedChoices) > 0 {
-					scanData, ok := result.(*turn_sheet.LocationChoiceScanData)
-					require.True(t, ok, "Result should be of type LocationChoiceScanData")
+					var scanData turn_sheet.LocationChoiceScanData
+					err := json.Unmarshal(resultBytes, &scanData)
+					require.NoError(t, err, "Should unmarshal scan results")
 					require.Equal(t, tt.expectedChoices, scanData.Choices, "Should extract correct choices")
 					t.Logf("Choices: %v", scanData.Choices)
 				}
@@ -317,7 +335,12 @@ func TestGenerateLocationChoicePDFForPrinting(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	pdfData, err := processor.GenerateTurnSheet(ctx, l, testData)
+
+	// Marshal test data to JSON bytes
+	sheetDataBytes, err := json.Marshal(testData)
+	require.NoError(t, err, "Should marshal test data")
+
+	pdfData, err := processor.GenerateTurnSheet(ctx, l, sheetDataBytes)
 	require.NoError(t, err, "Should generate PDF without error")
 
 	require.NotNil(t, pdfData, "PDF data should not be nil")
