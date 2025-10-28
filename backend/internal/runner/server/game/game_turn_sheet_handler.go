@@ -144,28 +144,17 @@ func uploadTurnSheetHandler(w http.ResponseWriter, r *http.Request, pp httproute
 		return coreerror.NewInvalidDataError("unsupported turn sheet type: %s", turnSheetRec.SheetType)
 	}
 
-	// Step 6: Parse the sheet data to get the actual data for processing
-	var sheetData interface{}
-	if err := json.Unmarshal(turnSheetRec.SheetData, &sheetData); err != nil {
-		l.Warn("failed to unmarshal sheet data >%v<", err)
-		return coreerror.NewInvalidDataError("invalid sheet data format")
-	}
-
-	// Step 7: Process the turn sheet using the appropriate processor
-	scannedData, err := processor.ScanTurnSheet(r.Context(), l, imageData, sheetData)
+	// Step 6: Process the turn sheet using the appropriate processor
+	// Pass sheetData as bytes directly (it's already JSON-encoded in the database)
+	scannedData, err := processor.ScanTurnSheet(r.Context(), l, imageData, turnSheetRec.SheetData)
 	if err != nil {
 		l.Warn("failed to process turn sheet >%v<", err)
 		return coreerror.NewInvalidDataError("failed to process turn sheet: %v", err)
 	}
 
 	// Step 8: Update the turn sheet record with scanned data
-	scannedDataBytes, err := json.Marshal(scannedData)
-	if err != nil {
-		l.Warn("failed to marshal scanned data >%v<", err)
-		return coreerror.NewInternalError("failed to marshal scanned data")
-	}
-
-	turnSheetRec.ScannedData = json.RawMessage(scannedDataBytes)
+	// scannedData is already JSON-encoded bytes from the processor
+	turnSheetRec.ScannedData = json.RawMessage(scannedData)
 	turnSheetRec.ScannedAt = sql.NullTime{Time: time.Now(), Valid: true}
 	turnSheetRec.ScanQuality = sql.NullFloat64{Float64: 0.95, Valid: true} // TODO: Calculate actual scan quality
 	turnSheetRec.ProcessingStatus = "processed"
@@ -177,12 +166,19 @@ func uploadTurnSheetHandler(w http.ResponseWriter, r *http.Request, pp httproute
 		return coreerror.NewInternalError("failed to update turn sheet record")
 	}
 
-	// Step 10: Create response
+	// Step 10: Unmarshal scanned data for response
+	var scannedDataMap map[string]interface{}
+	if err := json.Unmarshal(scannedData, &scannedDataMap); err != nil {
+		l.Warn("failed to unmarshal scanned data for response >%v<", err)
+		scannedDataMap = make(map[string]interface{})
+	}
+
+	// Create response
 	response := TurnSheetUploadResponse{
 		TurnSheetID:      identifier.GameTurnSheetID,
 		TurnSheetCodeCI:  turnSheetCode,
 		SheetType:        turnSheetRec.SheetType,
-		ScannedData:      scannedData.(map[string]interface{}),
+		ScannedData:      scannedDataMap,
 		ProcessingStatus: "processed",
 		ScanQuality:      0.95,
 		Message:          "Turn sheet uploaded and processed successfully",

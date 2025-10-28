@@ -2,6 +2,7 @@ package turn_sheet
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"regexp"
 	"strings"
@@ -46,16 +47,16 @@ func NewLocationChoiceProcessor(l logger.Logger, cfg *config.Config) *LocationCh
 }
 
 // GenerateTurnSheet generates a location choice turn sheet PDF
-func (p *LocationChoiceProcessor) GenerateTurnSheet(ctx context.Context, l logger.Logger, data any) ([]byte, error) {
+func (p *LocationChoiceProcessor) GenerateTurnSheet(ctx context.Context, l logger.Logger, sheetData []byte) ([]byte, error) {
 	l = l.WithFunctionContext("LocationChoiceProcessor/GenerateTurnSheet")
 
 	l.Info("generating location choice turn sheet")
 
-	// Validate and assert data type
-	locationChoiceData, ok := data.(*LocationChoiceData)
-	if !ok {
-		l.Warn("invalid data type for location choice turn sheet, expected *LocationChoiceData")
-		return nil, fmt.Errorf("invalid data type: expected *LocationChoiceData, got %T", data)
+	// Unmarshal sheet data
+	var locationChoiceData LocationChoiceData
+	if err := json.Unmarshal(sheetData, &locationChoiceData); err != nil {
+		l.Warn("failed to unmarshal sheet data >%v<", err)
+		return nil, fmt.Errorf("failed to parse sheet data: %w", err)
 	}
 
 	// Validate base template data
@@ -81,19 +82,20 @@ func (p *LocationChoiceProcessor) GenerateTurnSheet(ctx context.Context, l logge
 	// Generate PDF using the location choice template
 	templatePath := "turn_sheet/adventure_game.location_choice.template"
 
-	return p.Generator.GeneratePDF(ctx, templatePath, data)
+	return p.Generator.GeneratePDF(ctx, templatePath, &locationChoiceData)
 }
 
 // ScanTurnSheet scans a location choice turn sheet and extracts player choices
-func (p *LocationChoiceProcessor) ScanTurnSheet(ctx context.Context, l logger.Logger, imageData []byte, sheetData any) (any, error) {
+func (p *LocationChoiceProcessor) ScanTurnSheet(ctx context.Context, l logger.Logger, imageData []byte, sheetData []byte) ([]byte, error) {
 	l = l.WithFunctionContext("LocationChoiceProcessor/ScanTurnSheet")
 
 	l.Info("scanning location choice turn sheet")
 
-	// Parse sheet data to get location information
-	sheetDataMap, ok := sheetData.(map[string]any)
-	if !ok {
-		return nil, fmt.Errorf("invalid sheet data format for location choice turn sheet")
+	// Unmarshal sheet data to get location information
+	var sheetDataMap map[string]any
+	if err := json.Unmarshal(sheetData, &sheetDataMap); err != nil {
+		l.Warn("failed to unmarshal sheet data >%v<", err)
+		return nil, fmt.Errorf("failed to parse sheet data: %w", err)
 	}
 
 	// Extract text from image using base processor
@@ -113,9 +115,18 @@ func (p *LocationChoiceProcessor) ScanTurnSheet(ctx context.Context, l logger.Lo
 
 	l.Info("extracted %d location choices", len(choices))
 
-	return &LocationChoiceScanData{
+	// Marshal scan results to JSON
+	scanData := LocationChoiceScanData{
 		Choices: choices,
-	}, nil
+	}
+	
+	scanResultBytes, err := json.Marshal(scanData)
+	if err != nil {
+		l.Warn("failed to marshal scan results >%v<", err)
+		return nil, fmt.Errorf("failed to marshal scan results: %w", err)
+	}
+
+	return scanResultBytes, nil
 }
 
 // ParseLocationChoicesWithSheetData parses location choices using the actual sheet data
@@ -124,27 +135,48 @@ func (p *LocationChoiceProcessor) parseLocationChoicesWithSheetData(l logger.Log
 
 	l.Info("parsing location choices with sheet data")
 
-	// Extract location data from sheet data
-	locations, ok := sheetData["locations"].([]any)
-	if !ok {
-		return nil, fmt.Errorf("no locations found in sheet data")
+	// Extract location data from sheet data (try both "location_options" and "locations" for backwards compatibility)
+	var locations []any
+
+	if locationOptions, exists := sheetData["location_options"].([]any); exists {
+		locations = locationOptions
+	} else if locationsFromLegacy, exists := sheetData["locations"].([]any); exists {
+		locations = locationsFromLegacy
+	} else {
+		return nil, fmt.Errorf("no location options found in sheet data")
 	}
 
-	// Check if locations array is empty
 	if len(locations) == 0 {
-		return nil, fmt.Errorf("no locations found in sheet data")
+		return nil, fmt.Errorf("no location options found in sheet data")
 	}
 
 	// Create a map of location names for validation
+	// Key: location name (as shown on the turn sheet), Value: location ID
 	locationNames := make(map[string]string)
 	for _, loc := range locations {
 		if locMap, ok := loc.(map[string]any); ok {
-			if name, exists := locMap["name"]; exists {
-				if nameStr, ok := name.(string); ok {
-					locationNames[nameStr] = nameStr
-					// Also add lowercase version for matching
-					locationNames[strings.ToLower(nameStr)] = nameStr
-				}
+			// Try location_link_name first (from LocationOption), then name (for backward compatibility)
+			var name string
+			var locationID string
+
+			if linkName, exists := locMap["location_link_name"].(string); exists {
+				name = linkName
+			} else if nameOnly, exists := locMap["name"].(string); exists {
+				name = nameOnly
+			}
+
+			// Get location_id if available (from LocationOption)
+			if id, exists := locMap["location_id"].(string); exists {
+				locationID = id
+			} else if name != "" {
+				// Fallback: convert name to location ID format
+				locationID = strings.ToLower(strings.ReplaceAll(name, " ", "_"))
+			}
+
+			if name != "" {
+				locationNames[name] = locationID
+				// Also add lowercase version for matching
+				locationNames[strings.ToLower(name)] = locationID
 			}
 		}
 	}
@@ -229,17 +261,17 @@ func (p *LocationChoiceProcessor) parseLocationChoicesWithSheetData(l logger.Log
 	for _, match := range allMatches {
 		if match.patternIdx == minorityPatternIdx {
 			// Try to match this location name to our known locations
-			var matchedLocation string
+			var locationID string
 			var exists bool
 
 			// First try exact match
-			if matchedLocation, exists = locationNames[match.location]; !exists {
+			if locationID, exists = locationNames[match.location]; !exists {
 				// Then try case-insensitive match
-				if matchedLocation, exists = locationNames[strings.ToLower(match.location)]; !exists {
+				if locationID, exists = locationNames[strings.ToLower(match.location)]; !exists {
 					// Finally try case-insensitive match with original case
-					for originalName := range locationNames {
+					for originalName, id := range locationNames {
 						if strings.EqualFold(originalName, match.location) {
-							matchedLocation = originalName
+							locationID = id
 							exists = true
 							break
 						}
@@ -248,9 +280,6 @@ func (p *LocationChoiceProcessor) parseLocationChoicesWithSheetData(l logger.Log
 			}
 
 			if exists {
-				// Convert to location ID format (lowercase, spaces to underscores)
-				locationID := strings.ToLower(strings.ReplaceAll(matchedLocation, " ", "_"))
-
 				// Only add if we haven't seen this location before
 				if !seen[locationID] {
 					choices = append(choices, locationID)

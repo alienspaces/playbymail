@@ -13,13 +13,17 @@ import (
 // DocumentScanner defines the interface for scanning completed turn sheet documents
 type DocumentScanner interface {
 	// ScanTurnSheet scans a turn sheet image and extracts player choices/directions
-	ScanTurnSheet(ctx context.Context, l logger.Logger, imageData []byte, sheetData any) (any, error)
+	// sheetData: JSON-encoded sheet data from the database
+	// Returns: JSON-encoded scan results to store in the database
+	ScanTurnSheet(ctx context.Context, l logger.Logger, imageData []byte, sheetData []byte) ([]byte, error)
 }
 
 // DocumentGenerator defines the interface for generating turn sheet documents
 type DocumentGenerator interface {
 	// GenerateTurnSheet generates a turn sheet document with the provided data
-	GenerateTurnSheet(ctx context.Context, l logger.Logger, data any) ([]byte, error)
+	// sheetData: JSON-encoded sheet data from the database
+	// Returns: PDF bytes for the generated turn sheet
+	GenerateTurnSheet(ctx context.Context, l logger.Logger, sheetData []byte) ([]byte, error)
 }
 
 // DocumentProcessor defines the interface for processing turn sheet documents (generation + scanning)
