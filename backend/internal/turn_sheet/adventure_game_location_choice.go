@@ -216,7 +216,7 @@ func (p *LocationChoiceProcessor) parseLocationChoicesWithSheetData(l logger.Log
 	// When there are ties, prefer patterns that match known locations
 	minorityPatternIdx := -1
 	minCount := len(allMatches) // Start with max possible count
-	
+
 	// First, find all patterns with the minimum count
 	var candidatesWithMinCount []int
 	for patternIdx, count := range patternCounts {
@@ -227,13 +227,13 @@ func (p *LocationChoiceProcessor) parseLocationChoicesWithSheetData(l logger.Log
 			candidatesWithMinCount = append(candidatesWithMinCount, patternIdx)
 		}
 	}
-	
+
 	// If we have candidates with minCount, try to find one that matches known locations
 	// If multiple still match, pick the first selected pattern (index < 7)
 	if len(candidatesWithMinCount) > 0 {
 		bestCandidate := candidatesWithMinCount[0]
 		bestMatchCount := 0
-		
+
 		for _, candidateIdx := range candidatesWithMinCount {
 			matchCount := 0
 			for _, match := range allMatches {
@@ -254,7 +254,7 @@ func (p *LocationChoiceProcessor) parseLocationChoicesWithSheetData(l logger.Log
 					}
 				}
 			}
-			
+
 			if matchCount > bestMatchCount {
 				bestMatchCount = matchCount
 				bestCandidate = candidateIdx
@@ -263,7 +263,7 @@ func (p *LocationChoiceProcessor) parseLocationChoicesWithSheetData(l logger.Log
 				bestCandidate = candidateIdx
 			}
 		}
-		
+
 		minorityPatternIdx = bestCandidate
 	}
 
