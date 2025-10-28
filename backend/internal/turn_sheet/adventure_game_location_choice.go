@@ -213,13 +213,58 @@ func (p *LocationChoiceProcessor) parseLocationChoicesWithSheetData(l logger.Log
 	}
 
 	// Find the minority pattern (the one that appears least often)
+	// When there are ties, prefer patterns that match known locations
 	minorityPatternIdx := -1
 	minCount := len(allMatches) // Start with max possible count
+	
+	// First, find all patterns with the minimum count
+	var candidatesWithMinCount []int
 	for patternIdx, count := range patternCounts {
 		if count < minCount && count > 0 {
 			minCount = count
-			minorityPatternIdx = patternIdx
+			candidatesWithMinCount = []int{patternIdx}
+		} else if count == minCount && count > 0 {
+			candidatesWithMinCount = append(candidatesWithMinCount, patternIdx)
 		}
+	}
+	
+	// If we have candidates with minCount, try to find one that matches known locations
+	// If multiple still match, pick the first selected pattern (index < 7)
+	if len(candidatesWithMinCount) > 0 {
+		bestCandidate := candidatesWithMinCount[0]
+		bestMatchCount := 0
+		
+		for _, candidateIdx := range candidatesWithMinCount {
+			matchCount := 0
+			for _, match := range allMatches {
+				if match.patternIdx == candidateIdx {
+					// Try to match this location name to our known locations
+					if _, exists := locationNames[match.location]; exists {
+						matchCount++
+					} else if _, exists := locationNames[strings.ToLower(match.location)]; exists {
+						matchCount++
+					} else {
+						// Try case-insensitive match
+						for originalName := range locationNames {
+							if strings.EqualFold(originalName, match.location) {
+								matchCount++
+								break
+							}
+						}
+					}
+				}
+			}
+			
+			if matchCount > bestMatchCount {
+				bestMatchCount = matchCount
+				bestCandidate = candidateIdx
+			} else if matchCount == bestMatchCount && candidateIdx < 7 && bestCandidate >= 7 {
+				// Prefer selected patterns (indices 0-6) over artifact patterns (indices 7-10)
+				bestCandidate = candidateIdx
+			}
+		}
+		
+		minorityPatternIdx = bestCandidate
 	}
 
 	l.Info("pattern counts: %v, minority pattern: %d (count: %d)", patternCounts, minorityPatternIdx, minCount)
