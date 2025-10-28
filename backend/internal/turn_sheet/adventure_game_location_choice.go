@@ -15,23 +15,23 @@ type LocationChoiceData struct {
 	TurnSheetTemplateData
 
 	// Current location information
-	LocationName        string
-	LocationDescription string
+	LocationName        string `json:"location_name"`
+	LocationDescription string `json:"location_description"`
 
 	// Available location options
-	LocationOptions []LocationOption
+	LocationOptions []LocationOption `json:"location_options"`
 }
 
 // LocationOption represents a location choice option for the player
 type LocationOption struct {
-	LocationID              string
-	LocationLinkName        string
-	LocationLinkDescription string
+	LocationID              string `json:"location_id"`
+	LocationLinkName        string `json:"location_link_name"`
+	LocationLinkDescription string `json:"location_link_description"`
 }
 
 // LocationChoiceScanData represents the scanned data from a location choice turn sheet
 type LocationChoiceScanData struct {
-	Choices []string
+	Choices []string `json:"choices"`
 }
 
 // LocationChoiceProcessor implements the DocumentProcessor interface for location choice turn sheets
@@ -119,7 +119,7 @@ func (p *LocationChoiceProcessor) ScanTurnSheet(ctx context.Context, l logger.Lo
 	scanData := LocationChoiceScanData{
 		Choices: choices,
 	}
-	
+
 	scanResultBytes, err := json.Marshal(scanData)
 	if err != nil {
 		l.Warn("failed to marshal scan results >%v<", err)
