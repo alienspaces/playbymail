@@ -162,6 +162,7 @@ func (p *LocationChoiceProcessor) parseLocationChoicesWithSheetData(l logger.Log
 		`X\s+([A-Za-z][A-Za-z\s]+?)(?:\n|$)`,       // Just an X mark
 		`\\(X\\)\s*([A-Za-z][A-Za-z\s]+?)(?:\n|$)`, // X in parentheses
 		`vs\s+([A-Za-z][A-Za-z\s]+?)(?:\n|$)`,      // OCR reads X as "vs"
+		`¢\s*([A-Za-z][A-Za-z\s]+?)(?:\n|$)`,       // OCR reads X as cents symbol
 		`✓\s*([A-Za-z][A-Za-z\s]+?)(?:\n|$)`,       // Checkmark
 		// Unselected patterns
 		`\(O\s*([A-Za-z][A-Za-z\s]+?)(?:\n|$)`, // OCR reads unselected checkbox as (O
@@ -229,7 +230,7 @@ func (p *LocationChoiceProcessor) parseLocationChoicesWithSheetData(l logger.Log
 	}
 
 	// If we have candidates with minCount, try to find one that matches known locations
-	// If multiple still match, pick the first selected pattern (index < 7)
+	// If multiple still match, pick the first selected pattern (index < 8)
 	if len(candidatesWithMinCount) > 0 {
 		bestCandidate := candidatesWithMinCount[0]
 		bestMatchCount := 0
@@ -258,8 +259,8 @@ func (p *LocationChoiceProcessor) parseLocationChoicesWithSheetData(l logger.Log
 			if matchCount > bestMatchCount {
 				bestMatchCount = matchCount
 				bestCandidate = candidateIdx
-			} else if matchCount == bestMatchCount && candidateIdx < 7 && bestCandidate >= 7 {
-				// Prefer selected patterns (indices 0-6) over artifact patterns (indices 7-10)
+			} else if matchCount == bestMatchCount && candidateIdx < 8 && bestCandidate >= 8 {
+				// Prefer selected patterns (indices 0-7) over artifact patterns (indices 8-11)
 				bestCandidate = candidateIdx
 			}
 		}
