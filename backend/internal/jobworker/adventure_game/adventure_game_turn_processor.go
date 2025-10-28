@@ -101,7 +101,7 @@ func (p *AdventureGame) processTurnSheet(ctx context.Context, characterInstance 
 	}
 
 	// Process turn sheet response using the sheet-specific processor
-	return processor.ProcessTurnSheetResponse(ctx, turnSheet)
+	return processor.ProcessTurnSheetResponse(ctx, characterInstance, turnSheet)
 }
 
 // getTurnSheetsForCharacter retrieves turn sheets for a specific character and turn

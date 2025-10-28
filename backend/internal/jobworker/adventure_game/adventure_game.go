@@ -26,7 +26,7 @@ type TurnSheetBusinessProcessor interface {
 	GetSheetType() string
 
 	// ProcessTurnSheetResponse processes a single turn sheet response and updates game state
-	ProcessTurnSheetResponse(ctx context.Context, turnSheet *game_record.GameTurnSheet) error
+	ProcessTurnSheetResponse(ctx context.Context, characterInstance *adventure_game_record.AdventureGameCharacterInstance, turnSheet *game_record.GameTurnSheet) error
 
 	// CreateNextTurnSheet creates a new turn sheet record for the next turn
 	CreateNextTurnSheet(ctx context.Context, characterInstance *adventure_game_record.AdventureGameCharacterInstance) (*game_record.GameTurnSheet, error)

@@ -5,33 +5,25 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"gitlab.com/alienspaces/playbymail/core/type/logger"
-	"gitlab.com/alienspaces/playbymail/internal/harness"
-	"gitlab.com/alienspaces/playbymail/internal/utils/config"
-	"gitlab.com/alienspaces/playbymail/internal/utils/deps"
+	"gitlab.com/alienspaces/playbymail/core/log"
 )
 
 func TestNewImageScanner(t *testing.T) {
 	tests := []struct {
-		name   string
-		logger logger.Logger
+		name string
 	}{
 		{
 			name: "creates image scanner with valid dependencies",
-			logger: func() logger.Logger {
-				cfg, _ := config.Parse()
-				l, _, _, _ := deps.NewDefaultDependencies(cfg)
-				return l
-			}(),
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			scanner := NewImageScanner(tt.logger)
+			logger := log.NewDefaultLogger()
+			scanner := NewImageScanner(logger)
 
 			require.NotNil(t, scanner, "Scanner should not be nil")
-			require.Equal(t, tt.logger, scanner.logger, "Logger should match")
+			require.Equal(t, logger, scanner.logger, "Logger should match")
 		})
 	}
 }
@@ -87,26 +79,11 @@ func TestImageScanner_ExtractTextFromImage(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Setup harness
-			dcfg := harness.DefaultDataConfig()
-			cfg, err := config.Parse()
-			require.NoError(t, err, "Parse returns without error")
-
-			l, s, j, err := deps.NewDefaultDependencies(cfg)
-			require.NoError(t, err, "Default dependencies returns without error")
-
-			h, err := harness.NewTesting(l, s, j, cfg, dcfg)
-			require.NoError(t, err, "NewTesting returns without error")
-
-			_, err = h.Setup()
-			require.NoError(t, err, "Setup returns without error")
-			defer func() {
-				err = h.Teardown()
-				require.NoError(t, err, "Teardown returns without error")
-			}()
+			// Create logger
+			logger := log.NewDefaultLogger()
 
 			// Create scanner
-			scanner := NewImageScanner(l)
+			scanner := NewImageScanner(logger)
 
 			// Execute test
 			text, err := scanner.ExtractTextFromImage(context.Background(), tt.imageData)
