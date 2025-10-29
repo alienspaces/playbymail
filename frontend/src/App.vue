@@ -79,6 +79,9 @@ function closeMobileMenu() {
         <div class="footer-center">
           <BuildInfo />
           <p>&copy; 2025 PlayByMail. All rights reserved.</p>
+          <p>
+            <a href="mailto:support@playbymail.games" class="footer-link">support@playbymail.games</a>
+          </p>
         </div>
       </footer>
   </div>
@@ -316,6 +319,15 @@ footer p {
   margin: 0;
   color: var(--color-text-muted);
   font-size: var(--font-size-sm);
+}
+
+.footer-link {
+  color: var(--color-text-muted);
+  text-decoration: underline;
+}
+
+.footer-link:hover {
+  color: var(--color-text);
 }
 
 /* Mobile footer adjustments */

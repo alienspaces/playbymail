@@ -30,6 +30,8 @@ const formatBuildDate = (dateString) => {
       <span class="build-commit">{{ buildInfo.commitRef }}</span>
       <span class="build-separator">•</span>
       <span class="build-date">{{ formatBuildDate(buildInfo.buildDate) }}</span>
+      <span class="build-separator">•</span>
+      <a href="https://github.com/alienspaces/playbymail/blob/main/RELEASE_NOTES.md" class="release-notes-link" target="_blank" rel="noopener noreferrer">Release Notes</a>
     </div>
   </div>
 </template>
@@ -65,6 +67,18 @@ const formatBuildDate = (dateString) => {
 
 .build-date {
   white-space: nowrap;
+}
+
+.release-notes-link {
+  color: var(--color-text-muted);
+  text-decoration: underline;
+  opacity: 0.8;
+  transition: opacity 0.2s;
+}
+
+.release-notes-link:hover {
+  opacity: 1;
+  color: var(--color-primary);
 }
 
 @media (max-width: 768px) {
