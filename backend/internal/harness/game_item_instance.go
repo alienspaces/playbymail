@@ -9,7 +9,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 )
 
-func (t *Testing) createGameItemInstanceRec(cfg GameItemInstanceConfig, gameInstanceRec *game_record.GameInstance) (*adventure_game_record.AdventureGameItemInstance, error) {
+func (t *Testing) createGameItemInstanceRec(cfg AdventureGameItemInstanceConfig, gameInstanceRec *game_record.GameInstance) (*adventure_game_record.AdventureGameItemInstance, error) {
 	l := t.Logger("createGameItemInstanceRec")
 
 	if gameInstanceRec == nil {

@@ -8,7 +8,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 )
 
-func (t *Testing) createGameCharacterInstanceRec(cfg GameCharacterInstanceConfig, gameInstanceRec *game_record.GameInstance) (*adventure_game_record.AdventureGameCharacterInstance, error) {
+func (t *Testing) createGameCharacterInstanceRec(cfg AdventureGameCharacterInstanceConfig, gameInstanceRec *game_record.GameInstance) (*adventure_game_record.AdventureGameCharacterInstance, error) {
 	l := t.Logger("createGameCharacterInstanceRec")
 
 	if cfg.GameCharacterRef == "" {

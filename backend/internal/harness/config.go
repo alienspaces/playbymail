@@ -123,45 +123,59 @@ type GameLocationLinkRequirementConfig struct {
 }
 
 type GameInstanceConfig struct {
-	Reference                    string // Reference to the game_instance record
-	Record                       *game_record.GameInstance
-	GameInstanceParameterConfigs []GameInstanceParameterConfig
-	GameLocationInstanceConfigs  []GameLocationInstanceConfig
-	GameItemInstanceConfigs      []GameItemInstanceConfig
-	GameCreatureInstanceConfigs  []GameCreatureInstanceConfig
-	GameCharacterInstanceConfigs []GameCharacterInstanceConfig
+	Reference                             string // Reference to the game_instance record
+	Record                                *game_record.GameInstance
+	GameInstanceParameterConfigs          []GameInstanceParameterConfig
+	AdventureGameLocationInstanceConfigs  []AdventureGameLocationInstanceConfig
+	AdventureGameItemInstanceConfigs      []AdventureGameItemInstanceConfig
+	AdventureGameCreatureInstanceConfigs  []AdventureGameCreatureInstanceConfig
+	AdventureGameCharacterInstanceConfigs []AdventureGameCharacterInstanceConfig
+	GameTurnSheetConfigs                  []GameTurnSheetConfig
 }
 
-type GameLocationInstanceConfig struct {
+type AdventureGameLocationInstanceConfig struct {
 	Reference       string // Reference to the game_location_instance record
 	GameLocationRef string // Reference to the game_location (required)
 	Record          *adventure_game_record.AdventureGameLocationInstance
 }
 
-type GameCreatureInstanceConfig struct {
+type AdventureGameCreatureInstanceConfig struct {
 	Reference       string // Reference to the game_creature_instance record
 	GameCreatureRef string // Reference to the game_creature (required)
 	GameLocationRef string // Reference to the game_location (required)
 	Record          *adventure_game_record.AdventureGameCreatureInstance
 }
 
-type GameCharacterInstanceConfig struct {
+type AdventureGameCharacterInstanceConfig struct {
 	Reference        string // Reference to the game_character_instance record
 	GameCharacterRef string // Reference to the game_character (required)
 	GameLocationRef  string // Reference to the game_location (optional)
 	Record           *adventure_game_record.AdventureGameCharacterInstance
 }
 
-type GameItemInstanceConfig struct {
+type AdventureGameItemInstanceConfig struct {
 	Reference        string // Reference to the game_item_instance record
 	GameItemRef      string // Reference to the game_item (required)
 	GameLocationRef  string // Reference to the game_location (optional)
 	GameCharacterRef string // Reference to the game_character (optional)
 	GameCreatureRef  string // Reference to the game_creature (optional)
 
-	// TODO: Must be assigned to a location, a character, or a creature
+	// Must be assigned to a location, a character, or a creature
 
 	Record *adventure_game_record.AdventureGameItemInstance
+}
+
+type GameTurnSheetConfig struct {
+	Reference                string // Reference to the game_turn_sheet record
+	GameCharacterInstanceRef string // Reference to the game_character_instance (required)
+	TurnNumber               int    // Turn number for this turn sheet
+	SheetType                string // Type of turn sheet (e.g., "location_choice", "join_game")
+	SheetOrder               int    // Order of this sheet in the turn
+	SheetData                string // JSON data for the turn sheet
+	ScannedData              string // JSON data for the scanned response (optional)
+	ProcessingStatus         string // Processing status (e.g., "pending", "processing", "completed")
+	IsCompleted              bool   // Whether the turn sheet has been completed
+	Record                   *game_record.GameTurnSheet
 }
 
 type GameSubscriptionConfig struct {
@@ -301,7 +315,7 @@ func DefaultDataConfig() DataConfig {
 								},
 							},
 						},
-						GameLocationInstanceConfigs: []GameLocationInstanceConfig{
+						AdventureGameLocationInstanceConfigs: []AdventureGameLocationInstanceConfig{
 							{
 								Reference:       GameLocationInstanceOneRef,
 								GameLocationRef: GameLocationOneRef,
@@ -313,7 +327,7 @@ func DefaultDataConfig() DataConfig {
 								Record:          &adventure_game_record.AdventureGameLocationInstance{},
 							},
 						},
-						GameItemInstanceConfigs: []GameItemInstanceConfig{
+						AdventureGameItemInstanceConfigs: []AdventureGameItemInstanceConfig{
 							{
 								Reference:       GameItemInstanceOneRef,
 								GameItemRef:     GameItemOneRef,
@@ -321,7 +335,7 @@ func DefaultDataConfig() DataConfig {
 								Record:          &adventure_game_record.AdventureGameItemInstance{},
 							},
 						},
-						GameCreatureInstanceConfigs: []GameCreatureInstanceConfig{
+						AdventureGameCreatureInstanceConfigs: []AdventureGameCreatureInstanceConfig{
 							{
 								Reference:       GameCreatureInstanceOneRef,
 								GameCreatureRef: GameCreatureOneRef,
@@ -329,7 +343,7 @@ func DefaultDataConfig() DataConfig {
 								Record:          &adventure_game_record.AdventureGameCreatureInstance{},
 							},
 						},
-						GameCharacterInstanceConfigs: []GameCharacterInstanceConfig{
+						AdventureGameCharacterInstanceConfigs: []AdventureGameCharacterInstanceConfig{
 							{
 								Reference:        GameCharacterInstanceOneRef,
 								GameCharacterRef: GameCharacterOneRef,

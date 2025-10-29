@@ -26,6 +26,7 @@ type Data struct {
 	GameSubscriptionRecs            []*game_record.GameSubscription
 	GameAdministrationRecs          []*game_record.GameAdministration
 	GameInstanceParameterRecs       []*game_record.GameInstanceParameter
+	GameTurnSheetRecs               []*game_record.GameTurnSheet
 	// Data references
 	Refs DataRefs
 }
@@ -51,6 +52,7 @@ type DataRefs struct {
 	GameSubscriptionRefs            map[string]string // Map of refs to game_subscription records
 	GameAdministrationRefs          map[string]string // Map of refs to game_administration records
 	GameInstanceParameterRefs       map[string]string // Map of refs to game_instance_parameter records
+	GameTurnSheetRefs               map[string]string // Map of refs to game_turn_sheet records
 }
 
 // initialiseDataStores - Data is required to maintain data references and
@@ -75,6 +77,7 @@ func initialiseDataStores() Data {
 			GameSubscriptionRefs:            map[string]string{},
 			GameAdministrationRefs:          map[string]string{},
 			GameInstanceParameterRefs:       map[string]string{},
+			GameTurnSheetRefs:               map[string]string{},
 		},
 	}
 }
@@ -579,4 +582,32 @@ func (d *Data) GetGameInstanceParameterRecByRef(ref string) (*game_record.GameIn
 		return nil, fmt.Errorf("game instance parameter reference not found for ref >%s<", ref)
 	}
 	return d.GetGameInstanceParameterRecByID(id)
+}
+
+// GameTurnSheet
+func (d *Data) AddGameTurnSheetRec(rec *game_record.GameTurnSheet) {
+	for idx := range d.GameTurnSheetRecs {
+		if d.GameTurnSheetRecs[idx].ID == rec.ID {
+			d.GameTurnSheetRecs[idx] = rec
+			return
+		}
+	}
+	d.GameTurnSheetRecs = append(d.GameTurnSheetRecs, rec)
+}
+
+func (d *Data) GetGameTurnSheetRecByID(id string) (*game_record.GameTurnSheet, error) {
+	for _, rec := range d.GameTurnSheetRecs {
+		if rec.ID == id {
+			return rec, nil
+		}
+	}
+	return nil, fmt.Errorf("failed getting game_turn_sheet with ID >%s<", id)
+}
+
+func (d *Data) GetGameTurnSheetRecByRef(ref string) (*game_record.GameTurnSheet, error) {
+	id, exists := d.Refs.GameTurnSheetRefs[ref]
+	if !exists {
+		return nil, fmt.Errorf("failed getting game_turn_sheet with ref >%s<", ref)
+	}
+	return d.GetGameTurnSheetRecByID(id)
 }

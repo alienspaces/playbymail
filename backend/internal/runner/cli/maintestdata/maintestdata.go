@@ -264,7 +264,7 @@ func GameConfig() []harness.GameConfig {
 						},
 					},
 					// Location instances for this game instance
-					GameLocationInstanceConfigs: []harness.GameLocationInstanceConfig{
+					AdventureGameLocationInstanceConfigs: []harness.AdventureGameLocationInstanceConfig{
 						{
 							Reference:       harness.GameLocationInstanceOneRef,
 							GameLocationRef: harness.GameLocationOneRef,
@@ -277,7 +277,7 @@ func GameConfig() []harness.GameConfig {
 						},
 					},
 					// Item instances placed in the world
-					GameItemInstanceConfigs: []harness.GameItemInstanceConfig{
+					AdventureGameItemInstanceConfigs: []harness.AdventureGameItemInstanceConfig{
 						{
 							Reference:       harness.GameItemInstanceOneRef,
 							GameItemRef:     harness.GameItemOneRef,
@@ -286,7 +286,7 @@ func GameConfig() []harness.GameConfig {
 						},
 					},
 					// Creature instances in the world
-					GameCreatureInstanceConfigs: []harness.GameCreatureInstanceConfig{
+					AdventureGameCreatureInstanceConfigs: []harness.AdventureGameCreatureInstanceConfig{
 						{
 							Reference:       harness.GameCreatureInstanceOneRef,
 							GameCreatureRef: harness.GameCreatureOneRef,
@@ -295,7 +295,7 @@ func GameConfig() []harness.GameConfig {
 						},
 					},
 					// Character instances
-					GameCharacterInstanceConfigs: []harness.GameCharacterInstanceConfig{
+					AdventureGameCharacterInstanceConfigs: []harness.AdventureGameCharacterInstanceConfig{
 						{
 							Reference:        harness.GameCharacterInstanceOneRef,
 							GameCharacterRef: harness.GameCharacterOneRef,

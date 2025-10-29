@@ -196,7 +196,7 @@ func (t *Testing) CreateData() error {
 			}
 
 			// Create location instances for this game instance
-			for _, locationInstanceConfig := range gameInstanceConfig.GameLocationInstanceConfigs {
+			for _, locationInstanceConfig := range gameInstanceConfig.AdventureGameLocationInstanceConfigs {
 				locationInstanceRec, err := t.createGameLocationInstanceRec(locationInstanceConfig, gameInstanceRec)
 				if err != nil {
 					l.Warn("failed creating game_location_instance record >%v<", err)
@@ -206,7 +206,7 @@ func (t *Testing) CreateData() error {
 			}
 
 			// Create creature instances for this game instance
-			for _, creatureInstanceConfig := range gameInstanceConfig.GameCreatureInstanceConfigs {
+			for _, creatureInstanceConfig := range gameInstanceConfig.AdventureGameCreatureInstanceConfigs {
 				creatureInstanceRec, err := t.createGameCreatureInstanceRec(creatureInstanceConfig, gameInstanceRec)
 				if err != nil {
 					l.Warn("failed creating game_creature_instance record >%v<", err)
@@ -216,7 +216,7 @@ func (t *Testing) CreateData() error {
 			}
 
 			// Create character instances for this game instance
-			for _, characterInstanceConfig := range gameInstanceConfig.GameCharacterInstanceConfigs {
+			for _, characterInstanceConfig := range gameInstanceConfig.AdventureGameCharacterInstanceConfigs {
 				characterInstanceRec, err := t.createGameCharacterInstanceRec(characterInstanceConfig, gameInstanceRec)
 				if err != nil {
 					l.Warn("failed creating game_character_instance record >%v<", err)
@@ -226,13 +226,23 @@ func (t *Testing) CreateData() error {
 			}
 
 			// Create item instances for this game instance
-			for _, itemInstanceConfig := range gameInstanceConfig.GameItemInstanceConfigs {
+			for _, itemInstanceConfig := range gameInstanceConfig.AdventureGameItemInstanceConfigs {
 				itemInstanceRec, err := t.createGameItemInstanceRec(itemInstanceConfig, gameInstanceRec)
 				if err != nil {
 					l.Warn("failed creating game_item_instance record >%v<", err)
 					return err
 				}
 				l.Debug("created game_item_instance record ID >%s<", itemInstanceRec.ID)
+			}
+
+			// Create turn sheets for this game instance
+			for _, turnSheetConfig := range gameInstanceConfig.GameTurnSheetConfigs {
+				turnSheetRec, err := t.createGameTurnSheetRec(turnSheetConfig, gameInstanceRec)
+				if err != nil {
+					l.Warn("failed creating game_turn_sheet record >%v<", err)
+					return err
+				}
+				l.Debug("created game_turn_sheet record ID >%s<", turnSheetRec.ID)
 			}
 		}
 
