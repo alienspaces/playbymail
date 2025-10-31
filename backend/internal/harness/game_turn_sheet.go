@@ -1,7 +1,6 @@
 package harness
 
 import (
-	"encoding/json"
 	"fmt"
 	"time"
 
@@ -117,12 +116,7 @@ func (t *Testing) applyGameTurnSheetRecDefaultValues(rec *game_record.GameTurnSh
 
 	// Set default processing status if not already set
 	if rec.ProcessingStatus == "" {
-		rec.ProcessingStatus = "pending"
-	}
-
-	// Set default sheet data if not already set
-	if len(rec.SheetData) == 0 {
-		rec.SheetData = json.RawMessage("{}")
+		rec.ProcessingStatus = game_record.TurnSheetProcessingStatusPending
 	}
 
 	return rec

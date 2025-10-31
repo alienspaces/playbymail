@@ -1,4 +1,4 @@
-# Release Notes - Past 2 Months
+# Release Notes
 
 ## Overview
 

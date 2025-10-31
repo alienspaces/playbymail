@@ -36,6 +36,16 @@ const (
 	FieldGameTurnSheetDeletedAt        string = "deleted_at"
 )
 
+// Turn sheet processing status constants
+// - pending: The turn sheet has not been processed yet
+// - processed: The turn sheet has been processed successfully
+// - error: The turn sheet has an error
+const (
+	TurnSheetProcessingStatusPending   string = "pending"
+	TurnSheetProcessingStatusProcessed string = "processed"
+	TurnSheetProcessingStatusError     string = "error"
+)
+
 type GameTurnSheet struct {
 	record.Record
 	GameID           string          `db:"game_id"`
