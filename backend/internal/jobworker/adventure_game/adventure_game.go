@@ -17,19 +17,19 @@ import (
 type AdventureGame struct {
 	Logger     logger.Logger
 	Domain     *domain.Domain
-	Processors map[string]TurnSheetBusinessProcessor
+	Processors map[string]TurnSheetProcessor
 }
 
-// TurnSheetBusinessProcessor defines the interface for processing turn sheet business logic in adventure games
-type TurnSheetBusinessProcessor interface {
+// TurnSheetProcessor defines the interface for processing turn sheet business logic in adventure games
+type TurnSheetProcessor interface {
 	// GetSheetType returns the sheet type this processor handles
 	GetSheetType() string
 
 	// ProcessTurnSheetResponse processes a single turn sheet response and updates game state
-	ProcessTurnSheetResponse(ctx context.Context, characterInstance *adventure_game_record.AdventureGameCharacterInstance, turnSheet *game_record.GameTurnSheet) error
+	ProcessTurnSheetResponse(ctx context.Context, gameInstanceRec *game_record.GameInstance, characterInstance *adventure_game_record.AdventureGameCharacterInstance, turnSheet *game_record.GameTurnSheet) error
 
 	// CreateNextTurnSheet creates a new turn sheet record for the next turn
-	CreateNextTurnSheet(ctx context.Context, characterInstance *adventure_game_record.AdventureGameCharacterInstance) (*game_record.GameTurnSheet, error)
+	CreateNextTurnSheet(ctx context.Context, gameInstanceRec *game_record.GameInstance, characterInstance *adventure_game_record.AdventureGameCharacterInstance) (*game_record.GameTurnSheet, error)
 }
 
 // NewAdventureGame creates a new adventure game turn processor
@@ -53,10 +53,10 @@ func NewAdventureGame(l logger.Logger, d *domain.Domain) (*AdventureGame, error)
 
 // initializeTurnSheetProcessors creates and registers all available adventure game turn sheet business processors
 // To add new turn sheet types: 1) Create processor in internal/jobworker/adventure_game/turn_sheet_processor/ 2) Register here
-func (p *AdventureGame) initializeTurnSheetProcessors() (map[string]TurnSheetBusinessProcessor, error) {
+func (p *AdventureGame) initializeTurnSheetProcessors() (map[string]TurnSheetProcessor, error) {
 	l := p.Logger.WithFunctionContext("AdventureGame/initializeTurnSheetProcessors")
 
-	processors := make(map[string]TurnSheetBusinessProcessor)
+	processors := make(map[string]TurnSheetProcessor)
 
 	// Register location choice processor
 	locationChoiceProcessor, err := turn_sheet_processor.NewAdventureGameLocationChoiceProcessor(l, p.Domain)

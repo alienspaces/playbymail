@@ -14,7 +14,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/turn_sheet"
 )
 
-// AdventureGameLocationChoiceProcessor implements the TurnSheetBusinessProcessor interface
+// AdventureGameLocationChoiceProcessor implements the TurnSheetProcessor interface
 // (defined in the parent adventure_game package)
 
 // AdventureGameLocationChoiceProcessor processes location choice turn sheet business logic for adventure games
@@ -34,13 +34,13 @@ func NewAdventureGameLocationChoiceProcessor(l logger.Logger, d *domain.Domain) 
 	return p, nil
 }
 
-// GetSheetType returns the sheet type this processor handles (implements TurnSheetBusinessProcessor interface)
+// GetSheetType returns the sheet type this processor handles (implements TurnSheetProcessor interface)
 func (p *AdventureGameLocationChoiceProcessor) GetSheetType() string {
 	return adventure_game_record.AdventureSheetTypeLocationChoice
 }
 
-// ProcessTurnSheetResponse processes a single turn sheet response (implements TurnSheetBusinessProcessor interface)
-func (p *AdventureGameLocationChoiceProcessor) ProcessTurnSheetResponse(ctx context.Context, characterInstanceRec *adventure_game_record.AdventureGameCharacterInstance, turnSheet *game_record.GameTurnSheet) error {
+// ProcessTurnSheetResponse processes a single turn sheet response (implements TurnSheetProcessor interface)
+func (p *AdventureGameLocationChoiceProcessor) ProcessTurnSheetResponse(ctx context.Context, gameInstanceRec *game_record.GameInstance, characterInstanceRec *adventure_game_record.AdventureGameCharacterInstance, turnSheet *game_record.GameTurnSheet) error {
 	l := p.Logger.WithFunctionContext("AdventureGameLocationChoiceProcessor/ProcessTurnSheetResponse")
 
 	l.Info("processing location choice for turn sheet >%s< for character >%s<", turnSheet.ID, characterInstanceRec.ID)
@@ -105,8 +105,8 @@ func (p *AdventureGameLocationChoiceProcessor) ProcessTurnSheetResponse(ctx cont
 	return nil
 }
 
-// CreateNextTurnSheet creates a new turn sheet for a character (implements TurnSheetBusinessProcessor interface)
-func (p *AdventureGameLocationChoiceProcessor) CreateNextTurnSheet(ctx context.Context, characterInstanceRec *adventure_game_record.AdventureGameCharacterInstance) (*game_record.GameTurnSheet, error) {
+// CreateNextTurnSheet creates a new turn sheet for a character (implements TurnSheetProcessor interface)
+func (p *AdventureGameLocationChoiceProcessor) CreateNextTurnSheet(ctx context.Context, gameInstanceRec *game_record.GameInstance, characterInstanceRec *adventure_game_record.AdventureGameCharacterInstance) (*game_record.GameTurnSheet, error) {
 	l := p.Logger.WithFunctionContext("AdventureGameLocationChoiceProcessor/CreateNextTurnSheet")
 
 	l.Info("creating location choice turn sheet for character >%s<", characterInstanceRec.ID)
@@ -139,35 +139,28 @@ func (p *AdventureGameLocationChoiceProcessor) CreateNextTurnSheet(ctx context.C
 		return nil, fmt.Errorf("failed to get location links: %w", err)
 	}
 
-	// Step 4: Get game instance for turn number and game info
-	gameInstanceRec, err := p.Domain.GetGameInstanceRec(characterInstanceRec.GameInstanceID, nil)
-	if err != nil {
-		l.Warn("failed to get game instance >%v<", err)
-		return nil, fmt.Errorf("failed to get game instance: %w", err)
-	}
-
-	// Step 5: Get game for game name
+	// Step 4: Get game for game name
 	gameRec, err := p.Domain.GetGameRec(gameInstanceRec.GameID, nil)
 	if err != nil {
 		l.Warn("failed to get game >%v<", err)
 		return nil, fmt.Errorf("failed to get game: %w", err)
 	}
 
-	// Step 6: Get character for account ID
+	// Step 5: Get character for account ID
 	characterRec, err := p.Domain.GetAdventureGameCharacterRec(characterInstanceRec.AdventureGameCharacterID, nil)
 	if err != nil {
 		l.Warn("failed to get character >%v<", err)
 		return nil, fmt.Errorf("failed to get character: %w", err)
 	}
 
-	// Step 7: Get account for name
+	// Step 6: Get account for name
 	accountRec, err := p.Domain.GetAccountRec(characterRec.AccountID, nil)
 	if err != nil {
 		l.Warn("failed to get account >%v<", err)
 		return nil, fmt.Errorf("failed to get account: %w", err)
 	}
 
-	// Step 8: Build location options from links (these are the pathways!)
+	// Step 7: Build location options from links (these are the pathways!)
 	locationOptions := make([]turn_sheet.LocationOption, 0, len(locationLinkRecs))
 	for _, locationLinkRec := range locationLinkRecs {
 		// Get the destination location's name
@@ -195,7 +188,7 @@ func (p *AdventureGameLocationChoiceProcessor) CreateNextTurnSheet(ctx context.C
 		l.Info("added location option: >%s< via >%s< (%s)", toLocationRec.Name, locationLinkRec.Name, locationLinkRec.Description)
 	}
 
-	// Step 10: Create sheet data with REAL game data
+	// Step 8: Create sheet data with REAL game data
 	sheetData := turn_sheet.LocationChoiceData{
 		TurnSheetTemplateData: turn_sheet.TurnSheetTemplateData{
 			GameName:    convert.Ptr(gameRec.Name),
@@ -214,7 +207,7 @@ func (p *AdventureGameLocationChoiceProcessor) CreateNextTurnSheet(ctx context.C
 		return nil, fmt.Errorf("failed to marshal sheet data: %w", err)
 	}
 
-	// Step 11: Create turn sheet record
+	// Step 9: Create turn sheet record
 	turnSheet := &game_record.GameTurnSheet{
 		GameID:           gameInstanceRec.GameID,
 		GameInstanceID:   gameInstanceRec.ID,
@@ -224,7 +217,7 @@ func (p *AdventureGameLocationChoiceProcessor) CreateNextTurnSheet(ctx context.C
 		SheetOrder:       1,
 		SheetData:        json.RawMessage(sheetDataBytes),
 		IsCompleted:      false,
-		ProcessingStatus: "pending",
+		ProcessingStatus: game_record.TurnSheetProcessingStatusPending,
 	}
 
 	// Create the turn sheet record

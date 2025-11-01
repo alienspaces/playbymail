@@ -8,9 +8,9 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 )
 
-// GenerateTurnSheets generates all turn sheet records for an adventure game turn
-func (p *AdventureGame) GenerateTurnSheets(ctx context.Context, gameInstanceRec *game_record.GameInstance) error {
-	l := p.Logger.WithFunctionContext("AdventureGame/GenerateTurnSheets")
+// CreateTurnSheets generates all turn sheet records for an adventure game turn
+func (p *AdventureGame) CreateTurnSheets(ctx context.Context, gameInstanceRec *game_record.GameInstance) error {
+	l := p.Logger.WithFunctionContext("AdventureGame/CreateTurnSheets")
 
 	l.Info("generating adventure game turn sheets for instance >%s< turn >%d<", gameInstanceRec.ID, gameInstanceRec.CurrentTurn)
 
@@ -34,7 +34,7 @@ func (p *AdventureGame) GenerateTurnSheets(ctx context.Context, gameInstanceRec 
 	// Process turn sheets for each character
 	var errs []error
 	for _, characterInstanceRec := range characterInstanceRecs {
-		err := p.generateCharacterTurnSheets(ctx, gameInstanceRec, characterInstanceRec)
+		err := p.createCharacterTurnSheets(ctx, gameInstanceRec, characterInstanceRec)
 		if err != nil {
 			l.Warn("failed to process turn sheets for character >%s< error >%v<", characterInstanceRec.ID, err)
 			// Continue processing other characters even if one fails
@@ -53,32 +53,32 @@ func (p *AdventureGame) GenerateTurnSheets(ctx context.Context, gameInstanceRec 
 	return nil
 }
 
-// generateCharacterTurnSheets processes all turn sheets for a specific character
-func (p *AdventureGame) generateCharacterTurnSheets(ctx context.Context, gameInstanceRec *game_record.GameInstance, characterInstance *adventure_game_record.AdventureGameCharacterInstance) error {
+// createCharacterTurnSheets creates all of the current game turn's turn sheets for a character
+func (p *AdventureGame) createCharacterTurnSheets(ctx context.Context, gameInstanceRec *game_record.GameInstance, characterInstance *adventure_game_record.AdventureGameCharacterInstance) error {
 	l := p.Logger.WithFunctionContext("AdventureGame/processCharacterTurnSheets")
 
-	l.Info("generating turn sheets for game instance ID >%s< character instance ID >%s< turn >%d<", gameInstanceRec.ID, characterInstance.ID, gameInstanceRec.CurrentTurn)
+	l.Info("creating turn sheets for game instance ID >%s< character instance ID >%s< turn number >%d<", gameInstanceRec.ID, characterInstance.ID, gameInstanceRec.CurrentTurn)
 
-	// For each turn sheet type supported by the game generate a turn sheet for this character
+	// For each turn sheet type supported by the game create a turn sheet for this character
 	for _, turnSheetType := range adventure_game_record.AdventureGameSheetTypes.ToSlice() {
-		// Generate a turn sheet for this character
-		turnSheetRec, err := p.generateTurnSheet(ctx, gameInstanceRec, characterInstance, turnSheetType)
+		// Create a turn sheet for this character
+		turnSheetRec, err := p.createTurnSheet(ctx, gameInstanceRec, characterInstance, turnSheetType)
 		if err != nil {
-			l.Warn("failed to generate turn sheet >%s< for character >%s< error >%v<", turnSheetType, characterInstance.ID, err)
+			l.Warn("failed to create turn sheet >%s< for character >%s< error >%v<", turnSheetType, characterInstance.ID, err)
 			return err
 		}
 
-		l.Info("generated turn sheet >%s< for character >%s<", turnSheetRec.ID, characterInstance.ID)
+		l.Info("created turn sheet >%s< for character instance ID >%s< turn sheet type >%s< turn number >%d<", turnSheetRec.ID, characterInstance.ID, turnSheetType, gameInstanceRec.CurrentTurn)
 	}
 
 	return nil
 }
 
-// generateTurnSheet generates a single turn sheet for a character
-func (p *AdventureGame) generateTurnSheet(ctx context.Context, gameInstanceRec *game_record.GameInstance, characterInstance *adventure_game_record.AdventureGameCharacterInstance, turnSheetType string) (*game_record.GameTurnSheet, error) {
-	l := p.Logger.WithFunctionContext("AdventureGame/generateTurnSheet")
+// createTurnSheet creates a single turn sheet for a character
+func (p *AdventureGame) createTurnSheet(ctx context.Context, gameInstanceRec *game_record.GameInstance, characterInstance *adventure_game_record.AdventureGameCharacterInstance, turnSheetType string) (*game_record.GameTurnSheet, error) {
+	l := p.Logger.WithFunctionContext("AdventureGame/createTurnSheet")
 
-	l.Info("generating turn sheet type >%s< for game instance ID >%s< character instance ID >%s<", turnSheetType, gameInstanceRec.ID, characterInstance.ID)
+	l.Info("creating turn sheet type >%s< for game instance ID >%s< character instance ID >%s<", turnSheetType, gameInstanceRec.ID, characterInstance.ID)
 
 	// Get the appropriate processor for this sheet type
 	processor, exists := p.Processors[turnSheetType]
@@ -88,5 +88,5 @@ func (p *AdventureGame) generateTurnSheet(ctx context.Context, gameInstanceRec *
 	}
 
 	// Create next turn sheet using the sheet-specific processor
-	return processor.CreateNextTurnSheet(ctx, characterInstance)
+	return processor.CreateNextTurnSheet(ctx, gameInstanceRec, characterInstance)
 }

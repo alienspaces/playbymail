@@ -36,7 +36,7 @@ func (p *AdventureGame) ProcessTurnSheets(ctx context.Context, gameInstanceRec *
 	// Process turn sheets for each character
 	var errs []error
 	for _, characterInstanceRec := range characterInstanceRecs {
-		err := p.processCharacterTurnSheets(ctx, characterInstanceRec, gameInstanceRec.CurrentTurn)
+		err := p.processCharacterTurnSheets(ctx, gameInstanceRec, characterInstanceRec)
 		if err != nil {
 			l.Warn("failed to process turn sheets for character >%s< error >%v<", characterInstanceRec.ID, err)
 			// Continue processing other characters even if one fails
@@ -56,28 +56,28 @@ func (p *AdventureGame) ProcessTurnSheets(ctx context.Context, gameInstanceRec *
 }
 
 // processCharacterTurnSheets processes all turn sheets for a specific character
-func (p *AdventureGame) processCharacterTurnSheets(ctx context.Context, characterInstance *adventure_game_record.AdventureGameCharacterInstance, turnNumber int) error {
+func (p *AdventureGame) processCharacterTurnSheets(ctx context.Context, gameInstanceRec *game_record.GameInstance, characterInstance *adventure_game_record.AdventureGameCharacterInstance) error {
 	l := p.Logger.WithFunctionContext("AdventureGame/processCharacterTurnSheets")
 
-	l.Info("processing turn sheets for character >%s< turn >%d<", characterInstance.ID, turnNumber)
+	l.Info("processing turn sheets for character >%s< turn >%d<", characterInstance.ID, gameInstanceRec.CurrentTurn)
 
 	// Get turn sheets for this character and turn
-	turnSheetRecs, err := p.getTurnSheetsForCharacter(characterInstance, turnNumber)
+	turnSheetRecs, err := p.getTurnSheetsForCharacter(characterInstance, gameInstanceRec.CurrentTurn)
 	if err != nil {
-		l.Error("failed to get turn sheets for character >%s< turn >%d< error >%v<", characterInstance.ID, turnNumber, err)
+		l.Error("failed to get turn sheets for character >%s< turn >%d< error >%v<", characterInstance.ID, gameInstanceRec.CurrentTurn, err)
 		return err
 	}
 
-	l.Info("found >%d< turn sheets for character >%s< turn >%d<", len(turnSheetRecs), characterInstance.ID, turnNumber)
+	l.Info("found >%d< turn sheets for character >%s< turn >%d<", len(turnSheetRecs), characterInstance.ID, gameInstanceRec.CurrentTurn)
 
 	if len(turnSheetRecs) == 0 {
-		l.Info("no turn sheets found for character >%s< turn >%d<", characterInstance.ID, turnNumber)
+		l.Info("no turn sheets found for character >%s< turn >%d<", characterInstance.ID, gameInstanceRec.CurrentTurn)
 		return nil
 	}
 
 	// Process each turn sheet for this character
 	for _, turnSheet := range turnSheetRecs {
-		err := p.processTurnSheet(ctx, characterInstance, turnSheet)
+		err := p.processTurnSheet(ctx, gameInstanceRec, characterInstance, turnSheet)
 		if err != nil {
 			l.Warn("failed to process turn sheet >%s< for character >%s< error >%v<", turnSheet.ID, characterInstance.ID, err)
 			return err
@@ -88,7 +88,7 @@ func (p *AdventureGame) processCharacterTurnSheets(ctx context.Context, characte
 }
 
 // processTurnSheet processes a single turn sheet for a character
-func (p *AdventureGame) processTurnSheet(ctx context.Context, characterInstance *adventure_game_record.AdventureGameCharacterInstance, turnSheet *game_record.GameTurnSheet) error {
+func (p *AdventureGame) processTurnSheet(ctx context.Context, gameInstanceRec *game_record.GameInstance, characterInstance *adventure_game_record.AdventureGameCharacterInstance, turnSheet *game_record.GameTurnSheet) error {
 	l := p.Logger.WithFunctionContext("AdventureGame/processTurnSheet")
 
 	l.Info("processing turn sheet >%s< type >%s< for character >%s<", turnSheet.ID, turnSheet.SheetType, characterInstance.ID)
@@ -101,7 +101,7 @@ func (p *AdventureGame) processTurnSheet(ctx context.Context, characterInstance 
 	}
 
 	// Process turn sheet response using the sheet-specific processor
-	return processor.ProcessTurnSheetResponse(ctx, characterInstance, turnSheet)
+	return processor.ProcessTurnSheetResponse(ctx, gameInstanceRec, characterInstance, turnSheet)
 }
 
 // getTurnSheetsForCharacter retrieves turn sheets for a specific character and turn

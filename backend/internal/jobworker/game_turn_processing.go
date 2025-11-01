@@ -43,8 +43,8 @@ type GameTurnProcessor interface {
 	// ProcessTurnSheets processes all turn sheets for a game instance
 	ProcessTurnSheets(ctx context.Context, gameInstanceRec *game_record.GameInstance) error
 
-	// GenerateTurnSheets generates all turn sheets for a game instance
-	GenerateTurnSheets(ctx context.Context, gameInstanceRec *game_record.GameInstance) error
+	// CreateTurnSheets generates all turn sheets for a game instance
+	CreateTurnSheets(ctx context.Context, gameInstanceRec *game_record.GameInstance) error
 }
 
 // GameTurnProcessingWorker processes a game instance turn
@@ -181,7 +181,7 @@ func (w *GameTurnProcessingWorker) DoWork(ctx context.Context, m *domain.Domain,
 	l.Info("generating new turn sheets for game instance >%s< turn >%d<", gameInstanceRec.ID, gameInstanceRec.CurrentTurn)
 
 	// Generate turn sheets using the same processor
-	err = processor.GenerateTurnSheets(ctx, gameInstanceRec)
+	err = processor.CreateTurnSheets(ctx, gameInstanceRec)
 	if err != nil {
 		l.Warn("failed to generate new turn sheets for game instance ID >%s< turn >%d<; cannot process game turn >%v<", j.Args.GameInstanceID, j.Args.TurnNumber, err)
 		return nil, err
