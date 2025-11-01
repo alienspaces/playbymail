@@ -91,7 +91,7 @@ func TestGetOne(t *testing.T) {
 		{
 			name: "With ID",
 			id: func(d harness.Data, t *testing.T) string {
-				gameLocationRec, err := d.GetGameLocationRecByRef(harness.GameLocationOneRef)
+				gameLocationRec, err := d.GetAdventureGameLocationRecByRef(harness.GameLocationOneRef)
 				require.NoError(t, err, "GetGameLocationRecByRef returns without error")
 				return gameLocationRec.ID
 			},
@@ -143,7 +143,7 @@ func TestUpdateOne(t *testing.T) {
 		{
 			name: "With ID",
 			rec: func(d harness.Data, t *testing.T) *adventure_game_record.AdventureGameLocation {
-				gameLocationRec, err := d.GetGameLocationRecByRef(harness.GameLocationOneRef)
+				gameLocationRec, err := d.GetAdventureGameLocationRecByRef(harness.GameLocationOneRef)
 				require.NoError(t, err, "GetGameLocationRecByRef returns without error")
 				return gameLocationRec
 			},
@@ -196,7 +196,7 @@ func TestDeleteOne(t *testing.T) {
 		{
 			name: "With ID",
 			id: func(d harness.Data, t *testing.T) string {
-				gameLocationRec, err := d.GetGameLocationRecByRef(harness.GameLocationOneRef)
+				gameLocationRec, err := d.GetAdventureGameLocationRecByRef(harness.GameLocationOneRef)
 				require.NoError(t, err, "GetGameLocationRecByRef returns without error")
 				return gameLocationRec.ID
 			},

@@ -29,7 +29,7 @@ func Test_gameCreatureHandler(t *testing.T) {
 
 	gameRec, err := th.Data.GetGameRecByRef(harness.GameOneRef)
 	require.NoError(t, err, "GetGameRecByRef returns without error")
-	creatureRec, err := th.Data.GetGameCreatureRecByRef(harness.GameCreatureOneRef)
+	creatureRec, err := th.Data.GetAdventureGameCreatureRecByRef(harness.GameCreatureOneRef)
 	require.NoError(t, err, "GetGameCreatureRecByRef returns without error")
 
 	testCaseCollectionResponseDecoder := testutil.TestCaseResponseDecoderGeneric[adventure_game_schema.AdventureGameCreatureCollectionResponse]

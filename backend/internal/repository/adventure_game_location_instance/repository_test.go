@@ -27,7 +27,7 @@ func TestCreateOne(t *testing.T) {
 				require.NoError(t, err)
 				gameInstance, err := h.Data.GetGameInstanceRecByRef(harness.GameInstanceOneRef)
 				require.NoError(t, err)
-				location, err := h.Data.GetGameLocationRecByRef(harness.GameLocationOneRef)
+				location, err := h.Data.GetAdventureGameLocationRecByRef(harness.GameLocationOneRef)
 				require.NoError(t, err)
 				return &adventure_game_record.AdventureGameLocationInstance{
 					GameID:                  game.ID,
@@ -78,7 +78,7 @@ func TestGetOne(t *testing.T) {
 		{
 			name: "valid",
 			id: func(data *harness.Data, t *testing.T) string {
-				rec, err := h.Data.GetGameLocationInstanceRecByRef(harness.GameLocationInstanceOneRef)
+				rec, err := h.Data.GetAdventureGameLocationInstanceRecByRef(harness.GameLocationInstanceOneRef)
 				require.NoError(t, err)
 				return rec.ID
 			},
@@ -121,7 +121,7 @@ func TestUpdateOne(t *testing.T) {
 		{
 			name: "valid",
 			rec: func(data *harness.Data, t *testing.T) *adventure_game_record.AdventureGameLocationInstance {
-				rec, err := h.Data.GetGameLocationInstanceRecByRef(harness.GameLocationInstanceOneRef)
+				rec, err := h.Data.GetAdventureGameLocationInstanceRecByRef(harness.GameLocationInstanceOneRef)
 				require.NoError(t, err)
 				return rec
 			},
@@ -130,7 +130,7 @@ func TestUpdateOne(t *testing.T) {
 		{
 			name: "not found",
 			rec: func(data *harness.Data, t *testing.T) *adventure_game_record.AdventureGameLocationInstance {
-				rec, err := h.Data.GetGameLocationInstanceRecByRef(harness.GameLocationInstanceOneRef)
+				rec, err := h.Data.GetAdventureGameLocationInstanceRecByRef(harness.GameLocationInstanceOneRef)
 				require.NoError(t, err)
 				rec.ID = uuid.NewString()
 				return rec
@@ -167,7 +167,7 @@ func TestDeleteOne(t *testing.T) {
 		{
 			name: "valid",
 			id: func(data *harness.Data, t *testing.T) string {
-				rec, err := h.Data.GetGameLocationInstanceRecByRef(harness.GameLocationInstanceOneRef)
+				rec, err := h.Data.GetAdventureGameLocationInstanceRecByRef(harness.GameLocationInstanceOneRef)
 				require.NoError(t, err)
 				return rec.ID
 			},

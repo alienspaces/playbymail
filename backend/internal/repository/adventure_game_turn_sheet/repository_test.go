@@ -28,7 +28,7 @@ func TestCreateOne(t *testing.T) {
 				// Create test records first
 				gameRec, err := d.GetGameRecByRef(harness.GameOneRef)
 				require.NoError(t, err, "GetGameRecByRef returns without error")
-				characterInstanceRec, err := d.GetGameCharacterInstanceRecByRef(harness.GameCharacterInstanceOneRef)
+				characterInstanceRec, err := d.GetAdventureGameCharacterInstanceRecByRef(harness.GameCharacterInstanceOneRef)
 				require.NoError(t, err, "GetGameCharacterInstanceRecByRef returns without error")
 
 				// Create a game turn sheet first
@@ -66,7 +66,7 @@ func TestCreateOne(t *testing.T) {
 			rec: func(d harness.Data, t *testing.T) *adventure_game_record.AdventureGameTurnSheet {
 				gameRec, err := d.GetGameRecByRef(harness.GameOneRef)
 				require.NoError(t, err, "GetGameRecByRef returns without error")
-				characterInstanceRec, err := d.GetGameCharacterInstanceRecByRef(harness.GameCharacterInstanceOneRef)
+				characterInstanceRec, err := d.GetAdventureGameCharacterInstanceRecByRef(harness.GameCharacterInstanceOneRef)
 				require.NoError(t, err, "GetGameCharacterInstanceRecByRef returns without error")
 
 				// Create a game turn sheet first
@@ -149,7 +149,7 @@ func TestGetOne(t *testing.T) {
 				// Create test records first
 				gameRec, err := d.GetGameRecByRef(harness.GameOneRef)
 				require.NoError(t, err, "GetGameRecByRef returns without error")
-				characterInstanceRec, err := d.GetGameCharacterInstanceRecByRef(harness.GameCharacterInstanceOneRef)
+				characterInstanceRec, err := d.GetAdventureGameCharacterInstanceRecByRef(harness.GameCharacterInstanceOneRef)
 				require.NoError(t, err, "GetGameCharacterInstanceRecByRef returns without error")
 
 				gameInstanceRec, err := d.GetGameInstanceRecByRef(harness.GameInstanceOneRef)
@@ -241,7 +241,7 @@ func TestDeleteOne(t *testing.T) {
 				// Create test records first
 				gameRec, err := d.GetGameRecByRef(harness.GameOneRef)
 				require.NoError(t, err, "GetGameRecByRef returns without error")
-				characterInstanceRec, err := d.GetGameCharacterInstanceRecByRef(harness.GameCharacterInstanceOneRef)
+				characterInstanceRec, err := d.GetAdventureGameCharacterInstanceRecByRef(harness.GameCharacterInstanceOneRef)
 				require.NoError(t, err, "GetGameCharacterInstanceRecByRef returns without error")
 
 				gameInstanceRec, err := d.GetGameInstanceRecByRef(harness.GameInstanceOneRef)

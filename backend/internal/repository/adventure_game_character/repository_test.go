@@ -80,7 +80,7 @@ func TestGetOne(t *testing.T) {
 		{
 			name: "existing",
 			id: func(d harness.Data, t *testing.T) string {
-				rec, err := d.GetGameCharacterRecByRef(harness.GameCharacterOneRef)
+				rec, err := d.GetAdventureGameCharacterRecByRef(harness.GameCharacterOneRef)
 				require.NoError(t, err)
 				return rec.ID
 			},
@@ -123,7 +123,7 @@ func TestUpdateOne(t *testing.T) {
 		{
 			name: "valid update",
 			rec: func(d harness.Data, t *testing.T) *adventure_game_record.AdventureGameCharacter {
-				rec, err := d.GetGameCharacterRecByRef(harness.GameCharacterOneRef)
+				rec, err := d.GetAdventureGameCharacterRecByRef(harness.GameCharacterOneRef)
 				require.NoError(t, err)
 				rec.Name = harness.UniqueName(gofakeit.Name())
 				return rec
@@ -133,7 +133,7 @@ func TestUpdateOne(t *testing.T) {
 		{
 			name: "missing name",
 			rec: func(d harness.Data, t *testing.T) *adventure_game_record.AdventureGameCharacter {
-				rec, err := d.GetGameCharacterRecByRef(harness.GameCharacterOneRef)
+				rec, err := d.GetAdventureGameCharacterRecByRef(harness.GameCharacterOneRef)
 				require.NoError(t, err)
 				rec.Name = ""
 				return rec
@@ -170,7 +170,7 @@ func TestDeleteOne(t *testing.T) {
 		{
 			name: "existing",
 			id: func(d harness.Data, t *testing.T) string {
-				rec, err := d.GetGameCharacterRecByRef(harness.GameCharacterOneRef)
+				rec, err := d.GetAdventureGameCharacterRecByRef(harness.GameCharacterOneRef)
 				require.NoError(t, err)
 				return rec.ID
 			},

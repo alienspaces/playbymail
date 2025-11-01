@@ -10,23 +10,24 @@ import (
 
 // Data -
 type Data struct {
-	AccountRecs                     []*account_record.Account
-	GameRecs                        []*game_record.Game
-	GameLocationRecs                []*adventure_game_record.AdventureGameLocation
-	GameLocationLinkRecs            []*adventure_game_record.AdventureGameLocationLink
-	GameCharacterRecs               []*adventure_game_record.AdventureGameCharacter
-	GameCreatureRecs                []*adventure_game_record.AdventureGameCreature
-	GameItemRecs                    []*adventure_game_record.AdventureGameItem
-	GameLocationLinkRequirementRecs []*adventure_game_record.AdventureGameLocationLinkRequirement
-	GameInstanceRecs                []*game_record.GameInstance
-	GameLocationInstanceRecs        []*adventure_game_record.AdventureGameLocationInstance
-	GameItemInstanceRecs            []*adventure_game_record.AdventureGameItemInstance
-	GameCreatureInstanceRecs        []*adventure_game_record.AdventureGameCreatureInstance
-	GameCharacterInstanceRecs       []*adventure_game_record.AdventureGameCharacterInstance
-	GameSubscriptionRecs            []*game_record.GameSubscription
-	GameAdministrationRecs          []*game_record.GameAdministration
-	GameInstanceParameterRecs       []*game_record.GameInstanceParameter
-	GameTurnSheetRecs               []*game_record.GameTurnSheet
+	AccountRecs               []*account_record.Account
+	GameRecs                  []*game_record.Game
+	GameSubscriptionRecs      []*game_record.GameSubscription
+	GameAdministrationRecs    []*game_record.GameAdministration
+	GameInstanceRecs          []*game_record.GameInstance
+	GameInstanceParameterRecs []*game_record.GameInstanceParameter
+	GameTurnSheetRecs         []*game_record.GameTurnSheet
+	// Adventure game specific resources
+	AdventureGameLocationRecs                []*adventure_game_record.AdventureGameLocation
+	AdventureGameLocationLinkRecs            []*adventure_game_record.AdventureGameLocationLink
+	AdventureGameCharacterRecs               []*adventure_game_record.AdventureGameCharacter
+	AdventureGameCreatureRecs                []*adventure_game_record.AdventureGameCreature
+	AdventureGameItemRecs                    []*adventure_game_record.AdventureGameItem
+	AdventureGameLocationLinkRequirementRecs []*adventure_game_record.AdventureGameLocationLinkRequirement
+	AdventureGameLocationInstanceRecs        []*adventure_game_record.AdventureGameLocationInstance
+	AdventureGameItemInstanceRecs            []*adventure_game_record.AdventureGameItemInstance
+	AdventureGameCreatureInstanceRecs        []*adventure_game_record.AdventureGameCreatureInstance
+	AdventureGameCharacterInstanceRecs       []*adventure_game_record.AdventureGameCharacterInstance
 	// Data references
 	Refs DataRefs
 }
@@ -36,23 +37,24 @@ type Data struct {
 // When adding new reference maps make sure to also initialise the map
 // in the initialiseDataStores() function further below.
 type DataRefs struct {
-	AccountRefs                     map[string]string // Map of account refs to account records
-	GameRefs                        map[string]string // Map of game refs to game records
-	GameLocationRefs                map[string]string // Map of game location refs to game location records
-	GameLocationLinkRefs            map[string]string // Map of location link refs to location link records
-	GameLocationLinkRequirementRefs map[string]string // Map of refs to game_location_link_requirement records
-	GameCharacterRefs               map[string]string // Map of game_character refs to records
-	GameCreatureRefs                map[string]string // Map of game_creature refs to records
-	GameItemRefs                    map[string]string // Map of game_item refs to records
-	GameItemInstanceRefs            map[string]string // Map of refs to game_item_instance records
-	GameInstanceRefs                map[string]string // Map of refs to game_instance records
-	GameLocationInstanceRefs        map[string]string // Map of refs to game_location_instance records
-	GameCreatureInstanceRefs        map[string]string // Map of refs to game_creature_instance records
-	GameCharacterInstanceRefs       map[string]string // Map of refs to game_character_instance records
-	GameSubscriptionRefs            map[string]string // Map of refs to game_subscription records
-	GameAdministrationRefs          map[string]string // Map of refs to game_administration records
-	GameInstanceParameterRefs       map[string]string // Map of refs to game_instance_parameter records
-	GameTurnSheetRefs               map[string]string // Map of refs to game_turn_sheet records
+	AccountRefs               map[string]string // Map of account refs to account records
+	GameRefs                  map[string]string // Map of game refs to game records
+	GameSubscriptionRefs      map[string]string // Map of refs to game_subscription records
+	GameAdministrationRefs    map[string]string // Map of refs to game_administration records
+	GameInstanceRefs          map[string]string // Map of refs to game_instance records
+	GameInstanceParameterRefs map[string]string // Map of refs to game_instance_parameter records
+	GameTurnSheetRefs         map[string]string // Map of refs to game_turn_sheet records
+	// Adventure game specific resources
+	AdventureGameLocationRefs                map[string]string // Map of adventure game location refs to adventure game location records
+	AdventureGameLocationLinkRefs            map[string]string // Map of adventure game location link refs to adventure game location link records
+	AdventureGameLocationLinkRequirementRefs map[string]string // Map of adventure game location link requirement refs to adventure game location link requirement records
+	AdventureGameLocationInstanceRefs        map[string]string // Map of adventure game location instance refs to adventure game location instance records
+	AdventureGameCharacterRefs               map[string]string // Map of adventure game character refs to adventure game character records
+	AdventureGameCreatureRefs                map[string]string // Map of adventure game creature refs to adventure game creature records
+	AdventureGameItemRefs                    map[string]string // Map of adventure game item refs to adventure game item records
+	AdventureGameItemInstanceRefs            map[string]string // Map of adventure game item instance refs to adventure game item instance records
+	AdventureGameCreatureInstanceRefs        map[string]string // Map of adventure game creature instance refs to adventure game creature instance records
+	AdventureGameCharacterInstanceRefs       map[string]string // Map of adventure game character instance refs to adventure game character instance records
 }
 
 // initialiseDataStores - Data is required to maintain data references and
@@ -61,23 +63,24 @@ type DataRefs struct {
 func initialiseDataStores() Data {
 	return Data{
 		Refs: DataRefs{
-			AccountRefs:                     map[string]string{},
-			GameRefs:                        map[string]string{},
-			GameLocationRefs:                map[string]string{},
-			GameLocationLinkRefs:            map[string]string{},
-			GameLocationLinkRequirementRefs: map[string]string{},
-			GameCharacterRefs:               map[string]string{},
-			GameCreatureRefs:                map[string]string{},
-			GameItemRefs:                    map[string]string{},
-			GameItemInstanceRefs:            map[string]string{},
-			GameInstanceRefs:                map[string]string{},
-			GameLocationInstanceRefs:        map[string]string{},
-			GameCreatureInstanceRefs:        map[string]string{},
-			GameCharacterInstanceRefs:       map[string]string{},
-			GameSubscriptionRefs:            map[string]string{},
-			GameAdministrationRefs:          map[string]string{},
-			GameInstanceParameterRefs:       map[string]string{},
-			GameTurnSheetRefs:               map[string]string{},
+			AccountRefs:               map[string]string{},
+			GameRefs:                  map[string]string{},
+			GameSubscriptionRefs:      map[string]string{},
+			GameAdministrationRefs:    map[string]string{},
+			GameInstanceRefs:          map[string]string{},
+			GameInstanceParameterRefs: map[string]string{},
+			GameTurnSheetRefs:         map[string]string{},
+			// Adventure game specific resources
+			AdventureGameLocationRefs:                map[string]string{},
+			AdventureGameLocationLinkRefs:            map[string]string{},
+			AdventureGameLocationLinkRequirementRefs: map[string]string{},
+			AdventureGameLocationInstanceRefs:        map[string]string{},
+			AdventureGameCharacterRefs:               map[string]string{},
+			AdventureGameCreatureRefs:                map[string]string{},
+			AdventureGameItemRefs:                    map[string]string{},
+			AdventureGameItemInstanceRefs:            map[string]string{},
+			AdventureGameCreatureInstanceRefs:        map[string]string{},
+			AdventureGameCharacterInstanceRefs:       map[string]string{},
 		},
 	}
 }
@@ -144,182 +147,42 @@ func (d *Data) GetGameRecByRef(ref string) (*game_record.Game, error) {
 	return d.GetGameRecByID(gameID)
 }
 
-// GameLocation
-func (d *Data) AddGameLocationRec(rec *adventure_game_record.AdventureGameLocation) {
-	for idx := range d.GameLocationRecs {
-		if d.GameLocationRecs[idx].ID == rec.ID {
-			d.GameLocationRecs[idx] = rec
+func (d *Data) AddGameSubscriptionRec(rec *game_record.GameSubscription) {
+	for idx := range d.GameSubscriptionRecs {
+		if d.GameSubscriptionRecs[idx].ID == rec.ID {
+			d.GameSubscriptionRecs[idx] = rec
 			return
 		}
 	}
-	d.GameLocationRecs = append(d.GameLocationRecs, rec)
+	d.GameSubscriptionRecs = append(d.GameSubscriptionRecs, rec)
 }
 
-func (d *Data) GetGameLocationRecByID(locationID string) (*adventure_game_record.AdventureGameLocation, error) {
-	for _, rec := range d.GameLocationRecs {
-		if rec.ID == locationID {
-			return rec, nil
-		}
-	}
-	return nil, fmt.Errorf("failed getting location with ID >%s<", locationID)
-}
-
-func (d *Data) GetGameLocationRecByRef(ref string) (*adventure_game_record.AdventureGameLocation, error) {
-	id, ok := d.Refs.GameLocationRefs[ref]
-	if !ok {
-		return nil, fmt.Errorf("no location with ref >%s<", ref)
-	}
-	for _, rec := range d.GameLocationRecs {
+func (d *Data) GetGameSubscriptionRecByID(id string) (*game_record.GameSubscription, error) {
+	for _, rec := range d.GameSubscriptionRecs {
 		if rec.ID == id {
 			return rec, nil
 		}
 	}
-	return nil, fmt.Errorf("no location with id >%s< for ref >%s<", id, ref)
+	return nil, fmt.Errorf("failed getting game_subscription with ID >%s<", id)
 }
 
-// GameLocationLink
-func (d *Data) AddGameLocationLinkRec(rec *adventure_game_record.AdventureGameLocationLink) {
-	for idx := range d.GameLocationLinkRecs {
-		if d.GameLocationLinkRecs[idx].ID == rec.ID {
-			d.GameLocationLinkRecs[idx] = rec
+func (d *Data) AddGameAdministrationRec(rec *game_record.GameAdministration) {
+	for idx := range d.GameAdministrationRecs {
+		if d.GameAdministrationRecs[idx].ID == rec.ID {
+			d.GameAdministrationRecs[idx] = rec
 			return
 		}
 	}
-	d.GameLocationLinkRecs = append(d.GameLocationLinkRecs, rec)
+	d.GameAdministrationRecs = append(d.GameAdministrationRecs, rec)
 }
 
-func (d *Data) GetGameLocationLinkRecByID(linkID string) (*adventure_game_record.AdventureGameLocationLink, error) {
-	for _, rec := range d.GameLocationLinkRecs {
-		if rec.ID == linkID {
-			return rec, nil
-		}
-	}
-	return nil, fmt.Errorf("failed getting location link with ID >%s<", linkID)
-}
-
-func (d *Data) GetGameLocationLinkRecByRef(ref string) (*adventure_game_record.AdventureGameLocationLink, error) {
-	linkID, ok := d.Refs.GameLocationLinkRefs[ref]
-	if !ok {
-		return nil, fmt.Errorf("failed getting location link with ref >%s<", ref)
-	}
-	return d.GetGameLocationLinkRecByID(linkID)
-}
-
-// GameCreature
-func (d *Data) AddGameCreatureRec(rec *adventure_game_record.AdventureGameCreature) {
-	for idx := range d.GameCreatureRecs {
-		if d.GameCreatureRecs[idx].ID == rec.ID {
-			d.GameCreatureRecs[idx] = rec
-			return
-		}
-	}
-	d.GameCreatureRecs = append(d.GameCreatureRecs, rec)
-}
-
-func (d *Data) GetGameCreatureRecByID(creatureID string) (*adventure_game_record.AdventureGameCreature, error) {
-	for _, rec := range d.GameCreatureRecs {
-		if rec.ID == creatureID {
-			return rec, nil
-		}
-	}
-	return nil, fmt.Errorf("failed getting creature with ID >%s<", creatureID)
-}
-
-func (d *Data) GetGameCreatureRecByRef(ref string) (*adventure_game_record.AdventureGameCreature, error) {
-	id, ok := d.Refs.GameCreatureRefs[ref]
-	if !ok {
-		return nil, fmt.Errorf("no creature with ref >%s<", ref)
-	}
-	for _, rec := range d.GameCreatureRecs {
+func (d *Data) GetGameAdministrationRecByID(id string) (*game_record.GameAdministration, error) {
+	for _, rec := range d.GameAdministrationRecs {
 		if rec.ID == id {
 			return rec, nil
 		}
 	}
-	return nil, fmt.Errorf("no creature with id >%s< for ref >%s<", id, ref)
-}
-
-// GameCharacter
-func (d *Data) AddGameCharacterRec(rec *adventure_game_record.AdventureGameCharacter) {
-	for idx := range d.GameCharacterRecs {
-		if d.GameCharacterRecs[idx].ID == rec.ID {
-			d.GameCharacterRecs[idx] = rec
-			return
-		}
-	}
-	d.GameCharacterRecs = append(d.GameCharacterRecs, rec)
-}
-
-func (d *Data) GetGameCharacterRecByID(id string) (*adventure_game_record.AdventureGameCharacter, error) {
-	for _, rec := range d.GameCharacterRecs {
-		if rec.ID == id {
-			return rec, nil
-		}
-	}
-	return nil, fmt.Errorf("failed getting game_character with ID >%s<", id)
-}
-
-func (d *Data) GetGameCharacterRecByRef(ref string) (*adventure_game_record.AdventureGameCharacter, error) {
-	id, ok := d.Refs.GameCharacterRefs[ref]
-	if !ok {
-		return nil, fmt.Errorf("failed getting game_character with ref >%s<", ref)
-	}
-	return d.GetGameCharacterRecByID(id)
-}
-
-// GameItem
-func (d *Data) AddGameItemRec(rec *adventure_game_record.AdventureGameItem) {
-	for idx := range d.GameItemRecs {
-		if d.GameItemRecs[idx].ID == rec.ID {
-			d.GameItemRecs[idx] = rec
-			return
-		}
-	}
-	d.GameItemRecs = append(d.GameItemRecs, rec)
-}
-
-func (d *Data) GetGameItemRecByID(itemID string) (*adventure_game_record.AdventureGameItem, error) {
-	for _, rec := range d.GameItemRecs {
-		if rec.ID == itemID {
-			return rec, nil
-		}
-	}
-	return nil, fmt.Errorf("failed getting game_item with ID >%s<", itemID)
-}
-
-func (d *Data) GetGameItemRecByRef(ref string) (*adventure_game_record.AdventureGameItem, error) {
-	id, ok := d.Refs.GameItemRefs[ref]
-	if !ok {
-		return nil, fmt.Errorf("failed getting game_item with ref >%s<", ref)
-	}
-	return d.GetGameItemRecByID(id)
-}
-
-// GameLocationLinkRequirement
-func (d *Data) AddGameLocationLinkRequirementRec(rec *adventure_game_record.AdventureGameLocationLinkRequirement) {
-	for idx := range d.GameLocationLinkRequirementRecs {
-		if d.GameLocationLinkRequirementRecs[idx].ID == rec.ID {
-			d.GameLocationLinkRequirementRecs[idx] = rec
-			return
-		}
-	}
-	d.GameLocationLinkRequirementRecs = append(d.GameLocationLinkRequirementRecs, rec)
-}
-
-func (d *Data) GetGameLocationLinkRequirementRecByID(id string) (*adventure_game_record.AdventureGameLocationLinkRequirement, error) {
-	for _, rec := range d.GameLocationLinkRequirementRecs {
-		if rec.ID == id {
-			return rec, nil
-		}
-	}
-	return nil, fmt.Errorf("failed getting game_location_link_requirement with ID >%s<", id)
-}
-
-func (d *Data) GetGameLocationLinkRequirementRecByRef(ref string) (*adventure_game_record.AdventureGameLocationLinkRequirement, error) {
-	id, ok := d.Refs.GameLocationLinkRequirementRefs[ref]
-	if !ok {
-		return nil, fmt.Errorf("failed getting game_location_link_requirement with ref >%s<", ref)
-	}
-	return d.GetGameLocationLinkRequirementRecByID(id)
+	return nil, fmt.Errorf("game administration record not found for id >%s<", id)
 }
 
 // GameInstance
@@ -358,202 +221,6 @@ func (d *Data) GetGameInstanceRecByGameID(gameID string) []*game_record.GameInst
 		}
 	}
 	return result
-}
-
-// GameLocationInstance
-func (d *Data) AddGameLocationInstanceRec(rec *adventure_game_record.AdventureGameLocationInstance) {
-	for idx := range d.GameLocationInstanceRecs {
-		if d.GameLocationInstanceRecs[idx].ID == rec.ID {
-			d.GameLocationInstanceRecs[idx] = rec
-			return
-		}
-	}
-	d.GameLocationInstanceRecs = append(d.GameLocationInstanceRecs, rec)
-}
-
-func (d *Data) GetGameLocationInstanceRecByID(id string) (*adventure_game_record.AdventureGameLocationInstance, error) {
-	for _, rec := range d.GameLocationInstanceRecs {
-		if rec.ID == id {
-			return rec, nil
-		}
-	}
-	return nil, fmt.Errorf("failed getting game_location_instance with ID >%s<", id)
-}
-
-func (d *Data) GetGameLocationInstanceRecByRef(ref string) (*adventure_game_record.AdventureGameLocationInstance, error) {
-	id, ok := d.Refs.GameLocationInstanceRefs[ref]
-	if !ok {
-		return nil, fmt.Errorf("failed getting game_location_instance with ref >%s<", ref)
-	}
-	return d.GetGameLocationInstanceRecByID(id)
-}
-
-func (d *Data) GetGameLocationInstanceRecByLocationRef(ref string) (*adventure_game_record.AdventureGameLocationInstance, error) {
-	id, ok := d.Refs.GameLocationRefs[ref]
-	if !ok {
-		return nil, fmt.Errorf("failed getting game_location_instance with ref >%s<", ref)
-	}
-	for _, rec := range d.GameLocationInstanceRecs {
-		if rec.AdventureGameLocationID == id {
-			return rec, nil
-		}
-	}
-	return nil, fmt.Errorf("failed getting game_location_instance with location ID >%s<", id)
-}
-
-func (d *Data) GetGameLocationInstanceRecByLocationID(locationID string) []*adventure_game_record.AdventureGameLocationInstance {
-	var result []*adventure_game_record.AdventureGameLocationInstance
-	for _, rec := range d.GameLocationInstanceRecs {
-		if rec.AdventureGameLocationID == locationID {
-			result = append(result, rec)
-		}
-	}
-	return result
-}
-
-// GameItemInstance
-func (d *Data) AddGameItemInstanceRec(rec *adventure_game_record.AdventureGameItemInstance) {
-	for idx := range d.GameItemInstanceRecs {
-		if d.GameItemInstanceRecs[idx].ID == rec.ID {
-			d.GameItemInstanceRecs[idx] = rec
-			return
-		}
-	}
-	d.GameItemInstanceRecs = append(d.GameItemInstanceRecs, rec)
-}
-
-func (d *Data) GetGameItemInstanceRecByID(id string) (*adventure_game_record.AdventureGameItemInstance, error) {
-	for _, rec := range d.GameItemInstanceRecs {
-		if rec.ID == id {
-			return rec, nil
-		}
-	}
-	return nil, fmt.Errorf("failed getting game_item_instance with ID >%s<", id)
-}
-
-func (d *Data) GetGameItemInstanceRecByRef(ref string) (*adventure_game_record.AdventureGameItemInstance, error) {
-	id, ok := d.Refs.GameItemInstanceRefs[ref]
-	if !ok {
-		return nil, fmt.Errorf("failed getting game_item_instance with ref >%s<", ref)
-	}
-	return d.GetGameItemInstanceRecByID(id)
-}
-
-func (d *Data) GetGameItemInstanceRecByItemRef(ref string) (*adventure_game_record.AdventureGameItemInstance, error) {
-	id, ok := d.Refs.GameItemRefs[ref]
-	if !ok {
-		return nil, fmt.Errorf("failed getting game_item_instance with ref >%s<", ref)
-	}
-	for _, rec := range d.GameItemInstanceRecs {
-		if rec.AdventureGameItemID == id {
-			return rec, nil
-		}
-	}
-	return nil, fmt.Errorf("failed getting game_item_instance with item ID >%s<", id)
-}
-
-func (d *Data) GetGameItemInstanceRecByItemID(itemID string) []*adventure_game_record.AdventureGameItemInstance {
-	var result []*adventure_game_record.AdventureGameItemInstance
-	for _, rec := range d.GameItemInstanceRecs {
-		if rec.AdventureGameItemID == itemID {
-			result = append(result, rec)
-		}
-	}
-	return result
-}
-
-// GameCreatureInstance
-func (d *Data) AddGameCreatureInstanceRec(rec *adventure_game_record.AdventureGameCreatureInstance) {
-	for idx := range d.GameCreatureInstanceRecs {
-		if d.GameCreatureInstanceRecs[idx].ID == rec.ID {
-			d.GameCreatureInstanceRecs[idx] = rec
-			return
-		}
-	}
-	d.GameCreatureInstanceRecs = append(d.GameCreatureInstanceRecs, rec)
-}
-
-func (d *Data) GetGameCreatureInstanceRecByID(id string) (*adventure_game_record.AdventureGameCreatureInstance, error) {
-	for _, rec := range d.GameCreatureInstanceRecs {
-		if rec.ID == id {
-			return rec, nil
-		}
-	}
-	return nil, fmt.Errorf("failed getting game_creature_instance with ID >%s<", id)
-}
-
-func (d *Data) GetGameCreatureInstanceRecByRef(ref string) (*adventure_game_record.AdventureGameCreatureInstance, error) {
-	id, ok := d.Refs.GameCreatureInstanceRefs[ref]
-	if !ok {
-		return nil, fmt.Errorf("failed getting game_creature_instance with ref >%s<", ref)
-	}
-	return d.GetGameCreatureInstanceRecByID(id)
-}
-
-// GameCharacterInstance
-func (d *Data) AddGameCharacterInstanceRec(rec *adventure_game_record.AdventureGameCharacterInstance) {
-	for idx := range d.GameCharacterInstanceRecs {
-		if d.GameCharacterInstanceRecs[idx].ID == rec.ID {
-			d.GameCharacterInstanceRecs[idx] = rec
-			return
-		}
-	}
-	d.GameCharacterInstanceRecs = append(d.GameCharacterInstanceRecs, rec)
-}
-
-func (d *Data) GetGameCharacterInstanceRecByID(id string) (*adventure_game_record.AdventureGameCharacterInstance, error) {
-	for _, rec := range d.GameCharacterInstanceRecs {
-		if rec.ID == id {
-			return rec, nil
-		}
-	}
-	return nil, fmt.Errorf("failed getting game_character_instance with ID >%s<", id)
-}
-
-func (d *Data) GetGameCharacterInstanceRecByRef(ref string) (*adventure_game_record.AdventureGameCharacterInstance, error) {
-	id, ok := d.Refs.GameCharacterInstanceRefs[ref]
-	if !ok {
-		return nil, fmt.Errorf("failed getting game_character_instance with ref >%s<", ref)
-	}
-	return d.GetGameCharacterInstanceRecByID(id)
-}
-
-func (d *Data) AddGameSubscriptionRec(rec *game_record.GameSubscription) {
-	for idx := range d.GameSubscriptionRecs {
-		if d.GameSubscriptionRecs[idx].ID == rec.ID {
-			d.GameSubscriptionRecs[idx] = rec
-			return
-		}
-	}
-	d.GameSubscriptionRecs = append(d.GameSubscriptionRecs, rec)
-}
-
-func (d *Data) GetGameSubscriptionRecByID(id string) (*game_record.GameSubscription, error) {
-	for _, rec := range d.GameSubscriptionRecs {
-		if rec.ID == id {
-			return rec, nil
-		}
-	}
-	return nil, fmt.Errorf("failed getting game_subscription with ID >%s<", id)
-}
-
-func (d *Data) AddGameAdministrationRec(rec *game_record.GameAdministration) {
-	for idx := range d.GameAdministrationRecs {
-		if d.GameAdministrationRecs[idx].ID == rec.ID {
-			d.GameAdministrationRecs[idx] = rec
-			return
-		}
-	}
-	d.GameAdministrationRecs = append(d.GameAdministrationRecs, rec)
-}
-
-func (d *Data) GetGameAdministrationRecByID(id string) (*game_record.GameAdministration, error) {
-	for _, rec := range d.GameAdministrationRecs {
-		if rec.ID == id {
-			return rec, nil
-		}
-	}
-	return nil, fmt.Errorf("game administration record not found for id >%s<", id)
 }
 
 // GameInstanceParameter
@@ -610,4 +277,342 @@ func (d *Data) GetGameTurnSheetRecByRef(ref string) (*game_record.GameTurnSheet,
 		return nil, fmt.Errorf("failed getting game_turn_sheet with ref >%s<", ref)
 	}
 	return d.GetGameTurnSheetRecByID(id)
+}
+
+// Adventure game specific resources
+
+// GameLocation
+func (d *Data) AddAdventureGameLocationRec(rec *adventure_game_record.AdventureGameLocation) {
+	for idx := range d.AdventureGameLocationRecs {
+		if d.AdventureGameLocationRecs[idx].ID == rec.ID {
+			d.AdventureGameLocationRecs[idx] = rec
+			return
+		}
+	}
+	d.AdventureGameLocationRecs = append(d.AdventureGameLocationRecs, rec)
+}
+
+func (d *Data) GetAdventureGameLocationRecByID(locationID string) (*adventure_game_record.AdventureGameLocation, error) {
+	for _, rec := range d.AdventureGameLocationRecs {
+		if rec.ID == locationID {
+			return rec, nil
+		}
+	}
+	return nil, fmt.Errorf("failed getting location with ID >%s<", locationID)
+}
+
+func (d *Data) GetAdventureGameLocationRecByRef(ref string) (*adventure_game_record.AdventureGameLocation, error) {
+	id, ok := d.Refs.AdventureGameLocationRefs[ref]
+	if !ok {
+		return nil, fmt.Errorf("no adventure game location with ref >%s<", ref)
+	}
+	for _, rec := range d.AdventureGameLocationRecs {
+		if rec.ID == id {
+			return rec, nil
+		}
+	}
+	return nil, fmt.Errorf("no adventure game location with id >%s< for ref >%s<", id, ref)
+}
+
+// GameLocationLink
+func (d *Data) AddAdventureGameLocationLinkRec(rec *adventure_game_record.AdventureGameLocationLink) {
+	for idx := range d.AdventureGameLocationLinkRecs {
+		if d.AdventureGameLocationLinkRecs[idx].ID == rec.ID {
+			d.AdventureGameLocationLinkRecs[idx] = rec
+			return
+		}
+	}
+	d.AdventureGameLocationLinkRecs = append(d.AdventureGameLocationLinkRecs, rec)
+}
+
+func (d *Data) GetAdventureGameLocationLinkRecByID(linkID string) (*adventure_game_record.AdventureGameLocationLink, error) {
+	for _, rec := range d.AdventureGameLocationLinkRecs {
+		if rec.ID == linkID {
+			return rec, nil
+		}
+	}
+	return nil, fmt.Errorf("failed getting adventure game location link with ID >%s<", linkID)
+}
+
+func (d *Data) GetAdventureGameLocationLinkRecByRef(ref string) (*adventure_game_record.AdventureGameLocationLink, error) {
+	linkID, ok := d.Refs.AdventureGameLocationLinkRefs[ref]
+	if !ok {
+		return nil, fmt.Errorf("failed getting adventure game location link with ref >%s<", ref)
+	}
+	return d.GetAdventureGameLocationLinkRecByID(linkID)
+}
+
+// AdventureGameCreature
+func (d *Data) AddAdventureGameCreatureRec(rec *adventure_game_record.AdventureGameCreature) {
+	for idx := range d.AdventureGameCreatureRecs {
+		if d.AdventureGameCreatureRecs[idx].ID == rec.ID {
+			d.AdventureGameCreatureRecs[idx] = rec
+			return
+		}
+	}
+	d.AdventureGameCreatureRecs = append(d.AdventureGameCreatureRecs, rec)
+}
+
+func (d *Data) GetAdventureGameCreatureRecByID(creatureID string) (*adventure_game_record.AdventureGameCreature, error) {
+	for _, rec := range d.AdventureGameCreatureRecs {
+		if rec.ID == creatureID {
+			return rec, nil
+		}
+	}
+	return nil, fmt.Errorf("failed getting adventure game creature with ID >%s<", creatureID)
+}
+
+func (d *Data) GetAdventureGameCreatureRecByRef(ref string) (*adventure_game_record.AdventureGameCreature, error) {
+	id, ok := d.Refs.AdventureGameCreatureRefs[ref]
+	if !ok {
+		return nil, fmt.Errorf("no adventure game creature with ref >%s<", ref)
+	}
+	for _, rec := range d.AdventureGameCreatureRecs {
+		if rec.ID == id {
+			return rec, nil
+		}
+	}
+	return nil, fmt.Errorf("no adventure game creature with id >%s< for ref >%s<", id, ref)
+}
+
+// AdventureGameCharacter
+func (d *Data) AddAdventureGameCharacterRec(rec *adventure_game_record.AdventureGameCharacter) {
+	for idx := range d.AdventureGameCharacterRecs {
+		if d.AdventureGameCharacterRecs[idx].ID == rec.ID {
+			d.AdventureGameCharacterRecs[idx] = rec
+			return
+		}
+	}
+	d.AdventureGameCharacterRecs = append(d.AdventureGameCharacterRecs, rec)
+}
+
+func (d *Data) GetAdventureGameCharacterRecByID(id string) (*adventure_game_record.AdventureGameCharacter, error) {
+	for _, rec := range d.AdventureGameCharacterRecs {
+		if rec.ID == id {
+			return rec, nil
+		}
+	}
+	return nil, fmt.Errorf("failed getting adventure game character with ID >%s<", id)
+}
+
+func (d *Data) GetAdventureGameCharacterRecByRef(ref string) (*adventure_game_record.AdventureGameCharacter, error) {
+	id, ok := d.Refs.AdventureGameCharacterRefs[ref]
+	if !ok {
+		return nil, fmt.Errorf("failed getting adventure game character with ref >%s<", ref)
+	}
+	return d.GetAdventureGameCharacterRecByID(id)
+}
+
+// AdventureGameItem
+func (d *Data) AddAdventureGameItemRec(rec *adventure_game_record.AdventureGameItem) {
+	for idx := range d.AdventureGameItemRecs {
+		if d.AdventureGameItemRecs[idx].ID == rec.ID {
+			d.AdventureGameItemRecs[idx] = rec
+			return
+		}
+	}
+	d.AdventureGameItemRecs = append(d.AdventureGameItemRecs, rec)
+}
+
+func (d *Data) GetAdventureGameItemRecByID(itemID string) (*adventure_game_record.AdventureGameItem, error) {
+	for _, rec := range d.AdventureGameItemRecs {
+		if rec.ID == itemID {
+			return rec, nil
+		}
+	}
+	return nil, fmt.Errorf("failed getting adventure game item with ID >%s<", itemID)
+}
+
+func (d *Data) GetAdventureGameItemRecByRef(ref string) (*adventure_game_record.AdventureGameItem, error) {
+	id, ok := d.Refs.AdventureGameItemRefs[ref]
+	if !ok {
+		return nil, fmt.Errorf("failed getting adventure game item with ref >%s<", ref)
+	}
+	return d.GetAdventureGameItemRecByID(id)
+}
+
+// AdventureGameLocationLinkRequirement
+func (d *Data) AddAdventureGameLocationLinkRequirementRec(rec *adventure_game_record.AdventureGameLocationLinkRequirement) {
+	for idx := range d.AdventureGameLocationLinkRequirementRecs {
+		if d.AdventureGameLocationLinkRequirementRecs[idx].ID == rec.ID {
+			d.AdventureGameLocationLinkRequirementRecs[idx] = rec
+			return
+		}
+	}
+	d.AdventureGameLocationLinkRequirementRecs = append(d.AdventureGameLocationLinkRequirementRecs, rec)
+}
+
+func (d *Data) GetAdventureGameLocationLinkRequirementRecByID(id string) (*adventure_game_record.AdventureGameLocationLinkRequirement, error) {
+	for _, rec := range d.AdventureGameLocationLinkRequirementRecs {
+		if rec.ID == id {
+			return rec, nil
+		}
+	}
+	return nil, fmt.Errorf("failed getting adventure game location link requirement with ID >%s<", id)
+}
+
+func (d *Data) GetAdventureGameLocationLinkRequirementRecByRef(ref string) (*adventure_game_record.AdventureGameLocationLinkRequirement, error) {
+	id, ok := d.Refs.AdventureGameLocationLinkRequirementRefs[ref]
+	if !ok {
+		return nil, fmt.Errorf("failed getting adventure game location link requirement with ref >%s<", ref)
+	}
+	return d.GetAdventureGameLocationLinkRequirementRecByID(id)
+}
+
+// AdventureGameLocationInstance
+func (d *Data) AddAdventureGameLocationInstanceRec(rec *adventure_game_record.AdventureGameLocationInstance) {
+	for idx := range d.AdventureGameLocationInstanceRecs {
+		if d.AdventureGameLocationInstanceRecs[idx].ID == rec.ID {
+			d.AdventureGameLocationInstanceRecs[idx] = rec
+			return
+		}
+	}
+	d.AdventureGameLocationInstanceRecs = append(d.AdventureGameLocationInstanceRecs, rec)
+}
+
+func (d *Data) GetAdventureGameLocationInstanceRecByID(id string) (*adventure_game_record.AdventureGameLocationInstance, error) {
+	for _, rec := range d.AdventureGameLocationInstanceRecs {
+		if rec.ID == id {
+			return rec, nil
+		}
+	}
+	return nil, fmt.Errorf("failed getting adventure game location instance with ID >%s<", id)
+}
+
+func (d *Data) GetAdventureGameLocationInstanceRecByRef(ref string) (*adventure_game_record.AdventureGameLocationInstance, error) {
+	id, ok := d.Refs.AdventureGameLocationInstanceRefs[ref]
+	if !ok {
+		return nil, fmt.Errorf("failed getting game_location_instance with ref >%s<", ref)
+	}
+	return d.GetAdventureGameLocationInstanceRecByID(id)
+}
+
+func (d *Data) GetAdventureGameLocationInstanceRecByLocationRef(ref string) (*adventure_game_record.AdventureGameLocationInstance, error) {
+	id, ok := d.Refs.AdventureGameLocationRefs[ref]
+	if !ok {
+		return nil, fmt.Errorf("failed getting adventure game location instance with ref >%s<", ref)
+	}
+	for _, rec := range d.AdventureGameLocationInstanceRecs {
+		if rec.AdventureGameLocationID == id {
+			return rec, nil
+		}
+	}
+	return nil, fmt.Errorf("failed getting adventure game location instance with location ID >%s<", id)
+}
+
+func (d *Data) GetAdventureGameLocationInstanceRecByLocationID(locationID string) []*adventure_game_record.AdventureGameLocationInstance {
+	var result []*adventure_game_record.AdventureGameLocationInstance
+	for _, rec := range d.AdventureGameLocationInstanceRecs {
+		if rec.AdventureGameLocationID == locationID {
+			result = append(result, rec)
+		}
+	}
+	return result
+}
+
+// AdventureGameItemInstance
+func (d *Data) AddAdventureGameItemInstanceRec(rec *adventure_game_record.AdventureGameItemInstance) {
+	for idx := range d.AdventureGameItemInstanceRecs {
+		if d.AdventureGameItemInstanceRecs[idx].ID == rec.ID {
+			d.AdventureGameItemInstanceRecs[idx] = rec
+			return
+		}
+	}
+	d.AdventureGameItemInstanceRecs = append(d.AdventureGameItemInstanceRecs, rec)
+}
+
+func (d *Data) GetAdventureGameItemInstanceRecByID(id string) (*adventure_game_record.AdventureGameItemInstance, error) {
+	for _, rec := range d.AdventureGameItemInstanceRecs {
+		if rec.ID == id {
+			return rec, nil
+		}
+	}
+	return nil, fmt.Errorf("failed getting adventure game item instance with ID >%s<", id)
+}
+
+func (d *Data) GetAdventureGameItemInstanceRecByRef(ref string) (*adventure_game_record.AdventureGameItemInstance, error) {
+	id, ok := d.Refs.AdventureGameItemInstanceRefs[ref]
+	if !ok {
+		return nil, fmt.Errorf("failed getting adventure game item instance with ref >%s<", ref)
+	}
+	return d.GetAdventureGameItemInstanceRecByID(id)
+}
+
+func (d *Data) GetAdventureGameItemInstanceRecByItemRef(ref string) (*adventure_game_record.AdventureGameItemInstance, error) {
+	id, ok := d.Refs.AdventureGameItemRefs[ref]
+	if !ok {
+		return nil, fmt.Errorf("failed getting adventure game item instance with ref >%s<", ref)
+	}
+	for _, rec := range d.AdventureGameItemInstanceRecs {
+		if rec.AdventureGameItemID == id {
+			return rec, nil
+		}
+	}
+	return nil, fmt.Errorf("failed getting adventure game item instance with item ID >%s<", id)
+}
+
+func (d *Data) GetAdventureGameItemInstanceRecByItemID(itemID string) []*adventure_game_record.AdventureGameItemInstance {
+	var result []*adventure_game_record.AdventureGameItemInstance
+	for _, rec := range d.AdventureGameItemInstanceRecs {
+		if rec.AdventureGameItemID == itemID {
+			result = append(result, rec)
+		}
+	}
+	return result
+}
+
+// AdventureGameCreatureInstance
+func (d *Data) AddAdventureGameCreatureInstanceRec(rec *adventure_game_record.AdventureGameCreatureInstance) {
+	for idx := range d.AdventureGameCreatureInstanceRecs {
+		if d.AdventureGameCreatureInstanceRecs[idx].ID == rec.ID {
+			d.AdventureGameCreatureInstanceRecs[idx] = rec
+			return
+		}
+	}
+	d.AdventureGameCreatureInstanceRecs = append(d.AdventureGameCreatureInstanceRecs, rec)
+}
+
+func (d *Data) GetAdventureGameCreatureInstanceRecByID(id string) (*adventure_game_record.AdventureGameCreatureInstance, error) {
+	for _, rec := range d.AdventureGameCreatureInstanceRecs {
+		if rec.ID == id {
+			return rec, nil
+		}
+	}
+	return nil, fmt.Errorf("failed getting adventure game creature instance with ID >%s<", id)
+}
+
+func (d *Data) GetAdventureGameCreatureInstanceRecByRef(ref string) (*adventure_game_record.AdventureGameCreatureInstance, error) {
+	id, ok := d.Refs.AdventureGameCreatureInstanceRefs[ref]
+	if !ok {
+		return nil, fmt.Errorf("failed getting adventure game creature instance with ref >%s<", ref)
+	}
+	return d.GetAdventureGameCreatureInstanceRecByID(id)
+}
+
+// AdventureGameCharacterInstance
+func (d *Data) AddAdventureGameCharacterInstanceRec(rec *adventure_game_record.AdventureGameCharacterInstance) {
+	for idx := range d.AdventureGameCharacterInstanceRecs {
+		if d.AdventureGameCharacterInstanceRecs[idx].ID == rec.ID {
+			d.AdventureGameCharacterInstanceRecs[idx] = rec
+			return
+		}
+	}
+	d.AdventureGameCharacterInstanceRecs = append(d.AdventureGameCharacterInstanceRecs, rec)
+}
+
+func (d *Data) GetAdventureGameCharacterInstanceRecByID(id string) (*adventure_game_record.AdventureGameCharacterInstance, error) {
+	for _, rec := range d.AdventureGameCharacterInstanceRecs {
+		if rec.ID == id {
+			return rec, nil
+		}
+	}
+	return nil, fmt.Errorf("failed getting adventure game character instance with ID >%s<", id)
+}
+
+func (d *Data) GetAdventureGameCharacterInstanceRecByRef(ref string) (*adventure_game_record.AdventureGameCharacterInstance, error) {
+	id, ok := d.Refs.AdventureGameCharacterInstanceRefs[ref]
+	if !ok {
+		return nil, fmt.Errorf("failed getting adventure game character instance with ref >%s<", ref)
+	}
+	return d.GetAdventureGameCharacterInstanceRecByID(id)
 }

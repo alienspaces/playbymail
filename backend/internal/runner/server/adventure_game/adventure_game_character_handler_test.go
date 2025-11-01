@@ -33,7 +33,7 @@ func Test_adventureGameCharacterHandler(t *testing.T) {
 	accountRec, err := th.Data.GetAccountRecByRef(harness.AccountThreeRef)
 	require.NoError(t, err, "GetAccountRecByRef(AccountThreeRef) returns without error")
 
-	charRec, err := th.Data.GetGameCharacterRecByRef(harness.GameCharacterOneRef)
+	charRec, err := th.Data.GetAdventureGameCharacterRecByRef(harness.GameCharacterOneRef)
 	require.NoError(t, err, "GetGameCharacterRecByRef returns without error")
 
 	testCaseCollectionResponseDecoder := testutil.TestCaseResponseDecoderGeneric[adventure_game_schema.AdventureGameCharacterCollectionResponse]

@@ -11,6 +11,8 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 )
 
+// TODO: Make the following function generic for all game types but add an adventure game specific function for adventure games
+
 func (t *Testing) createGameTurnSheetRec(cfg GameTurnSheetConfig, gameInstanceRec *game_record.GameInstance) (*game_record.GameTurnSheet, error) {
 	l := t.Logger("createGameTurnSheetRec")
 
@@ -23,14 +25,14 @@ func (t *Testing) createGameTurnSheetRec(cfg GameTurnSheetConfig, gameInstanceRe
 	}
 
 	// Get the character instance
-	characterInstance, err := t.Data.GetGameCharacterInstanceRecByRef(cfg.GameCharacterInstanceRef)
+	characterInstance, err := t.Data.GetAdventureGameCharacterInstanceRecByRef(cfg.GameCharacterInstanceRef)
 	if err != nil {
 		l.Error("could not resolve GameCharacterInstanceRef >%s< to a valid character instance ID", cfg.GameCharacterInstanceRef)
 		return nil, fmt.Errorf("could not resolve GameCharacterInstanceRef >%s< to a valid character instance ID", cfg.GameCharacterInstanceRef)
 	}
 
 	// Get the account ID from the character
-	characterRec, err := t.Data.GetGameCharacterRecByID(characterInstance.AdventureGameCharacterID)
+	characterRec, err := t.Data.GetAdventureGameCharacterRecByID(characterInstance.AdventureGameCharacterID)
 	if err != nil {
 		l.Error("could not get character record >%s<", characterInstance.AdventureGameCharacterID)
 		return nil, fmt.Errorf("could not get character record >%s<", characterInstance.AdventureGameCharacterID)

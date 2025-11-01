@@ -21,9 +21,9 @@ func Test_adventureGameLocationLinkHandler(t *testing.T) {
 	require.NotNil(t, th, "NewTestHarness returns without error")
 
 	// Add a new location to the game that we can use in the test
-	th.DataConfig.GameConfigs[0].GameLocationConfigs = append(
-		th.DataConfig.GameConfigs[0].GameLocationConfigs,
-		harness.GameLocationConfig{
+	th.DataConfig.GameConfigs[0].AdventureGameLocationConfigs = append(
+		th.DataConfig.GameConfigs[0].AdventureGameLocationConfigs,
+		harness.AdventureGameLocationConfig{
 			Reference: harness.GameLocationThreeRef,
 		},
 	)
@@ -37,11 +37,11 @@ func Test_adventureGameLocationLinkHandler(t *testing.T) {
 
 	gameRec, err := th.Data.GetGameRecByRef(harness.GameOneRef)
 	require.NoError(t, err, "GetGameRecByRef returns without error")
-	locationOneRec, err := th.Data.GetGameLocationRecByRef(harness.GameLocationOneRef)
+	locationOneRec, err := th.Data.GetAdventureGameLocationRecByRef(harness.GameLocationOneRef)
 	require.NoError(t, err, "GetGameLocationRecByRef returns without error")
-	locationThreeRec, err := th.Data.GetGameLocationRecByRef(harness.GameLocationThreeRef)
+	locationThreeRec, err := th.Data.GetAdventureGameLocationRecByRef(harness.GameLocationThreeRef)
 	require.NoError(t, err, "GetGameLocationRecByRef returns without error")
-	linkRec, err := th.Data.GetGameLocationLinkRecByRef(harness.GameLocationLinkOneRef)
+	linkRec, err := th.Data.GetAdventureGameLocationLinkRecByRef(harness.GameLocationLinkOneRef)
 	require.NoError(t, err, "GetGameLocationLinkRecByRef returns without error")
 
 	testCaseCollectionResponseDecoder := testutil.TestCaseResponseDecoderGeneric[adventure_game_schema.AdventureGameLocationLinkCollectionResponse]

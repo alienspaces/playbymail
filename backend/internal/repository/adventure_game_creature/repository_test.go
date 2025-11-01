@@ -86,7 +86,7 @@ func TestGetOne(t *testing.T) {
 		{
 			name: "With ID",
 			id: func(d harness.Data, t *testing.T) string {
-				rec, err := d.GetGameCreatureRecByRef(harness.GameCreatureOneRef)
+				rec, err := d.GetAdventureGameCreatureRecByRef(harness.GameCreatureOneRef)
 				require.NoError(t, err, "GetGameCreatureRecByRef returns without error")
 				return rec.ID
 			},
@@ -138,7 +138,7 @@ func TestUpdateOne(t *testing.T) {
 		{
 			name: "With ID",
 			rec: func(d harness.Data, t *testing.T) *adventure_game_record.AdventureGameCreature {
-				rec, err := d.GetGameCreatureRecByRef(harness.GameCreatureOneRef)
+				rec, err := d.GetAdventureGameCreatureRecByRef(harness.GameCreatureOneRef)
 				require.NoError(t, err, "GetGameCreatureRecByRef returns without error")
 				return rec
 			},
@@ -147,7 +147,7 @@ func TestUpdateOne(t *testing.T) {
 		{
 			name: "Without ID",
 			rec: func(d harness.Data, t *testing.T) *adventure_game_record.AdventureGameCreature {
-				rec, err := d.GetGameCreatureRecByRef(harness.GameCreatureOneRef)
+				rec, err := d.GetAdventureGameCreatureRecByRef(harness.GameCreatureOneRef)
 				require.NoError(t, err, "GetGameCreatureRecByRef returns without error")
 				rec.ID = ""
 				return rec
@@ -193,7 +193,7 @@ func TestDeleteOne(t *testing.T) {
 		{
 			name: "With ID",
 			id: func(d harness.Data, t *testing.T) string {
-				rec, err := d.GetGameCreatureRecByRef(harness.GameCreatureOneRef)
+				rec, err := d.GetAdventureGameCreatureRecByRef(harness.GameCreatureOneRef)
 				require.NoError(t, err, "GetGameCreatureRecByRef returns without error")
 				return rec.ID
 			},

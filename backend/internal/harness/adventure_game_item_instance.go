@@ -9,15 +9,15 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 )
 
-func (t *Testing) createGameItemInstanceRec(cfg AdventureGameItemInstanceConfig, gameInstanceRec *game_record.GameInstance) (*adventure_game_record.AdventureGameItemInstance, error) {
-	l := t.Logger("createGameItemInstanceRec")
+func (t *Testing) createAdventureGameItemInstanceRec(cfg AdventureGameItemInstanceConfig, gameInstanceRec *game_record.GameInstance) (*adventure_game_record.AdventureGameItemInstance, error) {
+	l := t.Logger("createAdventureGameItemInstanceRec")
 
 	if gameInstanceRec == nil {
-		return nil, fmt.Errorf("game instance record is nil for game_item_instance record >%#v<", cfg)
+		return nil, fmt.Errorf("game instance record is nil for adventure game item instance record >%#v<", cfg)
 	}
 
 	if cfg.GameItemRef == "" {
-		return nil, fmt.Errorf("game_item_instance record must have a GameItemRef")
+		return nil, fmt.Errorf("adventure game item instance record must have a GameItemRef")
 	}
 
 	var rec *adventure_game_record.AdventureGameItemInstance
@@ -28,13 +28,13 @@ func (t *Testing) createGameItemInstanceRec(cfg AdventureGameItemInstanceConfig,
 		rec = &adventure_game_record.AdventureGameItemInstance{}
 	}
 
-	rec = t.applyGameItemInstanceRecDefaultValues(rec)
+	rec = t.applyAdventureGameItemInstanceRecDefaultValues(rec)
 
 	rec.GameID = gameInstanceRec.GameID
 	rec.GameInstanceID = gameInstanceRec.ID
 
 	// The game item is retrieved by reference
-	gameItemRec, err := t.Data.GetGameItemRecByRef(cfg.GameItemRef)
+	gameItemRec, err := t.Data.GetAdventureGameItemRecByRef(cfg.GameItemRef)
 	if err != nil {
 		l.Error("could not resolve GameItemRef >%s< to a valid game item ID", cfg.GameItemRef)
 		return nil, fmt.Errorf("could not resolve GameItemRef >%s< to a valid game item ID", cfg.GameItemRef)
@@ -43,7 +43,7 @@ func (t *Testing) createGameItemInstanceRec(cfg AdventureGameItemInstanceConfig,
 
 	// The game location instance the item is attached to is retrieved by reference
 	if cfg.GameLocationRef != "" {
-		gameLocationInstanceRec, err := t.Data.GetGameLocationInstanceRecByLocationRef(cfg.GameLocationRef)
+		gameLocationInstanceRec, err := t.Data.GetAdventureGameLocationInstanceRecByLocationRef(cfg.GameLocationRef)
 		if err != nil {
 			l.Error("could not resolve GameLocationRef >%s< to a valid game location ID", cfg.GameLocationRef)
 			return nil, fmt.Errorf("could not resolve GameLocationRef >%s< to a valid game location ID", cfg.GameLocationRef)
@@ -61,19 +61,19 @@ func (t *Testing) createGameItemInstanceRec(cfg AdventureGameItemInstanceConfig,
 	}
 
 	// Add to data store
-	t.Data.AddGameItemInstanceRec(createdRec)
+	t.Data.AddAdventureGameItemInstanceRec(createdRec)
 
 	// Add to teardown data store
-	t.teardownData.AddGameItemInstanceRec(createdRec)
+	t.teardownData.AddAdventureGameItemInstanceRec(createdRec)
 
 	// Add to references store
 	if cfg.Reference != "" {
-		t.Data.Refs.GameItemInstanceRefs[cfg.Reference] = createdRec.ID
+		t.Data.Refs.AdventureGameItemInstanceRefs[cfg.Reference] = createdRec.ID
 	}
 	return createdRec, nil
 }
 
-func (t *Testing) applyGameItemInstanceRecDefaultValues(rec *adventure_game_record.AdventureGameItemInstance) *adventure_game_record.AdventureGameItemInstance {
+func (t *Testing) applyAdventureGameItemInstanceRecDefaultValues(rec *adventure_game_record.AdventureGameItemInstance) *adventure_game_record.AdventureGameItemInstance {
 	if rec == nil {
 		rec = &adventure_game_record.AdventureGameItemInstance{}
 	}

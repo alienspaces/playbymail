@@ -25,9 +25,9 @@ func TestCreateOne(t *testing.T) {
 			rec: func(d harness.Data, t *testing.T) *adventure_game_record.AdventureGameCharacterInstance {
 				gameInstanceRec, err := d.GetGameInstanceRecByRef(harness.GameInstanceOneRef)
 				require.NoError(t, err)
-				charRec, err := d.GetGameCharacterRecByRef(harness.GameCharacterTwoRef)
+				charRec, err := d.GetAdventureGameCharacterRecByRef(harness.GameCharacterTwoRef)
 				require.NoError(t, err)
-				locationInstanceRec, err := d.GetGameLocationInstanceRecByRef(harness.GameLocationInstanceOneRef)
+				locationInstanceRec, err := d.GetAdventureGameLocationInstanceRecByRef(harness.GameLocationInstanceOneRef)
 				require.NoError(t, err)
 				return &adventure_game_record.AdventureGameCharacterInstance{
 					GameID:                          gameInstanceRec.GameID,
@@ -44,9 +44,9 @@ func TestCreateOne(t *testing.T) {
 			rec: func(d harness.Data, t *testing.T) *adventure_game_record.AdventureGameCharacterInstance {
 				gameInstanceRec, err := d.GetGameInstanceRecByRef(harness.GameInstanceOneRef)
 				require.NoError(t, err)
-				charRec, err := d.GetGameCharacterRecByRef(harness.GameCharacterTwoRef)
+				charRec, err := d.GetAdventureGameCharacterRecByRef(harness.GameCharacterTwoRef)
 				require.NoError(t, err)
-				locationInstanceRec, err := d.GetGameLocationInstanceRecByRef(harness.GameLocationInstanceOneRef)
+				locationInstanceRec, err := d.GetAdventureGameLocationInstanceRecByRef(harness.GameLocationInstanceOneRef)
 				require.NoError(t, err)
 				rec := &adventure_game_record.AdventureGameCharacterInstance{
 					GameID:                          gameInstanceRec.GameID,
@@ -102,7 +102,7 @@ func TestGetOne(t *testing.T) {
 		{
 			name: "With ID",
 			id: func(d harness.Data, t *testing.T) string {
-				rec, err := h.Data.GetGameCharacterInstanceRecByRef(harness.GameCharacterInstanceOneRef) // Add a reference if available
+				rec, err := h.Data.GetAdventureGameCharacterInstanceRecByRef(harness.GameCharacterInstanceOneRef) // Add a reference if available
 				require.NoError(t, err)
 				return rec.ID
 			},
@@ -156,7 +156,7 @@ func TestUpdateOne(t *testing.T) {
 		{
 			name: "With ID",
 			rec: func(d harness.Data, t *testing.T) *adventure_game_record.AdventureGameCharacterInstance {
-				rec, err := h.Data.GetGameCharacterInstanceRecByRef(harness.GameCharacterInstanceOneRef) // Add a reference if available
+				rec, err := h.Data.GetAdventureGameCharacterInstanceRecByRef(harness.GameCharacterInstanceOneRef) // Add a reference if available
 				require.NoError(t, err)
 				return rec
 			},
@@ -165,7 +165,7 @@ func TestUpdateOne(t *testing.T) {
 		{
 			name: "Without ID",
 			rec: func(d harness.Data, t *testing.T) *adventure_game_record.AdventureGameCharacterInstance {
-				rec, err := h.Data.GetGameCharacterInstanceRecByRef(harness.GameCharacterInstanceOneRef) // Add a reference if available
+				rec, err := h.Data.GetAdventureGameCharacterInstanceRecByRef(harness.GameCharacterInstanceOneRef) // Add a reference if available
 				require.NoError(t, err)
 				rec.ID = ""
 				return rec
@@ -213,7 +213,7 @@ func TestDeleteOne(t *testing.T) {
 		{
 			name: "With ID",
 			id: func(d harness.Data, t *testing.T) string {
-				rec, err := h.Data.GetGameCharacterInstanceRecByRef(harness.GameCharacterInstanceOneRef) // Add a reference if available
+				rec, err := h.Data.GetAdventureGameCharacterInstanceRecByRef(harness.GameCharacterInstanceOneRef) // Add a reference if available
 				require.NoError(t, err)
 				return rec.ID
 			},

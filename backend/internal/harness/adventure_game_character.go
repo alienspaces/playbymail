@@ -9,15 +9,15 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 )
 
-func (t *Testing) createGameCharacterRec(charConfig GameCharacterConfig, gameRec *game_record.Game) (*adventure_game_record.AdventureGameCharacter, error) {
-	l := t.Logger("createGameCharacterRec")
+func (t *Testing) createAdventureGameCharacterRec(charConfig AdventureGameCharacterConfig, gameRec *game_record.Game) (*adventure_game_record.AdventureGameCharacter, error) {
+	l := t.Logger("createAdventureGameCharacterRec")
 
 	if gameRec == nil {
-		return nil, fmt.Errorf("game record is nil for game_character record >%#v<", charConfig)
+		return nil, fmt.Errorf("game record is nil for adventure game character record >%#v<", charConfig)
 	}
 
 	if charConfig.AccountRef == "" {
-		return nil, fmt.Errorf("game_character record >%#v< must have an AccountRef set", charConfig)
+		return nil, fmt.Errorf("adventure game character record >%#v< must have an AccountRef set", charConfig)
 	}
 
 	var rec *adventure_game_record.AdventureGameCharacter
@@ -28,7 +28,7 @@ func (t *Testing) createGameCharacterRec(charConfig GameCharacterConfig, gameRec
 		rec = &adventure_game_record.AdventureGameCharacter{}
 	}
 
-	rec = t.applyGameCharacterRecDefaultValues(rec)
+	rec = t.applyAdventureGameCharacterRecDefaultValues(rec)
 
 	rec.GameID = gameRec.ID
 
@@ -50,20 +50,20 @@ func (t *Testing) createGameCharacterRec(charConfig GameCharacterConfig, gameRec
 	}
 
 	// Add to data store
-	t.Data.AddGameCharacterRec(rec)
+	t.Data.AddAdventureGameCharacterRec(rec)
 
 	// Add to teardown data store
-	t.teardownData.AddGameCharacterRec(rec)
+	t.teardownData.AddAdventureGameCharacterRec(rec)
 
 	// Add to references store
 	if charConfig.Reference != "" {
-		t.Data.Refs.GameCharacterRefs[charConfig.Reference] = rec.ID
+		t.Data.Refs.AdventureGameCharacterRefs[charConfig.Reference] = rec.ID
 	}
 
 	return rec, nil
 }
 
-func (t *Testing) applyGameCharacterRecDefaultValues(rec *adventure_game_record.AdventureGameCharacter) *adventure_game_record.AdventureGameCharacter {
+func (t *Testing) applyAdventureGameCharacterRecDefaultValues(rec *adventure_game_record.AdventureGameCharacter) *adventure_game_record.AdventureGameCharacter {
 	if rec == nil {
 		rec = &adventure_game_record.AdventureGameCharacter{}
 	}

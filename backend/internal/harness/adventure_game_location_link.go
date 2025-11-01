@@ -9,11 +9,11 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 )
 
-func (t *Testing) createGameLocationLinkRec(linkConfig GameLocationLinkConfig, gameRec *game_record.Game) (*adventure_game_record.AdventureGameLocationLink, error) {
-	l := t.Logger("createGameLocationLinkRec")
+func (t *Testing) createAdventureGameLocationLinkRec(linkConfig AdventureGameLocationLinkConfig, gameRec *game_record.Game) (*adventure_game_record.AdventureGameLocationLink, error) {
+	l := t.Logger("createAdventureGameLocationLinkRec")
 
 	if gameRec == nil {
-		return nil, fmt.Errorf("game record is nil for game_location_link record >%#v<", linkConfig)
+		return nil, fmt.Errorf("game record is nil for adventure game location link record >%#v<", linkConfig)
 	}
 
 	if linkConfig.FromLocationRef == "" && linkConfig.ToLocationRef == "" {
@@ -28,13 +28,13 @@ func (t *Testing) createGameLocationLinkRec(linkConfig GameLocationLinkConfig, g
 		rec = &adventure_game_record.AdventureGameLocationLink{}
 	}
 
-	rec = t.applyGameLocationLinkRecDefaultValues(rec)
+	rec = t.applyAdventureGameLocationLinkRecDefaultValues(rec)
 
 	// Set game_id from parent game
 	rec.GameID = gameRec.ID
 
 	if linkConfig.FromLocationRef != "" {
-		fromLoc, err := t.Data.GetGameLocationRecByRef(linkConfig.FromLocationRef)
+		fromLoc, err := t.Data.GetAdventureGameLocationRecByRef(linkConfig.FromLocationRef)
 		if err != nil || fromLoc == nil || fromLoc.ID == "" {
 			l.Error("could not resolve FromLocationRef >%s< to a valid location ID", linkConfig.FromLocationRef)
 			return nil, fmt.Errorf("could not resolve FromLocationRef >%s< to a valid location ID", linkConfig.FromLocationRef)
@@ -43,7 +43,7 @@ func (t *Testing) createGameLocationLinkRec(linkConfig GameLocationLinkConfig, g
 	}
 
 	if linkConfig.ToLocationRef != "" {
-		toLoc, err := t.Data.GetGameLocationRecByRef(linkConfig.ToLocationRef)
+		toLoc, err := t.Data.GetAdventureGameLocationRecByRef(linkConfig.ToLocationRef)
 		if err != nil || toLoc == nil || toLoc.ID == "" {
 			l.Error("could not resolve ToLocationRef >%s< to a valid location ID", linkConfig.ToLocationRef)
 			return nil, fmt.Errorf("could not resolve ToLocationRef >%s< to a valid location ID", linkConfig.ToLocationRef)
@@ -57,29 +57,29 @@ func (t *Testing) createGameLocationLinkRec(linkConfig GameLocationLinkConfig, g
 	}
 
 	// Create record
-	l.Debug("creating location link record >%#v<", rec)
+	l.Debug("creating adventure game location link record >%#v<", rec)
 
 	rec, err := t.Domain.(*domain.Domain).CreateAdventureGameLocationLinkRec(rec)
 	if err != nil {
-		l.Warn("failed creating location link record >%v<", err)
+		l.Warn("failed creating adventure game location link record >%v<", err)
 		return nil, err
 	}
 
 	// Add to data
-	t.Data.AddGameLocationLinkRec(rec)
+	t.Data.AddAdventureGameLocationLinkRec(rec)
 
 	// Add to teardown data
-	t.teardownData.AddGameLocationLinkRec(rec)
+	t.teardownData.AddAdventureGameLocationLinkRec(rec)
 
 	// Add to references store
 	if linkConfig.Reference != "" {
-		t.Data.Refs.GameLocationLinkRefs[linkConfig.Reference] = rec.ID
+		t.Data.Refs.AdventureGameLocationLinkRefs[linkConfig.Reference] = rec.ID
 	}
 
 	return rec, nil
 }
 
-func (t *Testing) applyGameLocationLinkRecDefaultValues(rec *adventure_game_record.AdventureGameLocationLink) *adventure_game_record.AdventureGameLocationLink {
+func (t *Testing) applyAdventureGameLocationLinkRecDefaultValues(rec *adventure_game_record.AdventureGameLocationLink) *adventure_game_record.AdventureGameLocationLink {
 	if rec == nil {
 		rec = &adventure_game_record.AdventureGameLocationLink{}
 	}

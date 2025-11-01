@@ -25,9 +25,9 @@ func TestCreateOne(t *testing.T) {
 			rec: func(data *harness.Data, t *testing.T) *adventure_game_record.AdventureGameLocationLinkRequirement {
 				game, err := data.GetGameRecByRef(harness.GameOneRef)
 				require.NoError(t, err)
-				link, err := data.GetGameLocationLinkRecByRef(harness.GameLocationLinkOneRef)
+				link, err := data.GetAdventureGameLocationLinkRecByRef(harness.GameLocationLinkOneRef)
 				require.NoError(t, err)
-				item, err := data.GetGameItemRecByRef(harness.GameItemOneRef)
+				item, err := data.GetAdventureGameItemRecByRef(harness.GameItemOneRef)
 				require.NoError(t, err)
 				return &adventure_game_record.AdventureGameLocationLinkRequirement{
 					GameID:                      game.ID,
@@ -80,7 +80,7 @@ func TestGetOne(t *testing.T) {
 		{
 			name: "valid",
 			id: func(data *harness.Data, t *testing.T) string {
-				rec, err := data.GetGameLocationLinkRequirementRecByRef(harness.GameLocationLinkRequirementOneRef)
+				rec, err := data.GetAdventureGameLocationLinkRequirementRecByRef(harness.GameLocationLinkRequirementOneRef)
 				require.NoError(t, err)
 				return rec.ID
 			},
@@ -123,7 +123,7 @@ func TestUpdateOne(t *testing.T) {
 		{
 			name: "valid",
 			rec: func(data *harness.Data, t *testing.T) *adventure_game_record.AdventureGameLocationLinkRequirement {
-				rec, err := data.GetGameLocationLinkRequirementRecByRef(harness.GameLocationLinkRequirementOneRef)
+				rec, err := data.GetAdventureGameLocationLinkRequirementRecByRef(harness.GameLocationLinkRequirementOneRef)
 				require.NoError(t, err)
 				rec.Quantity = 2 // simulate update
 				return rec
@@ -133,7 +133,7 @@ func TestUpdateOne(t *testing.T) {
 		{
 			name: "not found",
 			rec: func(data *harness.Data, t *testing.T) *adventure_game_record.AdventureGameLocationLinkRequirement {
-				rec, err := data.GetGameLocationLinkRequirementRecByRef(harness.GameLocationLinkRequirementOneRef)
+				rec, err := data.GetAdventureGameLocationLinkRequirementRecByRef(harness.GameLocationLinkRequirementOneRef)
 				require.NoError(t, err)
 				rec.ID = uuid.NewString()
 				return rec
@@ -170,7 +170,7 @@ func TestDeleteOne(t *testing.T) {
 		{
 			name: "valid",
 			id: func(data *harness.Data, t *testing.T) string {
-				rec, err := data.GetGameLocationLinkRequirementRecByRef(harness.GameLocationLinkRequirementOneRef)
+				rec, err := data.GetAdventureGameLocationLinkRequirementRecByRef(harness.GameLocationLinkRequirementOneRef)
 				require.NoError(t, err)
 				return rec.ID
 			},

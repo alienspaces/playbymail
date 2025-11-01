@@ -30,7 +30,7 @@ func Test_getGameLocationHandler(t *testing.T) {
 	gameRec, err := th.Data.GetGameRecByRef(harness.GameOneRef)
 	require.NoError(t, err, "GetGameRecByRef returns without error")
 
-	locationRec, err := th.Data.GetGameLocationRecByRef(harness.GameLocationOneRef)
+	locationRec, err := th.Data.GetAdventureGameLocationRecByRef(harness.GameLocationOneRef)
 	require.NoError(t, err, "GetGameLocationRecByRef returns without error")
 
 	type testCase struct {
@@ -148,7 +148,7 @@ func Test_createUpdateDeleteGameLocationHandler(t *testing.T) {
 
 	gameRec, err := th.Data.GetGameRecByRef(harness.GameOneRef)
 	require.NoError(t, err, "GetGameRecByRef returns without error")
-	locationRec, err := th.Data.GetGameLocationRecByRef(harness.GameLocationOneRef)
+	locationRec, err := th.Data.GetAdventureGameLocationRecByRef(harness.GameLocationOneRef)
 	require.NoError(t, err, "GetGameLocationRecByRef returns without error")
 
 	testCases := []testCase{

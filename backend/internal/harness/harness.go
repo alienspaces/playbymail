@@ -100,61 +100,7 @@ func (t *Testing) CreateData() error {
 		}
 		l.Debug("created game record ID >%s< Name >%s<", gameRec.ID, gameRec.Name)
 
-		for _, itemConfig := range gameConfig.GameItemConfigs {
-			_, err = t.createGameItemRec(itemConfig, gameRec)
-			if err != nil {
-				l.Warn("failed creating game_item record >%v<", err)
-				return err
-			}
-			l.Debug("created game_item record for game >%s<", gameRec.ID)
-		}
-
-		for _, gameLocationConfig := range gameConfig.GameLocationConfigs {
-			gameLocationRec, err := t.createGameLocationRec(gameLocationConfig, gameRec)
-			if err != nil {
-				l.Warn("failed creating game location record >%v<", err)
-				return err
-			}
-			l.Debug("created game location record ID >%s< Name >%s<", gameLocationRec.ID, gameLocationRec.Name)
-		}
-
-		for _, creatureConfig := range gameConfig.GameCreatureConfigs {
-			creatureRec, err := t.createGameCreatureRec(creatureConfig, gameRec)
-			if err != nil {
-				l.Warn("failed creating game creature record >%v<", err)
-				return err
-			}
-			l.Debug("created game creature record ID >%s< Name >%s<", creatureRec.ID, creatureRec.Name)
-		}
-
-		for _, linkConfig := range gameConfig.GameLocationLinkConfigs {
-			gameLocationLinkRec, err := t.createGameLocationLinkRec(linkConfig, gameRec)
-			if err != nil {
-				l.Warn("failed creating location link record >%v<", err)
-				return err
-			}
-			l.Debug("created location link record ID >%s<", gameLocationLinkRec.ID)
-
-			for _, reqConfig := range linkConfig.GameLocationLinkRequirementConfigs {
-				_, err = t.createGameLocationLinkRequirementRec(reqConfig, gameLocationLinkRec)
-				if err != nil {
-					l.Warn("failed creating game_location_link_requirement record >%v<", err)
-					return err
-				}
-				l.Debug("created game_location_link_requirement record for game >%s<", gameRec.ID)
-			}
-		}
-
-		for _, charConfig := range gameConfig.GameCharacterConfigs {
-			_, err = t.createGameCharacterRec(charConfig, gameRec)
-			if err != nil {
-				l.Warn("failed creating game_character record >%v<", err)
-				return err
-			}
-			l.Debug("created game_character record for game >%s<", gameRec.ID)
-		}
-
-		// Create game subscriptions for this game
+		// Create game subscription records for this game
 		for _, subscriptionConfig := range gameConfig.GameSubscriptionConfigs {
 			_, err = t.createGameSubscriptionRec(subscriptionConfig, gameRec)
 			if err != nil {
@@ -164,7 +110,7 @@ func (t *Testing) CreateData() error {
 			l.Debug("created game_subscription record for game >%s<", gameRec.ID)
 		}
 
-		// Create game administrations for this game
+		// Create game administrator records for this game
 		for _, administrationConfig := range gameConfig.GameAdministrationConfigs {
 			_, err = t.createGameAdministrationRec(administrationConfig, gameRec)
 			if err != nil {
@@ -174,9 +120,65 @@ func (t *Testing) CreateData() error {
 			l.Debug("created game_administration record for game >%s<", gameRec.ID)
 		}
 
+		// Adventure game specific records
+
+		for _, itemConfig := range gameConfig.AdventureGameItemConfigs {
+			_, err = t.createAdventureGameItemRec(itemConfig, gameRec)
+			if err != nil {
+				l.Warn("failed creating game_item record >%v<", err)
+				return err
+			}
+			l.Debug("created game_item record for game >%s<", gameRec.ID)
+		}
+
+		for _, locationConfig := range gameConfig.AdventureGameLocationConfigs {
+			gameLocationRec, err := t.createAdventureGameLocationRec(locationConfig, gameRec)
+			if err != nil {
+				l.Warn("failed creating game location record >%v<", err)
+				return err
+			}
+			l.Debug("created game location record ID >%s< Name >%s<", gameLocationRec.ID, gameLocationRec.Name)
+		}
+
+		for _, creatureConfig := range gameConfig.AdventureGameCreatureConfigs {
+			creatureRec, err := t.createAdventureGameCreatureRec(creatureConfig, gameRec)
+			if err != nil {
+				l.Warn("failed creating game creature record >%v<", err)
+				return err
+			}
+			l.Debug("created game creature record ID >%s< Name >%s<", creatureRec.ID, creatureRec.Name)
+		}
+
+		for _, linkConfig := range gameConfig.AdventureGameLocationLinkConfigs {
+			gameLocationLinkRec, err := t.createAdventureGameLocationLinkRec(linkConfig, gameRec)
+			if err != nil {
+				l.Warn("failed creating location link record >%v<", err)
+				return err
+			}
+			l.Debug("created location link record ID >%s<", gameLocationLinkRec.ID)
+
+			for _, reqConfig := range linkConfig.AdventureGameLocationLinkRequirementConfigs {
+				_, err = t.createAdventureGameLocationLinkRequirementRec(reqConfig, gameLocationLinkRec)
+				if err != nil {
+					l.Warn("failed creating game_location_link_requirement record >%v<", err)
+					return err
+				}
+				l.Debug("created game_location_link_requirement record for game >%s<", gameRec.ID)
+			}
+		}
+
+		for _, charConfig := range gameConfig.AdventureGameCharacterConfigs {
+			_, err = t.createAdventureGameCharacterRec(charConfig, gameRec)
+			if err != nil {
+				l.Warn("failed creating game_character record >%v<", err)
+				return err
+			}
+			l.Debug("created game_character record for game >%s<", gameRec.ID)
+		}
+
 		// Instance records
 
-		// Create game instances for this game
+		// Create game instance records for this game
 		for _, gameInstanceConfig := range gameConfig.GameInstanceConfigs {
 			gameInstanceRec, err := t.createGameInstanceRec(gameInstanceConfig, gameRec)
 			if err != nil {
@@ -185,7 +187,7 @@ func (t *Testing) CreateData() error {
 			}
 			l.Debug("created game_instance record ID >%s<", gameInstanceRec.ID)
 
-			// Create instance parameters for this game instance
+			// Create game instance parameter records for this game instance
 			for _, instanceParameterConfig := range gameInstanceConfig.GameInstanceParameterConfigs {
 				instanceParameterRec, err := t.createGameInstanceParameterRec(instanceParameterConfig, gameInstanceRec)
 				if err != nil {
@@ -195,54 +197,54 @@ func (t *Testing) CreateData() error {
 				l.Debug("created game_instance_parameter record ID >%s<", instanceParameterRec.ID)
 			}
 
-			// Create location instances for this game instance
+			// Create game location instance records for this game instance
 			for _, locationInstanceConfig := range gameInstanceConfig.AdventureGameLocationInstanceConfigs {
-				locationInstanceRec, err := t.createGameLocationInstanceRec(locationInstanceConfig, gameInstanceRec)
+				locationInstanceRec, err := t.createAdventureGameLocationInstanceRec(locationInstanceConfig, gameInstanceRec)
 				if err != nil {
-					l.Warn("failed creating game_location_instance record >%v<", err)
+					l.Warn("failed creating adventure game location instance record >%v<", err)
 					return err
 				}
-				l.Debug("created game_location_instance record ID >%s<", locationInstanceRec.ID)
+				l.Debug("created adventure game location instance record ID >%s<", locationInstanceRec.ID)
 			}
 
-			// Create creature instances for this game instance
+			// Create game creature instance records for this game instance
 			for _, creatureInstanceConfig := range gameInstanceConfig.AdventureGameCreatureInstanceConfigs {
-				creatureInstanceRec, err := t.createGameCreatureInstanceRec(creatureInstanceConfig, gameInstanceRec)
+				creatureInstanceRec, err := t.createAdventureGameCreatureInstanceRec(creatureInstanceConfig, gameInstanceRec)
 				if err != nil {
-					l.Warn("failed creating game_creature_instance record >%v<", err)
+					l.Warn("failed creating adventure game creature instance record >%v<", err)
 					return err
 				}
-				l.Debug("created game_creature_instance record ID >%s<", creatureInstanceRec.ID)
+				l.Debug("created adventure game creature instance record ID >%s<", creatureInstanceRec.ID)
 			}
 
-			// Create character instances for this game instance
+			// Create game character instance records for this game instance
 			for _, characterInstanceConfig := range gameInstanceConfig.AdventureGameCharacterInstanceConfigs {
-				characterInstanceRec, err := t.createGameCharacterInstanceRec(characterInstanceConfig, gameInstanceRec)
+				characterInstanceRec, err := t.createAdventureGameCharacterInstanceRec(characterInstanceConfig, gameInstanceRec)
 				if err != nil {
-					l.Warn("failed creating game_character_instance record >%v<", err)
+					l.Warn("failed creating adventure game character instance record >%v<", err)
 					return err
 				}
-				l.Debug("created game_character_instance record ID >%s<", characterInstanceRec.ID)
+				l.Debug("created adventure game character instance record ID >%s<", characterInstanceRec.ID)
 			}
 
-			// Create item instances for this game instance
+			// Create game item instance records for this game instance
 			for _, itemInstanceConfig := range gameInstanceConfig.AdventureGameItemInstanceConfigs {
-				itemInstanceRec, err := t.createGameItemInstanceRec(itemInstanceConfig, gameInstanceRec)
+				itemInstanceRec, err := t.createAdventureGameItemInstanceRec(itemInstanceConfig, gameInstanceRec)
 				if err != nil {
-					l.Warn("failed creating game_item_instance record >%v<", err)
+					l.Warn("failed creating adventure game item instance record >%v<", err)
 					return err
 				}
-				l.Debug("created game_item_instance record ID >%s<", itemInstanceRec.ID)
+				l.Debug("created adventure game item instance record ID >%s<", itemInstanceRec.ID)
 			}
 
-			// Create turn sheets for this game instance
+			// Create game turn sheet records for this game instance
 			for _, turnSheetConfig := range gameInstanceConfig.GameTurnSheetConfigs {
 				turnSheetRec, err := t.createGameTurnSheetRec(turnSheetConfig, gameInstanceRec)
 				if err != nil {
-					l.Warn("failed creating game_turn_sheet record >%v<", err)
+					l.Warn("failed creating adventure game turn sheet record >%v<", err)
 					return err
 				}
-				l.Debug("created game_turn_sheet record ID >%s<", turnSheetRec.ID)
+				l.Debug("created adventure game turn sheet record ID >%s<", turnSheetRec.ID)
 			}
 		}
 
@@ -262,8 +264,8 @@ func (t *Testing) RemoveData() error {
 	// Remove instance records
 
 	// Remove game creature instances
-	l.Debug("removing >%d< game creature instance records", len(t.teardownData.GameCreatureInstanceRecs))
-	for _, creatureInstanceRec := range t.teardownData.GameCreatureInstanceRecs {
+	l.Debug("removing >%d< game creature instance records", len(t.teardownData.AdventureGameCreatureInstanceRecs))
+	for _, creatureInstanceRec := range t.teardownData.AdventureGameCreatureInstanceRecs {
 		l.Debug("[teardown] game creature instance ID: >%s<", creatureInstanceRec.ID)
 		if creatureInstanceRec.ID == "" {
 			l.Warn("[teardown] skipping game creature instance with empty ID")
@@ -277,8 +279,8 @@ func (t *Testing) RemoveData() error {
 	}
 
 	// Remove game character instances
-	l.Debug("removing >%d< game character instance records", len(t.teardownData.GameCharacterInstanceRecs))
-	for _, characterInstanceRec := range t.teardownData.GameCharacterInstanceRecs {
+	l.Debug("removing >%d< game character instance records", len(t.teardownData.AdventureGameCharacterInstanceRecs))
+	for _, characterInstanceRec := range t.teardownData.AdventureGameCharacterInstanceRecs {
 		l.Debug("[teardown] game character instance ID: >%s<", characterInstanceRec.ID)
 		if characterInstanceRec.ID == "" {
 			l.Warn("[teardown] skipping game character instance with empty ID")
@@ -292,8 +294,8 @@ func (t *Testing) RemoveData() error {
 	}
 
 	// Remove game item instances
-	l.Debug("removing >%d< game item instance records", len(t.teardownData.GameItemInstanceRecs))
-	for _, itemInstanceRec := range t.teardownData.GameItemInstanceRecs {
+	l.Debug("removing >%d< game item instance records", len(t.teardownData.AdventureGameItemInstanceRecs))
+	for _, itemInstanceRec := range t.teardownData.AdventureGameItemInstanceRecs {
 		l.Debug("[teardown] game item instance ID: >%s<", itemInstanceRec.ID)
 		if itemInstanceRec.ID == "" {
 			l.Warn("[teardown] skipping game item instance with empty ID")
@@ -307,8 +309,8 @@ func (t *Testing) RemoveData() error {
 	}
 
 	// Remove game location instances before game instances to avoid FK errors
-	l.Debug("removing >%d< game location instance records", len(t.teardownData.GameLocationInstanceRecs))
-	for _, locationInstanceRec := range t.teardownData.GameLocationInstanceRecs {
+	l.Debug("removing >%d< game location instance records", len(t.teardownData.AdventureGameLocationInstanceRecs))
+	for _, locationInstanceRec := range t.teardownData.AdventureGameLocationInstanceRecs {
 		l.Debug("[teardown] game location instance ID: >%s<", locationInstanceRec.ID)
 		if locationInstanceRec.ID == "" {
 			l.Warn("[teardown] skipping game location instance with empty ID")
@@ -352,8 +354,8 @@ func (t *Testing) RemoveData() error {
 	}
 
 	// Remove game creature records
-	l.Debug("removing >%d< game creature records", len(t.teardownData.GameCreatureRecs))
-	for _, creatureRec := range t.teardownData.GameCreatureRecs {
+	l.Debug("removing >%d< game creature records", len(t.teardownData.AdventureGameCreatureRecs))
+	for _, creatureRec := range t.teardownData.AdventureGameCreatureRecs {
 		l.Debug("[teardown] game creature ID: >%s<", creatureRec.ID)
 		if creatureRec.ID == "" {
 			l.Warn("[teardown] skipping game creature with empty ID")
@@ -367,8 +369,8 @@ func (t *Testing) RemoveData() error {
 	}
 
 	// Remove game location link requirements
-	l.Debug("removing >%d< game location link requirement records", len(t.teardownData.GameLocationLinkRequirementRecs))
-	for _, reqRec := range t.teardownData.GameLocationLinkRequirementRecs {
+	l.Debug("removing >%d< game location link requirement records", len(t.teardownData.AdventureGameLocationLinkRequirementRecs))
+	for _, reqRec := range t.teardownData.AdventureGameLocationLinkRequirementRecs {
 		l.Debug("[teardown] game location link requirement ID: >%s<", reqRec.ID)
 		if reqRec.ID == "" {
 			l.Warn("[teardown] skipping game location link requirement with empty ID")
@@ -382,8 +384,8 @@ func (t *Testing) RemoveData() error {
 	}
 
 	// Remove game location links
-	l.Debug("removing >%d< game location link records", len(t.teardownData.GameLocationLinkRecs))
-	for _, linkRec := range t.teardownData.GameLocationLinkRecs {
+	l.Debug("removing >%d< game location link records", len(t.teardownData.AdventureGameLocationLinkRecs))
+	for _, linkRec := range t.teardownData.AdventureGameLocationLinkRecs {
 		l.Debug("[teardown] game location link ID: >%s<", linkRec.ID)
 		if linkRec.ID == "" {
 			l.Warn("[teardown] skipping game location link with empty ID")
@@ -397,8 +399,8 @@ func (t *Testing) RemoveData() error {
 	}
 
 	// Remove game location records before games to avoid FK errors
-	l.Debug("removing >%d< game location records", len(t.teardownData.GameLocationRecs))
-	for _, gameLocationRec := range t.teardownData.GameLocationRecs {
+	l.Debug("removing >%d< game location records", len(t.teardownData.AdventureGameLocationRecs))
+	for _, gameLocationRec := range t.teardownData.AdventureGameLocationRecs {
 		l.Debug("[teardown] game location ID: >%s<", gameLocationRec.ID)
 		if gameLocationRec.ID == "" {
 			l.Warn("[teardown] skipping game location with empty ID")
@@ -413,8 +415,8 @@ func (t *Testing) RemoveData() error {
 	}
 
 	// Remove game item records before games to avoid FK errors
-	l.Debug("removing >%d< game item records", len(t.teardownData.GameItemRecs))
-	for _, itemRec := range t.teardownData.GameItemRecs {
+	l.Debug("removing >%d< game item records", len(t.teardownData.AdventureGameItemRecs))
+	for _, itemRec := range t.teardownData.AdventureGameItemRecs {
 		l.Debug("[teardown] game item ID: >%s<", itemRec.ID)
 		if itemRec.ID == "" {
 			l.Warn("[teardown] skipping game item with empty ID")
@@ -428,8 +430,8 @@ func (t *Testing) RemoveData() error {
 	}
 
 	// Remove game character records before games to avoid FK errors
-	l.Debug("removing >%d< game character records", len(t.teardownData.GameCharacterRecs))
-	for _, charRec := range t.teardownData.GameCharacterRecs {
+	l.Debug("removing >%d< game character records", len(t.teardownData.AdventureGameCharacterRecs))
+	for _, charRec := range t.teardownData.AdventureGameCharacterRecs {
 		l.Debug("[teardown] game character ID: >%s<", charRec.ID)
 		if charRec.ID == "" {
 			l.Warn("[teardown] skipping game character with empty ID")

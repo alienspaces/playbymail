@@ -70,56 +70,21 @@ type DataConfig struct {
 }
 
 type GameConfig struct {
-	Reference                 string // Reference to the game record
-	Record                    *game_record.Game
-	GameLocationConfigs       []GameLocationConfig     // Locations associated with this game
-	GameLocationLinkConfigs   []GameLocationLinkConfig // Links associated with this game
-	GameItemConfigs           []GameItemConfig
-	GameCreatureConfigs       []GameCreatureConfig
-	GameCharacterConfigs      []GameCharacterConfig
-	GameInstanceConfigs       []GameInstanceConfig
-	GameSubscriptionConfigs   []GameSubscriptionConfig
-	GameAdministrationConfigs []GameAdministrationConfig
-}
-
-type GameCharacterConfig struct {
-	Reference  string // Reference to the game_character record
-	AccountRef string // Reference to the account
-	Record     *adventure_game_record.AdventureGameCharacter
-}
-
-type GameItemConfig struct {
-	Reference string // Reference to the game_item record
-	Record    *adventure_game_record.AdventureGameItem
-}
-
-type GameCreatureConfig struct {
-	Reference string // Reference to the game_creature record
-	Record    *adventure_game_record.AdventureGameCreature
+	Reference                        string // Reference to the game record
+	Record                           *game_record.Game
+	GameInstanceConfigs              []GameInstanceConfig
+	GameSubscriptionConfigs          []GameSubscriptionConfig
+	GameAdministrationConfigs        []GameAdministrationConfig
+	AdventureGameLocationConfigs     []AdventureGameLocationConfig     // Locations associated with this game
+	AdventureGameLocationLinkConfigs []AdventureGameLocationLinkConfig // Links associated with this game
+	AdventureGameItemConfigs         []AdventureGameItemConfig
+	AdventureGameCreatureConfigs     []AdventureGameCreatureConfig
+	AdventureGameCharacterConfigs    []AdventureGameCharacterConfig
 }
 
 type AccountConfig struct {
 	Reference string // Reference to the account record
 	Record    *account_record.Account
-}
-
-type GameLocationConfig struct {
-	Reference string // Reference to the game_location record
-	Record    *adventure_game_record.AdventureGameLocation
-}
-
-type GameLocationLinkConfig struct {
-	Reference                          string // Reference to the game_location_link record
-	FromLocationRef                    string // Reference to the from location
-	ToLocationRef                      string // Reference to the to location
-	Record                             *adventure_game_record.AdventureGameLocationLink
-	GameLocationLinkRequirementConfigs []GameLocationLinkRequirementConfig
-}
-
-type GameLocationLinkRequirementConfig struct {
-	Reference   string // Reference to the game_location_link_requirement record
-	GameItemRef string // Reference to the game_item
-	Record      *adventure_game_record.AdventureGameLocationLinkRequirement
 }
 
 type GameInstanceConfig struct {
@@ -131,6 +96,70 @@ type GameInstanceConfig struct {
 	AdventureGameCreatureInstanceConfigs  []AdventureGameCreatureInstanceConfig
 	AdventureGameCharacterInstanceConfigs []AdventureGameCharacterInstanceConfig
 	GameTurnSheetConfigs                  []GameTurnSheetConfig
+}
+
+type GameTurnSheetConfig struct {
+	Reference                string // Reference to the game_turn_sheet record
+	GameCharacterInstanceRef string // Reference to the game_character_instance (required)
+	TurnNumber               int    // Turn number for this turn sheet
+	SheetType                string // Type of turn sheet (e.g., "location_choice", "join_game")
+	SheetOrder               int    // Order of this sheet in the turn
+	SheetData                string // JSON data for the turn sheet
+	ScannedData              string // JSON data for the scanned response (optional)
+	ProcessingStatus         string // Processing status (e.g., "pending", "processing", "completed")
+	IsCompleted              bool   // Whether the turn sheet has been completed
+	Record                   *game_record.GameTurnSheet
+}
+
+type GameSubscriptionConfig struct {
+	Reference        string // Reference to the game_subscription record
+	AccountRef       string // Reference to the account
+	SubscriptionType string // Type of subscription (Player, Manager, Collaborator)
+	Record           *game_record.GameSubscription
+}
+
+type GameAdministrationConfig struct {
+	Reference           string // Reference to the game_administration record
+	AccountRef          string // Reference to the account
+	GrantedByAccountRef string // Reference to the account that granted the administration rights
+	Record              *game_record.GameAdministration
+}
+
+// Adventure game specific configuration
+
+type AdventureGameCharacterConfig struct {
+	Reference  string // Reference to the game_character record
+	AccountRef string // Reference to the account
+	Record     *adventure_game_record.AdventureGameCharacter
+}
+
+type AdventureGameItemConfig struct {
+	Reference string // Reference to the game_item record
+	Record    *adventure_game_record.AdventureGameItem
+}
+
+type AdventureGameCreatureConfig struct {
+	Reference string // Reference to the game_creature record
+	Record    *adventure_game_record.AdventureGameCreature
+}
+
+type AdventureGameLocationConfig struct {
+	Reference string // Reference to the game_location record
+	Record    *adventure_game_record.AdventureGameLocation
+}
+
+type AdventureGameLocationLinkConfig struct {
+	Reference                                   string // Reference to the game_location_link record
+	FromLocationRef                             string // Reference to the from location
+	ToLocationRef                               string // Reference to the to location
+	Record                                      *adventure_game_record.AdventureGameLocationLink
+	AdventureGameLocationLinkRequirementConfigs []AdventureGameLocationLinkRequirementConfig
+}
+
+type AdventureGameLocationLinkRequirementConfig struct {
+	Reference   string // Reference to the game_location_link_requirement record
+	GameItemRef string // Reference to the game_item
+	Record      *adventure_game_record.AdventureGameLocationLinkRequirement
 }
 
 type AdventureGameLocationInstanceConfig struct {
@@ -165,34 +194,9 @@ type AdventureGameItemInstanceConfig struct {
 	Record *adventure_game_record.AdventureGameItemInstance
 }
 
-type GameTurnSheetConfig struct {
-	Reference                string // Reference to the game_turn_sheet record
-	GameCharacterInstanceRef string // Reference to the game_character_instance (required)
-	TurnNumber               int    // Turn number for this turn sheet
-	SheetType                string // Type of turn sheet (e.g., "location_choice", "join_game")
-	SheetOrder               int    // Order of this sheet in the turn
-	SheetData                string // JSON data for the turn sheet
-	ScannedData              string // JSON data for the scanned response (optional)
-	ProcessingStatus         string // Processing status (e.g., "pending", "processing", "completed")
-	IsCompleted              bool   // Whether the turn sheet has been completed
-	Record                   *game_record.GameTurnSheet
-}
+// TODO: Possibly rename the following to AdventureGameDataConfig when additional game types are added
 
-type GameSubscriptionConfig struct {
-	Reference        string // Reference to the game_subscription record
-	AccountRef       string // Reference to the account
-	SubscriptionType string // Type of subscription (Player, Manager, Collaborator)
-	Record           *game_record.GameSubscription
-}
-
-type GameAdministrationConfig struct {
-	Reference           string // Reference to the game_administration record
-	AccountRef          string // Reference to the account
-	GrantedByAccountRef string // Reference to the account that granted the administration rights
-	Record              *game_record.GameAdministration
-}
-
-// DefaultDataConfig -
+// DefaultDataConfig
 func DefaultDataConfig() DataConfig {
 	return DataConfig{
 		GameConfigs: []GameConfig{
@@ -202,88 +206,6 @@ func DefaultDataConfig() DataConfig {
 					Name:              UniqueName("Default Game One"),
 					GameType:          game_record.GameTypeAdventure,
 					TurnDurationHours: 168, // 1 week
-				},
-				GameItemConfigs: []GameItemConfig{
-					{
-						Reference: GameItemOneRef,
-						Record: &adventure_game_record.AdventureGameItem{
-							Name:        UniqueName("Default Item One"),
-							Description: "Default item one for handler tests",
-						},
-					},
-					{
-						Reference: GameItemTwoRef,
-						Record: &adventure_game_record.AdventureGameItem{
-							Name:        UniqueName("Default Item Two"),
-							Description: "Default item two for handler tests",
-						},
-					},
-				},
-				GameLocationConfigs: []GameLocationConfig{
-					{
-						Reference: GameLocationOneRef,
-						Record: &adventure_game_record.AdventureGameLocation{
-							Name:        UniqueName("Default Location One"),
-							Description: "Default location one for handler tests",
-						},
-					},
-					{
-						Reference: GameLocationTwoRef,
-						Record: &adventure_game_record.AdventureGameLocation{
-							Name:        UniqueName("Default Location Two"),
-							Description: "Default location two for handler tests",
-						},
-					},
-				},
-				GameLocationLinkConfigs: []GameLocationLinkConfig{
-					{
-						Reference:       GameLocationLinkOneRef,
-						FromLocationRef: GameLocationOneRef,
-						ToLocationRef:   GameLocationTwoRef,
-						Record: &adventure_game_record.AdventureGameLocationLink{
-							Name:        UniqueName("The Red Door"),
-							Description: "Travel by boat to the swamp of the long forgotten Frog God",
-						},
-						GameLocationLinkRequirementConfigs: []GameLocationLinkRequirementConfig{
-							{
-								Reference:   GameLocationLinkRequirementOneRef,
-								GameItemRef: GameItemOneRef,
-								Record: &adventure_game_record.AdventureGameLocationLinkRequirement{
-									Quantity: 1,
-								},
-							},
-						},
-					},
-				},
-				GameCreatureConfigs: []GameCreatureConfig{
-					{
-						Reference: GameCreatureOneRef,
-						Record: &adventure_game_record.AdventureGameCreature{
-							Name: UniqueName("Default Creature One"),
-						},
-					},
-					{
-						Reference: GameCreatureTwoRef,
-						Record: &adventure_game_record.AdventureGameCreature{
-							Name: UniqueName("Default Creature Two"),
-						},
-					},
-				},
-				GameCharacterConfigs: []GameCharacterConfig{
-					{
-						Reference:  GameCharacterOneRef,
-						AccountRef: AccountOneRef,
-						Record: &adventure_game_record.AdventureGameCharacter{
-							Name: UniqueName("Default Character One"),
-						},
-					},
-					{
-						Reference:  GameCharacterTwoRef,
-						AccountRef: AccountTwoRef,
-						Record: &adventure_game_record.AdventureGameCharacter{
-							Name: UniqueName("Default Character Two"),
-						},
-					},
 				},
 				GameSubscriptionConfigs: []GameSubscriptionConfig{
 					{
@@ -301,7 +223,90 @@ func DefaultDataConfig() DataConfig {
 						Record:              &game_record.GameAdministration{},
 					},
 				},
-				// Default game instance with a location and an item assigned to the location
+				// Adventure game specific resources
+				AdventureGameItemConfigs: []AdventureGameItemConfig{
+					{
+						Reference: GameItemOneRef,
+						Record: &adventure_game_record.AdventureGameItem{
+							Name:        UniqueName("Default Item One"),
+							Description: "Default item one for handler tests",
+						},
+					},
+					{
+						Reference: GameItemTwoRef,
+						Record: &adventure_game_record.AdventureGameItem{
+							Name:        UniqueName("Default Item Two"),
+							Description: "Default item two for handler tests",
+						},
+					},
+				},
+				AdventureGameLocationConfigs: []AdventureGameLocationConfig{
+					{
+						Reference: GameLocationOneRef,
+						Record: &adventure_game_record.AdventureGameLocation{
+							Name:        UniqueName("Default Location One"),
+							Description: "Default location one for handler tests",
+						},
+					},
+					{
+						Reference: GameLocationTwoRef,
+						Record: &adventure_game_record.AdventureGameLocation{
+							Name:        UniqueName("Default Location Two"),
+							Description: "Default location two for handler tests",
+						},
+					},
+				},
+				AdventureGameLocationLinkConfigs: []AdventureGameLocationLinkConfig{
+					{
+						Reference:       GameLocationLinkOneRef,
+						FromLocationRef: GameLocationOneRef,
+						ToLocationRef:   GameLocationTwoRef,
+						Record: &adventure_game_record.AdventureGameLocationLink{
+							Name:        UniqueName("The Red Door"),
+							Description: "Travel by boat to the swamp of the long forgotten Frog God",
+						},
+						AdventureGameLocationLinkRequirementConfigs: []AdventureGameLocationLinkRequirementConfig{
+							{
+								Reference:   GameLocationLinkRequirementOneRef,
+								GameItemRef: GameItemOneRef,
+								Record: &adventure_game_record.AdventureGameLocationLinkRequirement{
+									Quantity: 1,
+								},
+							},
+						},
+					},
+				},
+				AdventureGameCreatureConfigs: []AdventureGameCreatureConfig{
+					{
+						Reference: GameCreatureOneRef,
+						Record: &adventure_game_record.AdventureGameCreature{
+							Name: UniqueName("Default Creature One"),
+						},
+					},
+					{
+						Reference: GameCreatureTwoRef,
+						Record: &adventure_game_record.AdventureGameCreature{
+							Name: UniqueName("Default Creature Two"),
+						},
+					},
+				},
+				AdventureGameCharacterConfigs: []AdventureGameCharacterConfig{
+					{
+						Reference:  GameCharacterOneRef,
+						AccountRef: AccountOneRef,
+						Record: &adventure_game_record.AdventureGameCharacter{
+							Name: UniqueName("Default Character One"),
+						},
+					},
+					{
+						Reference:  GameCharacterTwoRef,
+						AccountRef: AccountTwoRef,
+						Record: &adventure_game_record.AdventureGameCharacter{
+							Name: UniqueName("Default Character Two"),
+						},
+					},
+				},
+				// Default adventure game instance with a location and an item assigned to the location
 				GameInstanceConfigs: []GameInstanceConfig{
 					{
 						Reference: GameInstanceOneRef,

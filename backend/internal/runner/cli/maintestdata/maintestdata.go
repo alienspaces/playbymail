@@ -54,7 +54,7 @@ func GameConfig() []harness.GameConfig {
 				TurnDurationHours: 168, // 1 week
 			},
 			// Rich world with multiple interconnected locations
-			GameLocationConfigs: []harness.GameLocationConfig{
+			AdventureGameLocationConfigs: []harness.AdventureGameLocationConfig{
 				{
 					Reference: harness.GameLocationOneRef,
 					Record: &adventure_game_record.AdventureGameLocation{
@@ -85,7 +85,7 @@ func GameConfig() []harness.GameConfig {
 				},
 			},
 			// Items that can be found and used
-			GameItemConfigs: []harness.GameItemConfig{
+			AdventureGameItemConfigs: []harness.AdventureGameItemConfig{
 				{
 					Reference: harness.GameItemOneRef,
 					Record: &adventure_game_record.AdventureGameItem{
@@ -116,7 +116,7 @@ func GameConfig() []harness.GameConfig {
 				},
 			},
 			// Creatures that inhabit the world
-			GameCreatureConfigs: []harness.GameCreatureConfig{
+			AdventureGameCreatureConfigs: []harness.AdventureGameCreatureConfig{
 				{
 					Reference: harness.GameCreatureOneRef,
 					Record: &adventure_game_record.AdventureGameCreature{
@@ -133,7 +133,7 @@ func GameConfig() []harness.GameConfig {
 				},
 			},
 			// Characters that players can control
-			GameCharacterConfigs: []harness.GameCharacterConfig{
+			AdventureGameCharacterConfigs: []harness.AdventureGameCharacterConfig{
 				{
 					Reference:  harness.GameCharacterOneRef,
 					AccountRef: harness.AccountOneRef,
@@ -157,7 +157,7 @@ func GameConfig() []harness.GameConfig {
 				},
 			},
 			// Location links that connect the world
-			GameLocationLinkConfigs: []harness.GameLocationLinkConfig{
+			AdventureGameLocationLinkConfigs: []harness.AdventureGameLocationLinkConfig{
 				{
 					Reference:       harness.GameLocationLinkOneRef,
 					FromLocationRef: harness.GameLocationOneRef,
@@ -166,7 +166,7 @@ func GameConfig() []harness.GameConfig {
 						Name:        "The Crystal Path",
 						Description: "A winding path that leads from the grove down into the crystal caverns.",
 					},
-					GameLocationLinkRequirementConfigs: []harness.GameLocationLinkRequirementConfig{
+					AdventureGameLocationLinkRequirementConfigs: []harness.AdventureGameLocationLinkRequirementConfig{
 						{
 							Reference:   harness.GameLocationLinkRequirementOneRef,
 							GameItemRef: harness.GameItemOneRef,
@@ -184,7 +184,7 @@ func GameConfig() []harness.GameConfig {
 						Name:        "The Wind Lift",
 						Description: "A magical elevator that rises from the caverns to the floating islands.",
 					},
-					GameLocationLinkRequirementConfigs: []harness.GameLocationLinkRequirementConfig{
+					AdventureGameLocationLinkRequirementConfigs: []harness.AdventureGameLocationLinkRequirementConfig{
 						{
 							Reference:   harness.GameLocationLinkRequirementTwoRef,
 							GameItemRef: harness.GameItemFourRef,
@@ -202,7 +202,7 @@ func GameConfig() []harness.GameConfig {
 						Name:        "The Shadow Bridge",
 						Description: "A bridge of pure darkness that connects the floating islands to the shadow valley.",
 					},
-					GameLocationLinkRequirementConfigs: []harness.GameLocationLinkRequirementConfig{
+					AdventureGameLocationLinkRequirementConfigs: []harness.AdventureGameLocationLinkRequirementConfig{
 						{
 							Reference:   harness.GameLocationLinkRequirementThreeRef,
 							GameItemRef: harness.GameItemTwoRef,
@@ -220,7 +220,7 @@ func GameConfig() []harness.GameConfig {
 						Name:        "The Return Portal",
 						Description: "A magical portal that allows quick return to the mystic grove.",
 					},
-					GameLocationLinkRequirementConfigs: []harness.GameLocationLinkRequirementConfig{
+					AdventureGameLocationLinkRequirementConfigs: []harness.AdventureGameLocationLinkRequirementConfig{
 						{
 							Reference:   harness.GameLocationLinkRequirementFourRef,
 							GameItemRef: harness.GameItemThreeRef,
@@ -314,7 +314,7 @@ func GameConfig() []harness.GameConfig {
 				TurnDurationHours: 336, // 2 weeks
 			},
 			// Simpler world for the second game
-			GameLocationConfigs: []harness.GameLocationConfig{
+			AdventureGameLocationConfigs: []harness.AdventureGameLocationConfig{
 				{
 					Reference: "game-location-five",
 					Record: &adventure_game_record.AdventureGameLocation{
@@ -330,7 +330,7 @@ func GameConfig() []harness.GameConfig {
 					},
 				},
 			},
-			GameItemConfigs: []harness.GameItemConfig{
+			AdventureGameItemConfigs: []harness.AdventureGameItemConfig{
 				{
 					Reference: "game-item-five",
 					Record: &adventure_game_record.AdventureGameItem{
@@ -339,7 +339,7 @@ func GameConfig() []harness.GameConfig {
 					},
 				},
 			},
-			GameCreatureConfigs: []harness.GameCreatureConfig{
+			AdventureGameCreatureConfigs: []harness.AdventureGameCreatureConfig{
 				{
 					Reference: "game-creature-three",
 					Record: &adventure_game_record.AdventureGameCreature{
