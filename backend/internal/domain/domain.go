@@ -49,8 +49,16 @@ func NewDomain(l logger.Logger, cfg config.Config) (*Domain, error) {
 	l = l.WithPackageContext("domain")
 
 	repositoryConstructors := []domain.RepositoryConstructor{
+		// Core repositories
 		account.NewRepository,
 		game.NewRepository,
+		game_instance.NewRepository,
+		game_instance_parameter.NewRepository,
+		game_subscription.NewRepository,
+		game_administration.NewRepository,
+		game_turn_sheet.NewRepository,
+
+		// Adventure game repositories
 		adventure_game_location.NewRepository,
 		adventure_game_location_link.NewRepository,
 		adventure_game_character.NewRepository,
@@ -64,11 +72,6 @@ func NewDomain(l logger.Logger, cfg config.Config) (*Domain, error) {
 		adventure_game_creature_instance.NewRepository,
 		adventure_game_character_instance.NewRepository,
 		adventure_game_turn_sheet.NewRepository,
-		game_instance.NewRepository,
-		game_instance_parameter.NewRepository,
-		game_subscription.NewRepository,
-		game_administration.NewRepository,
-		game_turn_sheet.NewRepository,
 	}
 
 	cd, err := domain.NewDomain(l, repositoryConstructors)
@@ -81,7 +84,7 @@ func NewDomain(l logger.Logger, cfg config.Config) (*Domain, error) {
 		config: cfg,
 	}
 
-	l.Info("returning domain %+v", m)
+	l.Debug("returning domain %+v", m)
 
 	return m, nil
 }

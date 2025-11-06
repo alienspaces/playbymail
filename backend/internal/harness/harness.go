@@ -1,8 +1,6 @@
 package harness
 
 import (
-	"fmt"
-
 	"github.com/jackc/pgx/v5"
 	"github.com/riverqueue/river"
 
@@ -16,30 +14,24 @@ import (
 
 // Testing -
 type Testing struct {
-	harness.Testing
+	*harness.Testing
 	Data         Data
 	teardownData Data
 	DataConfig   DataConfig
 	Config       config.Config
-	// Note: Log property from embedded harness.Testing should be considered private.
-	// Use Logger() method for external access to logging functionality.
 }
 
 // NewTesting -
-func NewTesting(l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], cfg config.Config, config DataConfig) (t *Testing, err error) {
+func NewTesting(l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], cfg config.Config, dcfg DataConfig) (t *Testing, err error) {
 
-	t = &Testing{
-		Testing: harness.Testing{
-			Log:       l,
-			Store:     s,
-			JobClient: j,
-		},
-		Config: cfg,
+	h, err := harness.NewTesting(l, s, j)
+	if err != nil {
+		return nil, err
 	}
 
-	// Require service config, logger and store
-	if t.Log == nil || t.Store == nil {
-		return nil, fmt.Errorf("missing logger >%v< or storer >%v<, cannot create new test harness", t.Log, t.Store)
+	t = &Testing{
+		Testing: h,
+		Config:  cfg,
 	}
 
 	// domainer
@@ -49,7 +41,7 @@ func NewTesting(l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], cfg c
 	t.CreateDataFunc = t.CreateData
 	t.RemoveDataFunc = t.RemoveData
 
-	t.DataConfig = config
+	t.DataConfig = dcfg
 	t.Data = Data{}
 	t.teardownData = Data{}
 
@@ -93,6 +85,8 @@ func (t *Testing) CreateData() error {
 	}
 
 	for _, gameConfig := range t.DataConfig.GameConfigs {
+
+		// Create game record
 		gameRec, err := t.createGameRec(gameConfig)
 		if err != nil {
 			l.Warn("failed creating game record >%v<", err)
@@ -120,63 +114,13 @@ func (t *Testing) CreateData() error {
 			l.Debug("created game_administration record for game >%s<", gameRec.ID)
 		}
 
-		// Adventure game specific records
-
-		for _, itemConfig := range gameConfig.AdventureGameItemConfigs {
-			_, err = t.createAdventureGameItemRec(itemConfig, gameRec)
-			if err != nil {
-				l.Warn("failed creating game_item record >%v<", err)
-				return err
-			}
-			l.Debug("created game_item record for game >%s<", gameRec.ID)
+		// Adventure game specific records for this game
+		err = t.createAdventureGameRecords(gameConfig, gameRec)
+		if err != nil {
+			l.Warn("failed creating adventure game records >%v<", err)
+			return err
 		}
-
-		for _, locationConfig := range gameConfig.AdventureGameLocationConfigs {
-			gameLocationRec, err := t.createAdventureGameLocationRec(locationConfig, gameRec)
-			if err != nil {
-				l.Warn("failed creating game location record >%v<", err)
-				return err
-			}
-			l.Debug("created game location record ID >%s< Name >%s<", gameLocationRec.ID, gameLocationRec.Name)
-		}
-
-		for _, creatureConfig := range gameConfig.AdventureGameCreatureConfigs {
-			creatureRec, err := t.createAdventureGameCreatureRec(creatureConfig, gameRec)
-			if err != nil {
-				l.Warn("failed creating game creature record >%v<", err)
-				return err
-			}
-			l.Debug("created game creature record ID >%s< Name >%s<", creatureRec.ID, creatureRec.Name)
-		}
-
-		for _, linkConfig := range gameConfig.AdventureGameLocationLinkConfigs {
-			gameLocationLinkRec, err := t.createAdventureGameLocationLinkRec(linkConfig, gameRec)
-			if err != nil {
-				l.Warn("failed creating location link record >%v<", err)
-				return err
-			}
-			l.Debug("created location link record ID >%s<", gameLocationLinkRec.ID)
-
-			for _, reqConfig := range linkConfig.AdventureGameLocationLinkRequirementConfigs {
-				_, err = t.createAdventureGameLocationLinkRequirementRec(reqConfig, gameLocationLinkRec)
-				if err != nil {
-					l.Warn("failed creating game_location_link_requirement record >%v<", err)
-					return err
-				}
-				l.Debug("created game_location_link_requirement record for game >%s<", gameRec.ID)
-			}
-		}
-
-		for _, charConfig := range gameConfig.AdventureGameCharacterConfigs {
-			_, err = t.createAdventureGameCharacterRec(charConfig, gameRec)
-			if err != nil {
-				l.Warn("failed creating game_character record >%v<", err)
-				return err
-			}
-			l.Debug("created game_character record for game >%s<", gameRec.ID)
-		}
-
-		// Instance records
+		l.Debug("created adventure game records for game >%s<", gameRec.ID)
 
 		// Create game instance records for this game
 		for _, gameInstanceConfig := range gameConfig.GameInstanceConfigs {
@@ -197,45 +141,13 @@ func (t *Testing) CreateData() error {
 				l.Debug("created game_instance_parameter record ID >%s<", instanceParameterRec.ID)
 			}
 
-			// Create game location instance records for this game instance
-			for _, locationInstanceConfig := range gameInstanceConfig.AdventureGameLocationInstanceConfigs {
-				locationInstanceRec, err := t.createAdventureGameLocationInstanceRec(locationInstanceConfig, gameInstanceRec)
-				if err != nil {
-					l.Warn("failed creating adventure game location instance record >%v<", err)
-					return err
-				}
-				l.Debug("created adventure game location instance record ID >%s<", locationInstanceRec.ID)
+			// Adventure game specific instance records
+			err = t.createAdventureGameInstanceRecords(gameInstanceConfig, gameInstanceRec)
+			if err != nil {
+				l.Warn("failed creating adventure game instance records >%v<", err)
+				return err
 			}
-
-			// Create game creature instance records for this game instance
-			for _, creatureInstanceConfig := range gameInstanceConfig.AdventureGameCreatureInstanceConfigs {
-				creatureInstanceRec, err := t.createAdventureGameCreatureInstanceRec(creatureInstanceConfig, gameInstanceRec)
-				if err != nil {
-					l.Warn("failed creating adventure game creature instance record >%v<", err)
-					return err
-				}
-				l.Debug("created adventure game creature instance record ID >%s<", creatureInstanceRec.ID)
-			}
-
-			// Create game character instance records for this game instance
-			for _, characterInstanceConfig := range gameInstanceConfig.AdventureGameCharacterInstanceConfigs {
-				characterInstanceRec, err := t.createAdventureGameCharacterInstanceRec(characterInstanceConfig, gameInstanceRec)
-				if err != nil {
-					l.Warn("failed creating adventure game character instance record >%v<", err)
-					return err
-				}
-				l.Debug("created adventure game character instance record ID >%s<", characterInstanceRec.ID)
-			}
-
-			// Create game item instance records for this game instance
-			for _, itemInstanceConfig := range gameInstanceConfig.AdventureGameItemInstanceConfigs {
-				itemInstanceRec, err := t.createAdventureGameItemInstanceRec(itemInstanceConfig, gameInstanceRec)
-				if err != nil {
-					l.Warn("failed creating adventure game item instance record >%v<", err)
-					return err
-				}
-				l.Debug("created adventure game item instance record ID >%s<", itemInstanceRec.ID)
-			}
+			l.Debug("created adventure game instance records for game instance >%s<", gameInstanceRec.ID)
 
 			// Create game turn sheet records for this game instance
 			for _, turnSheetConfig := range gameInstanceConfig.GameTurnSheetConfigs {
@@ -247,7 +159,6 @@ func (t *Testing) CreateData() error {
 				l.Debug("created adventure game turn sheet record ID >%s<", turnSheetRec.ID)
 			}
 		}
-
 	}
 
 	l.Debug("created test data")
@@ -261,69 +172,15 @@ func (t *Testing) CreateData() error {
 func (t *Testing) RemoveData() error {
 	l := t.Logger("RemoveData")
 
-	// Remove instance records
-
-	// Remove game creature instances
-	l.Debug("removing >%d< game creature instance records", len(t.teardownData.AdventureGameCreatureInstanceRecs))
-	for _, creatureInstanceRec := range t.teardownData.AdventureGameCreatureInstanceRecs {
-		l.Debug("[teardown] game creature instance ID: >%s<", creatureInstanceRec.ID)
-		if creatureInstanceRec.ID == "" {
-			l.Warn("[teardown] skipping game creature instance with empty ID")
-			continue
-		}
-		err := t.Domain.(*domain.Domain).RemoveAdventureGameCreatureInstanceRec(creatureInstanceRec.ID)
-		if err != nil {
-			l.Warn("failed removing game creature instance record >%v<", err)
-			return err
-		}
+	// Adventure game specific instance records
+	err := t.removeAdventureGameInstanceRecords()
+	if err != nil {
+		l.Warn("failed removing adventure game instance records >%v<", err)
+		return err
 	}
+	l.Debug("removed adventure game instance records")
 
-	// Remove game character instances
-	l.Debug("removing >%d< game character instance records", len(t.teardownData.AdventureGameCharacterInstanceRecs))
-	for _, characterInstanceRec := range t.teardownData.AdventureGameCharacterInstanceRecs {
-		l.Debug("[teardown] game character instance ID: >%s<", characterInstanceRec.ID)
-		if characterInstanceRec.ID == "" {
-			l.Warn("[teardown] skipping game character instance with empty ID")
-			continue
-		}
-		err := t.Domain.(*domain.Domain).RemoveAdventureGameCharacterInstanceRec(characterInstanceRec.ID)
-		if err != nil {
-			l.Warn("failed removing game character instance record >%v<", err)
-			return err
-		}
-	}
-
-	// Remove game item instances
-	l.Debug("removing >%d< game item instance records", len(t.teardownData.AdventureGameItemInstanceRecs))
-	for _, itemInstanceRec := range t.teardownData.AdventureGameItemInstanceRecs {
-		l.Debug("[teardown] game item instance ID: >%s<", itemInstanceRec.ID)
-		if itemInstanceRec.ID == "" {
-			l.Warn("[teardown] skipping game item instance with empty ID")
-			continue
-		}
-		err := t.Domain.(*domain.Domain).RemoveAdventureGameItemInstanceRec(itemInstanceRec.ID)
-		if err != nil {
-			l.Warn("failed removing game item instance record >%v<", err)
-			return err
-		}
-	}
-
-	// Remove game location instances before game instances to avoid FK errors
-	l.Debug("removing >%d< game location instance records", len(t.teardownData.AdventureGameLocationInstanceRecs))
-	for _, locationInstanceRec := range t.teardownData.AdventureGameLocationInstanceRecs {
-		l.Debug("[teardown] game location instance ID: >%s<", locationInstanceRec.ID)
-		if locationInstanceRec.ID == "" {
-			l.Warn("[teardown] skipping game location instance with empty ID")
-			continue
-		}
-		err := t.Domain.(*domain.Domain).RemoveAdventureGameLocationInstanceRec(locationInstanceRec.ID)
-		if err != nil {
-			l.Warn("failed removing game location instance record >%v<", err)
-			return err
-		}
-	}
-
-	// Remove game instance parameter records before game instances to avoid FK errors
+	// Remove game instance parameter records
 	l.Debug("removing >%d< game instance parameter records", len(t.teardownData.GameInstanceParameterRecs))
 	for _, parameterRec := range t.teardownData.GameInstanceParameterRecs {
 		l.Debug("[teardown] game instance parameter ID: >%s<", parameterRec.ID)
@@ -338,7 +195,7 @@ func (t *Testing) RemoveData() error {
 		}
 	}
 
-	// Remove game instance records before games to avoid FK errors
+	// Remove game instance records
 	l.Debug("removing >%d< game instance records", len(t.teardownData.GameInstanceRecs))
 	for _, instanceRec := range t.teardownData.GameInstanceRecs {
 		l.Debug("[teardown] game instance ID: >%s<", instanceRec.ID)
@@ -353,98 +210,15 @@ func (t *Testing) RemoveData() error {
 		}
 	}
 
-	// Remove game creature records
-	l.Debug("removing >%d< game creature records", len(t.teardownData.AdventureGameCreatureRecs))
-	for _, creatureRec := range t.teardownData.AdventureGameCreatureRecs {
-		l.Debug("[teardown] game creature ID: >%s<", creatureRec.ID)
-		if creatureRec.ID == "" {
-			l.Warn("[teardown] skipping game creature with empty ID")
-			continue
-		}
-		err := t.Domain.(*domain.Domain).RemoveAdventureGameCreatureRec(creatureRec.ID)
-		if err != nil {
-			l.Warn("failed removing game creature record >%v<", err)
-			return err
-		}
+	// Adventure game specific records
+	err = t.removeAdventureGameRecords()
+	if err != nil {
+		l.Warn("failed removing adventure game records >%v<", err)
+		return err
 	}
+	l.Debug("removed adventure game records")
 
-	// Remove game location link requirements
-	l.Debug("removing >%d< game location link requirement records", len(t.teardownData.AdventureGameLocationLinkRequirementRecs))
-	for _, reqRec := range t.teardownData.AdventureGameLocationLinkRequirementRecs {
-		l.Debug("[teardown] game location link requirement ID: >%s<", reqRec.ID)
-		if reqRec.ID == "" {
-			l.Warn("[teardown] skipping game location link requirement with empty ID")
-			continue
-		}
-		err := t.Domain.(*domain.Domain).RemoveAdventureGameLocationLinkRequirementRec(reqRec.ID)
-		if err != nil {
-			l.Warn("failed removing game location link requirement record >%v<", err)
-			return err
-		}
-	}
-
-	// Remove game location links
-	l.Debug("removing >%d< game location link records", len(t.teardownData.AdventureGameLocationLinkRecs))
-	for _, linkRec := range t.teardownData.AdventureGameLocationLinkRecs {
-		l.Debug("[teardown] game location link ID: >%s<", linkRec.ID)
-		if linkRec.ID == "" {
-			l.Warn("[teardown] skipping game location link with empty ID")
-			continue
-		}
-		err := t.Domain.(*domain.Domain).RemoveAdventureGameLocationLinkRec(linkRec.ID)
-		if err != nil {
-			l.Warn("failed removing game location link record >%v<", err)
-			return err
-		}
-	}
-
-	// Remove game location records before games to avoid FK errors
-	l.Debug("removing >%d< game location records", len(t.teardownData.AdventureGameLocationRecs))
-	for _, gameLocationRec := range t.teardownData.AdventureGameLocationRecs {
-		l.Debug("[teardown] game location ID: >%s<", gameLocationRec.ID)
-		if gameLocationRec.ID == "" {
-			l.Warn("[teardown] skipping game location with empty ID")
-			continue
-		}
-		l.Debug("removing game location record ID >%s<", gameLocationRec.ID)
-		err := t.Domain.(*domain.Domain).RemoveAdventureGameLocationRec(gameLocationRec.ID)
-		if err != nil {
-			l.Warn("failed removing game location record >%v<", err)
-			return err
-		}
-	}
-
-	// Remove game item records before games to avoid FK errors
-	l.Debug("removing >%d< game item records", len(t.teardownData.AdventureGameItemRecs))
-	for _, itemRec := range t.teardownData.AdventureGameItemRecs {
-		l.Debug("[teardown] game item ID: >%s<", itemRec.ID)
-		if itemRec.ID == "" {
-			l.Warn("[teardown] skipping game item with empty ID")
-			continue
-		}
-		err := t.Domain.(*domain.Domain).RemoveAdventureGameItemRec(itemRec.ID)
-		if err != nil {
-			l.Warn("failed removing game item record >%v<", err)
-			return err
-		}
-	}
-
-	// Remove game character records before games to avoid FK errors
-	l.Debug("removing >%d< game character records", len(t.teardownData.AdventureGameCharacterRecs))
-	for _, charRec := range t.teardownData.AdventureGameCharacterRecs {
-		l.Debug("[teardown] game character ID: >%s<", charRec.ID)
-		if charRec.ID == "" {
-			l.Warn("[teardown] skipping game character with empty ID")
-			continue
-		}
-		err := t.Domain.(*domain.Domain).RemoveAdventureGameCharacterRec(charRec.ID)
-		if err != nil {
-			l.Warn("failed removing game character record >%v<", err)
-			return err
-		}
-	}
-
-	// Remove game subscription records before games to avoid FK errors
+	// Remove game subscription records
 	l.Debug("removing >%d< game subscription records", len(t.teardownData.GameSubscriptionRecs))
 	for _, subscriptionRec := range t.teardownData.GameSubscriptionRecs {
 		l.Debug("[teardown] game subscription ID: >%s<", subscriptionRec.ID)
@@ -505,11 +279,8 @@ func (t *Testing) RemoveData() error {
 			return err
 		}
 	}
-	return nil
-}
 
-// Logger - Returns a logger with package context and provided function context.
-// This is the preferred way to access logging functionality.
-func (t *Testing) Logger(functionName string) logger.Logger {
-	return t.Log.WithPackageContext("harness").WithFunctionContext(functionName)
+	l.Debug("removed test data")
+
+	return nil
 }

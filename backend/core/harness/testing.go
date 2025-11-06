@@ -46,10 +46,18 @@ type Testing struct {
 }
 
 // NewTesting -
-func NewTesting() (t *Testing, err error) {
+func NewTesting(l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx]) (t *Testing, err error) {
 
-	t = &Testing{}
+	// Require logger and store
+	if l == nil || s == nil {
+		return nil, fmt.Errorf("missing logger >%v< or storer >%v<, cannot create new test harness", l, s)
+	}
 
+	t = &Testing{
+		Log:       l,
+		Store:     s,
+		JobClient: j,
+	}
 	return t, nil
 }
 
@@ -87,7 +95,7 @@ func (t *Testing) Init() (err error) {
 		}
 	}
 
-	t.Log.Debug("domainer ready")
+	t.Log.Debug("test harness ready")
 
 	return nil
 }
@@ -267,4 +275,10 @@ func (t *Testing) UpdateRecordCreatedAt(tx pgx.Tx, tableName, recordID string, c
 	)
 
 	return nil
+}
+
+// Logger - Returns a logger with package context and provided function context.
+// This is the preferred way to access logging functionality.
+func (t *Testing) Logger(functionName string) logger.Logger {
+	return t.Log.WithPackageContext("harness").WithFunctionContext(functionName)
 }
