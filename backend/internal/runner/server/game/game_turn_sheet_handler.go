@@ -146,7 +146,7 @@ func uploadTurnSheetHandler(w http.ResponseWriter, r *http.Request, pp httproute
 
 	// Step 6: Process the turn sheet using the appropriate processor
 	// Pass sheetData as bytes directly (it's already JSON-encoded in the database)
-	scannedData, err := processor.ScanTurnSheet(r.Context(), l, imageData, turnSheetRec.SheetData)
+	scannedData, err := processor.ScanTurnSheet(r.Context(), l, turnSheetRec.SheetData, imageData)
 	if err != nil {
 		l.Warn("failed to process turn sheet >%v<", err)
 		return coreerror.NewInvalidDataError("failed to process turn sheet: %v", err)

@@ -80,13 +80,13 @@ func (p *LocationChoiceProcessor) GenerateTurnSheet(ctx context.Context, l logge
 	p.Generator.SetTemplatePath(p.TemplatePath)
 
 	// Generate PDF using the location choice template
-	templatePath := "turn_sheet/adventure_game.location_choice.template"
+	templatePath := "turn_sheet/adventure_game_location_choice.template"
 
 	return p.Generator.GeneratePDF(ctx, templatePath, &locationChoiceData)
 }
 
 // ScanTurnSheet scans a location choice turn sheet and extracts player choices
-func (p *LocationChoiceProcessor) ScanTurnSheet(ctx context.Context, l logger.Logger, imageData []byte, sheetData []byte) ([]byte, error) {
+func (p *LocationChoiceProcessor) ScanTurnSheet(ctx context.Context, l logger.Logger, sheetData []byte, imageData []byte) ([]byte, error) {
 	l = l.WithFunctionContext("LocationChoiceProcessor/ScanTurnSheet")
 
 	l.Info("scanning location choice turn sheet")

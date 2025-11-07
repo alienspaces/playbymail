@@ -15,7 +15,7 @@ type DocumentScanner interface {
 	// ScanTurnSheet scans a turn sheet image and extracts player choices/directions
 	// sheetData: JSON-encoded sheet data from the database
 	// Returns: JSON-encoded scan results to store in the database
-	ScanTurnSheet(ctx context.Context, l logger.Logger, imageData []byte, sheetData []byte) ([]byte, error)
+	ScanTurnSheet(ctx context.Context, l logger.Logger, sheetData []byte, imageData []byte) ([]byte, error)
 }
 
 // DocumentGenerator defines the interface for generating turn sheet documents
