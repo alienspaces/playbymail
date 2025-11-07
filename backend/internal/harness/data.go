@@ -28,6 +28,7 @@ type Data struct {
 	AdventureGameItemInstanceRecs            []*adventure_game_record.AdventureGameItemInstance
 	AdventureGameCreatureInstanceRecs        []*adventure_game_record.AdventureGameCreatureInstance
 	AdventureGameCharacterInstanceRecs       []*adventure_game_record.AdventureGameCharacterInstance
+	AdventureGameTurnSheetRecs               []*adventure_game_record.AdventureGameTurnSheet
 	// Data references
 	Refs DataRefs
 }
@@ -279,9 +280,11 @@ func (d *Data) GetGameTurnSheetRecByRef(ref string) (*game_record.GameTurnSheet,
 	return d.GetGameTurnSheetRecByID(id)
 }
 
+// ------------------------------------------------------------
 // Adventure game specific resources
+// ------------------------------------------------------------
 
-// GameLocation
+// AdventureGameLocation
 func (d *Data) AddAdventureGameLocationRec(rec *adventure_game_record.AdventureGameLocation) {
 	for idx := range d.AdventureGameLocationRecs {
 		if d.AdventureGameLocationRecs[idx].ID == rec.ID {
@@ -314,7 +317,7 @@ func (d *Data) GetAdventureGameLocationRecByRef(ref string) (*adventure_game_rec
 	return nil, fmt.Errorf("no adventure game location with id >%s< for ref >%s<", id, ref)
 }
 
-// GameLocationLink
+// AdventureGameLocationLink
 func (d *Data) AddAdventureGameLocationLinkRec(rec *adventure_game_record.AdventureGameLocationLink) {
 	for idx := range d.AdventureGameLocationLinkRecs {
 		if d.AdventureGameLocationLinkRecs[idx].ID == rec.ID {
@@ -615,4 +618,15 @@ func (d *Data) GetAdventureGameCharacterInstanceRecByRef(ref string) (*adventure
 		return nil, fmt.Errorf("failed getting adventure game character instance with ref >%s<", ref)
 	}
 	return d.GetAdventureGameCharacterInstanceRecByID(id)
+}
+
+// AdventureGameTurnSheet
+func (d *Data) AddAdventureGameTurnSheetRec(rec *adventure_game_record.AdventureGameTurnSheet) {
+	for idx := range d.AdventureGameTurnSheetRecs {
+		if d.AdventureGameTurnSheetRecs[idx].ID == rec.ID {
+			d.AdventureGameTurnSheetRecs[idx] = rec
+			return
+		}
+	}
+	d.AdventureGameTurnSheetRecs = append(d.AdventureGameTurnSheetRecs, rec)
 }

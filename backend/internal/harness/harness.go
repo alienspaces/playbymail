@@ -114,7 +114,10 @@ func (t *Testing) CreateData() error {
 			l.Debug("created game_administration record for game >%s<", gameRec.ID)
 		}
 
+		// ------------------------------------------------------------
 		// Adventure game specific records for this game
+		// ------------------------------------------------------------
+
 		err = t.createAdventureGameRecords(gameConfig, gameRec)
 		if err != nil {
 			l.Warn("failed creating adventure game records >%v<", err)
@@ -141,23 +144,16 @@ func (t *Testing) CreateData() error {
 				l.Debug("created game_instance_parameter record ID >%s<", instanceParameterRec.ID)
 			}
 
+			// ------------------------------------------------------------
 			// Adventure game specific instance records
+			// ------------------------------------------------------------
+
 			err = t.createAdventureGameInstanceRecords(gameInstanceConfig, gameInstanceRec)
 			if err != nil {
 				l.Warn("failed creating adventure game instance records >%v<", err)
 				return err
 			}
 			l.Debug("created adventure game instance records for game instance >%s<", gameInstanceRec.ID)
-
-			// Create game turn sheet records for this game instance
-			for _, turnSheetConfig := range gameInstanceConfig.GameTurnSheetConfigs {
-				turnSheetRec, err := t.createGameTurnSheetRec(turnSheetConfig, gameInstanceRec)
-				if err != nil {
-					l.Warn("failed creating adventure game turn sheet record >%v<", err)
-					return err
-				}
-				l.Debug("created adventure game turn sheet record ID >%s<", turnSheetRec.ID)
-			}
 		}
 	}
 
@@ -172,7 +168,10 @@ func (t *Testing) CreateData() error {
 func (t *Testing) RemoveData() error {
 	l := t.Logger("RemoveData")
 
+	// ------------------------------------------------------------
 	// Adventure game specific instance records
+	// ------------------------------------------------------------
+
 	err := t.removeAdventureGameInstanceRecords()
 	if err != nil {
 		l.Warn("failed removing adventure game instance records >%v<", err)
@@ -210,7 +209,10 @@ func (t *Testing) RemoveData() error {
 		}
 	}
 
+	// ------------------------------------------------------------
 	// Adventure game specific records
+	// ------------------------------------------------------------
+
 	err = t.removeAdventureGameRecords()
 	if err != nil {
 		l.Warn("failed removing adventure game records >%v<", err)

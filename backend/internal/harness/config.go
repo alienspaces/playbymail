@@ -95,20 +95,7 @@ type GameInstanceConfig struct {
 	AdventureGameItemInstanceConfigs      []AdventureGameItemInstanceConfig
 	AdventureGameCreatureInstanceConfigs  []AdventureGameCreatureInstanceConfig
 	AdventureGameCharacterInstanceConfigs []AdventureGameCharacterInstanceConfig
-	GameTurnSheetConfigs                  []GameTurnSheetConfig
-}
-
-type GameTurnSheetConfig struct {
-	Reference                string // Reference to the game_turn_sheet record
-	GameCharacterInstanceRef string // Reference to the game_character_instance (required)
-	TurnNumber               int    // Turn number for this turn sheet
-	SheetType                string // Type of turn sheet (e.g., "location_choice", "join_game")
-	SheetOrder               int    // Order of this sheet in the turn
-	SheetData                string // JSON data for the turn sheet
-	ScannedData              string // JSON data for the scanned response (optional)
-	ProcessingStatus         string // Processing status (e.g., "pending", "processing", "completed")
-	IsCompleted              bool   // Whether the turn sheet has been completed
-	Record                   *game_record.GameTurnSheet
+	AdventureGameTurnSheetConfigs         []AdventureGameTurnSheetConfig
 }
 
 type GameSubscriptionConfig struct {
@@ -125,7 +112,22 @@ type GameAdministrationConfig struct {
 	Record              *game_record.GameAdministration
 }
 
+type GameTurnSheetConfig struct {
+	Reference        string // Reference to the game_turn_sheet record
+	AccountRef       string // Reference to the account
+	TurnNumber       int    // Turn number for this turn sheet
+	SheetType        string // Type of turn sheet (e.g., "location_choice", "join_game")
+	SheetOrder       int    // Order of this sheet in the turn
+	SheetData        string // JSON data for the turn sheet
+	ScannedData      string // JSON data for the scanned response (optional)
+	ProcessingStatus string // Processing status (e.g., "pending", "processing", "completed")
+	IsCompleted      bool   // Whether the turn sheet has been completed
+	Record           *game_record.GameTurnSheet
+}
+
+// ------------------------------------------------------------
 // Adventure game specific configuration
+// ------------------------------------------------------------
 
 type AdventureGameCharacterConfig struct {
 	Reference  string // Reference to the game_character record
@@ -192,6 +194,12 @@ type AdventureGameItemInstanceConfig struct {
 	// Must be assigned to a location, a character, or a creature
 
 	Record *adventure_game_record.AdventureGameItemInstance
+}
+
+type AdventureGameTurnSheetConfig struct {
+	GameTurnSheetConfig      GameTurnSheetConfig
+	GameCharacterInstanceRef string // Reference to the game_character_instance (required)
+	Record                   *adventure_game_record.AdventureGameTurnSheet
 }
 
 // TODO: Possibly rename the following to AdventureGameDataConfig when additional game types are added
