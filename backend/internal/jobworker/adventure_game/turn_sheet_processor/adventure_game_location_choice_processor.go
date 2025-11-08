@@ -192,10 +192,13 @@ func (p *AdventureGameLocationChoiceProcessor) CreateNextTurnSheet(ctx context.C
 	// Step 8: Create sheet data with REAL game data
 	sheetData := turn_sheet.LocationChoiceData{
 		TurnSheetTemplateData: turn_sheet.TurnSheetTemplateData{
-			GameName:    convert.Ptr(gameRec.Name),
-			GameType:    convert.Ptr("adventure"),
-			TurnNumber:  convert.Ptr(gameInstanceRec.CurrentTurn + 1),
-			AccountName: convert.Ptr(accountRec.Email),
+			GameName:              convert.Ptr(gameRec.Name),
+			GameType:              convert.Ptr("adventure"),
+			TurnNumber:            convert.Ptr(gameInstanceRec.CurrentTurn + 1),
+			AccountName:           convert.Ptr(accountRec.Email),
+			TurnSheetTitle:        convert.Ptr(locationRec.Name),
+			TurnSheetDescription:  convert.Ptr(locationRec.Description),
+			TurnSheetInstructions: convert.Ptr(turn_sheet.DefaultLocationChoiceInstructions()),
 		},
 		LocationName:        locationRec.Name,
 		LocationDescription: locationRec.Description,

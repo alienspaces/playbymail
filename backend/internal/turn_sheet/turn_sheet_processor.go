@@ -23,7 +23,7 @@ type DocumentGenerator interface {
 	// GenerateTurnSheet generates a turn sheet document with the provided data
 	// sheetData: JSON-encoded sheet data from the database
 	// Returns: PDF bytes for the generated turn sheet
-	GenerateTurnSheet(ctx context.Context, l logger.Logger, sheetData []byte) ([]byte, error)
+	GenerateTurnSheet(ctx context.Context, l logger.Logger, format DocumentFormat, sheetData []byte) ([]byte, error)
 }
 
 // DocumentProcessor defines the interface for processing turn sheet documents (generation + scanning)

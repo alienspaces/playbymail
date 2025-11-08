@@ -41,6 +41,28 @@ func NewBaseProcessor(l logger.Logger, cfg config.Config) *BaseProcessor {
 	}
 }
 
+// GenerateDocument renders a template in the requested document format.
+func (bp *BaseProcessor) GenerateDocument(ctx context.Context, format DocumentFormat, templatePath string, data any) ([]byte, error) {
+	l := bp.Log.WithFunctionContext("BaseProcessor/GenerateDocument")
+
+	bp.Generator.SetTemplatePath(bp.TemplatePath)
+
+	switch format {
+	case DocumentFormatPDF, "":
+		l.Info("generating PDF document template=%s", templatePath)
+		return bp.Generator.GeneratePDF(ctx, templatePath, data)
+	case DocumentFormatHTML:
+		l.Info("generating HTML document template=%s", templatePath)
+		html, err := bp.Generator.GenerateHTML(ctx, templatePath, data)
+		if err != nil {
+			return nil, err
+		}
+		return []byte(html), nil
+	default:
+		return nil, fmt.Errorf("unsupported document format: %s", format)
+	}
+}
+
 // ExtractTurnSheetCode extracts the turn sheet code from OCR text
 // This is common across all turn sheet types
 func (bp *BaseProcessor) ExtractTurnSheetCode(text string) (string, error) {

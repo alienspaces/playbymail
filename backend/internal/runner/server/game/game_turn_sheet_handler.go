@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"time"
@@ -224,13 +225,17 @@ func handleJoinTurnSheetUpload(ctx context.Context, l logger.Logger, m *domain.D
 
 	joinData := turn_sheet.JoinGameData{
 		TurnSheetTemplateData: turn_sheet.TurnSheetTemplateData{
-			GameName:          convert.Ptr(gameRec.Name),
-			GameType:          convert.Ptr(gameRec.GameType),
-			TurnSheetCode:     convert.Ptr(turnSheetCode),
-			TurnNumber:        convert.Ptr(0),
-			AccountName:       nil,
-			TurnSheetDeadline: nil,
+			GameName:              convert.Ptr(gameRec.Name),
+			GameType:              convert.Ptr(gameRec.GameType),
+			TurnNumber:            convert.Ptr(0),
+			AccountName:           nil,
+			TurnSheetTitle:        convert.Ptr("Join Game"),
+			TurnSheetDescription:  convert.Ptr(fmt.Sprintf("Welcome to %s! Welcome to the PlayByMail Adventure!", gameRec.Name)),
+			TurnSheetInstructions: convert.Ptr(turn_sheet.DefaultJoinGameInstructions()),
+			TurnSheetDeadline:     nil,
+			TurnSheetCode:         convert.Ptr(turnSheetCode),
 		},
+		GameDescription: fmt.Sprintf("Welcome to %s! Welcome to the PlayByMail Adventure!", gameRec.Name),
 	}
 
 	sheetDataBytes, err := json.Marshal(joinData)

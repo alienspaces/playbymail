@@ -17,6 +17,13 @@ type JoinGameData struct {
 	GameDescription string `json:"game_description,omitempty"`
 }
 
+const defaultJoinGameInstructions = "Fill out your account information and character name, then return this form to join the game."
+
+// DefaultJoinGameInstructions returns the default instruction text for join game turn sheets.
+func DefaultJoinGameInstructions() string {
+	return defaultJoinGameInstructions
+}
+
 // JoinGameScanData captures the fields extracted from a scanned join game turn sheet
 type JoinGameScanData struct {
 	Email              string `json:"email"`
@@ -63,8 +70,8 @@ func NewJoinGameProcessor(l logger.Logger, cfg config.Config) *JoinGameProcessor
 	}
 }
 
-// GenerateTurnSheet generates a join game turn sheet document (PDF)
-func (p *JoinGameProcessor) GenerateTurnSheet(ctx context.Context, l logger.Logger, sheetData []byte) ([]byte, error) {
+// GenerateTurnSheet generates a join game turn sheet document
+func (p *JoinGameProcessor) GenerateTurnSheet(ctx context.Context, l logger.Logger, format DocumentFormat, sheetData []byte) ([]byte, error) {
 	l = l.WithFunctionContext("JoinGameProcessor/GenerateTurnSheet")
 
 	l.Info("generating join game turn sheet")
@@ -80,9 +87,27 @@ func (p *JoinGameProcessor) GenerateTurnSheet(ctx context.Context, l logger.Logg
 		return nil, fmt.Errorf("template data validation failed: %w", err)
 	}
 
-	p.Generator.SetTemplatePath(p.TemplatePath)
+	if data.TurnSheetInstructions == nil || strings.TrimSpace(*data.TurnSheetInstructions) == "" {
+		instruction := defaultJoinGameInstructions
+		data.TurnSheetInstructions = &instruction
+	}
 
-	return p.Generator.GeneratePDF(ctx, "turn_sheet/adventure_game_join_game.template", &data)
+	if data.TurnSheetTitle == nil || strings.TrimSpace(*data.TurnSheetTitle) == "" {
+		title := "Join Game"
+		data.TurnSheetTitle = &title
+	}
+
+	if data.TurnSheetDescription == nil || strings.TrimSpace(*data.TurnSheetDescription) == "" {
+		if data.GameDescription != "" {
+			desc := data.GameDescription
+			data.TurnSheetDescription = &desc
+		} else if data.GameName != nil && strings.TrimSpace(*data.GameName) != "" {
+			desc := fmt.Sprintf("Welcome to %s! Welcome to the PlayByMail Adventure!", *data.GameName)
+			data.TurnSheetDescription = &desc
+		}
+	}
+
+	return p.GenerateDocument(ctx, format, "turn_sheet/adventure_game_join_game.template", &data)
 }
 
 // ScanTurnSheet extracts join game player information from the uploaded document

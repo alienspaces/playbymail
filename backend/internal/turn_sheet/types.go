@@ -1,7 +1,12 @@
 package turn_sheet
 
-import (
-	"time"
+import "time"
+
+type DocumentFormat string
+
+const (
+	DocumentFormatPDF  DocumentFormat = "pdf"
+	DocumentFormatHTML DocumentFormat = "html"
 )
 
 // Turn sheet types
@@ -16,6 +21,9 @@ type TurnSheetTemplateData struct {
 	// Game data
 	GameName *string `json:"game_name"`
 	GameType *string `json:"game_type"`
+	// Display data
+	TurnSheetTitle       *string `json:"turn_sheet_title"`
+	TurnSheetDescription *string `json:"turn_sheet_description"`
 
 	// Game instance data
 	TurnNumber *int `json:"turn_number"`
@@ -29,6 +37,7 @@ type TurnSheetTemplateData struct {
 	BackgroundBottom *string `json:"background_bottom"`
 
 	// Turn sheet
-	TurnSheetDeadline *time.Time `json:"turn_sheet_deadline"`
-	TurnSheetCode     *string    `json:"turn_sheet_code"`
+	TurnSheetInstructions *string    `json:"turn_sheet_instructions"`
+	TurnSheetDeadline     *time.Time `json:"turn_sheet_deadline"`
+	TurnSheetCode         *string    `json:"turn_sheet_code"`
 }

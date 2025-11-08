@@ -1,11 +1,15 @@
+
+
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{if .GameName}}{{.GameName}}{{else}}Turn Sheet{{end}} - Turn {{if .TurnNumber}}{{.TurnNumber}}{{else}}0{{end}}</title>
+    <title>The Enchanted Forest Adventure - Turn 0</title>
     <style>
-        /* Base styles for PDF generation */
+         
         body {
             position: relative;
             font-family: 'Times New Roman', serif;
@@ -259,7 +263,7 @@
             margin: 0 0 12px 0;
         }
         
-        /* Form styling */
+         
         .form-group {
             margin-bottom: 15px;
         }
@@ -307,72 +311,167 @@
         }
     </style>
     
-    <!-- Child template styles -->
-    {{block "styles" .}}{{end}}
+    
+    
+<style>
+.turn-sheet .account-details,
+.turn-sheet .character-details {
+    max-width: 520px;
+    margin: 0 auto;
+}
+
+.turn-sheet .form-group {
+    margin-bottom: 10px;
+}
+
+.turn-sheet .form-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.turn-sheet .form-row.two-column {
+    gap: 28px;
+}
+
+.turn-sheet .form-row.two-column .form-group.third {
+    flex: 1 1 calc(50% - 14px);
+    max-width: calc(50% - 14px);
+}
+
+.turn-sheet .form-group.post-code {
+    flex: 1 1 calc(50% - 14px);
+    max-width: calc(50% - 14px);
+}
+
+.turn-sheet .form-group.half {
+    flex: 1 1 48%;
+    min-width: 180px;
+}
+
+.turn-sheet .form-group.third {
+    flex: 1 1 48%;
+    min-width: 180px;
+}
+
+.turn-sheet .section-divider {
+    margin: 14px 0;
+    border-bottom: 1px solid #d1d5db;
+}
+
+</style>
+
 </head>
 <body>
-    <!-- Background image container -->
+    
     <div class="background-container">
-        {{if .BackgroundTop}}
-        <div class="background-top" style="background-image: url('{{.BackgroundTop}}');"></div>
-        {{end}}
         
-        {{if .BackgroundMiddle}}
-        <div class="background-middle" style="background-image: url('{{.BackgroundMiddle}}');"></div>
-        {{end}}
         
-        {{if .BackgroundBottom}}
-        <div class="background-bottom" style="background-image: url('{{.BackgroundBottom}}');"></div>
-        {{end}}
+        
+        
+        
     </div>
 
-    <!-- Main content -->
+    
     <div class="content">
-        <!-- Header section -->
+        
         <div class="header">
-            <h1>{{if .GameName}}{{.GameName}}{{else}}Game{{end}}</h1>
-            <h2>Turn {{if .TurnNumber}}{{.TurnNumber}}{{else}}0{{end}}{{if .AccountName}} - {{.AccountName}}{{end}}</h2>
+            <h1>The Enchanted Forest Adventure</h1>
+            <h2>Turn 0</h2>
         </div>
 
-        {{if or .TurnSheetTitle .TurnSheetDescription}}
+        
         <div class="turn-sheet-heading">
-            {{if .TurnSheetTitle}}<h3>{{.TurnSheetTitle}}</h3>{{end}}
-            {{if .TurnSheetDescription}}<p>{{.TurnSheetDescription}}</p>{{end}}
+            <h3>Join Game</h3>
+            <p>Welcome to the PlayByMail Adventure!</p>
         </div>
-        {{end}}
+        
 
-        <!-- Instructions area -->
-        {{if .TurnSheetInstructions}}
+        
+        
         <div class="instructions-block">
-            <p><strong>Instructions:</strong> {{.TurnSheetInstructions}}</p>
+            <p><strong>Instructions:</strong> Fill out your account information and character name, then return this form to join the game.</p>
         </div>
-        {{end}}
+        
 
-        <!-- Main content area -->
+        
         <div class="main-content">
-            {{template "content" .}}
+            
+<div class="turn-sheet">
+    <div class="account-info-section">
+        <h3 class="section-title">Your PlayByMail Account</h3>
+        <div class="account-details">
+            <div class="form-group">
+                <label class="form-field-title" for="email">Email Address:</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+            <div class="form-group">
+                <label class="form-field-title" for="name">Name:</label>
+                <input type="text" id="name" name="name" required>
+            </div>
+            <div class="form-group">
+                <label class="form-field-title" for="postal_address_line1">Address Line 1:</label>
+                <input type="text" id="postal_address_line1" name="postal_address_line1" required>
+            </div>
+            <div class="form-group">
+                <label class="form-field-title" for="postal_address_line2">Address Line 2:</label>
+                <input type="text" id="postal_address_line2" name="postal_address_line2">
+            </div>
+            <div class="form-row two-column">
+                <div class="form-group third">
+                    <label class="form-field-title" for="state_province">State / Province:</label>
+                    <input type="text" id="state_province" name="state_province" required>
+                </div>
+                <div class="form-group third">
+                    <label class="form-field-title" for="country">Country:</label>
+                    <input type="text" id="country" name="country" required>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group third post-code">
+                    <label class="form-field-title" for="postal_code">Post Code:</label>
+                    <input type="text" id="postal_code" name="postal_code" required>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="character-info-section">
+        <div class="section-divider"></div>
+        <h3 class="section-title">Your Adventure Game Character</h3>
+        <div class="character-details">
+            <div class="form-group">
+                <label class="form-field-title" for="character_name">Character Name:</label>
+                <input type="text" id="character_name" name="character_name" required>
+            </div>
+        </div>
+    </div>
+</div>
+
         </div>
 
-        <!-- Fixed footer at bottom of page -->
-        {{if or .TurnSheetDeadline .TurnSheetCode}}
+        
+        
         <div class="turn-sheet-footer">
-            <!-- Turn Sheet Deadline -->
-            {{if .TurnSheetDeadline}}
+            
+            
             <div class="turn-sheet-footer-item">
                 <div class="turn-sheet-footer-label">Turn Sheet Deadline:</div>
-                <div class="turn-sheet-footer-value">{{.TurnSheetDeadline}}</div>
+                <div class="turn-sheet-footer-value">2025-11-10 23:14:44.247738564 &#43;0000 UTC</div>
             </div>
-            {{end}}
+            
 
-            <!-- Turn Sheet Identification Code -->
-            {{if .TurnSheetCode}}
+            
+            
             <div class="turn-sheet-footer-item">
                 <div class="turn-sheet-footer-label">Turn Sheet Code:</div>
-                <div class="turn-sheet-footer-value">{{.TurnSheetCode}}</div>
+                <div class="turn-sheet-footer-value">JOIN123</div>
             </div>
-            {{end}}
+            
         </div>
-        {{end}}
+        
     </div>
 </body>
 </html>
+
+

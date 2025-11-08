@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{if .GameName}}{{.GameName}}{{else}}Turn Sheet{{end}} - Turn {{if .TurnNumber}}{{.TurnNumber}}{{else}}0{{end}}</title>
+    <title>The Enchanted Forest Adventure - Turn 1</title>
     <style>
-        /* Base styles for PDF generation */
+         
         body {
             position: relative;
             font-family: 'Times New Roman', serif;
@@ -259,7 +259,7 @@
             margin: 0 0 12px 0;
         }
         
-        /* Form styling */
+         
         .form-group {
             margin-bottom: 15px;
         }
@@ -307,72 +307,158 @@
         }
     </style>
     
-    <!-- Child template styles -->
-    {{block "styles" .}}{{end}}
+    
+    
+<style>
+     
+    .location-choice-section {
+        margin-bottom: 20px;
+    }
+    
+    .location-options {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        max-width: 520px;
+        margin: 0 auto;
+    }
+    
+    .location-option {
+        position: relative;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        padding: 12px 16px 12px 46px;
+        background-color: #ffffff;
+        display: block;
+    }
+    
+    .location-option input[type="radio"] {
+        position: absolute;
+        top: 50%;
+        left: 18px;
+        transform: translateY(-50%);
+        margin: 0;
+        cursor: pointer;
+    }
+    
+    .location-option .location-option-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+</style>
+
 </head>
 <body>
-    <!-- Background image container -->
+    
     <div class="background-container">
-        {{if .BackgroundTop}}
-        <div class="background-top" style="background-image: url('{{.BackgroundTop}}');"></div>
-        {{end}}
         
-        {{if .BackgroundMiddle}}
-        <div class="background-middle" style="background-image: url('{{.BackgroundMiddle}}');"></div>
-        {{end}}
         
-        {{if .BackgroundBottom}}
-        <div class="background-bottom" style="background-image: url('{{.BackgroundBottom}}');"></div>
-        {{end}}
+        
+        
+        
     </div>
 
-    <!-- Main content -->
+    
     <div class="content">
-        <!-- Header section -->
+        
         <div class="header">
-            <h1>{{if .GameName}}{{.GameName}}{{else}}Game{{end}}</h1>
-            <h2>Turn {{if .TurnNumber}}{{.TurnNumber}}{{else}}0{{end}}{{if .AccountName}} - {{.AccountName}}{{end}}</h2>
+            <h1>The Enchanted Forest Adventure</h1>
+            <h2>Turn 1 - Test Player</h2>
         </div>
 
-        {{if or .TurnSheetTitle .TurnSheetDescription}}
+        
         <div class="turn-sheet-heading">
-            {{if .TurnSheetTitle}}<h3>{{.TurnSheetTitle}}</h3>{{end}}
-            {{if .TurnSheetDescription}}<p>{{.TurnSheetDescription}}</p>{{end}}
+            <h3>Mystic Grove</h3>
+            <p>You stand at the edge of an ancient forest. The trees whisper secrets of old magic.</p>
         </div>
-        {{end}}
+        
 
-        <!-- Instructions area -->
-        {{if .TurnSheetInstructions}}
+        
+        
         <div class="instructions-block">
-            <p><strong>Instructions:</strong> {{.TurnSheetInstructions}}</p>
+            <p><strong>Instructions:</strong> Select your next location and return this form by the deadline to continue your adventure.</p>
         </div>
-        {{end}}
+        
 
-        <!-- Main content area -->
+        
         <div class="main-content">
-            {{template "content" .}}
+            
+<div class="turn-sheet">
+    <div class="location-choice-section">
+        <h3 class="content-section-title">Choose Your Next Location</h3>
+        <p class="content-section-subtitle">Select where you would like to go next from the available paths:</p>
+        
+        
+        <div class="location-options">
+            
+            <label class="location-option">
+                <input type="radio" name="location_choice" value="crystal_caverns">
+                <div class="location-option-content">
+                    <span class="form-field-title">Crystal Caverns</span>
+                    <span class="form-field-description">Enter the glowing caverns where crystals hum with power</span>
+                </div>
+            </label>
+            
+            <label class="location-option">
+                <input type="radio" name="location_choice" value="dark_tower">
+                <div class="location-option-content">
+                    <span class="form-field-title">Dark Tower</span>
+                    <span class="form-field-description">Climb the mysterious tower that pierces the sky</span>
+                </div>
+            </label>
+            
+            <label class="location-option">
+                <input type="radio" name="location_choice" value="sunset_plains">
+                <div class="location-option-content">
+                    <span class="form-field-title">Sunset Plains</span>
+                    <span class="form-field-description">Venture into the vast plains where the sun sets eternally</span>
+                </div>
+            </label>
+            
+            <label class="location-option">
+                <input type="radio" name="location_choice" value="mermaid_lagoon">
+                <div class="location-option-content">
+                    <span class="form-field-title">Mermaid Lagoon</span>
+                    <span class="form-field-description">Dive into the hidden lagoon where mermaids sing</span>
+                </div>
+            </label>
+            
+        </div>
+        
+    </div>
+
+</div>
+
         </div>
 
-        <!-- Fixed footer at bottom of page -->
-        {{if or .TurnSheetDeadline .TurnSheetCode}}
+        
+        
         <div class="turn-sheet-footer">
-            <!-- Turn Sheet Deadline -->
-            {{if .TurnSheetDeadline}}
+            
+            
             <div class="turn-sheet-footer-item">
                 <div class="turn-sheet-footer-label">Turn Sheet Deadline:</div>
-                <div class="turn-sheet-footer-value">{{.TurnSheetDeadline}}</div>
+                <div class="turn-sheet-footer-value">2025-11-09 23:14:52.115112129 &#43;0000 UTC</div>
             </div>
-            {{end}}
+            
 
-            <!-- Turn Sheet Identification Code -->
-            {{if .TurnSheetCode}}
+            
+            
             <div class="turn-sheet-footer-item">
                 <div class="turn-sheet-footer-label">Turn Sheet Code:</div>
-                <div class="turn-sheet-footer-value">{{.TurnSheetCode}}</div>
+                <div class="turn-sheet-footer-value">ABC123XYZ</div>
             </div>
-            {{end}}
+            
         </div>
-        {{end}}
+        
     </div>
 </body>
 </html>
+
+
+
+
+
+

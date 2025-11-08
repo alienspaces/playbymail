@@ -12,7 +12,7 @@ type Config struct {
 	EmailerFaked bool `env:"EMAILER_FAKED" envDefault:"false"`
 
 	// Save test PDFs
-	SaveTestPDFs bool `env:"SAVE_TEST_PDFS" envDefault:"true"`
+	SaveTestFiles bool `env:"SAVE_TEST_FILES" envDefault:"true"`
 }
 
 // Parse parses environment variables into the provided struct using env.Parse.

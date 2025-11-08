@@ -34,6 +34,13 @@ type LocationChoiceScanData struct {
 	Choices []string `json:"choices"`
 }
 
+const defaultLocationChoiceInstructions = "Select your next location and return this form by the deadline to continue your adventure."
+
+// DefaultLocationChoiceInstructions returns the default instruction text for location choice turn sheets.
+func DefaultLocationChoiceInstructions() string {
+	return defaultLocationChoiceInstructions
+}
+
 // LocationChoiceProcessor implements the DocumentProcessor interface for location choice turn sheets
 type LocationChoiceProcessor struct {
 	*BaseProcessor
@@ -46,8 +53,8 @@ func NewLocationChoiceProcessor(l logger.Logger, cfg config.Config) *LocationCho
 	}
 }
 
-// GenerateTurnSheet generates a location choice turn sheet PDF
-func (p *LocationChoiceProcessor) GenerateTurnSheet(ctx context.Context, l logger.Logger, sheetData []byte) ([]byte, error) {
+// GenerateTurnSheet generates a location choice turn sheet document
+func (p *LocationChoiceProcessor) GenerateTurnSheet(ctx context.Context, l logger.Logger, format DocumentFormat, sheetData []byte) ([]byte, error) {
 	l = l.WithFunctionContext("LocationChoiceProcessor/GenerateTurnSheet")
 
 	l.Info("generating location choice turn sheet")
@@ -65,6 +72,25 @@ func (p *LocationChoiceProcessor) GenerateTurnSheet(ctx context.Context, l logge
 		return nil, fmt.Errorf("template data validation failed: %w", err)
 	}
 
+	if locationChoiceData.TurnSheetInstructions == nil || strings.TrimSpace(*locationChoiceData.TurnSheetInstructions) == "" {
+		instruction := defaultLocationChoiceInstructions
+		locationChoiceData.TurnSheetInstructions = &instruction
+	}
+
+	if locationChoiceData.TurnSheetTitle == nil || strings.TrimSpace(*locationChoiceData.TurnSheetTitle) == "" {
+		if locationChoiceData.LocationName != "" {
+			title := locationChoiceData.LocationName
+			locationChoiceData.TurnSheetTitle = &title
+		}
+	}
+
+	if locationChoiceData.TurnSheetDescription == nil || strings.TrimSpace(*locationChoiceData.TurnSheetDescription) == "" {
+		if locationChoiceData.LocationDescription != "" {
+			desc := locationChoiceData.LocationDescription
+			locationChoiceData.TurnSheetDescription = &desc
+		}
+	}
+
 	// Validate location-specific data
 	if locationChoiceData.LocationName == "" {
 		l.Warn("location name is missing")
@@ -76,13 +102,10 @@ func (p *LocationChoiceProcessor) GenerateTurnSheet(ctx context.Context, l logge
 		return nil, fmt.Errorf("at least one location option is required")
 	}
 
-	// Set the template path on the generator
-	p.Generator.SetTemplatePath(p.TemplatePath)
-
-	// Generate PDF using the location choice template
+	// Generate document using the location choice template
 	templatePath := "turn_sheet/adventure_game_location_choice.template"
 
-	return p.Generator.GeneratePDF(ctx, templatePath, &locationChoiceData)
+	return p.GenerateDocument(ctx, format, templatePath, &locationChoiceData)
 }
 
 // ScanTurnSheet scans a location choice turn sheet and extracts player choices
