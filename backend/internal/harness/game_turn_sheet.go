@@ -40,7 +40,7 @@ func (t *Testing) createGameTurnSheetRec(cfg GameTurnSheetConfig, gameInstanceRe
 
 	rec.AccountID = accountRec.ID
 	rec.GameID = gameInstanceRec.GameID
-	rec.GameInstanceID = gameInstanceRec.ID
+	rec.GameInstanceID = sql.NullString{String: gameInstanceRec.ID, Valid: true}
 	rec.TurnNumber = cfg.TurnNumber
 	rec.SheetType = cfg.SheetType
 	rec.SheetOrder = cfg.SheetOrder

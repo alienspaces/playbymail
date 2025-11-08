@@ -295,4 +295,105 @@ func (m *Domain) VerifyAccountSessionToken(token string) (*account_record.Accoun
 	return rec, nil
 }
 
+func (m *Domain) GetAccountRecByEmail(email string) (*account_record.Account, error) {
+	l := m.Logger("GetAccountRecByEmail")
 
+	l.Debug("getting account record by email >%s<", email)
+
+	if email == "" {
+		return nil, coreerror.NewInvalidDataError("email is required")
+	}
+
+	repo := m.AccountRepository()
+
+	recs, err := repo.GetMany(&coresql.Options{
+		Params: []coresql.Param{
+			{Col: account_record.FieldAccountEmail, Val: email},
+		},
+		Limit: 1,
+	})
+	if err != nil {
+		l.Warn("failed to get account by email >%v<", err)
+		return nil, databaseError(err)
+	}
+
+	if len(recs) == 0 {
+		return nil, nil
+	}
+
+	return recs[0], nil
+}
+
+func (m *Domain) validateAccountRecForCreate(rec *account_record.Account) error {
+	l := m.Logger("validateAccountRecForCreate")
+	l.Debug("validating account record >%#v<", rec)
+
+	if rec == nil {
+		return coreerror.NewInvalidDataError("record is nil")
+	}
+
+	if rec.Email == "" {
+		return coreerror.NewInvalidDataError("email is required")
+	}
+
+	if rec.Name == "" {
+		return coreerror.NewInvalidDataError("name is required")
+	}
+
+	if rec.Status == "" {
+		rec.Status = account_record.AccountStatusActive
+	}
+
+	if err := validateAccountStatus(rec.Status); err != nil {
+		return err
+	}
+
+	return nil
+}
+func (m *Domain) validateAccountRecForUpdate(next, curr *account_record.Account) error {
+	l := m.Logger("validateAccountRecForUpdate")
+	l.Debug("validating current account record >%#v< against next >%#v<", curr, next)
+
+	if next == nil {
+		return coreerror.NewInvalidDataError("record is nil")
+	}
+
+	if next.Email != curr.Email {
+		return coreerror.NewInvalidDataError("email cannot be updated")
+	}
+
+	if next.Name == "" {
+		return coreerror.NewInvalidDataError("name is required")
+	}
+
+	if next.Status == "" {
+		next.Status = curr.Status
+	}
+
+	if err := validateAccountStatus(next.Status); err != nil {
+		return err
+	}
+
+	return nil
+}
+func (m *Domain) validateAccountRecForDelete(rec *account_record.Account) error {
+	l := m.Logger("validateAccountRecForDelete")
+	l.Debug("validating account record >%#v<", rec)
+
+	if rec == nil {
+		return coreerror.NewInvalidDataError("record is nil")
+	}
+
+	return nil
+}
+
+func validateAccountStatus(status string) error {
+	switch status {
+	case account_record.AccountStatusPendingApproval,
+		account_record.AccountStatusActive,
+		account_record.AccountStatusDisabled:
+		return nil
+	default:
+		return coreerror.NewInvalidDataError("invalid account status >%s<", status)
+	}
+}

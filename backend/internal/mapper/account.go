@@ -41,6 +41,7 @@ func AccountRecordToResponseData(l logger.Logger, rec *account_record.Account) (
 		ID:        rec.ID,
 		Email:     rec.Email,
 		Name:      rec.Name,
+		Status:    rec.Status,
 		CreatedAt: rec.CreatedAt,
 		UpdatedAt: nulltime.ToTimePtr(rec.UpdatedAt),
 	}, nil

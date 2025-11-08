@@ -9,24 +9,32 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"gitlab.com/alienspaces/playbymail/core/config"
 	"gitlab.com/alienspaces/playbymail/core/convert"
 	"gitlab.com/alienspaces/playbymail/internal/turn_sheet"
 	"gitlab.com/alienspaces/playbymail/internal/utils/testutil"
 )
 
 func TestLocationChoiceProcessor_GenerateTurnSheet(t *testing.T) {
+
+	// Setup test harness
+	l, _, _, cfg := testutil.NewDefaultDependencies(t)
+
+	// Create a mock config for the processor
+	cfg.TemplatesPath = "../../templates"
+
+	processor := turn_sheet.NewLocationChoiceProcessor(l, cfg)
+
 	tests := []struct {
-		name        string
-		data        any
-		expectError bool
-		errorMsg    string
+		name               string
+		data               any
+		expectError        bool
+		expectErrorMessage string
 	}{
 		{
-			name:        "given empty LocationChoiceData when generating turn sheet then validation error is returned",
-			data:        &turn_sheet.LocationChoiceData{},
-			expectError: true,
-			errorMsg:    "game name is required",
+			name:               "given empty LocationChoiceData when generating turn sheet then validation error is returned",
+			data:               &turn_sheet.LocationChoiceData{},
+			expectError:        true,
+			expectErrorMessage: "game name is required",
 		},
 		{
 			name:        "given nil data when generating turn sheet then PDF generation is handled gracefully",
@@ -65,16 +73,6 @@ func TestLocationChoiceProcessor_GenerateTurnSheet(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			// Setup test harness
-			l, _, _, _ := testutil.NewDefaultDependencies(t)
-
-			// Create a mock config for the processor
-			cfg := &config.Config{
-				TemplatesPath: "../../templates",
-			}
-
-			processor := turn_sheet.NewLocationChoiceProcessor(l, cfg)
-
 			// Marshal test data to JSON bytes
 			var sheetData []byte
 			if tt.data != nil {
@@ -88,8 +86,8 @@ func TestLocationChoiceProcessor_GenerateTurnSheet(t *testing.T) {
 
 			if tt.expectError {
 				require.Error(t, err, "Should return error")
-				if tt.errorMsg != "" {
-					require.Contains(t, err.Error(), tt.errorMsg, "Error message should contain expected text")
+				if tt.expectErrorMessage != "" {
+					require.Contains(t, err.Error(), tt.expectErrorMessage, "Error message should contain expected text")
 				}
 				require.Nil(t, pdfData, "PDF data should be nil on error")
 			} else {
@@ -104,14 +102,24 @@ func TestLocationChoiceProcessor_GenerateTurnSheet(t *testing.T) {
 }
 
 func TestLocationChoiceProcessor_ScanTurnSheet(t *testing.T) {
+
+	// Setup test harness
+	l, _, _, cfg := testutil.NewDefaultDependencies(t)
+
+	// Create a mock config for the processor
+	cfg.TemplatesPath = "../../templates"
+
+	processor := turn_sheet.NewLocationChoiceProcessor(l, cfg)
+	baseProcessor := turn_sheet.NewBaseProcessor(l, cfg)
+
 	tests := []struct {
 		name                  string
 		imageDataFn           func() ([]byte, error)
 		sheetDataFn           func() ([]byte, error)
 		expectError           bool
-		errorMsg              string
+		expectErrorMessage    string
 		expectedTurnSheetCode string
-		expectedChoices       []string
+		expectedScanData      *turn_sheet.LocationChoiceScanData
 	}{
 		{
 			name: "given empty image data when scanning turn sheet then error is returned",
@@ -121,8 +129,8 @@ func TestLocationChoiceProcessor_ScanTurnSheet(t *testing.T) {
 			sheetDataFn: func() ([]byte, error) {
 				return []byte(`{}`), nil
 			},
-			expectError: true,
-			errorMsg:    "empty image data",
+			expectError:        true,
+			expectErrorMessage: "empty image data",
 		},
 		{
 			name: "given nil image data when scanning turn sheet then error is returned",
@@ -132,8 +140,8 @@ func TestLocationChoiceProcessor_ScanTurnSheet(t *testing.T) {
 			sheetDataFn: func() ([]byte, error) {
 				return []byte(`{"invalid":"data"}`), nil
 			},
-			expectError: true,
-			errorMsg:    "empty image data",
+			expectError:        true,
+			expectErrorMessage: "empty image data",
 		},
 		{
 			name: "given empty sheet data when scanning turn sheet then error is returned",
@@ -143,8 +151,8 @@ func TestLocationChoiceProcessor_ScanTurnSheet(t *testing.T) {
 			sheetDataFn: func() ([]byte, error) {
 				return []byte(`{}`), nil
 			},
-			expectError: true,
-			errorMsg:    "text extraction failed",
+			expectError:        true,
+			expectErrorMessage: "text extraction failed",
 		},
 		{
 			name: "given valid sheet data when scanning fake image then OCR extraction error is returned",
@@ -163,8 +171,8 @@ func TestLocationChoiceProcessor_ScanTurnSheet(t *testing.T) {
 				}
 				return json.Marshal(data)
 			},
-			expectError: true, // Will fail at OCR extraction, but should get past sheet data validation
-			errorMsg:    "text extraction failed",
+			expectError:        true, // Will fail at OCR extraction, but should get past sheet data validation
+			expectErrorMessage: "text extraction failed",
 		},
 		{
 			name: "given real scanned turn sheet image with tick mark when scanning then turn sheet code and location choices are extracted correctly",
@@ -200,7 +208,7 @@ func TestLocationChoiceProcessor_ScanTurnSheet(t *testing.T) {
 			},
 			expectError:           false,
 			expectedTurnSheetCode: "ABC123XYZ",
-			expectedChoices:       []string{"dark_tower"},
+			expectedScanData:      &turn_sheet.LocationChoiceScanData{Choices: []string{"dark_tower"}},
 		},
 		{
 			name: "given real scanned turn sheet image with cross mark when scanning then turn sheet code and location choices are extracted correctly",
@@ -236,19 +244,12 @@ func TestLocationChoiceProcessor_ScanTurnSheet(t *testing.T) {
 			},
 			expectError:           false,
 			expectedTurnSheetCode: "ABC123XYZ",
-			expectedChoices:       []string{"mermaid_lagoon"},
+			expectedScanData:      &turn_sheet.LocationChoiceScanData{Choices: []string{"mermaid_lagoon"}},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Setup test harness
-			l, _, _, _ := testutil.NewDefaultDependencies(t)
-
-			// Create a mock config for the processor
-			cfg := &config.Config{
-				TemplatesPath: "../../templates",
-			}
 
 			// Load image data
 			imageData, err := tt.imageDataFn()
@@ -256,8 +257,6 @@ func TestLocationChoiceProcessor_ScanTurnSheet(t *testing.T) {
 				t.Fatalf("Failed to load image data: %v", err)
 			}
 
-			processor := turn_sheet.NewLocationChoiceProcessor(l, cfg)
-			baseProcessor := turn_sheet.NewBaseProcessor(l, cfg)
 			ctx := context.Background()
 
 			// Test turn sheet code extraction if expected
@@ -283,8 +282,8 @@ func TestLocationChoiceProcessor_ScanTurnSheet(t *testing.T) {
 
 			if tt.expectError {
 				require.Error(t, err, "Should return error")
-				if tt.errorMsg != "" {
-					require.Contains(t, err.Error(), tt.errorMsg, "Error message should contain expected text")
+				if tt.expectErrorMessage != "" {
+					require.Contains(t, err.Error(), tt.expectErrorMessage, "Error message should contain expected text")
 				}
 				require.Nil(t, resultData, "Result should be nil on error")
 			} else {
@@ -292,11 +291,11 @@ func TestLocationChoiceProcessor_ScanTurnSheet(t *testing.T) {
 				require.NotNil(t, resultData, "Result should not be nil")
 
 				// Verify expected choices
-				if len(tt.expectedChoices) > 0 {
+				if tt.expectedScanData != nil {
 					var scanData turn_sheet.LocationChoiceScanData
 					err := json.Unmarshal(resultData, &scanData)
 					require.NoError(t, err, "Should unmarshal scan results")
-					require.Equal(t, tt.expectedChoices, scanData.Choices, "Should extract correct choices")
+					require.Equal(t, tt.expectedScanData.Choices, scanData.Choices, "Should extract correct choices")
 					t.Logf("Choices: %v", scanData.Choices)
 				}
 			}
@@ -305,15 +304,13 @@ func TestLocationChoiceProcessor_ScanTurnSheet(t *testing.T) {
 }
 
 // TestGenerateLocationChoicePDFForPrinting generates a PDF for physical testing
-// Set SAVE_PDF_FOR_TESTING=true to save the PDF to testdata directory
+// Set SAVE_TEST_PDFS=true to save the PDF to testdata directory
 func TestGenerateLocationChoicePDFForPrinting(t *testing.T) {
 	// Setup test harness
-	l, _, _, _ := testutil.NewDefaultDependencies(t)
+	l, _, _, cfg := testutil.NewDefaultDependencies(t)
 
 	// Create a mock config for the processor
-	cfg := &config.Config{
-		TemplatesPath: "../../templates",
-	}
+	cfg.TemplatesPath = "../../templates"
 
 	processor := turn_sheet.NewLocationChoiceProcessor(l, cfg)
 
@@ -365,19 +362,21 @@ func TestGenerateLocationChoicePDFForPrinting(t *testing.T) {
 	require.NotNil(t, pdfData, "PDF data should not be nil")
 	require.Greater(t, len(pdfData), 0, "PDF should contain data")
 
-	// Always save PDF to testdata directory for manual inspection and testing
-	testDataPath := "testdata/adventure_game_location_choice_turn_sheet.pdf"
-	err = os.WriteFile(testDataPath, pdfData, 0644)
-	require.NoError(t, err, "Should save PDF to testdata directory")
-	t.Logf("PDF saved to %s", testDataPath)
-	t.Logf("PDF size: %d bytes", len(pdfData))
+	// Optionally save PDF to testdata directory for manual inspection and testing
+	if cfg.SaveTestPDFs {
+		testDataPath := "testdata/adventure_game_location_choice_turn_sheet.pdf"
+		err = os.WriteFile(testDataPath, pdfData, 0644)
+		require.NoError(t, err, "Should save PDF to testdata directory")
+		t.Logf("PDF saved to %s", testDataPath)
+		t.Logf("PDF size: %d bytes", len(pdfData))
 
-	// Print instructions for testing
-	t.Logf("")
-	t.Logf("PDF generated successfully. To test the scanner:")
-	t.Logf("1. Print the PDF: %s", testDataPath)
-	t.Logf("2. Fill out the turn sheet with your choices")
-	t.Logf("3. Scan the completed turn sheet to a JPEG file")
-	t.Logf("4. Save the JPEG in testdata/ with a descriptive name")
-	t.Logf("5. Write a test that loads the JPEG and tests the scanner")
+		// Print instructions for testing
+		t.Logf("")
+		t.Logf("PDF generated successfully. To test the scanner:")
+		t.Logf("1. Print the PDF: %s", testDataPath)
+		t.Logf("2. Fill out the turn sheet with your choices")
+		t.Logf("3. Scan the completed turn sheet to a JPEG file")
+		t.Logf("4. Save the JPEG in testdata/ with a descriptive name")
+		t.Logf("5. Write a test that loads the JPEG and tests the scanner")
+	}
 }

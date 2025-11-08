@@ -29,6 +29,14 @@
         },
         "updated_at": {
             "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/updated_at"
+        },
+        "status": {
+            "type": "string",
+            "enum": [
+                "pending_approval",
+                "active",
+                "revoked"
+            ]
         }
     },
     "required": [
@@ -36,6 +44,7 @@
         "game_id",
         "account_id",
         "subscription_type",
+        "status",
         "created_at"
     ],
     "additionalProperties": false

@@ -124,6 +124,17 @@ func getWorkers(l logger.Logger, cfg config.Config, s storer.Storer, e emailer.E
 		return nil, fmt.Errorf("failed to add NewSendAccountVerificationEmailWorker worker: %w", err)
 	}
 
+	// Add game subscription approval email worker
+	// Sends confirmation emails when a player submits a join game turn sheet so they can approve their subscription.
+	sendGameSubscriptionApprovalEmailWorker, err := jobworker.NewSendGameSubscriptionApprovalEmailWorker(l, cfg, s, e)
+	if err != nil {
+		return nil, fmt.Errorf("failed NewSendGameSubscriptionApprovalEmailWorker worker: %w", err)
+	}
+
+	if err := river.AddWorkerSafely(w, sendGameSubscriptionApprovalEmailWorker); err != nil {
+		return nil, fmt.Errorf("failed to add NewSendGameSubscriptionApprovalEmailWorker worker: %w", err)
+	}
+
 	// Add game turn processing execution worker
 	// Executes game turn processing by running game logic, updating game state, and handling player actions.
 	// Manages turn progression, game rules enforcement, and state transitions.

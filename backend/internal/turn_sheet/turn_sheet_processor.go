@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"maps"
 
-	"gitlab.com/alienspaces/playbymail/core/config"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
+	"gitlab.com/alienspaces/playbymail/internal/utils/config"
 )
 
 // DocumentScanner defines the interface for scanning completed turn sheet documents
@@ -33,7 +33,7 @@ type DocumentProcessor interface {
 }
 
 // GetDocumentProcessor returns the document processor for a specific turn sheet type
-func GetDocumentProcessor(l logger.Logger, cfg *config.Config, sheetType string) (DocumentProcessor, error) {
+func GetDocumentProcessor(l logger.Logger, cfg config.Config, sheetType string) (DocumentProcessor, error) {
 
 	// Get turn sheet processor map
 	turnSheetProcessorMap := getDocumentProcessorMap(l, cfg)
@@ -48,7 +48,7 @@ func GetDocumentProcessor(l logger.Logger, cfg *config.Config, sheetType string)
 }
 
 // getDocumentProcessorMap returns a map of document processors for all turn sheet types
-func getDocumentProcessorMap(l logger.Logger, cfg *config.Config) map[string]DocumentProcessor {
+func getDocumentProcessorMap(l logger.Logger, cfg config.Config) map[string]DocumentProcessor {
 
 	processors := make(map[string]DocumentProcessor)
 
@@ -57,8 +57,9 @@ func getDocumentProcessorMap(l logger.Logger, cfg *config.Config) map[string]Doc
 	return processors
 }
 
-func getAdventureGameDocumentProcessorMap(l logger.Logger, cfg *config.Config) map[string]DocumentProcessor {
+func getAdventureGameDocumentProcessorMap(l logger.Logger, cfg config.Config) map[string]DocumentProcessor {
 	return map[string]DocumentProcessor{
 		adventure_game_record.AdventureSheetTypeLocationChoice: NewLocationChoiceProcessor(l, cfg),
+		adventure_game_record.AdventureSheetTypeJoinGame:       NewJoinGameProcessor(l, cfg),
 	}
 }

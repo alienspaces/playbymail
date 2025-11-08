@@ -1,6 +1,7 @@
 package game_turn_sheet_test
 
 import (
+	"database/sql"
 	"encoding/json"
 	"testing"
 
@@ -43,9 +44,8 @@ func TestCreateOne(t *testing.T) {
 				}
 				sheetDataBytes, _ := json.Marshal(sheetData)
 
-				return &game_record.GameTurnSheet{
+				rec := &game_record.GameTurnSheet{
 					GameID:           gameRec.ID,
-					GameInstanceID:   gameInstanceRec.ID,
 					AccountID:        accountRec.ID,
 					TurnNumber:       1,
 					SheetType:        "location_choice",
@@ -54,6 +54,8 @@ func TestCreateOne(t *testing.T) {
 					IsCompleted:      false,
 					ProcessingStatus: "pending",
 				}
+				rec.GameInstanceID = sql.NullString{String: gameInstanceRec.ID, Valid: true}
+				return rec
 			},
 			hasErr: false,
 		},
@@ -78,7 +80,6 @@ func TestCreateOne(t *testing.T) {
 
 				rec := &game_record.GameTurnSheet{
 					GameID:           gameRec.ID,
-					GameInstanceID:   gameInstanceRec.ID,
 					AccountID:        accountRec.ID,
 					TurnNumber:       2,
 					SheetType:        "combat",
@@ -87,6 +88,7 @@ func TestCreateOne(t *testing.T) {
 					IsCompleted:      false,
 					ProcessingStatus: "pending",
 				}
+				rec.GameInstanceID = sql.NullString{String: gameInstanceRec.ID, Valid: true}
 				id, _ := uuid.NewRandom()
 				rec.ID = id.String()
 				return rec
@@ -153,7 +155,6 @@ func TestGetOne(t *testing.T) {
 
 				rec := &game_record.GameTurnSheet{
 					GameID:           gameRec.ID,
-					GameInstanceID:   gameInstanceRec.ID,
 					AccountID:        accountRec.ID,
 					TurnNumber:       1,
 					SheetType:        "inventory",
@@ -162,6 +163,7 @@ func TestGetOne(t *testing.T) {
 					IsCompleted:      false,
 					ProcessingStatus: "pending",
 				}
+				rec.GameInstanceID = sql.NullString{String: gameInstanceRec.ID, Valid: true}
 
 				r := h.Domain.(*domain.Domain).GameTurnSheetRepository()
 				_, err = r.CreateOne(rec)
@@ -238,7 +240,6 @@ func TestUpdateOne(t *testing.T) {
 
 				rec := &game_record.GameTurnSheet{
 					GameID:           gameRec.ID,
-					GameInstanceID:   gameInstanceRec.ID,
 					AccountID:        accountRec.ID,
 					TurnNumber:       1,
 					SheetType:        "location_choice",
@@ -247,6 +248,7 @@ func TestUpdateOne(t *testing.T) {
 					IsCompleted:      false,
 					ProcessingStatus: "pending",
 				}
+				rec.GameInstanceID = sql.NullString{String: gameInstanceRec.ID, Valid: true}
 
 				r := h.Domain.(*domain.Domain).GameTurnSheetRepository()
 				_, err = r.CreateOne(rec)
@@ -327,7 +329,6 @@ func TestDeleteOne(t *testing.T) {
 
 				rec := &game_record.GameTurnSheet{
 					GameID:           gameRec.ID,
-					GameInstanceID:   gameInstanceRec.ID,
 					AccountID:        accountRec.ID,
 					TurnNumber:       3,
 					SheetType:        "combat",
@@ -336,6 +337,7 @@ func TestDeleteOne(t *testing.T) {
 					IsCompleted:      false,
 					ProcessingStatus: "pending",
 				}
+				rec.GameInstanceID = sql.NullString{String: gameInstanceRec.ID, Valid: true}
 
 				r := h.Domain.(*domain.Domain).GameTurnSheetRepository()
 				_, err = r.CreateOne(rec)

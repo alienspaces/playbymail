@@ -17,6 +17,19 @@ const (
 	FieldGameSubscriptionAccountID        = "account_id"
 	FieldGameSubscriptionSubscriptionType = "subscription_type"
 	FieldGameSubscriptionCreatedAt        = "created_at"
+	FieldGameSubscriptionStatus           = "status"
+)
+
+const (
+	GameSubscriptionTypePlayer       = "Player"
+	GameSubscriptionTypeManager      = "Manager"
+	GameSubscriptionTypeCollaborator = "Collaborator"
+)
+
+const (
+	GameSubscriptionStatusPendingApproval = "pending_approval"
+	GameSubscriptionStatusActive          = "active"
+	GameSubscriptionStatusRevoked         = "revoked"
 )
 
 // GameSubscription represents a subscription to a game (Player, Manager, Collaborator)
@@ -25,6 +38,7 @@ type GameSubscription struct {
 	GameID           string `db:"game_id"`
 	AccountID        string `db:"account_id"`
 	SubscriptionType string `db:"subscription_type"`
+	Status           string `db:"status"`
 }
 
 func (r *GameSubscription) ToNamedArgs() pgx.NamedArgs {
@@ -32,5 +46,6 @@ func (r *GameSubscription) ToNamedArgs() pgx.NamedArgs {
 	args[FieldGameSubscriptionGameID] = r.GameID
 	args[FieldGameSubscriptionAccountID] = r.AccountID
 	args[FieldGameSubscriptionSubscriptionType] = r.SubscriptionType
+	args[FieldGameSubscriptionStatus] = r.Status
 	return args
 }

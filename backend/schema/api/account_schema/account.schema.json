@@ -19,13 +19,22 @@
         },
         "updated_at": {
             "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/updated_at"
+        },
+        "status": {
+            "type": "string",
+            "enum": [
+                "pending_approval",
+                "active",
+                "disabled"
+            ]
         }
     },
     "required": [
         "id",
         "email",
         "name",
-        "created_at"
+        "created_at",
+        "status"
     ],
     "additionalProperties": false
 }

@@ -1,6 +1,7 @@
 package adventure_game_turn_sheet_test
 
 import (
+	"database/sql"
 	"encoding/json"
 	"testing"
 
@@ -39,7 +40,6 @@ func TestCreateOne(t *testing.T) {
 
 				gameTurnSheetRec := &game_record.GameTurnSheet{
 					GameID:           gameRec.ID,
-					GameInstanceID:   gameInstanceRec.ID,
 					AccountID:        accountRec.ID,
 					TurnNumber:       1,
 					SheetType:        "location_choice",
@@ -48,6 +48,7 @@ func TestCreateOne(t *testing.T) {
 					IsCompleted:      false,
 					ProcessingStatus: "pending",
 				}
+				gameTurnSheetRec.GameInstanceID = sql.NullString{String: gameInstanceRec.ID, Valid: true}
 
 				gameTurnSheetRepo := h.Domain.(*domain.Domain).GameTurnSheetRepository()
 				_, err = gameTurnSheetRepo.CreateOne(gameTurnSheetRec)
@@ -77,7 +78,6 @@ func TestCreateOne(t *testing.T) {
 
 				gameTurnSheetRec := &game_record.GameTurnSheet{
 					GameID:           gameRec.ID,
-					GameInstanceID:   gameInstanceRec.ID,
 					AccountID:        accountRec.ID,
 					TurnNumber:       2,
 					SheetType:        "combat",
@@ -86,6 +86,7 @@ func TestCreateOne(t *testing.T) {
 					IsCompleted:      false,
 					ProcessingStatus: "pending",
 				}
+				gameTurnSheetRec.GameInstanceID = sql.NullString{String: gameInstanceRec.ID, Valid: true}
 
 				gameTurnSheetRepo := h.Domain.(*domain.Domain).GameTurnSheetRepository()
 				_, err = gameTurnSheetRepo.CreateOne(gameTurnSheetRec)
@@ -159,7 +160,6 @@ func TestGetOne(t *testing.T) {
 
 				gameTurnSheetRec := &game_record.GameTurnSheet{
 					GameID:           gameRec.ID,
-					GameInstanceID:   gameInstanceRec.ID,
 					AccountID:        accountRec.ID,
 					TurnNumber:       1,
 					SheetType:        "inventory",
@@ -168,6 +168,7 @@ func TestGetOne(t *testing.T) {
 					IsCompleted:      false,
 					ProcessingStatus: "pending",
 				}
+				gameTurnSheetRec.GameInstanceID = sql.NullString{String: gameInstanceRec.ID, Valid: true}
 
 				gameTurnSheetRepo := h.Domain.(*domain.Domain).GameTurnSheetRepository()
 				_, err = gameTurnSheetRepo.CreateOne(gameTurnSheetRec)
@@ -251,7 +252,6 @@ func TestDeleteOne(t *testing.T) {
 
 				gameTurnSheetRec := &game_record.GameTurnSheet{
 					GameID:           gameRec.ID,
-					GameInstanceID:   gameInstanceRec.ID,
 					AccountID:        accountRec.ID,
 					TurnNumber:       3,
 					SheetType:        "combat",
@@ -260,6 +260,7 @@ func TestDeleteOne(t *testing.T) {
 					IsCompleted:      false,
 					ProcessingStatus: "pending",
 				}
+				gameTurnSheetRec.GameInstanceID = sql.NullString{String: gameInstanceRec.ID, Valid: true}
 
 				gameTurnSheetRepo := h.Domain.(*domain.Domain).GameTurnSheetRepository()
 				_, err = gameTurnSheetRepo.CreateOne(gameTurnSheetRec)

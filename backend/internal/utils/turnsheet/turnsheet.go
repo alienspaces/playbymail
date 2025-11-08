@@ -7,21 +7,35 @@ import (
 	"encoding/json"
 	"fmt"
 	"time"
+
+	"github.com/google/uuid"
+)
+
+// TurnSheetCodeType represents the encoding format for a turn sheet code
+// "playing" codes include full identifiers encoded as base64 JSON with checksum validation
+// "joining" codes are simple identifiers that contain only the game ID (used for join sheets)
+type TurnSheetCodeType string
+
+const (
+	TurnSheetCodeTypePlayingGame TurnSheetCodeType = "playing"
+	TurnSheetCodeTypeJoiningGame TurnSheetCodeType = "joining"
 )
 
 // TurnSheetIdentifier contains the unique identifiers for a turn sheet
 type TurnSheetIdentifier struct {
-	GameID          string    `json:"game_id"`
-	GameInstanceID  string    `json:"game_instance_id"`
-	AccountID       string    `json:"account_id"`
-	GameTurnSheetID string    `json:"game_turn_sheet_id"`
-	GeneratedAt     time.Time `json:"generated_at"`
-	Checksum        string    `json:"checksum"`
+	CodeType        TurnSheetCodeType `json:"code_type"`
+	GameID          string            `json:"game_id"`
+	GameInstanceID  string            `json:"game_instance_id"`
+	AccountID       string            `json:"account_id"`
+	GameTurnSheetID string            `json:"game_turn_sheet_id"`
+	GeneratedAt     time.Time         `json:"generated_at"`
+	Checksum        string            `json:"checksum"`
 }
 
 // GenerateTurnSheetCode creates a unique, scannable code for a turn sheet
 func GenerateTurnSheetCode(gameID, gameInstanceID, accountID, gameTurnSheetID string) (string, error) {
 	identifier := TurnSheetIdentifier{
+		CodeType:        TurnSheetCodeTypePlayingGame,
 		GameID:          gameID,
 		GameInstanceID:  gameInstanceID,
 		AccountID:       accountID,
@@ -47,21 +61,55 @@ func GenerateTurnSheetCode(gameID, gameInstanceID, accountID, gameTurnSheetID st
 	return encoded, nil
 }
 
-// ParseTurnSheetCode decodes and validates a turn sheet code
-func ParseTurnSheetCode(code string) (*TurnSheetIdentifier, error) {
-	// Base64 decode
-	jsonData, err := base64.URLEncoding.DecodeString(code)
-	if err != nil {
-		return nil, fmt.Errorf("failed to decode base64: %w", err)
+// GenerateJoinTurnSheetCode returns a structured code for join-game sheets using the same
+// encoding format as playing-game turn sheets but only including the game identifier.
+func GenerateJoinTurnSheetCode(gameID string) (string, error) {
+	if gameID == "" {
+		return "", fmt.Errorf("gameID is required")
+	}
+	if _, err := uuid.Parse(gameID); err != nil {
+		return "", fmt.Errorf("invalid gameID format: %w", err)
 	}
 
-	// Unmarshal JSON
+	identifier := TurnSheetIdentifier{
+		CodeType:        TurnSheetCodeTypeJoiningGame,
+		GameID:          gameID,
+		GeneratedAt:     time.Now(),
+		GameInstanceID:  "",
+		AccountID:       "",
+		GameTurnSheetID: "",
+	}
+
+	checksum, err := generateChecksum(identifier)
+	if err != nil {
+		return "", fmt.Errorf("failed to generate checksum: %w", err)
+	}
+	identifier.Checksum = checksum
+
+	jsonData, err := json.Marshal(identifier)
+	if err != nil {
+		return "", fmt.Errorf("failed to marshal identifier: %w", err)
+	}
+
+	return base64.URLEncoding.EncodeToString(jsonData), nil
+}
+
+// ParseTurnSheetCode decodes and validates a turn sheet code
+func ParseTurnSheetCode(code string) (*TurnSheetIdentifier, error) {
+	jsonData, err := base64.URLEncoding.DecodeString(code)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode turn sheet code: %w", err)
+	}
+
 	var identifier TurnSheetIdentifier
 	if err := json.Unmarshal(jsonData, &identifier); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal identifier: %w", err)
 	}
 
-	// Verify checksum
+	if identifier.CodeType != TurnSheetCodeTypePlayingGame && identifier.CodeType != TurnSheetCodeTypeJoiningGame {
+		return nil, fmt.Errorf("unsupported turn sheet code type: %s", identifier.CodeType)
+	}
+
 	expectedChecksum, err := generateChecksum(identifier)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate expected checksum: %w", err)
@@ -80,7 +128,8 @@ func generateChecksum(identifier TurnSheetIdentifier) (string, error) {
 	secretKey := "playbymail-turn-sheet-secret-key"
 
 	// Create data for checksum (exclude the checksum field itself)
-	data := fmt.Sprintf("%s:%s:%s:%s:%d",
+	data := fmt.Sprintf("%s:%s:%s:%s:%s:%d",
+		identifier.CodeType,
 		identifier.GameID,
 		identifier.GameInstanceID,
 		identifier.AccountID,

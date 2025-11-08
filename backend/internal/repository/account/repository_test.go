@@ -26,7 +26,8 @@ func TestCreateOne(t *testing.T) {
 			name: "Without ID",
 			rec: func(d harness.Data, t *testing.T) *account_record.Account {
 				return &account_record.Account{
-					Email: fmt.Sprintf("%s@example.com", gofakeit.Name()),
+					Email:  fmt.Sprintf("%s@example.com", gofakeit.Name()),
+					Status: account_record.AccountStatusActive,
 				}
 			},
 			hasErr: false,
@@ -35,7 +36,8 @@ func TestCreateOne(t *testing.T) {
 			name: "With ID",
 			rec: func(d harness.Data, t *testing.T) *account_record.Account {
 				rec := &account_record.Account{
-					Email: fmt.Sprintf("%s@example.com", gofakeit.Name()),
+					Email:  fmt.Sprintf("%s@example.com", gofakeit.Name()),
+					Status: account_record.AccountStatusActive,
 				}
 				id, _ := uuid.NewRandom()
 				rec.ID = id.String()

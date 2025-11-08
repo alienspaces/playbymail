@@ -43,6 +43,7 @@ func GameSubscriptionRecordToResponseData(l logger.Logger, rec *game_record.Game
 		GameID:           rec.GameID,
 		AccountID:        rec.AccountID,
 		SubscriptionType: rec.SubscriptionType,
+		Status:           rec.Status,
 		CreatedAt:        rec.CreatedAt,
 		UpdatedAt:        nulltime.ToTimePtr(rec.UpdatedAt),
 		DeletedAt:        nulltime.ToTimePtr(rec.DeletedAt),

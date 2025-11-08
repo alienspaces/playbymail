@@ -7,8 +7,8 @@ import (
 	"regexp"
 	"strings"
 
-	"gitlab.com/alienspaces/playbymail/core/config"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
+	"gitlab.com/alienspaces/playbymail/internal/utils/config"
 )
 
 type LocationChoiceData struct {
@@ -40,7 +40,7 @@ type LocationChoiceProcessor struct {
 }
 
 // NewLocationChoiceProcessor creates a new location choice processor
-func NewLocationChoiceProcessor(l logger.Logger, cfg *config.Config) *LocationChoiceProcessor {
+func NewLocationChoiceProcessor(l logger.Logger, cfg config.Config) *LocationChoiceProcessor {
 	return &LocationChoiceProcessor{
 		BaseProcessor: NewBaseProcessor(l, cfg),
 	}

@@ -49,7 +49,7 @@ const (
 type GameTurnSheet struct {
 	record.Record
 	GameID           string          `db:"game_id"`
-	GameInstanceID   string          `db:"game_instance_id"`
+	GameInstanceID   sql.NullString  `db:"game_instance_id"`
 	AccountID        string          `db:"account_id"`
 	TurnNumber       int             `db:"turn_number"`
 	SheetType        string          `db:"sheet_type"`

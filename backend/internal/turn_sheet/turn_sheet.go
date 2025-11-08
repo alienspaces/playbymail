@@ -6,10 +6,10 @@ import (
 	"regexp"
 	"strings"
 
-	"gitlab.com/alienspaces/playbymail/core/config"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
 	"gitlab.com/alienspaces/playbymail/internal/generator"
 	"gitlab.com/alienspaces/playbymail/internal/scanner"
+	"gitlab.com/alienspaces/playbymail/internal/utils/config"
 )
 
 // Trigger CI backend tests (One)
@@ -19,20 +19,18 @@ type BaseProcessor struct {
 	Scanner      *scanner.ImageScanner
 	Generator    *generator.PDFGenerator
 	Log          logger.Logger
-	Config       *config.Config
+	Config       config.Config
 	TemplatePath string
 }
 
 // NewBaseProcessor creates a new base processor
-func NewBaseProcessor(l logger.Logger, cfg *config.Config) *BaseProcessor {
+func NewBaseProcessor(l logger.Logger, cfg config.Config) *BaseProcessor {
 
 	scannerInstance := scanner.NewImageScanner(l)
 	generatorInstance := generator.NewPDFGenerator(l)
 
 	templatePath := "./backend/templates"
-	if cfg != nil {
-		templatePath = cfg.TemplatesPath
-	}
+	templatePath = cfg.TemplatesPath
 
 	return &BaseProcessor{
 		Scanner:      scannerInstance,

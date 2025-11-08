@@ -119,18 +119,132 @@ func (m *Domain) RemoveGameSubscriptionRec(recID string) error {
 func (m *Domain) validateGameSubscriptionRecForCreate(rec *game_record.GameSubscription) error {
 	l := m.Logger("validateGameSubscriptionRecForCreate")
 	l.Debug("validating game_subscription record >%#v<", rec)
-	// TODO: Add validation logic
+
+	if rec == nil {
+		return coreerror.NewInvalidDataError("record is nil")
+	}
+
+	if rec.GameID == "" {
+		return coreerror.NewInvalidDataError("game_id is required")
+	}
+
+	if rec.AccountID == "" {
+		return coreerror.NewInvalidDataError("account_id is required")
+	}
+
+	if rec.SubscriptionType == "" {
+		return coreerror.NewInvalidDataError("subscription_type is required")
+	}
+
+	if rec.Status == "" {
+		rec.Status = game_record.GameSubscriptionStatusActive
+	}
+
+	if err := validateGameSubscriptionStatus(rec.Status); err != nil {
+		return err
+	}
+
 	return nil
 }
 func (m *Domain) validateGameSubscriptionRecForUpdate(next, curr *game_record.GameSubscription) error {
 	l := m.Logger("validateGameSubscriptionRecForUpdate")
 	l.Debug("validating current game_subscription record >%#v< against next >%#v<", curr, next)
-	// TODO: Add validation logic
+
+	if next == nil {
+		return coreerror.NewInvalidDataError("record is nil")
+	}
+
+	if next.GameID == "" {
+		return coreerror.NewInvalidDataError("game_id is required")
+	}
+
+	if next.AccountID == "" {
+		return coreerror.NewInvalidDataError("account_id is required")
+	}
+
+	if next.SubscriptionType == "" {
+		return coreerror.NewInvalidDataError("subscription_type is required")
+	}
+
+	if next.Status == "" {
+		next.Status = curr.Status
+	}
+
+	if err := validateGameSubscriptionStatus(next.Status); err != nil {
+		return err
+	}
+
 	return nil
 }
 func (m *Domain) validateGameSubscriptionRecForDelete(rec *game_record.GameSubscription) error {
 	l := m.Logger("validateGameSubscriptionRecForDelete")
 	l.Debug("validating game_subscription record >%#v<", rec)
-	// TODO: Add validation logic
+
+	if rec == nil {
+		return coreerror.NewInvalidDataError("record is nil")
+	}
+
 	return nil
+}
+
+func validateGameSubscriptionStatus(status string) error {
+	switch status {
+	case game_record.GameSubscriptionStatusPendingApproval,
+		game_record.GameSubscriptionStatusActive,
+		game_record.GameSubscriptionStatusRevoked:
+		return nil
+	default:
+		return coreerror.NewInvalidDataError("invalid game subscription status >%s<", status)
+	}
+}
+
+func (m *Domain) UpsertPendingGameSubscription(gameID, accountID, subscriptionType string) (*game_record.GameSubscription, error) {
+	l := m.Logger("UpsertPendingGameSubscription")
+
+	l.Debug("upserting pending subscription game_id >%s< account_id >%s< type >%s<", gameID, accountID, subscriptionType)
+
+	switch {
+	case gameID == "":
+		return nil, coreerror.NewInvalidDataError("game_id is required")
+	case accountID == "":
+		return nil, coreerror.NewInvalidDataError("account_id is required")
+	case subscriptionType == "":
+		return nil, coreerror.NewInvalidDataError("subscription_type is required")
+	}
+
+	repo := m.GameSubscriptionRepository()
+
+	recs, err := repo.GetMany(&sql.Options{
+		Params: []sql.Param{
+			{Col: game_record.FieldGameSubscriptionGameID, Val: gameID},
+			{Col: game_record.FieldGameSubscriptionAccountID, Val: accountID},
+			{Col: game_record.FieldGameSubscriptionSubscriptionType, Val: subscriptionType},
+		},
+		Limit: 1,
+	})
+	if err != nil {
+		return nil, databaseError(err)
+	}
+
+	if len(recs) > 0 {
+		rec := recs[0]
+		if rec.Status != game_record.GameSubscriptionStatusPendingApproval {
+			rec.Status = game_record.GameSubscriptionStatusPendingApproval
+			updated, err := m.UpdateGameSubscriptionRec(rec)
+			if err != nil {
+				return nil, err
+			}
+			return updated, nil
+		}
+		return rec, nil
+	}
+
+	rec := &game_record.GameSubscription{
+		GameID:           gameID,
+		AccountID:        accountID,
+		SubscriptionType: subscriptionType,
+		Status:           game_record.GameSubscriptionStatusPendingApproval,
+	}
+
+	return m.CreateGameSubscriptionRec(rec)
 }

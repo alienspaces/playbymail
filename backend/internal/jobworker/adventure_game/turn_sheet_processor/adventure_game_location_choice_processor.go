@@ -2,6 +2,7 @@ package turn_sheet_processor
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 
@@ -210,7 +211,6 @@ func (p *AdventureGameLocationChoiceProcessor) CreateNextTurnSheet(ctx context.C
 	// Step 9: Create turn sheet record
 	turnSheet := &game_record.GameTurnSheet{
 		GameID:           gameInstanceRec.GameID,
-		GameInstanceID:   gameInstanceRec.ID,
 		AccountID:        characterRec.AccountID,
 		TurnNumber:       gameInstanceRec.CurrentTurn + 1,
 		SheetType:        adventure_game_record.AdventureSheetTypeLocationChoice,
@@ -219,6 +219,7 @@ func (p *AdventureGameLocationChoiceProcessor) CreateNextTurnSheet(ctx context.C
 		IsCompleted:      false,
 		ProcessingStatus: game_record.TurnSheetProcessingStatusPending,
 	}
+	turnSheet.GameInstanceID = sql.NullString{String: gameInstanceRec.ID, Valid: true}
 
 	// Create the turn sheet record
 	createdTurnSheetRec, err := p.Domain.CreateGameTurnSheetRec(turnSheet)
