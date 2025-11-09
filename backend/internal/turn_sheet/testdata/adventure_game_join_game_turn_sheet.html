@@ -9,16 +9,51 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>The Enchanted Forest Adventure - Turn 0</title>
     <style>
+        :root {
+            --page-width: 210mm;
+            --page-height: 297mm;
+            --padding-vertical: 8mm;
+            --padding-horizontal: 18mm;
+        }
+
+         
+        .debug-frame {
+            background-color: #ffffff;
+        }
+
+        .debug-main {
+            background-color: #ffffff;
+        }
+
+        .debug-section {
+            background-color: #ffffff;
+        }
+
          
         body {
             position: relative;
             font-family: 'Times New Roman', serif;
             margin: 0;
-            padding: 24px 0;
-            background-color: #f5f5f5;
+            padding: 0;
+            background-color: #ffffff;
             color: #333;
             display: flex;
             justify-content: center;
+        }
+        
+        h1 {
+            margin-top: 2mm;
+            margin-bottom: 2mm;
+        }
+
+        h2 {
+            margin-top: 2mm;
+            margin-bottom: 2mm;
+        }
+        
+        h3 {
+            margin-top: 2mm;
+            margin-bottom: 2mm;
         }
         
         .background-container {
@@ -63,46 +98,88 @@
             background-repeat: no-repeat;
             z-index: 0;
         }
-        
-        .header {
-            text-align: center;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-        }
-        
-        .header h1 {
-            margin: 0;
-            font-size: 24px;
-            color: #2c3e50;
-        }
-        
-        .header h2 {
-            margin: 5px 0 0 0;
-            font-size: 18px;
-            color: #7f8c8d;
-        }
 
         .content {
             position: relative;
             z-index: 2;
-            width: 210mm;
-            min-height: 297mm;
-            padding: 32px;
-            background-color: rgba(255, 255, 255, 0.98);
-            border-radius: 8px;
-            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
-            display: flex;
-            flex-direction: column;
+            width: var(--page-width);
+        }
+
+        .header-content {
+            margin: 0;
+            padding: 2mm;
+            height: 46mm;
+            text-align: center;
             box-sizing: border-box;
-            gap: 20px;
+            background-color: #ffffff;
         }
         
-        .turn-sheet {
+        .header-content h1 {
+            color: #2c3e50;
+        }
+        
+        .header-content h2 {
+            color: #7f8c8d;
+        }
+
+        .header-content-title {
+            text-align: center;
+        }
+
+        .header-content-title h3 {
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        .header-content-title p {
+            margin: 0;
+            color: #555;
+            line-height: 1.4;
+            max-width: 560px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+
+        .instruction-content {
+            margin: 0;
+            padding: 2mm;
+            height: 10mm;
             background-color: #ffffff;
-            padding: 20px 24px;
+            border-left: 3px solid #546a7b;
+            border-radius: 6px;
+            color: #2c3e50;
+        }
+
+        .instruction-content--empty {
+            background: transparent;
+            border: none;
+        }
+
+        .instruction-content p {
+            margin: 0;
+        }
+
+        .instruction-content strong {
+            color: #1f2a36;
+        }
+
+        .main-content {
+            margin: 0;
+            padding: 2mm;
+            height: 166mm;
+        }
+
+         
+        .turn-sheet {
+            margin: 0;
+            padding: 2mm;
             border-radius: 8px;
-            max-width: 620px;
+            max-width: 600px;
+            width: 100%;
             margin: 0 auto;
+            box-sizing: border-box;
+            background-color: #ffffff;
         }
 
         .turn-sheet label,
@@ -166,82 +243,37 @@
             color: #6c757d;
         }
 
-        .main-content {
-            flex: 1 1 auto;
-            display: flex;
-            flex-direction: column;
-            gap: 18px;
+        .turn-sheet-body {
         }
-        
-        .turn-sheet-footer {
-            margin-top: auto;
-            padding: 16px 20px 0 20px;
-            background-color: #f8f9fa;
+
+        .footer-content {
+            margin-top: 0;
+            padding: 2mm;
+            background-color: #ffffff;
             border-top: 1px solid #dee2e6;
             border-radius: 0 0 8px 8px;
         }
 
-        .turn-sheet-footer-item {
-            padding: 8px 0;
+        .footer-content-item {
+            padding: 1mm 0;
             border-bottom: 1px solid #dee2e6;
             font-family: 'Courier New', monospace;
             font-size: 10px;
             word-break: break-all;
         }
 
-        .turn-sheet-footer-item:last-child {
+        .footer-content-item:last-child {
             border-bottom: none;
         }
 
-        .turn-sheet-footer-label {
+        .footer-content-label {
             font-weight: bold;
             margin-bottom: 3px;
             color: #495057;
         }
         
-        .turn-sheet-footer-value {
+        .footer-content-value {
             color: #6c757d;
-        }
-
-        .instructions-block {
-            margin-top: 20px;
-            padding: 12px 14px;
-            background-color: #f3f6fb;
-            border-left: 3px solid #546a7b;
-            border-radius: 6px;
-            font-size: 12px;
-            line-height: 1.4;
-            color: #2c3e50;
-        }
-
-        .instructions-block p {
-            margin: 0;
-        }
-
-        .instructions-block strong {
-            color: #1f2a36;
-        }
-
-        .turn-sheet-heading {
-            margin-bottom: 16px;
-            text-align: center;
-        }
-
-        .turn-sheet-heading h3 {
-            margin: 0 0 6px 0;
-            font-size: 18px;
-            color: #2c3e50;
-            font-weight: 600;
-        }
-
-        .turn-sheet-heading p {
-            margin: 0;
-            font-size: 13px;
-            color: #555;
-            line-height: 1.4;
-            max-width: 560px;
-            margin-left: auto;
-            margin-right: auto;
         }
 
         .turn-sheet .section-title,
@@ -252,7 +284,7 @@
             font-size: 16px;
             font-weight: 600;
             color: #2c3e50;
-            margin: 18px 0 12px 0;
+            margin: 14px 0 10px 0;
         }
 
         .turn-sheet .section-subtitle,
@@ -316,12 +348,20 @@
 <style>
 .turn-sheet .account-details,
 .turn-sheet .character-details {
-    max-width: 520px;
+    width: 100%;
     margin: 0 auto;
 }
 
+.turn-sheet .account-info-section {
+    padding: 6px;
+}
+
+.turn-sheet .account-details {
+    padding: 4px 6px;
+}
+
 .turn-sheet .form-group {
-    margin-bottom: 10px;
+    margin-bottom: 8px;
 }
 
 .turn-sheet .form-row {
@@ -355,7 +395,7 @@
 }
 
 .turn-sheet .section-divider {
-    margin: 14px 0;
+    margin: 10px 0;
     border-bottom: 1px solid #d1d5db;
 }
 
@@ -373,76 +413,79 @@
     </div>
 
     
-    <div class="content">
+    <div class="content debug-frame">
+
         
-        <div class="header">
+        <div class="header-content">
             <h1>The Enchanted Forest Adventure</h1>
             <h2>Turn 0</h2>
+
+            
+            <div class="header-content-title">
+                <h3>Join Game</h3>
+                <p>Welcome to the PlayByMail Adventure!</p>
+            </div>
+            
         </div>
 
         
-        <div class="turn-sheet-heading">
-            <h3>Join Game</h3>
-            <p>Welcome to the PlayByMail Adventure!</p>
-        </div>
         
-
-        
-        
-        <div class="instructions-block">
+        <div class="instruction-content">
             <p><strong>Instructions:</strong> Fill out your account information and character name, then return this form to join the game.</p>
         </div>
         
 
         
-        <div class="main-content">
+        <div class="main-content debug-main">
             
-<div class="turn-sheet">
-    <div class="account-info-section">
-        <h3 class="section-title">Your PlayByMail Account</h3>
-        <div class="account-details">
-            <div class="form-group">
-                <label class="form-field-title" for="email">Email Address:</label>
-                <input type="email" id="email" name="email" required>
-            </div>
-            <div class="form-group">
-                <label class="form-field-title" for="name">Name:</label>
-                <input type="text" id="name" name="name" required>
-            </div>
-            <div class="form-group">
-                <label class="form-field-title" for="postal_address_line1">Address Line 1:</label>
-                <input type="text" id="postal_address_line1" name="postal_address_line1" required>
-            </div>
-            <div class="form-group">
-                <label class="form-field-title" for="postal_address_line2">Address Line 2:</label>
-                <input type="text" id="postal_address_line2" name="postal_address_line2">
-            </div>
-            <div class="form-row two-column">
-                <div class="form-group third">
-                    <label class="form-field-title" for="state_province">State / Province:</label>
-                    <input type="text" id="state_province" name="state_province" required>
+<div class="turn-sheet debug-section">
+    <div class="turn-sheet-body">
+        <div class="account-info-section">
+            <h3 class="section-title">Your PlayByMail Account</h3>
+            <div class="account-details">
+                <div class="form-group">
+                    <label class="form-field-title" for="email">Email Address:</label>
+                    <input type="email" id="email" name="email" required>
                 </div>
-                <div class="form-group third">
-                    <label class="form-field-title" for="country">Country:</label>
-                    <input type="text" id="country" name="country" required>
+                <div class="form-group">
+                    <label class="form-field-title" for="name">Name:</label>
+                    <input type="text" id="name" name="name" required>
                 </div>
-            </div>
-            <div class="form-row">
-                <div class="form-group third post-code">
-                    <label class="form-field-title" for="postal_code">Post Code:</label>
-                    <input type="text" id="postal_code" name="postal_code" required>
+                <div class="form-group">
+                    <label class="form-field-title" for="postal_address_line1">Address Line 1:</label>
+                    <input type="text" id="postal_address_line1" name="postal_address_line1" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-field-title" for="postal_address_line2">Address Line 2:</label>
+                    <input type="text" id="postal_address_line2" name="postal_address_line2">
+                </div>
+                <div class="form-row two-column">
+                    <div class="form-group third">
+                        <label class="form-field-title" for="state_province">State / Province:</label>
+                        <input type="text" id="state_province" name="state_province" required>
+                    </div>
+                    <div class="form-group third">
+                        <label class="form-field-title" for="country">Country:</label>
+                        <input type="text" id="country" name="country" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group third post-code">
+                        <label class="form-field-title" for="postal_code">Post Code:</label>
+                        <input type="text" id="postal_code" name="postal_code" required>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <div class="character-info-section">
-        <div class="section-divider"></div>
-        <h3 class="section-title">Your Adventure Game Character</h3>
-        <div class="character-details">
-            <div class="form-group">
-                <label class="form-field-title" for="character_name">Character Name:</label>
-                <input type="text" id="character_name" name="character_name" required>
+        <div class="character-info-section">
+            <div class="section-divider"></div>
+            <h3 class="section-title">Your Adventure Game Character</h3>
+            <div class="character-details">
+                <div class="form-group">
+                    <label class="form-field-title" for="character_name">Character Name:</label>
+                    <input type="text" id="character_name" name="character_name" required>
+                </div>
             </div>
         </div>
     </div>
@@ -452,20 +495,20 @@
 
         
         
-        <div class="turn-sheet-footer">
+        <div class="footer-content">
             
             
-            <div class="turn-sheet-footer-item">
-                <div class="turn-sheet-footer-label">Turn Sheet Deadline:</div>
-                <div class="turn-sheet-footer-value">2025-11-10 23:14:44.247738564 &#43;0000 UTC</div>
+            <div class="footer-content-item">
+                <div class="footer-content-label">Turn Sheet Deadline:</div>
+                <div class="footer-content-value">2025-11-11 19:49:55.107716347 &#43;0000 UTC</div>
             </div>
             
 
             
             
-            <div class="turn-sheet-footer-item">
-                <div class="turn-sheet-footer-label">Turn Sheet Code:</div>
-                <div class="turn-sheet-footer-value">JOIN123</div>
+            <div class="footer-content-item">
+                <div class="footer-content-label">Turn Sheet Code:</div>
+                <div class="footer-content-value">JOIN123</div>
             </div>
             
         </div>

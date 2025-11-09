@@ -2,12 +2,20 @@
 <style>
 .turn-sheet .account-details,
 .turn-sheet .character-details {
-    max-width: 520px;
+    width: 100%;
     margin: 0 auto;
 }
 
+.turn-sheet .account-info-section {
+    padding: 6px;
+}
+
+.turn-sheet .account-details {
+    padding: 4px 6px;
+}
+
 .turn-sheet .form-group {
-    margin-bottom: 10px;
+    margin-bottom: 8px;
 }
 
 .turn-sheet .form-row {
@@ -41,7 +49,7 @@
 }
 
 .turn-sheet .section-divider {
-    margin: 14px 0;
+    margin: 10px 0;
     border-bottom: 1px solid #d1d5db;
 }
 
@@ -49,52 +57,54 @@
 {{end}}
 
 {{define "content"}}
-<div class="turn-sheet">
-    <div class="account-info-section">
-        <h3 class="section-title">Your PlayByMail Account</h3>
-        <div class="account-details">
-            <div class="form-group">
-                <label class="form-field-title" for="email">Email Address:</label>
-                <input type="email" id="email" name="email" required>
-            </div>
-            <div class="form-group">
-                <label class="form-field-title" for="name">Name:</label>
-                <input type="text" id="name" name="name" required>
-            </div>
-            <div class="form-group">
-                <label class="form-field-title" for="postal_address_line1">Address Line 1:</label>
-                <input type="text" id="postal_address_line1" name="postal_address_line1" required>
-            </div>
-            <div class="form-group">
-                <label class="form-field-title" for="postal_address_line2">Address Line 2:</label>
-                <input type="text" id="postal_address_line2" name="postal_address_line2">
-            </div>
-            <div class="form-row two-column">
-                <div class="form-group third">
-                    <label class="form-field-title" for="state_province">State / Province:</label>
-                    <input type="text" id="state_province" name="state_province" required>
+<div class="turn-sheet debug-section">
+    <div class="turn-sheet-body">
+        <div class="account-info-section">
+            <h3 class="section-title">Your PlayByMail Account</h3>
+            <div class="account-details">
+                <div class="form-group">
+                    <label class="form-field-title" for="email">Email Address:</label>
+                    <input type="email" id="email" name="email" required>
                 </div>
-                <div class="form-group third">
-                    <label class="form-field-title" for="country">Country:</label>
-                    <input type="text" id="country" name="country" required>
+                <div class="form-group">
+                    <label class="form-field-title" for="name">Name:</label>
+                    <input type="text" id="name" name="name" required>
                 </div>
-            </div>
-            <div class="form-row">
-                <div class="form-group third post-code">
-                    <label class="form-field-title" for="postal_code">Post Code:</label>
-                    <input type="text" id="postal_code" name="postal_code" required>
+                <div class="form-group">
+                    <label class="form-field-title" for="postal_address_line1">Address Line 1:</label>
+                    <input type="text" id="postal_address_line1" name="postal_address_line1" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-field-title" for="postal_address_line2">Address Line 2:</label>
+                    <input type="text" id="postal_address_line2" name="postal_address_line2">
+                </div>
+                <div class="form-row two-column">
+                    <div class="form-group third">
+                        <label class="form-field-title" for="state_province">State / Province:</label>
+                        <input type="text" id="state_province" name="state_province" required>
+                    </div>
+                    <div class="form-group third">
+                        <label class="form-field-title" for="country">Country:</label>
+                        <input type="text" id="country" name="country" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group third post-code">
+                        <label class="form-field-title" for="postal_code">Post Code:</label>
+                        <input type="text" id="postal_code" name="postal_code" required>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <div class="character-info-section">
-        <div class="section-divider"></div>
-        <h3 class="section-title">Your Adventure Game Character</h3>
-        <div class="character-details">
-            <div class="form-group">
-                <label class="form-field-title" for="character_name">Character Name:</label>
-                <input type="text" id="character_name" name="character_name" required>
+        <div class="character-info-section">
+            <div class="section-divider"></div>
+            <h3 class="section-title">Your Adventure Game Character</h3>
+            <div class="character-details">
+                <div class="form-group">
+                    <label class="form-field-title" for="character_name">Character Name:</label>
+                    <input type="text" id="character_name" name="character_name" required>
+                </div>
             </div>
         </div>
     </div>

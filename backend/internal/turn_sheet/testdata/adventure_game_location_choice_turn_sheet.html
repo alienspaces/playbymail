@@ -5,16 +5,51 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>The Enchanted Forest Adventure - Turn 1</title>
     <style>
+        :root {
+            --page-width: 210mm;
+            --page-height: 297mm;
+            --padding-vertical: 8mm;
+            --padding-horizontal: 18mm;
+        }
+
+         
+        .debug-frame {
+            background-color: #ffffff;
+        }
+
+        .debug-main {
+            background-color: #ffffff;
+        }
+
+        .debug-section {
+            background-color: #ffffff;
+        }
+
          
         body {
             position: relative;
             font-family: 'Times New Roman', serif;
             margin: 0;
-            padding: 24px 0;
-            background-color: #f5f5f5;
+            padding: 0;
+            background-color: #ffffff;
             color: #333;
             display: flex;
             justify-content: center;
+        }
+        
+        h1 {
+            margin-top: 2mm;
+            margin-bottom: 2mm;
+        }
+
+        h2 {
+            margin-top: 2mm;
+            margin-bottom: 2mm;
+        }
+        
+        h3 {
+            margin-top: 2mm;
+            margin-bottom: 2mm;
         }
         
         .background-container {
@@ -59,46 +94,88 @@
             background-repeat: no-repeat;
             z-index: 0;
         }
-        
-        .header {
-            text-align: center;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-        }
-        
-        .header h1 {
-            margin: 0;
-            font-size: 24px;
-            color: #2c3e50;
-        }
-        
-        .header h2 {
-            margin: 5px 0 0 0;
-            font-size: 18px;
-            color: #7f8c8d;
-        }
 
         .content {
             position: relative;
             z-index: 2;
-            width: 210mm;
-            min-height: 297mm;
-            padding: 32px;
-            background-color: rgba(255, 255, 255, 0.98);
-            border-radius: 8px;
-            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
-            display: flex;
-            flex-direction: column;
+            width: var(--page-width);
+        }
+
+        .header-content {
+            margin: 0;
+            padding: 2mm;
+            height: 46mm;
+            text-align: center;
             box-sizing: border-box;
-            gap: 20px;
+            background-color: #ffffff;
         }
         
-        .turn-sheet {
+        .header-content h1 {
+            color: #2c3e50;
+        }
+        
+        .header-content h2 {
+            color: #7f8c8d;
+        }
+
+        .header-content-title {
+            text-align: center;
+        }
+
+        .header-content-title h3 {
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        .header-content-title p {
+            margin: 0;
+            color: #555;
+            line-height: 1.4;
+            max-width: 560px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+
+        .instruction-content {
+            margin: 0;
+            padding: 2mm;
+            height: 10mm;
             background-color: #ffffff;
-            padding: 20px 24px;
+            border-left: 3px solid #546a7b;
+            border-radius: 6px;
+            color: #2c3e50;
+        }
+
+        .instruction-content--empty {
+            background: transparent;
+            border: none;
+        }
+
+        .instruction-content p {
+            margin: 0;
+        }
+
+        .instruction-content strong {
+            color: #1f2a36;
+        }
+
+        .main-content {
+            margin: 0;
+            padding: 2mm;
+            height: 166mm;
+        }
+
+         
+        .turn-sheet {
+            margin: 0;
+            padding: 2mm;
             border-radius: 8px;
-            max-width: 620px;
+            max-width: 600px;
+            width: 100%;
             margin: 0 auto;
+            box-sizing: border-box;
+            background-color: #ffffff;
         }
 
         .turn-sheet label,
@@ -162,82 +239,37 @@
             color: #6c757d;
         }
 
-        .main-content {
-            flex: 1 1 auto;
-            display: flex;
-            flex-direction: column;
-            gap: 18px;
+        .turn-sheet-body {
         }
-        
-        .turn-sheet-footer {
-            margin-top: auto;
-            padding: 16px 20px 0 20px;
-            background-color: #f8f9fa;
+
+        .footer-content {
+            margin-top: 0;
+            padding: 2mm;
+            background-color: #ffffff;
             border-top: 1px solid #dee2e6;
             border-radius: 0 0 8px 8px;
         }
 
-        .turn-sheet-footer-item {
-            padding: 8px 0;
+        .footer-content-item {
+            padding: 1mm 0;
             border-bottom: 1px solid #dee2e6;
             font-family: 'Courier New', monospace;
             font-size: 10px;
             word-break: break-all;
         }
 
-        .turn-sheet-footer-item:last-child {
+        .footer-content-item:last-child {
             border-bottom: none;
         }
 
-        .turn-sheet-footer-label {
+        .footer-content-label {
             font-weight: bold;
             margin-bottom: 3px;
             color: #495057;
         }
         
-        .turn-sheet-footer-value {
+        .footer-content-value {
             color: #6c757d;
-        }
-
-        .instructions-block {
-            margin-top: 20px;
-            padding: 12px 14px;
-            background-color: #f3f6fb;
-            border-left: 3px solid #546a7b;
-            border-radius: 6px;
-            font-size: 12px;
-            line-height: 1.4;
-            color: #2c3e50;
-        }
-
-        .instructions-block p {
-            margin: 0;
-        }
-
-        .instructions-block strong {
-            color: #1f2a36;
-        }
-
-        .turn-sheet-heading {
-            margin-bottom: 16px;
-            text-align: center;
-        }
-
-        .turn-sheet-heading h3 {
-            margin: 0 0 6px 0;
-            font-size: 18px;
-            color: #2c3e50;
-            font-weight: 600;
-        }
-
-        .turn-sheet-heading p {
-            margin: 0;
-            font-size: 13px;
-            color: #555;
-            line-height: 1.4;
-            max-width: 560px;
-            margin-left: auto;
-            margin-right: auto;
         }
 
         .turn-sheet .section-title,
@@ -248,7 +280,7 @@
             font-size: 16px;
             font-weight: 600;
             color: #2c3e50;
-            margin: 18px 0 12px 0;
+            margin: 14px 0 10px 0;
         }
 
         .turn-sheet .section-subtitle,
@@ -312,40 +344,44 @@
 <style>
      
     .location-choice-section {
-        margin-bottom: 20px;
+        margin-bottom: 10px;
+        padding: 6px;
     }
     
     .location-options {
         display: flex;
         flex-direction: column;
-        gap: 8px;
-        max-width: 520px;
+        gap: 6px;
+        width: 100%;
         margin: 0 auto;
     }
     
     .location-option {
-        position: relative;
+        display: table;
+        table-layout: fixed;
         border: 1px solid #dee2e6;
         border-radius: 4px;
-        padding: 12px 16px 12px 46px;
-        background-color: #ffffff;
-        display: block;
+        padding: 10px 14px;
+        width: 100%;
+        box-sizing: border-box;
     }
-    
+
+    .location-option .location-option-radio {
+        display: table-cell;
+        width: 28px;
+        vertical-align: middle;
+        padding-right: 10px;
+    }
+
     .location-option input[type="radio"] {
-        position: absolute;
-        top: 50%;
-        left: 18px;
-        transform: translateY(-50%);
-        margin: 0;
+        margin-top: 0;
         cursor: pointer;
     }
     
     .location-option .location-option-content {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
+        display: table-cell;
+        vertical-align: top;
+        line-height: 1.35;
     }
 </style>
 
@@ -361,72 +397,83 @@
     </div>
 
     
-    <div class="content">
+    <div class="content debug-frame">
+
         
-        <div class="header">
+        <div class="header-content">
             <h1>The Enchanted Forest Adventure</h1>
             <h2>Turn 1 - Test Player</h2>
+
+            
+            <div class="header-content-title">
+                <h3>Mystic Grove</h3>
+                <p>You stand at the edge of an ancient forest. The trees whisper secrets of old magic.</p>
+            </div>
+            
         </div>
 
         
-        <div class="turn-sheet-heading">
-            <h3>Mystic Grove</h3>
-            <p>You stand at the edge of an ancient forest. The trees whisper secrets of old magic.</p>
-        </div>
         
-
-        
-        
-        <div class="instructions-block">
+        <div class="instruction-content">
             <p><strong>Instructions:</strong> Select your next location and return this form by the deadline to continue your adventure.</p>
         </div>
         
 
         
-        <div class="main-content">
+        <div class="main-content debug-main">
             
-<div class="turn-sheet">
-    <div class="location-choice-section">
-        <h3 class="content-section-title">Choose Your Next Location</h3>
-        <p class="content-section-subtitle">Select where you would like to go next from the available paths:</p>
-        
-        
-        <div class="location-options">
+<div class="turn-sheet debug-section">
+    <div class="turn-sheet-body">
+        <div class="location-choice-section">
+            <h3 class="content-section-title">Choose Your Next Location</h3>
+            <p class="content-section-subtitle">Select where you would like to go next from the available paths:</p>
             
-            <label class="location-option">
-                <input type="radio" name="location_choice" value="crystal_caverns">
-                <div class="location-option-content">
-                    <span class="form-field-title">Crystal Caverns</span>
-                    <span class="form-field-description">Enter the glowing caverns where crystals hum with power</span>
-                </div>
-            </label>
             
-            <label class="location-option">
-                <input type="radio" name="location_choice" value="dark_tower">
-                <div class="location-option-content">
-                    <span class="form-field-title">Dark Tower</span>
-                    <span class="form-field-description">Climb the mysterious tower that pierces the sky</span>
-                </div>
-            </label>
-            
-            <label class="location-option">
-                <input type="radio" name="location_choice" value="sunset_plains">
-                <div class="location-option-content">
-                    <span class="form-field-title">Sunset Plains</span>
-                    <span class="form-field-description">Venture into the vast plains where the sun sets eternally</span>
-                </div>
-            </label>
-            
-            <label class="location-option">
-                <input type="radio" name="location_choice" value="mermaid_lagoon">
-                <div class="location-option-content">
-                    <span class="form-field-title">Mermaid Lagoon</span>
-                    <span class="form-field-description">Dive into the hidden lagoon where mermaids sing</span>
-                </div>
-            </label>
+            <div class="location-options">
+                
+                <label class="location-option">
+                    <div class="location-option-radio">
+                        <input type="radio" name="location_choice" value="crystal_caverns">
+                    </div>
+                    <div class="location-option-content">
+                        <span class="form-field-title">Crystal Caverns</span>
+                        <span class="form-field-description">Enter the glowing caverns where crystals hum with power</span>
+                    </div>
+                </label>
+                
+                <label class="location-option">
+                    <div class="location-option-radio">
+                        <input type="radio" name="location_choice" value="dark_tower">
+                    </div>
+                    <div class="location-option-content">
+                        <span class="form-field-title">Dark Tower</span>
+                        <span class="form-field-description">Climb the mysterious tower that pierces the sky</span>
+                    </div>
+                </label>
+                
+                <label class="location-option">
+                    <div class="location-option-radio">
+                        <input type="radio" name="location_choice" value="sunset_plains">
+                    </div>
+                    <div class="location-option-content">
+                        <span class="form-field-title">Sunset Plains</span>
+                        <span class="form-field-description">Venture into the vast plains where the sun sets eternally</span>
+                    </div>
+                </label>
+                
+                <label class="location-option">
+                    <div class="location-option-radio">
+                        <input type="radio" name="location_choice" value="mermaid_lagoon">
+                    </div>
+                    <div class="location-option-content">
+                        <span class="form-field-title">Mermaid Lagoon</span>
+                        <span class="form-field-description">Dive into the hidden lagoon where mermaids sing</span>
+                    </div>
+                </label>
+                
+            </div>
             
         </div>
-        
     </div>
 
 </div>
@@ -435,20 +482,20 @@
 
         
         
-        <div class="turn-sheet-footer">
+        <div class="footer-content">
             
             
-            <div class="turn-sheet-footer-item">
-                <div class="turn-sheet-footer-label">Turn Sheet Deadline:</div>
-                <div class="turn-sheet-footer-value">2025-11-09 23:14:52.115112129 &#43;0000 UTC</div>
+            <div class="footer-content-item">
+                <div class="footer-content-label">Turn Sheet Deadline:</div>
+                <div class="footer-content-value">2025-11-10 19:50:03.767665696 &#43;0000 UTC</div>
             </div>
             
 
             
             
-            <div class="turn-sheet-footer-item">
-                <div class="turn-sheet-footer-label">Turn Sheet Code:</div>
-                <div class="turn-sheet-footer-value">ABC123XYZ</div>
+            <div class="footer-content-item">
+                <div class="footer-content-label">Turn Sheet Code:</div>
+                <div class="footer-content-value">ABC123XYZ</div>
             </div>
             
         </div>
