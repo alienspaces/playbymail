@@ -52,7 +52,9 @@ fi
 
 if [ -f "$dotfile_path/.env" ]; then
     echo "=> (env) Loading environment file"
+    set -a
     . "$dotfile_path/.env"
+    set +a
 fi
 
 

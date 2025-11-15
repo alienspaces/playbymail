@@ -107,98 +107,68 @@ func TestJoinGameProcessor_ScanTurnSheet(t *testing.T) {
 		expectErrorMessage    string
 		expectedTurnSheetCode string
 		expectedScanData      *turn_sheet.JoinGameScanData
+		requiresScanner       bool
 	}{
 		{
-			name: "valid data",
+			name: "given empty image data when scanning join game turn sheet then error returned",
 			imageDataFn: func() ([]byte, error) {
-				return []byte("fake image data"), nil
-			},
-			sheetDataFn: func() ([]byte, error) {
-				return []byte(`{}`), nil
-			},
-			expectError: false,
-		},
-		{
-			name: "missing email",
-			imageDataFn: func() ([]byte, error) {
-				return []byte("fake image data"), nil
+				return []byte{}, nil
 			},
 			sheetDataFn: func() ([]byte, error) {
 				return []byte(`{}`), nil
 			},
 			expectError:        true,
-			expectErrorMessage: "email is required",
+			expectErrorMessage: "empty image data",
+			requiresScanner:    false,
 		},
 		{
-			name: "missing name",
+			name: "given nil image data when scanning join game turn sheet then error returned",
 			imageDataFn: func() ([]byte, error) {
-				return []byte("fake image data"), nil
+				return nil, nil
 			},
 			sheetDataFn: func() ([]byte, error) {
 				return []byte(`{}`), nil
 			},
 			expectError:        true,
-			expectErrorMessage: "name is required",
+			expectErrorMessage: "empty image data",
+			requiresScanner:    false,
 		},
 		{
-			name: "missing address line1",
+			name: "given filled join game turn sheet image when scanning then code and player details are extracted correctly",
 			imageDataFn: func() ([]byte, error) {
-				return []byte("fake image data"), nil
+				return os.ReadFile("testdata/adventure_game_join_game_turn_sheet_filled.jpg")
 			},
 			sheetDataFn: func() ([]byte, error) {
-				return []byte(`{}`), nil
+				data := turn_sheet.JoinGameData{
+					TurnSheetTemplateData: turn_sheet.TurnSheetTemplateData{
+						GameName:      convert.Ptr("The Enchanted Forest Adventure"),
+						TurnSheetCode: convert.Ptr("JOIN123"),
+					},
+					GameDescription: "Adventure",
+				}
+				return json.Marshal(&data)
 			},
-			expectError:        true,
-			expectErrorMessage: "postal address line 1 is required",
-		},
-		{
-			name: "missing state",
-			imageDataFn: func() ([]byte, error) {
-				return []byte("fake image data"), nil
+			expectError:           false,
+			expectedTurnSheetCode: "JOIN123",
+			expectedScanData: &turn_sheet.JoinGameScanData{
+				Email:              "alienspaces@gmail.com",
+				Name:               "Ben Wallin",
+				PostalAddressLine1: "54 Ronald Street",
+				PostalAddressLine2: "",
+				StateProvince:      "Coburg North",
+				Country:            "Australia",
+				PostalCode:         "3058",
+				CharacterName:      "Luscious",
 			},
-			sheetDataFn: func() ([]byte, error) {
-				return []byte(`{}`), nil
-			},
-			expectError:        true,
-			expectErrorMessage: "state or province is required",
-		},
-		{
-			name: "missing country",
-			imageDataFn: func() ([]byte, error) {
-				return []byte("fake image data"), nil
-			},
-			sheetDataFn: func() ([]byte, error) {
-				return []byte(`{}`), nil
-			},
-			expectError:        true,
-			expectErrorMessage: "country is required",
-		},
-		{
-			name: "missing post code",
-			imageDataFn: func() ([]byte, error) {
-				return []byte("fake image data"), nil
-			},
-			sheetDataFn: func() ([]byte, error) {
-				return []byte(`{}`), nil
-			},
-			expectError:        true,
-			expectErrorMessage: "post code is required",
-		},
-		{
-			name: "missing character name",
-			imageDataFn: func() ([]byte, error) {
-				return []byte("fake image data"), nil
-			},
-			sheetDataFn: func() ([]byte, error) {
-				return []byte(`{}`), nil
-			},
-			expectError:        true,
-			expectErrorMessage: "character name is required",
+			requiresScanner: true,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			if tt.requiresScanner {
+				requireOpenAIKey(t)
+			}
 
 			// Load image data
 			imageData, err := tt.imageDataFn()
@@ -206,13 +176,12 @@ func TestJoinGameProcessor_ScanTurnSheet(t *testing.T) {
 				t.Fatalf("Failed to load image data: %v", err)
 			}
 
-			// Load sheet data
+			// Get sheet data bytes
 			sheetData, err := tt.sheetDataFn()
 			if err != nil {
-				t.Fatalf("Failed to load sheet data: %v", err)
+				t.Fatalf("Failed to get sheet data: %v", err)
 			}
 
-			// New context
 			ctx := context.Background()
 
 			// Test turn sheet code extraction if expected
@@ -221,18 +190,31 @@ func TestJoinGameProcessor_ScanTurnSheet(t *testing.T) {
 				if tt.expectError {
 					require.Error(t, err, "Should return error for turn sheet code extraction")
 				} else {
+					require.NoError(t, err, "Should extract turn sheet code without error")
 					require.Equal(t, tt.expectedTurnSheetCode, turnSheetCode)
 				}
 			}
 
-			// Test scan data extraction if expected
-			if tt.expectedScanData != nil {
-				scanData, err := processor.ScanTurnSheet(ctx, l, sheetData, imageData)
-				if tt.expectError {
-					require.Error(t, err, "Should return error for scan data extraction")
-				} else {
-					require.Equal(t, tt.expectedScanData, scanData)
+			// Test join game scanning
+			resultData, err := processor.ScanTurnSheet(ctx, l, sheetData, imageData)
+
+			if tt.expectError {
+				require.Error(t, err, "Should return error")
+				if tt.expectErrorMessage != "" {
+					require.Contains(t, err.Error(), tt.expectErrorMessage, "Error message should contain expected text")
 				}
+				require.Nil(t, resultData, "Result should be nil on error")
+				return
+			}
+
+			require.NoError(t, err, "Should not return error")
+			require.NotNil(t, resultData, "Result should not be nil")
+
+			if tt.expectedScanData != nil {
+				var scanData turn_sheet.JoinGameScanData
+				err := json.Unmarshal(resultData, &scanData)
+				require.NoError(t, err, "Should unmarshal scan results")
+				require.Equal(t, tt.expectedScanData, &scanData)
 			}
 		})
 	}

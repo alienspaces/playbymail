@@ -13,6 +13,10 @@ type Config struct {
 
 	// Save test PDFs
 	SaveTestFiles bool `env:"SAVE_TEST_FILES" envDefault:"true"`
+
+	// OpenAI settings
+	OpenAIAPIKey     string `env:"OPENAI_API_KEY" envDefault:""`
+	OpenAIImageModel string `env:"OPENAI_IMAGE_MODEL" envDefault:"gpt-4o-mini"`
 }
 
 // Parse parses environment variables into the provided struct using env.Parse.

@@ -3,10 +3,9 @@ package scanner
 import (
 	"context"
 	"fmt"
-	"strings"
 
-	"github.com/otiai10/gosseract/v2"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
+	"gitlab.com/alienspaces/playbymail/internal/utils/config"
 )
 
 // ImageScanner is responsible for generic OCR and text extraction from scanned
@@ -20,14 +19,50 @@ import (
 //   - Extracting turn sheet codes from OCR text
 //   - Validating player choices
 //   - Updating game state
-type ImageScanner struct {
-	logger logger.Logger
+type StructuredScanRequest struct {
+	Instructions       string
+	AdditionalContext  []string
+	TemplateImage      []byte
+	TemplateImageMIME  string
+	FilledImage        []byte
+	FilledImageMIME    string
+	ExpectedJSONSchema map[string]any
 }
 
-// NewImageScanner creates a new image scanner
-func NewImageScanner(l logger.Logger) *ImageScanner {
-	return &ImageScanner{
+type StructuredExtractorFunc func(context.Context, StructuredScanRequest) ([]byte, error)
+type TextExtractorFunc func(context.Context, []byte) (string, error)
+
+type ImageScanner struct {
+	logger              logger.Logger
+	cfg                 config.Config
+	structuredExtractor StructuredExtractorFunc
+	textExtractor       TextExtractorFunc
+}
+
+// NewImageScanner creates a new image scanner that leverages OpenAI-hosted OCR
+// flows for both generic text extraction and structured data extraction.
+func NewImageScanner(l logger.Logger, cfg config.Config) *ImageScanner {
+	s := &ImageScanner{
 		logger: l,
+		cfg:    cfg,
+	}
+	s.structuredExtractor = s.extractStructuredViaOpenAI
+	s.textExtractor = s.extractTextViaOpenAI
+	return s
+}
+
+// SetStructuredExtractor allows tests to override the structured extraction
+// pathway with a deterministic implementation.
+func (s *ImageScanner) SetStructuredExtractor(fn StructuredExtractorFunc) {
+	if fn != nil {
+		s.structuredExtractor = fn
+	}
+}
+
+// SetTextExtractor allows tests to override the raw text extraction workflow.
+func (s *ImageScanner) SetTextExtractor(fn TextExtractorFunc) {
+	if fn != nil {
+		s.textExtractor = fn
 	}
 }
 
@@ -41,69 +76,41 @@ func (s *ImageScanner) ExtractTextFromImage(ctx context.Context, imageData []byt
 		return "", fmt.Errorf("empty image data provided")
 	}
 
-	// Basic OCR implementation using a simple approach
-	// In production, this would use proper OCR libraries like:
-	// - github.com/otiai10/gosseract (Tesseract OCR)
-	// - Cloud OCR: Google Vision API, AWS Textract, Azure Computer Vision
-
-	// For now, implement a basic mock OCR that can be extended
-	extractedText, err := s.performBasicOCR(imageData)
-	if err != nil {
-		l.Warn("basic OCR failed >%v<", err)
-		return "", fmt.Errorf("OCR extraction failed: %w", err)
+	if s.textExtractor == nil {
+		return "", fmt.Errorf("text extractor not configured")
 	}
 
-	l.Info("extracted text length >%d< characters", len(extractedText))
-	return extractedText, nil
+	text, err := s.textExtractor(ctx, imageData)
+	if err != nil {
+		return "", err
+	}
+
+	l.Info("extracted text length >%d< characters", len(text))
+	return text, nil
 }
 
-// performBasicOCR performs OCR on image data using Gosseract
-func (s *ImageScanner) performBasicOCR(imageData []byte) (string, error) {
-	// Basic validation of image data
-	if len(imageData) == 0 {
-		return "", fmt.Errorf("empty image data provided")
+// ExtractStructuredData sends the structured extraction request to the hosted
+// OCR provider and returns a JSON payload matching the expected schema.
+func (s *ImageScanner) ExtractStructuredData(ctx context.Context, req StructuredScanRequest) ([]byte, error) {
+	l := s.logger.WithFunctionContext("ImageScanner/ExtractStructuredData")
+
+	if len(req.FilledImage) == 0 {
+		return nil, fmt.Errorf("filled image data is required")
 	}
 
-	if len(imageData) < 100 {
-		return "", fmt.Errorf("image data too small for OCR processing")
+	if req.ExpectedJSONSchema == nil {
+		return nil, fmt.Errorf("expected JSON schema is required")
 	}
 
-	// Create Gosseract client
-	client := gosseract.NewClient()
-	defer client.Close()
+	if s.structuredExtractor == nil {
+		return nil, fmt.Errorf("structured extractor not configured")
+	}
 
-	// Set image from byte data
-	err := client.SetImageFromBytes(imageData)
+	resp, err := s.structuredExtractor(ctx, req)
 	if err != nil {
-		return "", fmt.Errorf("failed to set image for OCR: %w", err)
+		l.Warn("structured extraction failed >%v<", err)
+		return nil, err
 	}
 
-	// Configure OCR settings for better text recognition
-	// Set language to English
-	err = client.SetLanguage("eng")
-	if err != nil {
-		// Log warning but continue - language setting is optional
-		s.logger.Warn("failed to set OCR language to English: %v", err)
-	}
-
-	// Set OCR mode to single text block (better for forms)
-	err = client.SetPageSegMode(gosseract.PSM_SINGLE_BLOCK)
-	if err != nil {
-		// Log warning but continue - page segmentation is optional
-		s.logger.Warn("failed to set OCR page segmentation mode: %v", err)
-	}
-
-	// Extract text
-	text, err := client.Text()
-	if err != nil {
-		return "", fmt.Errorf("OCR text extraction failed: %w", err)
-	}
-
-	// Clean up the extracted text
-	cleanedText := strings.TrimSpace(text)
-	if len(cleanedText) == 0 {
-		return "", fmt.Errorf("no text extracted from image")
-	}
-
-	return cleanedText, nil
+	return resp, nil
 }

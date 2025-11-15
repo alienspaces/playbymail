@@ -26,7 +26,7 @@ type BaseProcessor struct {
 // NewBaseProcessor creates a new base processor
 func NewBaseProcessor(l logger.Logger, cfg config.Config) *BaseProcessor {
 
-	scannerInstance := scanner.NewImageScanner(l)
+	scannerInstance := scanner.NewImageScanner(l, cfg)
 	generatorInstance := generator.NewPDFGenerator(l)
 
 	templatePath := "./backend/templates"
@@ -189,6 +189,22 @@ func (bp *BaseProcessor) ParseTurnSheetCodeFromImage(ctx context.Context, imageD
 // ExtractTextFromImage delegates to the scanner for OCR
 func (bp *BaseProcessor) ExtractTextFromImage(ctx context.Context, imageData []byte) (string, error) {
 	return bp.Scanner.ExtractTextFromImage(ctx, imageData)
+}
+
+// renderTemplatePreview renders the specified template with the provided data
+// and returns a PNG representation suitable for sending to hosted OCR services.
+func (bp *BaseProcessor) renderTemplatePreview(ctx context.Context, templatePath string, data any) ([]byte, error) {
+	l := bp.Log.WithFunctionContext("BaseProcessor/renderTemplatePreview")
+
+	bp.Generator.SetTemplatePath(bp.TemplatePath)
+
+	png, err := bp.Generator.GeneratePNG(ctx, templatePath, data)
+	if err != nil {
+		l.Warn("failed to render template preview >%v<", err)
+		return nil, err
+	}
+
+	return png, nil
 }
 
 // ValidateBaseTemplateData validates the required base fields for turn sheet generation

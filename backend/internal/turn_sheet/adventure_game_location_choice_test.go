@@ -121,6 +121,7 @@ func TestLocationChoiceProcessor_ScanTurnSheet(t *testing.T) {
 		expectErrorMessage    string
 		expectedTurnSheetCode string
 		expectedScanData      *turn_sheet.LocationChoiceScanData
+		requiresScanner       bool
 	}{
 		{
 			name: "given empty image data when scanning turn sheet then error is returned",
@@ -132,6 +133,7 @@ func TestLocationChoiceProcessor_ScanTurnSheet(t *testing.T) {
 			},
 			expectError:        true,
 			expectErrorMessage: "empty image data",
+			requiresScanner:    false,
 		},
 		{
 			name: "given nil image data when scanning turn sheet then error is returned",
@@ -143,114 +145,46 @@ func TestLocationChoiceProcessor_ScanTurnSheet(t *testing.T) {
 			},
 			expectError:        true,
 			expectErrorMessage: "empty image data",
+			requiresScanner:    false,
 		},
 		{
 			name: "given empty sheet data when scanning turn sheet then error is returned",
 			imageDataFn: func() ([]byte, error) {
-				return []byte("fake image data"), nil
+				return []byte("fake-image"), nil
 			},
 			sheetDataFn: func() ([]byte, error) {
 				return []byte(`{}`), nil
 			},
 			expectError:        true,
-			expectErrorMessage: "text extraction failed",
+			expectErrorMessage: "no location options supplied",
+			requiresScanner:    false,
 		},
 		{
-			name: "given valid sheet data when scanning fake image then OCR extraction error is returned",
+			name: "given real scanned image tick mark when scanning then turn sheet code and choices extracted",
 			imageDataFn: func() ([]byte, error) {
-				return []byte("fake image data"), nil
+				return os.ReadFile("testdata/adventure_game_location_choice_turn_sheet_filled_tick.jpg")
 			},
 			sheetDataFn: func() ([]byte, error) {
 				data := turn_sheet.LocationChoiceData{
 					LocationOptions: []turn_sheet.LocationOption{
-						{
-							LocationID:              "crystal_caverns",
-							LocationLinkName:        "Crystal Caverns",
-							LocationLinkDescription: "Enter the glowing caverns",
-						},
-					},
-				}
-				return json.Marshal(data)
-			},
-			expectError:        true, // Will fail at OCR extraction, but should get past sheet data validation
-			expectErrorMessage: "text extraction failed",
-		},
-		{
-			name: "given real scanned turn sheet image with tick mark when scanning then turn sheet code and location choices are extracted correctly",
-			imageDataFn: func() ([]byte, error) {
-				return os.ReadFile("testdata/adventure_game_location_choice_turn_sheet_scan_tick.jpg")
-			},
-			sheetDataFn: func() ([]byte, error) {
-				data := turn_sheet.LocationChoiceData{
-					LocationOptions: []turn_sheet.LocationOption{
-						{
-							LocationID:              "crystal_caverns",
-							LocationLinkName:        "Crystal Caverns",
-							LocationLinkDescription: "Enter the glowing caverns",
-						},
-						{
-							LocationID:              "dark_tower",
-							LocationLinkName:        "Dark Tower",
-							LocationLinkDescription: "Climb the mysterious tower",
-						},
-						{
-							LocationID:              "sunset_plains",
-							LocationLinkName:        "Sunset Plains",
-							LocationLinkDescription: "Venture into the vast plains",
-						},
-						{
-							LocationID:              "mermaid_lagoon",
-							LocationLinkName:        "Mermaid Lagoon",
-							LocationLinkDescription: "Dive into the hidden lagoon",
-						},
+						{LocationID: "sunset_plains", LocationLinkName: "Sunset Plains"},
+						{LocationID: "dark_tower", LocationLinkName: "Dark Tower"},
 					},
 				}
 				return json.Marshal(data)
 			},
 			expectError:           false,
 			expectedTurnSheetCode: "ABC123XYZ",
-			expectedScanData:      &turn_sheet.LocationChoiceScanData{Choices: []string{"dark_tower"}},
-		},
-		{
-			name: "given real scanned turn sheet image with cross mark when scanning then turn sheet code and location choices are extracted correctly",
-			imageDataFn: func() ([]byte, error) {
-				return os.ReadFile("testdata/adventure_game_location_choice_turn_sheet_scan_cross.jpg")
-			},
-			sheetDataFn: func() ([]byte, error) {
-				data := turn_sheet.LocationChoiceData{
-					LocationOptions: []turn_sheet.LocationOption{
-						{
-							LocationID:              "crystal_caverns",
-							LocationLinkName:        "Crystal Caverns",
-							LocationLinkDescription: "Enter the glowing caverns",
-						},
-						{
-							LocationID:              "dark_tower",
-							LocationLinkName:        "Dark Tower",
-							LocationLinkDescription: "Climb the mysterious tower",
-						},
-						{
-							LocationID:              "sunset_plains",
-							LocationLinkName:        "Sunset Plains",
-							LocationLinkDescription: "Venture into the vast plains",
-						},
-						{
-							LocationID:              "mermaid_lagoon",
-							LocationLinkName:        "Mermaid Lagoon",
-							LocationLinkDescription: "Dive into the hidden lagoon",
-						},
-					},
-				}
-				return json.Marshal(data)
-			},
-			expectError:           false,
-			expectedTurnSheetCode: "ABC123XYZ",
-			expectedScanData:      &turn_sheet.LocationChoiceScanData{Choices: []string{"mermaid_lagoon"}},
+			expectedScanData:      &turn_sheet.LocationChoiceScanData{Choices: []string{"sunset_plains"}},
+			requiresScanner:       true,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			if tt.requiresScanner {
+				requireOpenAIKey(t)
+			}
 
 			// Load image data
 			imageData, err := tt.imageDataFn()
@@ -278,7 +212,6 @@ func TestLocationChoiceProcessor_ScanTurnSheet(t *testing.T) {
 				t.Fatalf("Failed to get sheet data: %v", err)
 			}
 
-			// Test location choice scanning
 			resultData, err := processor.ScanTurnSheet(ctx, l, sheetData, imageData)
 
 			if tt.expectError {

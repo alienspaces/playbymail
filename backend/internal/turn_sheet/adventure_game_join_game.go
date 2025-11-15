@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
+	"gitlab.com/alienspaces/playbymail/internal/scanner"
 	"gitlab.com/alienspaces/playbymail/internal/utils/config"
 )
 
@@ -110,86 +111,123 @@ func (p *JoinGameProcessor) GenerateTurnSheet(ctx context.Context, l logger.Logg
 	return p.GenerateDocument(ctx, format, "turn_sheet/adventure_game_join_game.template", &data)
 }
 
-// ScanTurnSheet extracts join game player information from the uploaded document
+const joinGameTemplatePath = "turn_sheet/adventure_game_join_game.template"
+
+// ScanTurnSheet extracts join game player information from the uploaded document using the hosted scanner.
 func (p *JoinGameProcessor) ScanTurnSheet(ctx context.Context, l logger.Logger, sheetData []byte, imageData []byte) ([]byte, error) {
 	l = l.WithFunctionContext("JoinGameProcessor/ScanTurnSheet")
 
 	l.Info("scanning join game turn sheet")
 
-	// Extract text from image data
-	text, err := p.ExtractTextFromImage(ctx, imageData)
-	if err != nil {
-		l.Warn("failed to extract text from image >%v<", err)
-		return nil, fmt.Errorf("text extraction failed: %w", err)
+	if len(imageData) == 0 {
+		return nil, fmt.Errorf("empty image data provided")
 	}
 
-	// Parse the join game form fields from the extracted text
-	scanData, err := p.parseJoinGameText(l, text)
-	if err != nil {
-		l.Warn("failed to parse join game turn sheet >%v<", err)
-		return nil, err
+	templateData := p.resolveTemplateData(sheetData)
+
+	var templateImage []byte
+	if preview, err := p.renderTemplatePreview(ctx, joinGameTemplatePath, templateData); err == nil {
+		templateImage = preview
+	} else {
+		l.Warn("proceeding without template preview >%v<", err)
 	}
+
+	req := scanner.StructuredScanRequest{
+		Instructions:       buildJoinGameInstructions(),
+		AdditionalContext:  buildJoinGameContext(templateData),
+		TemplateImage:      templateImage,
+		TemplateImageMIME:  "image/png",
+		FilledImage:        imageData,
+		ExpectedJSONSchema: joinGameExpectedSchema(),
+	}
+
+	raw, err := p.Scanner.ExtractStructuredData(ctx, req)
+	if err != nil {
+		return nil, fmt.Errorf("structured extraction failed: %w", err)
+	}
+
+	var scanData JoinGameScanData
+	if err := json.Unmarshal(raw, &scanData); err != nil {
+		return nil, fmt.Errorf("failed to decode structured response: %w", err)
+	}
+
+	normalizeJoinGameScanData(&scanData)
 
 	if err := scanData.Validate(); err != nil {
-		l.Warn("validation failed for join game scan data >%v<", err)
 		return nil, err
 	}
 
 	return json.Marshal(scanData)
 }
 
-func (p *JoinGameProcessor) parseJoinGameText(_ logger.Logger, text string) (*JoinGameScanData, error) {
-
-	lines := strings.Split(text, "\n")
-	scanData := &JoinGameScanData{}
-
-	for _, line := range lines {
-		trimmed := strings.TrimSpace(line)
-		lower := strings.ToLower(trimmed)
-
-		switch {
-		case strings.Contains(lower, "email") && !strings.Contains(lower, "character") && scanData.Email == "":
-			if value := extractValue(trimmed); value != "" {
-				scanData.Email = value
-			}
-		case strings.Contains(lower, "name") && !strings.Contains(lower, "character") && scanData.Name == "":
-			if value := extractValue(trimmed); value != "" {
-				scanData.Name = value
-			}
-		case strings.Contains(lower, "address line 1") && scanData.PostalAddressLine1 == "":
-			if value := extractValue(trimmed); value != "" {
-				scanData.PostalAddressLine1 = value
-			}
-		case strings.Contains(lower, "address line 2") && scanData.PostalAddressLine2 == "":
-			if value := extractValue(trimmed); value != "" {
-				scanData.PostalAddressLine2 = value
-			}
-		case strings.Contains(lower, "state") || strings.Contains(lower, "province"):
-			if value := extractValue(trimmed); value != "" {
-				scanData.StateProvince = value
-			}
-		case strings.Contains(lower, "country") && scanData.Country == "":
-			if value := extractValue(trimmed); value != "" {
-				scanData.Country = value
-			}
-		case (strings.Contains(lower, "post code") || strings.Contains(lower, "postcode")) && scanData.PostalCode == "":
-			if value := extractValue(trimmed); value != "" {
-				scanData.PostalCode = value
-			}
-		case strings.Contains(lower, "character name") && scanData.CharacterName == "":
-			if value := extractValue(trimmed); value != "" {
-				scanData.CharacterName = value
-			}
+func (p *JoinGameProcessor) resolveTemplateData(sheetData []byte) *JoinGameData {
+	var data JoinGameData
+	if len(sheetData) > 0 {
+		if err := json.Unmarshal(sheetData, &data); err != nil {
+			return defaultJoinGameTemplateData()
 		}
+		return &data
 	}
-
-	return scanData, nil
+	return defaultJoinGameTemplateData()
 }
 
-func extractValue(line string) string {
-	parts := strings.SplitN(line, ":", 2)
-	if len(parts) != 2 {
-		return ""
+func defaultJoinGameTemplateData() *JoinGameData {
+	title := "Join Game"
+	instructions := DefaultJoinGameInstructions()
+	return &JoinGameData{
+		TurnSheetTemplateData: TurnSheetTemplateData{
+			TurnSheetTitle:        &title,
+			TurnSheetInstructions: &instructions,
+		},
 	}
-	return strings.TrimSpace(parts[1])
+}
+
+func joinGameExpectedSchema() map[string]any {
+	return map[string]any{
+		"email":                "",
+		"name":                 "",
+		"postal_address_line1": "",
+		"postal_address_line2": "",
+		"state_province":       "",
+		"country":              "",
+		"postal_code":          "",
+		"character_name":       "",
+	}
+}
+
+func buildJoinGameInstructions() string {
+	return `You are comparing two images of a PlayByMail "Join Game" form.
+- Image 1 is the blank reference form.
+- Image 2 is the completed form containing handwriting.
+Extract the player's answers and return them as JSON with the keys:
+email, name, postal_address_line1, postal_address_line2, state_province, country, postal_code, character_name.
+Copy the player's spelling exactly and leave values blank when fields are empty.`
+}
+
+func buildJoinGameContext(data *JoinGameData) []string {
+	var ctx []string
+	if data != nil {
+		if data.GameName != nil {
+			ctx = append(ctx, fmt.Sprintf("Game name: %s", strings.TrimSpace(*data.GameName)))
+		}
+		if data.GameDescription != "" {
+			ctx = append(ctx, fmt.Sprintf("Game description: %s", data.GameDescription))
+		}
+	}
+	ctx = append(ctx,
+		"The JSON must only contain the requested keys.",
+		"Return an empty string when the player left a field blank.",
+	)
+	return ctx
+}
+
+func normalizeJoinGameScanData(data *JoinGameScanData) {
+	data.Email = strings.TrimSpace(data.Email)
+	data.Name = strings.TrimSpace(data.Name)
+	data.PostalAddressLine1 = strings.TrimSpace(data.PostalAddressLine1)
+	data.PostalAddressLine2 = strings.TrimSpace(data.PostalAddressLine2)
+	data.StateProvince = strings.TrimSpace(data.StateProvince)
+	data.Country = strings.TrimSpace(data.Country)
+	data.PostalCode = strings.TrimSpace(data.PostalCode)
+	data.CharacterName = strings.TrimSpace(data.CharacterName)
 }
