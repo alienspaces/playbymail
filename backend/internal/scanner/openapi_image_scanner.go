@@ -58,6 +58,9 @@ type openAIError struct {
 // endpoint and returns the transcribed text. The caller must ensure an API key
 // is configured before calling.
 func (s *ImageScanner) extractTextViaOpenAI(ctx context.Context, imageData []byte) (string, error) {
+	l := s.logger.WithFunctionContext("ImageScanner/extractTextViaOpenAI")
+	start := time.Now()
+
 	if s.cfg.OpenAIAPIKey == "" {
 		return "", fmt.Errorf("OpenAI API key not configured")
 	}
@@ -71,8 +74,18 @@ func (s *ImageScanner) extractTextViaOpenAI(ctx context.Context, imageData []byt
 		mimeType = defaultImageMimeType
 	}
 
-	imageB64 := base64.StdEncoding.EncodeToString(imageData)
-	imageURI := fmt.Sprintf("data:%s;base64,%s", mimeType, imageB64)
+	// Optimize image before encoding
+	optimized, optimizedMIME, err := optimizeImageForOCR(l, imageData, mimeType)
+	if err != nil {
+		l.Warn("image optimization failed, using original >%v<", err)
+		optimized = imageData
+		optimizedMIME = mimeType
+	}
+
+	imageB64 := base64.StdEncoding.EncodeToString(optimized)
+	imageURI := fmt.Sprintf("data:%s;base64,%s", optimizedMIME, imageB64)
+	l.Debug("prepared image data URI original_size=%d optimized_size=%d mime_type=%s base64_size=%d",
+		len(imageData), len(optimized), optimizedMIME, len(imageB64))
 
 	reqPayload := openAIRequest{
 		Model: s.modelName(),
@@ -107,19 +120,34 @@ func (s *ImageScanner) extractTextViaOpenAI(ctx context.Context, imageData []byt
 	httpReq.Header.Set("Authorization", fmt.Sprintf("Bearer %s", s.cfg.OpenAIAPIKey))
 
 	client := &http.Client{Timeout: 45 * time.Second}
+	apiStart := time.Now()
+	model := s.modelName()
+	l.Info("sending OpenAI text extraction request endpoint=%s model=%s request_size=%d",
+		openAIResponsesEndpoint, model, len(body))
 	resp, err := client.Do(httpReq)
+	apiDuration := time.Since(apiStart)
 	if err != nil {
+		l.Warn("OpenAI HTTP request failed after %v error=%v", apiDuration, err)
 		return "", fmt.Errorf("OpenAI request failed: %w", err)
 	}
 	defer resp.Body.Close()
+
+	l.Info("received OpenAI response status=%d duration=%v content_length=%s",
+		resp.StatusCode, apiDuration, resp.Header.Get("Content-Length"))
 
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return "", fmt.Errorf("failed to read OpenAI response: %w", err)
 	}
+	l.Debug("read response body size=%d", len(respBody))
 
 	if resp.StatusCode >= 300 {
 		apiErr := parseOpenAIAPIError(respBody)
+		errorPreview := string(respBody)
+		if len(errorPreview) > 200 {
+			errorPreview = errorPreview[:200] + "..."
+		}
+		l.Warn("OpenAI API error response status=%d body_preview=%s", resp.StatusCode, errorPreview)
 		if apiErr != "" {
 			return "", fmt.Errorf("OpenAI API error: %s", apiErr)
 		}
@@ -129,18 +157,24 @@ func (s *ImageScanner) extractTextViaOpenAI(ctx context.Context, imageData []byt
 	var apiResp openAIResponse
 	err = json.Unmarshal(respBody, &apiResp)
 	if err != nil {
+		l.Warn("failed to decode OpenAI response body_size=%d error=%v", len(respBody), err)
 		return "", fmt.Errorf("failed to decode OpenAI response: %w", err)
 	}
 
 	if apiResp.Error != nil && apiResp.Error.Message != "" {
+		l.Warn("OpenAI API returned error type=%s message=%s", apiResp.Error.Type, apiResp.Error.Message)
 		return "", fmt.Errorf("OpenAI API error: %s", apiResp.Error.Message)
 	}
 
 	text := extractOpenAIText(apiResp)
 	if text == "" {
+		l.Warn("OpenAI response contained no text output_count=%d", len(apiResp.Output))
 		return "", fmt.Errorf("OpenAI did not return any text")
 	}
 
+	totalDuration := time.Since(start)
+	l.Info("OpenAI text extraction completed text_length=%d total_duration=%v api_duration=%v prep_duration=%v",
+		len(text), totalDuration, apiDuration, apiStart.Sub(start))
 	return text, nil
 }
 
@@ -172,6 +206,9 @@ func extractOpenAIText(resp openAIResponse) string {
 }
 
 func (s *ImageScanner) extractStructuredViaOpenAI(ctx context.Context, req StructuredScanRequest) ([]byte, error) {
+	l := s.logger.WithFunctionContext("ImageScanner/extractStructuredViaOpenAI")
+	start := time.Now()
+
 	if s.cfg.OpenAIAPIKey == "" {
 		return nil, fmt.Errorf("OpenAI API key not configured")
 	}
@@ -183,6 +220,8 @@ func (s *ImageScanner) extractStructuredViaOpenAI(ctx context.Context, req Struc
 	if req.ExpectedJSONSchema == nil {
 		return nil, fmt.Errorf("expected JSON schema must be provided")
 	}
+
+	l.Debug("preparing structured extraction request has_template=%v", len(req.TemplateImage) > 0)
 
 	skeleton, err := json.Marshal(req.ExpectedJSONSchema)
 	if err != nil {
@@ -209,15 +248,28 @@ func (s *ImageScanner) extractStructuredViaOpenAI(ctx context.Context, req Struc
 	}
 
 	if len(req.TemplateImage) > 0 {
+		optimizedTemplate, optimizedTemplateMIME, err := optimizeImageForOCR(l, req.TemplateImage, req.TemplateImageMIME)
+		if err != nil {
+			l.Warn("template image optimization failed, using original >%v<", err)
+			optimizedTemplate = req.TemplateImage
+			optimizedTemplateMIME = req.TemplateImageMIME
+		}
 		contents = append(contents, openAIInputContent{
 			Type:     "input_image",
-			ImageURL: encodeImageDataURI(req.TemplateImage, req.TemplateImageMIME),
+			ImageURL: encodeImageDataURI(optimizedTemplate, optimizedTemplateMIME),
 		})
+	}
+
+	optimizedFilled, optimizedFilledMIME, err := optimizeImageForOCR(l, req.FilledImage, req.FilledImageMIME)
+	if err != nil {
+		l.Warn("filled image optimization failed, using original >%v<", err)
+		optimizedFilled = req.FilledImage
+		optimizedFilledMIME = req.FilledImageMIME
 	}
 
 	contents = append(contents, openAIInputContent{
 		Type:     "input_image",
-		ImageURL: encodeImageDataURI(req.FilledImage, req.FilledImageMIME),
+		ImageURL: encodeImageDataURI(optimizedFilled, optimizedFilledMIME),
 	})
 
 	contents = append(contents,
@@ -255,19 +307,43 @@ func (s *ImageScanner) extractStructuredViaOpenAI(ctx context.Context, req Struc
 	httpReq.Header.Set("Authorization", fmt.Sprintf("Bearer %s", s.cfg.OpenAIAPIKey))
 
 	client := &http.Client{Timeout: 60 * time.Second}
+	apiStart := time.Now()
+	model := s.modelName()
+	imageCount := 0
+	textCount := 0
+	for _, c := range contents {
+		if c.Type == "input_image" {
+			imageCount++
+		} else if c.Type == "input_text" {
+			textCount++
+		}
+	}
+	l.Info("sending OpenAI structured extraction request endpoint=%s model=%s request_size=%d content_items=%d images=%d text=%d",
+		openAIResponsesEndpoint, model, len(body), len(contents), imageCount, textCount)
 	resp, err := client.Do(httpReq)
+	apiDuration := time.Since(apiStart)
 	if err != nil {
+		l.Warn("OpenAI HTTP request failed after %v error=%v", apiDuration, err)
 		return nil, fmt.Errorf("OpenAI structured request failed: %w", err)
 	}
 	defer resp.Body.Close()
+
+	l.Info("received OpenAI response status=%d duration=%v content_length=%s",
+		resp.StatusCode, apiDuration, resp.Header.Get("Content-Length"))
 
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read OpenAI structured response: %w", err)
 	}
+	l.Debug("read response body size=%d", len(respBody))
 
 	if resp.StatusCode >= 300 {
 		apiErr := parseOpenAIAPIError(respBody)
+		errorPreview := string(respBody)
+		if len(errorPreview) > 200 {
+			errorPreview = errorPreview[:200] + "..."
+		}
+		l.Warn("OpenAI API error response status=%d body_preview=%s", resp.StatusCode, errorPreview)
 		if apiErr != "" {
 			return nil, fmt.Errorf("OpenAI API error: %s", apiErr)
 		}
@@ -276,18 +352,25 @@ func (s *ImageScanner) extractStructuredViaOpenAI(ctx context.Context, req Struc
 
 	var apiResp openAIResponse
 	if err := json.Unmarshal(respBody, &apiResp); err != nil {
+		l.Warn("failed to decode OpenAI structured response body_size=%d error=%v", len(respBody), err)
 		return nil, fmt.Errorf("failed to decode OpenAI structured response: %w", err)
 	}
 
 	if apiResp.Error != nil && apiResp.Error.Message != "" {
+		l.Warn("OpenAI API returned error type=%s message=%s", apiResp.Error.Type, apiResp.Error.Message)
 		return nil, fmt.Errorf("OpenAI API error: %s", apiResp.Error.Message)
 	}
 
 	text := extractOpenAIText(apiResp)
 	if text == "" {
+		l.Warn("OpenAI response contained no text output_count=%d", len(apiResp.Output))
 		return nil, fmt.Errorf("OpenAI did not return structured data")
 	}
 
+	totalDuration := time.Since(start)
+	prepDuration := apiStart.Sub(start)
+	l.Info("OpenAI structured extraction completed response_size=%d total_duration=%v api_duration=%v prep_duration=%v",
+		len(text), totalDuration, apiDuration, prepDuration)
 	return []byte(text), nil
 }
 

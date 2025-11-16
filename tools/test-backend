@@ -1,9 +1,23 @@
 #!/usr/bin/env sh
 
 # Use this script to set up the environment and run all backend tests.
-
-# Local development only.
-# Usage: ./tools/test
+#
+# Usage:
+#   ./tools/test-backend                                   # Run all backend tests
+#   ./tools/test-backend <test-path>                       # Run tests in specific package
+#   ./tools/test-backend <test-path> -run <pattern>        # Run specific test(s)
+#   ./tools/test-backend <test-path> -run <pattern> -v     # Run with verbose output
+#
+# Examples:
+#   ./tools/test-backend                                   # Run all tests
+#   ./tools/test-backend ./internal/turn_sheet             # Run all turn_sheet tests
+#   ./tools/test-backend ./internal/scanner                # Run all scanner tests
+#   ./tools/test-backend ./internal/scanner -run TestNewImageScanner
+#   ./tools/test-backend ./internal/turn_sheet -run TestLocationChoiceProcessor_ScanTurnSheet
+#   ./tools/test-backend ./internal/turn_sheet -run "TestLocationChoiceProcessor_ScanTurnSheet/given_real_scanned_image_tick_mark"
+#
+# All arguments after the script name are passed directly to 'go test'.
+# The script sets up the test database and environment automatically.
 
 # copy develop env
 
@@ -15,11 +29,15 @@ cp .env.develop .env
 # setup test database
 . ./tools/db-setup-test || exit $?
 
-# test core
-. ./tools/test-backend-core || exit $?
+if [ -n "$1" ]; then
+    . ./tools/test-backend-custom "$@" || exit $?
+else
+    # test core
+    . ./tools/test-backend-core || exit $?
 
-# test internal
-. ./tools/test-backend-internal || exit $?
+    # test internal
+    . ./tools/test-backend-internal || exit $?
+fi
 
 # stop test database
 . ./tools/db-stop || exit $?
