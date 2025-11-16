@@ -180,8 +180,8 @@ func defaultJoinGameTemplateData() *JoinGameData {
 			TurnSheetTitle:        &title,
 			TurnSheetInstructions: &instructions,
 		},
+		}
 	}
-}
 
 func joinGameExpectedSchema() map[string]any {
 	return map[string]any{
