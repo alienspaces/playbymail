@@ -12,6 +12,9 @@ import (
 	"time"
 )
 
+// OpenAPI
+// https://platform.openai.com/docs/api-reference/responses/create
+
 const (
 	openAIResponsesEndpoint       = "https://api.openai.com/v1/responses"
 	openAIImageTranscriptionModel = "gpt-4o-mini"
@@ -54,11 +57,12 @@ type openAIError struct {
 	Type    string `json:"type"`
 }
 
-// extractTextViaOpenAI sends the scanned image to OpenAI's image understanding
-// endpoint and returns the transcribed text. The caller must ensure an API key
-// is configured before calling.
+// extractTextViaOpenAI sends the scanned image to OpenAI's responses endpoint
+// (https://api.openai.com/v1/responses) and returns the transcribed text.
+// The caller must ensure an API key is configured before calling.
 func (s *ImageScanner) extractTextViaOpenAI(ctx context.Context, imageData []byte) (string, error) {
 	l := s.logger.WithFunctionContext("ImageScanner/extractTextViaOpenAI")
+
 	start := time.Now()
 
 	if s.cfg.OpenAIAPIKey == "" {
@@ -84,7 +88,8 @@ func (s *ImageScanner) extractTextViaOpenAI(ctx context.Context, imageData []byt
 
 	imageB64 := base64.StdEncoding.EncodeToString(optimized)
 	imageURI := fmt.Sprintf("data:%s;base64,%s", optimizedMIME, imageB64)
-	l.Debug("prepared image data URI original_size=%d optimized_size=%d mime_type=%s base64_size=%d",
+
+	l.Info("prepared image data URI original_size=%d optimized_size=%d mime_type=%s base64_size=%d",
 		len(imageData), len(optimized), optimizedMIME, len(imageB64))
 
 	reqPayload := openAIRequest{
@@ -122,8 +127,10 @@ func (s *ImageScanner) extractTextViaOpenAI(ctx context.Context, imageData []byt
 	client := &http.Client{Timeout: 45 * time.Second}
 	apiStart := time.Now()
 	model := s.modelName()
+
 	l.Info("sending OpenAI text extraction request endpoint=%s model=%s request_size=%d",
 		openAIResponsesEndpoint, model, len(body))
+
 	resp, err := client.Do(httpReq)
 	apiDuration := time.Since(apiStart)
 	if err != nil {
@@ -139,6 +146,7 @@ func (s *ImageScanner) extractTextViaOpenAI(ctx context.Context, imageData []byt
 	if err != nil {
 		return "", fmt.Errorf("failed to read OpenAI response: %w", err)
 	}
+
 	l.Debug("read response body size=%d", len(respBody))
 
 	if resp.StatusCode >= 300 {
@@ -173,8 +181,10 @@ func (s *ImageScanner) extractTextViaOpenAI(ctx context.Context, imageData []byt
 	}
 
 	totalDuration := time.Since(start)
+
 	l.Info("OpenAI text extraction completed text_length=%d total_duration=%v api_duration=%v prep_duration=%v",
 		len(text), totalDuration, apiDuration, apiStart.Sub(start))
+
 	return text, nil
 }
 

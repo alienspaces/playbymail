@@ -72,13 +72,16 @@ func (s *ImageScanner) ExtractTextFromImage(ctx context.Context, imageData []byt
 	l := s.logger.WithFunctionContext("ImageScanner/ExtractTextFromImage")
 
 	start := time.Now()
+
 	l.Info("extracting text from image data image_size=%d", len(imageData))
 
 	if len(imageData) == 0 {
+		l.Warn("empty image data provided")
 		return "", fmt.Errorf("empty image data provided")
 	}
 
 	if s.textExtractor == nil {
+		l.Warn("text extractor not configured")
 		return "", fmt.Errorf("text extractor not configured")
 	}
 
@@ -90,6 +93,7 @@ func (s *ImageScanner) ExtractTextFromImage(ctx context.Context, imageData []byt
 	}
 
 	l.Info("extracted text length >%d< characters duration=%v", len(text), duration)
+
 	return text, nil
 }
 
@@ -99,17 +103,21 @@ func (s *ImageScanner) ExtractStructuredData(ctx context.Context, req Structured
 	l := s.logger.WithFunctionContext("ImageScanner/ExtractStructuredData")
 
 	start := time.Now()
+
 	l.Info("extracting structured data filled_image_size=%d template_image_size=%d", len(req.FilledImage), len(req.TemplateImage))
 
 	if len(req.FilledImage) == 0 {
+		l.Warn("filled image data is required")
 		return nil, fmt.Errorf("filled image data is required")
 	}
 
 	if req.ExpectedJSONSchema == nil {
+		l.Warn("expected JSON schema is required")
 		return nil, fmt.Errorf("expected JSON schema is required")
 	}
 
 	if s.structuredExtractor == nil {
+		l.Warn("structured extractor not configured")
 		return nil, fmt.Errorf("structured extractor not configured")
 	}
 
@@ -121,5 +129,6 @@ func (s *ImageScanner) ExtractStructuredData(ctx context.Context, req Structured
 	}
 
 	l.Info("extracted structured data response_size=%d duration=%v", len(resp), duration)
+
 	return resp, nil
 }

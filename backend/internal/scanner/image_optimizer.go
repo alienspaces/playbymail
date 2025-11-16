@@ -19,8 +19,11 @@ const (
 // optimizeImageForOCR resizes and compresses images to reduce payload size
 // for OpenAI API calls while maintaining OCR readability.
 func optimizeImageForOCR(l logger.Logger, imageData []byte, originalMIME string) ([]byte, string, error) {
+	l = l.WithFunctionContext("ImageOptimizer/optimizeImageForOCR")
+
 	optStart := len(imageData)
-	l.Debug("optimizing image for OCR original_size=%d mime=%s", optStart, originalMIME)
+
+	l.Info("optimizing image for OCR original_size=%d mime=%s", optStart, originalMIME)
 
 	// Decode image
 	img, format, err := image.Decode(bytes.NewReader(imageData))
@@ -31,14 +34,16 @@ func optimizeImageForOCR(l logger.Logger, imageData []byte, originalMIME string)
 	bounds := img.Bounds()
 	width := bounds.Dx()
 	height := bounds.Dy()
-	l.Debug("decoded image dimensions=%dx%d format=%s", width, height, format)
+
+	l.Info("decoded image dimensions=%dx%d format=%s", width, height, format)
 
 	// Resize if needed
 	if width > maxImageDimension || height > maxImageDimension {
 		scale := float64(maxImageDimension) / float64(max(width, height))
 		newWidth := int(float64(width) * scale)
 		newHeight := int(float64(height) * scale)
-		l.Debug("resizing image from %dx%d to %dx%d scale=%.2f", width, height, newWidth, newHeight, scale)
+
+		l.Info("resizing image from %dx%d to %dx%d scale=%.2f", width, height, newWidth, newHeight, scale)
 
 		img = resizeImage(img, newWidth, newHeight)
 		bounds = img.Bounds()

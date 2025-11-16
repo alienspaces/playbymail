@@ -120,6 +120,7 @@ func (p *JoinGameProcessor) ScanTurnSheet(ctx context.Context, l logger.Logger, 
 	l.Info("scanning join game turn sheet")
 
 	if len(imageData) == 0 {
+		l.Warn("empty image data provided")
 		return nil, fmt.Errorf("empty image data provided")
 	}
 
@@ -127,9 +128,12 @@ func (p *JoinGameProcessor) ScanTurnSheet(ctx context.Context, l logger.Logger, 
 
 	templateImage, err := p.renderTemplatePreview(ctx, joinGameTemplatePath, templateData)
 	if err != nil {
+		l.Warn("failed to generate template preview >%v<", err)
 		return nil, fmt.Errorf("failed to generate template preview: %w", err)
 	}
+
 	if len(templateImage) == 0 {
+		l.Warn("template preview generation returned empty image")
 		return nil, fmt.Errorf("template preview generation returned empty image")
 	}
 
@@ -144,17 +148,20 @@ func (p *JoinGameProcessor) ScanTurnSheet(ctx context.Context, l logger.Logger, 
 
 	raw, err := p.Scanner.ExtractStructuredData(ctx, req)
 	if err != nil {
+		l.Warn("structured extraction failed >%v<", err)
 		return nil, fmt.Errorf("structured extraction failed: %w", err)
 	}
 
 	var scanData JoinGameScanData
 	if err := json.Unmarshal(raw, &scanData); err != nil {
+		l.Warn("failed to decode structured response >%v<", err)
 		return nil, fmt.Errorf("failed to decode structured response: %w", err)
 	}
 
 	normalizeJoinGameScanData(&scanData)
 
 	if err := scanData.Validate(); err != nil {
+		l.Warn("failed to validate scan data >%v<", err)
 		return nil, err
 	}
 
@@ -180,8 +187,8 @@ func defaultJoinGameTemplateData() *JoinGameData {
 			TurnSheetTitle:        &title,
 			TurnSheetInstructions: &instructions,
 		},
-		}
 	}
+}
 
 func joinGameExpectedSchema() map[string]any {
 	return map[string]any{
@@ -196,6 +203,7 @@ func joinGameExpectedSchema() map[string]any {
 	}
 }
 
+// These are the instructions provided to the AI driven OCR service.
 func buildJoinGameInstructions() string {
 	return `You are comparing two images of a PlayByMail "Join Game" form.
 - Image 1 is the blank reference form.
@@ -205,6 +213,7 @@ email, name, postal_address_line1, postal_address_line2, state_province, country
 Copy the player's spelling exactly and leave values blank when fields are empty.`
 }
 
+// These are the additional context provided to the AI driven OCR service.
 func buildJoinGameContext(data *JoinGameData) []string {
 	var ctx []string
 	if data != nil {
@@ -222,6 +231,7 @@ func buildJoinGameContext(data *JoinGameData) []string {
 	return ctx
 }
 
+// normalizeJoinGameScanData normalizes the scan data by trimming whitespace from the fields.
 func normalizeJoinGameScanData(data *JoinGameScanData) {
 	data.Email = strings.TrimSpace(data.Email)
 	data.Name = strings.TrimSpace(data.Name)

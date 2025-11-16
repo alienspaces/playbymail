@@ -117,6 +117,7 @@ func (p *LocationChoiceProcessor) ScanTurnSheet(ctx context.Context, l logger.Lo
 	l.Info("scanning location choice turn sheet")
 
 	if len(imageData) == 0 {
+		l.Warn("empty image data provided")
 		return nil, fmt.Errorf("empty image data provided")
 	}
 
@@ -127,14 +128,17 @@ func (p *LocationChoiceProcessor) ScanTurnSheet(ctx context.Context, l logger.Lo
 	}
 
 	if len(locationChoiceData.LocationOptions) == 0 {
+		l.Warn("no location options supplied in sheet data")
 		return nil, fmt.Errorf("no location options supplied in sheet data")
 	}
 
 	templateImage, err := p.renderTemplatePreview(ctx, locationChoiceTemplatePath, &locationChoiceData)
 	if err != nil {
+		l.Warn("failed to generate template preview >%v<", err)
 		return nil, fmt.Errorf("failed to generate template preview: %w", err)
 	}
 	if len(templateImage) == 0 {
+		l.Warn("template preview generation returned empty image")
 		return nil, fmt.Errorf("template preview generation returned empty image")
 	}
 
@@ -153,8 +157,8 @@ func (p *LocationChoiceProcessor) ScanTurnSheet(ctx context.Context, l logger.Lo
 
 	raw, err := p.Scanner.ExtractStructuredData(ctx, req)
 	if err != nil {
-		l.Warn("failed to extract structured location choices >%v<", err)
-		return nil, fmt.Errorf("location choice parsing failed: %w", err)
+		l.Warn("structured extraction failed >%v<", err)
+		return nil, fmt.Errorf("structured extraction failed: %w", err)
 	}
 
 	var scanData LocationChoiceScanData
@@ -167,8 +171,9 @@ func (p *LocationChoiceProcessor) ScanTurnSheet(ctx context.Context, l logger.Lo
 	}
 
 	return json.Marshal(scanData)
-	}
+}
 
+// These are the instructions provided to the AI driven OCR service.
 func buildLocationChoiceInstructions() string {
 	return `Compare the blank template image with the completed turn sheet.
 Determine which checkbox/circle is marked by the player.
@@ -177,6 +182,7 @@ Use the provided reference list to map the printed location names to their ids.
 If no boxes are marked, return an empty array.`
 }
 
+// These are the additional context provided to the AI driven OCR service.
 func buildLocationChoiceContext(data *LocationChoiceData) []string {
 	var ctx []string
 	if data != nil {
@@ -186,22 +192,22 @@ func buildLocationChoiceContext(data *LocationChoiceData) []string {
 				strings.TrimSpace(option.LocationLinkName),
 				strings.TrimSpace(option.LocationLinkDescription),
 			))
-					}
-				}
+		}
+	}
 	return ctx
 }
 
 func validateLocationChoices(sheetData *LocationChoiceData, scanData *LocationChoiceScanData) error {
 	if scanData == nil {
-		return fmt.Errorf("no scan data returned")
+		return fmt.Errorf("no scan data provided")
 	}
 
 	validIDs := make(map[string]bool)
 	for _, opt := range sheetData.LocationOptions {
 		if opt.LocationID != "" {
 			validIDs[opt.LocationID] = true
-				}
-			}
+		}
+	}
 
 	for _, choice := range scanData.Choices {
 		if !validIDs[choice] {
