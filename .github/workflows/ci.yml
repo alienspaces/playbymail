@@ -40,6 +40,7 @@ jobs:
       TEMPLATES_PATH: "${{ github.workspace }}/backend/templates"
       SCHEMA_PATH: "${{ github.workspace }}/backend/schema"
       TZ: UTC
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
     steps:
       - uses: actions/checkout@v4
       - name: Set up Go
@@ -69,6 +70,8 @@ jobs:
 
   build-frontend:
     runs-on: ubuntu-latest
+    # Only build frontend for main branch pushes
+    if: github.ref == 'refs/heads/main'
     needs: test-frontend
     steps:
       - uses: actions/checkout@v4

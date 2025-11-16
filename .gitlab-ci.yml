@@ -70,6 +70,8 @@ test-frontend:
 build-frontend:
   image: node:18-alpine
   stage: build
+  only:
+    - main
   before_script:
     - apk add --no-cache git
   script:

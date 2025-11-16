@@ -167,7 +167,7 @@ func (p *LocationChoiceProcessor) ScanTurnSheet(ctx context.Context, l logger.Lo
 	}
 
 	return json.Marshal(scanData)
-}
+	}
 
 func buildLocationChoiceInstructions() string {
 	return `Compare the blank template image with the completed turn sheet.
@@ -186,8 +186,8 @@ func buildLocationChoiceContext(data *LocationChoiceData) []string {
 				strings.TrimSpace(option.LocationLinkName),
 				strings.TrimSpace(option.LocationLinkDescription),
 			))
-		}
-	}
+					}
+				}
 	return ctx
 }
 
@@ -200,8 +200,8 @@ func validateLocationChoices(sheetData *LocationChoiceData, scanData *LocationCh
 	for _, opt := range sheetData.LocationOptions {
 		if opt.LocationID != "" {
 			validIDs[opt.LocationID] = true
-		}
-	}
+				}
+			}
 
 	for _, choice := range scanData.Choices {
 		if !validIDs[choice] {
