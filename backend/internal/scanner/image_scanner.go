@@ -3,6 +3,7 @@ package scanner
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
 	"gitlab.com/alienspaces/playbymail/internal/utils/config"
@@ -70,7 +71,8 @@ func (s *ImageScanner) SetTextExtractor(fn TextExtractorFunc) {
 func (s *ImageScanner) ExtractTextFromImage(ctx context.Context, imageData []byte) (string, error) {
 	l := s.logger.WithFunctionContext("ImageScanner/ExtractTextFromImage")
 
-	l.Info("extracting text from image data")
+	start := time.Now()
+	l.Info("extracting text from image data image_size=%d", len(imageData))
 
 	if len(imageData) == 0 {
 		return "", fmt.Errorf("empty image data provided")
@@ -81,11 +83,13 @@ func (s *ImageScanner) ExtractTextFromImage(ctx context.Context, imageData []byt
 	}
 
 	text, err := s.textExtractor(ctx, imageData)
+	duration := time.Since(start)
 	if err != nil {
+		l.Warn("text extraction failed after %v error=%v", duration, err)
 		return "", err
 	}
 
-	l.Info("extracted text length >%d< characters", len(text))
+	l.Info("extracted text length >%d< characters duration=%v", len(text), duration)
 	return text, nil
 }
 
@@ -93,6 +97,9 @@ func (s *ImageScanner) ExtractTextFromImage(ctx context.Context, imageData []byt
 // OCR provider and returns a JSON payload matching the expected schema.
 func (s *ImageScanner) ExtractStructuredData(ctx context.Context, req StructuredScanRequest) ([]byte, error) {
 	l := s.logger.WithFunctionContext("ImageScanner/ExtractStructuredData")
+
+	start := time.Now()
+	l.Info("extracting structured data filled_image_size=%d template_image_size=%d", len(req.FilledImage), len(req.TemplateImage))
 
 	if len(req.FilledImage) == 0 {
 		return nil, fmt.Errorf("filled image data is required")
@@ -107,10 +114,12 @@ func (s *ImageScanner) ExtractStructuredData(ctx context.Context, req Structured
 	}
 
 	resp, err := s.structuredExtractor(ctx, req)
+	duration := time.Since(start)
 	if err != nil {
-		l.Warn("structured extraction failed >%v<", err)
+		l.Warn("structured extraction failed after %v error=%v", duration, err)
 		return nil, err
 	}
 
+	l.Info("extracted structured data response_size=%d duration=%v", len(resp), duration)
 	return resp, nil
 }

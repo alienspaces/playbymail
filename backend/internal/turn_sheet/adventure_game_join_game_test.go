@@ -166,15 +166,18 @@ func TestJoinGameProcessor_ScanTurnSheet(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			testStart := time.Now()
 			if tt.requiresScanner {
 				requireOpenAIKey(t)
 			}
 
 			// Load image data
+			loadStart := time.Now()
 			imageData, err := tt.imageDataFn()
 			if err != nil {
 				t.Fatalf("Failed to load image data: %v", err)
 			}
+			t.Logf("Loaded image data: %d bytes in %v", len(imageData), time.Since(loadStart))
 
 			// Get sheet data bytes
 			sheetData, err := tt.sheetDataFn()
@@ -186,17 +189,23 @@ func TestJoinGameProcessor_ScanTurnSheet(t *testing.T) {
 
 			// Test turn sheet code extraction if expected
 			if tt.expectedTurnSheetCode != "" {
+				codeStart := time.Now()
 				turnSheetCode, err := baseProcessor.ParseTurnSheetCodeFromImage(ctx, imageData)
+				codeDuration := time.Since(codeStart)
 				if tt.expectError {
 					require.Error(t, err, "Should return error for turn sheet code extraction")
 				} else {
 					require.NoError(t, err, "Should extract turn sheet code without error")
 					require.Equal(t, tt.expectedTurnSheetCode, turnSheetCode)
+					t.Logf("Extracted turn sheet code '%s' in %v", turnSheetCode, codeDuration)
 				}
 			}
 
 			// Test join game scanning
+			scanStart := time.Now()
 			resultData, err := processor.ScanTurnSheet(ctx, l, sheetData, imageData)
+			scanDuration := time.Since(scanStart)
+			t.Logf("ScanTurnSheet completed in %v", scanDuration)
 
 			if tt.expectError {
 				require.Error(t, err, "Should return error")
@@ -216,6 +225,9 @@ func TestJoinGameProcessor_ScanTurnSheet(t *testing.T) {
 				require.NoError(t, err, "Should unmarshal scan results")
 				require.Equal(t, tt.expectedScanData, &scanData)
 			}
+
+			totalDuration := time.Since(testStart)
+			t.Logf("Test completed in %v (scan: %v)", totalDuration, scanDuration)
 		})
 	}
 }

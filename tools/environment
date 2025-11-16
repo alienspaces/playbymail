@@ -41,9 +41,6 @@ verify_env() {
 
 # environment
 dotfile_path="."
-if [ -n "$1" ]; then
-    dotfile_path="$1"
-fi
 
 if [ -f "$dotfile_path/.env.private" ]; then
     echo "=> (env) Appending private environment file"
@@ -56,7 +53,6 @@ if [ -f "$dotfile_path/.env" ]; then
     . "$dotfile_path/.env"
     set +a
 fi
-
 
 # go present?
 if ! command -v go >/dev/null 2>&1; then
