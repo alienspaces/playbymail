@@ -267,6 +267,13 @@ func (g *PDFGenerator) htmlToPDF(ctx context.Context, html string) ([]byte, erro
 	}
 	tmpFile.Close()
 
+	// Get absolute path for file:// URL (required for Chrome in CI environments)
+	absPath, err := filepath.Abs(tmpFile.Name())
+	if err != nil {
+		return nil, fmt.Errorf("failed to get absolute path: %w", err)
+	}
+	fileURL := "file://" + absPath
+
 	// Generate PDF using Chrome's print to PDF
 	l.Debug("starting Chrome PDF generation")
 
@@ -275,7 +282,7 @@ func (g *PDFGenerator) htmlToPDF(ctx context.Context, html string) ([]byte, erro
 	err = chromedp.Run(runCtx,
 		chromedp.ActionFunc(func(ctx context.Context) error {
 			l.Debug("chrome browser started, navigating to HTML file")
-			return chromedp.Navigate("file://" + tmpFile.Name()).Do(ctx)
+			return chromedp.Navigate(fileURL).Do(ctx)
 		}),
 		chromedp.ActionFunc(func(ctx context.Context) error {
 			l.Debug("waiting for page to load and render")

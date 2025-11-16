@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/chromedp/cdproto/emulation"
@@ -93,10 +94,17 @@ func (g *PDFGenerator) htmlToPNG(ctx context.Context, html string) ([]byte, erro
 	}
 	tmpFile.Close()
 
+	// Get absolute path for file:// URL (required for Chrome in CI environments)
+	absPath, err := filepath.Abs(tmpFile.Name())
+	if err != nil {
+		return nil, fmt.Errorf("failed to get absolute path: %w", err)
+	}
+	fileURL := "file://" + absPath
+
 	var pngData []byte
 
 	err = chromedp.Run(runCtx,
-		chromedp.Navigate("file://"+tmpFile.Name()),
+		chromedp.Navigate(fileURL),
 		chromedp.ActionFunc(func(ctx context.Context) error {
 			return emulation.SetDeviceMetricsOverride(1240, 1754, 1.0, false).
 				WithScreenOrientation(&emulation.ScreenOrientation{
