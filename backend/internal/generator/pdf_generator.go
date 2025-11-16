@@ -3,6 +3,7 @@ package generator
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"fmt"
 	"html/template"
 	"os"
@@ -252,37 +253,22 @@ func (g *PDFGenerator) htmlToPDF(ctx context.Context, html string) ([]byte, erro
 
 	l.Debug("chrome context created")
 
-	// Write HTML to temporary file for Chrome to load
-	tmpFile, err := os.CreateTemp("", "pdf_generation_*.html")
-	if err != nil {
-		l.Warn("failed to create temp file error=%v", err)
-		return nil, fmt.Errorf("failed to create temp file: %w", err)
-	}
-	defer os.Remove(tmpFile.Name())
-	defer tmpFile.Close()
-
-	if _, err := tmpFile.WriteString(html); err != nil {
-		l.Warn("failed to write HTML to temp file error=%v", err)
-		return nil, fmt.Errorf("failed to write HTML to temp file: %w", err)
-	}
-	tmpFile.Close()
-
-	// Get absolute path for file:// URL (required for Chrome in CI environments)
-	absPath, err := filepath.Abs(tmpFile.Name())
-	if err != nil {
-		return nil, fmt.Errorf("failed to get absolute path: %w", err)
-	}
-	fileURL := "file://" + absPath
+	// Use data URL to avoid file system access issues in CI environments
+	// Base64 encode the HTML and use data URL
+	htmlB64 := base64.StdEncoding.EncodeToString([]byte(html))
+	dataURL := fmt.Sprintf("data:text/html;base64,%s", htmlB64)
+	l.Debug("using data URL for HTML content html_size=%d data_url_size=%d", len(html), len(dataURL))
 
 	// Generate PDF using Chrome's print to PDF
 	l.Debug("starting Chrome PDF generation")
 
 	var pdfData []byte
+	var err error
 
 	err = chromedp.Run(runCtx,
 		chromedp.ActionFunc(func(ctx context.Context) error {
-			l.Debug("chrome browser started, navigating to HTML file")
-			return chromedp.Navigate(fileURL).Do(ctx)
+			l.Debug("chrome browser started, navigating to data URL")
+			return chromedp.Navigate(dataURL).Do(ctx)
 		}),
 		chromedp.ActionFunc(func(ctx context.Context) error {
 			l.Debug("waiting for page to load and render")

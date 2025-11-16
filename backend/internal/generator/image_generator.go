@@ -3,9 +3,9 @@ package generator
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"fmt"
 	"os"
-	"path/filepath"
 	"time"
 
 	"github.com/chromedp/cdproto/emulation"
@@ -83,28 +83,17 @@ func (g *PDFGenerator) htmlToPNG(ctx context.Context, html string) ([]byte, erro
 	runCtx, cancelRun := chromedp.NewContext(allocCtx)
 	defer cancelRun()
 
-	tmpFile, err := os.CreateTemp("", "turn_sheet_preview_*.html")
-	if err != nil {
-		return nil, fmt.Errorf("failed to create temp file: %w", err)
-	}
-	defer os.Remove(tmpFile.Name())
-
-	if _, err := tmpFile.WriteString(html); err != nil {
-		return nil, fmt.Errorf("failed to write HTML to temp file: %w", err)
-	}
-	tmpFile.Close()
-
-	// Get absolute path for file:// URL (required for Chrome in CI environments)
-	absPath, err := filepath.Abs(tmpFile.Name())
-	if err != nil {
-		return nil, fmt.Errorf("failed to get absolute path: %w", err)
-	}
-	fileURL := "file://" + absPath
-
 	var pngData []byte
 
+	// Use data URL to avoid file system access issues in CI environments
+	// Base64 encode the HTML and use data URL
+	htmlB64 := base64.StdEncoding.EncodeToString([]byte(html))
+	dataURL := fmt.Sprintf("data:text/html;base64,%s", htmlB64)
+	l.Debug("using data URL for HTML content html_size=%d data_url_size=%d", len(html), len(dataURL))
+
+	var err error
 	err = chromedp.Run(runCtx,
-		chromedp.Navigate(fileURL),
+		chromedp.Navigate(dataURL),
 		chromedp.ActionFunc(func(ctx context.Context) error {
 			return emulation.SetDeviceMetricsOverride(1240, 1754, 1.0, false).
 				WithScreenOrientation(&emulation.ScreenOrientation{
