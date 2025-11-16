@@ -325,9 +325,10 @@ func (s *ImageScanner) extractStructuredViaOpenAI(ctx context.Context, req Struc
 	imageCount := 0
 	textCount := 0
 	for _, c := range contents {
-		if c.Type == "input_image" {
+		switch c.Type {
+		case "input_image":
 			imageCount++
-		} else if c.Type == "input_text" {
+		case "input_text":
 			textCount++
 		}
 	}

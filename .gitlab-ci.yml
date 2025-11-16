@@ -39,6 +39,9 @@ test-backend:
     - apk add git
     - apk add bash
     - apk add postgresql-client
+    - apk add chromium
+    - apk add chromium-chromedriver
+    - export GOOGLE_CHROME_SHIM=/usr/bin/chromium-browser
   script:
     - ./tools/test-backend-ci
   cache:

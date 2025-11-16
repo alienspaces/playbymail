@@ -71,11 +71,7 @@ func (g *PDFGenerator) htmlToPNG(ctx context.Context, html string) ([]byte, erro
 	}
 
 	if chromePath == "" {
-		if os.Getenv("TESTING") == "true" {
-			l.Warn("chrome not found, returning mock PNG for testing")
-			return []byte("mock-png-data-for-testing"), nil
-		}
-		return nil, fmt.Errorf("chrome not found. Please install Chrome or set GOOGLE_CHROME_SHIM")
+		return nil, fmt.Errorf("chrome not found. Please install Chrome or set GOOGLE_CHROME_SHIM environment variable")
 	}
 
 	opts = append(opts, chromedp.ExecPath(chromePath))

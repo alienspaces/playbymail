@@ -125,11 +125,12 @@ func (p *JoinGameProcessor) ScanTurnSheet(ctx context.Context, l logger.Logger, 
 
 	templateData := p.resolveTemplateData(sheetData)
 
-	var templateImage []byte
-	if preview, err := p.renderTemplatePreview(ctx, joinGameTemplatePath, templateData); err == nil {
-		templateImage = preview
-	} else {
-		l.Warn("proceeding without template preview >%v<", err)
+	templateImage, err := p.renderTemplatePreview(ctx, joinGameTemplatePath, templateData)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate template preview: %w", err)
+	}
+	if len(templateImage) == 0 {
+		return nil, fmt.Errorf("template preview generation returned empty image")
 	}
 
 	req := scanner.StructuredScanRequest{

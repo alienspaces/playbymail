@@ -132,8 +132,10 @@ func (p *LocationChoiceProcessor) ScanTurnSheet(ctx context.Context, l logger.Lo
 
 	templateImage, err := p.renderTemplatePreview(ctx, locationChoiceTemplatePath, &locationChoiceData)
 	if err != nil {
-		l.Warn("proceeding without template preview >%v<", err)
-		templateImage = nil
+		return nil, fmt.Errorf("failed to generate template preview: %w", err)
+	}
+	if len(templateImage) == 0 {
+		return nil, fmt.Errorf("template preview generation returned empty image")
 	}
 
 	expected := map[string]any{
