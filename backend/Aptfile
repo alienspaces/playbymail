@@ -1,14 +1,4 @@
-# Enhanced Tesseract OCR dependencies for gosseract
-tesseract-ocr
-tesseract-ocr-eng
-libtesseract-dev
-libleptonica-dev
-libpng-dev
-libjpeg-dev
-libtiff-dev
-libgif-dev
-libwebp-dev
-libarchive13
+# Build dependencies for Heroku
 build-essential
 pkg-config
 libc6-dev

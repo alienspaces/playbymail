@@ -254,10 +254,17 @@ func (s *ImageScanner) extractStructuredViaOpenAI(ctx context.Context, req Struc
 			optimizedTemplate = req.TemplateImage
 			optimizedTemplateMIME = req.TemplateImageMIME
 		}
-		contents = append(contents, openAIInputContent{
-			Type:     "input_image",
-			ImageURL: encodeImageDataURI(optimizedTemplate, optimizedTemplateMIME),
-		})
+		dataURI := encodeImageDataURI(optimizedTemplate, optimizedTemplateMIME)
+		if dataURI == "" {
+			l.Warn("failed to encode template image data URI, skipping template image")
+		} else {
+			l.Debug("template image encoded template_size=%d template_mime=%s data_uri_length=%d",
+				len(optimizedTemplate), optimizedTemplateMIME, len(dataURI))
+			contents = append(contents, openAIInputContent{
+				Type:     "input_image",
+				ImageURL: dataURI,
+			})
+		}
 	}
 
 	optimizedFilled, optimizedFilledMIME, err := optimizeImageForOCR(l, req.FilledImage, req.FilledImageMIME)
@@ -266,10 +273,16 @@ func (s *ImageScanner) extractStructuredViaOpenAI(ctx context.Context, req Struc
 		optimizedFilled = req.FilledImage
 		optimizedFilledMIME = req.FilledImageMIME
 	}
+	dataURI := encodeImageDataURI(optimizedFilled, optimizedFilledMIME)
+	if dataURI == "" {
+		return nil, fmt.Errorf("failed to encode filled image data URI")
+	}
+	l.Debug("filled image encoded filled_size=%d filled_mime=%s data_uri_length=%d",
+		len(optimizedFilled), optimizedFilledMIME, len(dataURI))
 
 	contents = append(contents, openAIInputContent{
 		Type:     "input_image",
-		ImageURL: encodeImageDataURI(optimizedFilled, optimizedFilledMIME),
+		ImageURL: dataURI,
 	})
 
 	contents = append(contents,
@@ -375,15 +388,33 @@ func (s *ImageScanner) extractStructuredViaOpenAI(ctx context.Context, req Struc
 }
 
 func encodeImageDataURI(data []byte, mime string) string {
+	// Validate image data before encoding
+	if len(data) == 0 {
+		return ""
+	}
+
+	// If MIME type not provided, detect it
 	if mime == "" {
 		mime = http.DetectContentType(data)
 	}
-	if mime == "" {
-		mime = defaultImageMimeType
+
+	// Validate MIME type matches actual image format
+	if mime == "" || mime == "application/octet-stream" {
+		// Try to detect from image signature
+		if len(data) >= 3 && data[0] == 0xFF && data[1] == 0xD8 && data[2] == 0xFF {
+			mime = "image/jpeg"
+		} else if len(data) >= 8 && bytes.Equal(data[0:8], []byte{0x89, 'P', 'N', 'G', 0x0D, 0x0A, 0x1A, 0x0A}) {
+			mime = "image/png"
+		} else {
+			mime = defaultImageMimeType
+		}
 	}
+
+	// Ensure MIME type is valid
 	if !strings.HasPrefix(mime, "image/") {
 		mime = defaultImageMimeType
 	}
+
 	return fmt.Sprintf("data:%s;base64,%s", mime, base64.StdEncoding.EncodeToString(data))
 }
 

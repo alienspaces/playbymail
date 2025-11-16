@@ -54,6 +54,19 @@ func optimizeImageForOCR(l logger.Logger, imageData []byte, originalMIME string)
 
 	optimized := buf.Bytes()
 	optEnd := len(optimized)
+
+	// Validate JPEG signature (starts with FF D8 FF)
+	if len(optimized) < 3 || optimized[0] != 0xFF || optimized[1] != 0xD8 || optimized[2] != 0xFF {
+		l.Warn("optimized JPEG data appears invalid (missing JPEG signature), using original")
+		return imageData, originalMIME, nil
+	}
+
+	// Verify the optimized JPEG can be decoded (validates it's a real image)
+	if _, _, err := image.Decode(bytes.NewReader(optimized)); err != nil {
+		l.Warn("optimized JPEG data cannot be decoded, using original error=%v", err)
+		return imageData, originalMIME, nil
+	}
+
 	reduction := float64(optStart-optEnd) / float64(optStart) * 100
 
 	// If optimization made the image larger or it's already small, return original
