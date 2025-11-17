@@ -1,11 +1,20 @@
 package game
 
 import (
+	"context"
+
 	"gitlab.com/alienspaces/playbymail/core/jsonschema"
 	"gitlab.com/alienspaces/playbymail/core/server"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
 	"gitlab.com/alienspaces/playbymail/internal/utils/logging"
 )
+
+// TurnSheetScanner defines the interface for scanning turn sheets
+// This allows the runner to be injected without creating import cycles
+type TurnSheetScanner interface {
+	GetTurnSheetCodeFromImage(ctx context.Context, l logger.Logger, imageData []byte) (string, error)
+	GetTurnSheetScanData(ctx context.Context, l logger.Logger, sheetType string, sheetData []byte, imageData []byte) ([]byte, error)
+}
 
 const (
 	packageName = "game"
@@ -22,7 +31,7 @@ var referenceSchemas = []jsonschema.Schema{
 	},
 }
 
-func GameHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error) {
+func GameHandlerConfig(l logger.Logger, scanner TurnSheetScanner) (map[string]server.HandlerConfig, error) {
 	l = logging.LoggerWithFunctionContext(l, packageName, "GameHandlerConfig")
 
 	l.Debug("Adding game handler configuration")
@@ -37,7 +46,6 @@ func GameHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error)
 		gameAdministrationHandlerConfig,
 		gameInstanceHandlerConfig,
 		gameInstanceParameterHandlerConfig,
-		gameTurnSheetHandlerConfig,
 	}
 
 	for _, fn := range handlerConfigFuncs {
@@ -47,6 +55,13 @@ func GameHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error)
 		}
 		gameConfig = server.MergeHandlerConfigs(gameConfig, cfg)
 	}
+
+	// Turn sheet handler config needs the scanner
+	turnSheetConfig, err := gameTurnSheetHandlerConfig(l, scanner)
+	if err != nil {
+		return nil, err
+	}
+	gameConfig = server.MergeHandlerConfigs(gameConfig, turnSheetConfig)
 
 	return gameConfig, nil
 }

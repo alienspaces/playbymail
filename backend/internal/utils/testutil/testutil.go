@@ -42,8 +42,12 @@ func NewDefaultDependencies(t *testing.T) (logger.Logger, storer.Storer, *river.
 
 func NewTestHarness(t *testing.T) *harness.Testing {
 	config := harness.DefaultDataConfig()
+	return NewTestHarnessWithConfig(t, config)
+}
+
+func NewTestHarnessWithConfig(t *testing.T, dataConfig harness.DataConfig) *harness.Testing {
 	l, s, j, cfg := NewDefaultDependencies(t)
-	h, err := harness.NewTesting(l, s, j, cfg, config)
+	h, err := harness.NewTesting(l, s, j, cfg, dataConfig)
 	require.NoError(t, err, "NewTesting returns without error")
 	h.ShouldCommitData = true
 	err = h.Teardown()
@@ -97,7 +101,7 @@ type TestRunnerer interface {
 // (restored after accidental deletion)
 type TestCaser interface {
 	TestName() string
-	TestNewRunner(l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx]) (TestRunnerer, error)
+	TestNewRunner(l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], d harness.Data) (TestRunnerer, error)
 	TestHandlerConfig(rnr TestRunnerer) server.HandlerConfig
 	TestRequestHeaders(data harness.Data) map[string]string
 	TestRequestPathParams(data harness.Data) map[string]string
@@ -116,7 +120,7 @@ type TestCaser interface {
 type TestCase struct {
 	Skip                      bool
 	Name                      string
-	NewRunner                 func(l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx]) (TestRunnerer, error)
+	NewRunner                 func(l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], d harness.Data) (TestRunnerer, error)
 	HandlerConfig             func(rnr TestRunnerer) server.HandlerConfig
 	RequestHeaders            func(d harness.Data) map[string]string
 	RequestPathParams         func(d harness.Data) map[string]string
@@ -136,17 +140,17 @@ type TestCase struct {
 // Update TestCase to implement TestCaser with TestRunnerer
 func (t *TestCase) TestName() string { return t.Name }
 
-func (t *TestCase) TestNewRunner(l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx]) (TestRunnerer, error) {
+func (t *TestCase) TestNewRunner(l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], d harness.Data) (TestRunnerer, error) {
 	if t.NewRunner != nil {
-		return t.NewRunner(l, s, j)
+		return t.NewRunner(l, s, j, d)
 	}
 
 	rnr, err := NewTestRunner(l, s, j)
 	if err != nil {
 		return nil, err
 	}
-	return rnr, nil
 
+	return rnr, nil
 }
 
 func (t *TestCase) TestHandlerConfig(rnr TestRunnerer) server.HandlerConfig {
@@ -236,7 +240,7 @@ func TestCaseResponseDecoderGeneric[T any](body io.Reader) (any, error) {
 func RunTestCase(t *testing.T, th *harness.Testing, tc TestCaser, tf func(method string, body any)) {
 	require.NotNil(t, th, "Test harness is not nil")
 
-	rnr, err := tc.TestNewRunner(th.Log, th.Store, th.JobClient)
+	rnr, err := tc.TestNewRunner(th.Log, th.Store, th.JobClient, th.Data)
 	require.NoError(t, err, "TestNewRunner returns without error")
 	require.NotNil(t, rnr, "TestNewRunner returns a new Runner")
 

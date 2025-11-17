@@ -29,7 +29,6 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 	"gitlab.com/alienspaces/playbymail/internal/turn_sheet"
-	"gitlab.com/alienspaces/playbymail/internal/utils/config"
 	"gitlab.com/alienspaces/playbymail/internal/utils/logging"
 	"gitlab.com/alienspaces/playbymail/internal/utils/turnsheet"
 )
@@ -50,7 +49,7 @@ type TurnSheetUploadResponse struct {
 	Message          string         `json:"message"`
 }
 
-func gameTurnSheetHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error) {
+func gameTurnSheetHandlerConfig(l logger.Logger, scanner TurnSheetScanner) (map[string]server.HandlerConfig, error) {
 	l = logging.LoggerWithFunctionContext(l, packageName, "gameTurnSheetHandlerConfig")
 
 	l.Debug("Adding game turn sheet handler configuration")
@@ -61,7 +60,7 @@ func gameTurnSheetHandlerConfig(l logger.Logger) (map[string]server.HandlerConfi
 	gameTurnSheetConfig[UploadTurnSheet] = server.HandlerConfig{
 		Method:      http.MethodPost,
 		Path:        "/api/v1/turn-sheets",
-		HandlerFunc: uploadTurnSheetHandler,
+		HandlerFunc: uploadTurnSheetHandler(scanner),
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
 				server.AuthenticationTypeToken,
@@ -80,141 +79,67 @@ func gameTurnSheetHandlerConfig(l logger.Logger) (map[string]server.HandlerConfi
 }
 
 // uploadTurnSheetHandler handles the single-pass turn sheet upload and processing
-func uploadTurnSheetHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
-	l = logging.LoggerWithFunctionContext(l, packageName, "uploadTurnSheetHandler")
+func uploadTurnSheetHandler(scanner TurnSheetScanner) server.Handle {
+	return func(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
+		l = logging.LoggerWithFunctionContext(l, packageName, "uploadTurnSheetHandler")
 
-	l.Info("uploading and processing turn sheet with path params >%#v<", pp)
+		l.Info("uploading and processing turn sheet with path params >%#v<", pp)
 
-	ctx := r.Context()
-	mm := m.(*domain.Domain)
+		ctx := r.Context()
+		mm := m.(*domain.Domain)
 
-	imageData, err := io.ReadAll(r.Body)
-	if err != nil {
-		l.Warn("failed to read image data >%v<", err)
-		return coreerror.NewInvalidDataError("failed to read image data")
+		imageData, err := io.ReadAll(r.Body)
+		if err != nil {
+			l.Warn("failed to read image data >%v<", err)
+			return coreerror.NewInvalidDataError("failed to read image data")
+		}
+
+		if len(imageData) == 0 {
+			l.Warn("empty image data provided")
+			return coreerror.NewInvalidDataError("empty image data provided")
+		}
+
+		turnSheetCode, err := scanner.GetTurnSheetCodeFromImage(ctx, l, imageData)
+		if err != nil {
+			l.Warn("failed to extract turn sheet code >%v<", err)
+			return coreerror.NewInvalidDataError("failed to extract turn sheet code from image")
+		}
+
+		identifier, err := turnsheet.ParseTurnSheetCode(turnSheetCode)
+		if err != nil {
+			l.Warn("failed to parse turn sheet code >%v<", err)
+			return coreerror.NewInvalidDataError("invalid turn sheet code format")
+		}
+
+		var (
+			resp   *TurnSheetUploadResponse
+			status int
+		)
+
+		switch identifier.CodeType {
+		case turnsheet.TurnSheetCodeTypeJoiningGame:
+			resp, status, err = handleJoinTurnSheetUpload(ctx, l, scanner, mm, jc, turnSheetCode, identifier, imageData)
+		case turnsheet.TurnSheetCodeTypePlayingGame, "":
+			resp, status, err = handleStandardTurnSheetUpload(ctx, l, scanner, mm, turnSheetCode, identifier, imageData)
+		default:
+			err = coreerror.NewInvalidDataError("unsupported turn sheet code type: %s", identifier.CodeType)
+		}
+		if err != nil {
+			return err
+		}
+
+		l.Info("responding with turn sheet upload result >%+v<", resp)
+
+		if err := server.WriteResponse(l, w, status, resp); err != nil {
+			l.Warn("failed writing response >%v<", err)
+			return err
+		}
+
+		return nil
 	}
-
-	if len(imageData) == 0 {
-		l.Warn("empty image data provided")
-		return coreerror.NewInvalidDataError("empty image data provided")
-	}
-
-	// TODO: Perhaps a config object should be passed to every handler function
-	cfg, err := config.Parse()
-	if err != nil {
-		l.Warn("failed to parse config >%v<", err)
-		return coreerror.NewInternalError("failed to parse config")
-	}
-
-	baseProcessor, err := turn_sheet.NewBaseProcessor(l, cfg)
-	if err != nil {
-		l.Warn("failed to create base processor >%v<", err)
-		return coreerror.NewInternalError("failed to create base processor")
-	}
-
-	turnSheetCode, err := baseProcessor.ParseTurnSheetCodeFromImage(ctx, imageData)
-	if err != nil {
-		l.Warn("failed to extract turn sheet code >%v<", err)
-		return coreerror.NewInvalidDataError("failed to extract turn sheet code from image")
-	}
-
-	identifier, err := turnsheet.ParseTurnSheetCode(turnSheetCode)
-	if err != nil {
-		l.Warn("failed to parse turn sheet code >%v<", err)
-		return coreerror.NewInvalidDataError("invalid turn sheet code format")
-	}
-
-	var (
-		resp   *TurnSheetUploadResponse
-		status int
-	)
-
-	switch identifier.CodeType {
-	case turnsheet.TurnSheetCodeTypeJoiningGame:
-		resp, status, err = handleJoinTurnSheetUpload(ctx, l, mm, jc, turnSheetCode, identifier, imageData)
-	case turnsheet.TurnSheetCodeTypePlayingGame, "":
-		resp, status, err = handleStandardTurnSheetUpload(ctx, l, mm, turnSheetCode, identifier, imageData)
-	default:
-		err = coreerror.NewInvalidDataError("unsupported turn sheet code type: %s", identifier.CodeType)
-	}
-	if err != nil {
-		return err
-	}
-
-	l.Info("responding with turn sheet upload result >%+v<", resp)
-
-	if err := server.WriteResponse(l, w, status, resp); err != nil {
-		l.Warn("failed writing response >%v<", err)
-		return err
-	}
-
-	return nil
 }
 
-func handleStandardTurnSheetUpload(ctx context.Context, l logger.Logger, m *domain.Domain, turnSheetCode string, identifier *turnsheet.TurnSheetIdentifier, imageData []byte) (*TurnSheetUploadResponse, int, error) {
-	l = l.WithFunctionContext("handleStandardTurnSheetUpload")
-
-	turnSheetRec, err := m.GetGameTurnSheetRec(identifier.GameTurnSheetID, coresql.ForUpdateNoWait)
-	if err != nil {
-		l.Warn("failed to get turn sheet record >%v<", err)
-		return nil, 0, coreerror.NewNotFoundError("turn sheet", identifier.GameTurnSheetID)
-	}
-
-	if !nullstring.IsValid(turnSheetRec.GameInstanceID) || identifier.GameInstanceID == "" ||
-		nullstring.ToString(turnSheetRec.GameInstanceID) != identifier.GameInstanceID {
-		l.Warn("turn sheet does not belong to expected game instance >%s<", identifier.GameInstanceID)
-		return nil, 0, coreerror.NewInvalidDataError("turn sheet does not belong to expected game instance")
-	}
-
-	// TODO: Perhaps a config object should be passed to every handler function
-	cfg, err := config.Parse()
-	if err != nil {
-		l.Warn("failed to parse config >%v<", err)
-		return nil, 0, coreerror.NewInternalError("failed to parse config")
-	}
-
-	processor, err := turn_sheet.GetDocumentProcessor(l, cfg, turnSheetRec.SheetType)
-	if err != nil {
-		l.Warn("failed to get processor for turn sheet type >%s< >%v<", turnSheetRec.SheetType, err)
-		return nil, 0, coreerror.NewInvalidDataError("unsupported turn sheet type: %s", turnSheetRec.SheetType)
-	}
-
-	scannedData, err := processor.ScanTurnSheet(ctx, l, turnSheetRec.SheetData, imageData)
-	if err != nil {
-		l.Warn("failed to process turn sheet >%v<", err)
-		return nil, 0, coreerror.NewInvalidDataError("failed to process turn sheet: %v", err)
-	}
-
-	turnSheetRec.ScannedData = json.RawMessage(scannedData)
-	turnSheetRec.ScannedAt = sql.NullTime{Time: time.Now(), Valid: true}
-	turnSheetRec.ScanQuality = sql.NullFloat64{Float64: 0.95, Valid: true} // TODO: Calculate actual scan quality
-	turnSheetRec.ProcessingStatus = game_record.TurnSheetProcessingStatusProcessed
-
-	if _, err := m.UpdateGameTurnSheetRec(turnSheetRec); err != nil {
-		l.Warn("failed to update turn sheet record >%v<", err)
-		return nil, 0, coreerror.NewInternalError("failed to update turn sheet record >%v<", err)
-	}
-
-	var scannedDataMap map[string]any
-	if err := json.Unmarshal(scannedData, &scannedDataMap); err != nil {
-		l.Warn("failed to unmarshal scanned data for response >%v<", err)
-		return nil, 0, coreerror.NewInternalError("failed to unmarshal scanned data for response >%v<", err)
-	}
-
-	response := &TurnSheetUploadResponse{
-		TurnSheetID:      identifier.GameTurnSheetID,
-		TurnSheetCodeCI:  turnSheetCode,
-		SheetType:        turnSheetRec.SheetType,
-		ScannedData:      scannedDataMap,
-		ProcessingStatus: turnSheetRec.ProcessingStatus,
-		ScanQuality:      0.95,
-		Message:          "Turn sheet uploaded and processed successfully",
-	}
-
-	return response, http.StatusOK, nil
-}
-
-func handleJoinTurnSheetUpload(ctx context.Context, l logger.Logger, m *domain.Domain, jc *river.Client[pgx.Tx], turnSheetCode string, identifier *turnsheet.TurnSheetIdentifier, imageData []byte) (*TurnSheetUploadResponse, int, error) {
+func handleJoinTurnSheetUpload(ctx context.Context, l logger.Logger, scanner TurnSheetScanner, m *domain.Domain, jc *river.Client[pgx.Tx], turnSheetCode string, identifier *turnsheet.TurnSheetIdentifier, imageData []byte) (*TurnSheetUploadResponse, int, error) {
 	l = l.WithFunctionContext("handleJoinTurnSheetUpload")
 
 	gameRec, err := m.GetGameRec(identifier.GameID, nil)
@@ -249,19 +174,7 @@ func handleJoinTurnSheetUpload(ctx context.Context, l logger.Logger, m *domain.D
 		return nil, 0, coreerror.NewInternalError("failed to marshal join game sheet data")
 	}
 
-	// TODO: Perhaps a config object should be passed to every handler function
-	cfg, err := config.Parse()
-	if err != nil {
-		l.Warn("failed to parse config >%v<", err)
-		return nil, 0, coreerror.NewInternalError("failed to parse config")
-	}
-	processor, err := turn_sheet.GetDocumentProcessor(l, cfg, adventure_game_record.AdventureSheetTypeJoinGame)
-	if err != nil {
-		l.Warn("failed to get join game processor >%v<", err)
-		return nil, 0, coreerror.NewInternalError("failed to get join game document processor")
-	}
-
-	scannedData, err := processor.ScanTurnSheet(ctx, l, sheetDataBytes, imageData)
+	scannedData, err := scanner.GetTurnSheetScanData(ctx, l, adventure_game_record.AdventureSheetTypeJoinGame, sheetDataBytes, imageData)
 	if err != nil {
 		l.Warn("failed to scan join game turn sheet >%v<", err)
 		return nil, 0, coreerror.NewInvalidDataError("failed to process join game turn sheet: %v", err)
@@ -343,4 +256,54 @@ func handleJoinTurnSheetUpload(ctx context.Context, l logger.Logger, m *domain.D
 	}
 
 	return response, http.StatusAccepted, nil
+}
+
+func handleStandardTurnSheetUpload(ctx context.Context, l logger.Logger, scanner TurnSheetScanner, m *domain.Domain, turnSheetCode string, identifier *turnsheet.TurnSheetIdentifier, imageData []byte) (*TurnSheetUploadResponse, int, error) {
+	l = l.WithFunctionContext("handleStandardTurnSheetUpload")
+
+	turnSheetRec, err := m.GetGameTurnSheetRec(identifier.GameTurnSheetID, coresql.ForUpdateNoWait)
+	if err != nil {
+		l.Warn("failed to get turn sheet record >%v<", err)
+		return nil, 0, coreerror.NewNotFoundError("turn sheet", identifier.GameTurnSheetID)
+	}
+
+	if !nullstring.IsValid(turnSheetRec.GameInstanceID) || identifier.GameInstanceID == "" ||
+		nullstring.ToString(turnSheetRec.GameInstanceID) != identifier.GameInstanceID {
+		l.Warn("turn sheet does not belong to expected game instance >%s<", identifier.GameInstanceID)
+		return nil, 0, coreerror.NewInvalidDataError("turn sheet does not belong to expected game instance")
+	}
+
+	scannedData, err := scanner.GetTurnSheetScanData(ctx, l, turnSheetRec.SheetType, turnSheetRec.SheetData, imageData)
+	if err != nil {
+		l.Warn("failed to process turn sheet >%v<", err)
+		return nil, 0, coreerror.NewInvalidDataError("failed to process turn sheet: %v", err)
+	}
+
+	turnSheetRec.ScannedData = json.RawMessage(scannedData)
+	turnSheetRec.ScannedAt = sql.NullTime{Time: time.Now(), Valid: true}
+	turnSheetRec.ScanQuality = sql.NullFloat64{Float64: 0.95, Valid: true} // TODO: Calculate actual scan quality
+	turnSheetRec.ProcessingStatus = game_record.TurnSheetProcessingStatusProcessed
+
+	if _, err := m.UpdateGameTurnSheetRec(turnSheetRec); err != nil {
+		l.Warn("failed to update turn sheet record >%v<", err)
+		return nil, 0, coreerror.NewInternalError("failed to update turn sheet record >%v<", err)
+	}
+
+	var scannedDataMap map[string]any
+	if err := json.Unmarshal(scannedData, &scannedDataMap); err != nil {
+		l.Warn("failed to unmarshal scanned data for response >%v<", err)
+		return nil, 0, coreerror.NewInternalError("failed to unmarshal scanned data for response >%v<", err)
+	}
+
+	response := &TurnSheetUploadResponse{
+		TurnSheetID:      identifier.GameTurnSheetID,
+		TurnSheetCodeCI:  turnSheetCode,
+		SheetType:        turnSheetRec.SheetType,
+		ScannedData:      scannedDataMap,
+		ProcessingStatus: turnSheetRec.ProcessingStatus,
+		ScanQuality:      0.95,
+		Message:          "Turn sheet uploaded and processed successfully",
+	}
+
+	return response, http.StatusOK, nil
 }

@@ -285,7 +285,7 @@ func Test_accountMeHandler(t *testing.T) {
 	testCases := []testutil.TestCase{
 		{
 			Name: "API key with open access \\ get my account \\ returns authenticated user account",
-			NewRunner: func(l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx]) (testutil.TestRunnerer, error) {
+			NewRunner: func(l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], d harness.Data) (testutil.TestRunnerer, error) {
 				rnr, err := testutil.NewTestRunner(l, s, j)
 				if err != nil {
 					return nil, err
@@ -313,7 +313,7 @@ func Test_accountMeHandler(t *testing.T) {
 		},
 		{
 			Name: "API key with open access \\ update my account \\ updates authenticated user account name",
-			NewRunner: func(l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx]) (testutil.TestRunnerer, error) {
+			NewRunner: func(l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], d harness.Data) (testutil.TestRunnerer, error) {
 				rnr, err := testutil.NewTestRunner(l, s, j)
 				if err != nil {
 					return nil, err
@@ -346,7 +346,7 @@ func Test_accountMeHandler(t *testing.T) {
 		},
 		{
 			Name: "API key with open access \\ delete my account \\ deletes authenticated user account",
-			NewRunner: func(l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx]) (testutil.TestRunnerer, error) {
+			NewRunner: func(l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], d harness.Data) (testutil.TestRunnerer, error) {
 				rnr, err := testutil.NewTestRunner(l, s, j)
 				if err != nil {
 					return nil, err

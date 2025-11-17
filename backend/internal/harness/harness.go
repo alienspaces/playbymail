@@ -179,6 +179,21 @@ func (t *Testing) RemoveData() error {
 	}
 	l.Debug("removed adventure game instance records")
 
+	// Remove game turn sheet records first (they reference game instances)
+	l.Debug("removing >%d< game turn sheet records", len(t.teardownData.GameTurnSheetRecs))
+	for _, turnSheetRec := range t.teardownData.GameTurnSheetRecs {
+		l.Debug("[teardown] game turn sheet ID: >%s<", turnSheetRec.ID)
+		if turnSheetRec.ID == "" {
+			l.Warn("[teardown] skipping game turn sheet with empty ID")
+			continue
+		}
+		err := t.Domain.(*domain.Domain).RemoveGameTurnSheetRec(turnSheetRec.ID)
+		if err != nil {
+			l.Warn("failed removing game turn sheet record >%v<", err)
+			return err
+		}
+	}
+
 	// Remove game instance parameter records
 	l.Debug("removing >%d< game instance parameter records", len(t.teardownData.GameInstanceParameterRecs))
 	for _, parameterRec := range t.teardownData.GameInstanceParameterRecs {

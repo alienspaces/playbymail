@@ -225,6 +225,21 @@ func (t *Testing) removeAdventureGameInstanceRecords() error {
 
 	l.Debug("removing adventure game instance records")
 
+	// Remove adventure game turn sheet records first (they reference character instances)
+	l.Debug("removing >%d< adventure game turn sheet records", len(t.teardownData.AdventureGameTurnSheetRecs))
+	for _, turnSheetRec := range t.teardownData.AdventureGameTurnSheetRecs {
+		l.Debug("[teardown] adventure game turn sheet ID: >%s<", turnSheetRec.ID)
+		if turnSheetRec.ID == "" {
+			l.Warn("[teardown] skipping adventure game turn sheet with empty ID")
+			continue
+		}
+		err := t.Domain.(*domain.Domain).RemoveAdventureGameTurnSheetRec(turnSheetRec.ID)
+		if err != nil {
+			l.Warn("failed removing adventure game turn sheet record >%v<", err)
+			return err
+		}
+	}
+
 	// Remove adventure game creature instances
 	l.Debug("removing >%d< adventure game creature instance records", len(t.teardownData.AdventureGameCreatureInstanceRecs))
 	for _, creatureInstanceRec := range t.teardownData.AdventureGameCreatureInstanceRecs {
@@ -281,21 +296,6 @@ func (t *Testing) removeAdventureGameInstanceRecords() error {
 		err := t.Domain.(*domain.Domain).RemoveAdventureGameLocationInstanceRec(locationInstanceRec.ID)
 		if err != nil {
 			l.Warn("failed removing adventure game location instance record >%v<", err)
-			return err
-		}
-	}
-
-	// Remove adventure game turn sheet records
-	l.Debug("removing >%d< adventure game turn sheet records", len(t.teardownData.AdventureGameTurnSheetRecs))
-	for _, turnSheetRec := range t.teardownData.AdventureGameTurnSheetRecs {
-		l.Debug("[teardown] adventure game turn sheet ID: >%s<", turnSheetRec.ID)
-		if turnSheetRec.ID == "" {
-			l.Warn("[teardown] skipping adventure game turn sheet with empty ID")
-			continue
-		}
-		err := t.Domain.(*domain.Domain).RemoveAdventureGameTurnSheetRec(turnSheetRec.ID)
-		if err != nil {
-			l.Warn("failed removing adventure game turn sheet record >%v<", err)
 			return err
 		}
 	}

@@ -47,6 +47,15 @@ func (m *Domain) DeleteGameTurnSheetRec(recID string) error {
 	return nil
 }
 
+// RemoveGameTurnSheetRec removes a game turn sheet record
+func (m *Domain) RemoveGameTurnSheetRec(recID string) error {
+	r := m.GameTurnSheetRepository()
+	if err := r.RemoveOne(recID); err != nil {
+		return err
+	}
+	return nil
+}
+
 // GetGameTurnSheetRecsByGameInstance retrieves all turn sheets for a game instance
 func (m *Domain) GetGameTurnSheetRecsByGameInstance(gameInstanceID string, turnNumber int) ([]*game_record.GameTurnSheet, error) {
 

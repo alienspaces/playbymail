@@ -61,6 +61,8 @@ const (
 	GameSubscriptionOneRef = "game-subscription-one"
 
 	GameAdministrationOneRef = "game-administration-one"
+
+	GameTurnSheetOneRef = "game-turn-sheet-one"
 )
 
 // DataConfig -
