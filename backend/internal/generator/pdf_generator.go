@@ -158,6 +158,7 @@ func (g *PDFGenerator) loadTemplate(templatePath string) (*template.Template, er
 		// We're running from backend/, so use relative path from there
 		baseTemplatePath = filepath.Join("templates", "turn_sheet", "base.template")
 	}
+
 	l.Info("parsing base template path=%s", baseTemplatePath)
 
 	var err error
@@ -169,7 +170,8 @@ func (g *PDFGenerator) loadTemplate(templatePath string) (*template.Template, er
 
 	// Parse specific template directory to support type-specific includes
 	specificTemplatePath := fullPath
-	l.Debug("parsing specific template path=%s", specificTemplatePath)
+
+	l.Info("parsing specific template path=%s", specificTemplatePath)
 
 	tmpl, err = tmpl.ParseFiles(specificTemplatePath)
 	if err != nil {
@@ -203,12 +205,12 @@ func (g *PDFGenerator) htmlToPDF(ctx context.Context, html string) ([]byte, erro
 		chromedp.Flag("disable-ipc-flooding-protection", true),
 	}
 
-	l.Debug("chrome options configured options_count=%d", len(opts))
+	l.Info("chrome options configured options_count=%d", len(opts))
 
 	// Check if Chrome is available
 	chromePath := os.Getenv("GOOGLE_CHROME_SHIM")
 	if chromePath == "" {
-		l.Debug("GOOGLE_CHROME_SHIM not set, searching for Chrome in common locations")
+		l.Info("GOOGLE_CHROME_SHIM not set, searching for Chrome in common locations")
 		// Try to find Chrome in common locations
 		commonPaths := []string{
 			"/usr/bin/google-chrome",
@@ -221,12 +223,12 @@ func (g *PDFGenerator) htmlToPDF(ctx context.Context, html string) ([]byte, erro
 		for _, path := range commonPaths {
 			if _, err := os.Stat(path); err == nil {
 				chromePath = path
-				l.Debug("found Chrome at path chrome_path=%s", chromePath)
+				l.Info("found Chrome at path chrome_path=%s", chromePath)
 				break
 			}
 		}
 	} else {
-		l.Debug("using Chrome from GOOGLE_CHROME_SHIM chrome_path=%s", chromePath)
+		l.Info("using Chrome from GOOGLE_CHROME_SHIM chrome_path=%s", chromePath)
 	}
 
 	if chromePath == "" {
@@ -241,7 +243,8 @@ func (g *PDFGenerator) htmlToPDF(ctx context.Context, html string) ([]byte, erro
 
 	// Set Chrome executable path
 	opts = append(opts, chromedp.ExecPath(chromePath))
-	l.Debug("chrome executable path set chrome_path=%s", chromePath)
+
+	l.Info("chrome executable path set chrome_path=%s", chromePath)
 
 	// Create allocator without timeout (browser needs time to start)
 	allocCtx, cancel := chromedp.NewExecAllocator(ctx, opts...)
@@ -263,9 +266,8 @@ func (g *PDFGenerator) htmlToPDF(ctx context.Context, html string) ([]byte, erro
 	l.Debug("starting Chrome PDF generation")
 
 	var pdfData []byte
-	var err error
 
-	err = chromedp.Run(runCtx,
+	err := chromedp.Run(runCtx,
 		chromedp.ActionFunc(func(ctx context.Context) error {
 			l.Debug("chrome browser started, navigating to data URL")
 			return chromedp.Navigate(dataURL).Do(ctx)

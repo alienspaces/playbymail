@@ -253,7 +253,8 @@ func TestLocationChoiceProcessor_ScanTurnSheet(t *testing.T) {
 func TestGenerateLocationChoiceFormatsForPrinting(t *testing.T) {
 	l, _, _, cfg := testutil.NewDefaultDependencies(t)
 	cfg.TemplatesPath = "../../templates"
-	cfg.SaveTestFiles = true
+	// SaveTestFiles defaults to false - set SAVE_TEST_FILES=true to generate files
+	// cfg.SaveTestFiles = true
 
 	processor := turn_sheet.NewLocationChoiceProcessor(l, cfg)
 
@@ -328,7 +329,9 @@ func TestGenerateLocationChoiceFormatsForPrinting(t *testing.T) {
 				path := fmt.Sprintf("testdata/adventure_game_location_choice_turn_sheet.%s", tc.ext)
 				err = os.WriteFile(path, output, 0644)
 				require.NoError(t, err, "Should save output to testdata directory")
+
 				t.Logf("%s preview saved to %s", tc.name, path)
+
 				if tc.logExtra {
 					t.Logf("Output size: %d bytes", len(output))
 					t.Logf("")

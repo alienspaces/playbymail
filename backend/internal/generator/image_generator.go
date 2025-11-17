@@ -72,6 +72,7 @@ func (g *PDFGenerator) htmlToPNG(ctx context.Context, html string) ([]byte, erro
 	}
 
 	if chromePath == "" {
+		l.Warn("chrome not found. Please install Chrome or set GOOGLE_CHROME_SHIM environment variable")
 		return nil, fmt.Errorf("chrome not found. Please install Chrome or set GOOGLE_CHROME_SHIM environment variable")
 	}
 
@@ -89,10 +90,10 @@ func (g *PDFGenerator) htmlToPNG(ctx context.Context, html string) ([]byte, erro
 	// Base64 encode the HTML and use data URL
 	htmlB64 := base64.StdEncoding.EncodeToString([]byte(html))
 	dataURL := fmt.Sprintf("data:text/html;base64,%s", htmlB64)
-	l.Debug("using data URL for HTML content html_size=%d data_url_size=%d", len(html), len(dataURL))
 
-	var err error
-	err = chromedp.Run(runCtx,
+	l.Info("using data URL for HTML content html_size=%d data_url_size=%d", len(html), len(dataURL))
+
+	err := chromedp.Run(runCtx,
 		chromedp.Navigate(dataURL),
 		chromedp.ActionFunc(func(ctx context.Context) error {
 			return emulation.SetDeviceMetricsOverride(1240, 1754, 1.0, false).
@@ -112,6 +113,7 @@ func (g *PDFGenerator) htmlToPNG(ctx context.Context, html string) ([]byte, erro
 				WithFromSurface(true).
 				Do(ctx)
 			if err != nil {
+				l.Warn("failed to capture PNG screenshot error=%v", err)
 				return err
 			}
 			pngData = buf
@@ -120,10 +122,12 @@ func (g *PDFGenerator) htmlToPNG(ctx context.Context, html string) ([]byte, erro
 	)
 
 	if err != nil {
+		l.Warn("failed to capture PNG screenshot error=%v", err)
 		return nil, fmt.Errorf("failed to capture PNG screenshot: %w", err)
 	}
 
 	if len(pngData) < len(pngSignature) || !bytes.Equal(pngData[:len(pngSignature)], pngSignature) {
+		l.Warn("chrome screenshot did not return PNG bytes (signature=%v)", pngData[:min(len(pngData), len(pngSignature))])
 		return nil, fmt.Errorf("chrome screenshot did not return PNG bytes (signature=%v)", pngData[:min(len(pngData), len(pngSignature))])
 	}
 

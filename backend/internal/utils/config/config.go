@@ -11,8 +11,8 @@ type Config struct {
 	// Emailer
 	EmailerFaked bool `env:"EMAILER_FAKED" envDefault:"false"`
 
-	// Save test PDFs
-	SaveTestFiles bool `env:"SAVE_TEST_FILES" envDefault:"true"`
+	// Save test PDFs (set SAVE_TEST_FILES=true to save, KEEP_TEST_FILES=true to keep after tests)
+	SaveTestFiles bool `env:"SAVE_TEST_FILES" envDefault:"false"`
 
 	// OpenAI settings
 	OpenAIAPIKey     string `env:"OPENAI_API_KEY" envDefault:""`

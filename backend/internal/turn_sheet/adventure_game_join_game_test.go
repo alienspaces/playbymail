@@ -233,9 +233,12 @@ func TestJoinGameProcessor_ScanTurnSheet(t *testing.T) {
 }
 
 func TestGenerateJoinGameFormatsForPrinting(t *testing.T) {
+
 	l, _, _, cfg := testutil.NewDefaultDependencies(t)
 	cfg.TemplatesPath = "../../templates"
-	cfg.SaveTestFiles = true
+
+	// SaveTestFiles defaults to false - set SAVE_TEST_FILES=true to generate files
+	// cfg.SaveTestFiles = true
 
 	processor := turn_sheet.NewJoinGameProcessor(l, cfg)
 
@@ -290,7 +293,9 @@ func TestGenerateJoinGameFormatsForPrinting(t *testing.T) {
 				path := fmt.Sprintf("testdata/adventure_game_join_game_turn_sheet.%s", tc.ext)
 				err = os.WriteFile(path, output, 0644)
 				require.NoError(t, err, "Should save output to testdata directory")
+
 				t.Logf("%s preview saved to %s", tc.name, path)
+
 				if tc.logExtra {
 					t.Logf("Output size: %d bytes", len(output))
 					t.Logf("")
