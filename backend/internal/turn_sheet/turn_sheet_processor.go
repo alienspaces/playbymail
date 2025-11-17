@@ -34,9 +34,11 @@ type DocumentProcessor interface {
 
 // GetDocumentProcessor returns the document processor for a specific turn sheet type
 func GetDocumentProcessor(l logger.Logger, cfg config.Config, sheetType string) (DocumentProcessor, error) {
-
 	// Get turn sheet processor map
-	turnSheetProcessorMap := getDocumentProcessorMap(l, cfg)
+	turnSheetProcessorMap, err := getDocumentProcessorMap(l, cfg)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create document processor map: %w", err)
+	}
 
 	// Get processor for turn sheet type
 	processor, exists := turnSheetProcessorMap[sheetType]
@@ -48,18 +50,32 @@ func GetDocumentProcessor(l logger.Logger, cfg config.Config, sheetType string) 
 }
 
 // getDocumentProcessorMap returns a map of document processors for all turn sheet types
-func getDocumentProcessorMap(l logger.Logger, cfg config.Config) map[string]DocumentProcessor {
-
+func getDocumentProcessorMap(l logger.Logger, cfg config.Config) (map[string]DocumentProcessor, error) {
 	processors := make(map[string]DocumentProcessor)
 
-	maps.Copy(processors, getAdventureGameDocumentProcessorMap(l, cfg))
+	adventureProcessors, err := getAdventureGameDocumentProcessorMap(l, cfg)
+	if err != nil {
+		return nil, err
+	}
+	maps.Copy(processors, adventureProcessors)
 
-	return processors
+	return processors, nil
 }
 
-func getAdventureGameDocumentProcessorMap(l logger.Logger, cfg config.Config) map[string]DocumentProcessor {
-	return map[string]DocumentProcessor{
-		adventure_game_record.AdventureSheetTypeLocationChoice: NewLocationChoiceProcessor(l, cfg),
-		adventure_game_record.AdventureSheetTypeJoinGame:       NewJoinGameProcessor(l, cfg),
+func getAdventureGameDocumentProcessorMap(l logger.Logger, cfg config.Config) (map[string]DocumentProcessor, error) {
+	processors := make(map[string]DocumentProcessor)
+
+	locationChoiceProcessor, err := NewLocationChoiceProcessor(l, cfg)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create location choice processor: %w", err)
 	}
+	processors[adventure_game_record.AdventureSheetTypeLocationChoice] = locationChoiceProcessor
+
+	joinGameProcessor, err := NewJoinGameProcessor(l, cfg)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create join game processor: %w", err)
+	}
+	processors[adventure_game_record.AdventureSheetTypeJoinGame] = joinGameProcessor
+
+	return processors, nil
 }

@@ -14,9 +14,16 @@ type Config struct {
 	// Save test PDFs (set SAVE_TEST_FILES=true to save, KEEP_TEST_FILES=true to keep after tests)
 	SaveTestFiles bool `env:"SAVE_TEST_FILES" envDefault:"false"`
 
+	// Agent configuration
+	AgentProvider string `env:"AGENT_PROVIDER" envDefault:"openai"` // "openai", "anthropic", "local"
+
 	// OpenAI settings
 	OpenAIAPIKey     string `env:"OPENAI_API_KEY" envDefault:""`
 	OpenAIImageModel string `env:"OPENAI_IMAGE_MODEL" envDefault:"gpt-4o-mini"`
+
+	// Anthropic settings (future)
+	AnthropicAPIKey string `env:"ANTHROPIC_API_KEY" envDefault:""`
+	AnthropicModel  string `env:"ANTHROPIC_MODEL" envDefault:"claude-3-opus"`
 }
 
 // Parse parses environment variables into the provided struct using env.Parse.

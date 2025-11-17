@@ -47,10 +47,14 @@ type LocationChoiceProcessor struct {
 }
 
 // NewLocationChoiceProcessor creates a new location choice processor
-func NewLocationChoiceProcessor(l logger.Logger, cfg config.Config) *LocationChoiceProcessor {
-	return &LocationChoiceProcessor{
-		BaseProcessor: NewBaseProcessor(l, cfg),
+func NewLocationChoiceProcessor(l logger.Logger, cfg config.Config) (*LocationChoiceProcessor, error) {
+	baseProcessor, err := NewBaseProcessor(l, cfg)
+	if err != nil {
+		return nil, err
 	}
+	return &LocationChoiceProcessor{
+		BaseProcessor: baseProcessor,
+	}, nil
 }
 
 // GenerateTurnSheet generates a location choice turn sheet document

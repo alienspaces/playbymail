@@ -24,10 +24,22 @@ type BaseProcessor struct {
 }
 
 // NewBaseProcessor creates a new base processor
-func NewBaseProcessor(l logger.Logger, cfg config.Config) *BaseProcessor {
+func NewBaseProcessor(l logger.Logger, cfg config.Config) (*BaseProcessor, error) {
+	l = l.WithFunctionContext("NewBaseProcessor")
 
-	scannerInstance := scanner.NewImageScanner(l, cfg)
-	generatorInstance := generator.NewPDFGenerator(l)
+	l.Info("creating base processor")
+
+	scannerInstance, err := scanner.NewImageScanner(l, cfg)
+	if err != nil {
+		l.Warn("failed to create image scanner >%v<", err)
+		return nil, fmt.Errorf("failed to create image scanner: %w", err)
+	}
+
+	generatorInstance, err := generator.NewPDFGenerator(l)
+	if err != nil {
+		l.Warn("failed to create PDF generator >%v<", err)
+		return nil, fmt.Errorf("failed to create PDF generator: %w", err)
+	}
 
 	templatePath := "./backend/templates"
 	templatePath = cfg.TemplatesPath
@@ -38,7 +50,7 @@ func NewBaseProcessor(l logger.Logger, cfg config.Config) *BaseProcessor {
 		Log:          l,
 		Config:       cfg,
 		TemplatePath: templatePath,
-	}
+	}, nil
 }
 
 // GenerateDocument renders a template in the requested document format.

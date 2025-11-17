@@ -65,10 +65,14 @@ type JoinGameProcessor struct {
 }
 
 // NewJoinGameProcessor creates a new join game processor
-func NewJoinGameProcessor(l logger.Logger, cfg config.Config) *JoinGameProcessor {
-	return &JoinGameProcessor{
-		BaseProcessor: NewBaseProcessor(l, cfg),
+func NewJoinGameProcessor(l logger.Logger, cfg config.Config) (*JoinGameProcessor, error) {
+	baseProcessor, err := NewBaseProcessor(l, cfg)
+	if err != nil {
+		return nil, err
 	}
+	return &JoinGameProcessor{
+		BaseProcessor: baseProcessor,
+	}, nil
 }
 
 // GenerateTurnSheet generates a join game turn sheet document
@@ -210,7 +214,14 @@ func buildJoinGameInstructions() string {
 - Image 2 is the completed form containing handwriting.
 Extract the player's answers and return them as JSON with the keys:
 email, name, postal_address_line1, postal_address_line2, state_province, country, postal_code, character_name.
-Copy the player's spelling exactly and leave values blank when fields are empty.`
+
+IMPORTANT: For email addresses, pay special attention to the domain portion.
+Common email domains include: gmail.com, yahoo.com, hotmail.com, outlook.com, etc.
+If you see "gmail" written, extract it as "gmail" (not "email").
+If you see "yahoo" written, extract it as "yahoo" (not "yaho" or similar).
+Copy the email address exactly as written, including the @ symbol and full domain name.
+
+For all other fields, copy the player's spelling exactly and leave values blank when fields are empty.`
 }
 
 // These are the additional context provided to the AI driven OCR service.
@@ -227,13 +238,16 @@ func buildJoinGameContext(data *JoinGameData) []string {
 	ctx = append(ctx,
 		"The JSON must only contain the requested keys.",
 		"Return an empty string when the player left a field blank.",
+		"Email addresses must be extracted with complete accuracy - pay close attention to the domain name (e.g., 'gmail.com' not 'email.com').",
 	)
 	return ctx
 }
 
-// normalizeJoinGameScanData normalizes the scan data by trimming whitespace from the fields.
+// normalizeJoinGameScanData normalizes the scan data by trimming whitespace from the fields
+// and correcting common OCR errors in email addresses.
 func normalizeJoinGameScanData(data *JoinGameScanData) {
 	data.Email = strings.TrimSpace(data.Email)
+	data.Email = correctEmailDomainOCR(data.Email)
 	data.Name = strings.TrimSpace(data.Name)
 	data.PostalAddressLine1 = strings.TrimSpace(data.PostalAddressLine1)
 	data.PostalAddressLine2 = strings.TrimSpace(data.PostalAddressLine2)
@@ -241,4 +255,42 @@ func normalizeJoinGameScanData(data *JoinGameScanData) {
 	data.Country = strings.TrimSpace(data.Country)
 	data.PostalCode = strings.TrimSpace(data.PostalCode)
 	data.CharacterName = strings.TrimSpace(data.CharacterName)
+}
+
+// correctEmailDomainOCR corrects common OCR mistakes in email domain names.
+// This is a safety net to fix errors like "email.com" -> "gmail.com" when the
+// context suggests it should be "gmail.com".
+func correctEmailDomainOCR(email string) string {
+	if email == "" {
+		return email
+	}
+
+	// Common OCR mistakes for email domains
+	domainCorrections := map[string]string{
+		"@email.com":   "@gmail.com",   // "gmail" often misread as "email"
+		"@yaho.com":    "@yahoo.com",   // "yahoo" often misread as "yaho"
+		"@yaho0.com":   "@yahoo.com",   // "yahoo" with zero instead of 'o'
+		"@hotmai1.com": "@hotmail.com", // "hotmail" with '1' instead of 'l'
+		"@hotmaii.com": "@hotmail.com", // "hotmail" with double 'i' instead of 'il'
+		"@out1ook.com": "@outlook.com", // "outlook" with '1' instead of 'l'
+		"@gmai1.com":   "@gmail.com",   // "gmail" with '1' instead of 'l'
+		"@gmaii.com":   "@gmail.com",   // "gmail" with double 'i' instead of 'il'
+	}
+
+	lowerEmail := strings.ToLower(email)
+	for wrong, correct := range domainCorrections {
+		if strings.Contains(lowerEmail, wrong) {
+			// Preserve original case of local part, fix domain
+			parts := strings.Split(email, "@")
+			if len(parts) == 2 {
+				email = parts[0] + correct
+			} else {
+				// Fallback: case-insensitive replacement
+				email = strings.ReplaceAll(strings.ToLower(email), wrong, correct)
+			}
+			break
+		}
+	}
+
+	return email
 }

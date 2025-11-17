@@ -6,36 +6,65 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"gitlab.com/alienspaces/playbymail/core/log"
+	"gitlab.com/alienspaces/playbymail/internal/agent"
 	"gitlab.com/alienspaces/playbymail/internal/utils/config"
 )
 
+// mockMultiModalAgent is a mock implementation of agent.MultiModalAgent for testing
+type mockMultiModalAgent struct {
+	extractTextFunc           func(ctx context.Context, req agent.TextExtractionRequest) (string, error)
+	extractStructuredDataFunc func(ctx context.Context, req agent.StructuredExtractionRequest) ([]byte, error)
+	generateContentFunc       func(ctx context.Context, req agent.ContentGenerationRequest) (string, error)
+	analyzeTextFunc           func(ctx context.Context, req agent.TextAnalysisRequest) (agent.TextAnalysisResult, error)
+}
+
+func (m *mockMultiModalAgent) ExtractText(ctx context.Context, req agent.TextExtractionRequest) (string, error) {
+	if m.extractTextFunc != nil {
+		return m.extractTextFunc(ctx, req)
+	}
+	return "", nil
+}
+
+func (m *mockMultiModalAgent) ExtractStructuredData(ctx context.Context, req agent.StructuredExtractionRequest) ([]byte, error) {
+	if m.extractStructuredDataFunc != nil {
+		return m.extractStructuredDataFunc(ctx, req)
+	}
+	return nil, nil
+}
+
+func (m *mockMultiModalAgent) GenerateContent(ctx context.Context, req agent.ContentGenerationRequest) (string, error) {
+	if m.generateContentFunc != nil {
+		return m.generateContentFunc(ctx, req)
+	}
+	return "", nil
+}
+
+func (m *mockMultiModalAgent) AnalyzeText(ctx context.Context, req agent.TextAnalysisRequest) (agent.TextAnalysisResult, error) {
+	if m.analyzeTextFunc != nil {
+		return m.analyzeTextFunc(ctx, req)
+	}
+	return agent.TextAnalysisResult{}, nil
+}
+
 func TestNewImageScanner(t *testing.T) {
-	tests := []struct {
-		name string
-	}{
-		{
-			name: "creates image scanner with valid dependencies",
-		},
-	}
+	t.Run("creates image scanner with valid dependencies", func(t *testing.T) {
+		logger := log.NewDefaultLogger()
+		cfg := config.Config{}
+		scanner, err := NewImageScanner(logger, cfg)
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			logger := log.NewDefaultLogger()
-			cfg := config.Config{}
-			scanner := NewImageScanner(logger, cfg)
-
-			require.NotNil(t, scanner, "Scanner should not be nil")
-			require.Equal(t, logger, scanner.logger, "Logger should match")
-			require.Equal(t, cfg, scanner.cfg, "Config should match")
-		})
-	}
+		require.NoError(t, err, "Should not return error")
+		require.NotNil(t, scanner, "Scanner should not be nil")
+		require.Equal(t, logger, scanner.logger, "Logger should match")
+		require.Equal(t, cfg, scanner.cfg, "Config should match")
+		require.NotNil(t, scanner.agent, "Agent should be configured")
+	})
 }
 
 func TestImageScanner_ExtractTextFromImage(t *testing.T) {
 	tests := []struct {
 		name        string
 		imageData   []byte
-		mock        TextExtractorFunc
+		mock        *mockMultiModalAgent
 		expectError bool
 		validate    func(t *testing.T, text string, err error)
 	}{
@@ -60,10 +89,13 @@ func TestImageScanner_ExtractTextFromImage(t *testing.T) {
 			},
 		},
 		{
-			name:      "delegates to text extractor",
+			name:      "delegates to agent",
 			imageData: []byte("pretend-image"),
-			mock: func(_ context.Context, _ []byte) (string, error) {
-				return "mock text", nil
+			mock: &mockMultiModalAgent{
+				extractTextFunc: func(_ context.Context, req agent.TextExtractionRequest) (string, error) {
+					require.NotEmpty(t, req.ImageData, "Image data should be provided")
+					return "mock text", nil
+				},
 			},
 			validate: func(t *testing.T, text string, err error) {
 				require.NoError(t, err)
@@ -79,9 +111,11 @@ func TestImageScanner_ExtractTextFromImage(t *testing.T) {
 			cfg := config.Config{}
 
 			// Create scanner
-			scanner := NewImageScanner(logger, cfg)
+			scanner, err := NewImageScanner(logger, cfg)
+			require.NoError(t, err)
+
 			if tt.mock != nil {
-				scanner.SetTextExtractor(tt.mock)
+				scanner.SetAgent(tt.mock)
 			}
 
 			// Execute test
@@ -96,19 +130,24 @@ func TestImageScanner_ExtractTextFromImage(t *testing.T) {
 func TestImageScanner_ExtractStructuredData(t *testing.T) {
 	logger := log.NewDefaultLogger()
 	cfg := config.Config{}
-	scanner := NewImageScanner(logger, cfg)
+	scanner, err := NewImageScanner(logger, cfg)
+	require.NoError(t, err)
 
 	mockResponse := []byte(`{"email":"alienspaces@gmail.com"}`)
-	scanner.SetStructuredExtractor(func(ctx context.Context, req StructuredScanRequest) ([]byte, error) {
-		require.NotNil(t, ctx)
-		require.NotEmpty(t, req.FilledImage)
-		require.NotNil(t, req.ExpectedJSONSchema)
-		return mockResponse, nil
-	})
+	mockAgent := &mockMultiModalAgent{
+		extractStructuredDataFunc: func(ctx context.Context, req agent.StructuredExtractionRequest) ([]byte, error) {
+			require.NotNil(t, ctx)
+			require.NotEmpty(t, req.FilledImage.Data, "Filled image data should be provided")
+			require.NotNil(t, req.ExpectedSchema, "Expected schema should be provided")
+			return mockResponse, nil
+		},
+	}
+	scanner.SetAgent(mockAgent)
 
 	result, err := scanner.ExtractStructuredData(context.Background(), StructuredScanRequest{
 		Instructions:       "test",
 		FilledImage:        []byte("image"),
+		FilledImageMIME:    "image/png",
 		ExpectedJSONSchema: map[string]any{"email": ""},
 	})
 

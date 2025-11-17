@@ -105,7 +105,12 @@ func uploadTurnSheetHandler(w http.ResponseWriter, r *http.Request, pp httproute
 		l.Warn("failed to parse config >%v<", err)
 		return coreerror.NewInternalError("failed to parse config")
 	}
-	baseProcessor := turn_sheet.NewBaseProcessor(l, cfg)
+
+	baseProcessor, err := turn_sheet.NewBaseProcessor(l, cfg)
+	if err != nil {
+		l.Warn("failed to create base processor >%v<", err)
+		return coreerror.NewInternalError("failed to create base processor")
+	}
 
 	turnSheetCode, err := baseProcessor.ParseTurnSheetCodeFromImage(ctx, imageData)
 	if err != nil {

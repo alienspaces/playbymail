@@ -23,7 +23,8 @@ func TestLocationChoiceProcessor_GenerateTurnSheet(t *testing.T) {
 	// Create a mock config for the processor
 	cfg.TemplatesPath = "../../templates"
 
-	processor := turn_sheet.NewLocationChoiceProcessor(l, cfg)
+	processor, err := turn_sheet.NewLocationChoiceProcessor(l, cfg)
+	require.NoError(t, err)
 
 	tests := []struct {
 		name               string
@@ -110,8 +111,10 @@ func TestLocationChoiceProcessor_ScanTurnSheet(t *testing.T) {
 	// Create a mock config for the processor
 	cfg.TemplatesPath = "../../templates"
 
-	processor := turn_sheet.NewLocationChoiceProcessor(l, cfg)
-	baseProcessor := turn_sheet.NewBaseProcessor(l, cfg)
+	processor, err := turn_sheet.NewLocationChoiceProcessor(l, cfg)
+	require.NoError(t, err)
+	baseProcessor, err := turn_sheet.NewBaseProcessor(l, cfg)
+	require.NoError(t, err)
 
 	tests := []struct {
 		name                  string
@@ -256,7 +259,8 @@ func TestGenerateLocationChoiceFormatsForPrinting(t *testing.T) {
 	// SaveTestFiles defaults to false - set SAVE_TEST_FILES=true to generate files
 	// cfg.SaveTestFiles = true
 
-	processor := turn_sheet.NewLocationChoiceProcessor(l, cfg)
+	processor, err := turn_sheet.NewLocationChoiceProcessor(l, cfg)
+	require.NoError(t, err)
 
 	type formatCase struct {
 		name     string

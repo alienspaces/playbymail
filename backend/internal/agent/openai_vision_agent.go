@@ -1,4 +1,4 @@
-package scanner
+package agent
 
 import (
 	"bytes"
@@ -10,10 +10,10 @@ import (
 	"net/http"
 	"strings"
 	"time"
-)
 
-// OpenAPI
-// https://platform.openai.com/docs/api-reference/responses/create
+	"gitlab.com/alienspaces/playbymail/core/type/logger"
+	"gitlab.com/alienspaces/playbymail/internal/utils/config"
+)
 
 const (
 	openAIResponsesEndpoint       = "https://api.openai.com/v1/responses"
@@ -22,85 +22,54 @@ const (
 	defaultImageMimeType          = "image/png"
 )
 
-type openAIRequest struct {
-	Model string        `json:"model"`
-	Input []openAIInput `json:"input"`
+type openAIVisionAgent struct {
+	logger logger.Logger
+	cfg    config.Config
+	client *http.Client
 }
 
-type openAIInput struct {
-	Role    string               `json:"role"`
-	Content []openAIInputContent `json:"content"`
+// NewOpenAIVisionAgent creates a new OpenAI VisionAgent implementation
+func NewOpenAIVisionAgent(l logger.Logger, cfg config.Config) VisionAgent {
+	return &openAIVisionAgent{
+		logger: l,
+		cfg:    cfg,
+		client: &http.Client{Timeout: 45 * time.Second},
+	}
 }
 
-type openAIInputContent struct {
-	Type     string `json:"type"`
-	Text     string `json:"text,omitempty"`
-	ImageURL string `json:"image_url,omitempty"`
-}
-
-type openAIResponse struct {
-	Output []openAIMessage `json:"output"`
-	Error  *openAIError    `json:"error,omitempty"`
-}
-
-type openAIMessage struct {
-	Content []openAIMessageContent `json:"content"`
-}
-
-type openAIMessageContent struct {
-	Type string `json:"type"`
-	Text string `json:"text"`
-}
-
-type openAIError struct {
-	Message string `json:"message"`
-	Type    string `json:"type"`
-}
-
-// extractTextViaOpenAI sends the scanned image to OpenAI's responses endpoint
-// (https://api.openai.com/v1/responses) and returns the transcribed text.
-// The caller must ensure an API key is configured before calling.
-func (s *ImageScanner) extractTextViaOpenAI(ctx context.Context, imageData []byte) (string, error) {
-	l := s.logger.WithFunctionContext("ImageScanner/extractTextViaOpenAI")
-
+func (a *openAIVisionAgent) ExtractText(ctx context.Context, req TextExtractionRequest) (string, error) {
+	l := a.logger.WithFunctionContext("OpenAIVisionAgent/ExtractText")
 	start := time.Now()
 
-	if s.cfg.OpenAIAPIKey == "" {
+	if a.cfg.OpenAIAPIKey == "" {
 		return "", fmt.Errorf("OpenAI API key not configured")
 	}
 
-	if len(imageData) == 0 {
+	if len(req.ImageData) == 0 {
 		return "", fmt.Errorf("empty image data provided")
 	}
 
-	mimeType := http.DetectContentType(imageData)
-	if mimeType == "" || mimeType == "application/octet-stream" {
-		mimeType = defaultImageMimeType
+	prompt := req.Prompt
+	if prompt == "" {
+		prompt = openAIImagePrompt
 	}
 
-	// Optimize image before encoding
-	optimized, optimizedMIME, err := optimizeImageForOCR(l, imageData, mimeType)
-	if err != nil {
-		l.Warn("image optimization failed, using original >%v<", err)
-		optimized = imageData
-		optimizedMIME = mimeType
-	}
+	// Encode image as data URI (image should already be optimized by scanner)
+	imageB64 := base64.StdEncoding.EncodeToString(req.ImageData)
+	imageURI := fmt.Sprintf("data:%s;base64,%s", req.ImageMIME, imageB64)
 
-	imageB64 := base64.StdEncoding.EncodeToString(optimized)
-	imageURI := fmt.Sprintf("data:%s;base64,%s", optimizedMIME, imageB64)
-
-	l.Info("prepared image data URI original_size=%d optimized_size=%d mime_type=%s base64_size=%d",
-		len(imageData), len(optimized), optimizedMIME, len(imageB64))
+	l.Info("prepared image data URI image_size=%d mime_type=%s base64_size=%d",
+		len(req.ImageData), req.ImageMIME, len(imageB64))
 
 	reqPayload := openAIRequest{
-		Model: s.modelName(),
+		Model: a.modelName(),
 		Input: []openAIInput{
 			{
 				Role: "user",
 				Content: []openAIInputContent{
 					{
 						Type: "input_text",
-						Text: openAIImagePrompt,
+						Text: prompt,
 					},
 					{
 						Type:     "input_image",
@@ -122,16 +91,15 @@ func (s *ImageScanner) extractTextViaOpenAI(ctx context.Context, imageData []byt
 	}
 
 	httpReq.Header.Set("Content-Type", "application/json")
-	httpReq.Header.Set("Authorization", fmt.Sprintf("Bearer %s", s.cfg.OpenAIAPIKey))
+	httpReq.Header.Set("Authorization", fmt.Sprintf("Bearer %s", a.cfg.OpenAIAPIKey))
 
-	client := &http.Client{Timeout: 45 * time.Second}
 	apiStart := time.Now()
-	model := s.modelName()
+	model := a.modelName()
 
 	l.Info("sending OpenAI text extraction request endpoint=%s model=%s request_size=%d",
 		openAIResponsesEndpoint, model, len(body))
 
-	resp, err := client.Do(httpReq)
+	resp, err := a.client.Do(httpReq)
 	apiDuration := time.Since(apiStart)
 	if err != nil {
 		l.Warn("OpenAI HTTP request failed after %v error=%v", apiDuration, err)
@@ -188,52 +156,25 @@ func (s *ImageScanner) extractTextViaOpenAI(ctx context.Context, imageData []byt
 	return text, nil
 }
 
-func parseOpenAIAPIError(body []byte) string {
-	var errResp openAIResponse
-	if err := json.Unmarshal(body, &errResp); err == nil {
-		if errResp.Error != nil && errResp.Error.Message != "" {
-			return errResp.Error.Message
-		}
-	}
-	return ""
-}
-
-func extractOpenAIText(resp openAIResponse) string {
-	var builder strings.Builder
-
-	for _, output := range resp.Output {
-		for _, content := range output.Content {
-			if content.Type == "output_text" && strings.TrimSpace(content.Text) != "" {
-				if builder.Len() > 0 {
-					builder.WriteString("\n")
-				}
-				builder.WriteString(strings.TrimSpace(content.Text))
-			}
-		}
-	}
-
-	return strings.TrimSpace(builder.String())
-}
-
-func (s *ImageScanner) extractStructuredViaOpenAI(ctx context.Context, req StructuredScanRequest) ([]byte, error) {
-	l := s.logger.WithFunctionContext("ImageScanner/extractStructuredViaOpenAI")
+func (a *openAIVisionAgent) ExtractStructuredData(ctx context.Context, req StructuredExtractionRequest) ([]byte, error) {
+	l := a.logger.WithFunctionContext("OpenAIVisionAgent/ExtractStructuredData")
 	start := time.Now()
 
-	if s.cfg.OpenAIAPIKey == "" {
+	if a.cfg.OpenAIAPIKey == "" {
 		return nil, fmt.Errorf("OpenAI API key not configured")
 	}
 
-	if len(req.FilledImage) == 0 {
-		return nil, fmt.Errorf("filled image data provided is empty")
+	if len(req.FilledImage.Data) == 0 {
+		return nil, fmt.Errorf("filled image data is required")
 	}
 
-	if req.ExpectedJSONSchema == nil {
-		return nil, fmt.Errorf("expected JSON schema must be provided")
+	if req.ExpectedSchema == nil {
+		return nil, fmt.Errorf("expected JSON schema is required")
 	}
 
-	l.Debug("preparing structured extraction request has_template=%v", len(req.TemplateImage) > 0)
+	l.Debug("preparing structured extraction request has_template=%v", req.TemplateImage != nil)
 
-	skeleton, err := json.Marshal(req.ExpectedJSONSchema)
+	skeleton, err := json.Marshal(req.ExpectedSchema)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal expected JSON schema: %w", err)
 	}
@@ -257,19 +198,13 @@ func (s *ImageScanner) extractStructuredViaOpenAI(ctx context.Context, req Struc
 		})
 	}
 
-	if len(req.TemplateImage) > 0 {
-		optimizedTemplate, optimizedTemplateMIME, err := optimizeImageForOCR(l, req.TemplateImage, req.TemplateImageMIME)
-		if err != nil {
-			l.Warn("template image optimization failed, using original >%v<", err)
-			optimizedTemplate = req.TemplateImage
-			optimizedTemplateMIME = req.TemplateImageMIME
-		}
-		dataURI := encodeImageDataURI(optimizedTemplate, optimizedTemplateMIME)
+	if req.TemplateImage != nil && len(req.TemplateImage.Data) > 0 {
+		dataURI := encodeImageDataURI(req.TemplateImage.Data, req.TemplateImage.MIME)
 		if dataURI == "" {
 			l.Warn("failed to encode template image data URI, skipping template image")
 		} else {
 			l.Debug("template image encoded template_size=%d template_mime=%s data_uri_length=%d",
-				len(optimizedTemplate), optimizedTemplateMIME, len(dataURI))
+				len(req.TemplateImage.Data), req.TemplateImage.MIME, len(dataURI))
 			contents = append(contents, openAIInputContent{
 				Type:     "input_image",
 				ImageURL: dataURI,
@@ -277,18 +212,12 @@ func (s *ImageScanner) extractStructuredViaOpenAI(ctx context.Context, req Struc
 		}
 	}
 
-	optimizedFilled, optimizedFilledMIME, err := optimizeImageForOCR(l, req.FilledImage, req.FilledImageMIME)
-	if err != nil {
-		l.Warn("filled image optimization failed, using original >%v<", err)
-		optimizedFilled = req.FilledImage
-		optimizedFilledMIME = req.FilledImageMIME
-	}
-	dataURI := encodeImageDataURI(optimizedFilled, optimizedFilledMIME)
+	dataURI := encodeImageDataURI(req.FilledImage.Data, req.FilledImage.MIME)
 	if dataURI == "" {
 		return nil, fmt.Errorf("failed to encode filled image data URI")
 	}
 	l.Debug("filled image encoded filled_size=%d filled_mime=%s data_uri_length=%d",
-		len(optimizedFilled), optimizedFilledMIME, len(dataURI))
+		len(req.FilledImage.Data), req.FilledImage.MIME, len(dataURI))
 
 	contents = append(contents, openAIInputContent{
 		Type:     "input_image",
@@ -307,7 +236,7 @@ func (s *ImageScanner) extractStructuredViaOpenAI(ctx context.Context, req Struc
 	)
 
 	reqPayload := openAIRequest{
-		Model: s.modelName(),
+		Model: a.modelName(),
 		Input: []openAIInput{
 			{
 				Role:    "user",
@@ -327,11 +256,11 @@ func (s *ImageScanner) extractStructuredViaOpenAI(ctx context.Context, req Struc
 	}
 
 	httpReq.Header.Set("Content-Type", "application/json")
-	httpReq.Header.Set("Authorization", fmt.Sprintf("Bearer %s", s.cfg.OpenAIAPIKey))
+	httpReq.Header.Set("Authorization", fmt.Sprintf("Bearer %s", a.cfg.OpenAIAPIKey))
 
 	client := &http.Client{Timeout: 60 * time.Second}
 	apiStart := time.Now()
-	model := s.modelName()
+	model := a.modelName()
 	imageCount := 0
 	textCount := 0
 	for _, c := range contents {
@@ -398,6 +327,69 @@ func (s *ImageScanner) extractStructuredViaOpenAI(ctx context.Context, req Struc
 	return []byte(text), nil
 }
 
+// Helper types and functions for OpenAI API
+type openAIRequest struct {
+	Model string        `json:"model"`
+	Input []openAIInput `json:"input"`
+}
+
+type openAIInput struct {
+	Role    string               `json:"role"`
+	Content []openAIInputContent `json:"content"`
+}
+
+type openAIInputContent struct {
+	Type     string `json:"type"`
+	Text     string `json:"text,omitempty"`
+	ImageURL string `json:"image_url,omitempty"`
+}
+
+type openAIResponse struct {
+	Output []openAIMessage `json:"output"`
+	Error  *openAIError    `json:"error,omitempty"`
+}
+
+type openAIMessage struct {
+	Content []openAIMessageContent `json:"content"`
+}
+
+type openAIMessageContent struct {
+	Type string `json:"type"`
+	Text string `json:"text"`
+}
+
+type openAIError struct {
+	Message string `json:"message"`
+	Type    string `json:"type"`
+}
+
+func parseOpenAIAPIError(body []byte) string {
+	var errResp openAIResponse
+	if err := json.Unmarshal(body, &errResp); err == nil {
+		if errResp.Error != nil && errResp.Error.Message != "" {
+			return errResp.Error.Message
+		}
+	}
+	return ""
+}
+
+func extractOpenAIText(resp openAIResponse) string {
+	var builder strings.Builder
+
+	for _, output := range resp.Output {
+		for _, content := range output.Content {
+			if content.Type == "output_text" && strings.TrimSpace(content.Text) != "" {
+				if builder.Len() > 0 {
+					builder.WriteString("\n")
+				}
+				builder.WriteString(strings.TrimSpace(content.Text))
+			}
+		}
+	}
+
+	return strings.TrimSpace(builder.String())
+}
+
 func encodeImageDataURI(data []byte, mime string) string {
 	// Validate image data before encoding
 	if len(data) == 0 {
@@ -429,8 +421,8 @@ func encodeImageDataURI(data []byte, mime string) string {
 	return fmt.Sprintf("data:%s;base64,%s", mime, base64.StdEncoding.EncodeToString(data))
 }
 
-func (s *ImageScanner) modelName() string {
-	if trimmed := strings.TrimSpace(s.cfg.OpenAIImageModel); trimmed != "" {
+func (a *openAIVisionAgent) modelName() string {
+	if trimmed := strings.TrimSpace(a.cfg.OpenAIImageModel); trimmed != "" {
 		return trimmed
 	}
 	return openAIImageTranscriptionModel

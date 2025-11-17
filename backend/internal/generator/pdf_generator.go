@@ -23,10 +23,16 @@ type PDFGenerator struct {
 }
 
 // NewPDFGenerator creates a new PDF generator
-func NewPDFGenerator(l logger.Logger) *PDFGenerator {
-	return &PDFGenerator{
+func NewPDFGenerator(l logger.Logger) (*PDFGenerator, error) {
+	l = l.WithFunctionContext("NewPDFGenerator")
+
+	l.Info("creating PDF generator")
+
+	pdfGenerator := &PDFGenerator{
 		logger: l,
 	}
+
+	return pdfGenerator, nil
 }
 
 // SetTemplatePath sets the template path
