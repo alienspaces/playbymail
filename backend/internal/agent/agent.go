@@ -33,5 +33,9 @@ type MultiModalAgent interface {
 
 // NewMultiModalAgent creates a new MultiModalAgent implementation
 func NewMultiModalAgent(l logger.Logger, cfg config.Config) MultiModalAgent {
+	l = l.WithFunctionContext("NewMultiModalAgent")
+
+	l.Info("instantiating multi modal agent")
+
 	return NewOpenAIMultimodalAgent(l, cfg)
 }

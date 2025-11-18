@@ -42,7 +42,7 @@ type SendAccountVerificationEmailWorker struct {
 func NewSendAccountVerificationEmailWorker(l logger.Logger, cfg config.Config, s storer.Storer, e emailer.Emailer) (*SendAccountVerificationEmailWorker, error) {
 	l = l.WithPackageContext("SendAccountVerificationEmailWorker")
 
-	l.Info("Instantiation SendAccountVerificationEmailWorker")
+	l.Info("instantiating send account verification email worker")
 
 	jw, err := NewJobWorker(l, cfg, s)
 	if err != nil {
@@ -82,7 +82,7 @@ func NewSendAccountVerificationEmailWorker(l logger.Logger, cfg config.Config, s
 func (w *SendAccountVerificationEmailWorker) Work(ctx context.Context, j *river.Job[SendAccountVerificationEmailWorkerArgs]) error {
 	l := w.JobWorker.Log.WithFunctionContext("SendAccountVerificationEmailWorker/Work")
 
-	l.Info("Running job ID >%s< Args >%#v<", strconv.FormatInt(j.ID, 10), j.Args)
+	l.Info("running job ID >%s< args >%#v<", strconv.FormatInt(j.ID, 10), j.Args)
 
 	// We can assume here that we must have an email client as we've been told to perform work.
 	if w.emailClient == nil {
@@ -113,7 +113,7 @@ type SendAccountVerificationEmailDoWorkResult struct {
 func (w *SendAccountVerificationEmailWorker) DoWork(ctx context.Context, m *domain.Domain, c *river.Client[pgx.Tx], j *river.Job[SendAccountVerificationEmailWorkerArgs]) (*SendAccountVerificationEmailDoWorkResult, error) {
 	l := w.JobWorker.Log.WithFunctionContext("SendAccountVerificationEmailWorker/DoWork")
 
-	l.Info("SendAccountVerificationEmailWorker report work record ID >%s<", j.Args.AccountID)
+	l.Info("send account verification email worker report work record ID >%s<", j.Args.AccountID)
 
 	accountRec, err := m.GetAccountRec(j.Args.AccountID, nil)
 	if err != nil {

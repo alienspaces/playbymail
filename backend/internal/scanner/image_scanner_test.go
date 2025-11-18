@@ -54,7 +54,7 @@ func TestNewImageScanner(t *testing.T) {
 
 		require.NoError(t, err, "Should not return error")
 		require.NotNil(t, scanner, "Scanner should not be nil")
-		require.Equal(t, logger, scanner.logger, "Logger should match")
+		require.NotNil(t, scanner.logger, "Logger should be set")
 		require.Equal(t, cfg, scanner.cfg, "Config should match")
 		require.NotNil(t, scanner.agent, "Agent should be configured")
 	})

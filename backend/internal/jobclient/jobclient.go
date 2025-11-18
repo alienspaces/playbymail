@@ -65,7 +65,7 @@ func getRiverConfig(l logger.Logger, cfg config.Config, s storer.Storer, e email
 
 	for _, queueName := range queueNames {
 
-		l.Info("Adding queue >%s<", queueName)
+		l.Info("adding queue >%s<", queueName)
 
 		// Add queue configuration
 		if !jobqueue.Queues.Has(queueName) {
@@ -82,7 +82,7 @@ func getRiverConfig(l logger.Logger, cfg config.Config, s storer.Storer, e email
 		}
 	}
 
-	l.Info("Added %d periodic jobs", len(p))
+	l.Info("added %d periodic jobs", len(p))
 
 	riverConfig.Queues = q
 	riverConfig.PeriodicJobs = p
@@ -93,7 +93,7 @@ func getRiverConfig(l logger.Logger, cfg config.Config, s storer.Storer, e email
 func addDefaultPeriodicJobs(l logger.Logger, s storer.Storer, p []*river.PeriodicJob) ([]*river.PeriodicJob, error) {
 	l = l.WithFunctionContext("addDefaultPeriodicJobs")
 
-	l.Info("Adding default periodic jobs")
+	l.Info("adding default periodic jobs")
 
 	return p, nil
 }
@@ -101,7 +101,7 @@ func addDefaultPeriodicJobs(l logger.Logger, s storer.Storer, p []*river.Periodi
 func addGamePeriodicJobs(l logger.Logger, s storer.Storer, p []*river.PeriodicJob) ([]*river.PeriodicJob, error) {
 	l = l.WithFunctionContext("addGamePeriodicJobs")
 
-	l.Info("Adding game periodic jobs")
+	l.Info("adding game periodic jobs")
 
 	// TODO: Add periodic job to check game deadlines every hour
 	// Need to check river documentation for correct PeriodicJob structure

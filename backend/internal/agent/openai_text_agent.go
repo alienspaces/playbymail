@@ -16,6 +16,10 @@ type openAITextAgent struct {
 // NewOpenAITextAgent creates a new OpenAI TextAgent implementation
 // Note: This is a stub implementation for future text generation features
 func NewOpenAITextAgent(l logger.Logger, cfg config.Config) TextAgent {
+	l = l.WithFunctionContext("NewOpenAITextAgent")
+
+	l.Info("instantiating openai text agent")
+
 	return &openAITextAgent{
 		logger: l,
 		cfg:    cfg,

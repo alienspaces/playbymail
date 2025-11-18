@@ -41,6 +41,10 @@ type ImageScanner struct {
 // NewImageScanner creates a new image scanner that uses an AI agent for OCR.
 // The scanner handles image processing and delegates AI operations to the agent.
 func NewImageScanner(l logger.Logger, cfg config.Config) (*ImageScanner, error) {
+	l = l.WithFunctionContext("NewImageScanner")
+
+	l.Info("instantiating image scanner")
+
 	// Direct instantiation of OpenAI agent (simple approach, no factory pattern)
 	agent := agent.NewMultiModalAgent(l, cfg)
 

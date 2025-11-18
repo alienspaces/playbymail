@@ -30,6 +30,12 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/utils/config"
 )
 
+// GameTurnProcessingWorker processes a game instance turn
+//
+// To add new game types:
+//   - Create processor in internal/jobworker/[game_type]/
+//   - Register in initializeProcessors() function below
+
 // GameTurnProcessingWorkerArgs defines the arguments for processing a game instance turn
 type GameTurnProcessingWorkerArgs struct {
 	GameInstanceID string `json:"game_instance_id"`
@@ -62,24 +68,6 @@ func NewGameTurnProcessingWorker(l logger.Logger, cfg config.Config, s storer.St
 	return &GameTurnProcessingWorker{
 		JobWorker: *jw,
 	}, nil
-}
-
-// initializeProcessors creates and registers all available game type processors
-func (w *GameTurnProcessingWorker) initializeProcessors(l logger.Logger, d *domain.Domain) (map[string]GameTurnProcessor, error) {
-	processors := make(map[string]GameTurnProcessor)
-
-	// Register adventure game processor
-	adventureProcessor, err := adventure_game.NewAdventureGame(l, d)
-	if err != nil {
-		return nil, err
-	}
-	processors[game_record.GameTypeAdventure] = adventureProcessor
-
-	// TODO: Add new game type processors here
-	// Example: processors[game_record.GameTypeStrategy] = strategyProcessor
-	// Example: processors[game_record.GameTypePuzzle] = puzzleProcessor
-
-	return processors, nil
 }
 
 func (w *GameTurnProcessingWorker) Work(ctx context.Context, j *river.Job[GameTurnProcessingWorkerArgs]) error {
@@ -115,7 +103,7 @@ func (w *GameTurnProcessingWorker) DoWork(ctx context.Context, m *domain.Domain,
 
 	l.Info("processing game turn for instance >%s< turn >%d<", j.Args.GameInstanceID, j.Args.TurnNumber)
 
-	// Initialize processors for this job
+	// Initialize all game type processors
 	processors, err := w.initializeProcessors(l, m)
 	if err != nil {
 		l.Warn("failed to initialize processors >%v<", err)
@@ -192,4 +180,22 @@ func (w *GameTurnProcessingWorker) DoWork(ctx context.Context, m *domain.Domain,
 		TurnNumber:     j.Args.TurnNumber,
 		ProcessedAt:    time.Now(),
 	}, nil
+}
+
+// initializeProcessors creates and registers all available game type processors
+func (w *GameTurnProcessingWorker) initializeProcessors(l logger.Logger, d *domain.Domain) (map[string]GameTurnProcessor, error) {
+	processors := make(map[string]GameTurnProcessor)
+
+	// Register adventure game processor
+	adventureProcessor, err := adventure_game.NewAdventureGame(l, d)
+	if err != nil {
+		return nil, err
+	}
+	processors[game_record.GameTypeAdventure] = adventureProcessor
+
+	// TODO: Add new game type processors here
+	// Example: processors[game_record.GameTypeStrategy] = strategyProcessor
+	// Example: processors[game_record.GameTypePuzzle] = puzzleProcessor
+
+	return processors, nil
 }

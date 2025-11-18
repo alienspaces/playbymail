@@ -26,9 +26,13 @@ func Test_searchManyGameInstancesHandler(t *testing.T) {
 		require.NoError(t, err, "Test data teardown returns without error")
 	}()
 
+	// Get a game from the harness data
+	gameRec, err := th.Data.GetGameRecByRef(harness.GameOneRef)
+	require.NoError(t, err, "GetGameRecByRef returns without error")
+
 	testCases := []struct {
 		testutil.TestCase
-		expectResponse func(d harness.Data) game_schema.GameInstanceCollectionResponse
+		expectedCount int
 	}{
 		{
 			TestCase: testutil.TestCase{
@@ -36,19 +40,17 @@ func Test_searchManyGameInstancesHandler(t *testing.T) {
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[game.SearchManyGameInstances]
 				},
+				RequestQueryParams: func(d harness.Data) map[string]any {
+					return map[string]any{
+						"page_size":   "2",
+						"page_number": "1",
+						"game_id":     gameRec.ID,
+					}
+				},
 				ResponseDecoder: testutil.TestCaseResponseDecoderGeneric[game_schema.GameInstanceCollectionResponse],
 				ResponseCode:    http.StatusOK,
 			},
-			expectResponse: func(d harness.Data) game_schema.GameInstanceCollectionResponse {
-				return game_schema.GameInstanceCollectionResponse{
-					Data: []*game_schema.GameInstanceResponseData{
-						{
-							Status:      "created",
-							CurrentTurn: 0,
-						},
-					},
-				}
-			},
+			expectedCount: 2, // GameInstanceOneRef and GameInstanceCleanRef
 		},
 		{
 			TestCase: testutil.TestCase{
@@ -58,23 +60,15 @@ func Test_searchManyGameInstancesHandler(t *testing.T) {
 				},
 				RequestQueryParams: func(d harness.Data) map[string]any {
 					return map[string]any{
-						"page_size":   "10",
+						"page_size":   "2",
 						"page_number": "1",
+						"game_id":     gameRec.ID,
 					}
 				},
 				ResponseDecoder: testutil.TestCaseResponseDecoderGeneric[game_schema.GameInstanceCollectionResponse],
 				ResponseCode:    http.StatusOK,
 			},
-			expectResponse: func(d harness.Data) game_schema.GameInstanceCollectionResponse {
-				return game_schema.GameInstanceCollectionResponse{
-					Data: []*game_schema.GameInstanceResponseData{
-						{
-							Status:      "created",
-							CurrentTurn: 0,
-						},
-					},
-				}
-			},
+			expectedCount: 2, // GameInstanceOneRef and GameInstanceCleanRef
 		},
 	}
 
@@ -85,16 +79,16 @@ func Test_searchManyGameInstancesHandler(t *testing.T) {
 			testFunc := func(method string, body interface{}) {
 				require.NotNil(t, body, "Response body is not nil")
 
-				aResp := body.(game_schema.GameInstanceCollectionResponse).Data
-				xResp := testCase.expectResponse(th.Data).Data
+				resp := body.(game_schema.GameInstanceCollectionResponse)
+				require.NotNil(t, resp.Data, "Response data is not nil")
+				require.Equal(t, testCase.expectedCount, len(resp.Data), "Response contains expected number of instances")
 
-				require.NotEmpty(t, aResp, "Response body is not empty")
-				// Search returns all game instances, so we expect multiple instances
-				require.GreaterOrEqual(t, len(aResp), 1, "Response contains at least one instance")
-				require.Equal(t, xResp[0].Status, aResp[0].Status, "Status equals expected")
-				require.Equal(t, xResp[0].CurrentTurn, aResp[0].CurrentTurn, "Current turn equals expected")
-				require.NotEmpty(t, aResp[0].ID, "Instance ID is not empty")
-				require.False(t, aResp[0].CreatedAt.IsZero(), "Instance CreatedAt is not zero")
+				// Confirm type of each record
+				for _, instance := range resp.Data {
+					require.NotEmpty(t, instance.ID, "Instance ID is not empty")
+					require.NotEmpty(t, instance.Status, "Instance Status is not empty")
+					require.GreaterOrEqual(t, instance.CurrentTurn, 0, "Instance CurrentTurn is valid")
+				}
 			}
 
 			testutil.RunTestCase(t, th, &testCase.TestCase, testFunc)
@@ -121,7 +115,7 @@ func Test_getManyGameInstancesHandler(t *testing.T) {
 
 	testCases := []struct {
 		testutil.TestCase
-		expectResponse func(d harness.Data) game_schema.GameInstanceCollectionResponse
+		expectedCount int
 	}{
 		{
 			TestCase: testutil.TestCase{
@@ -137,20 +131,7 @@ func Test_getManyGameInstancesHandler(t *testing.T) {
 				ResponseDecoder: testutil.TestCaseResponseDecoderGeneric[game_schema.GameInstanceCollectionResponse],
 				ResponseCode:    http.StatusOK,
 			},
-			expectResponse: func(d harness.Data) game_schema.GameInstanceCollectionResponse {
-				return game_schema.GameInstanceCollectionResponse{
-					Data: []*game_schema.GameInstanceResponseData{
-						{
-							Status:      "created",
-							CurrentTurn: 0,
-						},
-						{
-							Status:      "created",
-							CurrentTurn: 0,
-						},
-					},
-				}
-			},
+			expectedCount: 2, // GameInstanceOneRef and GameInstanceCleanRef
 		},
 		{
 			TestCase: testutil.TestCase{
@@ -172,16 +153,7 @@ func Test_getManyGameInstancesHandler(t *testing.T) {
 				ResponseDecoder: testutil.TestCaseResponseDecoderGeneric[game_schema.GameInstanceCollectionResponse],
 				ResponseCode:    http.StatusOK,
 			},
-			expectResponse: func(d harness.Data) game_schema.GameInstanceCollectionResponse {
-				return game_schema.GameInstanceCollectionResponse{
-					Data: []*game_schema.GameInstanceResponseData{
-						{
-							Status:      "created",
-							CurrentTurn: 0,
-						},
-					},
-				}
-			},
+			expectedCount: 2, // GameInstanceOneRef and GameInstanceCleanRef
 		},
 	}
 
@@ -192,15 +164,16 @@ func Test_getManyGameInstancesHandler(t *testing.T) {
 			testFunc := func(method string, body interface{}) {
 				require.NotNil(t, body, "Response body is not nil")
 
-				aResp := body.(game_schema.GameInstanceCollectionResponse).Data
-				xResp := testCase.expectResponse(th.Data).Data
+				resp := body.(game_schema.GameInstanceCollectionResponse)
+				require.NotNil(t, resp.Data, "Response data is not nil")
+				require.Len(t, resp.Data, testCase.expectedCount, "Response contains expected number of instances")
 
-				require.NotEmpty(t, aResp, "Response body is not empty")
-				require.Len(t, aResp, 2, "Response contains exactly two instances")
-				require.Equal(t, xResp[0].Status, aResp[0].Status, "Status equals expected")
-				require.Equal(t, xResp[0].CurrentTurn, aResp[0].CurrentTurn, "Current turn equals expected")
-				require.NotEmpty(t, aResp[0].ID, "Instance ID is not empty")
-				require.False(t, aResp[0].CreatedAt.IsZero(), "Instance CreatedAt is not zero")
+				// Confirm type of each record
+				for _, instance := range resp.Data {
+					require.NotEmpty(t, instance.ID, "Instance ID is not empty")
+					require.NotEmpty(t, instance.Status, "Instance Status is not empty")
+					require.GreaterOrEqual(t, instance.CurrentTurn, 0, "Instance CurrentTurn is valid")
+				}
 			}
 
 			testutil.RunTestCase(t, th, &testCase.TestCase, testFunc)

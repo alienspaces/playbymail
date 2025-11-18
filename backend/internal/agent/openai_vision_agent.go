@@ -30,6 +30,10 @@ type openAIVisionAgent struct {
 
 // NewOpenAIVisionAgent creates a new OpenAI VisionAgent implementation
 func NewOpenAIVisionAgent(l logger.Logger, cfg config.Config) VisionAgent {
+	l = l.WithFunctionContext("NewOpenAIVisionAgent")
+
+	l.Info("instantiating openai vision agent")
+
 	return &openAIVisionAgent{
 		logger: l,
 		cfg:    cfg,

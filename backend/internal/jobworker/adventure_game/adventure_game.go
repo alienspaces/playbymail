@@ -11,9 +11,14 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 )
 
-// AdventureGame coordinates turn processing for adventure games
-// NOTE: Assumes only existing character instances are present in the game instance
-// New player onboarding (join game) should be handled separately through API endpoints
+// AdventureGame is the turn sheet processor for adventure games
+//   - Only existing character instances are processed during turn processing
+//   - New player onboarding (join game) should be handled separately through API endpoints
+//
+// To add new turn sheet types:
+//   - Create processor in internal/jobworker/adventure_game/turn_sheet_processor/
+//   - Register in initializeTurnSheetProcessors() function below
+
 type AdventureGame struct {
 	Logger     logger.Logger
 	Domain     *domain.Domain
