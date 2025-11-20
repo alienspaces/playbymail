@@ -8,11 +8,11 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 )
 
-// CreateTurnSheets generates all turn sheet records for an adventure game turn
+// CreateTurnSheets creates all turn sheet records for the current turn of an adventure game instance
 func (p *AdventureGame) CreateTurnSheets(ctx context.Context, gameInstanceRec *game_record.GameInstance) error {
 	l := p.Logger.WithFunctionContext("AdventureGame/CreateTurnSheets")
 
-	l.Info("generating adventure game turn sheets for instance >%s< turn >%d<", gameInstanceRec.ID, gameInstanceRec.CurrentTurn)
+	l.Info("creating adventure game turn sheets for instance >%s< turn >%d<", gameInstanceRec.ID, gameInstanceRec.CurrentTurn)
 
 	// Get all character instances for this game instance
 	characterInstanceRecs, err := p.getCharacterInstancesForGameInstance(ctx, gameInstanceRec)

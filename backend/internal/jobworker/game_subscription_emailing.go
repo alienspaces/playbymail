@@ -1,10 +1,15 @@
 package jobworker
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"html/template"
 	"net/url"
+	"os"
+	"path/filepath"
 	"strconv"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/riverqueue/river"
@@ -52,6 +57,17 @@ func NewSendGameSubscriptionApprovalEmailWorker(l logger.Logger, cfg config.Conf
 
 	if e == nil {
 		l.Warn("email client is nil, assuming registration-only instantiation")
+	}
+
+	if cfg.TemplatesPath == "" {
+		return nil, fmt.Errorf("templates path is empty")
+	}
+
+	// Check the templates path actually exists
+	l.Info("templates path >%s<", cfg.TemplatesPath)
+
+	if _, err := os.Stat(cfg.TemplatesPath); os.IsNotExist(err) {
+		return nil, fmt.Errorf("templates path does not exist >%s<", cfg.TemplatesPath)
 	}
 
 	return &SendGameSubscriptionApprovalEmailWorker{
@@ -115,24 +131,43 @@ func (w *SendGameSubscriptionApprovalEmailWorker) DoWork(ctx context.Context, m 
 	}
 
 	approvalPath := fmt.Sprintf("/api/v1/game-subscriptions/%s/approve?email=%s", subscriptionRec.ID, url.QueryEscape(accountRec.Email))
+	// Construct full URL - in production this would use the actual domain from config
+	approvalURL := fmt.Sprintf("https://playbymail.games%s", approvalPath)
 
-	emailBody := fmt.Sprintf(`Hi %s,
+	// Render the HTML email template
+	baseTmplPath := filepath.Join(w.Config.TemplatesPath, "email", "base.email.html")
+	specificTmplPath := filepath.Join(w.Config.TemplatesPath, "email", "game_subscription_approval.email.html")
+	tmpl, err := template.ParseFiles(baseTmplPath, specificTmplPath)
+	if err != nil {
+		l.Warn("failed to parse email template >%v<", err)
+		return nil, err
+	}
 
-Please confirm your subscription to %s by visiting the following link:
+	var body bytes.Buffer
+	tmplData := struct {
+		AccountName  string
+		GameName     string
+		ApprovalURL  string
+		SupportEmail string
+		Year         int
+	}{
+		AccountName:  accountRec.Name,
+		GameName:     gameRec.Name,
+		ApprovalURL:  approvalURL,
+		SupportEmail: "support@playbymail.games",
+		Year:         time.Now().Year(),
+	}
 
-%s
-
-If you did not request this, you can ignore this email.
-
-Thanks,
-The PlayByMail Team
-`, accountRec.Name, gameRec.Name, approvalPath)
+	if err := tmpl.ExecuteTemplate(&body, "base", tmplData); err != nil {
+		l.Warn("failed to render email template >%v<", err)
+		return nil, err
+	}
 
 	emailMsg := &emailer.Message{
 		From:    "noreply@playbymail.games",
 		To:      []string{accountRec.Email},
 		Subject: fmt.Sprintf("Confirm your subscription to %s", gameRec.Name),
-		Body:    emailBody,
+		Body:    body.String(),
 	}
 
 	if err := w.emailClient.Send(emailMsg); err != nil {

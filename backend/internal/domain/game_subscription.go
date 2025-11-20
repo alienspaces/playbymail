@@ -248,3 +248,56 @@ func (m *Domain) UpsertPendingGameSubscription(gameID, accountID, subscriptionTy
 
 	return m.CreateGameSubscriptionRec(rec)
 }
+
+// ApproveGameSubscription approves a pending game subscription by verifying the email
+// matches the subscription's account and updating the status to active.
+func (m *Domain) ApproveGameSubscription(subscriptionID, email string) (*game_record.GameSubscription, error) {
+	l := m.Logger("ApproveGameSubscription")
+
+	l.Debug("approving game subscription ID >%s< for email >%s<", subscriptionID, email)
+
+	if subscriptionID == "" {
+		return nil, coreerror.NewInvalidDataError("subscription_id is required")
+	}
+
+	if email == "" {
+		return nil, coreerror.NewInvalidDataError("email is required")
+	}
+
+	// Get the subscription record
+	rec, err := m.GetGameSubscriptionRec(subscriptionID, sql.ForUpdateNoWait)
+	if err != nil {
+		return nil, err
+	}
+
+	// Verify the subscription is in pending_approval status
+	if rec.Status != game_record.GameSubscriptionStatusPendingApproval {
+		return nil, coreerror.NewInvalidDataError("subscription is not pending approval, current status: %s", rec.Status)
+	}
+
+	// Get the account record to verify email matches
+	accountRec, err := m.GetAccountRec(rec.AccountID, nil)
+	if err != nil {
+		l.Warn("failed to get account record >%v<", err)
+		return nil, err
+	}
+
+	// Verify email matches
+	if accountRec.Email != email {
+		l.Warn("email mismatch: subscription account email >%s< does not match provided email >%s<", accountRec.Email, email)
+		return nil, coreerror.NewInvalidDataError("email does not match subscription")
+	}
+
+	// Update status to active
+	rec.Status = game_record.GameSubscriptionStatusActive
+
+	updated, err := m.UpdateGameSubscriptionRec(rec)
+	if err != nil {
+		l.Warn("failed to update subscription status >%v<", err)
+		return nil, err
+	}
+
+	l.Info("approved game subscription ID >%s< for account ID >%s<", subscriptionID, rec.AccountID)
+
+	return updated, nil
+}

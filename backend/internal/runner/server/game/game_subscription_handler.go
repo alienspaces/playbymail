@@ -7,6 +7,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"github.com/riverqueue/river"
 
+	coreerror "gitlab.com/alienspaces/playbymail/core/error"
 	"gitlab.com/alienspaces/playbymail/core/jsonschema"
 	"gitlab.com/alienspaces/playbymail/core/queryparam"
 	"gitlab.com/alienspaces/playbymail/core/server"
@@ -25,6 +26,7 @@ const (
 	CreateOneGameSubscription = "create-one-game-subscription"
 	UpdateOneGameSubscription = "update-one-game-subscription"
 	DeleteOneGameSubscription = "delete-one-game-subscription"
+	ApproveGameSubscription   = "approve-game-subscription"
 )
 
 func gameSubscriptionHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error) {
@@ -114,6 +116,22 @@ func gameSubscriptionHandlerConfig(l logger.Logger) (map[string]server.HandlerCo
 			AuthenTypes: []server.AuthenticationType{server.AuthenticationTypeToken},
 		},
 	}
+	config[ApproveGameSubscription] = server.HandlerConfig{
+		Method:      http.MethodPost,
+		Path:        "/api/v1/game-subscriptions/:game_subscription_id/approve",
+		HandlerFunc: approveGameSubscriptionHandler,
+		MiddlewareConfig: server.MiddlewareConfig{
+			AuthenTypes:            []server.AuthenticationType{server.AuthenticationTypePublic},
+			ValidateResponseSchema: responseSchema,
+		},
+		DocumentationConfig: server.DocumentationConfig{
+			Document: true,
+			Title:    "Approve game subscription",
+			Description: "Approve a pending game subscription by verifying the email matches " +
+				"the subscription's account and updating the status to active. " +
+				"Requires email query parameter.",
+		},
+	}
 
 	return config, nil
 }
@@ -201,4 +219,39 @@ func deleteGameSubscriptionHandler(w http.ResponseWriter, r *http.Request, pp ht
 		return err
 	}
 	return server.WriteResponse(l, w, http.StatusNoContent, nil)
+}
+
+func approveGameSubscriptionHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
+	l = logging.LoggerWithFunctionContext(l, packageName, "approveGameSubscriptionHandler")
+
+	subscriptionID := pp.ByName("game_subscription_id")
+
+	emailParams, exists := qp.Params["email"]
+	if !exists || len(emailParams) == 0 {
+		l.Warn("email query parameter is required")
+		return coreerror.NewInvalidDataError("email query parameter is required")
+	}
+
+	email := emailParams[0].Val.(string)
+	if email == "" {
+		l.Warn("email query parameter is empty")
+		return coreerror.NewInvalidDataError("email query parameter is required")
+	}
+
+	mm := m.(*domain.Domain)
+
+	rec, err := mm.ApproveGameSubscription(subscriptionID, email)
+	if err != nil {
+		l.Warn("failed to approve game subscription >%v<", err)
+		return err
+	}
+
+	res, err := mapper.GameSubscriptionRecordToResponse(l, rec)
+	if err != nil {
+		return err
+	}
+
+	l.Info("approved game subscription ID >%s< for email >%s<", subscriptionID, email)
+
+	return server.WriteResponse(l, w, http.StatusOK, res)
 }

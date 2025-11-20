@@ -1,0 +1,31 @@
+{{define "content"}}
+<div style="font-weight: 700; font-size: 24px; line-height: 30px; margin-bottom: 24px; color: #11181C;">
+    Confirm your subscription to {{.GameName}}
+</div>
+<div style="font-size: 16px; line-height: 24px; margin-bottom: 24px; color: #11181C;">
+    Hi {{.AccountName}},
+    <br /><br />
+    Please confirm your subscription to <strong>{{.GameName}}</strong> by clicking the button below.
+</div>
+<div style="text-align: center; margin: 32px 0;">
+    <a href="{{.ApprovalURL}}" style="display: inline-block; background: #006ECD; color: #FFFFFF; font-size: 16px; font-weight: 600; text-decoration: none; padding: 12px 32px; border-radius: 8px; line-height: 24px;">
+        Confirm Subscription
+    </a>
+</div>
+<div style="font-size: 14px; line-height: 20px; color: #6B7280; margin-bottom: 24px; padding: 16px; background: #F5F7FA; border-radius: 8px;">
+    <strong>Note:</strong> If the button doesn't work, you can copy and paste this link into your browser:<br />
+    <a href="{{.ApprovalURL}}" style="color: #006ECD; word-break: break-all;">{{.ApprovalURL}}</a>
+</div>
+<div style="font-size: 16px; line-height: 24px; margin-bottom: 24px; color: #11181C;">
+    If you did not request this subscription, you can safely ignore this email.
+</div>
+{{end}}
+
+{{define "footer"}}
+<div style="margin-bottom: 8px;">
+    For help or questions, contact us at <a href="mailto:{{.SupportEmail}}" style="color: #006ECD; text-decoration: none;">{{.SupportEmail}}</a>.
+</div>
+<div>
+    &copy; {{.Year}} PlayByMail. All rights reserved.
+</div>
+{{end}}

@@ -12,6 +12,7 @@ import (
 	"bytes"
 	"html/template"
 	"path/filepath"
+	"time"
 
 	corejobworker "gitlab.com/alienspaces/playbymail/core/jobworker"
 	"gitlab.com/alienspaces/playbymail/core/type/emailer"
@@ -127,8 +128,9 @@ func (w *SendAccountVerificationEmailWorker) DoWork(ctx context.Context, m *doma
 	}
 
 	// Render the HTML email template
-	tmplPath := filepath.Join(w.Config.TemplatesPath, "email", "account_verification.email.html")
-	tmpl, err := template.ParseFiles(tmplPath)
+	baseTmplPath := filepath.Join(w.Config.TemplatesPath, "email", "base.email.html")
+	specificTmplPath := filepath.Join(w.Config.TemplatesPath, "email", "account_verification.email.html")
+	tmpl, err := template.ParseFiles(baseTmplPath, specificTmplPath)
 	if err != nil {
 		l.Warn("failed to parse email template >%v<", err)
 		return nil, err
@@ -138,12 +140,14 @@ func (w *SendAccountVerificationEmailWorker) DoWork(ctx context.Context, m *doma
 	tmplData := struct {
 		VerificationCode string
 		SupportEmail     string
+		Year             int
 	}{
 		VerificationCode: token,
 		SupportEmail:     "support@playbymail.games",
+		Year:             time.Now().Year(),
 	}
 
-	if err := tmpl.ExecuteTemplate(&body, "account_verification", tmplData); err != nil {
+	if err := tmpl.ExecuteTemplate(&body, "base", tmplData); err != nil {
 		l.Warn("failed to render email template >%v<", err)
 		return nil, err
 	}

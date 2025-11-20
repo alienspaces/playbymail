@@ -139,6 +139,14 @@ func uploadTurnSheetHandler(scanner TurnSheetScanner) server.Handle {
 	}
 }
 
+// handleJoinTurnSheetUpload processes an uploaded join game turn sheet.
+//
+// It fetches the game record to validate the game type, constructs default turn sheet metadata,
+// and invokes the sheet scanner to extract player registration data from the submission image.
+// Using the extracted registration information, it attempts to associate the joining player with
+// an account, creates a new pending account if necessary, and upserts a game subscription record.
+// Finally, it creates a new turn sheet record for the join game turn sheet and returns the upload
+// status and processed data for further handling.
 func handleJoinTurnSheetUpload(ctx context.Context, l logger.Logger, scanner TurnSheetScanner, m *domain.Domain, jc *river.Client[pgx.Tx], turnSheetCode string, identifier *turnsheet.TurnSheetIdentifier, imageData []byte) (*TurnSheetUploadResponse, int, error) {
 	l = l.WithFunctionContext("handleJoinTurnSheetUpload")
 
@@ -231,12 +239,10 @@ func handleJoinTurnSheetUpload(ctx context.Context, l logger.Logger, scanner Tur
 		return nil, 0, err
 	}
 
-	if jc != nil {
-		if _, err := jc.InsertTx(context.Background(), m.Tx, &jobworker.SendGameSubscriptionApprovalEmailWorkerArgs{
-			GameSubscriptionID: subscriptionRec.ID,
-		}, &river.InsertOpts{Queue: jobqueue.QueueDefault}); err != nil {
-			l.Warn("failed to enqueue game subscription approval email job >%v<", err)
-		}
+	if _, err := jc.InsertTx(context.Background(), m.Tx, &jobworker.SendGameSubscriptionApprovalEmailWorkerArgs{
+		GameSubscriptionID: subscriptionRec.ID,
+	}, &river.InsertOpts{Queue: jobqueue.QueueDefault}); err != nil {
+		l.Warn("failed to enqueue game subscription approval email job >%v<", err)
 	}
 
 	var scannedDataMap map[string]any
