@@ -8,11 +8,20 @@ import (
 
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
 	"gitlab.com/alienspaces/playbymail/internal/generator"
+	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 	"gitlab.com/alienspaces/playbymail/internal/scanner"
 	"gitlab.com/alienspaces/playbymail/internal/utils/config"
 )
 
-// Trigger CI backend tests (One)
+// GetTurnSheetJoinGameData creates join game data for a game based on its game type
+func GetTurnSheetJoinGameData(gameRec *game_record.Game, turnSheetCode string) (JoinGameData, error) {
+	switch gameRec.GameType {
+	case game_record.GameTypeAdventure:
+		return createAdventureGameJoinGameData(gameRec, turnSheetCode), nil
+	default:
+		return JoinGameData{}, fmt.Errorf("join game turn sheets not supported for game type: %s", gameRec.GameType)
+	}
+}
 
 // BaseProcessor provides common functionality for all turn sheet processors
 type BaseProcessor struct {

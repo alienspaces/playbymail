@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"strings"
 
+	"gitlab.com/alienspaces/playbymail/core/convert"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
+	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 	"gitlab.com/alienspaces/playbymail/internal/scanner"
 	"gitlab.com/alienspaces/playbymail/internal/utils/config"
 )
@@ -73,6 +75,24 @@ func NewJoinGameProcessor(l logger.Logger, cfg config.Config) (*JoinGameProcesso
 	return &JoinGameProcessor{
 		BaseProcessor: baseProcessor,
 	}, nil
+}
+
+// createAdventureGameJoinGameData creates join game data from an adventure game record and turn sheet code
+func createAdventureGameJoinGameData(gameRec *game_record.Game, turnSheetCode string) JoinGameData {
+	return JoinGameData{
+		TurnSheetTemplateData: TurnSheetTemplateData{
+			GameName:              convert.Ptr(gameRec.Name),
+			GameType:              convert.Ptr(gameRec.GameType),
+			TurnNumber:            convert.Ptr(0),
+			AccountName:           nil,
+			TurnSheetTitle:        convert.Ptr("Join Game"),
+			TurnSheetDescription:  convert.Ptr(fmt.Sprintf("Welcome to %s! Welcome to the PlayByMail Adventure!", gameRec.Name)),
+			TurnSheetInstructions: convert.Ptr(DefaultJoinGameInstructions()),
+			TurnSheetDeadline:     nil,
+			TurnSheetCode:         convert.Ptr(turnSheetCode),
+		},
+		GameDescription: fmt.Sprintf("Welcome to %s! Welcome to the PlayByMail Adventure!", gameRec.Name),
+	}
 }
 
 // GenerateTurnSheet generates a join game turn sheet document

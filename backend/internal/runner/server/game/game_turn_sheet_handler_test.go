@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"testing"
 	"time"
@@ -315,6 +316,96 @@ func Test_uploadTurnSheetHandler(t *testing.T) {
 					response := body.(game.TurnSheetUploadResponse)
 					require.True(t, testCase.expectResponse(th.Data, response), "Response matches expected structure")
 					require.NotEmpty(t, response.TurnSheetID, "Turn sheet ID is not empty")
+				}
+			}
+
+			testutil.RunTestCase(t, th, &testCase.TestCase, testFunc)
+		})
+	}
+}
+
+func Test_downloadJoinGameTurnSheetsHandler(t *testing.T) {
+	t.Parallel()
+
+	th := testutil.NewTestHarness(t)
+	require.NotNil(t, th, "newTestHarness returns without error")
+
+	_, err := th.Setup()
+	require.NoError(t, err, "Test data setup returns without error")
+	defer func() {
+		err = th.Teardown()
+		require.NoError(t, err, "Test data teardown returns without error")
+	}()
+
+	type testCase struct {
+		testutil.TestCase
+		expectPDFResponse func(d harness.Data, body []byte) bool
+	}
+
+	testCasePDFResponseDecoder := func(body io.Reader) (any, error) {
+		pdfData, err := io.ReadAll(body)
+		if err != nil {
+			return nil, err
+		}
+		return pdfData, nil
+	}
+
+	testCases := []testCase{
+		{
+			TestCase: testutil.TestCase{
+				Name: "authenticated user \\ download join game turn sheet for adventure game \\ returns PDF",
+				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
+					return rnr.GetHandlerConfig()[game.DownloadJoinGameTurnSheets]
+				},
+				RequestPathParams: func(d harness.Data) map[string]string {
+					gameID, ok := d.Refs.GameRefs[harness.GameOneRef]
+					require.True(t, ok, "game ref exists")
+					return map[string]string{
+						":game_id": gameID,
+					}
+				},
+				ResponseDecoder: testCasePDFResponseDecoder,
+				ResponseCode:    http.StatusOK,
+			},
+			expectPDFResponse: func(d harness.Data, body []byte) bool {
+				// PDF should not be empty and should start with PDF magic bytes
+				return len(body) > 0 && len(body) > 4 && string(body[0:4]) == "%PDF"
+			},
+		},
+		{
+			TestCase: testutil.TestCase{
+				Name: "authenticated user \\ download join game turn sheet with invalid game ID \\ returns error",
+				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
+					return rnr.GetHandlerConfig()[game.DownloadJoinGameTurnSheets]
+				},
+				RequestPathParams: func(d harness.Data) map[string]string {
+					return map[string]string{
+						":game_id": "00000000-0000-0000-0000-000000000000",
+					}
+				},
+				ResponseDecoder: testutil.TestCaseResponseDecoderGeneric[map[string]any],
+				ResponseCode:    http.StatusNotFound,
+			},
+			expectPDFResponse: func(d harness.Data, body []byte) bool {
+				return true // Error case, not used for error responses
+			},
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Logf("Running test >%s<", testCase.Name)
+
+		t.Run(testCase.Name, func(t *testing.T) {
+			testFunc := func(method string, body interface{}) {
+				if testCase.TestResponseCode() == http.StatusOK {
+					require.NotNil(t, body, "Response body is not nil")
+					pdfData, ok := body.([]byte)
+					require.True(t, ok, "Response body is []byte")
+					require.True(t, testCase.expectPDFResponse(th.Data, pdfData), "Response matches expected structure")
+					require.Greater(t, len(pdfData), 0, "PDF data is not empty")
+					// Verify PDF magic bytes
+					require.GreaterOrEqual(t, len(pdfData), 4, "PDF data is at least 4 bytes")
+					require.Equal(t, "%PDF", string(pdfData[0:4]), "Response is a valid PDF")
 				}
 			}
 

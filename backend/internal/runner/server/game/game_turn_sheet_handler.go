@@ -13,7 +13,6 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"github.com/riverqueue/river"
 
-	"gitlab.com/alienspaces/playbymail/core/convert"
 	coreerror "gitlab.com/alienspaces/playbymail/core/error"
 	"gitlab.com/alienspaces/playbymail/core/nullstring"
 	"gitlab.com/alienspaces/playbymail/core/queryparam"
@@ -29,6 +28,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 	"gitlab.com/alienspaces/playbymail/internal/turn_sheet"
+	"gitlab.com/alienspaces/playbymail/internal/utils/config"
 	"gitlab.com/alienspaces/playbymail/internal/utils/logging"
 	"gitlab.com/alienspaces/playbymail/internal/utils/turnsheet"
 )
@@ -36,6 +36,8 @@ import (
 const (
 	// Turn Sheet Scanning Endpoints
 	UploadTurnSheet = "upload-turn-sheet"
+	// Turn Sheet Download Endpoints
+	DownloadJoinGameTurnSheets = "download-join-game-turn-sheets"
 )
 
 // TurnSheetUploadResponse represents the response from uploading and processing a turn sheet
@@ -72,6 +74,25 @@ func gameTurnSheetHandlerConfig(l logger.Logger, scanner TurnSheetScanner) (map[
 			Description: "Upload a scanned turn sheet image and process it in a single pass. " +
 				"This extracts the turn sheet code, retrieves the turn sheet record, " +
 				"processes the scanned data, and saves the results.",
+		},
+	}
+
+	// Download join game turn sheets endpoint - Generates a single PDF for printing multiple copies
+	gameTurnSheetConfig[DownloadJoinGameTurnSheets] = server.HandlerConfig{
+		Method:      http.MethodGet,
+		Path:        "/api/v1/games/:game_id/turn-sheets",
+		HandlerFunc: downloadJoinGameTurnSheetsHandler(),
+		MiddlewareConfig: server.MiddlewareConfig{
+			AuthenTypes: []server.AuthenticationType{
+				server.AuthenticationTypeToken,
+			},
+		},
+		DocumentationConfig: server.DocumentationConfig{
+			Document: true,
+			Title:    "Download join game turn sheet",
+			Description: "Generate and download a join game turn sheet PDF. " +
+				"The same PDF can be printed multiple times for distribution. " +
+				"All join sheets for a game use the same turn sheet code.",
 		},
 	}
 
@@ -150,30 +171,26 @@ func uploadTurnSheetHandler(scanner TurnSheetScanner) server.Handle {
 func handleJoinTurnSheetUpload(ctx context.Context, l logger.Logger, scanner TurnSheetScanner, m *domain.Domain, jc *river.Client[pgx.Tx], turnSheetCode string, identifier *turnsheet.TurnSheetIdentifier, imageData []byte) (*TurnSheetUploadResponse, int, error) {
 	l = l.WithFunctionContext("handleJoinTurnSheetUpload")
 
+	l.Info("processing join game turn sheet upload for game >%s< turn sheet code >%s<", identifier.GameID, turnSheetCode)
+
 	gameRec, err := m.GetGameRec(identifier.GameID, nil)
 	if err != nil {
-		l.Warn("failed to get game record >%s< >%v<", identifier.GameID, err)
+		l.Warn("failed to get game record >%s< for join game turn sheet upload >%v<", identifier.GameID, err)
 		return nil, 0, coreerror.NewNotFoundError("game", identifier.GameID)
 	}
 
 	if gameRec.GameType != game_record.GameTypeAdventure {
-		l.Warn("join turn sheet only supported for adventure games, got >%s<", gameRec.GameType)
+		l.Warn("join turn sheet only supported for adventure games, got >%s< for game >%s<", gameRec.GameType, identifier.GameID)
 		return nil, 0, coreerror.NewInvalidDataError("join turn sheet is not supported for game type %s", gameRec.GameType)
 	}
 
-	joinData := turn_sheet.JoinGameData{
-		TurnSheetTemplateData: turn_sheet.TurnSheetTemplateData{
-			GameName:              convert.Ptr(gameRec.Name),
-			GameType:              convert.Ptr(gameRec.GameType),
-			TurnNumber:            convert.Ptr(0),
-			AccountName:           nil,
-			TurnSheetTitle:        convert.Ptr("Join Game"),
-			TurnSheetDescription:  convert.Ptr(fmt.Sprintf("Welcome to %s! Welcome to the PlayByMail Adventure!", gameRec.Name)),
-			TurnSheetInstructions: convert.Ptr(turn_sheet.DefaultJoinGameInstructions()),
-			TurnSheetDeadline:     nil,
-			TurnSheetCode:         convert.Ptr(turnSheetCode),
-		},
-		GameDescription: fmt.Sprintf("Welcome to %s! Welcome to the PlayByMail Adventure!", gameRec.Name),
+	l.Info("creating join game turn sheet data for game >%s<", identifier.GameID)
+
+	// Create join game data using mapper function
+	joinData, err := turn_sheet.GetTurnSheetJoinGameData(gameRec, turnSheetCode)
+	if err != nil {
+		l.Warn("failed to create join game data >%v<", err)
+		return nil, 0, coreerror.NewInvalidDataError("failed to create join game data: %v", err)
 	}
 
 	sheetDataBytes, err := json.Marshal(joinData)
@@ -184,13 +201,13 @@ func handleJoinTurnSheetUpload(ctx context.Context, l logger.Logger, scanner Tur
 
 	scannedData, err := scanner.GetTurnSheetScanData(ctx, l, adventure_game_record.AdventureSheetTypeJoinGame, sheetDataBytes, imageData)
 	if err != nil {
-		l.Warn("failed to scan join game turn sheet >%v<", err)
+		l.Warn("failed to scan join game turn sheet >%v< for game >%s< turn sheet code >%s<", err, identifier.GameID, turnSheetCode)
 		return nil, 0, coreerror.NewInvalidDataError("failed to process join game turn sheet: %v", err)
 	}
 
 	var scanData turn_sheet.JoinGameScanData
 	if err := json.Unmarshal(scannedData, &scanData); err != nil {
-		l.Warn("failed to unmarshal join game scan data >%v<", err)
+		l.Warn("failed to unmarshal join game scan data >%v< for game >%s< turn sheet code >%s<", err, identifier.GameID, turnSheetCode)
 		return nil, 0, coreerror.NewInvalidDataError("invalid join game turn sheet data")
 	}
 
@@ -328,4 +345,90 @@ func handleStandardTurnSheetUpload(ctx context.Context, l logger.Logger, scanner
 	}
 
 	return response, http.StatusOK, nil
+}
+
+// downloadJoinGameTurnSheetsHandler generates and downloads a join game turn sheet PDF
+func downloadJoinGameTurnSheetsHandler() server.Handle {
+	return func(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
+		l = logging.LoggerWithFunctionContext(l, packageName, "downloadJoinGameTurnSheetsHandler")
+
+		l.Info("downloading join game turn sheet with path params >%#v<", pp)
+
+		ctx := r.Context()
+		mm := m.(*domain.Domain)
+
+		gameID := pp.ByName("game_id")
+		if gameID == "" {
+			l.Warn("game ID is empty")
+			return coreerror.RequiredPathParameter("game_id")
+		}
+
+		// Get game record
+		gameRec, err := mm.GetGameRec(gameID, nil)
+		if err != nil {
+			l.Warn("failed to get game record >%s< >%v<", gameID, err)
+			return coreerror.NewNotFoundError("game", gameID)
+		}
+
+		// Validate game type supports join sheets
+		if gameRec.GameType != game_record.GameTypeAdventure {
+			l.Warn("join turn sheet only supported for adventure games, got >%s< for game >%s<", gameRec.GameType, gameID)
+			return coreerror.NewInvalidDataError("join turn sheet is not supported for game type %s", gameRec.GameType)
+		}
+
+		// Parse config for processor
+		cfg, err := config.Parse()
+		if err != nil {
+			l.Warn("failed to parse config >%v<", err)
+			return coreerror.NewInternalError("failed to parse config: %v", err)
+		}
+
+		// Generate join turn sheet code for this game
+		turnSheetCode, err := turnsheet.GenerateJoinTurnSheetCode(gameID)
+		if err != nil {
+			l.Warn("failed to generate join turn sheet code >%v<", err)
+			return coreerror.NewInternalError("failed to generate turn sheet code: %v", err)
+		}
+
+		// Create join game data using mapper function
+		joinData, err := turn_sheet.GetTurnSheetJoinGameData(gameRec, turnSheetCode)
+		if err != nil {
+			l.Warn("failed to create join game data >%v<", err)
+			return coreerror.NewInvalidDataError("failed to create join game data: %v", err)
+		}
+
+		// Marshal join data to JSON
+		sheetDataBytes, err := json.Marshal(joinData)
+		if err != nil {
+			l.Warn("failed to marshal join game sheet data >%v<", err)
+			return coreerror.NewInternalError("failed to marshal join game sheet data")
+		}
+
+		// Create join game processor for PDF generation
+		processor, err := turn_sheet.NewJoinGameProcessor(l, cfg)
+		if err != nil {
+			l.Warn("failed to create join game processor >%v<", err)
+			return coreerror.NewInternalError("failed to create join game processor: %v", err)
+		}
+
+		// Generate PDF
+		pdfData, err := processor.GenerateTurnSheet(ctx, l, turn_sheet.DocumentFormatPDF, sheetDataBytes)
+		if err != nil {
+			l.Warn("failed to generate join game turn sheet PDF >%v<", err)
+			return coreerror.NewInternalError("failed to generate turn sheet PDF: %v", err)
+		}
+
+		// Set filename in Content-Disposition header
+		filename := fmt.Sprintf("join-game-turn-sheet-%s.pdf", gameRec.Name)
+		w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filename))
+
+		// Return PDF response
+		l.Info("responding with join game turn sheet PDF for game >%s< size >%d<", gameID, len(pdfData))
+		if err := server.WritePDFResponse(l, w, http.StatusOK, pdfData); err != nil {
+			l.Warn("failed writing PDF response >%v<", err)
+			return err
+		}
+
+		return nil
+	}
 }
