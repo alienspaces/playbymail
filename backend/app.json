@@ -11,6 +11,10 @@
         "PORT": {
             "description": "Port for the web server",
             "value": "8080"
+        },
+        "APP_HOST": {
+            "description": "App host URL for constructing absolute URLs",
+            "value": "https://www.playbymail.games"
         }
     },
     "formation": {

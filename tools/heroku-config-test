@@ -95,7 +95,7 @@ echo "🔐 Testing environment variables..."
 CONFIG=$(heroku config --app "$APP_NAME" --json)
 
 # Check for required variables
-REQUIRED_VARS="DATABASE_URL"
+REQUIRED_VARS="DATABASE_URL APP_HOST"
 OPTIONAL_VARS="PORT APP_DOMAIN"
 
 print_status "Checking required variables..."

@@ -31,6 +31,7 @@ jobs:
       DATABASE_MAX_IDLE_CONNECTIONS: 45
       DATABASE_MAX_IDLE_TIME_MINS: 15
       APP_ENV: develop
+      APP_HOST: "https://www.playbymail.games"
       PORT: 8080
       LOG_LEVEL: debug
       GO_VERSION: 1.24.5
