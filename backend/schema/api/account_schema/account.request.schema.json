@@ -7,13 +7,8 @@
         "email": {
             "format": "email",
             "type": "string"
-        },
-        "name": {
-            "type": "string"
         }
     },
-    "required": [
-        "name"
-    ],
+    "required": [],
     "additionalProperties": false
 }

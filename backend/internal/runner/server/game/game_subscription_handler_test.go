@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"gitlab.com/alienspaces/playbymail/core/server"
 	"gitlab.com/alienspaces/playbymail/internal/harness"
+	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 	"gitlab.com/alienspaces/playbymail/internal/runner/server/game"
 	"gitlab.com/alienspaces/playbymail/internal/utils/testutil"
 	"gitlab.com/alienspaces/playbymail/schema/api/game_schema"
@@ -39,10 +40,12 @@ func Test_gameSubscriptionHandler(t *testing.T) {
 			RequestBody: func(d harness.Data) any {
 				gameRec, _ := d.GetGameRecByRef(harness.GameOneRef)
 				accountRec, _ := d.GetAccountRecByRef(harness.AccountTwoRef)
+				accountContactRec, _ := d.GetAccountContactRecByAccountID(accountRec.ID)
 				return game_schema.GameSubscriptionRequest{
 					GameID:           gameRec.ID,
 					AccountID:        accountRec.ID,
-					SubscriptionType: "Player",
+					AccountContactID: &accountContactRec.ID,
+					SubscriptionType: game_record.GameSubscriptionTypePlayer,
 				}
 			},
 			ResponseDecoder: singleDecoder,
@@ -72,7 +75,7 @@ func Test_gameSubscriptionHandler(t *testing.T) {
 				return game_schema.GameSubscriptionRequest{
 					GameID:           d.GameSubscriptionRecs[0].GameID,
 					AccountID:        d.GameSubscriptionRecs[0].AccountID,
-					SubscriptionType: "Manager",
+					SubscriptionType: game_record.GameSubscriptionTypeManager,
 				}
 			},
 			ResponseDecoder: singleDecoder,

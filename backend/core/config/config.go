@@ -16,6 +16,9 @@ type Config struct {
 	// Backend port (default: 8080)
 	Port string `env:"PORT" envDefault:"8080"`
 
+	// App host URL for constructing absolute URLs
+	AppHost string `env:"APP_HOST"`
+
 	// App home (frontend application) (default: ./frontend/dist)
 	AppHome string `env:"APP_HOME" envDefault:"./frontend/dist"`
 

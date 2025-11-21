@@ -3,6 +3,7 @@ package harness
 import (
 	"fmt"
 
+	"gitlab.com/alienspaces/playbymail/core/nullstring"
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 )
@@ -41,6 +42,18 @@ func (t *Testing) createGameSubscriptionRec(subscriptionConfig GameSubscriptionC
 	// Set subscription type if provided
 	if subscriptionConfig.SubscriptionType != "" {
 		rec.SubscriptionType = subscriptionConfig.SubscriptionType
+	}
+
+	// For player subscriptions, set account_contact_id if not already set
+	if rec.SubscriptionType == game_record.GameSubscriptionTypePlayer {
+		if !rec.AccountContactID.Valid || rec.AccountContactID.String == "" {
+			accountContactRec, err := t.Data.GetAccountContactRecByAccountID(accountRec.ID)
+			if err != nil {
+				l.Warn("failed getting account contact for account ID >%s<: %v", accountRec.ID, err)
+				return nil, err
+			}
+			rec.AccountContactID = nullstring.FromString(accountContactRec.ID)
+		}
 	}
 
 	// Create record

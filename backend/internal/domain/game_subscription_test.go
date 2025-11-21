@@ -50,7 +50,6 @@ func TestApproveGameSubscription(t *testing.T) {
 				Reference: "pending-account",
 				Record: &account_record.Account{
 					Email:  harness.UniqueEmail("pending@example.com"),
-					Name:   "Pending Account",
 					Status: account_record.AccountStatusPendingApproval,
 				},
 			},
@@ -58,7 +57,6 @@ func TestApproveGameSubscription(t *testing.T) {
 				Reference: "pending-account-two",
 				Record: &account_record.Account{
 					Email:  harness.UniqueEmail("pending-two@example.com"),
-					Name:   "Pending Account Two",
 					Status: account_record.AccountStatusPendingApproval,
 				},
 			},
@@ -66,7 +64,6 @@ func TestApproveGameSubscription(t *testing.T) {
 				Reference: "other-account",
 				Record: &account_record.Account{
 					Email:  harness.UniqueEmail("other@example.com"),
-					Name:   "Other Account",
 					Status: account_record.AccountStatusActive,
 				},
 			},

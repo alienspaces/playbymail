@@ -20,6 +20,7 @@ test-backend:
 
     # Environment variables for backend Go servers
     APP_ENV: develop
+    APP_HOST: "https://www.playbymail.games"
     PORT: 8080
     LOG_LEVEL: info
     GO_VERSION: 1.24.5

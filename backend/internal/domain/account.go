@@ -336,10 +336,6 @@ func (m *Domain) validateAccountRecForCreate(rec *account_record.Account) error 
 		return coreerror.NewInvalidDataError("email is required")
 	}
 
-	if rec.Name == "" {
-		return coreerror.NewInvalidDataError("name is required")
-	}
-
 	if rec.Status == "" {
 		rec.Status = account_record.AccountStatusActive
 	}
@@ -360,10 +356,6 @@ func (m *Domain) validateAccountRecForUpdate(next, curr *account_record.Account)
 
 	if next.Email != curr.Email {
 		return coreerror.NewInvalidDataError("email cannot be updated")
-	}
-
-	if next.Name == "" {
-		return coreerror.NewInvalidDataError("name is required")
 	}
 
 	if next.Status == "" {

@@ -82,6 +82,14 @@ func (t *Testing) CreateData() error {
 			return err
 		}
 		l.Debug("created account record ID >%s< Email >%s<", accountRec.ID, accountRec.Email)
+
+		// Create account contact for the account (required for player subscriptions)
+		_, err = t.createAccountContactRec(accountRec.ID)
+		if err != nil {
+			l.Warn("failed creating account contact record >%v<", err)
+			return err
+		}
+		l.Debug("created account contact record for account ID >%s<", accountRec.ID)
 	}
 
 	for _, gameConfig := range t.DataConfig.GameConfigs {

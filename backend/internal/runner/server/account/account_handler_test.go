@@ -157,7 +157,6 @@ func Test_createUpdateDeleteAccountHandler(t *testing.T) {
 					email := gofakeit.Email()
 					return account_schema.AccountRequest{
 						Email: &email,
-						Name:  gofakeit.Name(),
 					}
 				},
 				ResponseDecoder: testCaseResponseDecoder,
@@ -167,7 +166,6 @@ func Test_createUpdateDeleteAccountHandler(t *testing.T) {
 				return account_schema.AccountResponse{
 					Data: &account_schema.AccountResponseData{
 						Email: *req.Email,
-						Name:  req.Name,
 					},
 				}
 			},
@@ -190,7 +188,6 @@ func Test_createUpdateDeleteAccountHandler(t *testing.T) {
 					email := harness.UniqueEmail(gofakeit.Email())
 					return account_schema.AccountRequest{
 						Email: &email,
-						Name:  gofakeit.Name(),
 					}
 				},
 				ResponseDecoder: testCaseResponseDecoder,
@@ -204,7 +201,6 @@ func Test_createUpdateDeleteAccountHandler(t *testing.T) {
 				return account_schema.AccountResponse{
 					Data: &account_schema.AccountResponseData{
 						Email: accountRec.Email, // Email should remain unchanged
-						Name:  req.Name,
 					},
 				}
 			},
@@ -253,7 +249,6 @@ func Test_createUpdateDeleteAccountHandler(t *testing.T) {
 					testCase.TestRequestBody(th.Data).(account_schema.AccountRequest),
 				).Data
 				require.Equal(t, xResp.Email, aResp.Email, "Account Email matches expected")
-				require.Equal(t, xResp.Name, aResp.Name, "Account Name equals expected")
 				require.False(t, aResp.CreatedAt.IsZero(), "Account CreatedAt is not zero")
 				// UpdatedAt is allowed to be nil, so do not assert on it
 			}
@@ -297,7 +292,7 @@ func Test_accountMeHandler(t *testing.T) {
 						Type: server.AuthenticatedTypeToken,
 						Account: server.AuthenticatedAccount{
 							ID:    accountRec.ID,
-							Name:  accountRec.Name,
+							Name:  "", // Name is now in account_contact
 							Email: accountRec.Email,
 						},
 					}, nil
@@ -325,7 +320,7 @@ func Test_accountMeHandler(t *testing.T) {
 						Type: server.AuthenticatedTypeToken,
 						Account: server.AuthenticatedAccount{
 							ID:    accountRec.ID,
-							Name:  accountRec.Name,
+							Name:  "", // Name is now in account_contact
 							Email: accountRec.Email,
 						},
 					}, nil
@@ -337,9 +332,7 @@ func Test_accountMeHandler(t *testing.T) {
 				return rnr.GetHandlerConfig()[account.UpdateMyAccount]
 			},
 			RequestBody: func(d harness.Data) any {
-				return account_schema.AccountRequest{
-					Name: "Updated Name",
-				}
+				return account_schema.AccountRequest{}
 			},
 			ResponseDecoder: testCaseResponseDecoder,
 			ResponseCode:    http.StatusOK,
@@ -358,7 +351,7 @@ func Test_accountMeHandler(t *testing.T) {
 						Type: server.AuthenticatedTypeToken,
 						Account: server.AuthenticatedAccount{
 							ID:    accountRec.ID,
-							Name:  accountRec.Name,
+							Name:  "", // Name is now in account_contact
 							Email: accountRec.Email,
 						},
 					}, nil
@@ -394,12 +387,6 @@ func Test_accountMeHandler(t *testing.T) {
 				require.NotEmpty(t, aResp.Email, "Account Email is not empty")
 				require.Equal(t, accountRec.ID, aResp.ID, "Account ID matches authenticated user")
 				require.Equal(t, accountRec.Email, aResp.Email, "Account Email matches authenticated user")
-
-				if method == http.MethodPut {
-					require.Equal(t, "Updated Name", aResp.Name, "Account name is updated")
-				} else {
-					require.Equal(t, accountRec.Name, aResp.Name, "Account name matches authenticated user")
-				}
 
 				require.False(t, aResp.CreatedAt.IsZero(), "Account CreatedAt is not zero")
 			}

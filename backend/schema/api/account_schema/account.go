@@ -10,7 +10,6 @@ import (
 type AccountResponseData struct {
 	ID        string     `json:"id"`
 	Email     string     `json:"email"`
-	Name      string     `json:"name"`
 	Status    string     `json:"status"`
 	CreatedAt time.Time  `json:"created_at"`
 	UpdatedAt *time.Time `json:"updated_at,omitempty"`
@@ -30,7 +29,6 @@ type AccountCollectionResponse struct {
 
 type AccountRequest struct {
 	common_schema.Request
-	Name  string  `json:"name"`
 	Email *string `json:"email,omitempty"`
 }
 
@@ -56,4 +54,45 @@ type VerifyAuthRequest struct {
 
 type VerifyAuthResponse struct {
 	SessionToken string `json:"session_token"`
+}
+
+// AccountContactResponseData -
+type AccountContactResponseData struct {
+	ID                 string     `json:"id"`
+	AccountID          string     `json:"account_id"`
+	Name               string     `json:"name"`
+	PostalAddressLine1 string     `json:"postal_address_line1"`
+	PostalAddressLine2 string     `json:"postal_address_line2,omitempty"`
+	StateProvince      string     `json:"state_province"`
+	Country            string     `json:"country"`
+	PostalCode         string     `json:"postal_code"`
+	CreatedAt          time.Time  `json:"created_at"`
+	UpdatedAt          *time.Time `json:"updated_at,omitempty"`
+}
+
+type AccountContactResponse struct {
+	Data       *AccountContactResponseData       `json:"data"`
+	Error      *common_schema.ResponseError      `json:"error,omitempty"`
+	Pagination *common_schema.ResponsePagination `json:"pagination,omitempty"`
+}
+
+type AccountContactCollectionResponse struct {
+	Data       []*AccountContactResponseData     `json:"data"`
+	Error      *common_schema.ResponseError      `json:"error,omitempty"`
+	Pagination *common_schema.ResponsePagination `json:"pagination,omitempty"`
+}
+
+type AccountContactRequest struct {
+	common_schema.Request
+	Name               string `json:"name"`
+	PostalAddressLine1 string `json:"postal_address_line1"`
+	PostalAddressLine2 string `json:"postal_address_line2,omitempty"`
+	StateProvince      string `json:"state_province"`
+	Country            string `json:"country"`
+	PostalCode         string `json:"postal_code"`
+}
+
+type AccountContactQueryParams struct {
+	common_schema.QueryParamsPagination
+	AccountContactResponseData
 }

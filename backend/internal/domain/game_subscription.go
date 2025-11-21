@@ -7,6 +7,7 @@ import (
 
 	"gitlab.com/alienspaces/playbymail/core/domain"
 	coreerror "gitlab.com/alienspaces/playbymail/core/error"
+	"gitlab.com/alienspaces/playbymail/core/nullstring"
 	"gitlab.com/alienspaces/playbymail/core/sql"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 )
@@ -132,6 +133,13 @@ func (m *Domain) validateGameSubscriptionRecForCreate(rec *game_record.GameSubsc
 		return coreerror.NewInvalidDataError("account_id is required")
 	}
 
+	// Account contact is required for player subscriptions
+	if rec.SubscriptionType == game_record.GameSubscriptionTypePlayer {
+		if !rec.AccountContactID.Valid || rec.AccountContactID.String == "" {
+			return coreerror.NewInvalidDataError("account_contact_id is required for player subscriptions")
+		}
+	}
+
 	if rec.SubscriptionType == "" {
 		return coreerror.NewInvalidDataError("subscription_type is required")
 	}
@@ -198,16 +206,18 @@ func validateGameSubscriptionStatus(status string) error {
 	}
 }
 
-func (m *Domain) UpsertPendingGameSubscription(gameID, accountID, subscriptionType string) (*game_record.GameSubscription, error) {
+func (m *Domain) UpsertPendingGameSubscription(gameID, accountID, accountContactID, subscriptionType string) (*game_record.GameSubscription, error) {
 	l := m.Logger("UpsertPendingGameSubscription")
 
-	l.Debug("upserting pending subscription game_id >%s< account_id >%s< type >%s<", gameID, accountID, subscriptionType)
+	l.Debug("upserting pending subscription game_id >%s< account_id >%s< account_contact_id >%s< type >%s<", gameID, accountID, accountContactID, subscriptionType)
 
 	switch {
 	case gameID == "":
 		return nil, coreerror.NewInvalidDataError("game_id is required")
 	case accountID == "":
 		return nil, coreerror.NewInvalidDataError("account_id is required")
+	case accountContactID == "":
+		return nil, coreerror.NewInvalidDataError("account_contact_id is required")
 	case subscriptionType == "":
 		return nil, coreerror.NewInvalidDataError("subscription_type is required")
 	}
@@ -228,20 +238,24 @@ func (m *Domain) UpsertPendingGameSubscription(gameID, accountID, subscriptionTy
 
 	if len(recs) > 0 {
 		rec := recs[0]
+		// Update account_contact_id if needed
+		if !rec.AccountContactID.Valid || rec.AccountContactID.String != accountContactID {
+			rec.AccountContactID = nullstring.FromString(accountContactID)
+		}
 		if rec.Status != game_record.GameSubscriptionStatusPendingApproval {
 			rec.Status = game_record.GameSubscriptionStatusPendingApproval
-			updated, err := m.UpdateGameSubscriptionRec(rec)
-			if err != nil {
-				return nil, err
-			}
-			return updated, nil
 		}
-		return rec, nil
+		updated, err := m.UpdateGameSubscriptionRec(rec)
+		if err != nil {
+			return nil, err
+		}
+		return updated, nil
 	}
 
 	rec := &game_record.GameSubscription{
 		GameID:           gameID,
 		AccountID:        accountID,
+		AccountContactID: nullstring.FromString(accountContactID),
 		SubscriptionType: subscriptionType,
 		Status:           game_record.GameSubscriptionStatusPendingApproval,
 	}

@@ -11,6 +11,7 @@ import (
 // Data -
 type Data struct {
 	AccountRecs               []*account_record.Account
+	AccountContactRecs        []*account_record.AccountContact
 	GameRecs                  []*game_record.Game
 	GameSubscriptionRecs      []*game_record.GameSubscription
 	GameAdministrationRecs    []*game_record.GameAdministration
@@ -103,6 +104,16 @@ func (d *Data) AddAccountRec(rec *account_record.Account) {
 	d.AccountRecs = append(d.AccountRecs, rec)
 }
 
+func (d *Data) AddAccountContactRec(rec *account_record.AccountContact) {
+	for idx := range d.AccountContactRecs {
+		if d.AccountContactRecs[idx].ID == rec.ID {
+			d.AccountContactRecs[idx] = rec
+			return
+		}
+	}
+	d.AccountContactRecs = append(d.AccountContactRecs, rec)
+}
+
 func (d *Data) GetAccountRecByID(accountID string) (*account_record.Account, error) {
 	for _, rec := range d.AccountRecs {
 		if rec.ID == accountID {
@@ -118,6 +129,15 @@ func (d *Data) GetAccountRecByRef(ref string) (*account_record.Account, error) {
 		return nil, fmt.Errorf("failed getting account with ref >%s<", ref)
 	}
 	return d.GetAccountRecByID(accountID)
+}
+
+func (d *Data) GetAccountContactRecByAccountID(accountID string) (*account_record.AccountContact, error) {
+	for _, rec := range d.AccountContactRecs {
+		if rec.AccountID == accountID {
+			return rec, nil
+		}
+	}
+	return nil, fmt.Errorf("failed getting account contact with account ID >%s<", accountID)
 }
 
 // Game

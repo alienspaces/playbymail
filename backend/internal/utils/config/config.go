@@ -1,6 +1,8 @@
 package config
 
 import (
+	"fmt"
+
 	"gitlab.com/alienspaces/playbymail/core/config"
 )
 
@@ -30,5 +32,14 @@ type Config struct {
 func Parse() (Config, error) {
 	var cfg Config
 	err := config.Parse(&cfg)
-	return cfg, err
+	if err != nil {
+		return cfg, err
+	}
+
+	// Validate required configuration that doesn't have defaults applied by env.Parse
+	if cfg.AppHost == "" {
+		return cfg, fmt.Errorf("APP_HOST is required")
+	}
+
+	return cfg, nil
 }

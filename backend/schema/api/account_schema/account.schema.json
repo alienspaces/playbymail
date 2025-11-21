@@ -14,9 +14,6 @@
         "id": {
             "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
         },
-        "name": {
-            "type": "string"
-        },
         "updated_at": {
             "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/updated_at"
         },
@@ -32,7 +29,6 @@
     "required": [
         "id",
         "email",
-        "name",
         "created_at",
         "status"
     ],

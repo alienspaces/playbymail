@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/cenkalti/backoff/v4"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
 	"gitlab.com/alienspaces/playbymail/internal/utils/config"
 )
@@ -89,62 +90,86 @@ func (a *openAIVisionAgent) ExtractText(ctx context.Context, req TextExtractionR
 		return "", fmt.Errorf("failed to marshal OpenAI request: %w", err)
 	}
 
-	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, openAIResponsesEndpoint, bytes.NewReader(body))
-	if err != nil {
-		return "", fmt.Errorf("failed to create OpenAI request: %w", err)
-	}
-
-	httpReq.Header.Set("Content-Type", "application/json")
-	httpReq.Header.Set("Authorization", fmt.Sprintf("Bearer %s", a.cfg.OpenAIAPIKey))
-
 	apiStart := time.Now()
 	model := a.modelName()
 
 	l.Info("sending OpenAI text extraction request endpoint=%s model=%s request_size=%d",
 		openAIResponsesEndpoint, model, len(body))
 
-	resp, err := a.client.Do(httpReq)
+	var resp *http.Response
+	var respBody []byte
+	var apiResp openAIResponse
+
+	backoffConfig := backoff.NewExponentialBackOff()
+	backoffConfig.MaxElapsedTime = 2 * time.Minute
+
+	err = backoff.RetryNotify(func() error {
+		// Create a new request for each retry (body reader can only be read once)
+		httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, openAIResponsesEndpoint, bytes.NewReader(body))
+		if err != nil {
+			return backoff.Permanent(fmt.Errorf("failed to create OpenAI request: %w", err))
+		}
+
+		httpReq.Header.Set("Content-Type", "application/json")
+		httpReq.Header.Set("Authorization", fmt.Sprintf("Bearer %s", a.cfg.OpenAIAPIKey))
+
+		resp, err = a.client.Do(httpReq)
+		if err != nil {
+			l.Debug("OpenAI HTTP request failed error=%v", err)
+			return err
+		}
+		defer resp.Body.Close()
+
+		respBody, err = io.ReadAll(resp.Body)
+		if err != nil {
+			return backoff.Permanent(fmt.Errorf("failed to read OpenAI response: %w", err))
+		}
+
+		l.Debug("read response body size=%d status=%d", len(respBody), resp.StatusCode)
+
+		// Check for HTTP errors
+		if resp.StatusCode >= 300 {
+			apiErr := parseOpenAIAPIError(respBody)
+			errMsg := apiErr
+			if errMsg == "" {
+				errMsg = fmt.Sprintf("HTTP status %d", resp.StatusCode)
+			}
+
+			if isRetryableError(nil, resp.StatusCode, errMsg) {
+				l.Debug("retryable error status=%d message=%s", resp.StatusCode, errMsg)
+				return fmt.Errorf("OpenAI API error: %s", errMsg)
+			}
+			return backoff.Permanent(fmt.Errorf("OpenAI API error: %s", errMsg))
+		}
+
+		// Parse response
+		err = json.Unmarshal(respBody, &apiResp)
+		if err != nil {
+			return backoff.Permanent(fmt.Errorf("failed to decode OpenAI response: %w", err))
+		}
+
+		// Check for OpenAI API errors in response body
+		if apiResp.Error != nil && apiResp.Error.Message != "" {
+			if isRetryableError(nil, resp.StatusCode, apiResp.Error.Message) {
+				l.Debug("retryable OpenAI API error message=%s", apiResp.Error.Message)
+				return fmt.Errorf("OpenAI API error: %s", apiResp.Error.Message)
+			}
+			return backoff.Permanent(fmt.Errorf("OpenAI API error: %s", apiResp.Error.Message))
+		}
+
+		return nil
+	}, backoffConfig, func(err error, duration time.Duration) {
+		l.Debug("retrying OpenAI request after %v error=%v", duration, err)
+	})
+
 	apiDuration := time.Since(apiStart)
 	if err != nil {
-		l.Warn("OpenAI HTTP request failed after %v error=%v", apiDuration, err)
-		return "", fmt.Errorf("OpenAI request failed: %w", err)
-	}
-	defer resp.Body.Close()
-
-	l.Info("received OpenAI response status=%d duration=%v content_length=%s",
-		resp.StatusCode, apiDuration, resp.Header.Get("Content-Length"))
-
-	respBody, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return "", fmt.Errorf("failed to read OpenAI response: %w", err)
+		l.Warn("OpenAI request failed after %v error=%v", apiDuration, err)
+		return "", err
 	}
 
-	l.Debug("read response body size=%d", len(respBody))
-
-	if resp.StatusCode >= 300 {
-		apiErr := parseOpenAIAPIError(respBody)
-		errorPreview := string(respBody)
-		if len(errorPreview) > 200 {
-			errorPreview = errorPreview[:200] + "..."
-		}
-		l.Warn("OpenAI API error response status=%d body_preview=%s", resp.StatusCode, errorPreview)
-		if apiErr != "" {
-			return "", fmt.Errorf("OpenAI API error: %s", apiErr)
-		}
-		return "", fmt.Errorf("OpenAI API request failed with status %d", resp.StatusCode)
-	}
-
-	var apiResp openAIResponse
-	err = json.Unmarshal(respBody, &apiResp)
-	if err != nil {
-		l.Warn("failed to decode OpenAI response body_size=%d error=%v", len(respBody), err)
-		return "", fmt.Errorf("failed to decode OpenAI response: %w", err)
-	}
-
-	if apiResp.Error != nil && apiResp.Error.Message != "" {
-		l.Warn("OpenAI API returned error type=%s message=%s", apiResp.Error.Type, apiResp.Error.Message)
-		return "", fmt.Errorf("OpenAI API error: %s", apiResp.Error.Message)
-	}
+	l.Info("received OpenAI response status=%d duration=%v content_length=%d",
+		resp.StatusCode, apiDuration, len(respBody))
 
 	text := extractOpenAIText(apiResp)
 	if text == "" {
@@ -254,15 +279,6 @@ func (a *openAIVisionAgent) ExtractStructuredData(ctx context.Context, req Struc
 		return nil, fmt.Errorf("failed to marshal OpenAI structured request: %w", err)
 	}
 
-	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, openAIResponsesEndpoint, bytes.NewReader(body))
-	if err != nil {
-		return nil, fmt.Errorf("failed to create OpenAI structured request: %w", err)
-	}
-
-	httpReq.Header.Set("Content-Type", "application/json")
-	httpReq.Header.Set("Authorization", fmt.Sprintf("Bearer %s", a.cfg.OpenAIAPIKey))
-
-	client := &http.Client{Timeout: 60 * time.Second}
 	apiStart := time.Now()
 	model := a.modelName()
 	imageCount := 0
@@ -277,46 +293,83 @@ func (a *openAIVisionAgent) ExtractStructuredData(ctx context.Context, req Struc
 	}
 	l.Info("sending OpenAI structured extraction request endpoint=%s model=%s request_size=%d content_items=%d images=%d text=%d",
 		openAIResponsesEndpoint, model, len(body), len(contents), imageCount, textCount)
-	resp, err := client.Do(httpReq)
+
+	var resp *http.Response
+	var respBody []byte
+	var apiResp openAIResponse
+
+	// Use longer timeout for structured extraction
+	client := &http.Client{Timeout: 60 * time.Second}
+	backoffConfig := backoff.NewExponentialBackOff()
+	backoffConfig.MaxElapsedTime = 3 * time.Minute
+
+	err = backoff.RetryNotify(func() error {
+		// Create a new request for each retry (body reader can only be read once)
+		httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, openAIResponsesEndpoint, bytes.NewReader(body))
+		if err != nil {
+			return backoff.Permanent(fmt.Errorf("failed to create OpenAI structured request: %w", err))
+		}
+
+		httpReq.Header.Set("Content-Type", "application/json")
+		httpReq.Header.Set("Authorization", fmt.Sprintf("Bearer %s", a.cfg.OpenAIAPIKey))
+
+		resp, err = client.Do(httpReq)
+		if err != nil {
+			l.Debug("OpenAI HTTP request failed error=%v", err)
+			return err
+		}
+		defer resp.Body.Close()
+
+		respBody, err = io.ReadAll(resp.Body)
+		if err != nil {
+			return backoff.Permanent(fmt.Errorf("failed to read OpenAI structured response: %w", err))
+		}
+
+		l.Debug("read response body size=%d status=%d", len(respBody), resp.StatusCode)
+
+		// Check for HTTP errors
+		if resp.StatusCode >= 300 {
+			apiErr := parseOpenAIAPIError(respBody)
+			errMsg := apiErr
+			if errMsg == "" {
+				errMsg = fmt.Sprintf("HTTP status %d", resp.StatusCode)
+			}
+
+			if isRetryableError(nil, resp.StatusCode, errMsg) {
+				l.Debug("retryable error status=%d message=%s", resp.StatusCode, errMsg)
+				return fmt.Errorf("OpenAI API error: %s", errMsg)
+			}
+			return backoff.Permanent(fmt.Errorf("OpenAI API error: %s", errMsg))
+		}
+
+		// Parse response
+		err = json.Unmarshal(respBody, &apiResp)
+		if err != nil {
+			return backoff.Permanent(fmt.Errorf("failed to decode OpenAI structured response: %w", err))
+		}
+
+		// Check for OpenAI API errors in response body
+		if apiResp.Error != nil && apiResp.Error.Message != "" {
+			if isRetryableError(nil, resp.StatusCode, apiResp.Error.Message) {
+				l.Debug("retryable OpenAI API error message=%s", apiResp.Error.Message)
+				return fmt.Errorf("OpenAI API error: %s", apiResp.Error.Message)
+			}
+			return backoff.Permanent(fmt.Errorf("OpenAI API error: %s", apiResp.Error.Message))
+		}
+
+		return nil
+	}, backoffConfig, func(err error, duration time.Duration) {
+		l.Debug("retrying OpenAI structured extraction request after %v error=%v", duration, err)
+	})
+
 	apiDuration := time.Since(apiStart)
 	if err != nil {
-		l.Warn("OpenAI HTTP request failed after %v error=%v", apiDuration, err)
-		return nil, fmt.Errorf("OpenAI structured request failed: %w", err)
-	}
-	defer resp.Body.Close()
-
-	l.Info("received OpenAI response status=%d duration=%v content_length=%s",
-		resp.StatusCode, apiDuration, resp.Header.Get("Content-Length"))
-
-	respBody, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read OpenAI structured response: %w", err)
-	}
-	l.Debug("read response body size=%d", len(respBody))
-
-	if resp.StatusCode >= 300 {
-		apiErr := parseOpenAIAPIError(respBody)
-		errorPreview := string(respBody)
-		if len(errorPreview) > 200 {
-			errorPreview = errorPreview[:200] + "..."
-		}
-		l.Warn("OpenAI API error response status=%d body_preview=%s", resp.StatusCode, errorPreview)
-		if apiErr != "" {
-			return nil, fmt.Errorf("OpenAI API error: %s", apiErr)
-		}
-		return nil, fmt.Errorf("OpenAI API request failed with status %d", resp.StatusCode)
+		l.Warn("OpenAI structured extraction request failed after %v error=%v", apiDuration, err)
+		return nil, err
 	}
 
-	var apiResp openAIResponse
-	if err := json.Unmarshal(respBody, &apiResp); err != nil {
-		l.Warn("failed to decode OpenAI structured response body_size=%d error=%v", len(respBody), err)
-		return nil, fmt.Errorf("failed to decode OpenAI structured response: %w", err)
-	}
-
-	if apiResp.Error != nil && apiResp.Error.Message != "" {
-		l.Warn("OpenAI API returned error type=%s message=%s", apiResp.Error.Type, apiResp.Error.Message)
-		return nil, fmt.Errorf("OpenAI API error: %s", apiResp.Error.Message)
-	}
+	l.Info("received OpenAI response status=%d duration=%v content_length=%d",
+		resp.StatusCode, apiDuration, len(respBody))
 
 	text := extractOpenAIText(apiResp)
 	if text == "" {
@@ -375,6 +428,43 @@ func parseOpenAIAPIError(body []byte) string {
 		}
 	}
 	return ""
+}
+
+// isRetryableError determines if an OpenAI error should be retried
+func isRetryableError(err error, statusCode int, errorMessage string) bool {
+	// Retry on network errors
+	if err != nil {
+		return true
+	}
+
+	// Retry on 5xx server errors
+	if statusCode >= 500 && statusCode < 600 {
+		return true
+	}
+
+	// Retry on rate limit errors
+	if statusCode == http.StatusTooManyRequests {
+		return true
+	}
+
+	// Retry on service unavailable
+	if statusCode == http.StatusServiceUnavailable {
+		return true
+	}
+
+	// Retry on OpenAI errors that suggest retrying
+	if errorMessage != "" {
+		lowerMsg := strings.ToLower(errorMessage)
+		if strings.Contains(lowerMsg, "retry") ||
+			strings.Contains(lowerMsg, "error occurred while processing") ||
+			strings.Contains(lowerMsg, "rate limit") ||
+			strings.Contains(lowerMsg, "server error") ||
+			strings.Contains(lowerMsg, "temporary") {
+			return true
+		}
+	}
+
+	return false
 }
 
 func extractOpenAIText(resp openAIResponse) string {

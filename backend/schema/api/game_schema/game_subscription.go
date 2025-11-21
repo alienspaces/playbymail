@@ -3,9 +3,10 @@ package game_schema
 import "time"
 
 type GameSubscriptionRequest struct {
-	GameID           string `json:"game_id"`
-	AccountID        string `json:"account_id"`
-	SubscriptionType string `json:"subscription_type"`
+	GameID           string  `json:"game_id"`
+	AccountID        string  `json:"account_id"`
+	AccountContactID *string `json:"account_contact_id,omitempty"`
+	SubscriptionType string  `json:"subscription_type"`
 }
 
 type GameSubscriptionResponseData struct {

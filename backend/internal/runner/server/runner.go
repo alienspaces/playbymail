@@ -190,11 +190,26 @@ func (rnr *Runner) authenticateRequestTokenFunc(l logger.Logger, m domainer.Doma
 			accountRec := accountRecs[0]
 			l.Info("(playbymail) development mode: found account ID >%s< for email >%s<", accountRec.ID, bypassEmail)
 
+			// Get account contact name if available
+			accountName := ""
+			contactRecs, err := mm.GetManyAccountContactRecs(&coresql.Options{
+				Params: []coresql.Param{
+					{Col: account_record.FieldAccountContactAccountID, Val: accountRec.ID},
+				},
+				Limit: 1,
+				OrderBy: []coresql.OrderBy{
+					{Col: account_record.FieldAccountContactCreatedAt, Direction: coresql.OrderDirectionASC},
+				},
+			})
+			if err == nil && len(contactRecs) > 0 {
+				accountName = contactRecs[0].Name
+			}
+
 			return server.AuthenData{
 				Type: server.AuthenticatedTypeToken,
 				Account: server.AuthenticatedAccount{
 					ID:    accountRec.ID,
-					Name:  accountRec.Name,
+					Name:  accountName,
 					Email: accountRec.Email,
 				},
 			}, nil
@@ -228,11 +243,26 @@ func (rnr *Runner) authenticateRequestTokenFunc(l logger.Logger, m domainer.Doma
 		return server.AuthenData{}, nil
 	}
 
+	// Get account contact name if available
+	accountName := ""
+	contactRecs, err := mm.GetManyAccountContactRecs(&coresql.Options{
+		Params: []coresql.Param{
+			{Col: account_record.FieldAccountContactAccountID, Val: accountRec.ID},
+		},
+		Limit: 1,
+		OrderBy: []coresql.OrderBy{
+			{Col: account_record.FieldAccountContactCreatedAt, Direction: coresql.OrderDirectionASC},
+		},
+	})
+	if err == nil && len(contactRecs) > 0 {
+		accountName = contactRecs[0].Name
+	}
+
 	return server.AuthenData{
 		Type: server.AuthenticatedTypeToken,
 		Account: server.AuthenticatedAccount{
 			ID:    accountRec.ID,
-			Name:  accountRec.Name,
+			Name:  accountName,
 			Email: accountRec.Email,
 		},
 	}, nil

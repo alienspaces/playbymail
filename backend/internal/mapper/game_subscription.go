@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"gitlab.com/alienspaces/playbymail/core/nullstring"
 	"gitlab.com/alienspaces/playbymail/core/nulltime"
 	"gitlab.com/alienspaces/playbymail/core/server"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
@@ -24,10 +25,12 @@ func GameSubscriptionRequestToRecord(l logger.Logger, r *http.Request, rec *game
 	case server.HttpMethodPost:
 		rec.GameID = req.GameID
 		rec.AccountID = req.AccountID
+		rec.AccountContactID = nullstring.FromStringPtr(req.AccountContactID)
 		rec.SubscriptionType = req.SubscriptionType
 	case server.HttpMethodPut, server.HttpMethodPatch:
 		rec.GameID = req.GameID
 		rec.AccountID = req.AccountID
+		rec.AccountContactID = nullstring.FromStringPtr(req.AccountContactID)
 		rec.SubscriptionType = req.SubscriptionType
 	default:
 		return nil, fmt.Errorf("unsupported HTTP method")

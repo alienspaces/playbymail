@@ -663,11 +663,14 @@ func sendAccountVerificationEmail(m *domain.Domain, jc *river.Client[pgx.Tx], em
 
 	// Within API handler context we must use the transaction from the domain model so
 	// if there is an error the entire API request transaction is rolled back.
-	jc.InsertTx(context.Background(), m.Tx, &jobworker.SendAccountVerificationEmailWorkerArgs{
+	if _, err := jc.InsertTx(context.Background(), m.Tx, &jobworker.SendAccountVerificationEmailWorkerArgs{
 		AccountID: rec.ID,
 	}, &river.InsertOpts{
 		Queue: jobqueue.QueueDefault,
-	})
+	}); err != nil {
+		l.Warn("failed to enqueue account verification email job >%v<", err)
+		return err
+	}
 
 	return nil
 }

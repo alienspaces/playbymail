@@ -32,6 +32,7 @@ func AccountHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, err
 	// Additional handler configurations are added here
 	handlerConfigFuncs := []func(logger.Logger) (map[string]server.HandlerConfig, error){
 		accountHandlerConfig,
+		accountContactHandlerConfig,
 	}
 
 	for _, fn := range handlerConfigFuncs {

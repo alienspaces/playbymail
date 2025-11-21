@@ -8,6 +8,10 @@
             "format": "uuid",
             "type": "string"
         },
+        "account_contact_id": {
+            "format": "uuid",
+            "type": "string"
+        },
         "game_id": {
             "format": "uuid",
             "type": "string"

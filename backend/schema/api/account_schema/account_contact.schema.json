@@ -1,0 +1,62 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "http://playbymail.games/schema/account_schema/account_contact.schema.json",
+    "title": "AccountContact",
+    "type": "object",
+    "properties": {
+        "id": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
+        },
+        "account_id": {
+            "format": "uuid",
+            "type": "string"
+        },
+        "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+        },
+        "postal_address_line1": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+        },
+        "postal_address_line2": {
+            "type": "string",
+            "maxLength": 255
+        },
+        "state_province": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+        },
+        "country": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+        },
+        "postal_code": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 20
+        },
+        "created_at": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/created_at"
+        },
+        "updated_at": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/updated_at"
+        }
+    },
+    "required": [
+        "id",
+        "account_id",
+        "name",
+        "postal_address_line1",
+        "state_province",
+        "country",
+        "postal_code",
+        "created_at"
+    ],
+    "additionalProperties": false
+}
+

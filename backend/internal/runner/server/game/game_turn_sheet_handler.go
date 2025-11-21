@@ -204,7 +204,6 @@ func handleJoinTurnSheetUpload(ctx context.Context, l logger.Logger, scanner Tur
 		l.Info("creating new pending account for email >%s<", scanData.Email)
 		accountRec = &account_record.Account{
 			Email:  scanData.Email,
-			Name:   scanData.Name,
 			Status: account_record.AccountStatusPendingApproval,
 		}
 
@@ -215,7 +214,24 @@ func handleJoinTurnSheetUpload(ctx context.Context, l logger.Logger, scanner Tur
 		}
 	}
 
-	subscriptionRec, err := m.UpsertPendingGameSubscription(gameRec.ID, accountRec.ID, game_record.GameSubscriptionTypePlayer)
+	// Create or get account contact
+	accountContactRec := &account_record.AccountContact{
+		AccountID:          accountRec.ID,
+		Name:               scanData.Name,
+		PostalAddressLine1: scanData.PostalAddressLine1,
+		PostalAddressLine2: nullstring.FromString(scanData.PostalAddressLine2),
+		StateProvince:      scanData.StateProvince,
+		Country:            scanData.Country,
+		PostalCode:         scanData.PostalCode,
+	}
+
+	accountContactRec, err = m.CreateAccountContactRec(accountContactRec)
+	if err != nil {
+		l.Warn("failed to create account contact >%v<", err)
+		return nil, 0, err
+	}
+
+	subscriptionRec, err := m.UpsertPendingGameSubscription(gameRec.ID, accountRec.ID, accountContactRec.ID, game_record.GameSubscriptionTypePlayer)
 	if err != nil {
 		l.Warn("failed to upsert game subscription >%v<", err)
 		return nil, 0, err

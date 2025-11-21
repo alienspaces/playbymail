@@ -15,11 +15,13 @@ import (
 	"github.com/riverqueue/river"
 
 	corejobworker "gitlab.com/alienspaces/playbymail/core/jobworker"
+	coresql "gitlab.com/alienspaces/playbymail/core/sql"
 	"gitlab.com/alienspaces/playbymail/core/type/emailer"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
 	"gitlab.com/alienspaces/playbymail/core/type/storer"
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/jobqueue"
+	"gitlab.com/alienspaces/playbymail/internal/record/account_record"
 	"gitlab.com/alienspaces/playbymail/internal/utils/config"
 )
 
@@ -131,8 +133,24 @@ func (w *SendGameSubscriptionApprovalEmailWorker) DoWork(ctx context.Context, m 
 	}
 
 	approvalPath := fmt.Sprintf("/api/v1/game-subscriptions/%s/approve?email=%s", subscriptionRec.ID, url.QueryEscape(accountRec.Email))
-	// Construct full URL - in production this would use the actual domain from config
-	approvalURL := fmt.Sprintf("https://playbymail.games%s", approvalPath)
+
+	// Construct full URL using configured app host
+	approvalURL := fmt.Sprintf("%s%s", w.Config.AppHost, approvalPath)
+
+	// Get account contact name if available
+	accountName := ""
+	contactRecs, err := m.GetManyAccountContactRecs(&coresql.Options{
+		Params: []coresql.Param{
+			{Col: account_record.FieldAccountContactAccountID, Val: accountRec.ID},
+		},
+		Limit: 1,
+		OrderBy: []coresql.OrderBy{
+			{Col: account_record.FieldAccountContactCreatedAt, Direction: coresql.OrderDirectionASC},
+		},
+	})
+	if err == nil && len(contactRecs) > 0 {
+		accountName = contactRecs[0].Name
+	}
 
 	// Render the HTML email template
 	baseTmplPath := filepath.Join(w.Config.TemplatesPath, "email", "base.email.html")
@@ -151,7 +169,7 @@ func (w *SendGameSubscriptionApprovalEmailWorker) DoWork(ctx context.Context, m 
 		SupportEmail string
 		Year         int
 	}{
-		AccountName:  accountRec.Name,
+		AccountName:  accountName,
 		GameName:     gameRec.Name,
 		ApprovalURL:  approvalURL,
 		SupportEmail: "support@playbymail.games",

@@ -24,10 +24,8 @@ func AccountRequestToRecord(l logger.Logger, r *http.Request, rec *account_recor
 	switch server.HttpMethod(r.Method) {
 	case server.HttpMethodPost:
 		rec.Email = convert.String(req.Email)
-		rec.Name = req.Name
 	case server.HttpMethodPut, server.HttpMethodPatch:
-		// Email cannot be updated - only name can be changed
-		rec.Name = req.Name
+		// Email cannot be updated
 	default:
 		return nil, fmt.Errorf("unsupported HTTP method")
 	}
@@ -40,7 +38,6 @@ func AccountRecordToResponseData(l logger.Logger, rec *account_record.Account) (
 	return &account_schema.AccountResponseData{
 		ID:        rec.ID,
 		Email:     rec.Email,
-		Name:      rec.Name,
 		Status:    rec.Status,
 		CreatedAt: rec.CreatedAt,
 		UpdatedAt: nulltime.ToTimePtr(rec.UpdatedAt),

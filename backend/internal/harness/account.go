@@ -52,9 +52,5 @@ func (t *Testing) applyAccountRecDefaultValues(rec *account_record.Account) *acc
 		rec.Email = UniqueEmail(gofakeit.Email())
 	}
 
-	if rec.Name == "" {
-		rec.Name = UniqueName(gofakeit.Name())
-	}
-
 	return rec
 }

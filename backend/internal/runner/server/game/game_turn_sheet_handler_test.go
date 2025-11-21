@@ -206,8 +206,12 @@ func Test_uploadTurnSheetHandler(t *testing.T) {
 					rnr.GetTurnSheetScanDataFunc = func(ctx context.Context, sheetType string, sheetData []byte, imageData []byte) ([]byte, error) {
 						// Mock join game scan data for new player
 						mockData := map[string]any{
-							"email": "newplayer@example.com",
-							"name":  "New Player",
+							"email":                "newplayer@example.com",
+							"name":                 "New Player",
+							"postal_address_line1": "123 Huntsmans Road",
+							"state_province":       "VIC",
+							"country":              "Australia",
+							"postal_code":          "12345",
 						}
 						return json.Marshal(mockData)
 					}
@@ -269,8 +273,12 @@ func Test_uploadTurnSheetHandler(t *testing.T) {
 					rnr.GetTurnSheetScanDataFunc = func(ctx context.Context, sheetType string, sheetData []byte, imageData []byte) ([]byte, error) {
 						// Mock join game scan data for new player
 						mockData := map[string]any{
-							"email": "newplayer2@example.com",
-							"name":  "New Player 2",
+							"email":                "newplayer2@example.com",
+							"name":                 "New Player 2",
+							"postal_address_line1": "123 Huntsmans Road",
+							"state_province":       "VIC",
+							"country":              "Australia",
+							"postal_code":          "12345",
 						}
 						return json.Marshal(mockData)
 					}
