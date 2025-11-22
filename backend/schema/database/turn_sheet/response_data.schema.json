@@ -52,11 +52,6 @@
                     "minimum": 0,
                     "maximum": 1
                 },
-                "scan_quality_score": {
-                    "type": "number",
-                    "minimum": 0,
-                    "maximum": 1
-                },
                 "processing_notes": {
                     "type": "string"
                 }

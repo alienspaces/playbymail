@@ -8,7 +8,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 
-	"gitlab.com/alienspaces/playbymail/core/tag"
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/harness"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
@@ -376,21 +375,4 @@ func TestDeleteOne(t *testing.T) {
 			require.NoError(t, err, "DeleteOne returns without error")
 		})
 	}
-}
-
-func TestDebugAttributes(t *testing.T) {
-	// Test what fields are extracted from the struct
-	rec := game_record.GameTurnSheet{}
-	fields := tag.GetFieldTagValues(rec, "db")
-	t.Logf("Extracted fields: %v", fields)
-
-	// Check if scan_quality is in the fields
-	found := false
-	for _, field := range fields {
-		if field == "scan_quality" {
-			found = true
-			break
-		}
-	}
-	t.Logf("scan_quality found: %v", found)
 }

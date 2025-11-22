@@ -98,8 +98,8 @@ func (m *Domain) GetGameTurnSheetRecsByAccount(accountID string) ([]*game_record
 	return recs, nil
 }
 
-// MarkGameTurnSheetAsScanned marks a turn sheet as scanned with quality score
-func (m *Domain) MarkGameTurnSheetAsScanned(turnSheetID string, scanQuality float64, scannedBy string) error {
+// MarkGameTurnSheetAsScanned marks a turn sheet as scanned
+func (m *Domain) MarkGameTurnSheetAsScanned(turnSheetID string, scannedBy string) error {
 
 	rec, err := m.GetGameTurnSheetRec(turnSheetID, nil)
 	if err != nil {
@@ -108,7 +108,6 @@ func (m *Domain) MarkGameTurnSheetAsScanned(turnSheetID string, scanQuality floa
 
 	now := time.Now()
 	rec.ScannedAt = sql.NullTime{Time: now, Valid: true}
-	rec.ScanQuality = sql.NullFloat64{Float64: scanQuality, Valid: true}
 	rec.ScannedBy = sql.NullString{String: scannedBy, Valid: true}
 	rec.ProcessingStatus = "scanned"
 

@@ -28,7 +28,6 @@ const (
 	FieldGameTurnSheetScannedData      string = "scanned_data"
 	FieldGameTurnSheetScannedAt        string = "scanned_at"
 	FieldGameTurnSheetScannedBy        string = "scanned_by"
-	FieldGameTurnSheetScanQuality      string = "scan_quality"
 	FieldGameTurnSheetProcessingStatus string = "processing_status"
 	FieldGameTurnSheetErrorMessage     string = "error_message"
 	FieldGameTurnSheetCreatedAt        string = "created_at"
@@ -60,7 +59,6 @@ type GameTurnSheet struct {
 	ScannedData      json.RawMessage `db:"scanned_data"`
 	ScannedAt        sql.NullTime    `db:"scanned_at"`
 	ScannedBy        sql.NullString  `db:"scanned_by"`
-	ScanQuality      sql.NullFloat64 `db:"scan_quality"`
 	ProcessingStatus string          `db:"processing_status"`
 	ErrorMessage     sql.NullString  `db:"error_message"`
 }
@@ -79,7 +77,6 @@ func (r *GameTurnSheet) ToNamedArgs() pgx.NamedArgs {
 	args[FieldGameTurnSheetScannedData] = r.ScannedData
 	args[FieldGameTurnSheetScannedAt] = r.ScannedAt
 	args[FieldGameTurnSheetScannedBy] = r.ScannedBy
-	args[FieldGameTurnSheetScanQuality] = r.ScanQuality
 	args[FieldGameTurnSheetProcessingStatus] = r.ProcessingStatus
 	args[FieldGameTurnSheetErrorMessage] = r.ErrorMessage
 	return args

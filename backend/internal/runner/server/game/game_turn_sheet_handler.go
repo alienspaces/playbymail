@@ -47,8 +47,6 @@ type TurnSheetUploadResponse struct {
 	SheetType        string         `json:"sheet_type"`
 	ScannedData      map[string]any `json:"scanned_data"`
 	ProcessingStatus string         `json:"processing_status"`
-	ScanQuality      float64        `json:"scan_quality"`
-	Message          string         `json:"message"`
 }
 
 func gameTurnSheetHandlerConfig(l logger.Logger, scanner turn_sheet.TurnSheetScanner) (map[string]server.HandlerConfig, error) {
@@ -266,9 +264,9 @@ func handleJoinTurnSheetUpload(ctx context.Context, l logger.Logger, scanner tur
 	}
 	turnSheetRec.ScannedAt = sql.NullTime{Time: time.Now(), Valid: true}
 
-	turnSheetRec, err = m.CreateGameTurnSheetRec(turnSheetRec)
+	createdTurnSheetRec, err := m.CreateGameTurnSheetRec(turnSheetRec)
 	if err != nil {
-		l.Warn("failed to create game turn sheet record >%v<", err)
+		l.Warn("failed to create game turn sheet record >%#v< >%v<", turnSheetRec, err)
 		return nil, 0, err
 	}
 
@@ -285,13 +283,11 @@ func handleJoinTurnSheetUpload(ctx context.Context, l logger.Logger, scanner tur
 	}
 
 	response := &TurnSheetUploadResponse{
-		TurnSheetID:      turnSheetRec.ID,
+		TurnSheetID:      createdTurnSheetRec.ID,
 		TurnSheetCodeCI:  turnSheetCode,
-		SheetType:        turnSheetRec.SheetType,
+		SheetType:        createdTurnSheetRec.SheetType,
 		ScannedData:      scannedDataMap,
-		ProcessingStatus: turnSheetRec.ProcessingStatus,
-		ScanQuality:      0,
-		Message:          "Join game turn sheet received. Please confirm the subscription email to continue.",
+		ProcessingStatus: createdTurnSheetRec.ProcessingStatus,
 	}
 
 	return response, http.StatusAccepted, nil
@@ -320,7 +316,6 @@ func handleStandardTurnSheetUpload(ctx context.Context, l logger.Logger, scanner
 
 	turnSheetRec.ScannedData = json.RawMessage(scannedData)
 	turnSheetRec.ScannedAt = sql.NullTime{Time: time.Now(), Valid: true}
-	turnSheetRec.ScanQuality = sql.NullFloat64{Float64: 0.95, Valid: true} // TODO: Calculate actual scan quality
 	turnSheetRec.ProcessingStatus = game_record.TurnSheetProcessingStatusProcessed
 
 	if _, err := m.UpdateGameTurnSheetRec(turnSheetRec); err != nil {
@@ -340,8 +335,6 @@ func handleStandardTurnSheetUpload(ctx context.Context, l logger.Logger, scanner
 		SheetType:        turnSheetRec.SheetType,
 		ScannedData:      scannedDataMap,
 		ProcessingStatus: turnSheetRec.ProcessingStatus,
-		ScanQuality:      0.95,
-		Message:          "Turn sheet uploaded and processed successfully",
 	}
 
 	return response, http.StatusOK, nil
