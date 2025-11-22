@@ -1,7 +1,6 @@
 package runner
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 
@@ -32,10 +31,6 @@ type Runner struct {
 	// Pointer embedding ensures all references use the same data.
 	*server.Runner
 	Config config.Config
-
-	// Turn sheet scanning methods that can be overridden in tests
-	GetTurnSheetCodeFromImageFunc func(ctx context.Context, imageData []byte) (string, error)
-	GetTurnSheetScanDataFunc      func(ctx context.Context, sheetType string, sheetData []byte, imageData []byte) ([]byte, error)
 }
 
 // ensure we comply with the Runnerer interface
@@ -91,8 +86,9 @@ func NewRunnerWithConfig(l logger.Logger, s storer.Storer, j *river.Client[pgx.T
 		r.HandlerConfig = server.MergeHandlerConfigs(r.HandlerConfig, cfg)
 	}
 
-	// Game handler config needs the runner (as TurnSheetScanner interface)
-	gameConfig, err := game.GameHandlerConfig(l, &r)
+	// Game handler config needs a turn sheet scanner
+	turnSheetScanner := turn_sheet.NewScanner(cfg)
+	gameConfig, err := game.GameHandlerConfig(l, turnSheetScanner)
 	if err != nil {
 		return nil, err
 	}
@@ -356,46 +352,4 @@ func (rnr *Runner) rlsFunc(l logger.Logger, m domainer.Domainer, authedReq serve
 	return server.RLS{
 		Identifiers: identifiers,
 	}, nil
-}
-
-// GetTurnSheetCodeFromImage extracts the turn sheet code from image data.
-// This method can be overridden in tests to return mock data.
-func (rnr *Runner) GetTurnSheetCodeFromImage(ctx context.Context, l logger.Logger, imageData []byte) (string, error) {
-	if rnr.GetTurnSheetCodeFromImageFunc != nil {
-		return rnr.GetTurnSheetCodeFromImageFunc(ctx, imageData)
-	}
-
-	// Default implementation uses real processor
-	cfg, err := config.Parse()
-	if err != nil {
-		return "", fmt.Errorf("failed to parse config: %w", err)
-	}
-
-	baseProcessor, err := turn_sheet.NewBaseProcessor(l, cfg)
-	if err != nil {
-		return "", fmt.Errorf("failed to create base processor: %w", err)
-	}
-
-	return baseProcessor.ParseTurnSheetCodeFromImage(ctx, imageData)
-}
-
-// GetTurnSheetScanData scans a turn sheet image and returns the extracted data.
-// This method can be overridden in tests to return mock data.
-func (rnr *Runner) GetTurnSheetScanData(ctx context.Context, l logger.Logger, sheetType string, sheetData []byte, imageData []byte) ([]byte, error) {
-	if rnr.GetTurnSheetScanDataFunc != nil {
-		return rnr.GetTurnSheetScanDataFunc(ctx, sheetType, sheetData, imageData)
-	}
-
-	// Default implementation uses real processor
-	cfg, err := config.Parse()
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse config: %w", err)
-	}
-
-	processor, err := turn_sheet.GetDocumentProcessor(l, cfg, sheetType)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get processor for sheet type %s: %w", sheetType, err)
-	}
-
-	return processor.ScanTurnSheet(ctx, l, sheetData, imageData)
 }

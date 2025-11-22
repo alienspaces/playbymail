@@ -51,7 +51,7 @@ type TurnSheetUploadResponse struct {
 	Message          string         `json:"message"`
 }
 
-func gameTurnSheetHandlerConfig(l logger.Logger, scanner TurnSheetScanner) (map[string]server.HandlerConfig, error) {
+func gameTurnSheetHandlerConfig(l logger.Logger, scanner turn_sheet.TurnSheetScanner) (map[string]server.HandlerConfig, error) {
 	l = logging.LoggerWithFunctionContext(l, packageName, "gameTurnSheetHandlerConfig")
 
 	l.Debug("Adding game turn sheet handler configuration")
@@ -100,7 +100,7 @@ func gameTurnSheetHandlerConfig(l logger.Logger, scanner TurnSheetScanner) (map[
 }
 
 // uploadTurnSheetHandler handles the single-pass turn sheet upload and processing
-func uploadTurnSheetHandler(scanner TurnSheetScanner) server.Handle {
+func uploadTurnSheetHandler(scanner turn_sheet.TurnSheetScanner) server.Handle {
 	return func(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 		l = logging.LoggerWithFunctionContext(l, packageName, "uploadTurnSheetHandler")
 
@@ -168,7 +168,7 @@ func uploadTurnSheetHandler(scanner TurnSheetScanner) server.Handle {
 // an account, creates a new pending account if necessary, and upserts a game subscription record.
 // Finally, it creates a new turn sheet record for the join game turn sheet and returns the upload
 // status and processed data for further handling.
-func handleJoinTurnSheetUpload(ctx context.Context, l logger.Logger, scanner TurnSheetScanner, m *domain.Domain, jc *river.Client[pgx.Tx], turnSheetCode string, identifier *turnsheet.TurnSheetIdentifier, imageData []byte) (*TurnSheetUploadResponse, int, error) {
+func handleJoinTurnSheetUpload(ctx context.Context, l logger.Logger, scanner turn_sheet.TurnSheetScanner, m *domain.Domain, jc *river.Client[pgx.Tx], turnSheetCode string, identifier *turnsheet.TurnSheetIdentifier, imageData []byte) (*TurnSheetUploadResponse, int, error) {
 	l = l.WithFunctionContext("handleJoinTurnSheetUpload")
 
 	l.Info("processing join game turn sheet upload for game >%s< turn sheet code >%s<", identifier.GameID, turnSheetCode)
@@ -186,7 +186,7 @@ func handleJoinTurnSheetUpload(ctx context.Context, l logger.Logger, scanner Tur
 
 	l.Info("creating join game turn sheet data for game >%s<", identifier.GameID)
 
-	// Create join game data using mapper function
+	// Get join game data for the game
 	joinData, err := turn_sheet.GetTurnSheetJoinGameData(gameRec, turnSheetCode)
 	if err != nil {
 		l.Warn("failed to create join game data >%v<", err)
@@ -297,7 +297,7 @@ func handleJoinTurnSheetUpload(ctx context.Context, l logger.Logger, scanner Tur
 	return response, http.StatusAccepted, nil
 }
 
-func handleStandardTurnSheetUpload(ctx context.Context, l logger.Logger, scanner TurnSheetScanner, m *domain.Domain, turnSheetCode string, identifier *turnsheet.TurnSheetIdentifier, imageData []byte) (*TurnSheetUploadResponse, int, error) {
+func handleStandardTurnSheetUpload(ctx context.Context, l logger.Logger, scanner turn_sheet.TurnSheetScanner, m *domain.Domain, turnSheetCode string, identifier *turnsheet.TurnSheetIdentifier, imageData []byte) (*TurnSheetUploadResponse, int, error) {
 	l = l.WithFunctionContext("handleStandardTurnSheetUpload")
 
 	turnSheetRec, err := m.GetGameTurnSheetRec(identifier.GameTurnSheetID, coresql.ForUpdateNoWait)

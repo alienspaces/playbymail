@@ -1,20 +1,12 @@
 package game
 
 import (
-	"context"
-
 	"gitlab.com/alienspaces/playbymail/core/jsonschema"
 	"gitlab.com/alienspaces/playbymail/core/server"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
+	"gitlab.com/alienspaces/playbymail/internal/turn_sheet"
 	"gitlab.com/alienspaces/playbymail/internal/utils/logging"
 )
-
-// TurnSheetScanner defines the interface for scanning turn sheets
-// This allows the runner to be injected without creating import cycles
-type TurnSheetScanner interface {
-	GetTurnSheetCodeFromImage(ctx context.Context, l logger.Logger, imageData []byte) (string, error)
-	GetTurnSheetScanData(ctx context.Context, l logger.Logger, sheetType string, sheetData []byte, imageData []byte) ([]byte, error)
-}
 
 const (
 	packageName = "game"
@@ -31,7 +23,7 @@ var referenceSchemas = []jsonschema.Schema{
 	},
 }
 
-func GameHandlerConfig(l logger.Logger, scanner TurnSheetScanner) (map[string]server.HandlerConfig, error) {
+func GameHandlerConfig(l logger.Logger, scanner turn_sheet.TurnSheetScanner) (map[string]server.HandlerConfig, error) {
 	l = logging.LoggerWithFunctionContext(l, packageName, "GameHandlerConfig")
 
 	l.Debug("Adding game handler configuration")

@@ -21,6 +21,7 @@ type JoinGameData struct {
 }
 
 const defaultJoinGameInstructions = "Fill out your account information and character name, then return this form to join the game."
+const joinGameTemplatePath = "turn_sheet/adventure_game_join_game.template"
 
 // DefaultJoinGameInstructions returns the default instruction text for join game turn sheets.
 func DefaultJoinGameInstructions() string {
@@ -134,8 +135,6 @@ func (p *JoinGameProcessor) GenerateTurnSheet(ctx context.Context, l logger.Logg
 
 	return p.GenerateDocument(ctx, format, "turn_sheet/adventure_game_join_game.template", &data)
 }
-
-const joinGameTemplatePath = "turn_sheet/adventure_game_join_game.template"
 
 // ScanTurnSheet extracts join game player information from the uploaded document using the hosted scanner.
 func (p *JoinGameProcessor) ScanTurnSheet(ctx context.Context, l logger.Logger, sheetData []byte, imageData []byte) ([]byte, error) {

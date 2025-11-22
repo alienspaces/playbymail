@@ -126,11 +126,6 @@ func Test_uploadTurnSheetHandler(t *testing.T) {
 			TestCase: testutil.TestCase{
 				Name: "existing game with existing player \\ upload location choice turn sheet \\ returns processed turn sheet",
 				NewRunner: func(l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], d harness.Data) (testutil.TestRunnerer, error) {
-					rnr, err := testutil.NewTestRunner(l, s, j)
-					if err != nil {
-						return nil, err
-					}
-
 					// Get turn sheet from harness
 					turnSheetRec, err := d.GetGameTurnSheetRecByRef(harness.GameTurnSheetOneRef)
 					if err != nil {
@@ -147,17 +142,20 @@ func Test_uploadTurnSheetHandler(t *testing.T) {
 						return nil, fmt.Errorf("failed to generate turn sheet code: %w", err)
 					}
 
-					// Override runner methods to return mock data using harness data
-					rnr.GetTurnSheetCodeFromImageFunc = func(ctx context.Context, imageData []byte) (string, error) {
-						return turnSheetCode, nil
+					// Create mock scanner with test data
+					mockScanner := &testutil.MockTurnSheetScanner{
+						GetTurnSheetCodeFromImageFunc: func(ctx context.Context, l logger.Logger, imageData []byte) (string, error) {
+							return turnSheetCode, nil
+						},
+						GetTurnSheetScanDataFunc: func(ctx context.Context, l logger.Logger, sheetType string, sheetData []byte, imageData []byte) ([]byte, error) {
+							mockData := map[string]any{
+								"choices": []string{"location_1"},
+							}
+							return json.Marshal(mockData)
+						},
 					}
-					rnr.GetTurnSheetScanDataFunc = func(ctx context.Context, sheetType string, sheetData []byte, imageData []byte) ([]byte, error) {
-						mockData := map[string]any{
-							"choices": []string{"location_1"},
-						}
-						return json.Marshal(mockData)
-					}
-					return rnr, nil
+
+					return testutil.NewTestRunnerWithTurnSheetScanner(l, s, j, mockScanner)
 				},
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[game.UploadTurnSheet]
@@ -183,11 +181,6 @@ func Test_uploadTurnSheetHandler(t *testing.T) {
 			TestCase: testutil.TestCase{
 				Name: "existing game that has not started and new player \\ upload join game turn sheet \\ returns processed join game turn sheet",
 				NewRunner: func(l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], d harness.Data) (testutil.TestRunnerer, error) {
-					rnr, err := testutil.NewTestRunner(l, s, j)
-					if err != nil {
-						return nil, err
-					}
-
 					// Get game from harness (game instance status is "created" by default)
 					gameID, ok := d.Refs.GameRefs[harness.GameOneRef]
 					if !ok {
@@ -200,23 +193,26 @@ func Test_uploadTurnSheetHandler(t *testing.T) {
 						return nil, fmt.Errorf("failed to generate join turn sheet code: %w", err)
 					}
 
-					// Override runner methods to return mock data
-					rnr.GetTurnSheetCodeFromImageFunc = func(ctx context.Context, imageData []byte) (string, error) {
-						return turnSheetCode, nil
+					// Create mock scanner with test data
+					mockScanner := &testutil.MockTurnSheetScanner{
+						GetTurnSheetCodeFromImageFunc: func(ctx context.Context, l logger.Logger, imageData []byte) (string, error) {
+							return turnSheetCode, nil
+						},
+						GetTurnSheetScanDataFunc: func(ctx context.Context, l logger.Logger, sheetType string, sheetData []byte, imageData []byte) ([]byte, error) {
+							// Mock join game scan data for new player
+							mockData := map[string]any{
+								"email":                "newplayer@example.com",
+								"name":                 "New Player",
+								"postal_address_line1": "123 Huntsmans Road",
+								"state_province":       "VIC",
+								"country":              "Australia",
+								"postal_code":          "12345",
+							}
+							return json.Marshal(mockData)
+						},
 					}
-					rnr.GetTurnSheetScanDataFunc = func(ctx context.Context, sheetType string, sheetData []byte, imageData []byte) ([]byte, error) {
-						// Mock join game scan data for new player
-						mockData := map[string]any{
-							"email":                "newplayer@example.com",
-							"name":                 "New Player",
-							"postal_address_line1": "123 Huntsmans Road",
-							"state_province":       "VIC",
-							"country":              "Australia",
-							"postal_code":          "12345",
-						}
-						return json.Marshal(mockData)
-					}
-					return rnr, nil
+
+					return testutil.NewTestRunnerWithTurnSheetScanner(l, s, j, mockScanner)
 				},
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[game.UploadTurnSheet]
@@ -241,11 +237,6 @@ func Test_uploadTurnSheetHandler(t *testing.T) {
 			TestCase: testutil.TestCase{
 				Name: "existing game that has started and new player \\ upload join game turn sheet \\ returns processed join game turn sheet",
 				NewRunner: func(l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], d harness.Data) (testutil.TestRunnerer, error) {
-					rnr, err := testutil.NewTestRunner(l, s, j)
-					if err != nil {
-						return nil, err
-					}
-
 					// Get game from harness (use game instance two which has "started" status)
 					gameID, ok := d.Refs.GameRefs[harness.GameOneRef]
 					if !ok {
@@ -267,23 +258,26 @@ func Test_uploadTurnSheetHandler(t *testing.T) {
 						return nil, fmt.Errorf("failed to generate join turn sheet code: %w", err)
 					}
 
-					// Override runner methods to return mock data
-					rnr.GetTurnSheetCodeFromImageFunc = func(ctx context.Context, imageData []byte) (string, error) {
-						return turnSheetCode, nil
+					// Create mock scanner with test data
+					mockScanner := &testutil.MockTurnSheetScanner{
+						GetTurnSheetCodeFromImageFunc: func(ctx context.Context, l logger.Logger, imageData []byte) (string, error) {
+							return turnSheetCode, nil
+						},
+						GetTurnSheetScanDataFunc: func(ctx context.Context, l logger.Logger, sheetType string, sheetData []byte, imageData []byte) ([]byte, error) {
+							// Mock join game scan data for new player
+							mockData := map[string]any{
+								"email":                "newplayer2@example.com",
+								"name":                 "New Player 2",
+								"postal_address_line1": "123 Huntsmans Road",
+								"state_province":       "VIC",
+								"country":              "Australia",
+								"postal_code":          "12345",
+							}
+							return json.Marshal(mockData)
+						},
 					}
-					rnr.GetTurnSheetScanDataFunc = func(ctx context.Context, sheetType string, sheetData []byte, imageData []byte) ([]byte, error) {
-						// Mock join game scan data for new player
-						mockData := map[string]any{
-							"email":                "newplayer2@example.com",
-							"name":                 "New Player 2",
-							"postal_address_line1": "123 Huntsmans Road",
-							"state_province":       "VIC",
-							"country":              "Australia",
-							"postal_code":          "12345",
-						}
-						return json.Marshal(mockData)
-					}
-					return rnr, nil
+
+					return testutil.NewTestRunnerWithTurnSheetScanner(l, s, j, mockScanner)
 				},
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[game.UploadTurnSheet]

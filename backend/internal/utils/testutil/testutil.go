@@ -17,6 +17,9 @@ import (
 	"github.com/riverqueue/river"
 	"github.com/stretchr/testify/require"
 
+	"context"
+	"maps"
+
 	"gitlab.com/alienspaces/playbymail/core/collection/set"
 	coreerror "gitlab.com/alienspaces/playbymail/core/error"
 	"gitlab.com/alienspaces/playbymail/core/jsonschema"
@@ -26,6 +29,8 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/type/storer"
 	"gitlab.com/alienspaces/playbymail/internal/harness"
 	runner "gitlab.com/alienspaces/playbymail/internal/runner/server"
+	"gitlab.com/alienspaces/playbymail/internal/runner/server/game"
+	"gitlab.com/alienspaces/playbymail/internal/turn_sheet"
 	"gitlab.com/alienspaces/playbymail/internal/utils/config"
 	"gitlab.com/alienspaces/playbymail/internal/utils/deps"
 )
@@ -80,6 +85,45 @@ func NewTestRunner(l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx]) (*
 			Identifiers: map[string][]string{},
 		}, nil
 	}
+
+	return rnr, nil
+}
+
+// MockTurnSheetScanner is a mock implementation of TurnSheetScanner for testing
+type MockTurnSheetScanner struct {
+	GetTurnSheetCodeFromImageFunc func(ctx context.Context, l logger.Logger, imageData []byte) (string, error)
+	GetTurnSheetScanDataFunc      func(ctx context.Context, l logger.Logger, sheetType string, sheetData []byte, imageData []byte) ([]byte, error)
+}
+
+func (m *MockTurnSheetScanner) GetTurnSheetCodeFromImage(ctx context.Context, l logger.Logger, imageData []byte) (string, error) {
+	if m.GetTurnSheetCodeFromImageFunc != nil {
+		return m.GetTurnSheetCodeFromImageFunc(ctx, l, imageData)
+	}
+	return "", fmt.Errorf("mock GetTurnSheetCodeFromImage not implemented")
+}
+
+func (m *MockTurnSheetScanner) GetTurnSheetScanData(ctx context.Context, l logger.Logger, sheetType string, sheetData []byte, imageData []byte) ([]byte, error) {
+	if m.GetTurnSheetScanDataFunc != nil {
+		return m.GetTurnSheetScanDataFunc(ctx, l, sheetType, sheetData, imageData)
+	}
+	return nil, fmt.Errorf("mock GetTurnSheetScanData not implemented")
+}
+
+// NewTestRunnerWithTurnSheetScanner creates a test runner with a custom turn sheet scanner
+func NewTestRunnerWithTurnSheetScanner(l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], scanner turn_sheet.TurnSheetScanner) (TestRunnerer, error) {
+	rnr, err := NewTestRunner(l, s, j)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get the handler config with the custom scanner
+	gameConfig, err := game.GameHandlerConfig(l, scanner)
+	if err != nil {
+		return nil, err
+	}
+
+	// Merge the game config (which includes the turn sheet handler with custom scanner) into the runner's config
+	maps.Copy(rnr.GetHandlerConfig(), gameConfig)
 
 	return rnr, nil
 }
