@@ -15,6 +15,8 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/type/domainer"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
 	"gitlab.com/alienspaces/playbymail/internal/domain"
+	"gitlab.com/alienspaces/playbymail/internal/jobqueue"
+	"gitlab.com/alienspaces/playbymail/internal/jobworker"
 	"gitlab.com/alienspaces/playbymail/internal/mapper"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 	"gitlab.com/alienspaces/playbymail/internal/utils/logging"
@@ -138,86 +140,126 @@ func gameSubscriptionHandlerConfig(l logger.Logger) (map[string]server.HandlerCo
 
 func getManyGameSubscriptionsHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = logging.LoggerWithFunctionContext(l, packageName, "getManyGameSubscriptionsHandler")
+
 	mm := m.(*domain.Domain)
+
 	opts := queryparam.ToSQLOptionsWithDefaults(qp)
+
 	recs, err := mm.GetManyGameSubscriptionRecs(opts)
 	if err != nil {
+		l.Warn("failed to get many game subscription records >%v<", err)
 		return err
 	}
+
 	res, err := mapper.GameSubscriptionRecordsToCollectionResponse(l, recs)
 	if err != nil {
+		l.Warn("failed to map game subscription records to collection response >%v<", err)
 		return err
 	}
+
 	return server.WriteResponse(l, w, http.StatusOK, res, server.XPaginationHeader(len(recs), qp.PageSize))
 }
 
 func getGameSubscriptionHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = logging.LoggerWithFunctionContext(l, packageName, "getGameSubscriptionHandler")
+
 	mm := m.(*domain.Domain)
+
 	recID := pp.ByName("game_subscription_id")
+
 	rec, err := mm.GetGameSubscriptionRec(recID, coresql.ForUpdateNoWait)
 	if err != nil {
+		l.Warn("failed to get game subscription record >%v<", err)
 		return err
 	}
+
 	res, err := mapper.GameSubscriptionRecordToResponse(l, rec)
 	if err != nil {
+		l.Warn("failed to map game subscription record to response >%v<", err)
 		return err
 	}
+
 	return server.WriteResponse(l, w, http.StatusOK, res)
 }
 
 func createGameSubscriptionHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = logging.LoggerWithFunctionContext(l, packageName, "createGameSubscriptionHandler")
+
 	mm := m.(*domain.Domain)
+
 	rec, err := mapper.GameSubscriptionRequestToRecord(l, r, &game_record.GameSubscription{})
 	if err != nil {
+		l.Warn("failed to map game subscription request to record >%v<", err)
 		return err
 	}
+
 	rec, err = mm.CreateGameSubscriptionRec(rec)
 	if err != nil {
+		l.Warn("failed to create game subscription record >%v<", err)
 		return err
 	}
+
 	res, err := mapper.GameSubscriptionRecordToResponse(l, rec)
 	if err != nil {
+		l.Warn("failed to map game subscription record to response >%v<", err)
 		return err
 	}
+
 	return server.WriteResponse(l, w, http.StatusCreated, res)
 }
 
 func updateGameSubscriptionHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = logging.LoggerWithFunctionContext(l, packageName, "updateGameSubscriptionHandler")
+
 	mm := m.(*domain.Domain)
+
 	recID := pp.ByName("game_subscription_id")
+
 	rec, err := mm.GetGameSubscriptionRec(recID, coresql.ForUpdateNoWait)
 	if err != nil {
+		l.Warn("failed to get game subscription record >%v<", err)
 		return err
 	}
+
 	rec, err = mapper.GameSubscriptionRequestToRecord(l, r, rec)
 	if err != nil {
+		l.Warn("failed to map game subscription request to record >%v<", err)
 		return err
 	}
+
 	rec, err = mm.UpdateGameSubscriptionRec(rec)
 	if err != nil {
+		l.Warn("failed to update game subscription record >%v<", err)
 		return err
 	}
+
 	res, err := mapper.GameSubscriptionRecordToResponse(l, rec)
 	if err != nil {
+		l.Warn("failed to map game subscription record to response >%v<", err)
 		return err
 	}
+
 	return server.WriteResponse(l, w, http.StatusOK, res)
 }
 
 func deleteGameSubscriptionHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = logging.LoggerWithFunctionContext(l, packageName, "deleteGameSubscriptionHandler")
+
 	mm := m.(*domain.Domain)
+
 	recID := pp.ByName("game_subscription_id")
+
 	rec, err := mm.GetGameSubscriptionRec(recID, coresql.ForUpdateNoWait)
 	if err != nil {
+		l.Warn("failed to get game subscription record >%v<", err)
 		return err
 	}
+
 	if err := mm.DeleteGameSubscriptionRec(rec.ID); err != nil {
+		l.Warn("failed to delete game subscription record >%v<", err)
 		return err
 	}
+
 	return server.WriteResponse(l, w, http.StatusNoContent, nil)
 }
 
@@ -246,8 +288,17 @@ func approveGameSubscriptionHandler(w http.ResponseWriter, r *http.Request, pp h
 		return err
 	}
 
+	// Enqueue process subscription job to create game entities
+	if _, err := jc.InsertTx(r.Context(), mm.Tx, &jobworker.ProcessSubscriptionWorkerArgs{
+		GameSubscriptionID: rec.ID,
+	}, &river.InsertOpts{Queue: jobqueue.QueueDefault}); err != nil {
+		l.Warn("failed to enqueue process subscription job >%v<", err)
+		return err
+	}
+
 	res, err := mapper.GameSubscriptionRecordToResponse(l, rec)
 	if err != nil {
+		l.Warn("failed to map game subscription record to response >%v<", err)
 		return err
 	}
 
