@@ -4,7 +4,7 @@
       <h2>{{ mode === 'create' ? `Create ${title}` : `Edit ${title}` }}</h2>
       <form @submit.prevent="handleSubmit">
         <div v-for="field in fields" :key="field.key" class="form-group">
-          <label :for="field.key">{{ field.label }}{{ field.required ? ' *' : '' }}</label>
+          <label v-if="field.type !== 'checkbox'" :for="field.key">{{ field.label }}{{ field.required ? ' *' : '' }}</label>
           <slot name="field" :field="field" :value="form[field.key]" :update="val => form[field.key] = val">
             <!-- Render select for select type -->
             <select
@@ -30,6 +30,16 @@
               :rows="field.rows || 4"
               autocomplete="off"
             />
+            <!-- Render checkbox for checkbox type -->
+            <div v-else-if="field.type === 'checkbox'" class="checkbox-group">
+              <input
+                v-model="form[field.key]"
+                :id="field.key"
+                type="checkbox"
+                :required="field.required"
+              />
+              <label :for="field.key" class="checkbox-label">{{ field.checkboxLabel || field.label }}{{ field.required ? ' *' : '' }}</label>
+            </div>
             <!-- Render input for other types -->
             <input
               v-else
@@ -93,5 +103,19 @@ function handleSubmit() {
 </script>
 
 <style scoped>
-/* Component-specific styles only */
+.checkbox-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.checkbox-group input[type="checkbox"] {
+  width: auto;
+  margin: 0;
+}
+
+.checkbox-label {
+  margin: 0;
+  font-weight: normal;
+}
 </style> 

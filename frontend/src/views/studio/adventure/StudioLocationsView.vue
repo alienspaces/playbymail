@@ -15,7 +15,7 @@
       </div>
       <ResourceTable
         :columns="columns"
-        :rows="locationsStore.locations"
+        :rows="formattedLocations"
         :loading="locationsStore.loading"
         :error="locationsStore.error"
       >
@@ -48,7 +48,7 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useLocationsStore } from '../../../stores/locations';
 import { useGamesStore } from '../../../stores/games';
@@ -60,19 +60,29 @@ const locationsStore = useLocationsStore();
 const gamesStore = useGamesStore();
 const { selectedGame } = storeToRefs(gamesStore);
 
+// Format locations for display with formatted starting location
+const formattedLocations = computed(() => {
+  return locationsStore.locations.map(location => ({
+    ...location,
+    is_starting_location: location.is_starting_location ? 'Yes' : 'No'
+  }));
+});
+
 const columns = [
   { key: 'name', label: 'Name' },
-  { key: 'description', label: 'Description' }
+  { key: 'description', label: 'Description' },
+  { key: 'is_starting_location', label: 'Starting Location' }
 ];
 
 const fields = [
   { key: 'name', label: 'Name', required: true, maxlength: 1024 },
-  { key: 'description', label: 'Description', required: true, maxlength: 4096, type: 'textarea' }
+  { key: 'description', label: 'Description', required: true, maxlength: 4096, type: 'textarea' },
+  { key: 'is_starting_location', label: 'Starting Location', type: 'checkbox', checkboxLabel: 'This is a starting location for new players' }
 ];
 
 const showModal = ref(false);
 const modalMode = ref('create');
-const modalForm = ref({ name: '', description: '' });
+const modalForm = ref({ name: '', description: '', is_starting_location: false });
 const modalError = ref('');
 const showDeleteModal = ref(false);
 const locationToDelete = ref(null);
@@ -90,14 +100,16 @@ watch(
 
 function openCreate() {
   modalMode.value = 'create';
-  modalForm.value = { name: '', description: '' };
+  modalForm.value = { name: '', description: '', is_starting_location: false };
   modalError.value = '';
   showModal.value = true;
 }
 
 function openEdit(location) {
   modalMode.value = 'edit';
-  modalForm.value = { ...location };
+  // Get the original location from the store (not the formatted one)
+  const originalLocation = locationsStore.locations.find(l => l.id === location.id);
+  modalForm.value = { ...originalLocation };
   modalError.value = '';
   showModal.value = true;
 }
@@ -109,7 +121,7 @@ function openDelete(location) {
 
 function closeModal() {
   showModal.value = false;
-  modalForm.value = { name: '', description: '' };
+  modalForm.value = { name: '', description: '', is_starting_location: false };
   modalError.value = '';
 }
 
@@ -121,10 +133,19 @@ function closeDeleteModal() {
 async function handleSubmit(formData) {
   modalError.value = '';
   try {
+    // Only send allowed fields (exclude id, game_id, created_at, etc.)
+    const allowedFields = ['name', 'description', 'is_starting_location'];
+    const requestData = {};
+    for (const field of allowedFields) {
+      if (field in formData) {
+        requestData[field] = formData[field];
+      }
+    }
+    
     if (modalMode.value === 'create') {
-      await locationsStore.createLocation(formData);
+      await locationsStore.createLocation(requestData);
     } else {
-      await locationsStore.updateLocation(modalForm.value.id, formData);
+      await locationsStore.updateLocation(modalForm.value.id, requestData);
     }
     closeModal();
   } catch (error) {
