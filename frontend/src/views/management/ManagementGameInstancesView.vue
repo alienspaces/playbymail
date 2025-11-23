@@ -307,18 +307,19 @@ const cancelInstance = async (instance) => {
   align-items: center;
   gap: var(--space-sm);
   padding: var(--space-sm) var(--space-md);
-  background: var(--color-primary);
-  color: var(--color-text-light);
-  border: none;
+  background: transparent;
+  color: var(--color-button);
+  border: 2px solid var(--color-button);
   border-radius: var(--radius-sm);
   cursor: pointer;
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
-  transition: background 0.2s;
+  transition: all 0.2s;
 }
 
 .btn-primary:hover {
-  background: var(--color-primary-dark);
+  background: var(--color-button);
+  color: var(--color-text-light);
 }
 
 .icon {
@@ -338,11 +339,17 @@ const cancelInstance = async (instance) => {
 .error-state button {
   margin-top: var(--space-md);
   padding: var(--space-sm) var(--space-md);
-  background: var(--color-primary);
-  color: var(--color-text-light);
-  border: none;
+  background: transparent;
+  color: var(--color-button);
+  border: 2px solid var(--color-button);
   border-radius: var(--radius-sm);
   cursor: pointer;
+  transition: all 0.2s;
+}
+
+.error-state button:hover {
+  background: var(--color-button);
+  color: var(--color-text-light);
 }
 
 .instances-section {

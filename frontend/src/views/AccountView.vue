@@ -290,7 +290,7 @@ h3 {
 }
 
 .edit-btn:hover {
-  background: #1976d2;
+  background: var(--color-primary);
 }
 
 .name-edit {
@@ -333,7 +333,7 @@ h3 {
 }
 
 .save-btn:hover {
-  background: #388e3c;
+  background: var(--color-success);
 }
 
 .cancel-btn {

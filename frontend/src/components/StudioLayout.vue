@@ -377,7 +377,7 @@ function closeStudioMenuOnMobile() {
 .studio-body {
   flex: 1;
   padding: var(--space-lg);
-  background: #fafbfc;
+  background: var(--color-bg);
   min-width: 0;
 }
 .help-btn {

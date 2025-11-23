@@ -47,7 +47,7 @@ const isLoggedIn = computed(() => !!authStore.sessionToken);
   max-width: 900px;
   margin: 2rem auto;
   padding: 2.5rem 2.5rem 2.5rem 2.5rem;
-  background: #fff;
+  background: var(--color-bg);
   border-radius: 12px;
   box-shadow: 0 2px 12px rgba(0,0,0,0.07);
 }
@@ -80,8 +80,8 @@ const isLoggedIn = computed(() => !!authStore.sessionToken);
 }
 .admin-help {
   min-width: 250px;
-  background: #f7f7f7;
-  border: 1px solid #eee;
+  background: var(--color-bg-alt);
+  border: 1px solid var(--color-border-light);
   border-radius: 12px;
   padding: 2.5rem;
   margin: 2rem 0 2rem 2rem;
@@ -108,14 +108,16 @@ const isLoggedIn = computed(() => !!authStore.sessionToken);
 .cta-button {
   display: inline-block;
   padding: var(--space-md) var(--space-xl);
-  background: var(--color-primary);
-  color: var(--color-text-light);
+  background: transparent;
+  color: var(--color-button);
+  border: 2px solid var(--color-button);
   border-radius: var(--radius-sm);
   text-decoration: none;
   font-weight: var(--font-weight-bold);
-  transition: background 0.2s;
+  transition: all 0.2s;
 }
 .cta-button:hover {
-  background: var(--color-primary-dark);
+  background: var(--color-button);
+  color: var(--color-text-light);
 }
 </style> 

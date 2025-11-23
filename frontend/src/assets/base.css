@@ -6,43 +6,49 @@
 }
 
 :root {
-  /* Color palette */
-  --color-primary: #1976d2;
-  --color-primary-dark: #115293;
-  --color-primary-light: #64b5f6; /* New lighter blue for sub-headings */
-  --color-bg: #fff;
-  --color-bg-alt: #f7f7f7;
-  --color-bg-light: #f5f5f5;
-  --color-border: #ddd;
-  --color-border-light: #eee;
-  --color-text: #222;
-  --color-text-light: #fff;
-  --color-text-muted: #666;
-  --color-accent: #1976d2;
-  --color-error: #d32f2f;
+  /* Color palette - Mystical Adventure Theme */
+  --color-primary: #6B46C1;        /* Deep purple - main brand color */
+  --color-primary-dark: #5B21B6;  /* Darker purple for hover states */
+  --color-primary-light: #A78BFA;  /* Light purple for accents */
+  --color-bg: #FAF8F3;             /* Warm neutral background - less yellow */
+  --color-bg-alt: #F7F5F0;        /* Slightly darker neutral for cards */
+  --color-bg-light: #F5F3ED;      /* Subtle neutral for highlights */
+  --color-border: #D1D5DB;        /* Soft gray border */
+  --color-border-light: #E5E7EB;  /* Lighter gray border */
+  --color-text: #1F2937;          /* Charcoal text */
+  --color-text-light: #FFFFFF;   /* White text */
+  --color-text-muted: #6B7280;    /* Muted gray text */
+  --color-accent: #F59E0B;        /* Gold accent color */
+  --color-accent-dark: #D97706;   /* Dark gold */
+  --color-accent-light: #FCD34D;  /* Light gold */
+  --color-button: #A78BFA;          /* Light purple for buttons - harmonizes with primary */
+  --color-button-dark: #8B5CF6;    /* Medium purple for hover */
+  --color-error: #EF4444;         /* Red for errors */
   
-  /* Status colors */
-  --color-success: #388e3c;
-  --color-success-dark: #2e7d32;
-  --color-success-light: #e8f5e8;
-  --color-warning: #f57c00;
-  --color-warning-dark: #ef6c00;
-  --color-warning-light: #fff3e0;
-  --color-danger: #d32f2f;
-  --color-danger-dark: #c62828;
-  --color-danger-light: #ffebee;
-  --color-info: #1976d2;
-  --color-info-dark: #1565c0;
-  --color-info-light: #e3f2fd;
+  /* Status colors - Game-themed */
+  --color-success: #10B981;       /* Emerald green */
+  --color-success-dark: #059669;   /* Dark emerald */
+  --color-success-light: #D1FAE5;  /* Light emerald */
+  --color-warning: #F59E0B;       /* Gold warning */
+  --color-warning-dark: #D97706;  /* Dark gold */
+  --color-warning-light: #FEF3C7; /* Light gold */
+  --color-danger: #EF4444;        /* Red danger */
+  --color-danger-dark: #DC2626;   /* Dark red */
+  --color-danger-light: #FEE2E2;  /* Light red */
+  --color-info: #6B46C1;          /* Purple info */
+  --color-info-dark: #5B21B6;     /* Dark purple */
+  --color-info-light: #EDE9FE;    /* Light purple */
 
   /* Typography */
-  --font-family-base: 'Inter', Arial, sans-serif;
+  --font-family-heading: 'Cinzel', 'Georgia', serif;  /* Elegant serif for headings */
+  --font-family-base: 'Inter', 'Arial', sans-serif;   /* Clean sans-serif for body */
   --font-size-base: 16px;
   --font-size-sm: 0.95rem;
   --font-size-md: 1.1rem;
   --font-size-lg: 1.5rem;
   --font-size-xl: 2.2rem;
   --font-weight-bold: 700;
+  --font-weight-semibold: 600;
   --font-weight-normal: 400;
 
   /* Spacing */
@@ -67,20 +73,28 @@ body {
 
 /* Typography */
 h1, .h1 {
+  font-family: var(--font-family-heading);
   font-size: var(--font-size-xl);
   font-weight: var(--font-weight-bold);
   margin-bottom: var(--space-md);
+  color: var(--color-primary);
+  letter-spacing: 0.5px;
 }
 h2, .h2 {
+  font-family: var(--font-family-heading);
   font-size: var(--font-size-lg);
-  font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-semibold);
   margin-bottom: var(--space-sm);
+  color: var(--color-primary);
+  letter-spacing: 0.3px;
 }
 h3, .h3 {
+  font-family: var(--font-family-heading);
   font-size: var(--font-size-md);
-  font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-semibold);
   margin-bottom: var(--space-xs);
-  color: var(--color-primary-light);
+  color: var(--color-primary-dark);
+  letter-spacing: 0.2px;
 }
 p {
   margin-bottom: var(--space-sm);
@@ -101,16 +115,17 @@ button, .btn {
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-bold);
   padding: var(--space-sm) var(--space-md);
-  background: var(--color-primary);
-  color: var(--color-text-light);
-  border: none;
+  background: transparent;
+  color: var(--color-button);
+  border: 2px solid var(--color-button);
   border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.2s;
 }
 button:hover, .btn:hover,
 button:focus, .btn:focus {
-  background: var(--color-primary-dark);
+  background: var(--color-button);
+  color: var(--color-text-light);
 }
 button:disabled, .btn:disabled {
   background: var(--color-border);
@@ -178,7 +193,7 @@ input:focus, select:focus, textarea:focus {
   appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 140 140' width='16' height='16' xmlns='http://www.w3.org/2000/svg'%3E%3Cpolyline points='20,55 70,95 120,55' fill='none' stroke='%23333' stroke-width='15' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 140 140' width='16' height='16' xmlns='http://www.w3.org/2000/svg'%3E%3Cpolyline points='20,55 70,95 120,55' fill='none' stroke='%236B46C1' stroke-width='15' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 0.75rem center;
   background-size: 1.25rem 1.25rem;

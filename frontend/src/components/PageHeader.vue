@@ -36,18 +36,19 @@ defineEmits(['action']);
 }
 
 .action-btn {
-  background: var(--color-primary);
-  color: var(--color-text-light);
-  border: none;
+  background: transparent;
+  color: var(--color-button);
+  border: 2px solid var(--color-button);
   padding: var(--space-sm) var(--space-md);
   border-radius: var(--radius-sm);
   font-weight: var(--font-weight-bold);
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.2s;
 }
 
 .action-btn:hover {
-  background: var(--color-primary-dark);
+  background: var(--color-button);
+  color: var(--color-text-light);
 }
 
 @media (max-width: 768px) {

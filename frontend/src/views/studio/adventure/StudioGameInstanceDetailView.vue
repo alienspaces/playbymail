@@ -289,13 +289,13 @@ onMounted(async () => {
 }
 
 .status-created {
-  background: #e3f2fd;
-  color: #1976d2;
+  background: var(--color-info-light);
+  color: var(--color-primary);
 }
 
 .status-started {
-  background: #e8f5e8;
-  color: #388e3c;
+  background: var(--color-success-light);
+  color: var(--color-success);
 }
 
 .status-paused {

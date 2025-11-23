@@ -58,14 +58,16 @@
 .cta-button {
   display: inline-block;
   padding: var(--space-md) var(--space-xl);
-  background: var(--color-primary);
-  color: var(--color-text-light);
+  background: transparent;
+  color: var(--color-button);
+  border: 2px solid var(--color-button);
   border-radius: var(--radius-sm);
   text-decoration: none;
   font-weight: var(--font-weight-bold);
-  transition: background 0.2s;
+  transition: all 0.2s;
 }
 .cta-button:hover {
-  background: var(--color-primary-dark);
+  background: var(--color-button);
+  color: var(--color-text-light);
 }
 </style> 

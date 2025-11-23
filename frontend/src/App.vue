@@ -97,7 +97,7 @@ function closeMobileMenu() {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #11181c; /* Keep this specific dark color for navbar */
+  background: #1F1B3D; /* Deep purple-black for navbar */
   color: var(--color-text-light);
   padding: var(--space-md) var(--space-lg);
   position: relative;
@@ -118,13 +118,23 @@ function closeMobileMenu() {
   font-weight: 500;
 }
 .logo {
+  font-family: var(--font-family-heading);
   font-weight: var(--font-weight-bold);
   font-size: var(--font-size-xl);
   line-height: 1.1;
   display: flex;
   align-items: center;
   gap: var(--space-sm);
-  color: var(--color-primary);
+  color: var(--color-accent);
+  letter-spacing: 0.5px;
+  text-decoration: none !important;
+}
+.logo:hover,
+.logo:focus,
+.logo:active,
+.logo:visited {
+  text-decoration: none !important;
+  color: var(--color-accent);
 }
 
 .logo-icon {
@@ -134,11 +144,11 @@ function closeMobileMenu() {
 }
 
 .logo-text {
-  color: var(--color-primary-light);
+  color: var(--color-accent-light);
 }
 
 .logo-capital {
-  color: var(--color-primary-dark);
+  color: var(--color-accent);
 }
 .nav-actions {
   display: flex;
@@ -146,13 +156,17 @@ function closeMobileMenu() {
   gap: var(--space-md);
 }
 .nav-actions button {
-  background: var(--color-text-light);
-  color: #11181c; /* Keep this specific dark color */
+  background: var(--color-accent);
+  color: var(--color-text-light);
   border: none;
   padding: var(--space-sm) var(--space-md);
   border-radius: var(--radius-sm);
   font-weight: var(--font-weight-bold);
   cursor: pointer;
+  transition: background 0.2s;
+}
+.nav-actions button:hover {
+  background: var(--color-accent-dark);
 }
 .nav-actions a {
   color: var(--color-text-light);
@@ -194,7 +208,7 @@ function closeMobileMenu() {
   top: 100%;
   left: 0;
   right: 0;
-  background: #11181c; /* Keep this specific dark color */
+  background: #1F1B3D; /* Deep purple-black */
   padding: var(--space-lg) var(--space-lg) var(--space-lg) var(--space-lg);
   z-index: 3000;
   box-shadow: 0 4px 16px rgba(0,0,0,0.15);
@@ -223,14 +237,18 @@ function closeMobileMenu() {
 }
 .mobile-actions button {
   width: 100%;
-  background: var(--color-text-light);
-  color: #11181c; /* Keep this specific dark color */
+  background: var(--color-accent);
+  color: var(--color-text-light);
   border: none;
   padding: var(--space-md) 0;
   border-radius: var(--radius-sm);
   font-weight: var(--font-weight-bold);
   cursor: pointer;
   font-size: var(--font-size-md);
+  transition: background 0.2s;
+}
+.mobile-actions button:hover {
+  background: var(--color-accent-dark);
 }
 .mobile-logo {
   display: none;
@@ -263,6 +281,14 @@ function closeMobileMenu() {
     user-select: none;
     align-self: center;
     flex-shrink: 1; /* Allow logo to shrink if needed */
+    text-decoration: none !important;
+  }
+  .mobile-logo:hover,
+  .mobile-logo:focus,
+  .mobile-logo:active,
+  .mobile-logo:visited {
+    text-decoration: none !important;
+    color: var(--color-text-light);
   }
   
 

@@ -165,14 +165,16 @@ async function handleDelete() {
 
 .section-header button {
   padding: 8px 16px;
-  background-color: #007bff;
-  color: white;
-  border: none;
+  background: transparent;
+  color: var(--color-button);
+  border: 2px solid var(--color-button);
   border-radius: 4px;
   cursor: pointer;
+  transition: all 0.2s;
 }
 
 .section-header button:hover {
-  background-color: #0056b3;
+  background: var(--color-button);
+  color: var(--color-text-light);
 }
 </style> 

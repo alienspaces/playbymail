@@ -96,12 +96,14 @@ const buttonClasses = computed(() => [
 
 /* Color variants */
 .btn-primary {
-  background: var(--color-primary);
-  color: var(--color-text-light);
+  background: transparent;
+  color: var(--color-button);
+  border: 2px solid var(--color-button);
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: var(--color-primary-dark);
+  background: var(--color-button);
+  color: var(--color-text-light);
 }
 
 .btn-secondary {
