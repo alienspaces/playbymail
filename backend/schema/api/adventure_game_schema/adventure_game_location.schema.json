@@ -24,6 +24,9 @@
             "minLength": 1,
             "type": "string"
         },
+        "is_starting_location": {
+            "type": "boolean"
+        },
         "updated_at": {
             "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/updated_at"
         }

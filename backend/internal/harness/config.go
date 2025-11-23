@@ -254,8 +254,9 @@ func DefaultDataConfig() DataConfig {
 					{
 						Reference: GameLocationOneRef,
 						Record: &adventure_game_record.AdventureGameLocation{
-							Name:        UniqueName("Default Location One"),
-							Description: "Default location one for handler tests",
+							Name:              UniqueName("Default Location One"),
+							Description:       "Default location one for handler tests",
+							IsStartingLocation: true,
 						},
 					},
 					{

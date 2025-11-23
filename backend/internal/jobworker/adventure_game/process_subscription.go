@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	corerecord "gitlab.com/alienspaces/playbymail/core/record"
 	coresql "gitlab.com/alienspaces/playbymail/core/sql"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
 	"gitlab.com/alienspaces/playbymail/internal/domain"
@@ -81,7 +82,7 @@ func (p *AdventureGameProcessSubscriptionProcessor) ProcessProcessSubscription(c
 	}
 
 	// Get starting location for the character
-	startingLocationInstanceID, err := p.getStartingLocationInstance(gameInstanceRec.ID)
+	startingLocationInstanceID, err := p.getStartingLocationInstance(subscriptionRec.GameID, gameInstanceRec.ID)
 	if err != nil {
 		l.Warn("failed to get starting location instance >%v<", err)
 		return fmt.Errorf("failed to get starting location instance: %w", err)
@@ -111,31 +112,40 @@ func (p *AdventureGameProcessSubscriptionProcessor) ProcessProcessSubscription(c
 func (p *AdventureGameProcessSubscriptionProcessor) getOrCreateGameInstance(gameID string) (*game_record.GameInstance, error) {
 	l := p.Logger.WithFunctionContext("getOrCreateGameInstance")
 
-	// Try to get an existing active game instance
-	gameInstanceRecs, err := p.Domain.GetGameInstanceRecsByStatus(game_record.GameInstanceStatusStarted)
+	// Try to get an existing active game instance that has started
+	gameInstanceRecs, err := p.Domain.GetManyGameInstanceRecs(&coresql.Options{
+		Params: []coresql.Param{
+			{Col: game_record.FieldGameInstanceGameID, Val: gameID},
+			{Col: game_record.FieldGameInstanceStatus, Val: game_record.GameInstanceStatusStarted},
+		},
+		Limit: 1,
+	})
 	if err != nil {
+		l.Warn("failed to get game instances by game ID >%s< status >%s< >%v<", gameID, game_record.GameInstanceStatusStarted, err)
 		return nil, err
 	}
 
-	// Find the first instance for this game
-	for _, instanceRec := range gameInstanceRecs {
-		if instanceRec.GameID == gameID {
-			l.Info("found existing game instance ID >%s< for game ID >%s<", instanceRec.ID, gameID)
-			return instanceRec, nil
-		}
+	if len(gameInstanceRecs) > 0 {
+		l.Info("found existing game instance ID >%s< for game ID >%s<", gameInstanceRecs[0].ID, gameID)
+		return gameInstanceRecs[0], nil
 	}
 
-	// Also check for created status instances
-	createdInstanceRecs, err := p.Domain.GetGameInstanceRecsByStatus(game_record.GameInstanceStatusCreated)
+	// Also check for created status instances that have not started
+	createdInstanceRecs, err := p.Domain.GetManyGameInstanceRecs(&coresql.Options{
+		Params: []coresql.Param{
+			{Col: game_record.FieldGameInstanceGameID, Val: gameID},
+			{Col: game_record.FieldGameInstanceStatus, Val: game_record.GameInstanceStatusCreated},
+		},
+		Limit: 1,
+	})
 	if err != nil {
+		l.Warn("failed to get game instances by game ID >%s< status >%s< >%v<", gameID, game_record.GameInstanceStatusCreated, err)
 		return nil, err
 	}
 
-	for _, instanceRec := range createdInstanceRecs {
-		if instanceRec.GameID == gameID {
-			l.Info("found existing created game instance ID >%s< for game ID >%s<", instanceRec.ID, gameID)
-			return instanceRec, nil
-		}
+	if len(createdInstanceRecs) > 0 {
+		l.Info("found existing created game instance ID >%s< for game ID >%s<", createdInstanceRecs[0].ID, gameID)
+		return createdInstanceRecs[0], nil
 	}
 
 	// No existing instance found, create a new one
@@ -147,10 +157,12 @@ func (p *AdventureGameProcessSubscriptionProcessor) getOrCreateGameInstance(game
 
 	gameInstanceRec, err = p.Domain.CreateGameInstanceRec(gameInstanceRec)
 	if err != nil {
+		l.Warn("failed to create game instance >%v<", err)
 		return nil, err
 	}
 
 	l.Info("created new game instance ID >%s< for game ID >%s<", gameInstanceRec.ID, gameID)
+
 	return gameInstanceRec, nil
 }
 
@@ -193,30 +205,56 @@ func (p *AdventureGameProcessSubscriptionProcessor) getOrCreateAdventureGameChar
 	return characterRec, nil
 }
 
-// getStartingLocationInstance gets the first location instance for a game instance
-func (p *AdventureGameProcessSubscriptionProcessor) getStartingLocationInstance(gameInstanceID string) (string, error) {
+// getStartingLocationInstance gets the starting location instance for a game instance
+// It finds starting locations for the game and then finds the corresponding location instance
+func (p *AdventureGameProcessSubscriptionProcessor) getStartingLocationInstance(gameID, gameInstanceID string) (string, error) {
 	l := p.Logger.WithFunctionContext("getStartingLocationInstance")
 
-	// Get all location instances for this game instance
-	locationInstanceRecs, err := p.Domain.GetManyAdventureGameLocationInstanceRecs(&coresql.Options{
+	// Get starting locations for this game
+	startingLocationRecs, err := p.Domain.GetManyAdventureGameLocationRecs(&coresql.Options{
 		Params: []coresql.Param{
-			{Col: adventure_game_record.FieldAdventureGameLocationInstanceGameInstanceID, Val: gameInstanceID},
+			{Col: adventure_game_record.FieldAdventureGameLocationGameID, Val: gameID},
+			{Col: adventure_game_record.FieldAdventureGameLocationIsStartingLocation, Val: true},
 		},
 		Limit: 1,
 		OrderBy: []coresql.OrderBy{
-			{Col: "created_at", Direction: coresql.OrderDirectionASC},
+			{Col: corerecord.FieldCreatedAt, Direction: coresql.OrderDirectionASC},
 		},
 	})
 	if err != nil {
+		l.Warn("failed to get starting locations for game ID >%s< >%v<", gameID, err)
+		return "", err
+	}
+
+	if len(startingLocationRecs) == 0 {
+		l.Warn("no starting locations found for game ID >%s<", gameID)
+		// Return empty string - location is nullable
+		return "", nil
+	}
+
+	startingLocationID := startingLocationRecs[0].ID
+	l.Info("found starting location ID >%s< for game ID >%s<", startingLocationID, gameID)
+
+	// Find the location instance for this starting location in the game instance
+	locationInstanceRecs, err := p.Domain.GetManyAdventureGameLocationInstanceRecs(&coresql.Options{
+		Params: []coresql.Param{
+			{Col: adventure_game_record.FieldAdventureGameLocationInstanceGameInstanceID, Val: gameInstanceID},
+			{Col: adventure_game_record.FieldAdventureGameLocationInstanceAdventureGameLocationID, Val: startingLocationID},
+		},
+		Limit: 1,
+	})
+	if err != nil {
+		l.Warn("failed to get location instance for starting location ID >%s< game instance ID >%s< >%v<", startingLocationID, gameInstanceID, err)
 		return "", err
 	}
 
 	if len(locationInstanceRecs) == 0 {
-		l.Warn("no location instances found for game instance ID >%s<", gameInstanceID)
+		l.Warn("no location instance found for starting location ID >%s< in game instance ID >%s<", startingLocationID, gameInstanceID)
 		// Return empty string - location is nullable
 		return "", nil
 	}
 
 	l.Info("found starting location instance ID >%s< for game instance ID >%s<", locationInstanceRecs[0].ID, gameInstanceID)
+
 	return locationInstanceRecs[0].ID, nil
 }

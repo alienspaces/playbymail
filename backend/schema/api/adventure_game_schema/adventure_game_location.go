@@ -8,13 +8,14 @@ import (
 
 // AdventureGameLocationResponseData -
 type AdventureGameLocationResponseData struct {
-	ID          string     `json:"id"`
-	GameID      string     `json:"game_id"`
-	Name        string     `json:"name"`
-	Description string     `json:"description"`
-	CreatedAt   time.Time  `json:"created_at"`
-	UpdatedAt   *time.Time `json:"updated_at,omitempty"`
-	DeletedAt   *time.Time `json:"deleted_at,omitempty"`
+	ID                 string     `json:"id"`
+	GameID             string     `json:"game_id"`
+	Name               string     `json:"name"`
+	Description        string     `json:"description"`
+	IsStartingLocation bool       `json:"is_starting_location"`
+	CreatedAt          time.Time  `json:"created_at"`
+	UpdatedAt          *time.Time `json:"updated_at,omitempty"`
+	DeletedAt          *time.Time `json:"deleted_at,omitempty"`
 }
 
 type AdventureGameLocationResponse struct {
@@ -31,8 +32,9 @@ type AdventureGameLocationCollectionResponse struct {
 
 type AdventureGameLocationRequest struct {
 	common_schema.Request
-	Name        string `json:"name"`
-	Description string `json:"description"`
+	Name               string `json:"name"`
+	Description        string `json:"description"`
+	IsStartingLocation bool   `json:"is_starting_location,omitempty"`
 }
 
 type AdventureGameLocationQueryParams struct {

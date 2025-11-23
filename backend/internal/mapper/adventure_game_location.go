@@ -25,9 +25,11 @@ func AdventureGameLocationRequestToRecord(l logger.Logger, r *http.Request, rec 
 	case server.HttpMethodPost:
 		rec.Name = req.Name
 		rec.Description = req.Description
+		rec.IsStartingLocation = req.IsStartingLocation
 	case server.HttpMethodPut, server.HttpMethodPatch:
 		rec.Name = req.Name
 		rec.Description = req.Description
+		rec.IsStartingLocation = req.IsStartingLocation
 	default:
 		return nil, fmt.Errorf("unsupported HTTP method")
 	}
@@ -38,13 +40,14 @@ func AdventureGameLocationRequestToRecord(l logger.Logger, r *http.Request, rec 
 func AdventureGameLocationRecordToResponseData(l logger.Logger, rec *adventure_game_record.AdventureGameLocation) (*adventure_game_schema.AdventureGameLocationResponseData, error) {
 	l.Debug("mapping adventure_game_location record to response data")
 	return &adventure_game_schema.AdventureGameLocationResponseData{
-		ID:          rec.ID,
-		GameID:      rec.GameID,
-		Name:        rec.Name,
-		Description: rec.Description,
-		CreatedAt:   rec.CreatedAt,
-		UpdatedAt:   nulltime.ToTimePtr(rec.UpdatedAt),
-		DeletedAt:   nulltime.ToTimePtr(rec.DeletedAt),
+		ID:                 rec.ID,
+		GameID:             rec.GameID,
+		Name:               rec.Name,
+		Description:        rec.Description,
+		IsStartingLocation: rec.IsStartingLocation,
+		CreatedAt:          rec.CreatedAt,
+		UpdatedAt:          nulltime.ToTimePtr(rec.UpdatedAt),
+		DeletedAt:          nulltime.ToTimePtr(rec.DeletedAt),
 	}, nil
 }
 

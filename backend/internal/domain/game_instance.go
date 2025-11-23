@@ -6,11 +6,24 @@ import (
 
 	"gitlab.com/alienspaces/playbymail/core/nulltime"
 	"gitlab.com/alienspaces/playbymail/core/record"
-	"gitlab.com/alienspaces/playbymail/core/sql"
+	coresql "gitlab.com/alienspaces/playbymail/core/sql"
+	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 )
 
-func (m *Domain) GetGameInstanceRec(recID string, lock *sql.Lock) (*game_record.GameInstance, error) {
+// GetManyGameInstanceRecs -
+func (m *Domain) GetManyGameInstanceRecs(opts *coresql.Options) ([]*game_record.GameInstance, error) {
+	l := m.Logger("GetManyGameInstanceRecs")
+	l.Debug("getting many game_instance records opts >%#v<", opts)
+	r := m.GameInstanceRepository()
+	recs, err := r.GetMany(opts)
+	if err != nil {
+		return nil, databaseError(err)
+	}
+	return recs, nil
+}
+
+func (m *Domain) GetGameInstanceRec(recID string, lock *coresql.Lock) (*game_record.GameInstance, error) {
 	r := m.GameInstanceRepository()
 	rec, err := r.GetOne(recID, lock)
 	if err != nil {
@@ -20,6 +33,14 @@ func (m *Domain) GetGameInstanceRec(recID string, lock *sql.Lock) (*game_record.
 }
 
 func (m *Domain) CreateGameInstanceRec(rec *game_record.GameInstance) (*game_record.GameInstance, error) {
+	l := m.Logger("CreateGameInstanceRec")
+
+	// Validate adventure game has starting location
+	if err := m.validateAdventureGameInstanceCreation(rec.GameID); err != nil {
+		l.Warn("failed adventure game instance validation >%v<", err)
+		return rec, err
+	}
+
 	r := m.GameInstanceRepository()
 
 	// Set initial status and default values if not already set
@@ -37,6 +58,44 @@ func (m *Domain) CreateGameInstanceRec(rec *game_record.GameInstance) (*game_rec
 		return rec, err
 	}
 	return rec, nil
+}
+
+// validateAdventureGameInstanceCreation ensures adventure games have at least one starting location
+func (m *Domain) validateAdventureGameInstanceCreation(gameID string) error {
+	l := m.Logger("validateAdventureGameInstanceCreation")
+
+	// Get the game to check if it's an adventure game
+	gameRec, err := m.GetGameRec(gameID, nil)
+	if err != nil {
+		l.Warn("failed to get game record for game ID >%s< >%v<", gameID, err)
+		return err
+	}
+
+	// Only validate for adventure games
+	if gameRec.GameType != game_record.GameTypeAdventure {
+		l.Info("game ID >%s< is not an adventure game, skipping starting location validation", gameID)
+		return nil
+	}
+
+	// Check for starting locations
+	startingLocationRecs, err := m.GetManyAdventureGameLocationRecs(&coresql.Options{
+		Params: []coresql.Param{
+			{Col: adventure_game_record.FieldAdventureGameLocationGameID, Val: gameID},
+			{Col: adventure_game_record.FieldAdventureGameLocationIsStartingLocation, Val: true},
+		},
+		Limit: 1,
+	})
+	if err != nil {
+		l.Warn("failed to get starting locations for game ID >%s< >%v<", gameID, err)
+		return err
+	}
+
+	if len(startingLocationRecs) == 0 {
+		l.Warn("no starting locations found for game ID >%s<", gameID)
+		return InvalidField(adventure_game_record.FieldAdventureGameLocationGameID, gameID, "adventure game must have at least one starting location before creating an instance")
+	}
+
+	return nil
 }
 
 func (m *Domain) UpdateGameInstanceRec(next *game_record.GameInstance) (*game_record.GameInstance, error) {
@@ -75,7 +134,7 @@ func (m *Domain) RemoveGameInstanceRec(recID string) error {
 func (m *Domain) StartGameInstance(instanceID string) (*game_record.GameInstance, error) {
 	l := m.Logger("StartGameInstance")
 
-	instance, err := m.GetGameInstanceRec(instanceID, sql.ForUpdateNoWait)
+	instance, err := m.GetGameInstanceRec(instanceID, coresql.ForUpdateNoWait)
 	if err != nil {
 		return nil, err
 	}
@@ -106,7 +165,7 @@ func (m *Domain) StartGameInstance(instanceID string) (*game_record.GameInstance
 func (m *Domain) BeginTurnProcessing(instanceID string) (*game_record.GameInstance, error) {
 	l := m.Logger("BeginTurnProcessing")
 
-	instance, err := m.GetGameInstanceRec(instanceID, sql.ForUpdateNoWait)
+	instance, err := m.GetGameInstanceRec(instanceID, coresql.ForUpdateNoWait)
 	if err != nil {
 		return nil, err
 	}
@@ -133,7 +192,7 @@ func (m *Domain) BeginTurnProcessing(instanceID string) (*game_record.GameInstan
 func (m *Domain) CompleteTurn(instanceID string) (*game_record.GameInstance, error) {
 	l := m.Logger("CompleteTurn")
 
-	instance, err := m.GetGameInstanceRec(instanceID, sql.ForUpdateNoWait)
+	instance, err := m.GetGameInstanceRec(instanceID, coresql.ForUpdateNoWait)
 	if err != nil {
 		return nil, err
 	}
@@ -170,7 +229,7 @@ func (m *Domain) CompleteTurn(instanceID string) (*game_record.GameInstance, err
 func (m *Domain) PauseGameInstance(instanceID string) (*game_record.GameInstance, error) {
 	l := m.Logger("PauseGameInstance")
 
-	instanceRec, err := m.GetGameInstanceRec(instanceID, sql.ForUpdateNoWait)
+	instanceRec, err := m.GetGameInstanceRec(instanceID, coresql.ForUpdateNoWait)
 	if err != nil {
 		return nil, err
 	}
@@ -195,7 +254,7 @@ func (m *Domain) PauseGameInstance(instanceID string) (*game_record.GameInstance
 func (m *Domain) ResumeGameInstance(instanceID string) (*game_record.GameInstance, error) {
 	l := m.Logger("ResumeGameInstance")
 
-	instanceRec, err := m.GetGameInstanceRec(instanceID, sql.ForUpdateNoWait)
+	instanceRec, err := m.GetGameInstanceRec(instanceID, coresql.ForUpdateNoWait)
 	if err != nil {
 		return nil, err
 	}
@@ -220,7 +279,7 @@ func (m *Domain) ResumeGameInstance(instanceID string) (*game_record.GameInstanc
 func (m *Domain) CancelGameInstance(instanceID string) (*game_record.GameInstance, error) {
 	l := m.Logger("CancelGameInstance")
 
-	instanceRec, err := m.GetGameInstanceRec(instanceID, sql.ForUpdateNoWait)
+	instanceRec, err := m.GetGameInstanceRec(instanceID, coresql.ForUpdateNoWait)
 	if err != nil {
 		return nil, err
 	}
@@ -240,30 +299,4 @@ func (m *Domain) CancelGameInstance(instanceID string) (*game_record.GameInstanc
 
 	l.Info("cancelled game instance >%s<", instanceID)
 	return instanceRec, nil
-}
-
-// GetGameInstanceRecsByStatus gets all game instances with a specific status
-func (m *Domain) GetGameInstanceRecsByStatus(status string) ([]*game_record.GameInstance, error) {
-	l := m.Logger("GetGameInstanceRecsByStatus")
-
-	l.Info("getting game instances with status >%s<", status)
-
-	r := m.GameInstanceRepository()
-	opts := &sql.Options{
-		Params: []sql.Param{
-			{
-				Col: game_record.FieldGameInstanceStatus,
-				Val: status,
-			},
-		},
-	}
-	instanceRecs, err := r.GetMany(opts)
-	if err != nil {
-		l.Warn("failed to get game instances with status >%s< >%v<", status, err)
-		return nil, err
-	}
-
-	l.Info("returning >%d< game instances with status >%s<", len(instanceRecs), status)
-
-	return instanceRecs, nil
 }

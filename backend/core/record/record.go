@@ -13,6 +13,13 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/nulltime"
 )
 
+const (
+	FieldID        = "id"
+	FieldCreatedAt = "created_at"
+	FieldUpdatedAt = "updated_at"
+	FieldDeletedAt = "deleted_at"
+)
+
 // NOTE:
 // Use sql.NullXxx types when the underlying database column:
 // - has a NOT NULL check constraint;

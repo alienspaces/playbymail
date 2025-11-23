@@ -55,9 +55,14 @@ func (m *Domain) CreateAdventureGameLocationRec(rec *adventure_game_record.Adven
 
 	l.Debug("creating adventure_game_location record >%#v<", rec)
 
-	r := m.AdventureGameLocationRepository()
+	// Validate starting location constraint
+	if rec.IsStartingLocation {
+		if err := m.validateStartingLocationConstraint(rec.GameID, ""); err != nil {
+			return rec, err
+		}
+	}
 
-	// Add validation here if needed
+	r := m.AdventureGameLocationRepository()
 
 	var err error
 	rec, err = r.CreateOne(rec)
@@ -72,14 +77,19 @@ func (m *Domain) CreateAdventureGameLocationRec(rec *adventure_game_record.Adven
 func (m *Domain) UpdateAdventureGameLocationRec(next *adventure_game_record.AdventureGameLocation) (*adventure_game_record.AdventureGameLocation, error) {
 	l := m.Logger("UpdateAdventureGameLocationRec")
 
-	_, err := m.GetAdventureGameLocationRec(next.ID, coresql.ForUpdateNoWait)
+	curr, err := m.GetAdventureGameLocationRec(next.ID, coresql.ForUpdateNoWait)
 	if err != nil {
 		return next, err
 	}
 
 	l.Debug("updating adventure_game_location record >%#v<", next)
 
-	// Add validation here if needed
+	// Validate starting location constraint if setting to true
+	if next.IsStartingLocation && !curr.IsStartingLocation {
+		if err := m.validateStartingLocationConstraint(next.GameID, next.ID); err != nil {
+			return next, err
+		}
+	}
 
 	r := m.AdventureGameLocationRepository()
 
@@ -89,6 +99,42 @@ func (m *Domain) UpdateAdventureGameLocationRec(next *adventure_game_record.Adve
 	}
 
 	return next, nil
+}
+
+// validateStartingLocationConstraint ensures only one starting location exists per game
+// excludeID is used when updating to exclude the current record from the check
+func (m *Domain) validateStartingLocationConstraint(gameID, excludeID string) error {
+	l := m.Logger("validateStartingLocationConstraint")
+
+	l.Info("validating starting location constraint for game ID >%s< exclude ID >%s<", gameID, excludeID)
+
+	opts := &coresql.Options{
+		Params: []coresql.Param{
+			{Col: adventure_game_record.FieldAdventureGameLocationGameID, Val: gameID},
+			{Col: adventure_game_record.FieldAdventureGameLocationIsStartingLocation, Val: true},
+		},
+		Limit: 2,
+	}
+
+	existingRecs, err := m.GetManyAdventureGameLocationRecs(opts)
+	if err != nil {
+		l.Warn("failed to get many adventure game location records >%v<", err)
+		return err
+	}
+
+	// Filter out the excluded ID if provided
+	var count int
+	for _, rec := range existingRecs {
+		if rec.ID != excludeID {
+			count++
+		}
+	}
+
+	if count > 0 {
+		return InvalidField(adventure_game_record.FieldAdventureGameLocationIsStartingLocation, "true", "only one starting location is allowed per game")
+	}
+
+	return nil
 }
 
 // DeleteAdventureGameLocationRec -
