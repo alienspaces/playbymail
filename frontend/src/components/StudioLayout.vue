@@ -348,7 +348,9 @@ function closeStudioMenuOnMobile() {
   min-height: 0;
   height: 100%;
   align-items: stretch;
+  min-height: calc(100vh - 140px);
 }
+
 .sidebar {
   width: 200px;
   background: var(--color-bg-alt);
@@ -358,6 +360,21 @@ function closeStudioMenuOnMobile() {
   display: flex;
   flex-direction: column;
   align-self: stretch;
+  position: relative;
+  min-height: calc(100vh - 140px);
+}
+
+.sidebar::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  background: var(--color-bg-alt);
+  border-right: 1px solid var(--color-border);
+  height: calc(var(--space-xl) + 70px);
+  pointer-events: none;
+  z-index: 0;
 }
 .sidebar ul {
   list-style: none;
