@@ -22,8 +22,8 @@ type Config struct {
 	// App home (frontend application) (default: ./frontend/dist)
 	AppHome string `env:"APP_HOME" envDefault:"./frontend/dist"`
 
-	// Assets (javascript, css, images, etc.) (default: ./frontend/src/assets)
-	AssetsPath string `env:"ASSETS_PATH" envDefault:"./frontend/src/assets"`
+	// Assets (javascript, css, images, etc.) (default: ./frontend/dist/assets)
+	AssetsPath string `env:"ASSETS_PATH" envDefault:"./frontend/dist/assets"`
 
 	// Schemas (json) (default: ./backend/schema)
 	SchemaPath string `env:"SCHEMA_PATH" envDefault:"./backend/schema"`
