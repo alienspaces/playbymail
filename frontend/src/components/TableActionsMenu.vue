@@ -26,7 +26,7 @@
 import { ref, onMounted, onUnmounted } from 'vue';
 import HandDrawnIcon from './HandDrawnIcon.vue';
 
-const props = defineProps({
+defineProps({
   actions: {
     type: Array,
     required: true,
@@ -37,8 +37,6 @@ const props = defineProps({
     }
   }
 });
-
-const emit = defineEmits(['action']);
 
 const isOpen = ref(false);
 const menuContainer = ref(null);

@@ -151,8 +151,8 @@ body {
   padding: 0 var(--space-lg);
   position: relative;
   width: 100%;
-  min-height: 77.5px;
-  /* Wider green band */
+  min-height: 67.5px;
+  /* Original narrower green band */
 }
 
 .navbar::before {
@@ -161,7 +161,7 @@ body {
   left: 0;
   right: 0;
   top: 50%;
-  height: 77.5px;
+  height: 67.5px;
   background: var(--color-logo-teal);
   transform: translateY(-50%);
   z-index: 0;
@@ -403,12 +403,12 @@ body {
   .navbar {
     padding: var(--space-xs) var(--space-sm);
     /* Reduced padding on mobile for larger logo */
-    min-height: 55px;
-    /* Wider green band on mobile */
+    min-height: 45px;
+    /* Original narrower green band on mobile */
   }
 
   .navbar::before {
-    height: 55px;
+    height: 45px;
   }
 }
 
@@ -441,7 +441,7 @@ body {
 footer {
   margin-top: 60px;
   padding: var(--space-xs) var(--space-lg);
-  min-height: 80px;
+  min-height: 70px;
   background: var(--color-logo-teal);
   /* Match header band color */
   border-top: 1px solid var(--color-logo-teal);
@@ -472,7 +472,7 @@ footer {
 }
 
 .footer-banner :deep(.envelope-icon) {
-  height: 80px;
+  height: 70px;
 }
 
 .footer-banner :deep(.coming-soon-title) {

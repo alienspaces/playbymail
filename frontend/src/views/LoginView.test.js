@@ -37,7 +37,7 @@ describe('LoginView', () => {
   it('renders the login form', () => {
     const wrapper = mountWithMocks()
     
-    expect(wrapper.find('h2').text()).toBe('Sign in with Email')
+    expect(wrapper.find('h1').text()).toBe('Sign in with Email')
     expect(wrapper.find('form').exists()).toBe(true)
     expect(wrapper.find('input[type="email"]').exists()).toBe(true)
     expect(wrapper.find('button[type="submit"]').exists()).toBe(true)
@@ -97,7 +97,7 @@ describe('LoginView', () => {
     
     await wrapper.vm.$nextTick()
     
-    expect(wrapper.find('.message').text()).toBe('Failed to send verification email.')
+    expect(wrapper.find('.error').text()).toBe('Failed to send verification email.')
   })
 
   it('displays error message on API exception', async () => {
@@ -114,7 +114,7 @@ describe('LoginView', () => {
     
     await wrapper.vm.$nextTick()
     
-    expect(wrapper.find('.message').text()).toBe('Failed to send verification email.')
+    expect(wrapper.find('.error').text()).toBe('Failed to send verification email.')
   })
 
   it('navigates to verify page on successful submission', async () => {
@@ -167,13 +167,13 @@ describe('LoginView', () => {
   it('displays session expired message from query parameter', () => {
     const wrapper = mountWithMocks({ code: 'session_expired' })
     
-    expect(wrapper.find('.message').text()).toBe('Session expired. Please log in again.')
+    expect(wrapper.find('.error').text()).toBe('Session expired. Please log in again.')
   })
 
   it('does not display message when no query parameter', () => {
     const wrapper = mountWithMocks()
     
-    expect(wrapper.find('.message').exists()).toBe(false)
+    expect(wrapper.find('.error').exists()).toBe(false)
   })
 
   it('has correct CSS classes for styling', () => {

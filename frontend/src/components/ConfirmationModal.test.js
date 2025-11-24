@@ -66,7 +66,7 @@ describe('ConfirmationModal', () => {
       props: defaultProps
     })
     
-    await wrapper.find('.confirm-btn').trigger('click')
+    await wrapper.find('.danger-btn').trigger('click')
     expect(wrapper.emitted('confirm')).toBeTruthy()
   })
 
@@ -82,7 +82,7 @@ describe('ConfirmationModal', () => {
     const input = wrapper.find('input')
     await input.setValue('WRONG')
     
-    const confirmBtn = wrapper.find('.confirm-btn')
+    const confirmBtn = wrapper.find('.danger-btn')
     expect(confirmBtn.attributes('disabled')).toBeDefined()
   })
 
@@ -98,7 +98,7 @@ describe('ConfirmationModal', () => {
     const input = wrapper.find('input')
     await input.setValue('DELETE')
     
-    const confirmBtn = wrapper.find('.confirm-btn')
+    const confirmBtn = wrapper.find('.danger-btn')
     expect(confirmBtn.attributes('disabled')).toBeUndefined()
   })
 
@@ -111,6 +111,6 @@ describe('ConfirmationModal', () => {
       }
     })
     
-    expect(wrapper.find('.confirm-btn').text()).toBe('Deleting...')
+    expect(wrapper.find('.danger-btn').text()).toBe('Deleting...')
   })
 }) 

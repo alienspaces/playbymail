@@ -28,6 +28,9 @@ const codeToMessage = {
 
 export default {
   name: 'LoginView',
+  components: {
+    HandDrawnIcon
+  },
   data() {
     return {
       email: '',

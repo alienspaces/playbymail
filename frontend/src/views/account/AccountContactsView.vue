@@ -16,9 +16,9 @@
     <!-- Error state -->
     <div v-else-if="error" class="error-state">
       <p>{{ error }}</p>
-      <Button @click="loadAccountAndContacts" variant="primary" size="small">
+      <AppButton @click="loadAccountAndContacts" variant="primary" size="small">
         Retry
-      </Button>
+      </AppButton>
     </div>
 
     <!-- Contacts grid -->
@@ -53,14 +53,14 @@
         </div>
         
         <template #primary>
-          <Button @click="editContact(contact)" variant="primary" size="small">
+          <AppButton @click="editContact(contact)" variant="primary" size="small">
             Edit
-          </Button>
+          </AppButton>
         </template>
         <template #secondary>
-          <Button @click="openDelete(contact)" variant="danger" size="small">
+          <AppButton @click="openDelete(contact)" variant="danger" size="small">
             Delete
-          </Button>
+          </AppButton>
         </template>
       </DataCard>
     </div>
@@ -98,7 +98,7 @@ import ContactModal from '@/components/ContactModal.vue'
 import PageHeader from '@/components/PageHeader.vue'
 import DataCard from '@/components/DataCard.vue'
 import DataItem from '@/components/DataItem.vue'
-import Button from '@/components/Button.vue'
+import AppButton from '@/components/Button.vue'
 import ConfirmationModal from '@/components/ConfirmationModal.vue'
 
 export default {
@@ -108,7 +108,7 @@ export default {
     PageHeader,
     DataCard,
     DataItem,
-    Button,
+    AppButton,
     ConfirmationModal
   },
   data() {

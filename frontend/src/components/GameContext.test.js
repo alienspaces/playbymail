@@ -10,7 +10,10 @@ describe('GameContext', () => {
       }
     })
     
-    expect(wrapper.find('p').text()).toBe('Game: Test Game')
+    const label = wrapper.find('.game-context-label')
+    const name = wrapper.find('.game-context-name')
+    expect(label.text()).toBe('Game:')
+    expect(name.text()).toBe('Test Game')
   })
 
   it('does not render when gameName is empty', () => {

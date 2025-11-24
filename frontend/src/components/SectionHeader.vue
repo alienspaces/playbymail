@@ -13,7 +13,7 @@
 <script setup>
 import HandDrawnIcon from './HandDrawnIcon.vue';
 
-const props = defineProps({
+defineProps({
   title: {
     type: String,
     required: true

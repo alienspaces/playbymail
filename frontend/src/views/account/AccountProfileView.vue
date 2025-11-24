@@ -14,9 +14,9 @@
     <!-- Error state -->
     <div v-else-if="error" class="error-state">
       <p>{{ error }}</p>
-      <Button @click="loadAccount" variant="primary" size="small">
+      <AppButton @click="loadAccount" variant="primary" size="small">
         Retry
-      </Button>
+      </AppButton>
     </div>
     
     <!-- Account information -->
@@ -37,9 +37,9 @@
           <p>This action cannot be undone. This will permanently delete your account and all associated data.</p>
         </div>
         <template #primary>
-          <Button @click="showDeleteConfirmation" variant="danger" size="small">
+          <AppButton @click="showDeleteConfirmation" variant="danger" size="small">
             Delete Account
-          </Button>
+          </AppButton>
         </template>
       </DataCard>
     </div>
@@ -69,7 +69,7 @@ import ConfirmationModal from '@/components/ConfirmationModal.vue'
 import PageHeader from '@/components/PageHeader.vue'
 import DataCard from '@/components/DataCard.vue'
 import DataItem from '@/components/DataItem.vue'
-import Button from '@/components/Button.vue'
+import AppButton from '@/components/Button.vue'
 
 export default {
   name: 'AccountProfileView',
@@ -78,7 +78,7 @@ export default {
     PageHeader,
     DataCard,
     DataItem,
-    Button
+    AppButton
   },
   data() {
     return {

@@ -18,9 +18,9 @@ describe('BuildInfo', () => {
     
     // Check that the component renders the expected structure
     expect(wrapper.find('.build-info-panel').exists()).toBe(true)
-    expect(wrapper.find('.build-info-content').exists()).toBe(true)
     expect(wrapper.find('.build-commit').exists()).toBe(true)
     expect(wrapper.find('.build-date').exists()).toBe(true)
+    expect(wrapper.find('a.release-notes-link').exists()).toBe(true)
   })
 
   it('handles date formatting gracefully', () => {

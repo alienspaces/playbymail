@@ -95,7 +95,10 @@ describe('StudioCreaturePlacementsView', () => {
     const wrapper = mount(StudioCreaturePlacementsView)
     
     expect(wrapper.find('.game-table-section').exists()).toBe(true)
-    expect(wrapper.find('.game-context-name').text()).toBe('Game: Test Game')
+    const contextLabel = wrapper.find('.game-context-label')
+    const contextName = wrapper.find('.game-context-name')
+    expect(contextLabel.text()).toBe('Game:')
+    expect(contextName.text()).toBe('Test Game')
     expect(wrapper.find('h2').text()).toBe('Creature Placements')
   })
 
@@ -258,7 +261,7 @@ describe('StudioCreaturePlacementsView', () => {
     
     expect(wrapper.find('.game-table-section').exists()).toBe(true)
     expect(wrapper.find('.game-context-name').exists()).toBe(true)
-    expect(wrapper.find('.section-header').exists()).toBe(true)
+    expect(wrapper.findComponent({ name: 'PageHeader' }).exists()).toBe(true)
   })
 
   it('watches for selectedGame changes', async () => {
@@ -302,6 +305,7 @@ describe('StudioCreaturePlacementsView', () => {
     selectedGameRef.value = { id: 1, name: 'New Game' }
     await wrapper.vm.$nextTick()
     
-    expect(wrapper.find('.game-context-name').text()).toBe('Game: New Game')
+    const contextName = wrapper.find('.game-context-name')
+    expect(contextName.text()).toBe('New Game')
   })
 }) 

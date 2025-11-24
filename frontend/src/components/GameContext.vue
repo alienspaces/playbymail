@@ -1,6 +1,6 @@
 <template>
-  <p class="game-context">
-    <span class="game-context-label">Game:</span>
+  <p v-if="gameName" class="game-context">
+    <span class="game-context-label">Game:</span>&nbsp;
     <span class="game-context-name">{{ gameName }}</span>
   </p>
 </template>
@@ -9,7 +9,7 @@
 defineProps({
   gameName: {
     type: String,
-    required: true
+    default: ''
   }
 });
 </script>
