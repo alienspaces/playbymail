@@ -26,43 +26,30 @@ const formatBuildDate = (dateString) => {
 
 <template>
   <div class="build-info-panel">
-    <div class="build-info-content">
-      <span class="build-commit">{{ buildInfo.commitRef }}</span>
-      <span class="build-separator">•</span>
-      <span class="build-date">{{ formatBuildDate(buildInfo.buildDate) }}</span>
-      <span class="build-separator">•</span>
-      <a href="https://github.com/alienspaces/playbymail/blob/main/RELEASE_NOTES.md" class="release-notes-link" target="_blank" rel="noopener noreferrer">Release Notes</a>
-    </div>
+    <span class="build-commit">{{ buildInfo.commitRef }}</span>
+    <span class="build-date">{{ formatBuildDate(buildInfo.buildDate) }}</span>
+    <a href="https://github.com/alienspaces/playbymail/blob/main/RELEASE_NOTES.md" class="release-notes-link"
+      target="_blank" rel="noopener noreferrer">Release Notes</a>
   </div>
 </template>
 
 <style scoped>
 .build-info-panel {
-  display: inline-block;
-  background: rgba(255, 255, 255, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: var(--radius-sm);
-  padding: var(--space-xs) var(--space-sm);
-  margin: 0 auto;
-}
-
-.build-info-content {
   display: flex;
-  align-items: center;
-  gap: var(--space-xs);
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 2px;
   font-size: 0.75rem;
   color: var(--color-text-light);
   opacity: 0.9;
   font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  text-align: right;
 }
 
 .build-commit {
   color: var(--color-logo-beige-light);
   font-weight: 500;
-}
-
-.build-separator {
-  opacity: 0.4;
 }
 
 .build-date {
@@ -82,14 +69,9 @@ const formatBuildDate = (dateString) => {
 }
 
 @media (max-width: 768px) {
-  .build-info-content {
-    flex-direction: column;
-    gap: 2px;
+  .build-info-panel {
+    align-items: center;
     text-align: center;
-  }
-  
-  .build-separator {
-    display: none;
   }
 }
 </style>

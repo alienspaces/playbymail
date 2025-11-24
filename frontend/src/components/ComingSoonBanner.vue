@@ -39,10 +39,13 @@ import envelopeImage from '../assets/breakout-envelope-v2.png';
 
 .coming-soon-title {
   color: var(--color-text-light);
-  font-size: var(--font-size-md);
-  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-normal);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
   line-height: 1.2;
   white-space: nowrap;
+  opacity: 0.8;
 }
 
 .coming-soon-date {

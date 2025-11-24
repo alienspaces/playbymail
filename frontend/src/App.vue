@@ -84,13 +84,18 @@ function closeMobileMenu() {
       <router-view />
     </main>
     <footer>
-      <ComingSoonBanner class="footer-banner" />
-      <div class="footer-center">
-        <BuildInfo />
-        <p>&copy; 2025 PlayByMail. All rights reserved.</p>
-        <p>
-          <a href="mailto:support@playbymail.games" class="footer-link">support@playbymail.games</a>
-        </p>
+      <div class="footer-content">
+        <ComingSoonBanner class="footer-banner" />
+        <div class="footer-center">
+          <p>&copy; 2025 PlayByMail. All rights reserved.</p>
+          <p>
+            <a href="mailto:support@playbymail.games" class="footer-link">support@playbymail.games</a>
+          </p>
+        </div>
+        <div class="footer-meta">
+          <span class="footer-meta-label">Latest release</span>
+          <BuildInfo />
+        </div>
       </div>
     </footer>
   </div>
@@ -146,8 +151,8 @@ body {
   padding: 0 var(--space-lg);
   position: relative;
   width: 100%;
-  min-height: 67.5px;
-  /* 50% wider green band */
+  min-height: 77.5px;
+  /* Wider green band */
 }
 
 .navbar::before {
@@ -156,7 +161,7 @@ body {
   left: 0;
   right: 0;
   top: 50%;
-  height: 67.5px;
+  height: 77.5px;
   background: var(--color-logo-teal);
   transform: translateY(-50%);
   z-index: 0;
@@ -398,12 +403,12 @@ body {
   .navbar {
     padding: var(--space-xs) var(--space-sm);
     /* Reduced padding on mobile for larger logo */
-    min-height: 45px;
-    /* 50% wider green band on mobile */
+    min-height: 55px;
+    /* Wider green band on mobile */
   }
 
   .navbar::before {
-    height: 45px;
+    height: 55px;
   }
 }
 
@@ -435,10 +440,10 @@ body {
 /* Footer styling */
 footer {
   margin-top: 60px;
-  padding: var(--space-sm) var(--space-lg);
-  min-height: 110px;
-  background: var(--color-logo-teal-light);
-  /* Lighter teal matching header */
+  padding: var(--space-xs) var(--space-lg);
+  min-height: 80px;
+  background: var(--color-logo-teal);
+  /* Match header band color */
   border-top: 1px solid var(--color-logo-teal);
   position: relative;
   overflow: visible;
@@ -446,29 +451,46 @@ footer {
   z-index: 1;
   width: 100%;
   box-sizing: border-box;
+  display: flex;
+  align-items: center;
+}
+
+.footer-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: var(--space-sm);
+  flex-wrap: nowrap;
 }
 
 .footer-banner {
-  position: absolute;
-  left: var(--space-lg);
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 10;
   pointer-events: none;
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.footer-banner :deep(.envelope-icon) {
+  height: 80px;
+}
+
+.footer-banner :deep(.coming-soon-title) {
+  font-size: var(--font-size-xs);
+}
+
+.footer-banner :deep(.coming-soon-date) {
+  font-size: var(--font-size-xxs);
 }
 
 .footer-center {
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space-sm);
+  gap: var(--space-xs);
   text-align: center;
-  padding: var(--space-xs) var(--space-lg);
-  margin-left: 200px;
-  margin-right: var(--space-lg);
-  box-sizing: border-box;
   min-width: 0;
-  flex-shrink: 1;
 }
 
 footer p {
@@ -477,9 +499,35 @@ footer p {
   font-size: var(--font-size-sm);
 }
 
-.footer-link {
+.footer-link,
+.footer-meta-label {
   color: var(--color-text-light);
   text-decoration: underline;
+}
+
+.footer-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--space-xxs);
+  text-align: right;
+  min-width: 0;
+}
+
+.footer-meta-label {
+  font-size: var(--font-size-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  text-decoration: none;
+  opacity: 0.8;
+}
+
+.footer-meta :deep(.build-info-panel) {
+  margin: 0;
+}
+
+.footer-meta :deep(.build-info-content) {
+  justify-content: flex-end;
 }
 
 .footer-link:hover {
@@ -495,27 +543,29 @@ footer p {
   footer {
     margin-top: 0;
     margin-bottom: 0;
-    padding: var(--space-md) var(--space-md);
+    padding: var(--space-md);
     min-height: auto;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
   }
 
-  .footer-banner {
-    position: relative;
-    left: auto;
-    top: auto;
-    transform: none;
-    margin-bottom: var(--space-sm);
+  .footer-content {
+    flex-direction: column;
+    gap: var(--space-md);
+    flex-wrap: wrap;
   }
 
   .footer-center {
     padding: 0;
-    margin-left: 0;
-    margin-right: 0;
     width: 100%;
+  }
+
+  .footer-meta {
+    width: 100%;
+    align-items: center;
+    text-align: center;
+  }
+
+  .footer-meta :deep(.build-info-content) {
+    justify-content: center;
   }
 }
 </style>
