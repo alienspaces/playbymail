@@ -268,8 +268,12 @@ func (rnr *Runner) registerDefaultStaticRoutes(r *httprouter.Router) (*httproute
 
 		// Register assets route with httprouter
 		r.GET("/assets/*filepath", func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-			// Restore the original path for the file server
-			r.URL.Path = "/assets" + ps.ByName("filepath")
+			// Strip the /assets prefix so files resolve relative to AssetsPath
+			requestPath := ps.ByName("filepath")
+			if requestPath == "" {
+				requestPath = "/"
+			}
+			r.URL.Path = requestPath
 			assetsHandler.ServeHTTP(w, r)
 		})
 	}
