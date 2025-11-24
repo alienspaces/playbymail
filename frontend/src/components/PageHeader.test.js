@@ -47,4 +47,17 @@ describe('PageHeader', () => {
     await wrapper.find('button').trigger('click')
     expect(wrapper.emitted('action')).toBeTruthy()
   })
+
+  it('renders subtitle when provided', () => {
+    const wrapper = mount(PageHeader, {
+      props: {
+        title: 'Test Page',
+        subtitle: 'Additional context'
+      }
+    })
+
+    const subtitle = wrapper.find('.page-subtitle')
+    expect(subtitle.exists()).toBe(true)
+    expect(subtitle.text()).toBe('Additional context')
+  })
 }) 

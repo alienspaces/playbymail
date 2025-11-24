@@ -4,10 +4,12 @@
 -->
 <template>
   <div class="account-dashboard">
-    <div class="dashboard-header">
-      <h2>Account</h2>
-      <p>Manage your account information and settings</p>
-    </div>
+    <PageHeader
+      title="Account"
+      titleLevel="h2"
+      :showIcon="false"
+      subtitle="Manage your account information and settings"
+    />
 
     <!-- Loading state -->
     <div v-if="loading" class="loading-state">
@@ -93,6 +95,7 @@ import Button from '@/components/Button.vue';
 import DataCard from '@/components/DataCard.vue';
 import DataItem from '@/components/DataItem.vue';
 import ConfirmationModal from '@/components/ConfirmationModal.vue';
+import PageHeader from '@/components/PageHeader.vue';
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -175,23 +178,6 @@ const formatDate = (dateString) => {
 .account-dashboard {
   max-width: 1200px;
   margin: 0 auto;
-}
-
-.dashboard-header {
-  margin-bottom: var(--space-xl);
-  text-align: center;
-}
-
-.dashboard-header h2 {
-  margin: 0 0 var(--space-sm) 0;
-  font-size: var(--font-size-xl);
-  color: var(--color-text);
-}
-
-.dashboard-header p {
-  margin: 0;
-  color: var(--color-text-muted);
-  font-size: var(--font-size-md);
 }
 
 .loading-state,

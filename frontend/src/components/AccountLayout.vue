@@ -29,7 +29,8 @@
       </MainPageHeader>
     </div>
     <!-- Flex row: sidebar + main content -->
-    <div class="account-body-row">
+    <div class="account-shell">
+      <div class="account-body-row">
       <!-- Desktop sidebar -->
       <aside class="sidebar" v-if="!isMobile">
         <nav>
@@ -58,6 +59,7 @@
         <section class="account-body">
           <router-view />
         </section>
+      </div>
       </div>
     </div>
     <!-- Help Panel emerges from the right of the screen -->
@@ -132,7 +134,16 @@ function closeAccountMenuOnMobile() {
 .account-layout {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+}
+.account-shell {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
 }
 .account-header-wrapper {
   width: 100%;
@@ -212,9 +223,9 @@ function closeAccountMenuOnMobile() {
   .account-body {
     padding: var(--space-md) var(--space-sm);
   }
-  .sidebar.mobile {
+.sidebar.mobile {
     width: 280px;
-    padding: var(--space-lg) var(--space-md) 0 var(--space-md);
+    padding: var(--space-lg) var(--space-md) var(--space-lg) var(--space-md);
   }
   .sidebar ul {
     font-size: 1rem;
@@ -237,7 +248,7 @@ function closeAccountMenuOnMobile() {
   }
   .sidebar, .sidebar.mobile {
     width: 180px;
-    padding: var(--space-md) var(--space-sm) 0 var(--space-sm);
+    padding: var(--space-md) var(--space-sm) var(--space-md) var(--space-sm);
   }
   .sidebar ul {
     font-size: 1rem;
@@ -256,15 +267,18 @@ function closeAccountMenuOnMobile() {
   display: flex;
   flex: 1;
   min-height: 0;
+  height: 100%;
+  align-items: stretch;
 }
 .sidebar {
   width: 200px;
   background: var(--color-bg-alt);
   border-right: 1px solid var(--color-border);
-  padding: var(--space-lg) var(--space-md) 0 var(--space-md);
+  padding: var(--space-lg) var(--space-md) var(--space-lg) var(--space-md);
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
+  align-self: stretch;
 }
 .sidebar ul {
   list-style: none;

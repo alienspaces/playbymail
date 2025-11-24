@@ -4,7 +4,7 @@
     <StudioEntryView v-if="!isLoggedIn" />
     
     <!-- Show full studio interface for authenticated users -->
-    <div v-else>
+    <div v-else class="studio-shell">
       <!-- Studio Header expands entire screen width-->
       <div class="studio-header-wrapper">
         <!-- Studio burger menu (mobile only) -->
@@ -213,7 +213,16 @@ function closeStudioMenuOnMobile() {
 .studio-layout {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+}
+.studio-shell {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
 }
 .studio-header-wrapper {
   width: 100%;
@@ -337,6 +346,8 @@ function closeStudioMenuOnMobile() {
   display: flex;
   flex: 1;
   min-height: 0;
+  height: 100%;
+  align-items: stretch;
 }
 .sidebar {
   width: 200px;
@@ -346,6 +357,7 @@ function closeStudioMenuOnMobile() {
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
+  align-self: stretch;
 }
 .sidebar ul {
   list-style: none;

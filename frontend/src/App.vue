@@ -22,6 +22,7 @@ function toggleMobileMenu() {
 function closeMobileMenu() {
   mobileMenuOpen.value = false;
 }
+
 </script>
 
 <template>
@@ -80,12 +81,12 @@ function closeMobileMenu() {
         </div>
       </nav>
     </div>
-    <main class="main-content">
+    <main class="app-main">
       <router-view />
     </main>
     <footer>
+      <ComingSoonBanner class="footer-banner-floating" />
       <div class="footer-content">
-        <ComingSoonBanner class="footer-banner" />
         <div class="footer-center">
           <p>&copy; 2025 PlayByMail. All rights reserved.</p>
           <p>
@@ -104,6 +105,8 @@ function closeMobileMenu() {
 <style>
 html,
 body {
+  height: 100%;
+  min-height: 100%;
   overflow-x: hidden;
   overflow-y: auto;
 }
@@ -125,11 +128,19 @@ body {
 }
 
 /* Make main content area grow to fill space and push footer down */
-.main-content {
+.app-main {
   flex: 1 0 auto;
   display: flex;
   flex-direction: column;
-  margin-bottom: 60px;
+  min-height: 0;
+  margin-bottom: 0;
+}
+
+main.app-main>* {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 .navbar-container {
@@ -439,20 +450,31 @@ body {
 
 /* Footer styling */
 footer {
-  margin-top: 60px;
-  padding: var(--space-xs) var(--space-lg);
+  margin-top: 0;
+  padding: var(--space-xs) 0;
   min-height: 70px;
-  background: var(--color-logo-teal);
-  /* Match header band color */
-  border-top: 1px solid var(--color-logo-teal);
+  background: transparent;
   position: relative;
   overflow: visible;
-  margin-bottom: 60px;
+  margin-bottom: var(--space-lg);
   z-index: 1;
   width: 100%;
   box-sizing: border-box;
   display: flex;
   align-items: center;
+  --side-bleed: max(0px, (100vw - 100%)/2);
+}
+
+footer::before {
+  content: "";
+  position: absolute;
+  left: calc(0px - var(--side-bleed));
+  right: calc(0px - var(--side-bleed));
+  top: 50%;
+  height: 70px;
+  background: var(--color-logo-teal);
+  transform: translateY(-50%);
+  z-index: 0;
 }
 
 .footer-content {
@@ -462,24 +484,33 @@ footer {
   width: 100%;
   gap: var(--space-sm);
   flex-wrap: nowrap;
+  position: relative;
+  z-index: 1;
+  padding: 0 var(--space-lg);
+  padding-left: calc(var(--space-lg) + 170px);
 }
 
-.footer-banner {
+.footer-banner-floating {
+  position: absolute;
+  top: 50%;
+  left: var(--space-lg);
+  transform: translateY(-50%);
   pointer-events: none;
   display: flex;
   align-items: center;
   gap: var(--space-xs);
+  z-index: 2;
 }
 
-.footer-banner :deep(.envelope-icon) {
-  height: 70px;
+.footer-banner-floating :deep(.envelope-icon) {
+  height: 140px;
 }
 
-.footer-banner :deep(.coming-soon-title) {
+.footer-banner-floating :deep(.coming-soon-title) {
   font-size: var(--font-size-xs);
 }
 
-.footer-banner :deep(.coming-soon-date) {
+.footer-banner-floating :deep(.coming-soon-date) {
   font-size: var(--font-size-xxs);
 }
 
@@ -536,21 +567,41 @@ footer p {
 
 /* Mobile footer adjustments */
 @media (max-width: 768px) {
-  .main-content {
+  .app-main {
     margin-bottom: 0;
   }
 
   footer {
     margin-top: 0;
-    margin-bottom: 0;
-    padding: var(--space-md);
+    margin-bottom: var(--space-md);
+    padding: var(--space-md) 0;
     min-height: auto;
+  }
+
+  footer {
+    --side-bleed: 0;
+  }
+
+  footer::before {
+    left: 0;
+    right: 0;
+    transform: translateY(-50%);
   }
 
   .footer-content {
     flex-direction: column;
     gap: var(--space-md);
     flex-wrap: wrap;
+    padding: 0 var(--space-md);
+    padding-left: var(--space-md);
+  }
+
+  .footer-banner-floating {
+    position: static;
+    transform: none;
+    width: 100%;
+    justify-content: center;
+    margin-bottom: var(--space-md);
   }
 
   .footer-center {

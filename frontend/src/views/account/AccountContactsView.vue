@@ -5,6 +5,7 @@
       actionText="Create New Contact" 
       :showIcon="false"
       titleLevel="h2"
+      subtitle="Manage postal addresses for shipments and correspondence"
       @action="openCreate"
     />
 

@@ -7,6 +7,9 @@
     <button v-if="actionText" @click="$emit('action')" class="action-btn">
       {{ actionText }}
     </button>
+    <p v-if="subtitle" class="page-subtitle">
+      {{ subtitle }}
+    </p>
   </div>
 </template>
 
@@ -39,6 +42,10 @@ const props = defineProps({
     type: String,
     default: 'h1', // 'h1' for main titles, 'h2' for section titles
     validator: (value) => ['h1', 'h2'].includes(value)
+  },
+  subtitle: {
+    type: String,
+    default: ''
   }
 });
 
@@ -80,6 +87,12 @@ defineEmits(['action']);
 
 .hand-drawn-title {
   position: relative;
+}
+
+.page-subtitle {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-md);
 }
 
 .title-icon {

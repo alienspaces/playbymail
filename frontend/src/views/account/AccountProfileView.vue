@@ -4,6 +4,7 @@
       title="Account Profile" 
       :showIcon="false"
       titleLevel="h2"
+      subtitle="Review your profile details and account status"
     />
 
     <!-- Loading state -->
@@ -175,6 +176,9 @@ export default {
   display: flex;
   flex-direction: column;
   gap: var(--space-lg);
+  max-width: 600px;
+  width: 100%;
+  margin: 0;
 }
 
 .game-card {

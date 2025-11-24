@@ -23,24 +23,24 @@
 <style scoped>
 .admin-view {
   max-width: 700px;
-  margin: var(--space-lg) auto;
-  padding: var(--space-xl);
+  margin: var(--space-md) auto var(--space-lg);
+  padding: var(--space-lg);
   background: var(--color-bg);
   border-radius: var(--radius-lg);
   box-shadow: 0 2px 12px rgba(0,0,0,0.07);
 }
 .admin-view h1 {
-  margin-bottom: var(--space-lg);
+  margin-bottom: var(--space-md);
   font-size: var(--font-size-xl);
   text-align: left;
 }
 .admin-view p {
-  margin-bottom: var(--space-md);
+  margin-bottom: var(--space-sm);
   font-size: var(--font-size-md);
   text-align: left;
 }
 .admin-view ul {
-  margin: var(--space-lg) 0 var(--space-lg) var(--space-lg);
+  margin: var(--space-md) 0 var(--space-md) var(--space-lg);
   padding-left: var(--space-sm);
   text-align: left;
 }

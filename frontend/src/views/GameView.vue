@@ -5,6 +5,8 @@
         title="Games" 
         actionText="Create New Game" 
         :showIcon="false"
+        titleLevel="h2"
+        subtitle="Create and manage your adventure games"
         @action="openCreate"
       />
       <table v-if="games.length">
