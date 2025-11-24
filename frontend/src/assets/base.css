@@ -6,47 +6,72 @@
 }
 
 :root {
-  /* Color palette - Mystical Adventure Theme */
-  --color-primary: #6B46C1;        /* Deep purple - main brand color */
-  --color-primary-dark: #5B21B6;  /* Darker purple for hover states */
-  --color-primary-light: #A78BFA;  /* Light purple for accents */
-  --color-bg: #FAF8F3;             /* Warm neutral background - less yellow */
-  --color-bg-alt: #F7F5F0;        /* Slightly darker neutral for cards */
-  --color-bg-light: #F5F3ED;      /* Subtle neutral for highlights */
-  --color-border: #D1D5DB;        /* Soft gray border */
-  --color-border-light: #E5E7EB;  /* Lighter gray border */
-  --color-text: #1F2937;          /* Charcoal text */
-  --color-text-light: #FFFFFF;   /* White text */
-  --color-text-muted: #6B7280;    /* Muted gray text */
-  --color-accent: #F59E0B;        /* Gold accent color */
-  --color-accent-dark: #D97706;   /* Dark gold */
-  --color-accent-light: #FCD34D;  /* Light gold */
-  --color-button: #A78BFA;          /* Light purple for buttons - harmonizes with primary */
-  --color-button-dark: #8B5CF6;    /* Medium purple for hover */
-  --color-error: #EF4444;         /* Red for errors */
+  /* Color palette - Matching Logo Colors */
+  /* Logo colors: Dark teal (#0C4651), Gold (#D79F32), Black (#000000), Beige (#DBC396) */
+  --color-logo-teal: #0C4651;      /* Dark teal/blue-green from logo */
+  --color-logo-teal-dark: #082E35; /* Darker teal */
+  --color-logo-teal-light: #1A6B7A; /* Lighter teal */
+  --color-logo-gold: #D79F32;      /* Gold/yellow from logo */
+  --color-logo-gold-dark: #B8852A; /* Darker gold */
+  --color-logo-gold-light: #E8B85A; /* Lighter gold */
+  --color-logo-black: #000000;     /* Black from logo */
+  --color-logo-beige: #DBC396;     /* Light beige from logo */
+  --color-logo-beige-dark: #C4B085; /* Darker beige */
+  --color-logo-beige-light: #F0E5D0; /* Lighter beige */
   
-  /* Status colors - Game-themed */
-  --color-success: #10B981;       /* Emerald green */
-  --color-success-dark: #059669;   /* Dark emerald */
-  --color-success-light: #D1FAE5;  /* Light emerald */
-  --color-warning: #F59E0B;       /* Gold warning */
-  --color-warning-dark: #D97706;  /* Dark gold */
-  --color-warning-light: #FEF3C7; /* Light gold */
-  --color-danger: #EF4444;        /* Red danger */
-  --color-danger-dark: #DC2626;   /* Dark red */
-  --color-danger-light: #FEE2E2;  /* Light red */
-  --color-info: #6B46C1;          /* Purple info */
-  --color-info-dark: #5B21B6;     /* Dark purple */
-  --color-info-light: #EDE9FE;    /* Light purple */
+  /* Legacy pen color names - mapped to logo colors */
+  --color-pen-blue: var(--color-logo-teal);      /* Teal as primary */
+  --color-pen-blue-dark: var(--color-logo-teal-dark);
+  --color-pen-blue-light: var(--color-logo-teal-light);
+  --color-pen-black: var(--color-logo-black);    /* Black from logo */
+  --color-pen-black-dark: var(--color-logo-black);
+  --color-pen-red: var(--color-logo-gold);       /* Gold as accent */
+  --color-pen-red-dark: var(--color-logo-gold-dark);
+  --color-pen-red-light: var(--color-logo-gold-light);
+  
+  /* Primary colors using logo colors */
+  --color-primary: var(--color-logo-teal);        /* Dark teal as primary */
+  --color-primary-dark: var(--color-logo-teal-dark);
+  --color-primary-light: var(--color-logo-teal-light);
+  
+  /* Background - matching logo beige tones */
+  --color-bg: #F5F1E8;             /* Light beige paper (inspired by logo) */
+  --color-bg-alt: #E8E0D3;         /* Slightly darker beige */
+  --color-bg-light: #FAF8F3;       /* Very light beige highlight */
+  --color-border: #DBC396;         /* Logo beige for borders */
+  --color-border-light: #E8E0D3;   /* Lighter beige border */
+  --color-text: var(--color-logo-black);          /* Black from logo */
+  --color-text-light: #FFFFFF;     /* White text */
+  --color-text-muted: #6B7280;     /* Muted gray */
+  --color-accent: var(--color-logo-gold);        /* Gold from logo as accent */
+  --color-accent-dark: var(--color-logo-gold-dark);
+  --color-accent-light: var(--color-logo-gold-light);
+  --color-button: var(--color-logo-teal);          /* Teal for buttons */
+  --color-button-dark: var(--color-logo-teal-dark);
+  --color-error: #DC2626;         /* Keep red for errors (not in logo) */
+  
+  /* Status colors - using pen colors */
+  --color-success: #059669;        /* Green (less common pen color) */
+  --color-success-dark: #047857;
+  --color-success-light: #D1FAE5;
+  --color-warning: #F59E0B;        /* Gold warning */
+  --color-warning-dark: #D97706;
+  --color-warning-light: #FEF3C7;
+  --color-danger: #DC2626;        /* Red for danger (not in logo) */
+  --color-danger-dark: #B91C1C;
+  --color-danger-light: #FEE2E2;
+  --color-info: var(--color-logo-teal);          /* Teal for info */
+  --color-info-dark: var(--color-logo-teal-dark);
+  --color-info-light: #D1E7E8;
 
-  /* Typography */
-  --font-family-heading: 'Cinzel', 'Georgia', serif;  /* Elegant serif for headings */
+  /* Typography - Hand-drawn pen style */
+  --font-family-heading: 'Caveat', 'Kalam', cursive;  /* Hand-drawn pen style for headings */
   --font-family-base: 'Inter', 'Arial', sans-serif;   /* Clean sans-serif for body */
   --font-size-base: 16px;
   --font-size-sm: 0.95rem;
   --font-size-md: 1.1rem;
   --font-size-lg: 1.5rem;
-  --font-size-xl: 2.2rem;
+  --font-size-xl: 1.9rem;
   --font-weight-bold: 700;
   --font-weight-semibold: 600;
   --font-weight-normal: 400;
@@ -57,6 +82,9 @@
   --space-md: 1rem;
   --space-lg: 2rem;
   --space-xl: 3rem;
+  
+  /* Layout spacing - content padding to align with sidebar */
+  --layout-content-padding: var(--space-lg);
 
   /* Border radius */
   --radius-sm: 4px;
@@ -69,32 +97,92 @@ body {
   font-size: var(--font-size-base);
   background: var(--color-bg);
   color: var(--color-text);
+  /* Subtle paper texture */
+  background-image: 
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 0, 0, 0.01) 2px,
+      rgba(0, 0, 0, 0.01) 4px
+    );
 }
 
-/* Typography */
+/* Typography - Hand-drawn pen style */
 h1, .h1 {
   font-family: var(--font-family-heading);
   font-size: var(--font-size-xl);
-  font-weight: var(--font-weight-bold);
+  font-weight: 700;
   margin-bottom: var(--space-md);
-  color: var(--color-primary);
-  letter-spacing: 0.5px;
+  color: var(--color-text);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  position: relative;
+  display: inline-block;
+  /* Subtle hand-drawn effect */
+  text-shadow: 
+    0.5px 0.5px 0px rgba(0, 0, 0, 0.1),
+    1px 1px 0px rgba(0, 0, 0, 0.05);
+  /* Slight rotation for hand-drawn feel */
+  transform: rotate(-0.3deg);
+}
+
+/* Subtle underline decoration for titles */
+h1::after, .h1::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(
+    to right,
+    var(--color-pen-blue) 0%,
+    transparent 100%
+  );
+  opacity: 0.3;
+  transform: rotate(-0.2deg);
 }
 h2, .h2 {
   font-family: var(--font-family-heading);
   font-size: var(--font-size-lg);
-  font-weight: var(--font-weight-semibold);
+  font-weight: 600;
   margin-bottom: var(--space-sm);
-  color: var(--color-primary);
-  letter-spacing: 0.3px;
+  color: var(--color-text);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  position: relative;
+  display: inline-block;
+  text-shadow: 0.3px 0.3px 0px rgba(0, 0, 0, 0.1);
+  transform: rotate(0.2deg);
+}
+
+/* Subtle underline decoration for h2 titles (section titles) */
+h2::after, .h2::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(
+    to right,
+    var(--color-pen-blue) 0%,
+    transparent 100%
+  );
+  opacity: 0.3;
+  transform: rotate(-0.2deg);
 }
 h3, .h3 {
   font-family: var(--font-family-heading);
   font-size: var(--font-size-md);
-  font-weight: var(--font-weight-semibold);
+  font-weight: 600;
   margin-bottom: var(--space-xs);
-  color: var(--color-primary-dark);
-  letter-spacing: 0.2px;
+  color: var(--color-pen-black);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  position: relative;
+  display: inline-block;
 }
 p {
   margin-bottom: var(--space-sm);
@@ -109,7 +197,7 @@ a:hover, a:focus {
   text-decoration: underline;
 }
 
-/* Buttons */
+/* Buttons - Hand-drawn style */
 button, .btn {
   font-family: inherit;
   font-size: var(--font-size-base);
@@ -121,6 +209,11 @@ button, .btn {
   border-radius: var(--radius-sm);
   cursor: pointer;
   transition: all 0.2s;
+  /* Subtle hand-drawn border effect */
+  box-shadow: 
+    0 1px 2px rgba(0,0,0,0.05),
+    inset 0 1px 0 rgba(255,255,255,0.1);
+  position: relative;
 }
 button:hover, .btn:hover,
 button:focus, .btn:focus {
@@ -133,7 +226,7 @@ button:disabled, .btn:disabled {
   cursor: not-allowed;
 }
 
-/* Forms */
+/* Forms - Subtle paper lines */
 input, select, textarea {
   font-family: inherit;
   font-size: var(--font-size-base);
@@ -141,6 +234,12 @@ input, select, textarea {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   margin-bottom: var(--space-sm);
+  background: var(--color-bg);
+  color: var(--color-text);
+  /* Subtle paper texture */
+  box-shadow: 
+    inset 0 1px 2px rgba(0,0,0,0.02),
+    0 1px 0 rgba(255,255,255,0.5);
 }
 input:focus, select:focus, textarea:focus {
   outline: 2px solid var(--color-primary);
@@ -154,10 +253,10 @@ input:focus, select:focus, textarea:focus {
 .bg-alt { background: var(--color-bg-alt); }
 
 /* Responsive typography */
-@media (max-width: 600px) {
-  h1, .h1 { font-size: 1.3rem; }
-  h2, .h2 { font-size: 1.1rem; }
-  h3, .h3 { font-size: 1rem; }
+@media (max-width: 768px) {
+  h1, .h1 { font-size: 1.1rem; }
+  h2, .h2 { font-size: 0.95rem; }
+  h3, .h3 { font-size: 0.9rem; }
   body { font-size: 15px; }
 }
 
@@ -183,7 +282,7 @@ input:focus, select:focus, textarea:focus {
 .form-select {
   width: 100%;
   padding: var(--space-sm);
-  padding-right: 2.5rem;
+  padding-right: 3rem;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   font-size: var(--font-size-base);
@@ -193,14 +292,71 @@ input:focus, select:focus, textarea:focus {
   appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 140 140' width='16' height='16' xmlns='http://www.w3.org/2000/svg'%3E%3Cpolyline points='20,55 70,95 120,55' fill='none' stroke='%236B46C1' stroke-width='15' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  accent-color: var(--color-primary);
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 140 140' width='16' height='16' xmlns='http://www.w3.org/2000/svg'%3E%3Cpolyline points='20,55 70,95 120,55' fill='none' stroke='%230C4651' stroke-width='15' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
-  background-position: right 0.75rem center;
+  background-position: right 1rem center;
   background-size: 1.25rem 1.25rem;
 }
 .form-select:focus {
   outline: 2px solid var(--color-primary);
   border-color: var(--color-primary);
+}
+/* Style select options to match application color scheme */
+.form-select option {
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+.form-select option:checked {
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+/* Try to override browser default hover with beige theme */
+.form-select option:hover {
+  background: var(--color-bg-alt) !important;
+  color: var(--color-text) !important;
+}
+/* Ensure all select elements in modals use form-select styling */
+.modal select,
+.modal-overlay select {
+  width: 100%;
+  padding: var(--space-sm);
+  padding-right: 3rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-base);
+  background: var(--color-bg);
+  color: var(--color-text);
+  box-sizing: border-box;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  accent-color: var(--color-primary);
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 140 140' width='16' height='16' xmlns='http://www.w3.org/2000/svg'%3E%3Cpolyline points='20,55 70,95 120,55' fill='none' stroke='%230C4651' stroke-width='15' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 1.25rem 1.25rem;
+}
+.modal select:focus,
+.modal-overlay select:focus {
+  outline: 2px solid var(--color-primary);
+  border-color: var(--color-primary);
+}
+.modal select option,
+.modal-overlay select option {
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+.modal select option:checked,
+.modal-overlay select option:checked {
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+/* Try to override browser default hover with beige theme */
+.modal select option:hover,
+.modal-overlay select option:hover {
+  background: var(--color-bg-alt) !important;
+  color: var(--color-text) !important;
 }
 
 /* Navbar link styles (centralized) */
@@ -209,9 +365,9 @@ input:focus, select:focus, textarea:focus {
   text-decoration: none;
   font-weight: 500;
   padding: var(--space-xs) var(--space-sm);
-  border-radius: 3px;
-  transition: background 0.2s, color 0.2s;
-  background: none;
+  border-radius: var(--radius-sm);
+  transition: background-color 0.2s ease, color 0.2s ease;
+  background-color: transparent;
   outline: none;
   border: none;
   font-size: 1rem;
@@ -219,14 +375,14 @@ input:focus, select:focus, textarea:focus {
 }
 
 .navbar-link.active {
-  background: var(--color-primary);
+  background-color: var(--color-primary);
   color: var(--color-text-light);
   text-decoration: none;
 }
 
 .navbar-link:hover,
 .navbar-link:focus {
-  background: var(--color-primary-dark);
+  background-color: var(--color-primary-dark);
   color: var(--color-text-light);
   text-decoration: none;
 }
@@ -275,41 +431,116 @@ input:focus, select:focus, textarea:focus {
 .modal-overlay {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.3);
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 4000;
 }
 
 /* Modal - Base modal styles */
 .modal {
   background: var(--color-bg);
-  padding: var(--space-lg);
-  border-radius: var(--radius-md);
+  padding: var(--space-xl);
+  border-radius: var(--radius-lg);
   min-width: 300px;
-  max-width: 90vw;
-  box-shadow: 0 2px 16px rgba(0,0,0,0.2);
+  max-width: 600px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.modal h2 {
+  margin: 0 0 var(--space-lg) 0;
+  font-size: var(--font-size-xl);
+  color: var(--color-text);
+  font-family: var(--font-family-heading);
+  text-transform: uppercase;
+  padding-bottom: var(--space-md);
 }
 
 /* Modal Actions - Button container in modals */
 .modal-actions {
-  margin-top: var(--space-md);
+  margin-top: var(--space-lg);
+  padding-top: var(--space-lg);
+  border-top: 1px solid var(--color-border);
   display: flex;
   gap: var(--space-md);
-  justify-content: flex-start;
+  justify-content: flex-end;
+}
+
+.modal-actions button {
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-bold);
+  transition: all 0.2s;
+  border: 2px solid var(--color-button);
+}
+
+.modal-actions button[type="submit"] {
+  background: var(--color-button);
+  color: var(--color-text-light);
+}
+
+.modal-actions button[type="submit"]:hover:not(:disabled) {
+  background: var(--color-button-hover, var(--color-button));
+  border-color: var(--color-button-hover, var(--color-button));
+}
+
+.modal-actions button[type="button"],
+.modal-actions button[type="button"]:not([type="submit"]) {
+  background: transparent;
+  color: var(--color-text);
+  border-color: var(--color-border);
+}
+
+.modal-actions button[type="button"]:hover,
+.modal-actions button[type="button"]:not([type="submit"]):hover {
+  background: var(--color-bg-light);
+}
+
+.modal-actions button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 /* Form Group - Standard form field container */
 .form-group {
   display: flex;
   flex-direction: column;
-  margin-bottom: var(--space-md);
+  gap: var(--space-xs);
+  margin-bottom: 0.25rem;
 }
 
 .form-group label {
-  margin-bottom: var(--space-xs);
-  font-weight: 500;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-md);
+  font-family: inherit;
+  transition: border-color 0.2s;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: var(--color-button);
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 80px;
 }
 
 /* Error Messages - Consistent error styling */
@@ -333,6 +564,26 @@ th, td {
 
 th {
   background: var(--color-bg-alt);
+  /* Subtle paper line effect */
+  border-bottom: 2px solid var(--color-border);
+  position: relative;
+}
+
+td {
+  background: var(--color-bg-light);
+}
+
+/* Subtle hand-drawn line under table headers */
+th::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--color-pen-blue);
+  opacity: 0.2;
+  transform: rotate(-0.1deg);
 }
 
 /* Loading and Error States */
@@ -354,12 +605,17 @@ th {
   font-size: var(--font-size-xl);
 }
 
-/* Card/Container Styles */
+/* Card/Container Styles - Subtle paper effect */
 .card {
   background: var(--color-bg);
   border-radius: var(--radius-md);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  box-shadow: 
+    0 1px 3px rgba(0,0,0,0.05),
+    0 1px 2px rgba(0,0,0,0.03),
+    inset 0 1px 0 rgba(255,255,255,0.5);
   padding: var(--space-lg);
+  border: 1px solid var(--color-border-light);
+  position: relative;
 }
 
 /* Message Styles */
@@ -374,4 +630,30 @@ th {
   display: flex;
   justify-content: center;
   gap: var(--space-md);
+}
+
+/* Help Button - Shared across all layouts */
+.help-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: 6px 12px;
+  background: transparent;
+  color: var(--color-button);
+  border: 2px solid var(--color-button);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  transition: all 0.2s;
+}
+
+.help-btn:hover {
+  background: var(--color-button);
+  color: var(--color-text-light);
+}
+
+.help-btn .nav-icon {
+  width: 16px;
+  height: 16px;
 }

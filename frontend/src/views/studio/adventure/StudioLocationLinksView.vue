@@ -8,11 +8,14 @@
       <p>Select a game to manage location links.</p>
     </div>
     <div v-else class="game-table-section">
-      <p class="game-context-name">Game: {{ selectedGame.name }}</p>
-      <div class="section-header">
-        <h2>Location Links</h2>
-        <button @click="openCreate">Create New Location Link</button>
-      </div>
+      <GameContext :gameName="selectedGame.name" />
+      <PageHeader 
+        title="Location Links" 
+        actionText="Create New Location Link" 
+        :showIcon="false"
+        titleLevel="h2"
+        @action="openCreate"
+      />
       <ResourceTable
         :columns="columns"
         :rows="enhancedLocationLinks"
@@ -20,8 +23,7 @@
         :error="locationLinksStore.error"
       >
         <template #actions="{ row }">
-          <button @click="openEdit(row)">Edit</button>
-          <button @click="confirmDelete(row)">Delete</button>
+          <TableActionsMenu :actions="getActions(row)" />
         </template>
       </ResourceTable>
       
@@ -59,6 +61,9 @@ import { storeToRefs } from 'pinia';
 import ResourceTable from '../../../components/ResourceTable.vue';
 import ResourceModalForm from '../../../components/ResourceModalForm.vue';
 import ConfirmationModal from '../../../components/ConfirmationModal.vue';
+import PageHeader from '../../../components/PageHeader.vue';
+import GameContext from '../../../components/GameContext.vue';
+import TableActionsMenu from '../../../components/TableActionsMenu.vue';
 
 const locationLinksStore = useLocationLinksStore();
 const locationsStore = useLocationsStore();
@@ -188,6 +193,22 @@ async function deleteLocationLink() {
     console.error('Failed to delete location link:', err);
   }
 }
+
+function getActions(row) {
+  return [
+    {
+      key: 'edit',
+      label: 'Edit',
+      handler: () => openEdit(row)
+    },
+    {
+      key: 'delete',
+      label: 'Delete',
+      danger: true,
+      handler: () => confirmDelete(row)
+    }
+  ];
+}
 </script>
 
 <style scoped>
@@ -201,10 +222,5 @@ button {
   margin-right: var(--space-sm);
 }
 
-.game-context-name {
-  font-size: 1.1rem;
-  font-weight: 400;
-  color: #444;
-  margin-bottom: var(--space-sm);
-}
+/* Game context styling now handled by GameContext component */
 </style> 

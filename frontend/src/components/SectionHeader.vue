@@ -1,6 +1,9 @@
 <template>
   <div class="section-header">
-    <h2>{{ title }}</h2>
+    <h2 class="hand-drawn-title">
+      <HandDrawnIcon :type="iconType" :color="iconColor" class="title-icon" />
+      {{ title }}
+    </h2>
     <button @click="$emit('create')" class="create-btn">
       Create New {{ resourceName }}
     </button>
@@ -8,7 +11,9 @@
 </template>
 
 <script setup>
-defineProps({
+import HandDrawnIcon from './HandDrawnIcon.vue';
+
+const props = defineProps({
   title: {
     type: String,
     required: true
@@ -16,6 +21,14 @@ defineProps({
   resourceName: {
     type: String,
     required: true
+  },
+  iconType: {
+    type: String,
+    default: 'circle' // 'star', 'circle', 'checkbox-checked', etc.
+  },
+  iconColor: {
+    type: String,
+    default: 'blue' // 'blue', 'black', 'red'
   }
 });
 
@@ -33,6 +46,19 @@ defineEmits(['create']);
 
 .section-header h2 {
   margin: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  position: relative;
+}
+
+.hand-drawn-title {
+  position: relative;
+}
+
+.title-icon {
+  font-size: 0.8em;
+  margin-right: 0.2em;
 }
 
 .create-btn {

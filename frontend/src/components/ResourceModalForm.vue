@@ -1,10 +1,12 @@
 <template>
-  <div v-if="visible" class="modal-overlay">
+  <div v-if="visible" class="modal-overlay" @click.self="$emit('cancel')">
     <div class="modal">
       <h2>{{ mode === 'create' ? `Create ${title}` : `Edit ${title}` }}</h2>
-      <form @submit.prevent="handleSubmit">
+      <form @submit.prevent="handleSubmit" class="modal-form">
         <div v-for="field in fields" :key="field.key" class="form-group">
-          <label v-if="field.type !== 'checkbox'" :for="field.key">{{ field.label }}{{ field.required ? ' *' : '' }}</label>
+          <label v-if="field.type !== 'checkbox'" :for="field.key">
+            {{ field.label }}<span v-if="field.required" class="required"> *</span>
+          </label>
           <slot name="field" :field="field" :value="form[field.key]" :update="val => form[field.key] = val">
             <!-- Render select for select type -->
             <select
@@ -13,6 +15,7 @@
               :id="field.key"
               :required="field.required"
               :placeholder="field.placeholder"
+              class="form-select"
             >
               <option v-if="field.placeholder" value="" disabled>{{ field.placeholder }}</option>
               <option v-for="option in getFieldOptions(field)" :key="option.value" :value="option.value">
@@ -60,7 +63,9 @@
           <button type="button" @click="$emit('cancel')">Cancel</button>
         </div>
       </form>
-      <p v-if="error" class="error">{{ error }}</p>
+      <div v-if="error" class="error">
+        <p>{{ error }}</p>
+      </div>
     </div>
   </div>
 </template>
@@ -103,10 +108,33 @@ function handleSubmit() {
 </script>
 
 <style scoped>
+.modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.required {
+  color: var(--color-danger);
+}
+
+.error {
+  color: var(--color-warning-dark);
+  background: var(--color-warning-light);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-warning);
+  margin-top: var(--space-md);
+}
+
+.error p {
+  margin: 0;
+}
+
 .checkbox-group {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-xs);
 }
 
 .checkbox-group input[type="checkbox"] {
@@ -116,6 +144,22 @@ function handleSubmit() {
 
 .checkbox-label {
   margin: 0;
-  font-weight: normal;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+}
+
+@media (max-width: 768px) {
+  .modal {
+    padding: var(--space-lg);
+    width: 95%;
+  }
+
+  .modal-actions {
+    flex-direction: column-reverse;
+  }
+
+  .modal-actions button {
+    width: 100%;
+  }
 }
 </style> 

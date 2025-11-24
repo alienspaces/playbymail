@@ -27,4 +27,53 @@ export async function deleteMyAccount() {
   });
   if (!res.ok) throw new Error('Failed to delete account');
   return true;
-} 
+}
+
+export async function getAccountContacts(accountId) {
+  const res = await fetch(`${baseUrl}/api/v1/accounts/${accountId}/contacts`, {
+    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() }
+  });
+  if (!res.ok) throw new Error('Failed to fetch account contacts');
+  const data = await res.json();
+  return data.data || [];
+}
+
+export async function getAccountContact(accountId, contactId) {
+  const res = await fetch(`${baseUrl}/api/v1/accounts/${accountId}/contacts/${contactId}`, {
+    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() }
+  });
+  if (!res.ok) throw new Error('Failed to fetch account contact');
+  const data = await res.json();
+  return data.data;
+}
+
+export async function createAccountContact(accountId, contactData) {
+  const res = await fetch(`${baseUrl}/api/v1/accounts/${accountId}/contacts`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+    body: JSON.stringify(contactData)
+  });
+  if (!res.ok) throw new Error('Failed to create account contact');
+  const data = await res.json();
+  return data.data;
+}
+
+export async function updateAccountContact(accountId, contactId, contactData) {
+  const res = await fetch(`${baseUrl}/api/v1/accounts/${accountId}/contacts/${contactId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+    body: JSON.stringify(contactData)
+  });
+  if (!res.ok) throw new Error('Failed to update account contact');
+  const data = await res.json();
+  return data.data;
+}
+
+export async function deleteAccountContact(accountId, contactId) {
+  const res = await fetch(`${baseUrl}/api/v1/accounts/${accountId}/contacts/${contactId}`, {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() }
+  });
+  if (!res.ok) throw new Error('Failed to delete account contact');
+  return true;
+}

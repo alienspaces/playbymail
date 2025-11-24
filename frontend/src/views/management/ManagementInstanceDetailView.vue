@@ -8,9 +8,10 @@
       <div class="header-content">
         <h2>{{ selectedGame?.name }} - Instance Details</h2>
         <p>Manage game instance and monitor player activity</p>
-      </div>
-      <div class="header-actions">
-        <Button @click="goBack" variant="secondary">
+        <Button @click="goBack" variant="secondary" size="small" class="back-button">
+          <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+          </svg>
           Back to Instances
         </Button>
       </div>
@@ -30,8 +31,7 @@
     <!-- Instance details -->
     <div v-else-if="instance" class="instance-details">
       <!-- Status and Progress Section -->
-      <div class="detail-section">
-        <h3>Status & Progress</h3>
+      <DataCard title="Status & Progress">
         <div class="status-grid">
           <div class="status-item">
             <span class="label">Status</span>
@@ -48,11 +48,10 @@
             <span class="value">{{ formatDeadline(instance.next_turn_due_at) }}</span>
           </div>
         </div>
-      </div>
+      </DataCard>
 
       <!-- Timeline Section -->
-      <div class="detail-section">
-        <h3>Timeline</h3>
+      <DataCard title="Timeline">
         <div class="timeline-grid">
           <div class="timeline-item">
             <span class="label">Created</span>
@@ -71,11 +70,10 @@
             <span class="value">{{ formatDate(instance.completed_at) }}</span>
           </div>
         </div>
-      </div>
+      </DataCard>
 
       <!-- Runtime Controls Section -->
-      <div class="detail-section">
-        <h3>Runtime Controls</h3>
+      <DataCard title="Runtime Controls">
         <div class="controls-grid">
           <Button 
             v-if="instance.status === 'created'" 
@@ -110,83 +108,54 @@
             Cancel Game
           </Button>
         </div>
-      </div>
+      </DataCard>
 
       <!-- Game Instance Parameters Section -->
-      <div class="detail-section">
-        <h3>Game Instance Parameters</h3>
-        
-        <div v-if="instanceParametersLoading" class="loading-content">
-          <p>Loading parameters...</p>
-        </div>
-        <div v-else class="parameters-table-container">
-          <table class="parameters-table">
-            <thead>
-              <tr>
-                <th>Parameter</th>
-                <th>Type</th>
-                <th>Current Value</th>
-                <th>Default Value</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="param in allAvailableParameters" :key="param.config_key" class="parameter-row">
-                <td class="parameter-name">
-                  <div class="param-info">
-                    <strong>{{ param.description }}</strong>
-                    <small class="param-key">{{ param.config_key }}</small>
-                  </div>
-                </td>
-                <td class="parameter-type">
-                  <span class="type-badge" :class="'type-' + param.value_type">
-                    {{ param.value_type }}
-                  </span>
-                </td>
-                <td class="parameter-value">
-                  <div v-if="getCurrentParameterValue(param.config_key)" class="current-value">
-                    {{ getCurrentParameterValue(param.config_key) }}
-                  </div>
-                  <div v-else class="no-value">
-                    <em>Not set</em>
-                  </div>
-                </td>
-                <td class="parameter-default">
-                  <span v-if="param.default_value" class="default-value">
-                    {{ param.default_value }}
-                  </span>
-                  <span v-else class="no-default">
-                    <em>None</em>
-                  </span>
-                </td>
-                <td class="parameter-actions">
-                  <button 
-                    v-if="instance.status === 'created'"
-                    @click="editParameterInline(param)"
-                    class="btn-secondary btn-sm"
-                  >
-                    {{ getCurrentParameterValue(param.config_key) ? 'Edit' : 'Set' }}
-                  </button>
-                  <button 
-                    v-if="getCurrentParameterValue(param.config_key) && instance.status === 'created'"
-                    @click="removeParameterByKey(param.config_key)"
-                    class="btn-danger btn-sm"
-                  >
-                    Remove
-                  </button>
-                  <span v-else-if="instance.status !== 'created'" class="locked-message">
-                    <em>Locked</em>
-                  </span>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-          
-          <div v-if="allAvailableParameters.length === 0" class="no-parameters">
-            <p>No parameters available for this game type.</p>
-          </div>
-        </div>
-      </div>
+      <DataCard title="Game Instance Parameters">
+        <ResourceTable
+          :columns="parameterColumns"
+          :rows="parameterRows"
+          :loading="instanceParametersLoading"
+          :error="null"
+        >
+          <template #cell-parameter="{ row }">
+            <div class="param-info">
+              <strong>{{ row.description }}</strong>
+              <small class="param-key">{{ row.config_key }}</small>
+            </div>
+          </template>
+          <template #cell-type="{ row }">
+            <span class="type-badge" :class="'type-' + row.value_type">
+              {{ row.value_type }}
+            </span>
+          </template>
+          <template #cell-current_value="{ row }">
+            <div v-if="getCurrentParameterValue(row.config_key)" class="current-value">
+              {{ getCurrentParameterValue(row.config_key) }}
+            </div>
+            <div v-else class="no-value">
+              <em>Not set</em>
+            </div>
+          </template>
+          <template #cell-default_value="{ row }">
+            <span v-if="row.default_value" class="default-value">
+              {{ row.default_value }}
+            </span>
+            <span v-else class="no-default">
+              <em>None</em>
+            </span>
+          </template>
+          <template #actions="{ row }">
+            <TableActionsMenu 
+              v-if="instance && instance.status === 'created'"
+              :actions="getParameterActions(row)" 
+            />
+            <span v-else class="locked-message">
+              <em>Locked</em>
+            </span>
+          </template>
+        </ResourceTable>
+      </DataCard>
 
       <!-- Add/Edit Parameter Modal -->
       <div v-if="showEditParameterModal" class="modal-overlay" @click="closeParameterModal">
@@ -278,6 +247,9 @@ import { useGameInstancesStore } from '../../stores/gameInstances';
 import { useGameInstanceParametersStore } from '../../stores/gameInstanceParameters';
 import { useGameParametersStore } from '../../stores/gameParameters';
 import Button from '../../components/Button.vue';
+import TableActionsMenu from '../../components/TableActionsMenu.vue';
+import DataCard from '../../components/DataCard.vue';
+import ResourceTable from '../../components/ResourceTable.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -321,6 +293,22 @@ const allAvailableParameters = computed(() => {
     param.configured = instanceParameters.value.some(ip => ip.parameter_key === param.config_key);
   });
   return allParams;
+});
+
+// ResourceTable columns for parameters
+const parameterColumns = [
+  { key: 'parameter', label: 'Parameter' },
+  { key: 'type', label: 'Type' },
+  { key: 'current_value', label: 'Current Value' },
+  { key: 'default_value', label: 'Default Value' }
+];
+
+// ResourceTable rows for parameters (using allAvailableParameters as rows)
+const parameterRows = computed(() => {
+  return allAvailableParameters.value.map(param => ({
+    id: param.config_key,
+    ...param
+  }));
 });
 
 // Selected parameter type for form validation
@@ -538,6 +526,28 @@ const getCurrentParameterValue = (key) => {
   return param ? param.parameter_value : null;
 };
 
+const getParameterActions = (param) => {
+  const actions = [];
+  const hasValue = getCurrentParameterValue(param.config_key);
+  
+  actions.push({
+    key: hasValue ? 'edit' : 'set',
+    label: hasValue ? 'Edit' : 'Set',
+    handler: () => editParameterInline(param)
+  });
+  
+  if (hasValue) {
+    actions.push({
+      key: 'remove',
+      label: 'Remove',
+      danger: true,
+      handler: () => removeParameterByKey(param.config_key)
+    });
+  }
+  
+  return actions;
+};
+
 const getEditingParameterDescription = () => {
   const param = availableParameters.value.find(p => p.config_key === parameterForm.value.parameter_key);
   return param ? param.description : 'N/A';
@@ -556,21 +566,24 @@ const getEditingParameterDefault = () => {
 
 <style scoped>
 .instance-detail-view {
-  max-width: 1000px;
+  max-width: 1200px;
   margin: 0 auto;
 }
 
 .view-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: var(--space-xl);
+  margin-bottom: var(--space-lg);
   padding-bottom: var(--space-lg);
   border-bottom: 1px solid var(--color-border);
 }
 
+.header-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
 .header-content h2 {
-  margin: 0 0 var(--space-sm) 0;
+  margin: 0;
   font-size: var(--font-size-xl);
   color: var(--color-text);
 }
@@ -581,9 +594,14 @@ const getEditingParameterDefault = () => {
   font-size: var(--font-size-md);
 }
 
-.header-actions {
-  display: flex;
-  gap: var(--space-md);
+.back-button {
+  margin-top: var(--space-sm);
+  align-self: flex-start;
+}
+
+.icon {
+  width: 16px;
+  height: 16px;
 }
 
 .loading-state,
@@ -609,22 +627,6 @@ const getEditingParameterDefault = () => {
   display: flex;
   flex-direction: column;
   gap: var(--space-xl);
-}
-
-.detail-section {
-  background: var(--color-bg);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: var(--space-lg);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-.detail-section h3 {
-  margin: 0 0 var(--space-lg) 0;
-  font-size: var(--font-size-lg);
-  color: var(--color-text);
-  padding-bottom: var(--space-sm);
-  border-bottom: 1px solid var(--color-border);
 }
 
 .status-grid,
@@ -738,7 +740,6 @@ const getEditingParameterDefault = () => {
   display: flex;
   gap: var(--space-md);
   flex-wrap: wrap;
-  margin-top: var(--space-md);
 }
 
 .placeholder-content {
@@ -877,50 +878,7 @@ const getEditingParameterDefault = () => {
   margin: 0;
 }
 
-.parameters-table-container {
-  overflow-x: auto;
-  margin-top: var(--space-md);
-}
-
-.parameters-table {
-  width: 100%;
-  border-collapse: collapse;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  overflow: hidden;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.parameters-table th,
-.parameters-table td {
-  padding: var(--space-md);
-  text-align: left;
-  border-bottom: 1px solid var(--color-border-light);
-  vertical-align: top;
-}
-
-.parameters-table th {
-  background: var(--color-bg-light);
-  font-weight: var(--font-weight-bold);
-  color: var(--color-text);
-  position: sticky;
-  top: 0;
-  z-index: 1;
-  border-bottom: 2px solid var(--color-border);
-}
-
-.parameter-row:last-child td {
-  border-bottom: none;
-}
-
-.parameter-row:hover {
-  background-color: var(--color-bg-light);
-}
-
-.parameter-name {
-  min-width: 200px;
-}
-
+/* Parameter content styling */
 .param-info {
   display: flex;
   flex-direction: column;
@@ -936,11 +894,6 @@ const getEditingParameterDefault = () => {
   padding: 2px 6px;
   border-radius: var(--radius-xs);
   display: inline-block;
-}
-
-.parameter-type {
-  text-align: center;
-  min-width: 80px;
 }
 
 .type-badge {
@@ -962,14 +915,6 @@ const getEditingParameterDefault = () => {
 .type-array { background: var(--color-info); }
 .type-number { background: var(--color-success); }
 
-.parameter-value,
-.parameter-default {
-  font-size: var(--font-size-sm);
-  color: var(--color-text);
-  font-weight: var(--font-weight-medium);
-  min-width: 120px;
-}
-
 .current-value {
   color: var(--color-success);
   font-weight: var(--font-weight-bold);
@@ -990,21 +935,10 @@ const getEditingParameterDefault = () => {
   font-style: italic;
 }
 
-.parameter-actions {
-  min-width: 120px;
-  text-align: center;
-}
-
 .locked-message {
   color: var(--color-text-muted);
   font-style: italic;
   font-size: var(--font-size-sm);
-}
-
-.no-parameters {
-  text-align: center;
-  padding: var(--space-xl);
-  color: var(--color-text-muted);
 }
 
 .disabled-input {

@@ -8,11 +8,14 @@
       <p>Select a game to manage creatures.</p>
     </div>
     <div v-else class="game-table-section">
-      <p class="game-context-name">Game: {{ selectedGame.name }}</p>
-      <div class="section-header">
-        <h2>Creatures</h2>
-        <button @click="openCreate">Create New Creature</button>
-      </div>
+      <GameContext :gameName="selectedGame.name" />
+      <PageHeader 
+        title="Creatures" 
+        actionText="Create New Creature" 
+        :showIcon="false"
+        titleLevel="h2"
+        @action="openCreate"
+      />
       <ResourceTable
         :columns="columns"
         :rows="creaturesStore.creatures"
@@ -20,8 +23,7 @@
         :error="creaturesStore.error"
       >
         <template #actions="{ row }">
-          <button @click="openEdit(row)">Edit</button>
-          <button @click="confirmDelete(row)">Delete</button>
+          <TableActionsMenu :actions="getActions(row)" />
         </template>
       </ResourceTable>
 
@@ -57,6 +59,9 @@ import { useGamesStore } from '../../../stores/games';
 import ResourceTable from '../../../components/ResourceTable.vue';
 import ResourceModalForm from '../../../components/ResourceModalForm.vue';
 import ConfirmationModal from '../../../components/ConfirmationModal.vue';
+import PageHeader from '../../../components/PageHeader.vue';
+import GameContext from '../../../components/GameContext.vue';
+import TableActionsMenu from '../../../components/TableActionsMenu.vue';
 
 const creaturesStore = useCreaturesStore();
 const gamesStore = useGamesStore();
@@ -138,6 +143,22 @@ async function deleteCreature() {
     console.error('Failed to delete creature:', err);
   }
 }
+
+function getActions(row) {
+  return [
+    {
+      key: 'edit',
+      label: 'Edit',
+      handler: () => openEdit(row)
+    },
+    {
+      key: 'delete',
+      label: 'Delete',
+      danger: true,
+      handler: () => confirmDelete(row)
+    }
+  ];
+}
 </script>
 
 <style scoped>
@@ -149,10 +170,5 @@ async function deleteCreature() {
 button {
   margin-right: var(--space-sm);
 }
-.game-context-name {
-  font-size: 1.1rem;
-  font-weight: 400;
-  color: #444;
-  margin-bottom: var(--space-sm);
-}
+/* Game context styling now handled by GameContext component */
 </style> 

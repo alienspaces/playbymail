@@ -4,11 +4,14 @@
       <p>Please select or create a game to manage item placements.</p>
     </div>
     <div v-else class="game-table-section">
-      <p class="game-context-name">Game: {{ selectedGame.name }}</p>
-      <div class="section-header">
-        <h2>Item Placements</h2>
-        <button @click="openItemPlacementCreate">Create Item Placement</button>
-      </div>
+      <GameContext :gameName="selectedGame.name" />
+      <PageHeader 
+        title="Item Placements" 
+        actionText="Create Item Placement" 
+        :showIcon="false"
+        titleLevel="h2"
+        @action="openItemPlacementCreate"
+      />
       <ResourceTable
         :columns="itemPlacementColumns"
         :rows="enhancedItemPlacements"
@@ -16,10 +19,7 @@
         :error="itemPlacementsStore.error"
       >
         <template #actions="{ row }">
-          <div style="display: flex; gap: var(--space-sm);">
-            <button @click="openItemPlacementEdit(row)">Edit</button>
-            <button @click="confirmItemPlacementDelete(row)">Delete</button>
-          </div>
+          <TableActionsMenu :actions="getActions(row)" />
         </template>
       </ResourceTable>
 
@@ -58,6 +58,9 @@ import { storeToRefs } from 'pinia';
 import ResourceTable from '../../../components/ResourceTable.vue';
 import ResourceModalForm from '../../../components/ResourceModalForm.vue';
 import ConfirmationModal from '../../../components/ConfirmationModal.vue';
+import PageHeader from '../../../components/PageHeader.vue';
+import GameContext from '../../../components/GameContext.vue';
+import TableActionsMenu from '../../../components/TableActionsMenu.vue';
 
 const itemsStore = useItemsStore();
 const locationsStore = useLocationsStore();
@@ -176,6 +179,22 @@ async function deleteItemPlacement() {
     console.error('Failed to delete item placement:', err);
   }
 }
+
+function getActions(row) {
+  return [
+    {
+      key: 'edit',
+      label: 'Edit',
+      handler: () => openItemPlacementEdit(row)
+    },
+    {
+      key: 'delete',
+      label: 'Delete',
+      danger: true,
+      handler: () => confirmItemPlacementDelete(row)
+    }
+  ];
+}
 </script>
 
 <style scoped>
@@ -187,10 +206,5 @@ async function deleteItemPlacement() {
 button {
   margin-right: var(--space-sm);
 }
-.game-context-name {
-  font-size: 1.1rem;
-  font-weight: 400;
-  color: #444;
-  margin-bottom: var(--space-sm);
-}
+/* Game context styling now handled by GameContext component */
 </style> 

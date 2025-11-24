@@ -1,6 +1,7 @@
 <template>
-  <p v-if="gameName" class="game-context-name">
-    Game: {{ gameName }}
+  <p class="game-context">
+    <span class="game-context-label">Game:</span>
+    <span class="game-context-name">{{ gameName }}</span>
   </p>
 </template>
 
@@ -8,16 +9,25 @@
 defineProps({
   gameName: {
     type: String,
-    default: ''
+    required: true
   }
 });
 </script>
 
 <style scoped>
-.game-context-name {
-  font-size: 1.1rem;
-  font-weight: 400;
-  color: #444;
-  margin-bottom: var(--space-sm);
+.game-context {
+  margin: 0 0 var(--space-md) 0;
+  font-size: var(--font-size-base);
+  color: var(--color-text);
+  font-weight: var(--font-weight-normal);
 }
-</style> 
+
+.game-context-label {
+  font-weight: var(--font-weight-semibold);
+  margin-right: var(--space-xs);
+}
+
+.game-context-name {
+  font-weight: var(--font-weight-semibold);
+}
+</style>

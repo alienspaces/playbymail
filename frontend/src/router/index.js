@@ -45,8 +45,11 @@ const routes = [
   },
   {
     path: '/account',
-    name: 'Account',
-    component: () => import('../views/AccountView.vue'),
+    component: () => import('../components/AccountLayout.vue'),
+    children: [
+      { path: '', name: 'AccountProfile', component: () => import('../views/account/AccountProfileView.vue') },
+      { path: 'contacts', name: 'AccountContacts', component: () => import('../views/account/AccountContactsView.vue') },
+    ],
   },
   {
     path: '/admin',

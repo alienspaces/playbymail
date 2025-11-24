@@ -1,6 +1,9 @@
 <template>
   <div class="studio-entry">
-    <h1>Game Designer Studio</h1>
+    <h1 class="hand-drawn-title">
+      <HandDrawnIcon type="pencil" color="blue" class="title-icon" />
+      Game Designer Studio
+    </h1>
     <p>
       The Game Designer Studio is your workspace for creating, editing, and managing play-by-mail games. Here, designers can:
     </p>
@@ -18,7 +21,9 @@
   </div>
 </template>
 
-
+<script setup>
+import HandDrawnIcon from '../components/HandDrawnIcon.vue';
+</script>
 
 <style scoped>
 .studio-entry {
@@ -32,6 +37,20 @@
 .studio-entry h1 {
   margin-bottom: var(--space-lg);
   font-size: var(--font-size-xl);
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  position: relative;
+  color: var(--color-text);
+}
+
+.hand-drawn-title {
+  position: relative;
+}
+
+.title-icon {
+  font-size: 0.8em;
+  margin-right: 0.2em;
 }
 .studio-entry p {
   margin-bottom: var(--space-md);
@@ -69,5 +88,12 @@
 .cta-button:hover {
   background: var(--color-button);
   color: var(--color-text-light);
+}
+
+/* Mobile responsive breakpoint */
+@media (max-width: 900px) {
+  .studio-entry {
+    padding: var(--space-md);
+  }
 }
 </style> 

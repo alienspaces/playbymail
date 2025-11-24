@@ -10,17 +10,20 @@
     <!-- Show full management interface for authenticated users -->
     <div v-else>
       <!-- Management Header -->
-      <div class="management-header">
-        <h1>Game Management</h1>
-        <div class="header-actions">
+      <MainPageHeader 
+        title="Game Management" 
+        icon-type="clipboard" 
+        icon-color="blue"
+      >
+        <template #actions>
           <button class="help-btn" @click="showHelp = true">
             <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
               <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/>
             </svg>
             Help
           </button>
-        </div>
-      </div>
+        </template>
+      </MainPageHeader>
 
       <!-- Main content area -->
       <div class="management-body">
@@ -67,6 +70,7 @@ import { ref, computed } from 'vue';
 import { useAuthStore } from '../stores/auth';
 import { storeToRefs } from 'pinia';
 import ManagementEntryView from '../views/ManagementEntryView.vue';
+import MainPageHeader from './MainPageHeader.vue';
 
 const authStore = useAuthStore();
 const { sessionToken } = storeToRefs(authStore);
@@ -77,53 +81,10 @@ const showHelp = ref(false);
 <style scoped>
 .management-layout {
   min-height: 100vh;
-  background: var(--color-bg-light);
 }
 
-.management-header {
-  background: var(--color-bg);
-  border-bottom: 1px solid var(--color-border);
-  padding: var(--space-md) var(--space-xl);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
+/* Header styling now handled by MainPageHeader component */
 
-.management-header h1 {
-  margin: 0;
-  font-size: var(--font-size-xl);
-  color: var(--color-text);
-}
-
-.header-actions {
-  display: flex;
-  gap: var(--space-md);
-}
-
-.help-btn {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  padding: var(--space-sm) var(--space-md);
-  background: transparent;
-  color: var(--color-button);
-  border: 2px solid var(--color-button);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  font-size: var(--font-size-sm);
-  transition: all 0.2s;
-}
-
-.help-btn:hover {
-  background: var(--color-button);
-  color: var(--color-text-light);
-}
-
-.nav-icon {
-  width: 16px;
-  height: 16px;
-}
 
 .management-body {
   padding: var(--space-xl);

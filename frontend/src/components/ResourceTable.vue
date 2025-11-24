@@ -9,7 +9,11 @@
       </thead>
       <tbody>
         <tr v-for="row in rows" :key="row.id">
-          <td v-for="col in columns" :key="col.key">{{ row[col.key] }}</td>
+          <td v-for="col in columns" :key="col.key">
+            <slot :name="`cell-${col.key}`" :row="row" :column="col">
+              {{ row[col.key] }}
+            </slot>
+          </td>
           <td v-if="$slots.actions">
             <slot name="actions" :row="row" />
           </td>
@@ -36,18 +40,14 @@ defineProps({
   width: 100%;
 }
 
-/* Add spacing between action buttons */
+/* Actions column styling */
+.resource-table-section th:last-child,
 .resource-table-section td:last-child {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.resource-table-section td:last-child button {
-  margin-right: 8px;
-}
-
-.resource-table-section td:last-child button:last-child {
-  margin-right: 0;
+  text-align: center;
+  width: 60px;
+  white-space: nowrap;
+  vertical-align: middle;
+  padding-left: var(--space-sm);
+  padding-right: var(--space-sm);
 }
 </style> 

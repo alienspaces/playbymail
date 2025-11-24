@@ -5,6 +5,7 @@ import { storeToRefs } from 'pinia';
 import { ref } from 'vue';
 import BuildInfo from './components/BuildInfo.vue';
 import ComingSoonBanner from './components/ComingSoonBanner.vue';
+import titleImage from './assets/title-logo-v4.png';
 
 const authStore = useAuthStore();
 const { sessionToken } = storeToRefs(authStore);
@@ -25,87 +26,157 @@ function closeMobileMenu() {
 
 <template>
   <div id="app">
-    <nav class="navbar">
-      <div class="nav-links">
-        <router-link to="/" class="logo">
-          <svg class="logo-icon" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-          </svg>
-          <span class="logo-text">
-            <span class="logo-capital">P</span>lay<span class="logo-capital">B</span>y<span class="logo-capital">M</span>ail
-          </span>
-        </router-link>
-        <router-link to="/faq" class="navbar-link" exact-active-class="active" @click="closeMobileMenu">F.A.Q.</router-link>
-        <router-link to="/studio" class="navbar-link" exact-active-class="active" @click="closeMobileMenu">Game Designer Studio</router-link>
-        <router-link to="/admin" class="navbar-link" exact-active-class="active" @click="closeMobileMenu">Game Management</router-link>
-      </div>
-      <div class="nav-actions">
-        <template v-if="sessionToken">
-          <router-link to="/account" class="navbar-link" exact-active-class="active" @click="closeMobileMenu">Account</router-link>
-          <button @click="logout">Logout</button>
-        </template>
-        <template v-else>
-          <router-link to="/login" class="navbar-link" exact-active-class="active" @click="closeMobileMenu">Login</router-link>
-        </template>
-      </div>
-      <router-link to="/" class="mobile-logo">
-        <span class="logo-text">
-          <span class="logo-capital">P</span>lay<span class="logo-capital">B</span>y<span class="logo-capital">M</span>ail
-        </span>
-      </router-link>
-      <button class="burger icon-btn" @click="toggleMobileMenu" aria-label="Open navigation menu">
-        <span :class="{ 'open': mobileMenuOpen }"></span>
-        <span :class="{ 'open': mobileMenuOpen }"></span>
-        <span :class="{ 'open': mobileMenuOpen }"></span>
-      </button>
-      <div class="mobile-menu" v-if="mobileMenuOpen">
-        <router-link to="/faq" class="navbar-link" exact-active-class="active" @click="closeMobileMenu">F.A.Q.</router-link>
-        <router-link to="/studio" class="navbar-link" exact-active-class="active" @click="closeMobileMenu">Game Designer Studio</router-link>
-        <router-link to="/admin" class="navbar-link" exact-active-class="active" @click="closeMobileMenu">Game Management</router-link>
-        <div class="mobile-actions">
+    <div class="navbar-container">
+      <nav class="navbar">
+        <div class="nav-links">
+          <router-link to="/" class="logo">
+            <img :src="titleImage" alt="Play By Mail" class="logo-image" />
+          </router-link>
+          <router-link to="/faq" class="navbar-link" exact-active-class="active"
+            @click="closeMobileMenu">F.A.Q.</router-link>
+          <router-link to="/studio" class="navbar-link" exact-active-class="active" @click="closeMobileMenu">Game
+            Designer Studio</router-link>
+          <router-link to="/admin" class="navbar-link" exact-active-class="active" @click="closeMobileMenu">Game
+            Management</router-link>
+        </div>
+        <div class="nav-actions">
           <template v-if="sessionToken">
-            <router-link to="/account" class="navbar-link" exact-active-class="active" @click="closeMobileMenu">Account</router-link>
+            <router-link to="/account" class="navbar-link" exact-active-class="active"
+              @click="closeMobileMenu">Account</router-link>
             <button @click="logout">Logout</button>
           </template>
           <template v-else>
-            <router-link to="/login" class="navbar-link" exact-active-class="active" @click="closeMobileMenu">Login</router-link>
+            <router-link to="/login" class="navbar-link" exact-active-class="active"
+              @click="closeMobileMenu">Login</router-link>
           </template>
         </div>
-      </div>
-    </nav>
-    <router-view />
-          <footer>
-        <ComingSoonBanner class="footer-banner" />
-        <div class="footer-center">
-          <BuildInfo />
-          <p>&copy; 2025 PlayByMail. All rights reserved.</p>
-          <p>
-            <a href="mailto:support@playbymail.games" class="footer-link">support@playbymail.games</a>
-          </p>
+        <router-link to="/" class="mobile-logo">
+          <img :src="titleImage" alt="Play By Mail" class="logo-image" />
+        </router-link>
+        <button class="burger icon-btn" @click="toggleMobileMenu" aria-label="Open navigation menu">
+          <span :class="{ 'open': mobileMenuOpen }"></span>
+          <span :class="{ 'open': mobileMenuOpen }"></span>
+          <span :class="{ 'open': mobileMenuOpen }"></span>
+        </button>
+        <div class="mobile-menu" v-if="mobileMenuOpen">
+          <router-link to="/faq" class="navbar-link" exact-active-class="active"
+            @click="closeMobileMenu">F.A.Q.</router-link>
+          <router-link to="/studio" class="navbar-link" exact-active-class="active" @click="closeMobileMenu">Game
+            Designer
+            Studio</router-link>
+          <router-link to="/admin" class="navbar-link" exact-active-class="active" @click="closeMobileMenu">Game
+            Management</router-link>
+          <div class="mobile-actions">
+            <template v-if="sessionToken">
+              <router-link to="/account" class="navbar-link" exact-active-class="active"
+                @click="closeMobileMenu">Account</router-link>
+              <button @click="logout">Logout</button>
+            </template>
+            <template v-else>
+              <router-link to="/login" class="navbar-link" exact-active-class="active"
+                @click="closeMobileMenu">Login</router-link>
+            </template>
+          </div>
         </div>
-      </footer>
+      </nav>
+    </div>
+    <main class="main-content">
+      <router-view />
+    </main>
+    <footer>
+      <ComingSoonBanner class="footer-banner" />
+      <div class="footer-center">
+        <BuildInfo />
+        <p>&copy; 2025 PlayByMail. All rights reserved.</p>
+        <p>
+          <a href="mailto:support@playbymail.games" class="footer-link">support@playbymail.games</a>
+        </p>
+      </div>
+    </footer>
   </div>
 </template>
 
 <style>
+html,
+body {
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
 #app {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  overflow: visible;
+  position: relative;
 }
+
+/* Ensure app fills viewport height on larger screens */
+@media (min-width: 769px) {
+  #app {
+    height: 100vh;
+    min-height: 100vh;
+  }
+}
+
+/* Make main content area grow to fill space and push footer down */
+.main-content {
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 60px;
+}
+
+.navbar-container {
+  position: relative;
+  overflow: visible;
+  margin-top: var(--space-md);
+  min-height: 140px;
+  /* Accommodate 140px image with bleed */
+  display: flex;
+  align-items: center;
+}
+
 .navbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #1F1B3D; /* Deep purple-black for navbar */
+  background: transparent;
   color: var(--color-text-light);
-  padding: var(--space-md) var(--space-lg);
+  padding: 0 var(--space-lg);
   position: relative;
+  width: 100%;
+  min-height: 67.5px;
+  /* 50% wider green band */
 }
+
+.navbar::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 67.5px;
+  background: var(--color-logo-teal);
+  transform: translateY(-50%);
+  z-index: 0;
+}
+
+.navbar>* {
+  position: relative;
+  z-index: 1;
+}
+
 .nav-links {
   display: flex;
   align-items: center;
-  gap: var(--space-lg);
+  gap: var(--space-md);
+}
+
+.nav-links .logo {
+  margin-right: var(--space-md);
+  position: relative;
+  z-index: 10;
 }
 
 .nav-links .coming-soon-banner {
@@ -114,65 +185,80 @@ function closeMobileMenu() {
 
 .navbar-link {
   color: var(--color-text-light);
-  text-decoration: underline;
+  text-decoration: none;
   font-weight: 500;
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-sm);
+  transition: background-color 0.2s ease, color 0.2s ease;
+  white-space: nowrap;
 }
+
+.nav-actions .navbar-link {
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-sm);
+  padding: 6px 12px;
+}
+
 .logo {
-  font-family: var(--font-family-heading);
-  font-weight: var(--font-weight-bold);
-  font-size: var(--font-size-xl);
-  line-height: 1.1;
   display: flex;
   align-items: center;
-  gap: var(--space-sm);
-  color: var(--color-accent);
-  letter-spacing: 0.5px;
   text-decoration: none !important;
+  padding: 0;
+  margin: 0;
 }
+
 .logo:hover,
 .logo:focus,
 .logo:active,
 .logo:visited {
   text-decoration: none !important;
-  color: var(--color-accent);
+  opacity: 0.9;
 }
 
-.logo-icon {
-  width: 24px;
-  height: 24px;
+.logo-image {
+  height: 140px;
+  width: auto;
+  display: block;
   flex-shrink: 0;
+  margin: -10px 0;
+  padding: 0;
+  border-radius: var(--radius-md);
 }
 
-.logo-text {
-  color: var(--color-accent-light);
-}
-
-.logo-capital {
-  color: var(--color-accent);
-}
 .nav-actions {
   display: flex;
   align-items: center;
   gap: var(--space-md);
 }
+
 .nav-actions button {
   background: var(--color-accent);
   color: var(--color-text-light);
   border: none;
-  padding: var(--space-sm) var(--space-md);
+  padding: 6px 12px;
   border-radius: var(--radius-sm);
-  font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-sm);
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background-color 0.2s ease;
+  white-space: nowrap;
 }
+
 .nav-actions button:hover {
   background: var(--color-accent-dark);
 }
+
 .nav-actions a {
   color: var(--color-text-light);
-  text-decoration: underline;
-  font-weight: 500;
+  text-decoration: none;
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-sm);
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  transition: background-color 0.2s ease, color 0.2s ease;
+  white-space: nowrap;
 }
+
 .burger {
   display: none;
   flex-direction: column;
@@ -183,6 +269,7 @@ function closeMobileMenu() {
   margin-left: var(--space-md);
   z-index: 1002;
 }
+
 .burger span {
   display: block;
   width: 26px;
@@ -192,15 +279,19 @@ function closeMobileMenu() {
   border-radius: 2px;
   transition: 0.3s;
 }
+
 .burger span.open:nth-child(1) {
   transform: translateY(7px) rotate(45deg);
 }
+
 .burger span.open:nth-child(2) {
   opacity: 0;
 }
+
 .burger span.open:nth-child(3) {
   transform: translateY(-7px) rotate(-45deg);
 }
+
 .mobile-menu {
   display: flex;
   flex-direction: column;
@@ -208,16 +299,13 @@ function closeMobileMenu() {
   top: 100%;
   left: 0;
   right: 0;
-  background: #1F1B3D; /* Deep purple-black */
+  background: var(--color-logo-teal-light);
+  /* Lighter teal matching footer */
   padding: var(--space-lg) var(--space-lg) var(--space-lg) var(--space-lg);
   z-index: 3000;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
   animation: fadeIn 0.2s;
 }
-
-
-
-
 
 .mobile-menu a {
   color: var(--color-text-light);
@@ -227,14 +315,17 @@ function closeMobileMenu() {
   border-radius: 3px;
   font-size: var(--font-size-md);
 }
+
 .mobile-menu .logo {
   font-size: var(--font-size-md);
   font-weight: var(--font-weight-bold);
   margin-bottom: var(--space-md);
 }
+
 .mobile-actions {
   margin-top: var(--space-lg);
 }
+
 .mobile-actions button {
   width: 100%;
   background: var(--color-accent);
@@ -247,82 +338,114 @@ function closeMobileMenu() {
   font-size: var(--font-size-md);
   transition: background 0.2s;
 }
+
 .mobile-actions button:hover {
   background: var(--color-accent-dark);
 }
+
 .mobile-logo {
   display: none;
 }
-
-
-
-
-
-
 
 @media (max-width: 768px) {
   .nav-actions {
     display: none;
   }
-  
+
   .nav-links {
     display: none;
   }
+
   .burger {
     display: flex;
   }
+
   .mobile-logo {
     display: block;
-    color: var(--color-text-light);
-    font-size: var(--font-size-lg); /* Reduced from xl to lg */
-    line-height: 1.1;
-    margin-right: var(--space-sm); /* Reduced from md to sm */
-    margin-left: var(--space-sm);
+    margin: 0;
+    padding: 0;
     user-select: none;
     align-self: center;
-    flex-shrink: 1; /* Allow logo to shrink if needed */
+    flex-shrink: 1;
     text-decoration: none !important;
   }
+
   .mobile-logo:hover,
   .mobile-logo:focus,
   .mobile-logo:active,
   .mobile-logo:visited {
     text-decoration: none !important;
-    color: var(--color-text-light);
+    opacity: 0.9;
   }
-  
 
-  
+  .mobile-logo .logo-image {
+    height: 100px;
+    margin: -10px 0;
+    padding: 0;
+    border-radius: var(--radius-md);
+  }
 
 
-  /* Ensure navbar has proper spacing */
+
+
+
+  /* Ensure navbar container and navbar have proper spacing on mobile */
+  .navbar-container {
+    min-height: 100px;
+    /* Accommodate 100px mobile logo with bleed */
+  }
+
   .navbar {
-    padding: var(--space-md) var(--space-sm); /* Reduced horizontal padding on mobile */
+    padding: var(--space-xs) var(--space-sm);
+    /* Reduced padding on mobile for larger logo */
+    min-height: 45px;
+    /* 50% wider green band on mobile */
+  }
+
+  .navbar::before {
+    height: 45px;
   }
 }
+
 @media (min-width: 769px) {
   .mobile-menu {
     display: none !important;
   }
+
   .mobile-logo {
     display: none;
   }
 
 }
+
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 
 
 /* Footer styling */
 footer {
-  margin-top: 0;
+  margin-top: 60px;
   padding: var(--space-sm) var(--space-lg);
-  background: var(--color-background-soft);
-  border-top: 1px solid var(--color-border);
+  min-height: 110px;
+  background: var(--color-logo-teal-light);
+  /* Lighter teal matching header */
+  border-top: 1px solid var(--color-logo-teal);
   position: relative;
+  overflow: visible;
+  margin-bottom: 60px;
+  z-index: 1;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .footer-banner {
@@ -330,6 +453,8 @@ footer {
   left: var(--space-lg);
   top: 50%;
   transform: translateY(-50%);
+  z-index: 10;
+  pointer-events: none;
 }
 
 .footer-center {
@@ -338,30 +463,46 @@ footer {
   align-items: center;
   gap: var(--space-sm);
   text-align: center;
-  padding: var(--space-md) 0;
+  padding: var(--space-xs) var(--space-lg);
+  margin-left: 200px;
+  margin-right: var(--space-lg);
+  box-sizing: border-box;
+  min-width: 0;
+  flex-shrink: 1;
 }
 
 footer p {
   margin: 0;
-  color: var(--color-text-muted);
+  color: var(--color-text-light);
   font-size: var(--font-size-sm);
 }
 
 .footer-link {
-  color: var(--color-text-muted);
+  color: var(--color-text-light);
   text-decoration: underline;
 }
 
 .footer-link:hover {
-  color: var(--color-text);
+  color: var(--color-logo-beige-light);
 }
 
 /* Mobile footer adjustments */
 @media (max-width: 768px) {
-  footer {
-    padding: var(--space-xs) var(--space-md);
+  .main-content {
+    margin-bottom: 0;
   }
-  
+
+  footer {
+    margin-top: 0;
+    margin-bottom: 0;
+    padding: var(--space-md) var(--space-md);
+    min-height: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
   .footer-banner {
     position: relative;
     left: auto;
@@ -369,16 +510,12 @@ footer p {
     transform: none;
     margin-bottom: var(--space-sm);
   }
-  
+
   .footer-center {
     padding: 0;
-  }
-  
-  footer {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
+    margin-left: 0;
+    margin-right: 0;
+    width: 100%;
   }
 }
 </style>

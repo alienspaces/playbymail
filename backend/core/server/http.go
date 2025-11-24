@@ -257,7 +257,21 @@ func (rnr *Runner) registerDefaultStaticRoutes(r *httprouter.Router) (*httproute
 
 	if rnr.Config.AssetsPath != "" {
 		l.Info("(core) registering assets file server, serving from >%s<", rnr.Config.AssetsPath)
-		r.ServeFiles("/assets/*filepath", http.Dir(rnr.Config.AssetsPath))
+
+		// Create assets file server with cache-control headers
+		assetsFileServer := http.FileServer(http.Dir(rnr.Config.AssetsPath))
+		assetsHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// Assets can be cached, but not too aggressively in development
+			w.Header().Set("Cache-Control", "public, max-age=3600")
+			assetsFileServer.ServeHTTP(w, r)
+		})
+
+		// Register assets route with httprouter
+		r.GET("/assets/*filepath", func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+			// Restore the original path for the file server
+			r.URL.Path = "/assets" + ps.ByName("filepath")
+			assetsHandler.ServeHTTP(w, r)
+		})
 	}
 
 	if rnr.Config.AppHome != "" {
@@ -265,6 +279,39 @@ func (rnr *Runner) registerDefaultStaticRoutes(r *httprouter.Router) (*httproute
 
 		// Create a file server for the static directory
 		fileServer := http.FileServer(http.Dir(rnr.Config.AppHome))
+
+		// Wrap file server with cache-control headers
+		cachedFileServer := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			filePath := r.URL.Path
+
+			// Set cache-control headers based on file type
+			if strings.HasSuffix(filePath, ".html") || filePath == "/" || filePath == "" {
+				// HTML files (especially index.html) should not be cached
+				// to ensure SPA always gets the latest version
+				w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+				w.Header().Set("Pragma", "no-cache")
+				w.Header().Set("Expires", "0")
+			} else if strings.HasSuffix(filePath, ".js") || strings.HasSuffix(filePath, ".css") {
+				// Check if file has Vite content hash (pattern: name-hash.ext)
+				// Vite hashes look like: index-abc123.js or main-def456.css
+				baseName := strings.TrimSuffix(filePath, ".js")
+				baseName = strings.TrimSuffix(baseName, ".css")
+				// If filename contains a dash followed by alphanumeric hash, it's hashed
+				hasHash := strings.Contains(baseName, "-") && len(baseName) > 8
+				if hasHash {
+					// Hashed assets can be cached long-term
+					w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+				} else {
+					// Non-hashed assets should not be cached in development
+					w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+				}
+			} else {
+				// Other static assets (images, fonts, etc.)
+				w.Header().Set("Cache-Control", "public, max-age=86400")
+			}
+
+			fileServer.ServeHTTP(w, r)
+		})
 
 		// Create a custom NotFound handler that implements SPA fallback
 		r.NotFound = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -274,8 +321,8 @@ func (rnr *Runner) registerDefaultStaticRoutes(r *httprouter.Router) (*httproute
 			// Check if the file exists
 			fullPath := rnr.Config.AppHome + filePath
 			if _, err := os.Stat(fullPath); err == nil {
-				// File exists, serve it normally
-				fileServer.ServeHTTP(w, r)
+				// File exists, serve it with cache headers
+				cachedFileServer.ServeHTTP(w, r)
 				return
 			}
 
@@ -283,7 +330,7 @@ func (rnr *Runner) registerDefaultStaticRoutes(r *httprouter.Router) (*httproute
 			if _, err := os.Stat(fullPath + "/index.html"); err == nil {
 				// Directory with index.html exists, serve it
 				r.URL.Path = filePath + "/index.html"
-				fileServer.ServeHTTP(w, r)
+				cachedFileServer.ServeHTTP(w, r)
 				return
 			}
 
@@ -292,7 +339,7 @@ func (rnr *Runner) registerDefaultStaticRoutes(r *httprouter.Router) (*httproute
 			if !strings.HasPrefix(filePath, "/api/") && !strings.HasPrefix(filePath, "/v1/") && !strings.HasPrefix(filePath, "/healthz") && !strings.HasPrefix(filePath, "/liveness") {
 				l.Debug("(core) serving index.html for SPA route >%s<", filePath)
 				r.URL.Path = "/index.html"
-				fileServer.ServeHTTP(w, r)
+				cachedFileServer.ServeHTTP(w, r)
 				return
 			}
 

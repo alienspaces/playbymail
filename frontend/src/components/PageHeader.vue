@@ -1,6 +1,9 @@
 <template>
   <div class="page-header">
-    <h1>{{ title }}</h1>
+    <component :is="titleTag" class="hand-drawn-title" :class="titleClass">
+      <HandDrawnIcon v-if="showIcon" :type="iconType" :color="iconColor" class="title-icon" />
+      {{ title }}
+    </component>
     <button v-if="actionText" @click="$emit('action')" class="action-btn">
       {{ actionText }}
     </button>
@@ -8,7 +11,10 @@
 </template>
 
 <script setup>
-defineProps({
+import { computed } from 'vue';
+import HandDrawnIcon from './HandDrawnIcon.vue';
+
+const props = defineProps({
   title: {
     type: String,
     required: true
@@ -16,7 +22,29 @@ defineProps({
   actionText: {
     type: String,
     default: ''
+  },
+  iconType: {
+    type: String,
+    default: 'star' // 'star', 'circle', 'checkbox-checked', etc.
+  },
+  iconColor: {
+    type: String,
+    default: 'blue' // 'blue', 'black', 'red'
+  },
+  showIcon: {
+    type: Boolean,
+    default: true // Show icon by default
+  },
+  titleLevel: {
+    type: String,
+    default: 'h1', // 'h1' for main titles, 'h2' for section titles
+    validator: (value) => ['h1', 'h2'].includes(value)
   }
+});
+
+const titleTag = computed(() => props.titleLevel);
+const titleClass = computed(() => {
+  return props.titleLevel === 'h2' ? 'section-title' : '';
 });
 
 defineEmits(['action']);
@@ -31,8 +59,32 @@ defineEmits(['action']);
   margin-bottom: var(--space-lg);
 }
 
-.page-header h1 {
+.page-header h1,
+.page-header h2 {
   margin: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  position: relative;
+}
+
+/* Section titles (h2) should be smaller than main titles (h1) */
+.page-header h2.section-title {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: var(--space-sm);
+}
+
+.hand-drawn-title {
+  position: relative;
+}
+
+.title-icon {
+  font-size: 0.8em;
+  margin-right: 0.2em;
 }
 
 .action-btn {

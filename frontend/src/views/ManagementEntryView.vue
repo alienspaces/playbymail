@@ -1,7 +1,10 @@
 <template>
   <div>
     <div v-if="!isLoggedIn" class="admin-entry">
-      <h1>Game Management</h1>
+      <h1 class="hand-drawn-title">
+        <HandDrawnIcon type="clipboard" color="blue" class="title-icon" />
+        Game Management
+      </h1>
       <p>
         This area is for game managers to subscribe to or purchase games, configure runtime parameters, review automated turn processing, attend to player queries, and provide assistance. The platform automatically processes player turns, but game managers provide human oversight and support.
       </p>
@@ -38,6 +41,8 @@
 <script setup>
 import { useAuthStore } from '../stores/auth';
 import { computed } from 'vue';
+import HandDrawnIcon from '../components/HandDrawnIcon.vue';
+
 const authStore = useAuthStore();
 const isLoggedIn = computed(() => !!authStore.sessionToken);
 </script>
@@ -53,7 +58,21 @@ const isLoggedIn = computed(() => !!authStore.sessionToken);
 }
 .admin-entry h1 {
   margin-bottom: 1.5rem;
-  font-size: 2.2rem;
+  font-size: var(--font-size-xl);
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  position: relative;
+  color: var(--color-text);
+}
+
+.hand-drawn-title {
+  position: relative;
+}
+
+.title-icon {
+  font-size: 0.8em;
+  margin-right: 0.2em;
 }
 .admin-entry p {
   margin-bottom: 1.25rem;
@@ -90,7 +109,7 @@ const isLoggedIn = computed(() => !!authStore.sessionToken);
   text-align: left;
 }
 .admin-help h2 {
-  font-size: 2.2rem;
+  font-size: var(--font-size-xl);
   margin-bottom: 1.5rem;
   text-align: left;
 }

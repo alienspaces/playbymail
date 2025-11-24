@@ -4,6 +4,7 @@
       <PageHeader 
         title="Games" 
         actionText="Create New Game" 
+        :showIcon="false"
         @action="openCreate"
       />
       <table v-if="games.length">
@@ -23,9 +24,7 @@
             <td>{{ formatTurnDuration(game.turn_duration_hours) }}</td>
             <td>{{ formatDate(game.created_at) }}</td>
             <td>
-              <button @click="openEdit(game)">Edit</button>
-              <button @click="confirmDelete(game)">Delete</button>
-              <button @click="selectGame(game)">Manage</button>
+              <TableActionsMenu :actions="getActions(game)" />
             </td>
           </tr>
         </tbody>
@@ -34,22 +33,22 @@
     </div>
 
     <!-- Modal for create/edit -->
-    <div v-if="showModal" class="modal-overlay">
+    <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
       <div class="modal">
         <h2>{{ modalMode === 'create' ? 'Create Game' : 'Edit Game' }}</h2>
-        <form @submit.prevent="modalMode === 'create' ? createGame() : updateGame()">
+        <form @submit.prevent="modalMode === 'create' ? createGame() : updateGame()" class="modal-form">
           <div class="form-group">
-            <label for="game-name">Name:</label>
+            <label for="game-name">Name <span class="required">*</span></label>
             <input v-model="modalForm.name" id="game-name" required maxlength="1024" autocomplete="off" />
           </div>
           <div class="form-group">
-            <label for="game-type">Type:</label>
+            <label for="game-type">Type <span class="required">*</span></label>
             <select v-model="modalForm.game_type" id="game-type" required>
               <option value="adventure">Adventure</option>
             </select>
           </div>
           <div class="form-group">
-            <label for="turn-duration">Turn Duration (hours):</label>
+            <label for="turn-duration">Turn Duration (hours) <span class="required">*</span></label>
             <input 
               v-model.number="modalForm.turn_duration_hours" 
               id="turn-duration" 
@@ -64,20 +63,24 @@
             <button type="button" @click="closeModal">Cancel</button>
           </div>
         </form>
-        <p v-if="modalError" class="error">{{ modalError }}</p>
+        <div v-if="modalError" class="error">
+          <p>{{ modalError }}</p>
+        </div>
       </div>
     </div>
 
     <!-- Confirm delete dialog -->
-    <div v-if="showDeleteConfirm" class="modal-overlay">
+    <div v-if="showDeleteConfirm" class="modal-overlay" @click.self="closeDelete">
       <div class="modal">
         <h2>Delete Game</h2>
         <p>Are you sure you want to delete <b>{{ deleteTarget?.name }}</b>?</p>
         <div class="modal-actions">
-          <button @click="deleteGame">Delete</button>
-          <button @click="closeDelete">Cancel</button>
+          <button type="button" @click="deleteGame" class="danger-btn">Delete</button>
+          <button type="button" @click="closeDelete">Cancel</button>
         </div>
-        <p v-if="deleteError" class="error">{{ deleteError }}</p>
+        <div v-if="deleteError" class="error">
+          <p>{{ deleteError }}</p>
+        </div>
       </div>
     </div>
   </div>
@@ -86,11 +89,13 @@
 <script>
 import { useGamesStore } from '../stores/games';
 import PageHeader from '../components/PageHeader.vue';
+import TableActionsMenu from '../components/TableActionsMenu.vue';
 
 export default {
   name: 'GameView',
   components: {
-    PageHeader
+    PageHeader,
+    TableActionsMenu
   },
   data() {
     return {
@@ -214,6 +219,26 @@ export default {
     selectGame(game) {
       this.gamesStore.setSelectedGame(game)
       this.$router.push(`/studio/${game.id}/locations`)
+    },
+    getActions(game) {
+      return [
+        {
+          key: 'edit',
+          label: 'Edit',
+          handler: () => this.openEdit(game)
+        },
+        {
+          key: 'delete',
+          label: 'Delete',
+          danger: true,
+          handler: () => this.confirmDelete(game)
+        },
+        {
+          key: 'manage',
+          label: 'Manage',
+          handler: () => this.selectGame(game)
+        }
+      ];
     }
   }
 }
@@ -230,7 +255,61 @@ export default {
   flex-direction: column;
   align-items: flex-start;
 }
-button {
-  margin-right: var(--space-sm);
+
+.game-table-section table {
+  margin-top: 0; /* Remove default table margin-top to match ResourceTable spacing */
+}
+
+.game-table-section table th:last-child,
+.game-table-section table td:last-child {
+  width: 60px;
+  text-align: center;
+  padding-left: var(--space-sm);
+  padding-right: var(--space-sm);
+  vertical-align: middle;
+}
+
+.modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.required {
+  color: var(--color-danger);
+}
+
+.error {
+  color: var(--color-warning-dark);
+  background: var(--color-warning-light);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-warning);
+  margin-top: var(--space-md);
+}
+
+.error p {
+  margin: 0;
+}
+
+.danger-btn {
+  background: var(--color-danger) !important;
+  color: var(--color-text-light) !important;
+  border-color: var(--color-danger) !important;
+}
+
+.danger-btn:hover {
+  background: var(--color-danger-dark) !important;
+  border-color: var(--color-danger-dark) !important;
+}
+
+@media (max-width: 768px) {
+  .modal-actions {
+    flex-direction: column-reverse;
+  }
+
+  .modal-actions button {
+    width: 100%;
+  }
 }
 </style> 

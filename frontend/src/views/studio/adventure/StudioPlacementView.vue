@@ -24,8 +24,7 @@
           :error="itemPlacementsStore.error"
         >
           <template #actions="{ row }">
-            <button @click="openItemPlacementEdit(row)">Edit</button>
-            <button @click="confirmItemPlacementDelete(row)">Delete</button>
+            <TableActionsMenu :actions="getItemPlacementActions(row)" />
           </template>
         </ResourceTable>
 
@@ -41,10 +40,10 @@
           @cancel="closeItemPlacementModal"
         >
           <template v-slot:field="{ field }">
-            <select v-if="field.key === 'adventure_game_item_id'" v-model="itemPlacementModalForm.adventure_game_item_id">
+            <select v-if="field.key === 'adventure_game_item_id'" v-model="itemPlacementModalForm.adventure_game_item_id" class="form-select">
               <option v-for="item in itemsStore.items" :key="item.id" :value="item.id">{{ item.name }}</option>
             </select>
-            <select v-else-if="field.key === 'adventure_game_location_id'" v-model="itemPlacementModalForm.adventure_game_location_id">
+            <select v-else-if="field.key === 'adventure_game_location_id'" v-model="itemPlacementModalForm.adventure_game_location_id" class="form-select">
               <option v-for="loc in locationsStore.locations" :key="loc.id" :value="loc.id">{{ loc.name }}</option>
             </select>
             <input v-else v-model="itemPlacementModalForm[field.key]" :type="field.type || 'text'" :required="field.required" :maxlength="field.maxlength" :placeholder="field.placeholder" />
@@ -84,8 +83,7 @@
           :error="creaturePlacementsStore.error"
         >
           <template #actions="{ row }">
-            <button @click="openCreaturePlacementEdit(row)">Edit</button>
-            <button @click="confirmCreaturePlacementDelete(row)">Delete</button>
+            <TableActionsMenu :actions="getCreaturePlacementActions(row)" />
           </template>
         </ResourceTable>
         <ResourceModalForm
@@ -99,10 +97,10 @@
           @cancel="closeCreaturePlacementModal"
         >
           <template v-slot:field="{ field }">
-            <select v-if="field.key === 'adventure_game_creature_id'" v-model="creaturePlacementModalForm.adventure_game_creature_id">
+            <select v-if="field.key === 'adventure_game_creature_id'" v-model="creaturePlacementModalForm.adventure_game_creature_id" class="form-select">
               <option v-for="creature in creaturesStore.creatures" :key="creature.id" :value="creature.id">{{ creature.name }}</option>
             </select>
-            <select v-else-if="field.key === 'adventure_game_location_id'" v-model="creaturePlacementModalForm.adventure_game_location_id">
+            <select v-else-if="field.key === 'adventure_game_location_id'" v-model="creaturePlacementModalForm.adventure_game_location_id" class="form-select">
               <option v-for="loc in locationsStore.locations" :key="loc.id" :value="loc.id">{{ loc.name }}</option>
             </select>
             <input v-else v-model="creaturePlacementModalForm[field.key]" :type="field.type || 'text'" :required="field.required" :maxlength="field.maxlength" :placeholder="field.placeholder" />
@@ -135,6 +133,7 @@ import { useGamesStore } from '../../../stores/games';
 import { storeToRefs } from 'pinia';
 import ResourceTable from '../../../components/ResourceTable.vue';
 import ResourceModalForm from '../../../components/ResourceModalForm.vue';
+import TableActionsMenu from '../../../components/TableActionsMenu.vue';
 
 const itemsStore = useItemsStore();
 const creaturesStore = useCreaturesStore();
@@ -314,6 +313,38 @@ async function deleteCreaturePlacement() {
   } catch (err) {
     creaturePlacementDeleteError.value = err.message || 'Failed to delete.';
   }
+}
+
+function getItemPlacementActions(row) {
+  return [
+    {
+      key: 'edit',
+      label: 'Edit',
+      handler: () => openItemPlacementEdit(row)
+    },
+    {
+      key: 'delete',
+      label: 'Delete',
+      danger: true,
+      handler: () => confirmItemPlacementDelete(row)
+    }
+  ];
+}
+
+function getCreaturePlacementActions(row) {
+  return [
+    {
+      key: 'edit',
+      label: 'Edit',
+      handler: () => openCreaturePlacementEdit(row)
+    },
+    {
+      key: 'delete',
+      label: 'Delete',
+      danger: true,
+      handler: () => confirmCreaturePlacementDelete(row)
+    }
+  ];
 }
 </script>
 

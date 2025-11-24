@@ -39,8 +39,8 @@ const formatBuildDate = (dateString) => {
 <style scoped>
 .build-info-panel {
   display: inline-block;
-  background: var(--color-background-soft);
-  border: 1px solid var(--color-border);
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: var(--radius-sm);
   padding: var(--space-xs) var(--space-sm);
   margin: 0 auto;
@@ -51,13 +51,13 @@ const formatBuildDate = (dateString) => {
   align-items: center;
   gap: var(--space-xs);
   font-size: 0.75rem;
-  color: var(--color-text-muted);
-  opacity: 0.6;
+  color: var(--color-text-light);
+  opacity: 0.9;
   font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
 }
 
 .build-commit {
-  color: var(--color-primary);
+  color: var(--color-logo-beige-light);
   font-weight: 500;
 }
 
@@ -70,15 +70,15 @@ const formatBuildDate = (dateString) => {
 }
 
 .release-notes-link {
-  color: var(--color-text-muted);
+  color: var(--color-text-light);
   text-decoration: underline;
-  opacity: 0.8;
+  opacity: 0.9;
   transition: opacity 0.2s;
 }
 
 .release-notes-link:hover {
   opacity: 1;
-  color: var(--color-primary);
+  color: var(--color-logo-beige-light);
 }
 
 @media (max-width: 768px) {

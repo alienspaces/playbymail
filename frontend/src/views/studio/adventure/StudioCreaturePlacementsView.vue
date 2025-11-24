@@ -4,11 +4,14 @@
       <p>Please select or create a game to manage creature placements.</p>
     </div>
     <div v-else class="game-table-section">
-      <p class="game-context-name">Game: {{ selectedGame.name }}</p>
-      <div class="section-header">
-        <h2>Creature Placements</h2>
-        <button @click="openCreaturePlacementCreate">Create Creature Placement</button>
-      </div>
+      <GameContext :gameName="selectedGame.name" />
+      <PageHeader 
+        title="Creature Placements" 
+        actionText="Create Creature Placement" 
+        :showIcon="false"
+        titleLevel="h2"
+        @action="openCreaturePlacementCreate"
+      />
       <ResourceTable
         :columns="creaturePlacementColumns"
         :rows="enhancedCreaturePlacements"
@@ -16,10 +19,7 @@
         :error="creaturePlacementsStore.error"
       >
         <template #actions="{ row }">
-          <div style="display: flex; gap: var(--space-sm);">
-            <button @click="openCreaturePlacementEdit(row)">Edit</button>
-            <button @click="confirmCreaturePlacementDelete(row)">Delete</button>
-          </div>
+          <TableActionsMenu :actions="getActions(row)" />
         </template>
       </ResourceTable>
 
@@ -58,6 +58,9 @@ import { storeToRefs } from 'pinia';
 import ResourceTable from '../../../components/ResourceTable.vue';
 import ResourceModalForm from '../../../components/ResourceModalForm.vue';
 import ConfirmationModal from '../../../components/ConfirmationModal.vue';
+import PageHeader from '../../../components/PageHeader.vue';
+import GameContext from '../../../components/GameContext.vue';
+import TableActionsMenu from '../../../components/TableActionsMenu.vue';
 
 const creaturesStore = useCreaturesStore();
 const locationsStore = useLocationsStore();
@@ -176,6 +179,22 @@ async function deleteCreaturePlacement() {
     console.error('Failed to delete creature placement:', err);
   }
 }
+
+function getActions(row) {
+  return [
+    {
+      key: 'edit',
+      label: 'Edit',
+      handler: () => openCreaturePlacementEdit(row)
+    },
+    {
+      key: 'delete',
+      label: 'Delete',
+      danger: true,
+      handler: () => confirmCreaturePlacementDelete(row)
+    }
+  ];
+}
 </script>
 
 <style scoped>
@@ -187,10 +206,5 @@ async function deleteCreaturePlacement() {
 button {
   margin-right: var(--space-sm);
 }
-.game-context-name {
-  font-size: 1.1rem;
-  font-weight: 400;
-  color: #444;
-  margin-bottom: var(--space-sm);
-}
+/* Game context styling now handled by GameContext component */
 </style> 

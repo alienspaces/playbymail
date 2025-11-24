@@ -8,11 +8,14 @@
       <p>Select a game to manage items.</p>
     </div>
     <div v-else class="game-table-section">
-      <p class="game-context-name">Game: {{ selectedGame.name }}</p>
-      <div class="section-header">
-        <h2>Items</h2>
-        <button @click="openCreate">Create New Item</button>
-      </div>
+      <GameContext :gameName="selectedGame.name" />
+      <PageHeader 
+        title="Items" 
+        actionText="Create New Item" 
+        :showIcon="false"
+        titleLevel="h2"
+        @action="openCreate"
+      />
       <ResourceTable
         :columns="columns"
         :rows="itemsStore.items"
@@ -20,8 +23,7 @@
         :error="itemsStore.error"
       >
         <template #actions="{ row }">
-          <button @click="openEdit(row)">Edit</button>
-          <button @click="openDelete(row)">Delete</button>
+          <TableActionsMenu :actions="getActions(row)" />
         </template>
       </ResourceTable>
     </div>
@@ -55,6 +57,9 @@ import { useGamesStore } from '../../../stores/games';
 import ResourceTable from '../../../components/ResourceTable.vue';
 import ResourceModalForm from '../../../components/ResourceModalForm.vue';
 import ConfirmationModal from '../../../components/ConfirmationModal.vue';
+import PageHeader from '../../../components/PageHeader.vue';
+import GameContext from '../../../components/GameContext.vue';
+import TableActionsMenu from '../../../components/TableActionsMenu.vue';
 
 const itemsStore = useItemsStore();
 const gamesStore = useGamesStore();
@@ -107,6 +112,22 @@ function openDelete(item) {
   showDeleteModal.value = true;
 }
 
+function getActions(row) {
+  return [
+    {
+      key: 'edit',
+      label: 'Edit',
+      handler: () => openEdit(row)
+    },
+    {
+      key: 'delete',
+      label: 'Delete',
+      danger: true,
+      handler: () => openDelete(row)
+    }
+  ];
+}
+
 function closeModal() {
   showModal.value = false;
   modalForm.value = { name: '', description: '' };
@@ -144,12 +165,7 @@ async function handleDelete() {
 
 <style scoped>
 .game-table-section {
-  margin-top: 20px;
-}
-
-.game-context-name {
-  font-weight: bold;
-  margin-bottom: 10px;
+  /* Consistent spacing - no top margin, handled by GameContext */
 }
 
 .section-header {

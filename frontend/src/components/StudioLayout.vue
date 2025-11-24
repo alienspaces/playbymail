@@ -6,7 +6,7 @@
     <!-- Show full studio interface for authenticated users -->
     <div v-else>
       <!-- Studio Header expands entire screen width-->
-      <div class="studio-header">
+      <div class="studio-header-wrapper">
         <!-- Studio burger menu (mobile only) -->
         <button
           class="studio-burger icon-btn"
@@ -18,7 +18,20 @@
           <span></span>
           <span></span>
         </button>
-        <h1>Game Designer Studio</h1>
+        <MainPageHeader 
+          title="Game Designer Studio" 
+          icon-type="pencil" 
+          icon-color="blue"
+        >
+          <template #actions>
+            <button class="help-btn" @click="showHelp = true">
+              <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/>
+              </svg>
+              Help
+            </button>
+          </template>
+        </MainPageHeader>
       </div>
       <!-- Flex row: sidebar + main content -->
       <div class="studio-body-row">
@@ -76,12 +89,6 @@
               </template>
             </ul>
           </nav>
-          <button class="help-btn" @click="showHelp = true">
-            <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/>
-            </svg>
-            Help
-          </button>
         </aside>
         <!-- Main content area -->
         <div class="main-content" @click="closeStudioMenuOnMobile">
@@ -154,12 +161,6 @@
           </template>
         </ul>
       </nav>
-      <button class="help-btn" @click="showHelp = true; closeStudioMenu()">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/>
-        </svg>
-        Help
-      </button>
     </aside>
     </div>
   </div>
@@ -171,6 +172,7 @@ import { storeToRefs } from 'pinia';
 import { useGamesStore } from '../stores/games';
 import { useAuthStore } from '../stores/auth';
 import StudioEntryView from '../views/StudioEntryView.vue';
+import MainPageHeader from './MainPageHeader.vue';
 
 const gamesStore = useGamesStore();
 const authStore = useAuthStore();
@@ -213,29 +215,35 @@ function closeStudioMenuOnMobile() {
   flex-direction: column;
   min-height: 100vh;
 }
-.studio-header {
+.studio-header-wrapper {
   width: 100%;
-  padding: var(--space-lg) var(--space-lg) var(--space-md) var(--space-lg);
-  border-bottom: 1px solid var(--color-border);
-  background: var(--color-bg);
   flex-shrink: 0;
-  display: flex;
-  align-items: center;
   position: relative;
+  z-index: 2998;
 }
-.studio-header h1 {
-  margin: 0 auto 0 0;
-  /* font-size and font-weight now from global h1 */
-}
+
 .studio-burger {
-  display: none;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  width: 40px;
-  height: 40px;
-  margin-right: var(--space-lg);
-  z-index: 2100;
+  position: absolute;
+  left: var(--space-lg);
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+}
+
+@media (max-width: 900px) {
+  .studio-header-wrapper :deep(.main-page-header) {
+    padding-left: calc(var(--space-xl) + 50px);
+  }
+  .studio-burger {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 40px;
+    height: 40px;
+    margin-right: var(--space-lg);
+    z-index: 3002;
+  }
 }
 .studio-burger span {
   display: block;
@@ -247,15 +255,12 @@ function closeStudioMenuOnMobile() {
   transition: 0.3s;
 }
 @media (max-width: 900px) {
-  .studio-burger {
-    display: flex;
-  }
   .sidebar {
     display: none;
   }
   .mobile-overlay {
     position: fixed;
-    top: 0;
+    top: 70px;
     left: 0;
     right: 0;
     bottom: 0;
@@ -265,9 +270,9 @@ function closeStudioMenuOnMobile() {
   .sidebar.mobile {
     display: flex;
     position: fixed;
-    top: 0;
+    top: 70px;
     left: 0;
-    height: 100vh;
+    height: calc(100vh - 70px);
     width: 280px;
     background: var(--color-bg-alt);
     border-right: 1px solid var(--color-border);
@@ -285,20 +290,22 @@ function closeStudioMenuOnMobile() {
     position: relative;
     z-index: 1;
   }
+  .studio-body {
+    padding: var(--space-md) var(--space-sm);
+  }
+  .sidebar.mobile {
+    width: 280px;
+    padding: var(--space-lg) var(--space-md) 0 var(--space-md);
+  }
+  .sidebar ul {
+    font-size: 1rem;
+  }
 }
+
 @media (max-width: 600px) {
-  .studio-header {
-    padding: var(--space-md) var(--space-md) var(--space-sm) var(--space-md);
-  }
-  .studio-header h1 {
-    font-size: 1.2rem;
-    line-height: 1.2;
-    margin: 0;
-  }
   .studio-burger {
     width: 32px;
     height: 32px;
-    margin-right: var(--space-md);
   }
   .studio-burger span {
     width: 22px;
@@ -376,18 +383,8 @@ function closeStudioMenuOnMobile() {
 }
 .studio-body {
   flex: 1;
-  padding: var(--space-lg);
-  background: var(--color-bg);
+  padding: var(--layout-content-padding);
   min-width: 0;
-}
-.help-btn {
-  margin-top: var(--space-lg);
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-sm);
-  /* Use global button styles, only override margin/width */
 }
 .help-panel-overlay {
   position: fixed;

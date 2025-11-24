@@ -22,37 +22,27 @@
 
     <!-- Games list -->
     <div v-else class="games-grid">
-      <div v-for="game in games" :key="game.id" class="game-card">
-        <div class="game-header">
-          <h3>{{ game.name }}</h3>
-          <span class="game-type">{{ game.game_type }}</span>
-        </div>
-        
+      <DataCard
+        v-for="game in games"
+        :key="game.id"
+        :title="game.name"
+        class="game-card"
+      >
         <div class="game-info">
-          <p class="game-description">
-            {{ getGameDescription(game.game_type) }}
-          </p>
+          <DataItem label="Game Type" :value="game.game_type" />
+          <DataItem label="Description" :value="getGameDescription(game.game_type)" />
           <div class="game-stats">
-            <div class="stat">
-              <span class="stat-label">Instances:</span>
-              <span class="stat-value">{{ getGameInstanceCount(game.id) }}</span>
-            </div>
-            <div class="stat">
-              <span class="stat-label">Active:</span>
-              <span class="stat-value">{{ getActiveInstanceCount(game.id) }}</span>
-            </div>
+            <DataItem label="Instances" :value="getGameInstanceCount(game.id)" />
+            <DataItem label="Active" :value="getActiveInstanceCount(game.id)" />
           </div>
         </div>
-
-        <div class="game-actions">
+        
+        <template #primary>
           <Button @click="viewGameInstances(game)" variant="primary" size="small">
             Manage
           </Button>
-          <Button @click="createGameInstance(game)" variant="secondary" size="small">
-            Create
-          </Button>
-        </div>
-      </div>
+        </template>
+      </DataCard>
     </div>
 
     <!-- Empty state -->
@@ -68,7 +58,9 @@ import { computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useGamesStore } from '../../stores/games';
 import { useGameInstancesStore } from '../../stores/gameInstances';
-import Button from '../../components/Button.vue'; // Added import for Button
+import Button from '../../components/Button.vue';
+import DataCard from '../../components/DataCard.vue';
+import DataItem from '../../components/DataItem.vue';
 
 const router = useRouter();
 const gamesStore = useGamesStore();
@@ -118,10 +110,6 @@ const getActiveInstanceCount = (gameId) => {
 const viewGameInstances = (game) => {
   router.push(`/admin/games/${game.id}/instances`);
 };
-
-const createGameInstance = (game) => {
-  router.push(`/admin/games/${game.id}/instances/create`);
-};
 </script>
 
 <style scoped>
@@ -131,8 +119,8 @@ const createGameInstance = (game) => {
 }
 
 .dashboard-header {
-  margin-bottom: var(--space-xl);
-  text-align: center;
+  margin-bottom: var(--space-lg);
+  text-align: left;
 }
 
 .dashboard-header h2 {
@@ -174,102 +162,22 @@ const createGameInstance = (game) => {
 }
 
 .game-card {
-  background: var(--color-bg);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: var(--space-lg);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  transition: transform 0.2s, box-shadow 0.2s;
-  display: flex;
-  flex-direction: column;
   min-height: 280px;
 }
 
-.game-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
-}
-
-.game-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: var(--space-md);
-}
-
-.game-header h3 {
-  margin: 0;
-  font-size: var(--font-size-lg);
-  color: var(--color-text);
-  flex: 1;
-  margin-right: var(--space-sm);
-}
-
-.game-type {
-  background: var(--color-primary-light);
-  color: var(--color-primary);
-  padding: var(--space-xs) var(--space-sm);
-  border-radius: var(--radius-sm);
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-bold);
-  text-transform: uppercase;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
 .game-info {
-  margin-bottom: var(--space-lg);
+  margin-bottom: 0;
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: var(--space-md);
-}
-
-.game-description {
-  margin: 0 0 var(--space-md) 0;
-  color: var(--color-text-muted);
-  font-size: var(--font-size-sm);
-  line-height: 1.4;
-  flex: 1;
+  gap: var(--space-sm);
 }
 
 .game-stats {
   display: flex;
   gap: var(--space-lg);
-  margin-top: auto;
-}
-
-.stat {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.stat-label {
-  font-size: var(--font-size-xs);
-  color: var(--color-text-muted);
-  text-transform: uppercase;
-  margin-bottom: var(--space-xs);
-}
-
-.stat-value {
-  font-size: var(--font-size-lg);
-  font-weight: var(--font-weight-bold);
-  color: var(--color-text);
-}
-
-.game-actions {
-  display: flex;
-  gap: var(--space-sm);
-  flex-direction: column;
-  width: 100%;
-}
-
-.game-actions .btn {
-  width: 100%;
-  justify-content: center;
-  padding: var(--space-sm) var(--space-md);
-  font-size: var(--font-size-sm);
-  min-height: 44px;
+  margin-top: var(--space-md);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--color-border);
 }
 </style> 

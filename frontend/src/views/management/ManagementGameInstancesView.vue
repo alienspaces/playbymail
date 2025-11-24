@@ -8,13 +8,11 @@
       <div class="header-content">
         <h2>{{ selectedGame?.name }} - Game Instances</h2>
         <p>Manage active game sessions and monitor player activity</p>
-      </div>
-      <div class="header-actions">
-        <Button @click="createInstance" variant="primary">
+        <Button @click="goBack" variant="secondary" size="small" class="back-button">
           <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+            <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
           </svg>
-          Create Instance
+          Back to Games
         </Button>
       </div>
     </div>
@@ -32,10 +30,22 @@
 
     <!-- Active Instances Section -->
     <div class="instances-section">
-      <h3>
-        Active Instances
-        <span class="count">({{ activeInstances.length }})</span>
-      </h3>
+      <div class="section-header">
+        <div class="section-header-left">
+          <h3>
+            Active Instances
+            <span class="count">({{ activeInstances.length }})</span>
+          </h3>
+        </div>
+        <div class="section-header-right">
+          <Button @click="createInstance" variant="primary" size="small" class="create-button">
+            <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+            </svg>
+            Create Instance
+          </Button>
+        </div>
+      </div>
       
       <div v-if="activeInstances.length === 0" class="empty-state">
         <h4>No Active Instances</h4>
@@ -43,106 +53,104 @@
       </div>
       
       <div v-else class="instances-grid">
-        <div v-for="instance in activeInstances" :key="instance.id" class="instance-card">
-          <div class="instance-info">
-            <div class="instance-header">
-              <h4>Instance #{{ instance.id.slice(0, 8) }}</h4>
-              <span class="status-badge status-{{ instance.status }}">
-                {{ getStatusLabel(instance.status) }}
-              </span>
-            </div>
-            <div class="info-row">
-              <span class="label">Turn:</span>
-              <span class="value">{{ instance.current_turn || 0 }}</span>
-            </div>
-            <div class="info-row">
-              <span class="label">Next Turn Due:</span>
-              <span class="value">{{ formatDeadline(instance.next_turn_due_at) }}</span>
-            </div>
-            <div class="info-row">
-              <span class="label">Started:</span>
-              <span class="value">{{ formatDate(instance.started_at) }}</span>
-            </div>
-          </div>
-
-          <div class="instance-actions">
-            <Button @click="viewInstance(instance)" variant="secondary" size="small">
+        <DataCard
+          v-for="instance in activeInstances"
+          :key="instance.id"
+          :title="`Instance #${instance.id.slice(0, 8)}`"
+        >
+          <template #header-extra>
+            <span :class="['status-badge', `status-${instance.status}`]">
+              {{ getStatusLabel(instance.status) }}
+            </span>
+          </template>
+          <template #primary>
+            <Button @click="viewInstance(instance)" variant="primary" size="small">
               View Details
             </Button>
+          </template>
+          <template #secondary>
             <Button 
               v-if="instance.status === 'created'" 
               @click="startInstance(instance)" 
-              variant="primary" 
-              size="sm"
+              variant="secondary" 
+              size="small"
             >
               Start
             </Button>
             <Button 
-              v-if="instance.status === 'started'" 
+              v-else-if="instance.status === 'started'" 
               @click="pauseInstance(instance)" 
-              variant="warning" 
-              size="sm"
+              variant="secondary" 
+              size="small"
             >
               Pause
             </Button>
             <Button 
-              v-if="instance.status === 'paused'" 
+              v-else-if="instance.status === 'paused'" 
               @click="resumeInstance(instance)" 
-              variant="success" 
-              size="sm"
+              variant="secondary" 
+              size="small"
             >
               Resume
             </Button>
+          </template>
+          <template #tertiary>
             <Button 
               v-if="['created', 'started', 'paused'].includes(instance.status)" 
               @click="cancelInstance(instance)" 
               variant="danger" 
-              size="sm"
+              size="small"
             >
               Cancel
             </Button>
+          </template>
+          
+          <div class="instance-info">
+            <DataItem label="Turn" :value="instance.current_turn || 0" />
+            <DataItem label="Next Turn Due" :value="formatDeadline(instance.next_turn_due_at)" />
+            <DataItem label="Started" :value="formatDate(instance.started_at)" />
           </div>
-        </div>
+        </DataCard>
       </div>
     </div>
 
     <!-- Completed Instances Section -->
     <div class="instances-section">
-      <h3>
-        Completed Instances
-        <span class="count">({{ completedInstances.length }})</span>
-      </h3>
-      
+      <div class="section-header">
+        <div class="section-header-left">
+          <h3>
+            Completed Instances
+            <span class="count">({{ completedInstances.length }})</span>
+          </h3>
+        </div>
+      </div>
       <div v-if="completedInstances.length === 0" class="empty-state">
         <h4>No Completed Instances</h4>
         <p>Completed games will appear here.</p>
       </div>
       
       <div v-else class="instances-grid">
-        <div v-for="instance in completedInstances" :key="instance.id" class="instance-card">
-          <div class="instance-info">
-            <div class="instance-header">
-              <h4>Instance #{{ instance.id.slice(0, 8) }}</h4>
-              <span class="status-badge status-{{ instance.status }}">
-                {{ getStatusLabel(instance.status) }}
-              </span>
-            </div>
-            <div class="info-row">
-              <span class="label">Final Turn:</span>
-              <span class="value">{{ instance.current_turn || 0 }}</span>
-            </div>
-            <div class="info-row">
-              <span class="label">Completed:</span>
-              <span class="value">{{ formatDate(instance.completed_at) }}</span>
-            </div>
-          </div>
-
-          <div class="instance-actions">
-            <Button @click="viewInstance(instance)" variant="secondary" size="small">
+        <DataCard
+          v-for="instance in completedInstances"
+          :key="instance.id"
+          :title="`Instance #${instance.id.slice(0, 8)}`"
+        >
+          <template #header-extra>
+            <span :class="['status-badge', `status-${instance.status}`]">
+              {{ getStatusLabel(instance.status) }}
+            </span>
+          </template>
+          <template #primary>
+            <Button @click="viewInstance(instance)" variant="primary" size="small">
               View Details
             </Button>
+          </template>
+          
+          <div class="instance-info">
+            <DataItem label="Final Turn" :value="instance.current_turn || 0" />
+            <DataItem label="Completed" :value="formatDate(instance.completed_at)" />
           </div>
-        </div>
+        </DataCard>
       </div>
     </div>
   </div>
@@ -154,6 +162,8 @@ import { useRoute, useRouter } from 'vue-router';
 import { useGamesStore } from '../../stores/games';
 import { useGameInstancesStore } from '../../stores/gameInstances';
 import Button from '../../components/Button.vue';
+import DataCard from '../../components/DataCard.vue';
+import DataItem from '../../components/DataItem.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -222,6 +232,10 @@ const formatDeadline = (deadlineString) => {
   return deadline.toLocaleDateString();
 };
 
+const goBack = () => {
+  router.push('/admin');
+};
+
 const createInstance = () => {
   router.push(`/admin/games/${gameId.value}/instances/create`);
 };
@@ -273,20 +287,22 @@ const cancelInstance = async (instance) => {
 .game-instances-view {
   max-width: 1200px;
   margin: 0 auto;
-  padding: var(--space-lg);
 }
 
 .view-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: var(--space-xl);
+  margin-bottom: var(--space-lg);
   padding-bottom: var(--space-lg);
   border-bottom: 1px solid var(--color-border);
 }
 
+.header-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
 .header-content h2 {
-  margin: 0 0 var(--space-sm) 0;
+  margin: 0;
   font-size: var(--font-size-xl);
   color: var(--color-text);
 }
@@ -297,29 +313,14 @@ const cancelInstance = async (instance) => {
   font-size: var(--font-size-md);
 }
 
+.back-button {
+  margin-top: var(--space-sm);
+  align-self: flex-start;
+}
+
 .header-actions {
   display: flex;
   gap: var(--space-md);
-}
-
-.btn-primary {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  padding: var(--space-sm) var(--space-md);
-  background: transparent;
-  color: var(--color-button);
-  border: 2px solid var(--color-button);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
-  transition: all 0.2s;
-}
-
-.btn-primary:hover {
-  background: var(--color-button);
-  color: var(--color-text-light);
 }
 
 .icon {
@@ -356,13 +357,37 @@ const cancelInstance = async (instance) => {
   margin-bottom: var(--space-xl);
 }
 
+.section-header {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  width: 100%;
+  margin-bottom: var(--space-md);
+}
+
+.section-header-left {
+  flex: 0 0 auto;
+  margin-right: auto;
+}
+
+.section-header-right {
+  flex: 0 0 auto;
+  margin-left: auto;
+}
+
 .instances-section h3 {
-  margin: 0 0 var(--space-md) 0;
+  margin: 0;
   font-size: var(--font-size-lg);
   color: var(--color-text);
   display: flex;
   align-items: center;
   gap: var(--space-sm);
+  white-space: nowrap;
+}
+
+.create-button {
+  flex-shrink: 0;
 }
 
 .instances-section h3 .count {
@@ -380,35 +405,10 @@ const cancelInstance = async (instance) => {
   grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
 }
 
-.instance-card {
-  background: var(--color-bg);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: var(--space-lg);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  transition: box-shadow 0.2s ease;
-}
-
-.instance-card:hover {
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-}
-
-.instance-card.completed {
-  opacity: 0.7;
-}
-
-.instance-header {
+.instance-info {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: var(--space-md);
-}
-
-.instance-header h4 {
-  margin: 0;
-  font-size: var(--font-size-md);
-  color: var(--color-text);
-  font-weight: var(--font-weight-bold);
+  flex-direction: column;
+  gap: var(--space-xs);
 }
 
 .status-badge {
@@ -418,6 +418,8 @@ const cancelInstance = async (instance) => {
   font-weight: var(--font-weight-bold);
   text-transform: uppercase;
   color: var(--color-text-light);
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .status-created {
@@ -439,37 +441,6 @@ const cancelInstance = async (instance) => {
 
 .status-cancelled {
   background: var(--color-danger);
-}
-
-.instance-info {
-  margin-bottom: var(--space-lg);
-}
-
-.info-row {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: var(--space-sm);
-}
-
-.info-row:last-child {
-  margin-bottom: 0;
-}
-
-.label {
-  font-size: var(--font-size-sm);
-  color: var(--color-text-muted);
-}
-
-.value {
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
-  color: var(--color-text);
-}
-
-.instance-actions {
-  display: flex;
-  gap: var(--space-sm);
-  flex-wrap: wrap;
 }
 
 .empty-state {

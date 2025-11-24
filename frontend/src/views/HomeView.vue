@@ -13,9 +13,7 @@
       <div class="user-types">
         <div class="user-type">
           <div class="user-icon">
-            <svg viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-            </svg>
+            <HandDrawnIcon type="pencil" color="blue" />
           </div>
           <div class="user-content">
             <h3>Game Designers</h3>
@@ -24,9 +22,7 @@
         </div>
         <div class="user-type">
           <div class="user-icon">
-            <svg viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-            </svg>
+            <HandDrawnIcon type="clipboard" color="blue" />
           </div>
           <div class="user-content">
             <h3>Game Managers</h3>
@@ -35,9 +31,7 @@
         </div>
         <div class="user-type">
           <div class="user-icon">
-            <svg viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-            </svg>
+            <HandDrawnIcon type="person" color="blue" />
           </div>
           <div class="user-content">
             <h3>Players</h3>
@@ -52,9 +46,7 @@
     <div class="sections">
       <div class="section">
         <div class="section-icon">
-          <svg viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-          </svg>
+          <HandDrawnIcon type="pencil" color="blue" />
         </div>
         <h2>Game Designer Studio</h2>
         <p>Create, edit, and manage play-by-mail games. Design locations, items, creatures, and game mechanics.</p>
@@ -63,9 +55,7 @@
       
       <div class="section">
         <div class="section-icon">
-          <svg viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-          </svg>
+          <HandDrawnIcon type="clipboard" color="blue" />
         </div>
         <h2>Game Management</h2>
         <p>Subscribe to or purchase games, configure runtime parameters, review game states, process player turns, and provide player help.</p>
@@ -76,7 +66,7 @@
 </template>
 
 <script setup>
-// No logic needed for static home view
+import HandDrawnIcon from '../components/HandDrawnIcon.vue';
 </script>
 
 <style scoped>
@@ -103,10 +93,10 @@
 .who-section {
   margin: var(--space-lg) 0;
 }
-.who-section h2 {
+.home-view .who-section h2 {
   margin-bottom: var(--space-md);
   font-size: var(--font-size-lg);
-  color: var(--color-primary);
+  color: var(--color-text) !important;
   text-align: left;
 }
 .user-types {
@@ -130,10 +120,10 @@
 .user-type:last-child {
   margin-bottom: 0;
 }
-.user-type h3 {
+.home-view .user-type h3 {
   margin: 0 0 var(--space-sm) 0;
   font-size: var(--font-size-md);
-  color: var(--color-primary-light);
+  color: var(--color-text) !important;
   font-weight: var(--font-weight-bold);
 }
 .user-type p {
@@ -146,6 +136,18 @@
   height: 30px;
   color: var(--color-primary);
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.user-icon :deep(.hand-drawn-icon) {
+  font-size: 1.5em;
+}
+
+.user-icon :deep(.icon-svg) {
+  width: 30px;
+  height: 30px;
 }
 .divider {
   height: 1px;
@@ -170,10 +172,10 @@
   min-height: 200px;
   position: relative;
 }
-.section h2 {
+.home-view .sections .section h2 {
   margin-bottom: var(--space-md);
   font-size: var(--font-size-lg);
-  color: var(--color-primary);
+  color: var(--color-text) !important;
 }
 .section p {
   margin-bottom: var(--space-lg);
@@ -201,20 +203,25 @@
   top: -20px;
   left: 50%;
   transform: translateX(-50%);
-  width: 40px;
-  height: 40px;
-  background: var(--color-primary);
+  width: 50px;
+  height: 50px;
+  background: var(--color-bg);
+  border: 3px solid var(--color-pen-blue);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-.section-icon svg {
-  width: 24px;
-  height: 24px;
-  color: var(--color-text-light);
+.section-icon :deep(.hand-drawn-icon) {
+  font-size: 1.8em;
+}
+
+.section-icon :deep(.icon-svg) {
+  width: 28px;
+  height: 28px;
 }
 @media (max-width: 768px) {
   .sections {

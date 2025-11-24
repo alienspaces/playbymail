@@ -1,6 +1,6 @@
 <template>
-  <div v-if="visible" class="modal-overlay" @click="$emit('cancel')">
-    <div class="modal-content" @click.stop>
+  <div v-if="visible" class="modal-overlay" @click.self="$emit('cancel')">
+    <div class="modal">
       <h2>{{ title }}</h2>
       <p>{{ message }}</p>
       <p v-if="warning" class="warning-text">{{ warning }}</p>
@@ -16,11 +16,12 @@
       </div>
       
       <div class="modal-actions">
-        <button @click="$emit('cancel')" class="cancel-btn">Cancel</button>
+        <button type="button" @click="$emit('cancel')">Cancel</button>
         <button 
+          type="button"
           @click="$emit('confirm')" 
           :disabled="isConfirmDisabled || loading"
-          class="confirm-btn"
+          class="danger-btn"
         >
           {{ loading ? loadingText : confirmText }}
         </button>
@@ -65,111 +66,77 @@ const isConfirmDisabled = computed(() => {
 </script>
 
 <style scoped>
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
+.modal h2 {
+  color: var(--color-danger);
 }
 
-.modal-content {
-  background: white;
-  padding: 2rem;
-  border-radius: 8px;
-  max-width: 500px;
-  width: 90%;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-}
-
-.modal-content h2 {
-  color: #d32f2f;
-  margin-bottom: 1rem;
-}
-
-.modal-content p {
-  margin-bottom: 1rem;
-  color: #333;
+.modal p {
+  margin-bottom: var(--space-md);
+  color: var(--color-text);
   line-height: 1.5;
 }
 
 .warning-text {
-  color: #d32f2f;
-  font-weight: 600;
-  background: #ffebee;
-  padding: 0.75rem;
-  border-radius: 4px;
-  border-left: 4px solid #d32f2f;
+  color: var(--color-danger);
+  font-weight: var(--font-weight-semibold);
+  background: var(--color-danger-light);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-sm);
+  border-left: 4px solid var(--color-danger);
+  margin-bottom: var(--space-md);
 }
 
 .confirmation-input {
-  margin: 1.5rem 0;
+  margin: var(--space-lg) 0;
 }
 
 .confirmation-input label {
   display: block;
-  margin-bottom: 0.5rem;
-  font-weight: 600;
-  color: #333;
+  margin-bottom: var(--space-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
 }
 
 .confirm-input {
   width: 100%;
-  padding: 0.75rem;
-  border: 2px solid #ddd;
-  border-radius: 4px;
-  font-size: 1rem;
+  padding: var(--space-sm) var(--space-md);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-md);
   text-transform: uppercase;
+  font-family: inherit;
 }
 
 .confirm-input:focus {
   outline: none;
-  border-color: #d32f2f;
-  box-shadow: 0 0 0 2px rgba(211, 47, 47, 0.1);
+  border-color: var(--color-danger);
+  box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.1);
 }
 
-.modal-actions {
-  display: flex;
-  gap: 1rem;
-  justify-content: flex-end;
-  margin-top: 1.5rem;
+.danger-btn {
+  background: var(--color-danger) !important;
+  color: var(--color-text-light) !important;
+  border-color: var(--color-danger) !important;
 }
 
-.cancel-btn {
-  background: #f44336;
-  color: white;
-  border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 0.9rem;
+.danger-btn:hover:not(:disabled) {
+  background: var(--color-danger-dark) !important;
+  border-color: var(--color-danger-dark) !important;
 }
 
-.cancel-btn:hover {
-  background: #d32f2f;
-}
-
-.confirm-btn {
-  background: #d32f2f;
-  color: white;
-  border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 0.9rem;
-}
-
-.confirm-btn:hover:not(:disabled) {
-  background: #b71c1c;
-}
-
-.confirm-btn:disabled {
-  background: #ccc;
+.danger-btn:disabled {
+  background: var(--color-text-muted) !important;
+  border-color: var(--color-text-muted) !important;
   cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+  .modal-actions {
+    flex-direction: column-reverse;
+  }
+
+  .modal-actions button {
+    width: 100%;
+  }
 }
 </style> 
