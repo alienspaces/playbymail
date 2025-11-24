@@ -450,7 +450,7 @@ main.app-main>* {
 
 /* Footer styling */
 footer {
-  margin-top: 0;
+  margin-top: var(--space-xl);
   padding: var(--space-xs) 0;
   min-height: 70px;
   background: transparent;
@@ -572,7 +572,7 @@ footer p {
   }
 
   footer {
-    margin-top: 0;
+    margin-top: var(--space-lg);
     margin-bottom: var(--space-md);
     padding: var(--space-md) 0;
     min-height: auto;
