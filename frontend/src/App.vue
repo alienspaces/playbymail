@@ -33,12 +33,12 @@ function closeMobileMenu() {
           <router-link to="/" class="logo">
             <img :src="titleImage" alt="Play By Mail" class="logo-image" />
           </router-link>
-          <router-link to="/faq" class="navbar-link" exact-active-class="active"
-            @click="closeMobileMenu">F.A.Q.</router-link>
           <router-link to="/studio" class="navbar-link" exact-active-class="active" @click="closeMobileMenu">Game
             Designer Studio</router-link>
           <router-link to="/admin" class="navbar-link" exact-active-class="active" @click="closeMobileMenu">Game
             Management</router-link>
+          <router-link to="/faq" class="navbar-link" exact-active-class="active"
+            @click="closeMobileMenu">F.A.Q.</router-link>
         </div>
         <div class="nav-actions">
           <template v-if="sessionToken">
@@ -573,9 +573,10 @@ footer p {
 
   footer {
     margin-top: var(--space-lg);
-    margin-bottom: var(--space-md);
-    padding: var(--space-md) 0;
+    margin-bottom: 0;
+    padding: 0;
     min-height: auto;
+    overflow: visible;
   }
 
   footer {
@@ -585,34 +586,83 @@ footer p {
   footer::before {
     left: 0;
     right: 0;
-    transform: translateY(-50%);
+    top: 0;
+    bottom: 0;
+    height: 100%;
+    transform: none;
+    background: var(--color-logo-teal);
   }
 
   .footer-content {
     flex-direction: column;
     gap: var(--space-md);
-    flex-wrap: wrap;
-    padding: 0 var(--space-md);
-    padding-left: var(--space-md);
+    flex-wrap: nowrap;
+    padding: var(--space-xl) var(--space-md) var(--space-md);
+    padding-top: calc(var(--space-xl) + 60px);
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    align-items: center;
   }
 
   .footer-banner-floating {
-    position: static;
-    transform: none;
-    width: 100%;
+    position: absolute;
+    top: -60px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: auto;
     justify-content: center;
-    margin-bottom: var(--space-md);
+    margin-bottom: 0;
+    z-index: 2;
+  }
+
+  .footer-banner-floating :deep(.envelope-icon) {
+    height: 120px;
+  }
+
+  .footer-banner-floating :deep(.coming-soon-title) {
+    font-size: var(--font-size-sm);
+  }
+
+  .footer-banner-floating :deep(.coming-soon-date) {
+    font-size: var(--font-size-xs);
   }
 
   .footer-center {
     padding: 0;
     width: 100%;
+    gap: var(--space-xs);
+  }
+
+  footer p {
+    font-size: var(--font-size-base);
+    color: var(--color-text-light);
+    opacity: 1;
+    margin: 0;
+  }
+
+  .footer-link {
+    color: var(--color-text-light);
+    opacity: 1;
   }
 
   .footer-meta {
     width: 100%;
     align-items: center;
     text-align: center;
+    gap: var(--space-xs);
+  }
+
+  .footer-meta-label {
+    font-size: var(--font-size-sm);
+    opacity: 1;
+  }
+
+  .footer-meta :deep(.build-info-panel) {
+    align-items: center;
+    text-align: center;
+    font-size: var(--font-size-sm);
+    opacity: 1;
   }
 
   .footer-meta :deep(.build-info-content) {

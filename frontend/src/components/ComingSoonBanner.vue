@@ -82,11 +82,4 @@ import envelopeImage from '../assets/breakout-envelope-v2.png';
     font-size: var(--font-size-xs);
   }
 }
-
-/* Hide banner on very small screens to prevent crowding */
-@media (max-width: 360px) {
-  .coming-soon-banner {
-    display: none;
-  }
-}
 </style>
