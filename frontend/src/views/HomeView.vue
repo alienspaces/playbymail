@@ -18,6 +18,8 @@
         <li>Space 4X and science-fiction strategy</li>
         <li>Diplomacy and political negotiation games</li>
         <li>Hybrid strategy/RPG formats</li>
+        <li>Sports simulations</li>
+        <li>And more...</li>
       </ul>
     </div>
 

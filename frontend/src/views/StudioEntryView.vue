@@ -8,22 +8,12 @@
     <p class="intro">Create the next generation of play-by-mail campaigns.</p>
 
     <p>
-      The Game Designer Studio is an evolving toolkit dedicated exclusively to building PBM campaigns for the all of the
-      game types the platform supports.
+      The Game Designer Studio is an evolving toolkit dedicated exclusively to building PBM campaigns.
     </p>
-
-    <section class="genre-callout">
-      <h2>PBM Genres We Aim to Support</h2>
-      <p>The studio is being built to support the full spectrum of classic and modern PBM game types, including:</p>
-      <ul>
-        <li>Strategy and wargames</li>
-        <li>Fantasy empire-building campaigns</li>
-        <li>Space 4X and science-fiction strategy</li>
-        <li>Diplomacy and political negotiation games</li>
-        <li>Hybrid strategy/RPG formats</li>
-      </ul>
-      <p>These genres shape the roadmap as we expand the platform’s capabilities.</p>
-    </section>
+    <p>
+      Game designers will be able to design games for all of the game types the platform supports, from adventure games
+      and strategy campaigns to sports simulations and more.
+    </p>
 
     <section class="studio-purpose">
       <h2>What the Studio Is Being Designed For</h2>

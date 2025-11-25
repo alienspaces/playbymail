@@ -12,6 +12,8 @@ All game content, communication, and visuals are delivered via printed materials
 
 Players return completed forms and puzzles by mail for processing, with human review only when needed.
 
+The platform is being built to support the full spectrum of classic and modern play-by-mail game types. For designers, this means flexible tools to create adventure games, strategy and wargames, fantasy empire-building campaigns, space 4X and science-fiction strategy games, diplomacy and political negotiation games, hybrid strategy/RPG formats, sports simulations, economic simulations, and more. For players, this translates to diverse gaming experiences—from narrative-driven adventures to complex strategic campaigns—all delivered through the tactile experience of physical mail.
+
 Game writers have tools to create, manage, and publish new games, storylines, maps, and puzzles, all optimized for print.
 
 Privacy, security, age-appropriateness, and inclusivity are core principles, with support for parental controls and accessibility.
