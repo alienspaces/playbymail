@@ -279,6 +279,21 @@ function closeAccountMenuOnMobile() {
   display: flex;
   flex-direction: column;
   align-self: stretch;
+  position: relative;
+  min-height: calc(100vh - 140px);
+}
+
+.sidebar::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  background: var(--color-bg-alt);
+  border-right: 1px solid var(--color-border);
+  height: calc(var(--space-xl) + 70px);
+  pointer-events: none;
+  z-index: 0;
 }
 .sidebar ul {
   list-style: none;
