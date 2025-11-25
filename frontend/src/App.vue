@@ -235,7 +235,6 @@ main.app-main> :not(.studio-layout):not(.account-layout):not(.management-layout)
 .logo:active,
 .logo:visited {
   text-decoration: none !important;
-  opacity: 0.9;
 }
 
 .logo-image {
@@ -398,7 +397,6 @@ main.app-main> :not(.studio-layout):not(.account-layout):not(.management-layout)
   .mobile-logo:active,
   .mobile-logo:visited {
     text-decoration: none !important;
-    opacity: 0.9;
   }
 
   .mobile-logo .logo-image {

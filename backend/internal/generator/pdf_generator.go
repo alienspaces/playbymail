@@ -213,30 +213,8 @@ func (g *PDFGenerator) htmlToPDF(ctx context.Context, html string) ([]byte, erro
 
 	l.Info("chrome options configured options_count=%d", len(opts))
 
-	// Check if Chrome is available
-	chromePath := os.Getenv("GOOGLE_CHROME_SHIM")
-	if chromePath == "" {
-		l.Info("GOOGLE_CHROME_SHIM not set, searching for Chrome in common locations")
-		// Try to find Chrome in common locations
-		commonPaths := []string{
-			"/usr/bin/google-chrome",
-			"/usr/bin/chromium-browser",
-			"/usr/bin/chromium",
-			"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-			"/Applications/Chromium.app/Contents/MacOS/Chromium",
-		}
-
-		for _, path := range commonPaths {
-			if _, err := os.Stat(path); err == nil {
-				chromePath = path
-				l.Info("found Chrome at path chrome_path=%s", chromePath)
-				break
-			}
-		}
-	} else {
-		l.Info("using Chrome from GOOGLE_CHROME_SHIM chrome_path=%s", chromePath)
-	}
-
+	// Find Chrome executable path
+	chromePath := findChromePath(l)
 	if chromePath == "" {
 		// In test environment, return a mock PDF instead of failing
 		if os.Getenv("TESTING") == "true" {

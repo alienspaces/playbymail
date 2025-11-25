@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/chromedp/cdproto/emulation"
@@ -53,23 +52,8 @@ func (g *PDFGenerator) htmlToPNG(ctx context.Context, html string) ([]byte, erro
 		chromedp.Flag("disable-ipc-flooding-protection", true),
 	}
 
-	chromePath := os.Getenv("GOOGLE_CHROME_SHIM")
-	if chromePath == "" {
-		commonPaths := []string{
-			"/usr/bin/google-chrome",
-			"/usr/bin/chromium-browser",
-			"/usr/bin/chromium",
-			"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-			"/Applications/Chromium.app/Contents/MacOS/Chromium",
-		}
-
-		for _, path := range commonPaths {
-			if _, err := os.Stat(path); err == nil {
-				chromePath = path
-				break
-			}
-		}
-	}
+	// Find Chrome executable path
+	chromePath := findChromePath(l)
 
 	if chromePath == "" {
 		l.Warn("chrome not found. Please install Chrome or set GOOGLE_CHROME_SHIM environment variable")
@@ -132,11 +116,4 @@ func (g *PDFGenerator) htmlToPNG(ctx context.Context, html string) ([]byte, erro
 	}
 
 	return pngData, nil
-}
-
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
 }
