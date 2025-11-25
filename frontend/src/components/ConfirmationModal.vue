@@ -4,28 +4,20 @@
       <h2>{{ title }}</h2>
       <p>{{ message }}</p>
       <p v-if="warning" class="warning-text">{{ warning }}</p>
-      
+
       <div v-if="requireConfirmation" class="confirmation-input">
         <label :for="confirmationId">Type "{{ confirmationText }}" to confirm:</label>
-        <input 
-          :id="confirmationId"
-          v-model="confirmationValue" 
-          :placeholder="confirmationText"
-          class="confirm-input"
-        />
+        <input :id="confirmationId" v-model="confirmationValue" :placeholder="confirmationText" class="confirm-input" />
       </div>
-      
+
       <div class="modal-actions">
-        <button type="button" @click="$emit('cancel')">Cancel</button>
-        <button 
-          type="button"
-          @click="$emit('confirm')" 
-          :disabled="isConfirmDisabled || loading"
-          class="danger-btn"
-        >
+        <button type="button" @click="$emit('cancel')">{{ cancelText }}</button>
+        <button type="button" @click="$emit('confirm')" :disabled="isConfirmDisabled || loading" class="danger-btn">
           {{ loading ? loadingText : confirmText }}
         </button>
       </div>
+
+      <p v-if="error" class="error-text">{{ error }}</p>
     </div>
   </div>
 </template>
@@ -42,6 +34,10 @@ const props = defineProps({
     type: String,
     default: 'Confirm'
   },
+  cancelText: {
+    type: String,
+    default: 'Cancel'
+  },
   loading: Boolean,
   loadingText: {
     type: String,
@@ -51,7 +47,8 @@ const props = defineProps({
   confirmationText: {
     type: String,
     default: 'DELETE'
-  }
+  },
+  error: String
 });
 
 defineEmits(['confirm', 'cancel']);
@@ -130,6 +127,11 @@ const isConfirmDisabled = computed(() => {
   cursor: not-allowed;
 }
 
+.error-text {
+  color: var(--color-danger);
+  margin-top: var(--space-md);
+}
+
 @media (max-width: 768px) {
   .modal-actions {
     flex-direction: column-reverse;
@@ -139,4 +141,4 @@ const isConfirmDisabled = computed(() => {
     width: 100%;
   }
 }
-</style> 
+</style>

@@ -1,14 +1,8 @@
 <template>
   <div class="game-list">
     <div class="game-table-section">
-      <PageHeader 
-        title="Games" 
-        actionText="Create New Game" 
-        :showIcon="false"
-        titleLevel="h2"
-        subtitle="Create and manage your adventure games"
-        @action="openCreate"
-      />
+      <PageHeader title="Games" actionText="Create New Game" :showIcon="false" titleLevel="h2"
+        subtitle="Create and manage your adventure games" @action="openCreate" />
       <table v-if="games.length">
         <thead>
           <tr>
@@ -51,14 +45,8 @@
           </div>
           <div class="form-group">
             <label for="turn-duration">Turn Duration (hours) <span class="required">*</span></label>
-            <input 
-              v-model.number="modalForm.turn_duration_hours" 
-              id="turn-duration" 
-              type="number" 
-              min="1" 
-              required 
-              placeholder="168 (1 week)"
-            />
+            <input v-model.number="modalForm.turn_duration_hours" id="turn-duration" type="number" min="1" required
+              placeholder="168 (1 week)" />
           </div>
           <div class="modal-actions">
             <button type="submit">{{ modalMode === 'create' ? 'Create' : 'Save' }}</button>
@@ -156,11 +144,11 @@ export default {
     },
     openEdit(game) {
       this.modalMode = 'edit'
-      this.modalForm = { 
-        id: game.id, 
-        name: game.name, 
-        game_type: game.game_type, 
-        turn_duration_hours: game.turn_duration_hours || 168 
+      this.modalForm = {
+        id: game.id,
+        name: game.name,
+        game_type: game.game_type,
+        turn_duration_hours: game.turn_duration_hours || 168
       }
       this.modalError = ''
       this.showModal = true
@@ -172,8 +160,8 @@ export default {
     async createGame() {
       this.modalError = ''
       try {
-        const created = await this.gamesStore.createGame({ 
-          name: this.modalForm.name, 
+        const created = await this.gamesStore.createGame({
+          name: this.modalForm.name,
           game_type: this.modalForm.game_type,
           turn_duration_hours: this.modalForm.turn_duration_hours
         });
@@ -188,8 +176,8 @@ export default {
     async updateGame() {
       this.modalError = ''
       try {
-        await this.gamesStore.updateGame(this.modalForm.id, { 
-          name: this.modalForm.name, 
+        await this.gamesStore.updateGame(this.modalForm.id, {
+          name: this.modalForm.name,
           game_type: this.modalForm.game_type,
           turn_duration_hours: this.modalForm.turn_duration_hours
         });
@@ -252,6 +240,7 @@ export default {
   margin: 0;
   padding: 0;
 }
+
 .game-table-section {
   display: flex;
   flex-direction: column;
@@ -259,7 +248,8 @@ export default {
 }
 
 .game-table-section table {
-  margin-top: 0; /* Remove default table margin-top to match ResourceTable spacing */
+  margin-top: 0;
+  /* Remove default table margin-top to match ResourceTable spacing */
 }
 
 .game-table-section table th:last-child,
@@ -314,4 +304,4 @@ export default {
     width: 100%;
   }
 }
-</style> 
+</style>

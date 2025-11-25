@@ -1,13 +1,7 @@
 <template>
   <div class="account-contacts-view">
-    <PageHeader 
-      title="Account Contacts" 
-      actionText="Create New Contact" 
-      :showIcon="false"
-      titleLevel="h2"
-      subtitle="Manage postal addresses for shipments and correspondence"
-      @action="openCreate"
-    />
+    <PageHeader title="Account Contacts" actionText="Create New Contact" :showIcon="false" titleLevel="h2"
+      subtitle="Manage postal addresses for shipments and correspondence" @action="openCreate" />
 
     <!-- Loading state -->
     <div v-if="loading" class="loading-state">
@@ -24,35 +18,15 @@
 
     <!-- Contacts grid -->
     <div v-else-if="accountContacts.length > 0" class="contacts-grid">
-      <DataCard
-        v-for="contact in accountContacts"
-        :key="contact.id"
-        :title="contact.name || 'Unnamed Contact'"
-        class="contact-card"
-      >
+      <DataCard v-for="contact in accountContacts" :key="contact.id" :title="contact.name || 'Unnamed Contact'"
+        class="contact-card">
         <div class="contact-info">
-          <DataItem 
-            v-if="formatAddress(contact)" 
-            label="Address" 
-            :value="formatAddress(contact)" 
-          />
-          <DataItem 
-            v-if="contact.state_province" 
-            label="State/Province" 
-            :value="contact.state_province" 
-          />
-          <DataItem 
-            v-if="contact.country" 
-            label="Country" 
-            :value="contact.country" 
-          />
-          <DataItem 
-            v-if="contact.postal_code" 
-            label="Postal Code" 
-            :value="contact.postal_code" 
-          />
+          <DataItem v-if="formatAddress(contact)" label="Address" :value="formatAddress(contact)" />
+          <DataItem v-if="contact.state_province" label="State/Province" :value="contact.state_province" />
+          <DataItem v-if="contact.country" label="Country" :value="contact.country" />
+          <DataItem v-if="contact.postal_code" label="Postal Code" :value="contact.postal_code" />
         </div>
-        
+
         <template #primary>
           <AppButton @click="editContact(contact)" variant="primary" size="small">
             Edit
@@ -73,23 +47,13 @@
     </div>
 
     <!-- Create/Edit Contact Modal -->
-    <ContactModal
-      v-if="showCreateModal || showEditModal"
-      :visible="showCreateModal || showEditModal"
-      :contact="editingContact"
-      :account-id="accountId"
-      @close="closeModal"
-      @saved="handleContactSaved"
-    />
+    <ContactModal v-if="showCreateModal || showEditModal" :visible="showCreateModal || showEditModal"
+      :contact="editingContact" :account-id="accountId" @close="closeModal" @saved="handleContactSaved" />
 
     <!-- Confirm Delete Dialog -->
-    <ConfirmationModal
-      :visible="showDeleteModal"
-      title="Delete Contact"
-      :message="`Are you sure you want to delete '${contactToDelete?.name || 'this contact'}'?`"
-      @confirm="handleDelete"
-      @cancel="closeDeleteModal"
-    />
+    <ConfirmationModal :visible="showDeleteModal" title="Delete Contact"
+      :message="`Are you sure you want to delete '${contactToDelete?.name || 'this contact'}'?`" @confirm="handleDelete"
+      @cancel="closeDeleteModal" />
   </div>
 </template>
 
@@ -142,11 +106,11 @@ export default {
       try {
         this.loading = true
         this.error = null
-        
+
         // Get account first
         const account = await getMyAccount()
         this.accountId = account.id
-        
+
         // Load contacts
         if (this.accountId) {
           try {
@@ -178,7 +142,7 @@ export default {
     },
     async handleDelete() {
       if (!this.contactToDelete) return
-      
+
       try {
         await deleteAccountContact(this.accountId, this.contactToDelete.id)
         this.closeDeleteModal()
@@ -214,7 +178,7 @@ export default {
   padding: var(--space-xl);
   background: var(--color-bg);
   border-radius: var(--radius-lg);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .error-state button {

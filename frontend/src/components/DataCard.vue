@@ -3,7 +3,7 @@
   Reusable card component with title, data/content, and standardized buttons.
 -->
 <template>
-  <div class="data-card" :class="{ 
+  <div class="data-card" :class="{
     'data-card-completed': completed,
     'data-card-danger': variant === 'danger'
   }">

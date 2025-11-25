@@ -9,43 +9,21 @@
     </div>
     <div v-else class="game-table-section">
       <GameContext :gameName="selectedGame.name" />
-      <PageHeader 
-        title="Items" 
-        actionText="Create New Item" 
-        :showIcon="false"
-        titleLevel="h2"
-        @action="openCreate"
-      />
-      <ResourceTable
-        :columns="columns"
-        :rows="itemsStore.items"
-        :loading="itemsStore.loading"
-        :error="itemsStore.error"
-      >
+      <PageHeader title="Items" actionText="Create New Item" :showIcon="false" titleLevel="h2" @action="openCreate" />
+      <ResourceTable :columns="columns" :rows="itemsStore.items" :loading="itemsStore.loading"
+        :error="itemsStore.error">
         <template #actions="{ row }">
           <TableActionsMenu :actions="getActions(row)" />
         </template>
       </ResourceTable>
     </div>
 
-    <ResourceModalForm
-      :visible="showModal"
-      :mode="modalMode"
-      title="Item"
-      :fields="fields"
-      :modelValue="modalForm"
-      :error="modalError"
-      @submit="handleSubmit"
-      @cancel="closeModal"
-    />
+    <ResourceModalForm :visible="showModal" :mode="modalMode" title="Item" :fields="fields" :modelValue="modalForm"
+      :error="modalError" @submit="handleSubmit" @cancel="closeModal" />
 
-    <ConfirmationModal
-      :visible="showDeleteModal"
-      title="Delete Item"
-      :message="`Are you sure you want to delete '${itemToDelete?.name}'?`"
-      @confirm="handleDelete"
-      @cancel="closeDeleteModal"
-    />
+    <ConfirmationModal :visible="showDeleteModal" title="Delete Item"
+      :message="`Are you sure you want to delete '${itemToDelete?.name}'?`" @confirm="handleDelete"
+      @cancel="closeDeleteModal" />
   </div>
 </template>
 
@@ -162,35 +140,3 @@ async function handleDelete() {
   }
 }
 </script>
-
-<style scoped>
-.game-table-section {
-  /* Consistent spacing - no top margin, handled by GameContext */
-}
-
-.section-header {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  margin-bottom: 20px;
-}
-
-.section-header h2 {
-  margin: 0 0 10px 0;
-}
-
-.section-header button {
-  padding: 8px 16px;
-  background: transparent;
-  color: var(--color-button);
-  border: 2px solid var(--color-button);
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.section-header button:hover {
-  background: var(--color-button);
-  color: var(--color-text-light);
-}
-</style> 

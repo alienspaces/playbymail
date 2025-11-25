@@ -4,12 +4,8 @@
 -->
 <template>
   <div class="games-dashboard">
-    <PageHeader
-      title="Games & Instances"
-      titleLevel="h2"
-      :showIcon="false"
-      subtitle="Manage your game instances and monitor player activity"
-    />
+    <PageHeader title="Games & Instances" titleLevel="h2" :showIcon="false"
+      subtitle="Manage your game instances and monitor player activity" />
 
     <!-- Loading state -->
     <div v-if="gamesStore.loading" class="loading-state">
@@ -24,12 +20,7 @@
 
     <!-- Games list -->
     <div v-else class="games-grid">
-      <DataCard
-        v-for="game in games"
-        :key="game.id"
-        :title="game.name"
-        class="game-card"
-      >
+      <DataCard v-for="game in games" :key="game.id" :title="game.name" class="game-card">
         <div class="game-info">
           <DataItem label="Game Type" :value="game.game_type" />
           <DataItem label="Description" :value="getGameDescription(game.game_type)" />
@@ -38,7 +29,7 @@
             <DataItem label="Active" :value="getActiveInstanceCount(game.id)" />
           </div>
         </div>
-        
+
         <template #primary>
           <Button @click="viewGameInstances(game)" variant="primary" size="small">
             Manage
@@ -104,8 +95,8 @@ const getGameInstanceCount = (gameId) => {
 const getActiveInstanceCount = (gameId) => {
   // This would need to be implemented to get active instance count per game
   // For now, return a placeholder
-  return gameInstancesStore.gameInstances.filter(instance => 
-    instance.game_id === gameId && 
+  return gameInstancesStore.gameInstances.filter(instance =>
+    instance.game_id === gameId &&
     ['started'].includes(instance.status)
   ).length;
 };
@@ -128,7 +119,7 @@ const viewGameInstances = (game) => {
   padding: var(--space-xl);
   background: var(--color-bg);
   border-radius: var(--radius-lg);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .error-state button {
@@ -166,4 +157,4 @@ const viewGameInstances = (game) => {
   padding-top: var(--space-md);
   border-top: 1px solid var(--color-border);
 }
-</style> 
+</style>

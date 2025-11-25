@@ -6,19 +6,16 @@
   <div class="management-layout">
     <!-- Show ManagementEntryView for unauthenticated users -->
     <ManagementEntryView v-if="!isLoggedIn" />
-    
+
     <!-- Show full management interface for authenticated users -->
     <div v-else>
       <!-- Management Header -->
-      <MainPageHeader 
-        title="Game Management" 
-        icon-type="clipboard" 
-        icon-color="blue"
-      >
+      <MainPageHeader title="Game Management" icon-type="clipboard" icon-color="blue">
         <template #actions>
           <button class="help-btn" @click="showHelp = true">
             <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/>
+              <path
+                d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z" />
             </svg>
             Help
           </button>
@@ -40,7 +37,8 @@
           <h2>Game Management Help</h2>
           <button class="close-btn" @click="showHelp = false">
             <svg viewBox="0 0 24 24" fill="currentColor">
-              <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+              <path
+                d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
             </svg>
           </button>
         </div>
@@ -53,7 +51,7 @@
             <li><strong>Runtime Controls:</strong> Start, pause, resume, or cancel game instances</li>
             <li><strong>Player Support:</strong> Review submissions and provide assistance</li>
           </ul>
-          
+
           <h3>Game Types</h3>
           <ul>
             <li><strong>Adventure Games:</strong> Exploration and story-driven experiences</li>
@@ -102,7 +100,7 @@ const showHelp = ref(false);
   right: 0;
   bottom: 0;
   width: 400px;
-  background: rgba(0,0,0,0.5);
+  background: rgba(0, 0, 0, 0.5);
   z-index: 1000;
   display: flex;
   justify-content: flex-end;
@@ -174,4 +172,4 @@ const showHelp = ref(false);
 .help-content strong {
   color: var(--color-text);
 }
-</style> 
+</style>

@@ -10,7 +10,7 @@
         <p>Manage game instance and monitor player activity</p>
         <Button @click="goBack" variant="secondary" size="small" class="back-button">
           <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+            <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" />
           </svg>
           Back to Instances
         </Button>
@@ -75,36 +75,20 @@
       <!-- Runtime Controls Section -->
       <DataCard title="Runtime Controls">
         <div class="controls-grid">
-          <Button 
-            v-if="instance.status === 'created'" 
-            @click="startInstance" 
-            variant="primary"
-            :disabled="controlLoading"
-          >
+          <Button v-if="instance.status === 'created'" @click="startInstance" variant="primary"
+            :disabled="controlLoading">
             Start Game
           </Button>
-          <Button 
-            v-if="instance.status === 'started'" 
-            @click="pauseInstance" 
-            variant="warning"
-            :disabled="controlLoading"
-          >
+          <Button v-if="instance.status === 'started'" @click="pauseInstance" variant="warning"
+            :disabled="controlLoading">
             Pause Game
           </Button>
-          <Button 
-            v-if="instance.status === 'paused'" 
-            @click="resumeInstance" 
-            variant="success"
-            :disabled="controlLoading"
-          >
+          <Button v-if="instance.status === 'paused'" @click="resumeInstance" variant="success"
+            :disabled="controlLoading">
             Resume Game
           </Button>
-          <Button 
-            v-if="['created', 'started', 'paused'].includes(instance.status)" 
-            @click="cancelInstance" 
-            variant="danger"
-            :disabled="controlLoading"
-          >
+          <Button v-if="['created', 'started', 'paused'].includes(instance.status)" @click="cancelInstance"
+            variant="danger" :disabled="controlLoading">
             Cancel Game
           </Button>
         </div>
@@ -112,12 +96,8 @@
 
       <!-- Game Instance Parameters Section -->
       <DataCard title="Game Instance Parameters">
-        <ResourceTable
-          :columns="parameterColumns"
-          :rows="parameterRows"
-          :loading="instanceParametersLoading"
-          :error="null"
-        >
+        <ResourceTable :columns="parameterColumns" :rows="parameterRows" :loading="instanceParametersLoading"
+          :error="null">
           <template #cell-parameter="{ row }">
             <div class="param-info">
               <strong>{{ row.description }}</strong>
@@ -146,10 +126,7 @@
             </span>
           </template>
           <template #actions="{ row }">
-            <TableActionsMenu 
-              v-if="instance && instance.status === 'created'"
-              :actions="getParameterActions(row)" 
-            />
+            <TableActionsMenu v-if="instance && instance.status === 'created'" :actions="getParameterActions(row)" />
             <span v-else class="locked-message">
               <em>Locked</em>
             </span>
@@ -164,61 +141,35 @@
             <h3>Configure Parameter: {{ getEditingParameterDescription() }}</h3>
             <button @click="closeParameterModal" class="btn-close">&times;</button>
           </div>
-          
+
           <form @submit.prevent="saveParameter" class="parameter-form">
             <div class="form-group">
               <label for="parameterKey">Parameter</label>
-              <input 
-                id="parameterKey" 
-                :value="parameterForm.parameter_key" 
-                type="text" 
-                disabled
-                class="disabled-input"
-              />
+              <input id="parameterKey" :value="parameterForm.parameter_key" type="text" disabled
+                class="disabled-input" />
               <small class="help-text">{{ getEditingParameterType() }}</small>
             </div>
-            
+
             <div class="form-group">
               <label for="parameterValue">Value</label>
-              <input 
-                v-if="selectedParameterType === 'string'"
-                id="parameterValue" 
-                v-model="parameterForm.parameter_value" 
-                type="text" 
-                required
-                :placeholder="getParameterPlaceholder()"
-              />
-              <input 
-                v-else-if="selectedParameterType === 'integer'"
-                id="parameterValue" 
-                v-model="parameterForm.parameter_value" 
-                type="number" 
-                required
-                :placeholder="getParameterPlaceholder()"
-              />
-              <select 
-                v-else-if="selectedParameterType === 'boolean'"
-                id="parameterValue" 
-                v-model="parameterForm.parameter_value" 
-                required
-              >
+              <input v-if="selectedParameterType === 'string'" id="parameterValue"
+                v-model="parameterForm.parameter_value" type="text" required :placeholder="getParameterPlaceholder()" />
+              <input v-else-if="selectedParameterType === 'integer'" id="parameterValue"
+                v-model="parameterForm.parameter_value" type="number" required
+                :placeholder="getParameterPlaceholder()" />
+              <select v-else-if="selectedParameterType === 'boolean'" id="parameterValue"
+                v-model="parameterForm.parameter_value" required>
                 <option value="">Select value...</option>
                 <option value="true">True</option>
                 <option value="false">False</option>
               </select>
-              <input 
-                v-else
-                id="parameterValue" 
-                v-model="parameterForm.parameter_value" 
-                type="text" 
-                required
-                :placeholder="getParameterPlaceholder()"
-              />
+              <input v-else id="parameterValue" v-model="parameterForm.parameter_value" type="text" required
+                :placeholder="getParameterPlaceholder()" />
               <small v-if="getEditingParameterDefault()" class="help-text">
                 Default: {{ getEditingParameterDefault() }}
               </small>
             </div>
-            
+
             <div class="form-actions">
               <Button type="submit" :disabled="savingParameter" variant="primary">
                 {{ savingParameter ? 'Saving...' : 'Save Parameter' }}
@@ -227,7 +178,7 @@
                 Cancel
               </Button>
             </div>
-            
+
             <div v-if="parameterError" class="error-message">
               {{ parameterError }}
             </div>
@@ -332,7 +283,7 @@ const loadInstance = async () => {
     if (!selectedGame.value) {
       await gamesStore.fetchGames();
     }
-    
+
     const instanceData = await gameInstancesStore.getGameInstance(gameId.value, instanceId.value);
     instance.value = instanceData;
   } catch (err) {
@@ -344,7 +295,7 @@ const loadInstance = async () => {
 
 const loadInstanceParameters = async () => {
   if (!instanceId.value) return;
-  
+
   instanceParametersLoading.value = true;
   try {
     await gameInstanceParametersStore.fetchGameInstanceParameters(gameId.value, instanceId.value);
@@ -358,7 +309,7 @@ const loadInstanceParameters = async () => {
 
 const loadGameParameters = async () => {
   if (!selectedGame.value) return;
-  
+
   try {
     await gameParametersStore.fetchGameParameters();
   } catch (err) {
@@ -387,11 +338,11 @@ const formatDeadline = (deadlineString) => {
   const deadline = new Date(deadlineString);
   const now = new Date();
   const diff = deadline - now;
-  
+
   if (diff < 0) return 'Overdue';
   if (diff < 24 * 60 * 60 * 1000) return 'Today';
   if (diff < 48 * 60 * 60 * 1000) return 'Tomorrow';
-  
+
   return deadline.toLocaleDateString();
 };
 
@@ -444,7 +395,7 @@ const getParameterPlaceholder = () => {
 const editParameterInline = (param) => {
   editingParameterId.value = null; // Clear any existing editing ID
   parameterForm.value.parameter_key = param.config_key;
-  
+
   // Get current value if parameter is already configured, otherwise use default or empty
   const currentParam = instanceParameters.value.find(p => p.parameter_key === param.config_key);
   if (currentParam) {
@@ -453,7 +404,7 @@ const editParameterInline = (param) => {
     // Use default value if available, otherwise empty
     parameterForm.value.parameter_value = param.default_value || '';
   }
-  
+
   showEditParameterModal.value = true;
 };
 
@@ -481,7 +432,7 @@ const saveParameter = async () => {
   try {
     // Check if parameter already exists for this instance
     const existingParam = instanceParameters.value.find(p => p.parameter_key === parameterForm.value.parameter_key);
-    
+
     if (existingParam) {
       // Update existing parameter
       await gameInstanceParametersStore.updateGameInstanceParameter(gameId.value, instanceId.value, existingParam.id, {
@@ -495,7 +446,7 @@ const saveParameter = async () => {
         parameter_value: parameterForm.value.parameter_value
       });
     }
-    
+
     await loadInstanceParameters(); // Reload parameters after save
     closeParameterModal();
   } catch (err) {
@@ -529,13 +480,13 @@ const getCurrentParameterValue = (key) => {
 const getParameterActions = (param) => {
   const actions = [];
   const hasValue = getCurrentParameterValue(param.config_key);
-  
+
   actions.push({
     key: hasValue ? 'edit' : 'set',
     label: hasValue ? 'Edit' : 'Set',
     handler: () => editParameterInline(param)
   });
-  
+
   if (hasValue) {
     actions.push({
       key: 'remove',
@@ -544,7 +495,7 @@ const getParameterActions = (param) => {
       handler: () => removeParameterByKey(param.config_key)
     });
   }
-  
+
   return actions;
 };
 
@@ -610,7 +561,7 @@ const getEditingParameterDefault = () => {
   padding: var(--space-xl);
   background: var(--color-bg);
   border-radius: var(--radius-lg);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .error-state button {
@@ -908,12 +859,29 @@ const getEditingParameterDefault = () => {
   text-align: center;
 }
 
-.type-string { background: var(--color-info); }
-.type-integer { background: var(--color-success); }
-.type-boolean { background: var(--color-warning); }
-.type-object { background: var(--color-primary); }
-.type-array { background: var(--color-info); }
-.type-number { background: var(--color-success); }
+.type-string {
+  background: var(--color-info);
+}
+
+.type-integer {
+  background: var(--color-success);
+}
+
+.type-boolean {
+  background: var(--color-warning);
+}
+
+.type-object {
+  background: var(--color-primary);
+}
+
+.type-array {
+  background: var(--color-info);
+}
+
+.type-number {
+  background: var(--color-success);
+}
 
 .current-value {
   color: var(--color-success);
@@ -953,4 +921,4 @@ const getEditingParameterDefault = () => {
   color: var(--color-text-muted);
   margin-top: var(--space-xs);
 }
-</style> 
+</style>

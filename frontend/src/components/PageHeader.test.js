@@ -9,7 +9,7 @@ describe('PageHeader', () => {
         title: 'Test Page'
       }
     })
-    
+
     expect(wrapper.find('h1').text()).toBe('Test Page')
   })
 
@@ -20,7 +20,7 @@ describe('PageHeader', () => {
         actionText: 'Create New'
       }
     })
-    
+
     const button = wrapper.find('button')
     expect(button.exists()).toBe(true)
     expect(button.text()).toBe('Create New')
@@ -32,7 +32,7 @@ describe('PageHeader', () => {
         title: 'Test Page'
       }
     })
-    
+
     expect(wrapper.find('button').exists()).toBe(false)
   })
 
@@ -43,7 +43,7 @@ describe('PageHeader', () => {
         actionText: 'Create New'
       }
     })
-    
+
     await wrapper.find('button').trigger('click')
     expect(wrapper.emitted('action')).toBeTruthy()
   })

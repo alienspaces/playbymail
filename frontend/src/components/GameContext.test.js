@@ -9,7 +9,7 @@ describe('GameContext', () => {
         gameName: 'Test Game'
       }
     })
-    
+
     const label = wrapper.find('.game-context-label')
     const name = wrapper.find('.game-context-name')
     expect(label.text()).toBe('Game:')
@@ -22,13 +22,13 @@ describe('GameContext', () => {
         gameName: ''
       }
     })
-    
+
     expect(wrapper.find('p').exists()).toBe(false)
   })
 
   it('does not render when gameName is not provided', () => {
     const wrapper = mount(GameContext)
-    
+
     expect(wrapper.find('p').exists()).toBe(false)
   })
 }) 

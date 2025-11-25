@@ -14,7 +14,7 @@ describe('ConfirmationModal', () => {
     const wrapper = mount(ConfirmationModal, {
       props: defaultProps
     })
-    
+
     expect(wrapper.find('.modal-overlay').exists()).toBe(true)
     expect(wrapper.find('h2').text()).toBe('Delete Item')
     expect(wrapper.find('p').text()).toBe('Are you sure?')
@@ -24,7 +24,7 @@ describe('ConfirmationModal', () => {
     const wrapper = mount(ConfirmationModal, {
       props: { ...defaultProps, visible: false }
     })
-    
+
     expect(wrapper.find('.modal-overlay').exists()).toBe(false)
   })
 
@@ -35,7 +35,7 @@ describe('ConfirmationModal', () => {
         warning: 'This action cannot be undone'
       }
     })
-    
+
     expect(wrapper.find('.warning-text').text()).toBe('This action cannot be undone')
   })
 
@@ -47,7 +47,7 @@ describe('ConfirmationModal', () => {
         confirmationText: 'DELETE'
       }
     })
-    
+
     expect(wrapper.find('.confirmation-input').exists()).toBe(true)
     expect(wrapper.find('input').attributes('placeholder')).toBe('DELETE')
   })
@@ -56,7 +56,7 @@ describe('ConfirmationModal', () => {
     const wrapper = mount(ConfirmationModal, {
       props: defaultProps
     })
-    
+
     await wrapper.find('.modal-overlay').trigger('click')
     expect(wrapper.emitted('cancel')).toBeTruthy()
   })
@@ -65,7 +65,7 @@ describe('ConfirmationModal', () => {
     const wrapper = mount(ConfirmationModal, {
       props: defaultProps
     })
-    
+
     await wrapper.find('.danger-btn').trigger('click')
     expect(wrapper.emitted('confirm')).toBeTruthy()
   })
@@ -78,10 +78,10 @@ describe('ConfirmationModal', () => {
         confirmationText: 'DELETE'
       }
     })
-    
+
     const input = wrapper.find('input')
     await input.setValue('WRONG')
-    
+
     const confirmBtn = wrapper.find('.danger-btn')
     expect(confirmBtn.attributes('disabled')).toBeDefined()
   })
@@ -94,10 +94,10 @@ describe('ConfirmationModal', () => {
         confirmationText: 'DELETE'
       }
     })
-    
+
     const input = wrapper.find('input')
     await input.setValue('DELETE')
-    
+
     const confirmBtn = wrapper.find('.danger-btn')
     expect(confirmBtn.attributes('disabled')).toBeUndefined()
   })
@@ -110,7 +110,30 @@ describe('ConfirmationModal', () => {
         loadingText: 'Deleting...'
       }
     })
-    
+
     expect(wrapper.find('.danger-btn').text()).toBe('Deleting...')
+  })
+
+  it('renders custom cancel text', () => {
+    const wrapper = mount(ConfirmationModal, {
+      props: {
+        ...defaultProps,
+        cancelText: 'Never mind'
+      }
+    })
+
+    const buttons = wrapper.findAll('button')
+    expect(buttons[0].text()).toBe('Never mind')
+  })
+
+  it('renders error text when provided', () => {
+    const wrapper = mount(ConfirmationModal, {
+      props: {
+        ...defaultProps,
+        error: 'Something went wrong'
+      }
+    })
+
+    expect(wrapper.find('.error-text').text()).toBe('Something went wrong')
   })
 }) 

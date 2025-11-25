@@ -9,45 +9,24 @@
     </div>
     <div v-else class="game-table-section">
       <GameContext :gameName="selectedGame.name" />
-      <PageHeader 
-        title="Location Links" 
-        actionText="Create New Location Link" 
-        :showIcon="false"
-        titleLevel="h2"
-        @action="openCreate"
-      />
-      <ResourceTable
-        :columns="columns"
-        :rows="enhancedLocationLinks"
-        :loading="locationLinksStore.loading"
-        :error="locationLinksStore.error"
-      >
+      <PageHeader title="Location Links" actionText="Create New Location Link" :showIcon="false" titleLevel="h2"
+        @action="openCreate" />
+      <ResourceTable :columns="columns" :rows="enhancedLocationLinks" :loading="locationLinksStore.loading"
+        :error="locationLinksStore.error">
         <template #actions="{ row }">
           <TableActionsMenu :actions="getActions(row)" />
         </template>
       </ResourceTable>
-      
+
       <!-- Create/Edit Location Link Modal -->
-      <ResourceModalForm
-        :visible="showModal"
-        :mode="modalMode"
-        title="Location Link"
-        :fields="locationLinkFields"
-        :modelValue="modalForm"
-        :error="modalError"
-        :options="locationLinkOptions"
-        @submit="handleSubmit"
-        @cancel="closeModal"
-      />
-      
+      <ResourceModalForm :visible="showModal" :mode="modalMode" title="Location Link" :fields="locationLinkFields"
+        :modelValue="modalForm" :error="modalError" :options="locationLinkOptions" @submit="handleSubmit"
+        @cancel="closeModal" />
+
       <!-- Confirm Delete Dialog -->
-      <ConfirmationModal
-        :visible="showDeleteConfirm"
-        title="Delete Location Link"
-        :message="`Are you sure you want to delete the link '${deleteTarget?.name}'?`"
-        @confirm="deleteLocationLink"
-        @cancel="closeDelete"
-      />
+      <ConfirmationModal :visible="showDeleteConfirm" title="Delete Location Link"
+        :message="`Are you sure you want to delete the link '${deleteTarget?.name}'?`" @confirm="deleteLocationLink"
+        @cancel="closeDelete" />
     </div>
   </div>
 </template>
@@ -132,11 +111,11 @@ const enhancedLocationLinks = computed(() => {
 
 function openCreate() {
   modalMode.value = 'create';
-  modalForm.value = { 
-    from_adventure_game_location_id: '', 
-    to_adventure_game_location_id: '', 
-    name: '', 
-    description: '' 
+  modalForm.value = {
+    from_adventure_game_location_id: '',
+    to_adventure_game_location_id: '',
+    name: '',
+    description: ''
   };
   modalError.value = '';
   showModal.value = true;
@@ -144,12 +123,12 @@ function openCreate() {
 
 function openEdit(row) {
   modalMode.value = 'edit';
-  modalForm.value = { 
+  modalForm.value = {
     id: row.id,
-    from_adventure_game_location_id: row.from_adventure_game_location_id, 
-    to_adventure_game_location_id: row.to_adventure_game_location_id, 
-    name: row.name, 
-    description: row.description || '' 
+    from_adventure_game_location_id: row.from_adventure_game_location_id,
+    to_adventure_game_location_id: row.to_adventure_game_location_id,
+    name: row.name,
+    description: row.description || ''
   };
   modalError.value = '';
   showModal.value = true;
@@ -210,17 +189,3 @@ function getActions(row) {
   ];
 }
 </script>
-
-<style scoped>
-.game-table-section {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-}
-
-button {
-  margin-right: var(--space-sm);
-}
-
-/* Game context styling now handled by GameContext component */
-</style> 

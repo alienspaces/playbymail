@@ -5,45 +5,24 @@
     </div>
     <div v-else class="game-table-section">
       <GameContext :gameName="selectedGame.name" />
-      <PageHeader 
-        title="Item Placements" 
-        actionText="Create Item Placement" 
-        :showIcon="false"
-        titleLevel="h2"
-        @action="openItemPlacementCreate"
-      />
-      <ResourceTable
-        :columns="itemPlacementColumns"
-        :rows="enhancedItemPlacements"
-        :loading="itemPlacementsStore.loading"
-        :error="itemPlacementsStore.error"
-      >
+      <PageHeader title="Item Placements" actionText="Create Item Placement" :showIcon="false" titleLevel="h2"
+        @action="openItemPlacementCreate" />
+      <ResourceTable :columns="itemPlacementColumns" :rows="enhancedItemPlacements"
+        :loading="itemPlacementsStore.loading" :error="itemPlacementsStore.error">
         <template #actions="{ row }">
           <TableActionsMenu :actions="getActions(row)" />
         </template>
       </ResourceTable>
 
       <!-- Create/Edit Item Placement Modal -->
-      <ResourceModalForm
-        :visible="showItemPlacementModal"
-        :mode="itemPlacementModalMode"
-        title="Item Placement"
-        :fields="itemPlacementFields"
-        :modelValue="itemPlacementModalForm"
-        :error="itemPlacementModalError"
-        :options="itemPlacementOptions"
-        @submit="handleItemPlacementSubmit"
-        @cancel="closeItemPlacementModal"
-      />
+      <ResourceModalForm :visible="showItemPlacementModal" :mode="itemPlacementModalMode" title="Item Placement"
+        :fields="itemPlacementFields" :modelValue="itemPlacementModalForm" :error="itemPlacementModalError"
+        :options="itemPlacementOptions" @submit="handleItemPlacementSubmit" @cancel="closeItemPlacementModal" />
 
       <!-- Confirm Delete Dialog -->
-      <ConfirmationModal
-        :visible="showItemPlacementDeleteConfirm"
-        title="Delete Item Placement"
-        message="Are you sure you want to delete this item placement?"
-        @confirm="deleteItemPlacement"
-        @cancel="closeItemPlacementDelete"
-      />
+      <ConfirmationModal :visible="showItemPlacementDeleteConfirm" title="Delete Item Placement"
+        message="Are you sure you want to delete this item placement?" @confirm="deleteItemPlacement"
+        @cancel="closeItemPlacementDelete" />
     </div>
   </div>
 </template>
@@ -196,15 +175,3 @@ function getActions(row) {
   ];
 }
 </script>
-
-<style scoped>
-.game-table-section {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-}
-button {
-  margin-right: var(--space-sm);
-}
-/* Game context styling now handled by GameContext component */
-</style> 

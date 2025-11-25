@@ -58,8 +58,8 @@ func GameConfig() []harness.GameConfig {
 				{
 					Reference: harness.GameLocationOneRef,
 					Record: &adventure_game_record.AdventureGameLocation{
-						Name:              "Mystic Grove",
-						Description:       "A peaceful grove filled with ancient trees and magical flowers. The air shimmers with enchantment.",
+						Name:               "Mystic Grove",
+						Description:        "A peaceful grove filled with ancient trees and magical flowers. The air shimmers with enchantment.",
 						IsStartingLocation: true,
 					},
 				},
@@ -319,8 +319,8 @@ func GameConfig() []harness.GameConfig {
 				{
 					Reference: "game-location-five",
 					Record: &adventure_game_record.AdventureGameLocation{
-						Name:              "Oasis Village",
-						Description:       "A bustling village built around a life-giving oasis in the desert.",
+						Name:               "Oasis Village",
+						Description:        "A bustling village built around a life-giving oasis in the desert.",
 						IsStartingLocation: true,
 					},
 				},

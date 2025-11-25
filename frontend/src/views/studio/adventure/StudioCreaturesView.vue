@@ -9,44 +9,23 @@
     </div>
     <div v-else class="game-table-section">
       <GameContext :gameName="selectedGame.name" />
-      <PageHeader 
-        title="Creatures" 
-        actionText="Create New Creature" 
-        :showIcon="false"
-        titleLevel="h2"
-        @action="openCreate"
-      />
-      <ResourceTable
-        :columns="columns"
-        :rows="creaturesStore.creatures"
-        :loading="creaturesStore.loading"
-        :error="creaturesStore.error"
-      >
+      <PageHeader title="Creatures" actionText="Create New Creature" :showIcon="false" titleLevel="h2"
+        @action="openCreate" />
+      <ResourceTable :columns="columns" :rows="creaturesStore.creatures" :loading="creaturesStore.loading"
+        :error="creaturesStore.error">
         <template #actions="{ row }">
           <TableActionsMenu :actions="getActions(row)" />
         </template>
       </ResourceTable>
 
       <!-- Create/Edit Modal using ResourceModalForm -->
-      <ResourceModalForm
-        :visible="showModal"
-        :mode="modalMode"
-        title="Creature"
-        :fields="fields"
-        :modelValue="modalForm"
-        :error="modalError"
-        @submit="handleSubmit"
-        @cancel="closeModal"
-      />
+      <ResourceModalForm :visible="showModal" :mode="modalMode" title="Creature" :fields="fields"
+        :modelValue="modalForm" :error="modalError" @submit="handleSubmit" @cancel="closeModal" />
 
       <!-- Confirm Delete Dialog -->
-      <ConfirmationModal
-        :visible="showDeleteConfirm"
-        title="Delete Creature"
-        :message="`Are you sure you want to delete '${deleteTarget?.name}'?`"
-        @confirm="deleteCreature"
-        @cancel="closeDelete"
-      />
+      <ConfirmationModal :visible="showDeleteConfirm" title="Delete Creature"
+        :message="`Are you sure you want to delete '${deleteTarget?.name}'?`" @confirm="deleteCreature"
+        @cancel="closeDelete" />
     </div>
   </div>
 </template>
@@ -160,15 +139,3 @@ function getActions(row) {
   ];
 }
 </script>
-
-<style scoped>
-.game-table-section {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-}
-button {
-  margin-right: var(--space-sm);
-}
-/* Game context styling now handled by GameContext component */
-</style> 

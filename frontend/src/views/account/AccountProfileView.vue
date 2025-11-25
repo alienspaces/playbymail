@@ -1,17 +1,13 @@
 <template>
   <div class="account-profile-view">
-    <PageHeader 
-      title="Account Profile" 
-      :showIcon="false"
-      titleLevel="h2"
-      subtitle="Review your profile details and account status"
-    />
+    <PageHeader title="Account Profile" :showIcon="false" titleLevel="h2"
+      subtitle="Review your profile details and account status" />
 
     <!-- Loading state -->
     <div v-if="loading" class="loading-state">
       <p>Loading account information...</p>
     </div>
-    
+
     <!-- Error state -->
     <div v-else-if="error" class="error-state">
       <p>{{ error }}</p>
@@ -19,7 +15,7 @@
         Retry
       </AppButton>
     </div>
-    
+
     <!-- Account information -->
     <div v-else-if="account" class="account-grid">
       <!-- Profile Information Card -->
@@ -46,19 +42,11 @@
     </div>
 
     <!-- Delete Confirmation Modal -->
-    <ConfirmationModal
-      :visible="showDeleteModal"
-      title="Delete Account"
+    <ConfirmationModal :visible="showDeleteModal" title="Delete Account"
       message="Are you sure you want to delete your account? This action cannot be undone."
       warning="All your data, including games, characters, and settings will be permanently deleted."
-      confirmText="Delete Account"
-      :loading="deleting"
-      loadingText="Deleting..."
-      :requireConfirmation="true"
-      confirmationText="DELETE"
-      @confirm="confirmDeleteAccount"
-      @cancel="hideDeleteConfirmation"
-    />
+      confirmText="Delete Account" :loading="deleting" loadingText="Deleting..." :requireConfirmation="true"
+      confirmationText="DELETE" @confirm="confirmDeleteAccount" @cancel="hideDeleteConfirmation" />
   </div>
 </template>
 
@@ -121,16 +109,16 @@ export default {
       if (this.deleteConfirmationText !== 'DELETE') {
         return
       }
-      
+
       try {
         this.deleting = true
         this.error = null
         await deleteMyAccount()
-        
+
         // Clear auth store and redirect to home
         const authStore = useAuthStore()
         authStore.logout()
-        
+
         const router = useRouter()
         router.push('/')
       } catch (err) {
@@ -165,7 +153,7 @@ export default {
   padding: var(--space-xl);
   background: var(--color-bg);
   border-radius: var(--radius-lg);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .error-state button {
@@ -212,4 +200,3 @@ export default {
   flex: 0 1 auto;
 }
 </style>
-

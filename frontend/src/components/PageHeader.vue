@@ -121,4 +121,4 @@ defineEmits(['action']);
     gap: var(--space-sm);
   }
 }
-</style> 
+</style>

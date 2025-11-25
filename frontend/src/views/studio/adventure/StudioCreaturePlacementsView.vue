@@ -5,45 +5,25 @@
     </div>
     <div v-else class="game-table-section">
       <GameContext :gameName="selectedGame.name" />
-      <PageHeader 
-        title="Creature Placements" 
-        actionText="Create Creature Placement" 
-        :showIcon="false"
-        titleLevel="h2"
-        @action="openCreaturePlacementCreate"
-      />
-      <ResourceTable
-        :columns="creaturePlacementColumns"
-        :rows="enhancedCreaturePlacements"
-        :loading="creaturePlacementsStore.loading"
-        :error="creaturePlacementsStore.error"
-      >
+      <PageHeader title="Creature Placements" actionText="Create Creature Placement" :showIcon="false" titleLevel="h2"
+        @action="openCreaturePlacementCreate" />
+      <ResourceTable :columns="creaturePlacementColumns" :rows="enhancedCreaturePlacements"
+        :loading="creaturePlacementsStore.loading" :error="creaturePlacementsStore.error">
         <template #actions="{ row }">
           <TableActionsMenu :actions="getActions(row)" />
         </template>
       </ResourceTable>
 
       <!-- Create/Edit Creature Placement Modal -->
-      <ResourceModalForm
-        :visible="showCreaturePlacementModal"
-        :mode="creaturePlacementModalMode"
-        title="Creature Placement"
-        :fields="creaturePlacementFields"
-        :modelValue="creaturePlacementModalForm"
-        :error="creaturePlacementModalError"
-        :options="creaturePlacementOptions"
-        @submit="handleCreaturePlacementSubmit"
-        @cancel="closeCreaturePlacementModal"
-      />
+      <ResourceModalForm :visible="showCreaturePlacementModal" :mode="creaturePlacementModalMode"
+        title="Creature Placement" :fields="creaturePlacementFields" :modelValue="creaturePlacementModalForm"
+        :error="creaturePlacementModalError" :options="creaturePlacementOptions" @submit="handleCreaturePlacementSubmit"
+        @cancel="closeCreaturePlacementModal" />
 
       <!-- Confirm Delete Dialog -->
-      <ConfirmationModal
-        :visible="showCreaturePlacementDeleteConfirm"
-        title="Delete Creature Placement"
-        message="Are you sure you want to delete this creature placement?"
-        @confirm="deleteCreaturePlacement"
-        @cancel="closeCreaturePlacementDelete"
-      />
+      <ConfirmationModal :visible="showCreaturePlacementDeleteConfirm" title="Delete Creature Placement"
+        message="Are you sure you want to delete this creature placement?" @confirm="deleteCreaturePlacement"
+        @cancel="closeCreaturePlacementDelete" />
     </div>
   </div>
 </template>
@@ -196,15 +176,3 @@ function getActions(row) {
   ];
 }
 </script>
-
-<style scoped>
-.game-table-section {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-}
-button {
-  margin-right: var(--space-sm);
-}
-/* Game context styling now handled by GameContext component */
-</style> 

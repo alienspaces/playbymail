@@ -38,7 +38,7 @@ defineProps({
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   flex-shrink: 0;
 }
 
@@ -74,10 +74,9 @@ defineProps({
   .main-page-header {
     padding: var(--space-md) var(--space-lg);
   }
-  
+
   .main-page-header h1 {
     font-size: var(--font-size-lg);
   }
 }
 </style>
-

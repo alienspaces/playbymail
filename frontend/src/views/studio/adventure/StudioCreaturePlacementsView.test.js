@@ -49,7 +49,7 @@ describe('StudioCreaturePlacementsView', () => {
     const { useCreaturesStore } = await import('../../../stores/creatures')
     const { useLocationsStore } = await import('../../../stores/locations')
     const { useCreaturePlacementsStore } = await import('../../../stores/creaturePlacements')
-    
+
     useGamesStore.mockReturnValue({
       selectedGame: ref(selectedGame)
     })
@@ -84,7 +84,7 @@ describe('StudioCreaturePlacementsView', () => {
 
   it('renders prompt when no game is selected', () => {
     const wrapper = mount(StudioCreaturePlacementsView)
-    
+
     expect(wrapper.text()).toContain('Please select or create a game to manage creature placements.')
     expect(wrapper.find('.game-table-section').exists()).toBe(false)
   })
@@ -93,7 +93,7 @@ describe('StudioCreaturePlacementsView', () => {
     await setupStoreMocks({ id: 1, name: 'Test Game' })
 
     const wrapper = mount(StudioCreaturePlacementsView)
-    
+
     expect(wrapper.find('.game-table-section').exists()).toBe(true)
     const contextLabel = wrapper.find('.game-context-label')
     const contextName = wrapper.find('.game-context-name')
@@ -106,7 +106,7 @@ describe('StudioCreaturePlacementsView', () => {
     await setupStoreMocks({ id: 1, name: 'Test Game' })
 
     const wrapper = mount(StudioCreaturePlacementsView)
-    
+
     const createButton = wrapper.find('button')
     expect(createButton.text()).toBe('Create Creature Placement')
   })
@@ -115,7 +115,7 @@ describe('StudioCreaturePlacementsView', () => {
     await setupStoreMocks({ id: 1, name: 'Test Game' })
 
     const wrapper = mount(StudioCreaturePlacementsView)
-    
+
     const resourceTable = wrapper.findComponent({ name: 'ResourceTable' })
     expect(resourceTable.exists()).toBe(true)
     expect(resourceTable.props('columns')).toEqual([
@@ -130,10 +130,10 @@ describe('StudioCreaturePlacementsView', () => {
     await setupStoreMocks({ id: 1, name: 'Test Game' })
 
     const wrapper = mount(StudioCreaturePlacementsView)
-    
+
     const createButton = wrapper.find('button')
     await createButton.trigger('click')
-    
+
     expect(wrapper.vm.showCreaturePlacementModal).toBe(true)
     expect(wrapper.vm.creaturePlacementModalMode).toBe('create')
   })
@@ -142,12 +142,12 @@ describe('StudioCreaturePlacementsView', () => {
     await setupStoreMocks({ id: 1, name: 'Test Game' })
 
     const wrapper = mount(StudioCreaturePlacementsView)
-    
+
     // Open modal
     wrapper.vm.showCreaturePlacementModal = true
     wrapper.vm.creaturePlacementModalMode = 'create'
     await wrapper.vm.$nextTick()
-    
+
     expect(wrapper.find('.modal h2').text()).toBe('Create Creature Placement')
   })
 
@@ -155,22 +155,22 @@ describe('StudioCreaturePlacementsView', () => {
     await setupStoreMocks({ id: 1, name: 'Test Game' })
 
     const wrapper = mount(StudioCreaturePlacementsView)
-    
+
     // Open modal in edit mode
     wrapper.vm.showCreaturePlacementModal = true
     wrapper.vm.creaturePlacementModalMode = 'edit'
     await wrapper.vm.$nextTick()
-    
+
     expect(wrapper.find('.modal h2').text()).toBe('Edit Creature Placement')
   })
 
   it('renders creature and location select options', async () => {
     await setupStoreMocks({ id: 1, name: 'Test Game' })
-    
+
     // Override the creatures and locations for this specific test
     const { useCreaturesStore } = await import('../../../stores/creatures')
     const { useLocationsStore } = await import('../../../stores/locations')
-    
+
     useCreaturesStore.mockReturnValue({
       creatures: [
         { id: 1, name: 'Dragon' },
@@ -191,20 +191,20 @@ describe('StudioCreaturePlacementsView', () => {
     })
 
     const wrapper = mount(StudioCreaturePlacementsView)
-    
+
     // Open modal
     wrapper.vm.showCreaturePlacementModal = true
     await wrapper.vm.$nextTick()
-    
+
     const creatureSelect = wrapper.find('#adventure_game_creature_id')
     const locationSelect = wrapper.find('#adventure_game_location_id')
-    
+
     expect(creatureSelect.exists()).toBe(true)
     expect(locationSelect.exists()).toBe(true)
-    
+
     const creatureOptions = creatureSelect.findAll('option')
     const locationOptions = locationSelect.findAll('option')
-    
+
     expect(creatureOptions).toHaveLength(3) // placeholder + 2 creatures
     expect(locationOptions).toHaveLength(3) // placeholder + 2 locations
   })
@@ -213,14 +213,14 @@ describe('StudioCreaturePlacementsView', () => {
     await setupStoreMocks({ id: 1, name: 'Test Game' })
 
     const wrapper = mount(StudioCreaturePlacementsView)
-    
+
     // Open modal
     wrapper.vm.showCreaturePlacementModal = true
     await wrapper.vm.$nextTick()
-    
+
     const cancelButton = wrapper.find('button[type="button"]')
     await cancelButton.trigger('click')
-    
+
     expect(wrapper.vm.showCreaturePlacementModal).toBe(false)
   })
 
@@ -228,12 +228,12 @@ describe('StudioCreaturePlacementsView', () => {
     await setupStoreMocks({ id: 1, name: 'Test Game' })
 
     const wrapper = mount(StudioCreaturePlacementsView)
-    
+
     // Open modal and set error
     wrapper.vm.showCreaturePlacementModal = true
     wrapper.vm.creaturePlacementModalError = 'Validation failed'
     await wrapper.vm.$nextTick()
-    
+
     expect(wrapper.find('.modal .error').text()).toBe('Validation failed')
   })
 
@@ -241,11 +241,11 @@ describe('StudioCreaturePlacementsView', () => {
     await setupStoreMocks({ id: 1, name: 'Test Game' })
 
     const wrapper = mount(StudioCreaturePlacementsView)
-    
+
     // Open delete confirmation
     wrapper.vm.showCreaturePlacementDeleteConfirm = true
     await wrapper.vm.$nextTick()
-    
+
     // Check that ConfirmationModal is rendered with correct props
     const confirmationModal = wrapper.findComponent({ name: 'ConfirmationModal' })
     expect(confirmationModal.exists()).toBe(true)
@@ -258,7 +258,7 @@ describe('StudioCreaturePlacementsView', () => {
     await setupStoreMocks({ id: 1, name: 'Test Game' })
 
     const wrapper = mount(StudioCreaturePlacementsView)
-    
+
     expect(wrapper.find('.game-table-section').exists()).toBe(true)
     expect(wrapper.find('.game-context-name').exists()).toBe(true)
     expect(wrapper.findComponent({ name: 'PageHeader' }).exists()).toBe(true)
@@ -270,7 +270,7 @@ describe('StudioCreaturePlacementsView', () => {
     const { useCreaturesStore } = await import('../../../stores/creatures')
     const { useLocationsStore } = await import('../../../stores/locations')
     const { useCreaturePlacementsStore } = await import('../../../stores/creaturePlacements')
-    
+
     useGamesStore.mockReturnValue({
       selectedGame: selectedGameRef
     })
@@ -297,14 +297,14 @@ describe('StudioCreaturePlacementsView', () => {
     })
 
     const wrapper = mount(StudioCreaturePlacementsView)
-    
+
     // Initially no game selected
     expect(wrapper.text()).toContain('Please select or create a game')
-    
+
     // Change selected game
     selectedGameRef.value = { id: 1, name: 'New Game' }
     await wrapper.vm.$nextTick()
-    
+
     const contextName = wrapper.find('.game-context-name')
     expect(contextName.text()).toBe('New Game')
   })

@@ -8,65 +8,96 @@
 :root {
   /* Color palette - Matching Logo Colors */
   /* Logo colors: Dark teal (#0C4651), Gold (#D79F32), Black (#000000), Beige (#DBC396) */
-  --color-logo-teal: #0C4651;      /* Dark teal/blue-green from logo */
-  --color-logo-teal-dark: #082E35; /* Darker teal */
-  --color-logo-teal-light: #1A6B7A; /* Lighter teal */
-  --color-logo-gold: #D79F32;      /* Gold/yellow from logo */
-  --color-logo-gold-dark: #B8852A; /* Darker gold */
-  --color-logo-gold-light: #E8B85A; /* Lighter gold */
-  --color-logo-black: #000000;     /* Black from logo */
-  --color-logo-beige: #DBC396;     /* Light beige from logo */
-  --color-logo-beige-dark: #C4B085; /* Darker beige */
-  --color-logo-beige-light: #F0E5D0; /* Lighter beige */
-  
+  --color-logo-teal: #0C4651;
+  /* Dark teal/blue-green from logo */
+  --color-logo-teal-dark: #082E35;
+  /* Darker teal */
+  --color-logo-teal-light: #1A6B7A;
+  /* Lighter teal */
+  --color-logo-gold: #D79F32;
+  /* Gold/yellow from logo */
+  --color-logo-gold-dark: #B8852A;
+  /* Darker gold */
+  --color-logo-gold-light: #E8B85A;
+  /* Lighter gold */
+  --color-logo-black: #000000;
+  /* Black from logo */
+  --color-logo-beige: #DBC396;
+  /* Light beige from logo */
+  --color-logo-beige-dark: #C4B085;
+  /* Darker beige */
+  --color-logo-beige-light: #F0E5D0;
+  /* Lighter beige */
+
   /* Legacy pen color names - mapped to logo colors */
-  --color-pen-blue: var(--color-logo-teal);      /* Teal as primary */
+  --color-pen-blue: var(--color-logo-teal);
+  /* Teal as primary */
   --color-pen-blue-dark: var(--color-logo-teal-dark);
   --color-pen-blue-light: var(--color-logo-teal-light);
-  --color-pen-black: var(--color-logo-black);    /* Black from logo */
+  --color-pen-black: var(--color-logo-black);
+  /* Black from logo */
   --color-pen-black-dark: var(--color-logo-black);
-  --color-pen-red: var(--color-logo-gold);       /* Gold as accent */
+  --color-pen-red: var(--color-logo-gold);
+  /* Gold as accent */
   --color-pen-red-dark: var(--color-logo-gold-dark);
   --color-pen-red-light: var(--color-logo-gold-light);
-  
+
   /* Primary colors using logo colors */
-  --color-primary: var(--color-logo-teal);        /* Dark teal as primary */
+  --color-primary: var(--color-logo-teal);
+  /* Dark teal as primary */
   --color-primary-dark: var(--color-logo-teal-dark);
   --color-primary-light: var(--color-logo-teal-light);
-  
+
   /* Background - matching logo beige tones */
-  --color-bg: #F5F1E8;             /* Light beige paper (inspired by logo) */
-  --color-bg-alt: #E8E0D3;         /* Slightly darker beige */
-  --color-bg-light: #FAF8F3;       /* Very light beige highlight */
-  --color-border: #DBC396;         /* Logo beige for borders */
-  --color-border-light: #E8E0D3;   /* Lighter beige border */
-  --color-text: var(--color-logo-black);          /* Black from logo */
-  --color-text-light: #FFFFFF;     /* White text */
-  --color-text-muted: #6B7280;     /* Muted gray */
-  --color-accent: var(--color-logo-gold);        /* Gold from logo as accent */
+  --color-bg: #F5F1E8;
+  /* Light beige paper (inspired by logo) */
+  --color-bg-alt: #E8E0D3;
+  /* Slightly darker beige */
+  --color-bg-light: #FAF8F3;
+  /* Very light beige highlight */
+  --color-border: #DBC396;
+  /* Logo beige for borders */
+  --color-border-light: #E8E0D3;
+  /* Lighter beige border */
+  --color-text: var(--color-logo-black);
+  /* Black from logo */
+  --color-text-light: #FFFFFF;
+  /* White text */
+  --color-text-muted: #6B7280;
+  /* Muted gray */
+  --color-accent: var(--color-logo-gold);
+  /* Gold from logo as accent */
   --color-accent-dark: var(--color-logo-gold-dark);
   --color-accent-light: var(--color-logo-gold-light);
-  --color-button: var(--color-logo-teal);          /* Teal for buttons */
+  --color-button: var(--color-logo-teal);
+  /* Teal for buttons */
   --color-button-dark: var(--color-logo-teal-dark);
-  --color-error: #DC2626;         /* Keep red for errors (not in logo) */
-  
+  --color-error: #DC2626;
+  /* Keep red for errors (not in logo) */
+
   /* Status colors - using pen colors */
-  --color-success: #059669;        /* Green (less common pen color) */
+  --color-success: #059669;
+  /* Green (less common pen color) */
   --color-success-dark: #047857;
   --color-success-light: #D1FAE5;
-  --color-warning: #F59E0B;        /* Gold warning */
+  --color-warning: #F59E0B;
+  /* Gold warning */
   --color-warning-dark: #D97706;
   --color-warning-light: #FEF3C7;
-  --color-danger: #DC2626;        /* Red for danger (not in logo) */
+  --color-danger: #DC2626;
+  /* Red for danger (not in logo) */
   --color-danger-dark: #B91C1C;
   --color-danger-light: #FEE2E2;
-  --color-info: var(--color-logo-teal);          /* Teal for info */
+  --color-info: var(--color-logo-teal);
+  /* Teal for info */
   --color-info-dark: var(--color-logo-teal-dark);
   --color-info-light: #D1E7E8;
 
   /* Typography - Hand-drawn pen style */
-  --font-family-heading: 'Caveat', 'Kalam', cursive;  /* Hand-drawn pen style for headings */
-  --font-family-base: 'Inter', 'Arial', sans-serif;   /* Clean sans-serif for body */
+  --font-family-heading: 'Caveat', 'Kalam', cursive;
+  /* Hand-drawn pen style for headings */
+  --font-family-base: 'Inter', 'Arial', sans-serif;
+  /* Clean sans-serif for body */
   --font-size-base: 16px;
   --font-size-sm: 0.95rem;
   --font-size-md: 1.1rem;
@@ -82,7 +113,7 @@
   --space-md: 1rem;
   --space-lg: 2rem;
   --space-xl: 3rem;
-  
+
   /* Layout spacing - content padding to align with sidebar */
   --layout-content-padding: var(--space-lg);
 
@@ -98,18 +129,17 @@ body {
   background: var(--color-bg);
   color: var(--color-text);
   /* Subtle paper texture */
-  background-image: 
-    repeating-linear-gradient(
-      0deg,
+  background-image:
+    repeating-linear-gradient(0deg,
       transparent,
       transparent 2px,
       rgba(0, 0, 0, 0.01) 2px,
-      rgba(0, 0, 0, 0.01) 4px
-    );
+      rgba(0, 0, 0, 0.01) 4px);
 }
 
 /* Typography - Hand-drawn pen style */
-h1, .h1 {
+h1,
+.h1 {
   font-family: var(--font-family-heading);
   font-size: var(--font-size-xl);
   font-weight: 700;
@@ -120,7 +150,7 @@ h1, .h1 {
   position: relative;
   display: inline-block;
   /* Subtle hand-drawn effect */
-  text-shadow: 
+  text-shadow:
     0.5px 0.5px 0px rgba(0, 0, 0, 0.1),
     1px 1px 0px rgba(0, 0, 0, 0.05);
   /* Slight rotation for hand-drawn feel */
@@ -128,22 +158,23 @@ h1, .h1 {
 }
 
 /* Subtle underline decoration for titles */
-h1::after, .h1::after {
+h1::after,
+.h1::after {
   content: '';
   position: absolute;
   bottom: -4px;
   left: 0;
   right: 0;
   height: 2px;
-  background: linear-gradient(
-    to right,
-    var(--color-pen-blue) 0%,
-    transparent 100%
-  );
+  background: linear-gradient(to right,
+      var(--color-pen-blue) 0%,
+      transparent 100%);
   opacity: 0.3;
   transform: rotate(-0.2deg);
 }
-h2, .h2 {
+
+h2,
+.h2 {
   font-family: var(--font-family-heading);
   font-size: var(--font-size-lg);
   font-weight: 600;
@@ -158,22 +189,23 @@ h2, .h2 {
 }
 
 /* Subtle underline decoration for h2 titles (section titles) */
-h2::after, .h2::after {
+h2::after,
+.h2::after {
   content: '';
   position: absolute;
   bottom: -4px;
   left: 0;
   right: 0;
   height: 2px;
-  background: linear-gradient(
-    to right,
-    var(--color-pen-blue) 0%,
-    transparent 100%
-  );
+  background: linear-gradient(to right,
+      var(--color-pen-blue) 0%,
+      transparent 100%);
   opacity: 0.3;
   transform: rotate(-0.2deg);
 }
-h3, .h3 {
+
+h3,
+.h3 {
   font-family: var(--font-family-heading);
   font-size: var(--font-size-md);
   font-weight: 600;
@@ -184,21 +216,26 @@ h3, .h3 {
   position: relative;
   display: inline-block;
 }
+
 p {
   margin-bottom: var(--space-sm);
 }
+
 a {
   color: var(--color-primary);
   text-decoration: none;
   transition: color 0.2s;
 }
-a:hover, a:focus {
+
+a:hover,
+a:focus {
   color: var(--color-primary-dark);
   text-decoration: underline;
 }
 
 /* Buttons - Hand-drawn style */
-button, .btn {
+button,
+.btn {
   font-family: inherit;
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-bold);
@@ -210,24 +247,31 @@ button, .btn {
   cursor: pointer;
   transition: all 0.2s;
   /* Subtle hand-drawn border effect */
-  box-shadow: 
-    0 1px 2px rgba(0,0,0,0.05),
-    inset 0 1px 0 rgba(255,255,255,0.1);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
   position: relative;
 }
-button:hover, .btn:hover,
-button:focus, .btn:focus {
+
+button:hover,
+.btn:hover,
+button:focus,
+.btn:focus {
   background: var(--color-button);
   color: var(--color-text-light);
 }
-button:disabled, .btn:disabled {
+
+button:disabled,
+.btn:disabled {
   background: var(--color-border);
   color: #aaa;
   cursor: not-allowed;
 }
 
 /* Forms - Subtle paper lines */
-input, select, textarea {
+input,
+select,
+textarea {
   font-family: inherit;
   font-size: var(--font-size-base);
   padding: var(--space-xs) var(--space-sm);
@@ -237,27 +281,59 @@ input, select, textarea {
   background: var(--color-bg);
   color: var(--color-text);
   /* Subtle paper texture */
-  box-shadow: 
-    inset 0 1px 2px rgba(0,0,0,0.02),
-    0 1px 0 rgba(255,255,255,0.5);
+  box-shadow:
+    inset 0 1px 2px rgba(0, 0, 0, 0.02),
+    0 1px 0 rgba(255, 255, 255, 0.5);
 }
-input:focus, select:focus, textarea:focus {
+
+input:focus,
+select:focus,
+textarea:focus {
   outline: 2px solid var(--color-primary);
 }
 
 /* Utility classes (optional, add more as needed) */
-.mt-md { margin-top: var(--space-md); }
-.mb-md { margin-bottom: var(--space-md); }
-.p-md { padding: var(--space-md); }
-.text-center { text-align: center; }
-.bg-alt { background: var(--color-bg-alt); }
+.mt-md {
+  margin-top: var(--space-md);
+}
+
+.mb-md {
+  margin-bottom: var(--space-md);
+}
+
+.p-md {
+  padding: var(--space-md);
+}
+
+.text-center {
+  text-align: center;
+}
+
+.bg-alt {
+  background: var(--color-bg-alt);
+}
 
 /* Responsive typography */
 @media (max-width: 768px) {
-  h1, .h1 { font-size: 1.1rem; }
-  h2, .h2 { font-size: 0.95rem; }
-  h3, .h3 { font-size: 0.9rem; }
-  body { font-size: 15px; }
+
+  h1,
+  .h1 {
+    font-size: 1.1rem;
+  }
+
+  h2,
+  .h2 {
+    font-size: 0.95rem;
+  }
+
+  h3,
+  .h3 {
+    font-size: 0.9rem;
+  }
+
+  body {
+    font-size: 15px;
+  }
 }
 
 /* End design system foundation */
@@ -275,6 +351,7 @@ input:focus, select:focus, textarea:focus {
   align-items: center;
   justify-content: center;
 }
+
 .icon-btn:focus {
   outline: 2px solid var(--color-primary);
 }
@@ -298,24 +375,29 @@ input:focus, select:focus, textarea:focus {
   background-position: right 1rem center;
   background-size: 1.25rem 1.25rem;
 }
+
 .form-select:focus {
   outline: 2px solid var(--color-primary);
   border-color: var(--color-primary);
 }
+
 /* Style select options to match application color scheme */
 .form-select option {
   background: var(--color-bg);
   color: var(--color-text);
 }
+
 .form-select option:checked {
   background: var(--color-bg);
   color: var(--color-text);
 }
+
 /* Try to override browser default hover with beige theme */
 .form-select option:hover {
   background: var(--color-bg-alt) !important;
   color: var(--color-text) !important;
 }
+
 /* Ensure all select elements in modals use form-select styling */
 .modal select,
 .modal-overlay select {
@@ -337,21 +419,25 @@ input:focus, select:focus, textarea:focus {
   background-position: right 1rem center;
   background-size: 1.25rem 1.25rem;
 }
+
 .modal select:focus,
 .modal-overlay select:focus {
   outline: 2px solid var(--color-primary);
   border-color: var(--color-primary);
 }
+
 .modal select option,
 .modal-overlay select option {
   background: var(--color-bg);
   color: var(--color-text);
 }
+
 .modal select option:checked,
 .modal-overlay select option:checked {
   background: var(--color-bg);
   color: var(--color-text);
 }
+
 /* Try to override browser default hover with beige theme */
 .modal select option:hover,
 .modal-overlay select option:hover {
@@ -404,6 +490,7 @@ input:focus, select:focus, textarea:focus {
   .mobile-menu .logo {
     color: var(--color-primary);
   }
+
   .mobile-menu .navbar-link {
     padding: 0.75rem 1.25rem;
     font-size: 1.1rem;
@@ -411,10 +498,12 @@ input:focus, select:focus, textarea:focus {
     margin-bottom: 0.5rem;
     border-radius: var(--radius-md);
   }
+
   .mobile-menu .navbar-link.active {
     background: var(--color-primary);
     color: var(--color-text-light);
   }
+
   .mobile-menu .mobile-actions button {
     margin-top: 0.5rem;
     padding: 0.5rem 1.25rem;
@@ -430,7 +519,10 @@ input:focus, select:focus, textarea:focus {
 /* Modal Overlay - Used across multiple components */
 .modal-overlay {
   position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   background: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
@@ -556,7 +648,8 @@ table {
   margin-top: var(--space-md);
 }
 
-th, td {
+th,
+td {
   border: 1px solid var(--color-border);
   padding: var(--space-sm) var(--space-md);
   text-align: left;
@@ -587,7 +680,8 @@ th::after {
 }
 
 /* Loading and Error States */
-.loading, .error {
+.loading,
+.error {
   margin-top: var(--space-md);
 }
 
@@ -609,13 +703,140 @@ th::after {
 .card {
   background: var(--color-bg);
   border-radius: var(--radius-md);
-  box-shadow: 
-    0 1px 3px rgba(0,0,0,0.05),
-    0 1px 2px rgba(0,0,0,0.03),
-    inset 0 1px 0 rgba(255,255,255,0.5);
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.05),
+    0 1px 2px rgba(0, 0, 0, 0.03),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
   padding: var(--space-lg);
   border: 1px solid var(--color-border-light);
   position: relative;
+}
+
+/* Entry view shared styles */
+.entry-card {
+  max-width: 900px;
+  margin: var(--space-lg) auto;
+  padding: var(--space-xl);
+  background: var(--color-bg);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.07);
+}
+
+.entry-card h1 {
+  margin-bottom: var(--space-lg);
+  font-size: var(--font-size-xl);
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  color: var(--color-text);
+}
+
+.entry-card p {
+  margin-bottom: var(--space-md);
+  font-size: var(--font-size-md);
+  line-height: 1.5;
+}
+
+.entry-card ul {
+  margin-bottom: var(--space-lg);
+  margin-left: var(--space-lg);
+  padding-left: var(--space-sm);
+  line-height: 1.5;
+}
+
+.entry-card li {
+  margin-bottom: var(--space-sm);
+  font-size: var(--font-size-sm);
+}
+
+.entry-card em {
+  display: block;
+  margin-top: var(--space-lg);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.entry-cta {
+  text-align: center;
+  margin-top: var(--space-lg);
+}
+
+.cta-button {
+  display: inline-block;
+  padding: var(--space-md) var(--space-xl);
+  background: transparent;
+  color: var(--color-button);
+  border: 2px solid var(--color-button);
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  font-weight: var(--font-weight-bold);
+  transition: all 0.2s;
+}
+
+.cta-button:hover {
+  background: var(--color-button);
+  color: var(--color-text-light);
+}
+
+.hand-drawn-title {
+  position: relative;
+}
+
+.title-icon {
+  font-size: 0.8em;
+  margin-right: 0.2em;
+}
+
+.entry-help {
+  margin-top: var(--space-lg);
+  padding: var(--space-lg);
+  background: var(--color-bg-alt);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.07);
+}
+
+.entry-help h2 {
+  font-size: var(--font-size-xl);
+  margin-bottom: var(--space-md);
+  text-align: left;
+}
+
+.entry-help ul {
+  margin-left: var(--space-lg);
+  padding-left: var(--space-sm);
+}
+
+.entry-help li {
+  margin-bottom: var(--space-sm);
+  font-size: var(--font-size-sm);
+}
+
+@media (max-width: 900px) {
+
+  .entry-card,
+  .game-table-section,
+  .studio-section {
+    padding: var(--space-md);
+  }
+}
+
+/* Studio shared sections */
+.game-table-section,
+.studio-section {
+  background: var(--color-bg);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.07);
+  padding: var(--space-xl);
+  margin-bottom: var(--space-xl);
+  width: 100%;
+}
+
+.section-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  margin: var(--space-md) 0;
 }
 
 /* Message Styles */

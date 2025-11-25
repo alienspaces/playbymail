@@ -31,7 +31,7 @@ describe('ManagementEntryView', () => {
     expect(wrapper.text()).toContain('Sign In to Game Management')
     
     // Should not show admin help section
-    expect(wrapper.find('.admin-help').exists()).toBe(false)
+    expect(wrapper.find('.entry-help').exists()).toBe(false)
   })
 
   it('renders admin help and router-view when user is authenticated', () => {
@@ -48,7 +48,7 @@ describe('ManagementEntryView', () => {
     })
     
     // Should show admin help section
-    expect(wrapper.find('.admin-help').exists()).toBe(true)
+    expect(wrapper.find('.entry-help').exists()).toBe(true)
     expect(wrapper.text()).toContain('Game Management Help')
     
     // Should show router-view for admin content

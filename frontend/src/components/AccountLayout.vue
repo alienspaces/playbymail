@@ -3,25 +3,17 @@
     <!-- Account Header expands entire screen width-->
     <div class="account-header-wrapper">
       <!-- Account burger menu (mobile only) -->
-      <button
-        class="account-burger icon-btn"
-        @click="toggleAccountMenu"
-        aria-label="Open account menu"
-        v-if="isMobile"
-      >
+      <button class="account-burger icon-btn" @click="toggleAccountMenu" aria-label="Open account menu" v-if="isMobile">
         <span></span>
         <span></span>
         <span></span>
       </button>
-      <MainPageHeader 
-        title="Account" 
-        icon-type="person" 
-        icon-color="blue"
-      >
+      <MainPageHeader title="Account" icon-type="person" icon-color="blue">
         <template #actions>
           <button class="help-btn" @click="showHelp = true">
             <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/>
+              <path
+                d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z" />
             </svg>
             Help
           </button>
@@ -31,35 +23,37 @@
     <!-- Flex row: sidebar + main content -->
     <div class="account-shell">
       <div class="account-body-row">
-      <!-- Desktop sidebar -->
-      <aside class="sidebar" v-if="!isMobile">
-        <nav>
-          <ul>
-            <li>
-              <router-link to="/account" active-class="active" exact>
-                <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-                </svg>
-                Profile
-              </router-link>
-            </li>
-            <li>
-              <router-link to="/account/contacts" active-class="active">
-                <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
-                </svg>
-                Contacts
-              </router-link>
-            </li>
-          </ul>
-        </nav>
-      </aside>
-      <!-- Main content area -->
-      <div class="main-content" @click="closeAccountMenuOnMobile">
-        <section class="account-body">
-          <router-view />
-        </section>
-      </div>
+        <!-- Desktop sidebar -->
+        <aside class="sidebar" v-if="!isMobile">
+          <nav>
+            <ul>
+              <li>
+                <router-link to="/account" active-class="active" exact>
+                  <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                  </svg>
+                  Profile
+                </router-link>
+              </li>
+              <li>
+                <router-link to="/account/contacts" active-class="active">
+                  <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" />
+                  </svg>
+                  Contacts
+                </router-link>
+              </li>
+            </ul>
+          </nav>
+        </aside>
+        <!-- Main content area -->
+        <div class="main-content" @click="closeAccountMenuOnMobile">
+          <section class="account-body">
+            <router-view />
+          </section>
+        </div>
       </div>
     </div>
     <!-- Help Panel emerges from the right of the screen -->
@@ -79,7 +73,8 @@
           <li>
             <router-link to="/account" active-class="active" exact @click="closeAccountMenu">
               <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                <path
+                  d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
               </svg>
               Profile
             </router-link>
@@ -87,7 +82,8 @@
           <li>
             <router-link to="/account/contacts" active-class="active" @click="closeAccountMenu">
               <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+                <path
+                  d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" />
               </svg>
               Contacts
             </router-link>
@@ -138,6 +134,7 @@ function closeAccountMenuOnMobile() {
   min-height: 0;
   height: 100%;
 }
+
 .account-shell {
   display: flex;
   flex-direction: column;
@@ -145,6 +142,7 @@ function closeAccountMenuOnMobile() {
   min-height: 0;
   height: 100%;
 }
+
 .account-header-wrapper {
   width: 100%;
   flex-shrink: 0;
@@ -164,6 +162,7 @@ function closeAccountMenuOnMobile() {
   .account-header-wrapper :deep(.main-page-header) {
     padding-left: calc(var(--space-xl) + 50px);
   }
+
   .account-burger {
     display: flex;
     flex-direction: column;
@@ -175,6 +174,7 @@ function closeAccountMenuOnMobile() {
     z-index: 3002;
   }
 }
+
 .account-burger span {
   display: block;
   width: 28px;
@@ -184,10 +184,12 @@ function closeAccountMenuOnMobile() {
   border-radius: 2px;
   transition: 0.3s;
 }
+
 @media (max-width: 900px) {
   .sidebar {
     display: none;
   }
+
   .mobile-overlay {
     position: fixed;
     top: 70px;
@@ -197,6 +199,7 @@ function closeAccountMenuOnMobile() {
     background: rgba(0, 0, 0, 0.3);
     z-index: 2999;
   }
+
   .sidebar.mobile {
     display: flex;
     position: fixed;
@@ -209,24 +212,29 @@ function closeAccountMenuOnMobile() {
     padding: var(--space-lg) var(--space-md) 0 var(--space-md);
     flex-direction: column;
     z-index: 3000;
-    box-shadow: 2px 0 16px rgba(0,0,0,0.12);
+    box-shadow: 2px 0 16px rgba(0, 0, 0, 0.12);
     animation: slideInLeft 0.2s;
   }
+
   /* Prevent main content from being affected by mobile sidebar */
   .account-body-row {
     position: relative;
   }
+
   .main-content {
     position: relative;
     z-index: 1;
   }
+
   .account-body {
     padding: var(--space-md) var(--space-sm);
   }
-.sidebar.mobile {
+
+  .sidebar.mobile {
     width: 280px;
     padding: var(--space-lg) var(--space-md) var(--space-lg) var(--space-md);
   }
+
   .sidebar ul {
     font-size: 1rem;
   }
@@ -237,32 +245,45 @@ function closeAccountMenuOnMobile() {
     width: 32px;
     height: 32px;
   }
+
   .account-burger span {
     width: 22px;
     height: 3px;
     margin: 2px 0;
   }
+
   .account-body {
     padding: var(--space-md) var(--space-sm);
     font-size: 1rem;
   }
-  .sidebar, .sidebar.mobile {
+
+  .sidebar,
+  .sidebar.mobile {
     width: 180px;
     padding: var(--space-md) var(--space-sm) var(--space-md) var(--space-sm);
   }
+
   .sidebar ul {
     font-size: 1rem;
   }
+
   .help-panel {
     min-width: 220px;
     padding: var(--space-md) var(--space-md);
     font-size: 1rem;
   }
 }
+
 @keyframes slideInLeft {
-  from { transform: translateX(-100%); }
-  to { transform: translateX(0); }
+  from {
+    transform: translateX(-100%);
+  }
+
+  to {
+    transform: translateX(0);
+  }
 }
+
 .account-body-row {
   display: flex;
   flex: 1;
@@ -270,6 +291,7 @@ function closeAccountMenuOnMobile() {
   height: 100%;
   align-items: stretch;
 }
+
 .sidebar {
   width: 200px;
   background: var(--color-bg-alt);
@@ -295,12 +317,15 @@ function closeAccountMenuOnMobile() {
   pointer-events: none;
   z-index: 0;
 }
+
 .sidebar ul {
   list-style: none;
 }
+
 .sidebar li {
   margin-bottom: var(--space-md);
 }
+
 .sidebar a {
   color: var(--color-text);
   text-decoration: none;
@@ -315,13 +340,16 @@ function closeAccountMenuOnMobile() {
   height: 18px;
   flex-shrink: 0;
 }
+
 .sidebar a.active {
   color: var(--color-primary);
 }
+
 .sidebar a.disabled {
   pointer-events: none;
   color: #aaa;
 }
+
 .main-content {
   flex: 1;
   display: flex;
@@ -329,29 +357,36 @@ function closeAccountMenuOnMobile() {
   min-width: 0;
   background: transparent;
 }
+
 .account-body {
   flex: 1;
   padding: var(--layout-content-padding);
   min-width: 0;
 }
+
 .help-panel-overlay {
   position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.25);
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.25);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 2000;
 }
+
 .help-panel {
   background: var(--color-bg);
   padding: var(--space-lg) var(--space-xl);
   border-radius: var(--radius-lg);
   min-width: 320px;
   max-width: 90vw;
-  box-shadow: 0 2px 16px rgba(0,0,0,0.18);
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.18);
   position: relative;
 }
+
 .close-help {
   position: absolute;
   top: var(--space-md);

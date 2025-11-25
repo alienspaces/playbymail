@@ -5,118 +5,85 @@
     </div>
     <div v-else>
       <!-- Items Section -->
-      <section>
+      <section class="studio-section">
         <h2>Items</h2>
-        <ResourceTable
-          :columns="itemColumns"
-          :rows="itemsStore.items"
-          :loading="itemsStore.loading"
-          :error="itemsStore.error"
-        />
+        <ResourceTable :columns="itemColumns" :rows="itemsStore.items" :loading="itemsStore.loading"
+          :error="itemsStore.error" />
       </section>
-      <section style="margin-bottom: 2rem;">
+      <section class="studio-section">
         <h3>Item Placements</h3>
-        <button @click="openItemPlacementCreate">Create Item Placement</button>
-        <ResourceTable
-          :columns="itemPlacementColumns"
-          :rows="itemPlacementsStore.itemPlacements"
-          :loading="itemPlacementsStore.loading"
-          :error="itemPlacementsStore.error"
-        >
+        <div class="section-actions">
+          <button @click="openItemPlacementCreate">Create Item Placement</button>
+        </div>
+        <ResourceTable :columns="itemPlacementColumns" :rows="itemPlacementsStore.itemPlacements"
+          :loading="itemPlacementsStore.loading" :error="itemPlacementsStore.error">
           <template #actions="{ row }">
             <TableActionsMenu :actions="getItemPlacementActions(row)" />
           </template>
         </ResourceTable>
 
         <!-- Create/Edit Modal using ResourceModalForm -->
-        <ResourceModalForm
-          :visible="showItemPlacementModal"
-          :mode="itemPlacementModalMode"
-          title="Item Placement"
-          :fields="itemPlacementFields"
-          :modelValue="itemPlacementModalForm"
-          :error="itemPlacementModalError"
-          @submit="handleItemPlacementSubmit"
-          @cancel="closeItemPlacementModal"
-        >
+        <ResourceModalForm :visible="showItemPlacementModal" :mode="itemPlacementModalMode" title="Item Placement"
+          :fields="itemPlacementFields" :modelValue="itemPlacementModalForm" :error="itemPlacementModalError"
+          @submit="handleItemPlacementSubmit" @cancel="closeItemPlacementModal">
           <template v-slot:field="{ field }">
-            <select v-if="field.key === 'adventure_game_item_id'" v-model="itemPlacementModalForm.adventure_game_item_id" class="form-select">
+            <select v-if="field.key === 'adventure_game_item_id'"
+              v-model="itemPlacementModalForm.adventure_game_item_id" class="form-select">
               <option v-for="item in itemsStore.items" :key="item.id" :value="item.id">{{ item.name }}</option>
             </select>
-            <select v-else-if="field.key === 'adventure_game_location_id'" v-model="itemPlacementModalForm.adventure_game_location_id" class="form-select">
+            <select v-else-if="field.key === 'adventure_game_location_id'"
+              v-model="itemPlacementModalForm.adventure_game_location_id" class="form-select">
               <option v-for="loc in locationsStore.locations" :key="loc.id" :value="loc.id">{{ loc.name }}</option>
             </select>
-            <input v-else v-model="itemPlacementModalForm[field.key]" :type="field.type || 'text'" :required="field.required" :maxlength="field.maxlength" :placeholder="field.placeholder" />
+            <input v-else v-model="itemPlacementModalForm[field.key]" :type="field.type || 'text'"
+              :required="field.required" :maxlength="field.maxlength" :placeholder="field.placeholder" />
           </template>
         </ResourceModalForm>
 
-        <div v-if="showItemPlacementDeleteConfirm" class="modal-overlay">
-          <div class="modal">
-            <h2>Delete Item Placement</h2>
-            <p>Are you sure you want to delete this item placement?</p>
-            <div class="modal-actions">
-              <button @click="deleteItemPlacement">Delete</button>
-              <button @click="closeItemPlacementDelete">Cancel</button>
-            </div>
-            <p v-if="itemPlacementDeleteError" class="error">{{ itemPlacementDeleteError }}</p>
-          </div>
-        </div>
+        <ConfirmationModal :visible="showItemPlacementDeleteConfirm" title="Delete Item Placement"
+          message="Are you sure you want to delete this item placement?" confirmText="Delete"
+          :error="itemPlacementDeleteError" @confirm="deleteItemPlacement" @cancel="closeItemPlacementDelete" />
       </section>
 
       <!-- Creatures Section -->
-      <section>
+      <section class="studio-section">
         <h2>Creatures</h2>
-        <ResourceTable
-          :columns="creatureColumns"
-          :rows="creaturesStore.creatures"
-          :loading="creaturesStore.loading"
-          :error="creaturesStore.error"
-        />
+        <ResourceTable :columns="creatureColumns" :rows="creaturesStore.creatures" :loading="creaturesStore.loading"
+          :error="creaturesStore.error" />
       </section>
-      <section>
+      <section class="studio-section">
         <h3>Creature Placements</h3>
-        <button @click="openCreaturePlacementCreate">Create Creature Placement</button>
-        <ResourceTable
-          :columns="creaturePlacementColumns"
-          :rows="creaturePlacementsStore.creaturePlacements"
-          :loading="creaturePlacementsStore.loading"
-          :error="creaturePlacementsStore.error"
-        >
+        <div class="section-actions">
+          <button @click="openCreaturePlacementCreate">Create Creature Placement</button>
+        </div>
+        <ResourceTable :columns="creaturePlacementColumns" :rows="creaturePlacementsStore.creaturePlacements"
+          :loading="creaturePlacementsStore.loading" :error="creaturePlacementsStore.error">
           <template #actions="{ row }">
             <TableActionsMenu :actions="getCreaturePlacementActions(row)" />
           </template>
         </ResourceTable>
-        <ResourceModalForm
-          :visible="showCreaturePlacementModal"
-          :mode="creaturePlacementModalMode"
-          title="Creature Placement"
-          :fields="creaturePlacementFields"
-          :modelValue="creaturePlacementModalForm"
-          :error="creaturePlacementModalError"
-          @submit="handleCreaturePlacementSubmit"
-          @cancel="closeCreaturePlacementModal"
-        >
+        <ResourceModalForm :visible="showCreaturePlacementModal" :mode="creaturePlacementModalMode"
+          title="Creature Placement" :fields="creaturePlacementFields" :modelValue="creaturePlacementModalForm"
+          :error="creaturePlacementModalError" @submit="handleCreaturePlacementSubmit"
+          @cancel="closeCreaturePlacementModal">
           <template v-slot:field="{ field }">
-            <select v-if="field.key === 'adventure_game_creature_id'" v-model="creaturePlacementModalForm.adventure_game_creature_id" class="form-select">
-              <option v-for="creature in creaturesStore.creatures" :key="creature.id" :value="creature.id">{{ creature.name }}</option>
+            <select v-if="field.key === 'adventure_game_creature_id'"
+              v-model="creaturePlacementModalForm.adventure_game_creature_id" class="form-select">
+              <option v-for="creature in creaturesStore.creatures" :key="creature.id" :value="creature.id">{{
+                creature.name }}</option>
             </select>
-            <select v-else-if="field.key === 'adventure_game_location_id'" v-model="creaturePlacementModalForm.adventure_game_location_id" class="form-select">
+            <select v-else-if="field.key === 'adventure_game_location_id'"
+              v-model="creaturePlacementModalForm.adventure_game_location_id" class="form-select">
               <option v-for="loc in locationsStore.locations" :key="loc.id" :value="loc.id">{{ loc.name }}</option>
             </select>
-            <input v-else v-model="creaturePlacementModalForm[field.key]" :type="field.type || 'text'" :required="field.required" :maxlength="field.maxlength" :placeholder="field.placeholder" />
+            <input v-else v-model="creaturePlacementModalForm[field.key]" :type="field.type || 'text'"
+              :required="field.required" :maxlength="field.maxlength" :placeholder="field.placeholder" />
           </template>
         </ResourceModalForm>
-        <div v-if="showCreaturePlacementDeleteConfirm" class="modal-overlay">
-          <div class="modal">
-            <h2>Delete Creature Placement</h2>
-            <p>Are you sure you want to delete this creature placement?</p>
-            <div class="modal-actions">
-              <button @click="deleteCreaturePlacement">Delete</button>
-              <button @click="closeCreaturePlacementDelete">Cancel</button>
-            </div>
-            <p v-if="creaturePlacementDeleteError" class="error">{{ creaturePlacementDeleteError }}</p>
-          </div>
-        </div>
+        <ConfirmationModal :visible="showCreaturePlacementDeleteConfirm" title="Delete Creature Placement"
+          message="Are you sure you want to delete this creature placement?" confirmText="Delete"
+          :error="creaturePlacementDeleteError" @confirm="deleteCreaturePlacement"
+          @cancel="closeCreaturePlacementDelete" />
       </section>
     </div>
   </div>
@@ -134,6 +101,7 @@ import { storeToRefs } from 'pinia';
 import ResourceTable from '../../../components/ResourceTable.vue';
 import ResourceModalForm from '../../../components/ResourceModalForm.vue';
 import TableActionsMenu from '../../../components/TableActionsMenu.vue';
+import ConfirmationModal from '../../../components/ConfirmationModal.vue';
 
 const itemsStore = useItemsStore();
 const creaturesStore = useCreaturesStore();
@@ -347,40 +315,3 @@ function getCreaturePlacementActions(row) {
   ];
 }
 </script>
-
-<style scoped>
-h2, h3 {
-  margin-top: 2rem;
-  margin-bottom: 1rem;
-}
-button {
-  margin-bottom: 1rem;
-}
-.modal-overlay {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.3);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-.modal {
-  background: var(--color-bg);
-  padding: var(--space-lg);
-  border-radius: var(--radius-md);
-  min-width: 300px;
-  max-width: 90vw;
-  box-shadow: 0 2px 16px rgba(0,0,0,0.2);
-}
-.modal-actions {
-  margin-top: var(--space-md);
-  display: flex;
-  gap: var(--space-md);
-  justify-content: flex-start;
-}
-.error {
-  color: var(--color-error);
-  margin-top: var(--space-md);
-}
-</style> 
