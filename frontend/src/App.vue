@@ -136,11 +136,18 @@ body {
   margin-bottom: 0;
 }
 
-main.app-main>* {
+main.app-main>.studio-layout,
+main.app-main>.account-layout,
+main.app-main>.management-layout {
   flex: 1 1 auto;
   display: flex;
   flex-direction: column;
   min-height: 0;
+}
+
+/* Prevent standalone views from stretching */
+main.app-main> :not(.studio-layout):not(.account-layout):not(.management-layout) {
+  flex: 0 0 auto;
 }
 
 .navbar-container {
