@@ -100,7 +100,7 @@ describe('StudioLayout', () => {
     
     // Should show StudioEntryView content
     expect(wrapper.text()).toContain('Game Designer Studio')
-    expect(wrapper.text()).toContain('Sign in to access the full studio features')
+    expect(wrapper.text()).toContain('Sign in to access current tools and track new features as they become available')
     expect(wrapper.text()).toContain('Sign In to Studio')
     
     // Should not show sidebar navigation
