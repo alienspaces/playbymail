@@ -124,7 +124,7 @@ describe('HomeView', () => {
     
     // Check for proper heading hierarchy
     expect(wrapper.find('h1').exists()).toBe(true)
-    expect(wrapper.findAll('h2')).toHaveLength(3) // who section + 2 sections
+    expect(wrapper.findAll('h2')).toHaveLength(4) // genres section + who section + 2 sections
     expect(wrapper.findAll('h3')).toHaveLength(3) // 3 user types
   })
 

@@ -8,8 +8,8 @@
     <p class="intro">Create the next generation of play-by-mail campaigns.</p>
 
     <p>
-      The Game Designer Studio is an evolving toolkit dedicated exclusively to building PBM games—crafted for designers
-      who want to create custom worlds, rules, and turn structures for postal and digital-mail play.
+      The Game Designer Studio is an evolving toolkit dedicated exclusively to building PBM campaigns for the all of the
+      game types the platform supports.
     </p>
 
     <section class="genre-callout">
@@ -21,7 +21,6 @@
         <li>Space 4X and science-fiction strategy</li>
         <li>Diplomacy and political negotiation games</li>
         <li>Hybrid strategy/RPG formats</li>
-        <li>Narrative and storytelling-focused PBM</li>
       </ul>
       <p>These genres shape the roadmap as we expand the platform’s capabilities.</p>
     </section>
@@ -33,9 +32,8 @@
         <li>Outline branching stories, strategic scenarios, and player roles</li>
         <li>Define locations, maps, units, encounters, and events</li>
         <li>Import custom artwork for maps, tokens, handouts, and other physical mailers</li>
-        <li>Set up PBM-specific turn pacing, economies, and rule systems</li>
         <li>Link regions and scenes with travel rules, conditions, and objectives</li>
-        <li>Playtest turn flows before sending them to players</li>
+        <li>Playtest turn flows before publishing your game to players</li>
       </ul>
       <p>As features come online, you’ll be able to build complete PBM campaigns in one place.</p>
     </section>
@@ -52,13 +50,3 @@
 <script setup>
 import HandDrawnIcon from '../components/HandDrawnIcon.vue';
 </script>
-
-<style scoped>
-.studio-entry h2 {
-  margin-bottom: var(--space-md);
-}
-
-.studio-entry li {
-  font-size: var(--font-size-md);
-}
-</style>

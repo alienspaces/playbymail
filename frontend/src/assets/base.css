@@ -737,6 +737,10 @@ th::after {
   line-height: 1.5;
 }
 
+.entry-card h2 {
+  margin-bottom: var(--space-md);
+}
+
 .entry-card ul {
   margin-bottom: var(--space-lg);
   margin-left: var(--space-lg);
@@ -746,7 +750,7 @@ th::after {
 
 .entry-card li {
   margin-bottom: var(--space-sm);
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-md);
 }
 
 .entry-card em {
