@@ -9,7 +9,7 @@ import (
 )
 
 // CreateTurnSheets creates all turn sheet records for the current turn of an adventure game instance
-func (p *AdventureGame) CreateTurnSheets(ctx context.Context, gameInstanceRec *game_record.GameInstance) error {
+func (p *AdventureGame) CreateTurnSheets(ctx context.Context, gameInstanceRec *game_record.GameInstance) ([]*game_record.GameTurnSheet, error) {
 	l := p.Logger.WithFunctionContext("AdventureGame/CreateTurnSheets")
 
 	l.Info("creating adventure game turn sheets for instance >%s< turn >%d<", gameInstanceRec.ID, gameInstanceRec.CurrentTurn)
@@ -18,14 +18,14 @@ func (p *AdventureGame) CreateTurnSheets(ctx context.Context, gameInstanceRec *g
 	characterInstanceRecs, err := p.getCharacterInstancesForGameInstance(ctx, gameInstanceRec)
 	if err != nil {
 		l.Error("failed to get character instances for game instance >%s< error >%v<", gameInstanceRec.ID, err)
-		return err
+		return nil, err
 	}
 
 	l.Info("found >%d< character instances for game instance >%s<", len(characterInstanceRecs), gameInstanceRec.ID)
 
 	if len(characterInstanceRecs) == 0 {
 		l.Info("no character instances found for game instance >%s<", gameInstanceRec.ID)
-		return nil
+		return nil, nil
 	}
 
 	// TODO: Wrap this all in a new database transaction so we can roll back
@@ -33,45 +33,55 @@ func (p *AdventureGame) CreateTurnSheets(ctx context.Context, gameInstanceRec *g
 
 	// Process turn sheets for each character
 	var errs []error
+	var createdTurnSheets []*game_record.GameTurnSheet
 	for _, characterInstanceRec := range characterInstanceRecs {
-		err := p.createCharacterTurnSheets(ctx, gameInstanceRec, characterInstanceRec)
+		characterTurnSheets, err := p.createCharacterTurnSheets(ctx, gameInstanceRec, characterInstanceRec)
 		if err != nil {
 			l.Warn("failed to process turn sheets for character >%s< error >%v<", characterInstanceRec.ID, err)
 			// Continue processing other characters even if one fails
 			errs = append(errs, err)
 			continue
 		}
+		createdTurnSheets = append(createdTurnSheets, characterTurnSheets...)
 	}
 
 	// If there were any errors we cannot continue processing the turn
 	// until the errors are resolved.
 	if len(errs) > 0 {
 		l.Warn("failed to process turn sheets for some characters error >%v<", errs)
-		return fmt.Errorf("failed to process turn sheets for some characters error >%v<", errs)
+		return nil, fmt.Errorf("failed to process turn sheets for some characters error >%v<", errs)
 	}
 
-	return nil
+	return createdTurnSheets, nil
 }
 
 // createCharacterTurnSheets creates all of the current game turn's turn sheets for a character
-func (p *AdventureGame) createCharacterTurnSheets(ctx context.Context, gameInstanceRec *game_record.GameInstance, characterInstance *adventure_game_record.AdventureGameCharacterInstance) error {
+func (p *AdventureGame) createCharacterTurnSheets(ctx context.Context, gameInstanceRec *game_record.GameInstance, characterInstance *adventure_game_record.AdventureGameCharacterInstance) ([]*game_record.GameTurnSheet, error) {
 	l := p.Logger.WithFunctionContext("AdventureGame/processCharacterTurnSheets")
 
 	l.Info("creating turn sheets for game instance ID >%s< character instance ID >%s< turn number >%d<", gameInstanceRec.ID, characterInstance.ID, gameInstanceRec.CurrentTurn)
 
+	var createdTurnSheets []*game_record.GameTurnSheet
+
 	// For each turn sheet type supported by the game create a turn sheet for this character
 	for _, turnSheetType := range adventure_game_record.AdventureGameSheetTypes.ToSlice() {
+		// Join game turn sheets are handled through the subscription workflow, not turn processing.
+		if turnSheetType == adventure_game_record.AdventureSheetTypeJoinGame {
+			continue
+		}
+
 		// Create a turn sheet for this character
 		turnSheetRec, err := p.createTurnSheet(ctx, gameInstanceRec, characterInstance, turnSheetType)
 		if err != nil {
 			l.Warn("failed to create turn sheet >%s< for character >%s< error >%v<", turnSheetType, characterInstance.ID, err)
-			return err
+			return nil, err
 		}
 
 		l.Info("created turn sheet >%s< for character instance ID >%s< turn sheet type >%s< turn number >%d<", turnSheetRec.ID, characterInstance.ID, turnSheetType, gameInstanceRec.CurrentTurn)
+		createdTurnSheets = append(createdTurnSheets, turnSheetRec)
 	}
 
-	return nil
+	return createdTurnSheets, nil
 }
 
 // createTurnSheet creates a single turn sheet for a character

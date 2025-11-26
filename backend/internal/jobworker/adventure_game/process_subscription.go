@@ -38,7 +38,7 @@ func (p *AdventureGameProcessSubscriptionProcessor) ProcessProcessSubscription(c
 	l.Info("processing join game turn sheet for subscription ID >%s< turn sheet ID >%s<", subscriptionRec.ID, turnSheetRec.ID)
 
 	// Parse the scanned data to get character name
-	var scanData turn_sheet.JoinGameScanData
+	var scanData turn_sheet.AdventureGameJoinGameScanData
 	if err := json.Unmarshal(turnSheetRec.ScannedData, &scanData); err != nil {
 		l.Warn("failed to unmarshal join game scan data >%v<", err)
 		return fmt.Errorf("failed to parse join game scan data: %w", err)

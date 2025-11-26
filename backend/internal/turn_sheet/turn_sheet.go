@@ -256,3 +256,35 @@ func (bp *BaseProcessor) ValidateBaseTemplateData(data *TurnSheetTemplateData) e
 
 	return nil
 }
+
+// JoinGameScanData captures the generic fields extracted from a scanned join game turn sheet
+// This includes email and contact information that is common across all game types
+type JoinGameScanData struct {
+	Email              string `json:"email"`
+	Name               string `json:"name"`
+	PostalAddressLine1 string `json:"postal_address_line1"`
+	PostalAddressLine2 string `json:"postal_address_line2,omitempty"`
+	StateProvince      string `json:"state_province"`
+	Country            string `json:"country"`
+	PostalCode         string `json:"postal_code"`
+}
+
+// Validate ensures required fields are present in the scanned data
+func (d *JoinGameScanData) Validate() error {
+	switch {
+	case d.Email == "":
+		return fmt.Errorf("email is required")
+	case d.Name == "":
+		return fmt.Errorf("name is required")
+	case d.PostalAddressLine1 == "":
+		return fmt.Errorf("postal address line 1 is required")
+	case d.StateProvince == "":
+		return fmt.Errorf("state or province is required")
+	case d.Country == "":
+		return fmt.Errorf("country is required")
+	case d.PostalCode == "":
+		return fmt.Errorf("post code is required")
+	default:
+		return nil
+	}
+}

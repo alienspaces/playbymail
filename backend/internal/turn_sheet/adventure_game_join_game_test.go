@@ -109,7 +109,7 @@ func TestJoinGameProcessor_ScanTurnSheet(t *testing.T) {
 		expectError           bool
 		expectErrorMessage    string
 		expectedTurnSheetCode string
-		expectedScanData      *turn_sheet.JoinGameScanData
+		expectedScanData      *turn_sheet.AdventureGameJoinGameScanData
 		requiresScanner       bool
 	}{
 		{
@@ -153,15 +153,17 @@ func TestJoinGameProcessor_ScanTurnSheet(t *testing.T) {
 			},
 			expectError:           false,
 			expectedTurnSheetCode: "JOIN123",
-			expectedScanData: &turn_sheet.JoinGameScanData{
-				Email:              "alienspaces@gmail.com",
-				Name:               "Ben Wallin",
-				PostalAddressLine1: "54 Ronald Street",
-				PostalAddressLine2: "",
-				StateProvince:      "Coburg North",
-				Country:            "Australia",
-				PostalCode:         "3058",
-				CharacterName:      "Luscious",
+			expectedScanData: &turn_sheet.AdventureGameJoinGameScanData{
+				JoinGameScanData: turn_sheet.JoinGameScanData{
+					Email:              "alienspaces@gmail.com",
+					Name:               "Ben Wallin",
+					PostalAddressLine1: "54 Ronald Street",
+					PostalAddressLine2: "",
+					StateProvince:      "Coburg North",
+					Country:            "Australia",
+					PostalCode:         "3058",
+				},
+				CharacterName: "Luscious",
 			},
 			requiresScanner: true,
 		},
@@ -223,7 +225,7 @@ func TestJoinGameProcessor_ScanTurnSheet(t *testing.T) {
 			require.NotNil(t, resultData, "Result should not be nil")
 
 			if tt.expectedScanData != nil {
-				var scanData turn_sheet.JoinGameScanData
+				var scanData turn_sheet.AdventureGameJoinGameScanData
 				err := json.Unmarshal(resultData, &scanData)
 				require.NoError(t, err, "Should unmarshal scan results")
 

@@ -2,7 +2,6 @@ package game_test
 
 import (
 	"context"
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -15,6 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"gitlab.com/alienspaces/playbymail/core/nullstring"
+	"gitlab.com/alienspaces/playbymail/core/nulltime"
 	"gitlab.com/alienspaces/playbymail/core/server"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
 	"gitlab.com/alienspaces/playbymail/core/type/storer"
@@ -22,7 +22,6 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 	"gitlab.com/alienspaces/playbymail/internal/runner/server/game"
-	"gitlab.com/alienspaces/playbymail/internal/turn_sheet"
 	"gitlab.com/alienspaces/playbymail/internal/utils/testutil"
 	"gitlab.com/alienspaces/playbymail/internal/utils/turnsheet"
 )
@@ -30,63 +29,46 @@ import (
 func Test_uploadTurnSheetHandler(t *testing.T) {
 	t.Parallel()
 
-	// Create a custom harness config with turn sheets for existing players
+	// Create a custom harness config
 	testDataConfig := harness.DefaultDataConfig()
 
-	// Add a turn sheet for existing player in game instance one
-	// Construct sheet data using LocationChoiceData struct
-	locationChoiceData := turn_sheet.LocationChoiceData{
-		LocationName:        "Test Location",
-		LocationDescription: "A test location for turn sheet testing",
-		LocationOptions: []turn_sheet.LocationOption{
-			{
-				LocationID:              "location_1",
-				LocationLinkName:        "Location One",
-				LocationLinkDescription: "First location option",
-			},
-			{
-				LocationID:              "location_2",
-				LocationLinkName:        "Location Two",
-				LocationLinkDescription: "Second location option",
-			},
-		},
-	}
-	sheetDataBytes, err2 := json.Marshal(locationChoiceData)
-	require.NoError(t, err2, "marshal location choice data returns without error")
-	testDataConfig.GameConfigs[0].GameInstanceConfigs[0].AdventureGameTurnSheetConfigs = []harness.AdventureGameTurnSheetConfig{
+	// Configure expected turn sheets so references can be resolved after job workers run
+	err := testDataConfig.ReplaceGameTurnConfigs(harness.GameInstanceOneRef, []harness.GameTurnConfig{
 		{
-			GameTurnSheetConfig: harness.GameTurnSheetConfig{
-				Reference:        harness.GameTurnSheetOneRef,
-				AccountRef:       harness.AccountOneRef,
-				TurnNumber:       1,
-				SheetType:        adventure_game_record.AdventureSheetTypeLocationChoice,
-				SheetOrder:       1,
-				SheetData:        string(sheetDataBytes),
-				ProcessingStatus: game_record.TurnSheetProcessingStatusPending,
+			TurnNumber: 1,
+			AdventureGameTurnSheetConfigs: []harness.AdventureGameTurnSheetConfig{
+				{
+					GameTurnSheetConfig: harness.GameTurnSheetConfig{
+						Reference:        harness.GameTurnSheetOneRef,
+						AccountRef:       harness.AccountOneRef,
+						SheetType:        adventure_game_record.AdventureSheetTypeLocationChoice,
+						ProcessingStatus: game_record.TurnSheetProcessingStatusPending,
+					},
+					GameCharacterInstanceRef: harness.GameCharacterInstanceOneRef,
+				},
 			},
-			GameCharacterInstanceRef: harness.GameCharacterInstanceOneRef,
 		},
-	}
+	})
+	require.NoError(t, err, "ReplaceAdventureGameTurnSheetConfigs returns without error")
 
 	// Add a second game instance with "started" status for join game test with started game
 	now := time.Now()
 
-	// Create a new slice with existing instances plus the new one
-	existingInstances := testDataConfig.GameConfigs[0].GameInstanceConfigs
-	testDataConfig.GameConfigs[0].GameInstanceConfigs = make([]harness.GameInstanceConfig, 0, len(existingInstances)+1)
-	testDataConfig.GameConfigs[0].GameInstanceConfigs = append(testDataConfig.GameConfigs[0].GameInstanceConfigs, existingInstances...)
-	testDataConfig.GameConfigs[0].GameInstanceConfigs = append(testDataConfig.GameConfigs[0].GameInstanceConfigs, harness.GameInstanceConfig{
-		Reference: harness.GameInstanceTwoRef,
-		Record: &game_record.GameInstance{
-			Status:    game_record.GameInstanceStatusStarted,
-			StartedAt: sql.NullTime{Time: now, Valid: true},
+	err = testDataConfig.AppendGameInstanceConfigs(harness.GameOneRef, []harness.GameInstanceConfig{
+		{
+			Reference: harness.GameInstanceTwoRef,
+			Record: &game_record.GameInstance{
+				Status:    game_record.GameInstanceStatusStarted,
+				StartedAt: nulltime.FromTime(now),
+			},
 		},
 	})
+	require.NoError(t, err, "AppendGameInstanceConfigs returns without error")
 
 	th := testutil.NewTestHarnessWithConfig(t, testDataConfig)
 	require.NotNil(t, th, "newTestHarness returns without error")
 
-	_, err := th.Setup()
+	_, err = th.Setup()
 	require.NoError(t, err, "Test data setup returns without error")
 	defer func() {
 		err = th.Teardown()

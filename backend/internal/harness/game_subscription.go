@@ -1,6 +1,7 @@
 package harness
 
 import (
+	"context"
 	"fmt"
 
 	"gitlab.com/alienspaces/playbymail/core/nullstring"
@@ -74,6 +75,17 @@ func (t *Testing) createGameSubscriptionRec(subscriptionConfig GameSubscriptionC
 	// Add to references store
 	if subscriptionConfig.Reference != "" {
 		t.Data.Refs.GameSubscriptionRefs[subscriptionConfig.Reference] = rec.ID
+	}
+
+	// Process join game subscription if scan data is provided
+	if subscriptionConfig.JoinGameScanData != nil {
+		ctx := context.Background()
+		_, err = t.processJoinGameSubscriptionInSetup(ctx, subscriptionConfig.Reference, subscriptionConfig.JoinGameScanData)
+		if err != nil {
+			l.Warn("failed processing join game subscription >%v<", err)
+			return nil, fmt.Errorf("failed processing join game subscription: %w", err)
+		}
+		l.Debug("processed join game subscription for subscription >%s<", subscriptionConfig.Reference)
 	}
 
 	return rec, nil

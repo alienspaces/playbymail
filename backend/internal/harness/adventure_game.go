@@ -1,6 +1,9 @@
 package harness
 
 import (
+	"context"
+	"fmt"
+
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 )
@@ -108,14 +111,81 @@ func (t *Testing) createAdventureGameInstanceRecords(gameInstanceConfig GameInst
 		l.Debug("created adventure game item instance record ID >%s<", itemInstanceRec.ID)
 	}
 
-	// Create game turn sheet records for this game instance
-	for _, turnSheetConfig := range gameInstanceConfig.AdventureGameTurnSheetConfigs {
-		turnSheetRec, err := t.createAdventureGameTurnSheetRec(turnSheetConfig, gameInstanceRec)
+	if len(gameInstanceConfig.GameTurnConfigs) == 0 {
+		return nil
+	}
+
+	if gameInstanceConfig.Reference == "" {
+		return fmt.Errorf("game_instance config must have a reference when configuring turns")
+	}
+
+	instanceRec := gameInstanceRec
+	if instanceRec.Status != game_record.GameInstanceStatusStarted {
+		var err error
+		instanceRec, err = t.Domain.(*domain.Domain).StartGameInstance(gameInstanceRec.ID)
 		if err != nil {
-			l.Warn("failed creating adventure game turn sheet record >%v<", err)
+			l.Warn("failed starting game instance >%v<", err)
 			return err
 		}
-		l.Debug("created adventure game turn sheet record ID >%s<", turnSheetRec.ID)
+	}
+
+	turnConfigs := normalizeTurnConfigs(gameInstanceConfig.GameTurnConfigs)
+
+	ctx := context.Background()
+
+	turnSheets, err := t.generateTurnSheetsForGameInstanceInTx(ctx, instanceRec, gameInstanceConfig.Reference)
+	if err != nil {
+		l.Warn("failed generating adventure game turn sheets >%v<", err)
+		return err
+	}
+
+	turnSheetsCache := map[int][]*game_record.GameTurnSheet{}
+	if len(turnSheets) > 0 {
+		turnSheetsCache[turnSheets[0].TurnNumber] = turnSheets
+	}
+
+	for idx, turnCfg := range turnConfigs {
+		turnSheetsForConfig, ok := turnSheetsCache[turnCfg.TurnNumber]
+		if !ok {
+			turnSheetsForConfig, err = t.getTurnSheetsForTurn(instanceRec.ID, turnCfg.TurnNumber)
+			if err != nil {
+				l.Warn("failed fetching turn sheets for turn >%d< >%v<", turnCfg.TurnNumber, err)
+				return err
+			}
+			turnSheetsCache[turnCfg.TurnNumber] = turnSheetsForConfig
+		}
+
+		if err := t.assignTurnSheetReferencesForTurn(turnCfg, turnSheetsForConfig); err != nil {
+			l.Warn("failed assigning turn sheet refs for turn >%d< >%v<", turnCfg.TurnNumber, err)
+			return err
+		}
+
+		readyForProcessing, err := t.applyConfiguredScanData(ctx, turnCfg)
+		if err != nil {
+			l.Warn("failed applying scan data for turn >%d< >%v<", turnCfg.TurnNumber, err)
+			return err
+		}
+
+		isLastTurn := idx == len(turnConfigs)-1
+		if !readyForProcessing {
+			if !isLastTurn {
+				return fmt.Errorf("turn %d is missing scan data but subsequent turns are configured", turnCfg.TurnNumber)
+			}
+			continue
+		}
+
+		if err := t.processGameTurnForInstanceInTx(ctx, instanceRec.ID); err != nil {
+			l.Warn("failed processing turn >%d< for instance >%s< >%v<", turnCfg.TurnNumber, instanceRec.ID, err)
+			return err
+		}
+
+		nextTurn := turnCfg.TurnNumber + 1
+		nextSheets, err := t.getTurnSheetsForTurn(instanceRec.ID, nextTurn)
+		if err != nil {
+			l.Warn("failed fetching next turn sheets >%v<", err)
+			return err
+		}
+		turnSheetsCache[nextTurn] = nextSheets
 	}
 
 	return nil

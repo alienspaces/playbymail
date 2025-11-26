@@ -28,38 +28,24 @@ func DefaultJoinGameInstructions() string {
 	return defaultJoinGameInstructions
 }
 
-// JoinGameScanData captures the fields extracted from a scanned join game turn sheet
-type JoinGameScanData struct {
-	Email              string `json:"email"`
-	Name               string `json:"name"`
-	PostalAddressLine1 string `json:"postal_address_line1"`
-	PostalAddressLine2 string `json:"postal_address_line2,omitempty"`
-	StateProvince      string `json:"state_province"`
-	Country            string `json:"country"`
-	PostalCode         string `json:"postal_code"`
-	CharacterName      string `json:"character_name"`
+// AdventureGameJoinGameScanData captures the fields extracted from a scanned adventure game join turn sheet
+// It embeds the generic JoinGameScanData and adds adventure game specific fields
+type AdventureGameJoinGameScanData struct {
+	JoinGameScanData
+	CharacterName string `json:"character_name"`
 }
 
 // Validate ensures required fields are present in the scanned data
-func (d *JoinGameScanData) Validate() error {
-	switch {
-	case d.Email == "":
-		return fmt.Errorf("email is required")
-	case d.Name == "":
-		return fmt.Errorf("name is required")
-	case d.PostalAddressLine1 == "":
-		return fmt.Errorf("postal address line 1 is required")
-	case d.StateProvince == "":
-		return fmt.Errorf("state or province is required")
-	case d.Country == "":
-		return fmt.Errorf("country is required")
-	case d.PostalCode == "":
-		return fmt.Errorf("post code is required")
-	case d.CharacterName == "":
-		return fmt.Errorf("character name is required")
-	default:
-		return nil
+func (d *AdventureGameJoinGameScanData) Validate() error {
+	// Validate the embedded generic fields
+	if err := d.JoinGameScanData.Validate(); err != nil {
+		return err
 	}
+	// Validate adventure game specific fields
+	if d.CharacterName == "" {
+		return fmt.Errorf("character name is required")
+	}
+	return nil
 }
 
 // JoinGameProcessor implements the DocumentProcessor interface for adventure game join sheets
@@ -175,13 +161,13 @@ func (p *JoinGameProcessor) ScanTurnSheet(ctx context.Context, l logger.Logger, 
 		return nil, fmt.Errorf("structured extraction failed: %w", err)
 	}
 
-	var scanData JoinGameScanData
+	var scanData AdventureGameJoinGameScanData
 	if err := json.Unmarshal(raw, &scanData); err != nil {
 		l.Warn("failed to decode structured response >%v<", err)
 		return nil, fmt.Errorf("failed to decode structured response: %w", err)
 	}
 
-	normalizeJoinGameScanData(&scanData)
+	normalizeAdventureGameJoinGameScanData(&scanData)
 
 	if err := scanData.Validate(); err != nil {
 		l.Warn("failed to validate scan data >%v<", err)
@@ -262,9 +248,10 @@ func buildJoinGameContext(data *JoinGameData) []string {
 	return ctx
 }
 
-// normalizeJoinGameScanData normalizes the scan data by trimming whitespace from the fields
+// normalizeAdventureGameJoinGameScanData normalizes the scan data by trimming whitespace from the fields
 // and correcting common OCR errors in email addresses.
-func normalizeJoinGameScanData(data *JoinGameScanData) {
+func normalizeAdventureGameJoinGameScanData(data *AdventureGameJoinGameScanData) {
+	// Normalize generic fields
 	data.Email = strings.TrimSpace(data.Email)
 	data.Email = correctEmailDomainOCR(data.Email)
 	data.Name = strings.TrimSpace(data.Name)
@@ -273,6 +260,7 @@ func normalizeJoinGameScanData(data *JoinGameScanData) {
 	data.StateProvince = strings.TrimSpace(data.StateProvince)
 	data.Country = strings.TrimSpace(data.Country)
 	data.PostalCode = strings.TrimSpace(data.PostalCode)
+	// Normalize adventure game specific fields
 	data.CharacterName = strings.TrimSpace(data.CharacterName)
 }
 
