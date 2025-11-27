@@ -55,6 +55,11 @@ func (m *Domain) CreateAdventureGameLocationRec(rec *adventure_game_record.Adven
 
 	l.Debug("creating adventure_game_location record >%#v<", rec)
 
+	if err := m.validateAdventureGameLocationRecForCreate(rec); err != nil {
+		l.Warn("failed to validate adventure_game_location record >%v<", err)
+		return rec, err
+	}
+
 	// Validate starting location constraint
 	if rec.IsStartingLocation {
 		if err := m.validateStartingLocationConstraint(rec.GameID, ""); err != nil {
@@ -74,31 +79,36 @@ func (m *Domain) CreateAdventureGameLocationRec(rec *adventure_game_record.Adven
 }
 
 // UpdateAdventureGameLocationRec -
-func (m *Domain) UpdateAdventureGameLocationRec(next *adventure_game_record.AdventureGameLocation) (*adventure_game_record.AdventureGameLocation, error) {
+func (m *Domain) UpdateAdventureGameLocationRec(rec *adventure_game_record.AdventureGameLocation) (*adventure_game_record.AdventureGameLocation, error) {
 	l := m.Logger("UpdateAdventureGameLocationRec")
 
-	curr, err := m.GetAdventureGameLocationRec(next.ID, coresql.ForUpdateNoWait)
+	currRec, err := m.GetAdventureGameLocationRec(rec.ID, coresql.ForUpdateNoWait)
 	if err != nil {
-		return next, err
+		return rec, err
 	}
 
-	l.Debug("updating adventure_game_location record >%#v<", next)
+	l.Debug("updating adventure_game_location record >%#v<", rec)
+
+	if err := m.validateAdventureGameLocationRecForUpdate(rec); err != nil {
+		l.Warn("failed to validate adventure_game_location record >%v<", err)
+		return rec, err
+	}
 
 	// Validate starting location constraint if setting to true
-	if next.IsStartingLocation && !curr.IsStartingLocation {
-		if err := m.validateStartingLocationConstraint(next.GameID, next.ID); err != nil {
-			return next, err
+	if rec.IsStartingLocation && !currRec.IsStartingLocation {
+		if err := m.validateStartingLocationConstraint(rec.GameID, rec.ID); err != nil {
+			return rec, err
 		}
 	}
 
 	r := m.AdventureGameLocationRepository()
 
-	next, err = r.UpdateOne(next)
+	updatedRec, err := r.UpdateOne(rec)
 	if err != nil {
-		return next, databaseError(err)
+		return rec, databaseError(err)
 	}
 
-	return next, nil
+	return updatedRec, nil
 }
 
 // validateStartingLocationConstraint ensures only one starting location exists per game

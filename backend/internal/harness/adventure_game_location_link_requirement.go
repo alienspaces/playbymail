@@ -14,6 +14,10 @@ func (t *Testing) createAdventureGameLocationLinkRequirementRec(cfg AdventureGam
 		return nil, fmt.Errorf("game location link record is nil for adventure game location link requirement record >%#v<", cfg)
 	}
 
+	if cfg.GameItemRef == "" {
+		return nil, fmt.Errorf("game item reference is required for adventure game location link requirement record >%#v<", cfg)
+	}
+
 	var rec *adventure_game_record.AdventureGameLocationLinkRequirement
 	if cfg.Record != nil {
 		recCopy := *cfg.Record
@@ -27,36 +31,34 @@ func (t *Testing) createAdventureGameLocationLinkRequirementRec(cfg AdventureGam
 	rec.GameID = gameLocationLinkRec.GameID
 	rec.AdventureGameLocationLinkID = gameLocationLinkRec.ID
 
-	if cfg.GameItemRef != "" {
-		gameItemRec, err := t.Data.GetAdventureGameItemRecByRef(cfg.GameItemRef)
-		if err != nil {
-			l.Error("could not resolve GameItemRef >%s< to a valid game item ID", cfg.GameItemRef)
-			return nil, fmt.Errorf("could not resolve GameItemRef >%s< to a valid game item ID", cfg.GameItemRef)
-		}
-		rec.AdventureGameItemID = gameItemRec.ID
+	gameItemRec, err := t.Data.GetAdventureGameItemRecByRef(cfg.GameItemRef)
+	if err != nil {
+		l.Error("could not resolve GameItemRef >%s< to a valid game item ID", cfg.GameItemRef)
+		return nil, fmt.Errorf("could not resolve GameItemRef >%s< to a valid game item ID", cfg.GameItemRef)
 	}
+	rec.AdventureGameItemID = gameItemRec.ID
 
 	// Create record
 	l.Debug("creating adventure game location link requirement record >%#v<", rec)
 
-	rec, err := t.Domain.(*domain.Domain).CreateAdventureGameLocationLinkRequirementRec(rec)
+	createdRec, err := t.Domain.(*domain.Domain).CreateAdventureGameLocationLinkRequirementRec(rec)
 	if err != nil {
 		l.Warn("failed creating adventure game location link requirement record >%v<", err)
 		return nil, err
 	}
 
 	// Add to data store
-	t.Data.AddAdventureGameLocationLinkRequirementRec(rec)
+	t.Data.AddAdventureGameLocationLinkRequirementRec(createdRec)
 
 	// Add to teardown data store
-	t.teardownData.AddAdventureGameLocationLinkRequirementRec(rec)
+	t.teardownData.AddAdventureGameLocationLinkRequirementRec(createdRec)
 
 	// Add to references store
 	if cfg.Reference != "" {
-		t.Data.Refs.AdventureGameLocationLinkRequirementRefs[cfg.Reference] = rec.ID
+		t.Data.Refs.AdventureGameLocationLinkRequirementRefs[cfg.Reference] = createdRec.ID
 	}
 
-	return rec, nil
+	return createdRec, nil
 }
 
 func (t *Testing) applyAdventureGameLocationLinkRequirementRecDefaultValues(rec *adventure_game_record.AdventureGameLocationLinkRequirement) *adventure_game_record.AdventureGameLocationLinkRequirement {
@@ -66,5 +68,6 @@ func (t *Testing) applyAdventureGameLocationLinkRequirementRecDefaultValues(rec 
 	if rec.Quantity == 0 {
 		rec.Quantity = 1
 	}
+
 	return rec
 }

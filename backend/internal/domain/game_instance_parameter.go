@@ -1,169 +1,170 @@
 package domain
 
 import (
-	"fmt"
+	"errors"
 
-	"gitlab.com/alienspaces/playbymail/core/sql"
+	"github.com/jackc/pgx/v5"
+
+	"gitlab.com/alienspaces/playbymail/core/domain"
+	coreerror "gitlab.com/alienspaces/playbymail/core/error"
+	coresql "gitlab.com/alienspaces/playbymail/core/sql"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 )
 
-func (m *Domain) GetGameInstanceParameterRec(recID string, lock *sql.Lock) (*game_record.GameInstanceParameter, error) {
-	r := m.GameInstanceParameterRepository()
-	rec, err := r.GetOne(recID, lock)
-	if err != nil {
-		return nil, err
-	}
-	return rec, nil
-}
+// GetManyGameInstanceParameterRecs -
+func (m *Domain) GetManyGameInstanceParameterRecs(opts *coresql.Options) ([]*game_record.GameInstanceParameter, error) {
+	l := m.Logger("GetManyGameInstanceParameterRecs")
 
-func (m *Domain) CreateGameInstanceParameterRec(rec *game_record.GameInstanceParameter) (*game_record.GameInstanceParameter, error) {
-	// Validate before creating
-	if err := m.ValidateGameInstanceParameter(rec); err != nil {
-		return nil, err
-	}
+	l.Debug("getting many game_instance_parameter records opts >%#v<", opts)
 
 	r := m.GameInstanceParameterRepository()
-	var err error
-	rec, err = r.CreateOne(rec)
-	if err != nil {
-		return rec, err
-	}
-	return rec, nil
-}
 
-func (m *Domain) UpdateGameInstanceParameterRec(next *game_record.GameInstanceParameter) (*game_record.GameInstanceParameter, error) {
-	// Validate before updating
-	if err := m.ValidateGameInstanceParameter(next); err != nil {
-		return nil, err
-	}
-
-	r := m.GameInstanceParameterRepository()
-	rec, err := r.UpdateOne(next)
-	if err != nil {
-		return nil, err
-	}
-	return rec, nil
-}
-
-func (m *Domain) DeleteGameInstanceParameterRec(recID string) error {
-	r := m.GameInstanceParameterRepository()
-	return r.DeleteOne(recID)
-}
-
-func (m *Domain) RemoveGameInstanceParameterRec(recID string) error {
-	r := m.GameInstanceParameterRepository()
-	return r.RemoveOne(recID)
-}
-
-func (m *Domain) GetGameInstanceParameterRecs(opts *sql.Options) ([]*game_record.GameInstanceParameter, error) {
-	r := m.GameInstanceParameterRepository()
 	recs, err := r.GetMany(opts)
 	if err != nil {
-		return nil, err
+		return nil, databaseError(err)
 	}
+
 	return recs, nil
 }
 
-func (m *Domain) ValidateGameInstanceParameter(rec *game_record.GameInstanceParameter) error {
-	// Validate required fields
-	if rec.GameInstanceID == "" {
-		return RequiredField("game_instance_id")
+// GetGameInstanceParameterRec -
+func (m *Domain) GetGameInstanceParameterRec(recID string, lock *coresql.Lock) (*game_record.GameInstanceParameter, error) {
+	l := m.Logger("GetGameInstanceParameterRec")
+
+	l.Debug("getting game_instance_parameter record ID >%s<", recID)
+
+	if err := domain.ValidateUUIDField("id", recID); err != nil {
+		return nil, err
 	}
 
-	if rec.ParameterKey == "" {
-		return RequiredField("parameter_key")
+	r := m.GameInstanceParameterRepository()
+
+	rec, err := r.GetOne(recID, lock)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, coreerror.NewNotFoundError(game_record.TableGameInstanceParameter, recID)
+	} else if err != nil {
+		return nil, databaseError(err)
 	}
 
-	if rec.ParameterValue.String == "" {
-		return RequiredField("parameter_value")
+	return rec, nil
+}
+
+// CreateGameInstanceParameterRec -
+func (m *Domain) CreateGameInstanceParameterRec(rec *game_record.GameInstanceParameter) (*game_record.GameInstanceParameter, error) {
+	l := m.Logger("CreateGameInstanceParameterRec")
+
+	l.Debug("creating game_instance_parameter record >%#v<", rec)
+
+	if err := m.validateGameInstanceParameterRecForCreate(rec); err != nil {
+		l.Warn("failed to validate game_instance_parameter record >%v<", err)
+		return rec, err
 	}
 
-	// Validate that the game instance exists
-	gameInstance, err := m.GetGameInstanceRec(rec.GameInstanceID, nil)
+	// Use comprehensive validation for business logic
+	if err := m.ValidateGameInstanceParameter(rec); err != nil {
+		l.Warn("failed comprehensive validation for game_instance_parameter record >%v<", err)
+		return rec, err
+	}
+
+	r := m.GameInstanceParameterRepository()
+
+	var err error
+	rec, err = r.CreateOne(rec)
 	if err != nil {
-		return NotFound("game instance", rec.GameInstanceID)
+		return rec, databaseError(err)
 	}
 
-	// Get the game to find its type
-	game, err := m.GetGameRec(gameInstance.GameID, nil)
+	return rec, nil
+}
+
+// UpdateGameInstanceParameterRec -
+func (m *Domain) UpdateGameInstanceParameterRec(rec *game_record.GameInstanceParameter) (*game_record.GameInstanceParameter, error) {
+	l := m.Logger("UpdateGameInstanceParameterRec")
+
+	_, err := m.GetGameInstanceParameterRec(rec.ID, coresql.ForUpdateNoWait)
 	if err != nil {
-		return NotFound("game", gameInstance.GameID)
+		return rec, err
 	}
 
-	// Validate that the parameter key is valid for this game type
-	gameParameters := GetGameParametersByGameType(game.GameType)
-	validParameter := false
-	var expectedValueType string
+	l.Debug("updating game_instance_parameter record >%#v<", rec)
 
-	for _, gp := range gameParameters {
-		if gp.ConfigKey == rec.ParameterKey {
-			validParameter = true
-			expectedValueType = gp.ValueType
-			break
-		}
+	if err := m.validateGameInstanceParameterRecForUpdate(rec); err != nil {
+		l.Warn("failed to validate game_instance_parameter record >%v<", err)
+		return rec, err
 	}
 
-	if !validParameter {
-		return InvalidField(game_record.FieldGameInstanceParameterParameterKey, rec.ParameterKey, "parameter key is not valid for game type")
+	// Use comprehensive validation for business logic
+	if err := m.ValidateGameInstanceParameter(rec); err != nil {
+		l.Warn("failed comprehensive validation for game_instance_parameter record >%v<", err)
+		return rec, err
 	}
 
-	// Validate that the parameter value matches the expected type
-	if err := validateParameterValue(rec.ParameterValue.String, expectedValueType); err != nil {
-		return InvalidField(game_record.FieldGameInstanceParameterParameterValue, rec.ParameterValue.String, err.Error())
+	r := m.GameInstanceParameterRepository()
+
+	updatedRec, err := r.UpdateOne(rec)
+	if err != nil {
+		return rec, databaseError(err)
+	}
+
+	return updatedRec, nil
+}
+
+// DeleteGameInstanceParameterRec -
+func (m *Domain) DeleteGameInstanceParameterRec(recID string) error {
+	l := m.Logger("DeleteGameInstanceParameterRec")
+
+	l.Debug("deleting game_instance_parameter record ID >%s<", recID)
+
+	_, err := m.GetGameInstanceParameterRec(recID, coresql.ForUpdateNoWait)
+	if err != nil {
+		return err
+	}
+
+	r := m.GameInstanceParameterRepository()
+
+	if err := r.DeleteOne(recID); err != nil {
+		return databaseError(err)
 	}
 
 	return nil
 }
 
-// validateParameterValue validates that a parameter value matches its expected type
-func validateParameterValue(value, valueType string) error {
-	switch valueType {
-	case "string":
-		// String values are always valid
-		return nil
-	case "integer":
-		// Check if the string can be parsed as an integer
-		if _, err := parseInt(value); err != nil {
-			return fmt.Errorf("value '%s' is not a valid integer", value)
-		}
-		return nil
-	case "boolean":
-		// Check if the string represents a valid boolean
-		if value != "true" && value != "false" {
-			return fmt.Errorf("value '%s' is not a valid boolean (must be 'true' or 'false')", value)
-		}
-		return nil
-	default:
-		return fmt.Errorf("unknown value type '%s'", valueType)
-	}
-}
+// RemoveGameInstanceParameterRec -
+func (m *Domain) RemoveGameInstanceParameterRec(recID string) error {
+	l := m.Logger("RemoveGameInstanceParameterRec")
 
-// parseInt is a helper function to parse integers
-func parseInt(s string) (int64, error) {
-	var i int64
-	_, err := fmt.Sscanf(s, "%d", &i)
-	return i, err
-}
+	l.Debug("removing game_instance_parameter record ID >%s<", recID)
 
-func (m *Domain) GetManyGameInstanceParameterRecs(opts *sql.Options) ([]*game_record.GameInstanceParameter, error) {
-	r := m.GameInstanceParameterRepository()
-	recs, err := r.GetMany(opts)
+	_, err := m.GetGameInstanceParameterRec(recID, coresql.ForUpdateNoWait)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return recs, nil
+
+	r := m.GameInstanceParameterRepository()
+
+	if err := r.RemoveOne(recID); err != nil {
+		return databaseError(err)
+	}
+
+	return nil
 }
 
-// GetGameInstanceParametersByGameInstanceID gets all parameters for a specific game instance
+// GetGameInstanceParameterRecsByGameInstanceID gets all parameters for a specific game instance
 func (m *Domain) GetGameInstanceParameterRecsByGameInstanceID(gameInstanceID string) ([]*game_record.GameInstanceParameter, error) {
+	l := m.Logger("GetGameInstanceParameterRecsByGameInstanceID")
+
+	l.Debug("getting game_instance_parameter records for game_instance_id >%s<", gameInstanceID)
+
 	r := m.GameInstanceParameterRepository()
-	opts := &sql.Options{
-		Params: []sql.Param{
+
+	opts := &coresql.Options{
+		Params: []coresql.Param{
 			{
 				Col: game_record.FieldGameInstanceParameterGameInstanceID,
 				Val: gameInstanceID,
 			},
 		},
 	}
+
 	return r.GetMany(opts)
 }

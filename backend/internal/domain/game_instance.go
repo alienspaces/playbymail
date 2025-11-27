@@ -1,9 +1,14 @@
 package domain
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
+	"github.com/jackc/pgx/v5"
+
+	"gitlab.com/alienspaces/playbymail/core/domain"
+	coreerror "gitlab.com/alienspaces/playbymail/core/error"
 	"gitlab.com/alienspaces/playbymail/core/nulltime"
 	"gitlab.com/alienspaces/playbymail/core/record"
 	coresql "gitlab.com/alienspaces/playbymail/core/sql"
@@ -14,26 +19,51 @@ import (
 // GetManyGameInstanceRecs -
 func (m *Domain) GetManyGameInstanceRecs(opts *coresql.Options) ([]*game_record.GameInstance, error) {
 	l := m.Logger("GetManyGameInstanceRecs")
+
 	l.Debug("getting many game_instance records opts >%#v<", opts)
+
 	r := m.GameInstanceRepository()
+
 	recs, err := r.GetMany(opts)
 	if err != nil {
 		return nil, databaseError(err)
 	}
+
 	return recs, nil
 }
 
+// GetGameInstanceRec -
 func (m *Domain) GetGameInstanceRec(recID string, lock *coresql.Lock) (*game_record.GameInstance, error) {
-	r := m.GameInstanceRepository()
-	rec, err := r.GetOne(recID, lock)
-	if err != nil {
+	l := m.Logger("GetGameInstanceRec")
+
+	l.Debug("getting game_instance record ID >%s<", recID)
+
+	if err := domain.ValidateUUIDField("id", recID); err != nil {
 		return nil, err
 	}
+
+	r := m.GameInstanceRepository()
+
+	rec, err := r.GetOne(recID, lock)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, coreerror.NewNotFoundError(game_record.TableGameInstance, recID)
+	} else if err != nil {
+		return nil, databaseError(err)
+	}
+
 	return rec, nil
 }
 
+// CreateGameInstanceRec -
 func (m *Domain) CreateGameInstanceRec(rec *game_record.GameInstance) (*game_record.GameInstance, error) {
 	l := m.Logger("CreateGameInstanceRec")
+
+	l.Debug("creating game_instance record >%#v<", rec)
+
+	if err := m.validateGameInstanceRecForCreate(rec); err != nil {
+		l.Warn("failed to validate game_instance record >%v<", err)
+		return rec, err
+	}
 
 	// Validate adventure game has starting location
 	if err := m.validateAdventureGameInstanceCreation(rec.GameID); err != nil {
@@ -55,8 +85,9 @@ func (m *Domain) CreateGameInstanceRec(rec *game_record.GameInstance) (*game_rec
 	var err error
 	rec, err = r.CreateOne(rec)
 	if err != nil {
-		return rec, err
+		return rec, databaseError(err)
 	}
+
 	return rec, nil
 }
 
@@ -98,33 +129,69 @@ func (m *Domain) validateAdventureGameInstanceCreation(gameID string) error {
 	return nil
 }
 
-func (m *Domain) UpdateGameInstanceRec(next *game_record.GameInstance) (*game_record.GameInstance, error) {
-	r := m.GameInstanceRepository()
-	next, err := r.UpdateOne(next)
+// UpdateGameInstanceRec -
+func (m *Domain) UpdateGameInstanceRec(rec *game_record.GameInstance) (*game_record.GameInstance, error) {
+	l := m.Logger("UpdateGameInstanceRec")
+
+	_, err := m.GetGameInstanceRec(rec.ID, coresql.ForUpdateNoWait)
 	if err != nil {
-		return next, err
+		return rec, err
 	}
-	return next, nil
+
+	l.Debug("updating game_instance record >%#v<", rec)
+
+	if err := m.validateGameInstanceRecForUpdate(rec); err != nil {
+		l.Warn("failed to validate game_instance record >%v<", err)
+		return rec, err
+	}
+
+	r := m.GameInstanceRepository()
+
+	updatedRec, err := r.UpdateOne(rec)
+	if err != nil {
+		return rec, databaseError(err)
+	}
+
+	return updatedRec, nil
 }
 
+// DeleteGameInstanceRec -
 func (m *Domain) DeleteGameInstanceRec(recID string) error {
+	l := m.Logger("DeleteGameInstanceRec")
+
+	l.Debug("deleting game_instance record ID >%s<", recID)
+
+	_, err := m.GetGameInstanceRec(recID, coresql.ForUpdateNoWait)
+	if err != nil {
+		return err
+	}
+
 	r := m.GameInstanceRepository()
+
 	if err := r.DeleteOne(recID); err != nil {
-		return err
-	}
+		return databaseError(err)
+}
+
 	return nil
 }
 
-func (m *Domain) ValidateGameInstance(rec *game_record.GameInstance) error {
-	// Add validation logic as needed
-	return nil
-}
-
+// RemoveGameInstanceRec -
 func (m *Domain) RemoveGameInstanceRec(recID string) error {
-	r := m.GameInstanceRepository()
-	if err := r.RemoveOne(recID); err != nil {
+	l := m.Logger("RemoveGameInstanceRec")
+
+	l.Debug("removing game_instance record ID >%s<", recID)
+
+	_, err := m.GetGameInstanceRec(recID, coresql.ForUpdateNoWait)
+	if err != nil {
 		return err
 	}
+
+	r := m.GameInstanceRepository()
+
+	if err := r.RemoveOne(recID); err != nil {
+		return databaseError(err)
+	}
+
 	return nil
 }
 

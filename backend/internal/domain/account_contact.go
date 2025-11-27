@@ -74,30 +74,30 @@ func (m *Domain) CreateAccountContactRec(rec *account_record.AccountContact) (*a
 }
 
 // UpdateAccountContactRec -
-func (m *Domain) UpdateAccountContactRec(next *account_record.AccountContact) (*account_record.AccountContact, error) {
+func (m *Domain) UpdateAccountContactRec(rec *account_record.AccountContact) (*account_record.AccountContact, error) {
 	l := m.Logger("UpdateAccountContactRec")
 
-	curr, err := m.GetAccountContactRec(next.ID, coresql.ForUpdateNoWait)
+	curr, err := m.GetAccountContactRec(rec.ID, coresql.ForUpdateNoWait)
 	if err != nil {
-		return next, err
+		return rec, err
 	}
 
-	l.Debug("updating account contact record >%#v<", next)
+	l.Debug("updating account contact record >%#v<", rec)
 
-	if err := m.validateAccountContactRecForUpdate(next, curr); err != nil {
+	if err := m.validateAccountContactRecForUpdate(rec, curr); err != nil {
 		l.Warn("failed to validate account contact record >%v<", err)
-		return next, err
+		return rec, err
 	}
 
 	r := m.AccountContactRepository()
 
-	next, err = r.UpdateOne(next)
+	updatedRec, err := r.UpdateOne(rec)
 	if err != nil {
 		l.Warn("failed to update account contact record >%v<", err)
-		return next, databaseError(err)
+		return rec, databaseError(err)
 	}
 
-	return next, nil
+	return updatedRec, nil
 }
 
 // DeleteAccountContactRec -
@@ -149,87 +149,6 @@ func (m *Domain) RemoveAccountContactRec(recID string) error {
 	if err := r.RemoveOne(recID); err != nil {
 		l.Warn("failed to remove account contact record ID >%s< >%v<", recID, err)
 		return databaseError(err)
-	}
-
-	return nil
-}
-
-func (m *Domain) validateAccountContactRecForCreate(rec *account_record.AccountContact) error {
-	l := m.Logger("validateAccountContactRecForCreate")
-	l.Debug("validating account contact record >%#v<", rec)
-
-	if rec == nil {
-		return coreerror.NewInvalidDataError("record is nil")
-	}
-
-	if err := domain.ValidateUUIDField("account_id", rec.AccountID); err != nil {
-		return err
-	}
-
-	if rec.Name == "" {
-		return coreerror.NewInvalidDataError("name is required")
-	}
-
-	if rec.PostalAddressLine1 == "" {
-		return coreerror.NewInvalidDataError("postal_address_line1 is required")
-	}
-
-	if rec.StateProvince == "" {
-		return coreerror.NewInvalidDataError("state_province is required")
-	}
-
-	if rec.Country == "" {
-		return coreerror.NewInvalidDataError("country is required")
-	}
-
-	if rec.PostalCode == "" {
-		return coreerror.NewInvalidDataError("postal_code is required")
-	}
-
-	return nil
-}
-
-func (m *Domain) validateAccountContactRecForUpdate(next, curr *account_record.AccountContact) error {
-	l := m.Logger("validateAccountContactRecForUpdate")
-	l.Debug("validating current account contact record >%#v< against next >%#v<", curr, next)
-
-	if next == nil {
-		return coreerror.NewInvalidDataError("record is nil")
-	}
-
-	if next.AccountID != curr.AccountID {
-		return coreerror.NewInvalidDataError("account_id cannot be updated")
-	}
-
-	if next.Name == "" {
-		return coreerror.NewInvalidDataError("name is required")
-	}
-
-	if next.PostalAddressLine1 == "" {
-		return coreerror.NewInvalidDataError("postal_address_line1 is required")
-	}
-
-	if next.StateProvince == "" {
-		return coreerror.NewInvalidDataError("state_province is required")
-	}
-
-	if next.Country == "" {
-		return coreerror.NewInvalidDataError("country is required")
-	}
-
-	if next.PostalCode == "" {
-		return coreerror.NewInvalidDataError("postal_code is required")
-	}
-
-	return nil
-}
-
-func (m *Domain) validateAccountContactRecForDelete(rec *account_record.AccountContact) error {
-	l := m.Logger("validateAccountContactRecForDelete")
-	l.Debug("validating account contact record >%#v<", rec)
-
-	if rec == nil {
-		return coreerror.NewInvalidDataError("record is nil")
 	}
 
 	return nil

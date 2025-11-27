@@ -65,6 +65,7 @@ func (t *Testing) createAdventureGameCharacterInstanceRec(cfg AdventureGameChara
 	if cfg.Reference != "" {
 		t.Data.Refs.AdventureGameCharacterInstanceRefs[cfg.Reference] = createdRec.ID
 	}
+
 	return createdRec, nil
 }
 

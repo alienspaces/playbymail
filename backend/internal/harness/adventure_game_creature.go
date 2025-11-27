@@ -58,5 +58,9 @@ func (t *Testing) applyAdventureGameCreatureRecDefaultValues(rec *adventure_game
 	if rec.Name == "" {
 		rec.Name = UniqueName(gofakeit.Name())
 	}
+	if rec.Description == "" {
+		rec.Description = gofakeit.Sentence(10)
+	}
+
 	return rec
 }

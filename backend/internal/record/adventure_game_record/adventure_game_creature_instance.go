@@ -8,15 +8,15 @@ import (
 const TableAdventureGameCreatureInstance = "adventure_game_creature_instance"
 
 const (
-	FieldAdventureGameCreatureInstanceID                          = "id"
-	FieldAdventureGameCreatureInstanceGameID                      = "game_id"
-	FieldAdventureGameCreatureInstanceGameInstanceID              = "game_instance_id"
-	FieldAdventureGameCreatureInstanceAdventureGameCreatureID     = "adventure_game_creature_id"
-	FieldAdventureGameCreatureInstanceAdventureGameLocationInstID = "adventure_game_location_instance_id"
-	FieldAdventureGameCreatureInstanceHealth                      = "health"
-	FieldAdventureGameCreatureInstanceCreatedAt                   = "created_at"
-	FieldAdventureGameCreatureInstanceUpdatedAt                   = "updated_at"
-	FieldAdventureGameCreatureInstanceDeletedAt                   = "deleted_at"
+	FieldAdventureGameCreatureInstanceID                              = "id"
+	FieldAdventureGameCreatureInstanceGameID                          = "game_id"
+	FieldAdventureGameCreatureInstanceGameInstanceID                  = "game_instance_id"
+	FieldAdventureGameCreatureInstanceAdventureGameCreatureID         = "adventure_game_creature_id"
+	FieldAdventureGameCreatureInstanceAdventureGameLocationInstanceID = "adventure_game_location_instance_id"
+	FieldAdventureGameCreatureInstanceHealth                          = "health"
+	FieldAdventureGameCreatureInstanceCreatedAt                       = "created_at"
+	FieldAdventureGameCreatureInstanceUpdatedAt                       = "updated_at"
+	FieldAdventureGameCreatureInstanceDeletedAt                       = "deleted_at"
 )
 
 type AdventureGameCreatureInstance struct {
@@ -33,7 +33,7 @@ func (r *AdventureGameCreatureInstance) ToNamedArgs() pgx.NamedArgs {
 	args[FieldAdventureGameCreatureInstanceGameID] = r.GameID
 	args[FieldAdventureGameCreatureInstanceGameInstanceID] = r.GameInstanceID
 	args[FieldAdventureGameCreatureInstanceAdventureGameCreatureID] = r.AdventureGameCreatureID
-	args[FieldAdventureGameCreatureInstanceAdventureGameLocationInstID] = r.AdventureGameLocationInstanceID
+	args[FieldAdventureGameCreatureInstanceAdventureGameLocationInstanceID] = r.AdventureGameLocationInstanceID
 	args[FieldAdventureGameCreatureInstanceHealth] = r.Health
 	return args
 }

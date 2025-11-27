@@ -43,8 +43,11 @@ func (m *Domain) GetAdventureGameItemInstanceRec(recID string, lock *coresql.Loc
 func (m *Domain) CreateAdventureGameItemInstanceRec(rec *adventure_game_record.AdventureGameItemInstance) (*adventure_game_record.AdventureGameItemInstance, error) {
 	l := m.Logger("CreateAdventureGameItemInstanceRec")
 	l.Debug("creating adventure_game_item_instance record >%#v<", rec)
+	if err := m.validateAdventureGameItemInstanceRecForCreate(rec); err != nil {
+		l.Warn("failed to validate adventure_game_item_instance record >%v<", err)
+		return rec, err
+	}
 	r := m.AdventureGameItemInstanceRepository()
-	// Add validation here if needed
 	var err error
 	rec, err = r.CreateOne(rec)
 	if err != nil {
@@ -54,20 +57,29 @@ func (m *Domain) CreateAdventureGameItemInstanceRec(rec *adventure_game_record.A
 }
 
 // UpdateAdventureGameItemInstanceRec -
-func (m *Domain) UpdateAdventureGameItemInstanceRec(next *adventure_game_record.AdventureGameItemInstance) (*adventure_game_record.AdventureGameItemInstance, error) {
+func (m *Domain) UpdateAdventureGameItemInstanceRec(rec *adventure_game_record.AdventureGameItemInstance) (*adventure_game_record.AdventureGameItemInstance, error) {
 	l := m.Logger("UpdateAdventureGameItemInstanceRec")
-	_, err := m.GetAdventureGameItemInstanceRec(next.ID, coresql.ForUpdateNoWait)
+
+	_, err := m.GetAdventureGameItemInstanceRec(rec.ID, coresql.ForUpdateNoWait)
 	if err != nil {
-		return next, err
+		return rec, err
 	}
-	l.Debug("updating adventure_game_item_instance record >%#v<", next)
-	// Add validation here if needed
+
+	l.Debug("updating adventure_game_item_instance record >%#v<", rec)
+
+	if err := m.validateAdventureGameItemInstanceRecForUpdate(rec); err != nil {
+		l.Warn("failed to validate adventure_game_item_instance record >%v<", err)
+		return rec, err
+	}
+
 	r := m.AdventureGameItemInstanceRepository()
-	next, err = r.UpdateOne(next)
+
+	updatedRec, err := r.UpdateOne(rec)
 	if err != nil {
-		return next, databaseError(err)
+		return rec, databaseError(err)
 	}
-	return next, nil
+
+	return updatedRec, nil
 }
 
 // DeleteAdventureGameItemInstanceRec -

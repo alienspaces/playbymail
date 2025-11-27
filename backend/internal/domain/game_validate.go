@@ -8,14 +8,14 @@ import (
 )
 
 type validateGameArgs struct {
-	next *game_record.Game
-	curr *game_record.Game
+	nextRec *game_record.Game
+	currRec *game_record.Game
 }
 
-func (m *Domain) populateGameValidateArgs(next, curr *game_record.Game) (*validateGameArgs, error) {
+func (m *Domain) populateGameValidateArgs(nextRec, currRec *game_record.Game) (*validateGameArgs, error) {
 	args := &validateGameArgs{
-		curr: curr,
-		next: next,
+		currRec: currRec,
+		nextRec: nextRec,
 	}
 	return args, nil
 }
@@ -28,8 +28,8 @@ func (m *Domain) validateGameRecForCreate(rec *game_record.Game) error {
 	return validateGameRecForCreate(args)
 }
 
-func (m *Domain) validateGameRecForUpdate(next, curr *game_record.Game) error {
-	args, err := m.populateGameValidateArgs(next, curr)
+func (m *Domain) validateGameRecForUpdate(nextRec, currRec *game_record.Game) error {
+	args, err := m.populateGameValidateArgs(nextRec, currRec)
 	if err != nil {
 		return err
 	}
@@ -53,7 +53,7 @@ func validateGameRecForUpdate(args *validateGameArgs) error {
 }
 
 func validateGameRec(args *validateGameArgs) error {
-	rec := args.next
+	rec := args.nextRec
 
 	if err := domain.ValidateStringField(game_record.FieldGameName, rec.Name); err != nil {
 		return err
@@ -71,7 +71,7 @@ func validateGameRec(args *validateGameArgs) error {
 }
 
 func validateGameRecForDelete(args *validateGameArgs) error {
-	rec := args.next
+	rec := args.nextRec
 
 	if err := domain.ValidateUUIDField(game_record.FieldGameID, rec.ID); err != nil {
 		return err

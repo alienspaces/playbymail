@@ -43,8 +43,11 @@ func (m *Domain) GetAdventureGameCreatureRec(recID string, lock *coresql.Lock) (
 func (m *Domain) CreateAdventureGameCreatureRec(rec *adventure_game_record.AdventureGameCreature) (*adventure_game_record.AdventureGameCreature, error) {
 	l := m.Logger("CreateAdventureGameCreatureRec")
 	l.Debug("creating adventure_game_creature record >%#v<", rec)
+	if err := m.validateAdventureGameCreatureRecForCreate(rec); err != nil {
+		l.Warn("failed to validate adventure_game_creature record >%v<", err)
+		return rec, err
+	}
 	r := m.AdventureGameCreatureRepository()
-	// Add validation here if needed
 	var err error
 	rec, err = r.CreateOne(rec)
 	if err != nil {
@@ -54,20 +57,29 @@ func (m *Domain) CreateAdventureGameCreatureRec(rec *adventure_game_record.Adven
 }
 
 // UpdateAdventureGameCreatureRec -
-func (m *Domain) UpdateAdventureGameCreatureRec(next *adventure_game_record.AdventureGameCreature) (*adventure_game_record.AdventureGameCreature, error) {
+func (m *Domain) UpdateAdventureGameCreatureRec(rec *adventure_game_record.AdventureGameCreature) (*adventure_game_record.AdventureGameCreature, error) {
 	l := m.Logger("UpdateAdventureGameCreatureRec")
-	_, err := m.GetAdventureGameCreatureRec(next.ID, coresql.ForUpdateNoWait)
+
+	_, err := m.GetAdventureGameCreatureRec(rec.ID, coresql.ForUpdateNoWait)
 	if err != nil {
-		return next, err
+		return rec, err
 	}
-	l.Debug("updating adventure_game_creature record >%#v<", next)
-	// Add validation here if needed
+
+	l.Debug("updating adventure_game_creature record >%#v<", rec)
+
+	if err := m.validateAdventureGameCreatureRecForUpdate(rec); err != nil {
+		l.Warn("failed to validate adventure_game_creature record >%v<", err)
+		return rec, err
+	}
+
 	r := m.AdventureGameCreatureRepository()
-	next, err = r.UpdateOne(next)
+
+	updatedRec, err := r.UpdateOne(rec)
 	if err != nil {
-		return next, databaseError(err)
+		return rec, databaseError(err)
 	}
-	return next, nil
+
+	return updatedRec, nil
 }
 
 // DeleteAdventureGameCreatureRec -

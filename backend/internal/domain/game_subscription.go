@@ -59,23 +59,29 @@ func (m *Domain) CreateGameSubscriptionRec(rec *game_record.GameSubscription) (*
 }
 
 // UpdateGameSubscriptionRec -
-func (m *Domain) UpdateGameSubscriptionRec(next *game_record.GameSubscription) (*game_record.GameSubscription, error) {
+func (m *Domain) UpdateGameSubscriptionRec(rec *game_record.GameSubscription) (*game_record.GameSubscription, error) {
 	l := m.Logger("UpdateGameSubscriptionRec")
-	curr, err := m.GetGameSubscriptionRec(next.ID, sql.ForUpdateNoWait)
+
+	curr, err := m.GetGameSubscriptionRec(rec.ID, sql.ForUpdateNoWait)
 	if err != nil {
-		return next, err
+		return rec, err
 	}
-	l.Debug("updating game_subscription record >%#v<", next)
-	if err := m.validateGameSubscriptionRecForUpdate(next, curr); err != nil {
+
+	l.Debug("updating game_subscription record >%#v<", rec)
+
+	if err := m.validateGameSubscriptionRecForUpdate(rec, curr); err != nil {
 		l.Warn("failed to validate game_subscription record >%v<", err)
-		return next, err
+		return rec, err
 	}
+
 	r := m.GameSubscriptionRepository()
-	next, err = r.UpdateOne(next)
+
+	updatedRec, err := r.UpdateOne(rec)
 	if err != nil {
-		return next, databaseError(err)
+		return rec, databaseError(err)
 	}
-	return next, nil
+
+	return updatedRec, nil
 }
 
 // DeleteGameSubscriptionRec -
@@ -114,96 +120,6 @@ func (m *Domain) RemoveGameSubscriptionRec(recID string) error {
 		return databaseError(err)
 	}
 	return nil
-}
-
-// Validation stubs
-func (m *Domain) validateGameSubscriptionRecForCreate(rec *game_record.GameSubscription) error {
-	l := m.Logger("validateGameSubscriptionRecForCreate")
-	l.Debug("validating game_subscription record >%#v<", rec)
-
-	if rec == nil {
-		return coreerror.NewInvalidDataError("record is nil")
-	}
-
-	if rec.GameID == "" {
-		return coreerror.NewInvalidDataError("game_id is required")
-	}
-
-	if rec.AccountID == "" {
-		return coreerror.NewInvalidDataError("account_id is required")
-	}
-
-	// Account contact is required for player subscriptions
-	if rec.SubscriptionType == game_record.GameSubscriptionTypePlayer {
-		if !rec.AccountContactID.Valid || rec.AccountContactID.String == "" {
-			return coreerror.NewInvalidDataError("account_contact_id is required for player subscriptions")
-		}
-	}
-
-	if rec.SubscriptionType == "" {
-		return coreerror.NewInvalidDataError("subscription_type is required")
-	}
-
-	if rec.Status == "" {
-		rec.Status = game_record.GameSubscriptionStatusActive
-	}
-
-	if err := validateGameSubscriptionStatus(rec.Status); err != nil {
-		return err
-	}
-
-	return nil
-}
-func (m *Domain) validateGameSubscriptionRecForUpdate(next, curr *game_record.GameSubscription) error {
-	l := m.Logger("validateGameSubscriptionRecForUpdate")
-	l.Debug("validating current game_subscription record >%#v< against next >%#v<", curr, next)
-
-	if next == nil {
-		return coreerror.NewInvalidDataError("record is nil")
-	}
-
-	if next.GameID == "" {
-		return coreerror.NewInvalidDataError("game_id is required")
-	}
-
-	if next.AccountID == "" {
-		return coreerror.NewInvalidDataError("account_id is required")
-	}
-
-	if next.SubscriptionType == "" {
-		return coreerror.NewInvalidDataError("subscription_type is required")
-	}
-
-	if next.Status == "" {
-		next.Status = curr.Status
-	}
-
-	if err := validateGameSubscriptionStatus(next.Status); err != nil {
-		return err
-	}
-
-	return nil
-}
-func (m *Domain) validateGameSubscriptionRecForDelete(rec *game_record.GameSubscription) error {
-	l := m.Logger("validateGameSubscriptionRecForDelete")
-	l.Debug("validating game_subscription record >%#v<", rec)
-
-	if rec == nil {
-		return coreerror.NewInvalidDataError("record is nil")
-	}
-
-	return nil
-}
-
-func validateGameSubscriptionStatus(status string) error {
-	switch status {
-	case game_record.GameSubscriptionStatusPendingApproval,
-		game_record.GameSubscriptionStatusActive,
-		game_record.GameSubscriptionStatusRevoked:
-		return nil
-	default:
-		return coreerror.NewInvalidDataError("invalid game subscription status >%s<", status)
-	}
 }
 
 func (m *Domain) UpsertPendingGameSubscription(gameID, accountID, accountContactID, subscriptionType string) (*game_record.GameSubscription, error) {

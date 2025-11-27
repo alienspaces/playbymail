@@ -139,18 +139,21 @@ type GameTurnSheetConfig struct {
 }
 
 type GameTurnConfig struct {
-	TurnNumber                    int
-	AdventureGameTurnSheetConfigs []AdventureGameTurnSheetConfig
-}
+	TurnNumber int
 
-type AdventureGameTurnSheetConfig struct {
-	GameTurnSheetConfig      GameTurnSheetConfig
-	GameCharacterInstanceRef string // Reference to the game_character_instance (required)
+	// Adventure game specific turn sheet configurations
+	AdventureGameTurnSheetConfigs []AdventureGameTurnSheetConfig
+
+	// This is where additional turn sheet configurations can be added for other game types
 }
 
 // ------------------------------------------------------------
 // Adventure game specific configuration
 // ------------------------------------------------------------
+type AdventureGameTurnSheetConfig struct {
+	GameTurnSheetConfig      GameTurnSheetConfig
+	GameCharacterInstanceRef string // Reference to the game_character_instance (required)
+}
 
 type AdventureGameCharacterConfig struct {
 	Reference  string // Reference to the game_character record
@@ -182,39 +185,53 @@ type AdventureGameLocationLinkConfig struct {
 }
 
 type AdventureGameLocationLinkRequirementConfig struct {
-	Reference   string // Reference to the game_location_link_requirement record
+	Reference string // Reference to the game_location_link_requirement record
+
+	// Must be assigned to an item
 	GameItemRef string // Reference to the game_item
-	Record      *adventure_game_record.AdventureGameLocationLinkRequirement
+
+	Record *adventure_game_record.AdventureGameLocationLinkRequirement
 }
 
 type AdventureGameLocationInstanceConfig struct {
-	Reference       string // Reference to the game_location_instance record
+	Reference string // Reference to the game_location_instance record
+
+	// Must be assigned to a location
 	GameLocationRef string // Reference to the game_location (required)
-	Record          *adventure_game_record.AdventureGameLocationInstance
+
+	Record *adventure_game_record.AdventureGameLocationInstance
 }
 
 type AdventureGameCreatureInstanceConfig struct {
-	Reference       string // Reference to the game_creature_instance record
+	Reference string // Reference to the game_creature_instance record
+
+	// Must be assigned to a creature and a location
 	GameCreatureRef string // Reference to the game_creature (required)
 	GameLocationRef string // Reference to the game_location (required)
-	Record          *adventure_game_record.AdventureGameCreatureInstance
+
+	Record *adventure_game_record.AdventureGameCreatureInstance
 }
 
 type AdventureGameCharacterInstanceConfig struct {
-	Reference        string // Reference to the game_character_instance record
+	Reference string // Reference to the game_character_instance record
+
+	// Must be assigned to a character and a location
 	GameCharacterRef string // Reference to the game_character (required)
-	GameLocationRef  string // Reference to the game_location (optional)
-	Record           *adventure_game_record.AdventureGameCharacterInstance
+	GameLocationRef  string // Reference to the game_location (required)
+
+	Record *adventure_game_record.AdventureGameCharacterInstance
 }
 
 type AdventureGameItemInstanceConfig struct {
-	Reference        string // Reference to the game_item_instance record
-	GameItemRef      string // Reference to the game_item (required)
-	GameLocationRef  string // Reference to the game_location (optional)
-	GameCharacterRef string // Reference to the game_character (optional)
-	GameCreatureRef  string // Reference to the game_creature (optional)
+	Reference string // Reference to the game_item_instance record
 
-	// Must be assigned to a location, a character, or a creature
+	// Must be assigned to an item
+	GameItemRef string // Reference to the game_item (required)
+
+	// Must be assigned to a location, a character, or a creature (one of these is required)
+	GameLocationRef  string // Reference to the game_location
+	GameCharacterRef string // Reference to the game_character
+	GameCreatureRef  string // Reference to the game_creature
 
 	Record *adventure_game_record.AdventureGameItemInstance
 }

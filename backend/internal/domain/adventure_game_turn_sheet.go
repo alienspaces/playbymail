@@ -55,9 +55,12 @@ func (m *Domain) CreateAdventureGameTurnSheetRec(rec *adventure_game_record.Adve
 
 	l.Debug("creating adventure_game_turn_sheet record >%#v<", rec)
 
-	r := m.AdventureGameTurnSheetRepository()
+	if err := m.validateAdventureGameTurnSheetRecForCreate(rec); err != nil {
+		l.Warn("failed to validate adventure_game_turn_sheet record >%v<", err)
+		return rec, err
+	}
 
-	// Add validation here if needed
+	r := m.AdventureGameTurnSheetRepository()
 
 	var err error
 	rec, err = r.CreateOne(rec)
@@ -69,26 +72,29 @@ func (m *Domain) CreateAdventureGameTurnSheetRec(rec *adventure_game_record.Adve
 }
 
 // UpdateAdventureGameTurnSheetRec -
-func (m *Domain) UpdateAdventureGameTurnSheetRec(next *adventure_game_record.AdventureGameTurnSheet) (*adventure_game_record.AdventureGameTurnSheet, error) {
+func (m *Domain) UpdateAdventureGameTurnSheetRec(rec *adventure_game_record.AdventureGameTurnSheet) (*adventure_game_record.AdventureGameTurnSheet, error) {
 	l := m.Logger("UpdateAdventureGameTurnSheetRec")
 
-	_, err := m.GetAdventureGameTurnSheetRec(next.ID, coresql.ForUpdateNoWait)
+	_, err := m.GetAdventureGameTurnSheetRec(rec.ID, coresql.ForUpdateNoWait)
 	if err != nil {
-		return next, err
+		return rec, err
 	}
 
-	l.Debug("updating adventure_game_turn_sheet record >%#v<", next)
+	l.Debug("updating adventure_game_turn_sheet record >%#v<", rec)
 
-	// Add validation here if needed
+	if err := m.validateAdventureGameTurnSheetRecForUpdate(rec); err != nil {
+		l.Warn("failed to validate adventure_game_turn_sheet record >%v<", err)
+		return rec, err
+	}
 
 	r := m.AdventureGameTurnSheetRepository()
 
-	next, err = r.UpdateOne(next)
+	updatedRec, err := r.UpdateOne(rec)
 	if err != nil {
-		return next, databaseError(err)
+		return rec, databaseError(err)
 	}
 
-	return next, nil
+	return updatedRec, nil
 }
 
 // DeleteAdventureGameTurnSheetRec -

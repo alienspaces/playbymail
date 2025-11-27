@@ -72,29 +72,29 @@ func (m *Domain) CreateGameRec(rec *game_record.Game) (*game_record.Game, error)
 }
 
 // UpdateGameRec -
-func (m *Domain) UpdateGameRec(next *game_record.Game) (*game_record.Game, error) {
+func (m *Domain) UpdateGameRec(rec *game_record.Game) (*game_record.Game, error) {
 	l := m.Logger("UpdateGameRec")
 
-	curr, err := m.GetGameRec(next.ID, coresql.ForUpdateNoWait)
+	curr, err := m.GetGameRec(rec.ID, coresql.ForUpdateNoWait)
 	if err != nil {
-		return next, err
+		return rec, err
 	}
 
-	l.Debug("updating client record >%#v<", next)
+	l.Debug("updating client record >%#v<", rec)
 
-	if err := m.validateGameRecForUpdate(next, curr); err != nil {
+	if err := m.validateGameRecForUpdate(rec, curr); err != nil {
 		l.Warn("failed to validate client record >%v<", err)
-		return next, err
+		return rec, err
 	}
 
 	r := m.GameRepository()
 
-	next, err = r.UpdateOne(next)
+	updatedRec, err := r.UpdateOne(rec)
 	if err != nil {
-		return next, databaseError(err)
+		return rec, databaseError(err)
 	}
 
-	return next, nil
+	return updatedRec, nil
 }
 
 // DeleteGameRec -

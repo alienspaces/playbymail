@@ -187,7 +187,7 @@ func getManyGameInstanceParametersHandler(w http.ResponseWriter, r *http.Request
 		Val: instanceID,
 	})
 
-	recs, err := m.(*domain.Domain).GetGameInstanceParameterRecs(opts)
+	recs, err := m.(*domain.Domain).GetManyGameInstanceParameterRecs(opts)
 	if err != nil {
 		l.Warn("failed getting game instance parameters >%v<", err)
 		return err

@@ -70,5 +70,6 @@ func (t *Testing) applyAdventureGameCharacterRecDefaultValues(rec *adventure_gam
 	if rec.Name == "" {
 		rec.Name = UniqueName(gofakeit.Name())
 	}
+
 	return rec
 }

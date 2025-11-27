@@ -70,6 +70,7 @@ func (t *Testing) createAdventureGameItemInstanceRec(cfg AdventureGameItemInstan
 	if cfg.Reference != "" {
 		t.Data.Refs.AdventureGameItemInstanceRefs[cfg.Reference] = createdRec.ID
 	}
+
 	return createdRec, nil
 }
 
@@ -77,5 +78,6 @@ func (t *Testing) applyAdventureGameItemInstanceRecDefaultValues(rec *adventure_
 	if rec == nil {
 		rec = &adventure_game_record.AdventureGameItemInstance{}
 	}
+
 	return rec
 }

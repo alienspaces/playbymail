@@ -61,5 +61,6 @@ func (t *Testing) applyAdventureGameItemRecDefaultValues(rec *adventure_game_rec
 	if rec.Description == "" {
 		rec.Description = gofakeit.Sentence(10)
 	}
+
 	return rec
 }

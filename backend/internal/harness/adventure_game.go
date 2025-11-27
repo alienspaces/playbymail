@@ -8,6 +8,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 )
 
+// createAdventureGameRecords creates the adventure game records for a game
 func (t *Testing) createAdventureGameRecords(gameConfig GameConfig, gameRec *game_record.Game) error {
 	l := t.Logger("createAdventureGameRecords")
 
@@ -68,6 +69,7 @@ func (t *Testing) createAdventureGameRecords(gameConfig GameConfig, gameRec *gam
 	return nil
 }
 
+// createAdventureGameInstanceRecords creates the adventure game instance records for a game instance
 func (t *Testing) createAdventureGameInstanceRecords(gameInstanceConfig GameInstanceConfig, gameInstanceRec *game_record.GameInstance) error {
 	l := t.Logger("createAdventureGameInstanceRecords")
 
@@ -191,6 +193,7 @@ func (t *Testing) createAdventureGameInstanceRecords(gameInstanceConfig GameInst
 	return nil
 }
 
+// removeAdventureGameRecords removes the adventure game records for a game
 func (t *Testing) removeAdventureGameRecords() error {
 	l := t.Logger("removeAdventureGameRecords")
 
@@ -290,6 +293,7 @@ func (t *Testing) removeAdventureGameRecords() error {
 	return nil
 }
 
+// removeAdventureGameInstanceRecords removes the adventure game instance records for a game instance
 func (t *Testing) removeAdventureGameInstanceRecords() error {
 	l := t.Logger("removeAdventureGameInstanceRecords")
 

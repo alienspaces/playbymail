@@ -47,6 +47,7 @@ func (t *Testing) createGameInstanceRec(cfg GameInstanceConfig, gameRec *game_re
 	if cfg.Reference != "" {
 		t.Data.Refs.GameInstanceRefs[cfg.Reference] = createdRec.ID
 	}
+
 	return createdRec, nil
 }
 

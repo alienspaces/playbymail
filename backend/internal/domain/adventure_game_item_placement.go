@@ -43,8 +43,11 @@ func (m *Domain) GetAdventureGameItemPlacementRec(recID string, lock *coresql.Lo
 func (m *Domain) CreateAdventureGameItemPlacementRec(rec *adventure_game_record.AdventureGameItemPlacement) (*adventure_game_record.AdventureGameItemPlacement, error) {
 	l := m.Logger("CreateAdventureGameItemPlacementRec")
 	l.Debug("creating adventure_game_item_placement record >%#v<", rec)
+	if err := m.validateAdventureGameItemPlacementRecForCreate(rec); err != nil {
+		l.Warn("failed to validate adventure_game_item_placement record >%v<", err)
+		return rec, err
+	}
 	r := m.AdventureGameItemPlacementRepository()
-	// Add validation here if needed
 	var err error
 	rec, err = r.CreateOne(rec)
 	if err != nil {
@@ -54,20 +57,29 @@ func (m *Domain) CreateAdventureGameItemPlacementRec(rec *adventure_game_record.
 }
 
 // UpdateAdventureGameItemPlacementRec -
-func (m *Domain) UpdateAdventureGameItemPlacementRec(next *adventure_game_record.AdventureGameItemPlacement) (*adventure_game_record.AdventureGameItemPlacement, error) {
+func (m *Domain) UpdateAdventureGameItemPlacementRec(rec *adventure_game_record.AdventureGameItemPlacement) (*adventure_game_record.AdventureGameItemPlacement, error) {
 	l := m.Logger("UpdateAdventureGameItemPlacementRec")
-	_, err := m.GetAdventureGameItemPlacementRec(next.ID, coresql.ForUpdateNoWait)
+
+	_, err := m.GetAdventureGameItemPlacementRec(rec.ID, coresql.ForUpdateNoWait)
 	if err != nil {
-		return next, err
+		return rec, err
 	}
-	l.Debug("updating adventure_game_item_placement record >%#v<", next)
-	// Add validation here if needed
+
+	l.Debug("updating adventure_game_item_placement record >%#v<", rec)
+
+	if err := m.validateAdventureGameItemPlacementRecForUpdate(rec); err != nil {
+		l.Warn("failed to validate adventure_game_item_placement record >%v<", err)
+		return rec, err
+	}
+
 	r := m.AdventureGameItemPlacementRepository()
-	next, err = r.UpdateOne(next)
+
+	updatedRec, err := r.UpdateOne(rec)
 	if err != nil {
-		return next, databaseError(err)
+		return rec, databaseError(err)
 	}
-	return next, nil
+
+	return updatedRec, nil
 }
 
 // DeleteAdventureGameItemPlacementRec -
