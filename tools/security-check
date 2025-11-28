@@ -1,0 +1,127 @@
+#!/usr/bin/env sh
+
+# Security Check Script
+# Checks for indicators of compromise from Shai-Hulud 2.0 npm worm
+# Based on: https://securitylabs.datadoghq.com/articles/shai-hulud-2.0-npm-worm/
+#
+# Usage: ./tools/security-check
+#        npm run security:check (from frontend or root)
+
+set -e
+
+# Ensure we're in the project root
+if [ -f "tools/security-check" ]; then
+    # Already in project root
+    :
+elif [ -f "../tools/security-check" ]; then
+    # In a subdirectory, go to project root
+    cd ..
+else
+    echo "❌ Error: Must be run from project root or a subdirectory"
+    exit 1
+fi
+
+echo "🔒 Security Check: Shai-Hulud 2.0 Indicators of Compromise"
+echo "=========================================================="
+echo ""
+
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+ISSUES=0
+
+# Check for malicious files
+echo "📁 Checking for malicious files..."
+if [ -f "frontend/setup_bun.js" ] || [ -f "setup_bun.js" ]; then
+    echo -e "${RED}❌ FOUND: setup_bun.js (malicious file)${NC}"
+    ISSUES=$((ISSUES + 1))
+else
+    echo -e "${GREEN}✅ setup_bun.js not found${NC}"
+fi
+
+if [ -f "frontend/bun_environment.js" ] || [ -f "bun_environment.js" ]; then
+    echo -e "${RED}❌ FOUND: bun_environment.js (malicious file)${NC}"
+    ISSUES=$((ISSUES + 1))
+else
+    echo -e "${GREEN}✅ bun_environment.js not found${NC}"
+fi
+
+# Check package.json for suspicious preinstall scripts
+echo ""
+echo "📦 Checking package.json files for suspicious scripts..."
+# Check frontend package.json
+if [ -f "frontend/package.json" ]; then
+    if grep -q '"preinstall"' frontend/package.json 2>/dev/null; then
+        PREINSTALL=$(grep -A 1 '"preinstall"' frontend/package.json | head -2)
+        if echo "$PREINSTALL" | grep -q "setup_bun\|bun_environment"; then
+            echo -e "${RED}❌ FOUND: Suspicious preinstall script in frontend/package.json${NC}"
+            echo "$PREINSTALL"
+            ISSUES=$((ISSUES + 1))
+        else
+            echo -e "${YELLOW}⚠️  preinstall script found in frontend/package.json (review manually)${NC}"
+        fi
+    else
+        echo -e "${GREEN}✅ No preinstall script in frontend/package.json${NC}"
+    fi
+fi
+
+# Check root package.json
+if [ -f "package.json" ] && [ ! -f "frontend/package.json" ] || [ "$(pwd)" != "$(dirname "$(pwd)")" ]; then
+    if grep -q '"preinstall"' package.json 2>/dev/null; then
+        PREINSTALL=$(grep -A 1 '"preinstall"' package.json | head -2)
+        if echo "$PREINSTALL" | grep -q "setup_bun\|bun_environment"; then
+            echo -e "${RED}❌ FOUND: Suspicious preinstall script in package.json${NC}"
+            echo "$PREINSTALL"
+            ISSUES=$((ISSUES + 1))
+        else
+            echo -e "${YELLOW}⚠️  preinstall script found in package.json (review manually)${NC}"
+        fi
+    else
+        echo -e "${GREEN}✅ No preinstall script in package.json${NC}"
+    fi
+fi
+
+# Check for suspicious GitHub repositories
+echo ""
+echo "🔍 Checking for suspicious GitHub repositories..."
+echo -e "${YELLOW}⚠️  Manual check required:${NC}"
+echo "   Search GitHub for repos with description: 'Sha1-Hulud: The Second Coming.'"
+echo "   URL: https://github.com/search?q=%22Sha1-Hulud%3A+The+Second+Coming.%22&type=repositories"
+
+# Check npm credentials location
+echo ""
+echo "🔑 Checking npm credentials..."
+if [ -f "$HOME/.npmrc" ]; then
+    echo -e "${YELLOW}⚠️  .npmrc file found at $HOME/.npmrc${NC}"
+    echo "   Review for unauthorized tokens"
+else
+    echo -e "${GREEN}✅ No .npmrc file found in home directory${NC}"
+fi
+
+# Summary
+echo ""
+echo "=========================================================="
+if [ $ISSUES -eq 0 ]; then
+    echo -e "${GREEN}✅ No obvious indicators of compromise found${NC}"
+    echo ""
+    echo "Next steps:"
+    echo "1. Check IOCs list: https://github.com/DataDog/indicators-of-compromise/tree/main/shai-hulud-2.0"
+    echo "2. Review npm package dependencies for affected packages"
+    echo "3. Check GitHub for unauthorized repositories"
+    echo "4. Review cloud credentials (AWS, GCP, Azure) for unauthorized access"
+    echo "5. Rotate npm credentials if you publish packages"
+else
+    echo -e "${RED}❌ Found $ISSUES potential issue(s)${NC}"
+    echo ""
+    echo "IMMEDIATE ACTIONS REQUIRED:"
+    echo "1. Do NOT run npm install"
+    echo "2. Review the malicious files found"
+    echo "3. Check for unauthorized GitHub repositories"
+    echo "4. Rotate all credentials (npm, GitHub, cloud providers)"
+    echo "5. Review cloud access logs"
+fi
+echo ""
+

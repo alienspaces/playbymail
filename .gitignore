@@ -111,5 +111,6 @@ TASK.md
 test-results/
 playwright-report/
 playwright/.auth/
+playwright/screenshots/
 playwright/*.png
 playwright/*.mp4

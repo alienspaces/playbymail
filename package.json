@@ -20,7 +20,10 @@
         "test:e2e:workflows": "playwright test workflows/",
         "test:e2e:legacy": "playwright test legacy/",
         "test:e2e:install": "playwright install",
-        "test:e2e:install-deps": "playwright install-deps"
+        "test:e2e:install-deps": "playwright install-deps",
+        "upgrade": "./tools/npm-upgrade-safe --root",
+        "upgrade:package": "./tools/npm-upgrade-safe --root",
+        "security:check": "./tools/security-check"
     },
     "repository": {
         "type": "git",
@@ -34,6 +37,6 @@
     },
     "homepage": "https://gitlab.com/alienspaces/playbymail#readme",
     "devDependencies": {
-        "@playwright/test": "1.54.2"
+        "@playwright/test": "1.57.0"
     }
 }
