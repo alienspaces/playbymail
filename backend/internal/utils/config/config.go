@@ -16,6 +16,14 @@ type Config struct {
 	// Save test PDFs (set SAVE_TEST_FILES=true to save, KEEP_TEST_FILES=true to keep after tests)
 	SaveTestFiles bool `env:"SAVE_TEST_FILES" envDefault:"false"`
 
+	// Test authentication bypass configuration
+	// When both are set, requests with the specified header and matching value
+	// can use email as verification code. This enables E2E and API testing.
+	// - TestBypassHeaderName: HTTP header name (e.g., "X-Test-Bypass")
+	// - TestBypassHeaderValue: Required header value to enable bypass
+	TestBypassHeaderName  string `env:"TEST_BYPASS_HEADER_NAME" envDefault:""`
+	TestBypassHeaderValue string `env:"TEST_BYPASS_HEADER_VALUE" envDefault:""`
+
 	// Agent configuration
 	AgentProvider string `env:"AGENT_PROVIDER" envDefault:"openai"` // "openai", "anthropic", "local"
 

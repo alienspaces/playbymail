@@ -13,6 +13,20 @@ set -e
 # Change to project root directory
 cd "$(dirname "$0")/.."
 
+# Load environment variables
+. "$(dirname "$0")"/environment || exit $?
+
+# Verify required test bypass environment variables are set
+if [ -z "$TEST_BYPASS_HEADER_NAME" ]; then
+    echo "❌ Error: TEST_BYPASS_HEADER_NAME environment variable is not set."
+    exit 1
+fi
+
+if [ -z "$TEST_BYPASS_HEADER_VALUE" ]; then
+    echo "❌ Error: TEST_BYPASS_HEADER_VALUE environment variable is not set."
+    exit 1
+fi
+
 echo "🔍 Checking Playwright setup..."
 
 # Check if Node.js and npm are available
@@ -60,35 +74,24 @@ echo "✅ Playwright setup verified"
 
 # Check if backend is running
 echo "🔍 Checking backend prerequisites..."
-if ! curl -s http://localhost:8080/healthz > /dev/null 2>&1; then
-    echo ""
-    echo "❌ Backend not running on localhost:8080"
-    echo ""
-    echo "📋 Prerequisites needed:"
-    echo "   1. Database setup: ./tools/db-setup"
-    echo "   2. Start backend: ./tools/start-backend (includes db-setup)"
-    echo "   3. Build frontend: ./tools/build-frontend (optional, for asset serving)"
-    echo ""
-    echo "🚀 Quick start:"
-    echo "   ./tools/start-backend    # Start backend + load test data"
-    echo "   ./tools/test-playwright  # Run tests"
-    echo ""
-    echo "   Or use full stack:"
-    echo "   ./tools/start            # Start everything"
-    echo "   ./tools/test-playwright  # Run tests"
-    echo ""
+
+ensure_backend() {
+    if curl -s http://localhost:8080/healthz > /dev/null 2>&1; then
+        echo "✅ Backend running on localhost:8080"
+        return 0
+    else
+        echo "❌ Backend not running on localhost:8080"
+        echo ""
+        echo "🚀 Quick start:"
+        echo "   ./tools/start-backend    # Start backend + load test data"
+        echo ""
+        return 1
+    fi
+}
+
+if ! ensure_backend; then
     exit 1
 fi
-
-echo "✅ Backend running on localhost:8080"
-
-# Check if frontend is built (optional but recommended)
-if [ ! -d "frontend/dist" ] || [ ! -f "frontend/dist/index.html" ]; then
-    echo "⚠️  Frontend not built. Building now for better test coverage..."
-    ./tools/build-frontend
-fi
-
-echo "✅ Frontend assets available"
 
 # Default to running all tests
 TEST_COMMAND="test:e2e"

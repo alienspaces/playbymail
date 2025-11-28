@@ -1,14 +1,14 @@
 package domain
 
 import (
-	"errors"
-	"time"
-
-	"github.com/jackc/pgx/v5"
-
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
+	"strings"
+	"time"
+
+	"github.com/jackc/pgx/v5"
 
 	"gitlab.com/alienspaces/playbymail/core/domain"
 	coreerror "gitlab.com/alienspaces/playbymail/core/error"
@@ -24,6 +24,18 @@ func hmacSHA256(key, data string) string {
 	h := hmac.New(sha256.New, []byte(key))
 	h.Write([]byte(data))
 	return hex.EncodeToString(h.Sum(nil))
+}
+
+// isEmailAddress checks if a string looks like an email address (simple check)
+func isEmailAddress(s string) bool {
+	// Simple check: contains @ and has text before and after it
+	atIndex := strings.Index(s, "@")
+	if atIndex <= 0 || atIndex >= len(s)-1 {
+		return false
+	}
+	// Check for at least one dot after @
+	afterAt := s[atIndex+1:]
+	return strings.Contains(afterAt, ".") && !strings.HasSuffix(afterAt, ".")
 }
 
 // GetManyAccountRecs -
@@ -187,33 +199,65 @@ func (m *Domain) GenerateAccountVerificationToken(rec *account_record.Account) (
 	return token, nil
 }
 
-func (m *Domain) VerifyAccountVerificationToken(token string) (string, error) {
+// VerifyAccountVerificationToken verifies a verification token and returns a session token.
+// If testBypassEnabled is true, the token is treated as an email address for test authentication.
+func (m *Domain) VerifyAccountVerificationToken(token string, testBypassEnabled bool) (string, error) {
 	l := m.Logger("VerifyAccountVerificationToken")
 
 	l.Info("verifying verification token >%s<", token)
 
-	// HMAC hash the provided token
-	hash := hmacSHA256(m.config.TokenHMACKey, token)
-
 	repo := m.AccountRepository()
 
-	recs, err := repo.GetMany(&coresql.Options{
-		Params: []coresql.Param{
-			{Col: account_record.FieldAccountVerificationToken, Val: hash},
-		},
-		Limit: 1,
-	})
-	if err != nil {
-		l.Warn("failed to get account by verification token >%s< >%v<", token, err)
-		return "", err
+	var rec *account_record.Account
+
+	// Test bypass mode: allow using email address as the verification code
+	// This is enabled when the caller has verified the test bypass header/token
+	if testBypassEnabled {
+		// Check if the token looks like an email address
+		if isEmailAddress(token) {
+			l.Info("test bypass: attempting magic auth with email >%s<", token)
+
+			recs, err := repo.GetMany(&coresql.Options{
+				Params: []coresql.Param{
+					{Col: account_record.FieldAccountEmail, Val: token},
+				},
+				Limit: 1,
+			})
+			if err != nil {
+				l.Warn("test bypass: failed to get account by email >%s< >%v<", token, err)
+				return "", err
+			}
+
+			if len(recs) > 0 {
+				rec = recs[0]
+				l.Info("test bypass: magic auth successful for email >%s<", token)
+			}
+		}
 	}
 
-	if len(recs) == 0 {
-		l.Info("no account found for verification token >%s<", token)
-		return "", nil
-	}
+	// If no test bypass match, try the normal verification token lookup
+	if rec == nil {
+		// HMAC hash the provided token
+		hash := hmacSHA256(m.config.TokenHMACKey, token)
 
-	rec := recs[0]
+		recs, err := repo.GetMany(&coresql.Options{
+			Params: []coresql.Param{
+				{Col: account_record.FieldAccountVerificationToken, Val: hash},
+			},
+			Limit: 1,
+		})
+		if err != nil {
+			l.Warn("failed to get account by verification token >%s< >%v<", token, err)
+			return "", err
+		}
+
+		if len(recs) == 0 {
+			l.Info("no account found for verification token >%s<", token)
+			return "", nil
+		}
+
+		rec = recs[0]
+	}
 
 	l.Info("account found for verification token >%s<", token)
 
@@ -226,7 +270,7 @@ func (m *Domain) VerifyAccountVerificationToken(token string) (string, error) {
 	rec.SessionToken = nullstring.FromString(hashedSessionToken)
 	rec.SessionTokenExpiresAt = nulltime.FromTime(corerecord.NewRecordTimestamp().Add(15 * time.Minute))
 
-	_, err = m.UpdateAccountRec(rec)
+	_, err := m.UpdateAccountRec(rec)
 	if err != nil {
 		l.Warn("failed to update account >%v<", err)
 		return "", err
@@ -235,6 +279,23 @@ func (m *Domain) VerifyAccountVerificationToken(token string) (string, error) {
 	l.Info("generated session token >%s< for account ID >%s<", sessionToken, rec.ID)
 
 	return sessionToken, nil
+}
+
+// IsTestBypassEnabled checks if test bypass authentication is enabled based on
+// the configured header name, value, and the provided header value.
+func (m *Domain) IsTestBypassEnabled(headerValue string) bool {
+	// Both config values must be set
+	if m.config.TestBypassHeaderName == "" || m.config.TestBypassHeaderValue == "" {
+		return false
+	}
+
+	// Header value must match the configured value exactly
+	return headerValue == m.config.TestBypassHeaderValue
+}
+
+// GetTestBypassHeaderName returns the configured test bypass header name.
+func (m *Domain) GetTestBypassHeaderName() string {
+	return m.config.TestBypassHeaderName
 }
 
 func (m *Domain) VerifyAccountSessionToken(token string) (*account_record.Account, error) {

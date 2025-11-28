@@ -497,7 +497,20 @@ func verifyAuthHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Par
 
 	mm := m.(*domain.Domain)
 
-	sessionToken, err := mm.VerifyAccountVerificationToken(req.VerificationToken)
+	// Check if test bypass authentication is enabled via header
+	testBypassEnabled := false
+	bypassHeaderName := mm.GetTestBypassHeaderName()
+	if bypassHeaderName != "" {
+		headerValue := r.Header.Get(bypassHeaderName)
+		if headerValue != "" {
+			testBypassEnabled = mm.IsTestBypassEnabled(headerValue)
+			if testBypassEnabled {
+				l.Info("test bypass authentication enabled via header >%s<", bypassHeaderName)
+			}
+		}
+	}
+
+	sessionToken, err := mm.VerifyAccountVerificationToken(req.VerificationToken, testBypassEnabled)
 	if err != nil {
 		l.Warn("failed verifying account verification token >%v<", err)
 		return err

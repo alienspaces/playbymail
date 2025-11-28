@@ -1,8 +1,30 @@
 // Common test utilities for Playwright tests
 import { expect } from '@playwright/test'
+
+// Test bypass authentication configuration
+// These must be set via environment variables - no defaults allowed
+export const TEST_BYPASS_HEADER_NAME = process.env.TEST_BYPASS_HEADER_NAME
+export const TEST_BYPASS_HEADER_VALUE = process.env.TEST_BYPASS_HEADER_VALUE
+
+// Validate required environment variables at module load time
+if (!TEST_BYPASS_HEADER_NAME) {
+  throw new Error('TEST_BYPASS_HEADER_NAME environment variable is required')
+}
+if (!TEST_BYPASS_HEADER_VALUE) {
+  throw new Error('TEST_BYPASS_HEADER_VALUE environment variable is required')
+}
+
+// Set up test bypass headers on a page context for API requests
+export async function setupTestBypassHeaders(page) {
+  await page.setExtraHTTPHeaders({
+    [TEST_BYPASS_HEADER_NAME]: TEST_BYPASS_HEADER_VALUE
+  })
+}
+
 export async function waitForElement(page, selector, timeout = 5000) {
   await page.waitForSelector(selector, { timeout })
-  return page.locator(selector)
+  // Return locator that handles multiple matches
+  return page.locator(selector).first()
 }
 
 export async function waitForPageReady(page) {
@@ -27,7 +49,7 @@ export async function isAuthenticated(page) {
   // Check if user is authenticated by looking for authenticated content
   const body = page.locator('body')
   const content = await body.textContent()
-  
+
   // Look for signs of authentication
   const authenticatedIndicators = [
     'Games & Instances',
@@ -35,8 +57,8 @@ export async function isAuthenticated(page) {
     'Account Settings',
     'Sign Out'
   ]
-  
-  return authenticatedIndicators.some(indicator => 
+
+  return authenticatedIndicators.some(indicator =>
     content.includes(indicator)
   )
 }
@@ -47,9 +69,9 @@ export async function navigateTo(page, path) {
 }
 
 export async function takeScreenshot(page, name) {
-  await page.screenshot({ 
+  await page.screenshot({
     path: `playwright/screenshots/${name}-${Date.now()}.png`,
-    fullPage: true 
+    fullPage: true
   })
 }
 
@@ -80,7 +102,8 @@ export async function checkPageURL(page, expectedURL) {
 
 export async function checkElementVisible(page, selector) {
   const element = await waitForElement(page, selector)
-  await expect(element).toBeVisible()
+  // Use .first() to handle multiple matching elements
+  await expect(element.first()).toBeVisible()
 }
 
 export async function checkElementContainsText(page, selector, text) {
@@ -110,7 +133,7 @@ export async function submitForm(page, formSelector) {
 export async function waitForLoadingState(page, loadingSelector, timeout = 10000) {
   // Wait for loading to appear
   await waitForElement(page, loadingSelector, 2000)
-  
+
   // Wait for loading to disappear
   await waitForElementToDisappear(page, loadingSelector, timeout)
 }
@@ -118,7 +141,7 @@ export async function waitForLoadingState(page, loadingSelector, timeout = 10000
 export async function checkErrorDisplayed(page, errorSelector, expectedError) {
   const errorElement = await waitForElement(page, errorSelector)
   await expect(errorElement).toBeVisible()
-  
+
   if (expectedError) {
     await expect(errorElement).toContainText(expectedError)
   }
@@ -127,7 +150,7 @@ export async function checkErrorDisplayed(page, errorSelector, expectedError) {
 export async function checkSuccessMessage(page, successSelector, expectedMessage) {
   const successElement = await waitForElement(page, successSelector)
   await expect(successElement).toBeVisible()
-  
+
   if (expectedMessage) {
     await expect(successElement).toContainText(expectedMessage)
   }
