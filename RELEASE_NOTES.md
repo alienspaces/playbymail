@@ -2,20 +2,46 @@
 
 ## Overview
 
-These release notes cover two months of development focused on building a complete turn sheet processing system with OCR capabilities. The work progressed from foundational architecture in September to full production-ready OCR integration and deployment in October.
+These release notes cover development focused on building a complete turn sheet processing system. The work progressed from foundational architecture in September, to OCR integration in October, to AI-powered scanning in November.
 
 ---
 
 ## 🎯 What's Next
 
-- Additional turn sheet types (join game, inventory management)
-- Enhanced OCR accuracy improvements
+- Additional turn sheet types (inventory management)
 - Real-time turn processing workflows
 - Expanded test coverage
+- An additional game type!
 
 ---
 
-## 📅 October 2025
+## 🗓️ November 2025
+
+**Theme**: AI Integration & Game Subscriptions
+
+### 🎯 Major Features
+
+**Game Subscription & Join Workflow**
+- Game subscription processing job worker
+- Subscription approval endpoint with email templates
+- Join game processor with complete workflow
+- Download endpoint for join game turn sheets
+
+**Starting Locations**
+- Starting location concept for adventure games
+- Starting location selection in frontend studio
+
+**Turn Sheet Scanning**
+- Replaced OCR-based scanning with OpenAI vision integration
+
+### 🎨 User Interface
+
+**Home Page**
+- Game genres section added
+
+---
+
+## 🗓️ October 2025
 
 **Theme**: OCR Integration & Production Deployment
 
@@ -72,7 +98,7 @@ These release notes cover two months of development focused on building a comple
 
 ---
 
-## 📅 September 2025
+## 🗓️ September 2025
 
 **Theme**: Foundation & Architecture
 
