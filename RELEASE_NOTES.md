@@ -17,7 +17,7 @@ These release notes cover development focused on building a complete turn sheet 
 
 ## 🗓️ November 2025
 
-**Theme**: AI Integration & Game Subscriptions
+**Theme**: AI Integration, Game Subscriptions & Management UI
 
 ### 🎯 Major Features
 
@@ -26,6 +26,13 @@ These release notes cover development focused on building a complete turn sheet 
 - Subscription approval endpoint with email templates
 - Join game processor with complete workflow
 - Download endpoint for join game turn sheets
+- Renamed Collaborator subscription type to Designer for clarity
+
+**Subscription-Based Access Control**
+- Games API supports filtering by subscription type
+- Studio shows only games where user is Designer
+- Management shows only games where user is Manager
+- Removed redundant game_administration table
 
 **Starting Locations**
 - Starting location concept for adventure games
@@ -38,6 +45,23 @@ These release notes cover development focused on building a complete turn sheet 
 
 **Home Page**
 - Game genres section added
+
+**Game Designer Studio**
+- Subscription-based access control (Designer role)
+- Clickable table rows for quick editing
+- Prominent game selection button
+- Shared sidebar layout with game context menu
+
+**Game Management**
+- Subscription-based access control (Manager role)
+- Turn sheet download and upload interface
+- Resource table layout for game instances
+- Game context menu in sidebar navigation
+
+**Layout & Navigation**
+- New SidebarLayout component for consistent layouts
+- Game context appears when a game is selected
+- Improved navigation with direct edit links in tables
 
 ---
 
