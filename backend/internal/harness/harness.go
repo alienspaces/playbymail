@@ -112,16 +112,6 @@ func (t *Testing) CreateData() error {
 			l.Debug("created game_subscription record for game >%s<", gameRec.ID)
 		}
 
-		// Create game administrator records for this game
-		for _, administrationConfig := range gameConfig.GameAdministrationConfigs {
-			_, err = t.createGameAdministrationRec(administrationConfig, gameRec)
-			if err != nil {
-				l.Warn("failed creating game_administration record >%v<", err)
-				return err
-			}
-			l.Debug("created game_administration record for game >%s<", gameRec.ID)
-		}
-
 		// ------------------------------------------------------------
 		// Adventure game specific records for this game
 		// ------------------------------------------------------------
@@ -254,21 +244,6 @@ func (t *Testing) RemoveData() error {
 		err := t.Domain.(*domain.Domain).RemoveGameSubscriptionRec(subscriptionRec.ID)
 		if err != nil {
 			l.Warn("failed removing game subscription record >%v<", err)
-			return err
-		}
-	}
-
-	// Remove game administration records before games to avoid FK errors
-	l.Debug("removing >%d< game administration records", len(t.teardownData.GameAdministrationRecs))
-	for _, administrationRec := range t.teardownData.GameAdministrationRecs {
-		l.Debug("[teardown] game administration ID: >%s<", administrationRec.ID)
-		if administrationRec.ID == "" {
-			l.Warn("[teardown] skipping game administration with empty ID")
-			continue
-		}
-		err := t.Domain.(*domain.Domain).RemoveGameAdministrationRec(administrationRec.ID)
-		if err != nil {
-			l.Warn("failed removing game administration record >%v<", err)
 			return err
 		}
 	}

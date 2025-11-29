@@ -9,6 +9,7 @@ import (
 type GameInstanceResponseData struct {
 	ID                  string     `json:"id"`
 	GameID              string     `json:"game_id"`
+	GameSubscriptionID  string     `json:"game_subscription_id"`
 	Status              string     `json:"status"`
 	CurrentTurn         int        `json:"current_turn"`
 	LastTurnProcessedAt *time.Time `json:"last_turn_processed_at,omitempty"`

@@ -52,6 +52,7 @@ func GameInstanceRecordToResponseData(l logger.Logger, rec *game_record.GameInst
 	return &game_schema.GameInstanceResponseData{
 		ID:                  rec.ID,
 		GameID:              rec.GameID,
+		GameSubscriptionID:  rec.GameSubscriptionID,
 		Status:              rec.Status,
 		CurrentTurn:         rec.CurrentTurn,
 		LastTurnProcessedAt: nulltime.ToTimePtr(rec.LastTurnProcessedAt),

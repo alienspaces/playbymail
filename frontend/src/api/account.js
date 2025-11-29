@@ -1,7 +1,7 @@
-import { baseUrl, getAuthHeaders } from './baseUrl';
+import { baseUrl, getAuthHeaders, apiFetch } from './baseUrl';
 
 export async function getMyAccount() {
-  const res = await fetch(`${baseUrl}/api/v1/my-account`, {
+  const res = await apiFetch(`${baseUrl}/api/v1/my-account`, {
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() }
   });
   if (!res.ok) throw new Error('Failed to fetch account');
@@ -10,7 +10,7 @@ export async function getMyAccount() {
 }
 
 export async function updateMyAccount(accountData) {
-  const res = await fetch(`${baseUrl}/api/v1/my-account`, {
+  const res = await apiFetch(`${baseUrl}/api/v1/my-account`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
     body: JSON.stringify(accountData)
@@ -21,7 +21,7 @@ export async function updateMyAccount(accountData) {
 }
 
 export async function deleteMyAccount() {
-  const res = await fetch(`${baseUrl}/api/v1/my-account`, {
+  const res = await apiFetch(`${baseUrl}/api/v1/my-account`, {
     method: 'DELETE',
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() }
   });
@@ -30,7 +30,7 @@ export async function deleteMyAccount() {
 }
 
 export async function getAccountContacts(accountId) {
-  const res = await fetch(`${baseUrl}/api/v1/accounts/${accountId}/contacts`, {
+  const res = await apiFetch(`${baseUrl}/api/v1/accounts/${accountId}/contacts`, {
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() }
   });
   if (!res.ok) throw new Error('Failed to fetch account contacts');
@@ -39,7 +39,7 @@ export async function getAccountContacts(accountId) {
 }
 
 export async function getAccountContact(accountId, contactId) {
-  const res = await fetch(`${baseUrl}/api/v1/accounts/${accountId}/contacts/${contactId}`, {
+  const res = await apiFetch(`${baseUrl}/api/v1/accounts/${accountId}/contacts/${contactId}`, {
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() }
   });
   if (!res.ok) throw new Error('Failed to fetch account contact');
@@ -48,7 +48,7 @@ export async function getAccountContact(accountId, contactId) {
 }
 
 export async function createAccountContact(accountId, contactData) {
-  const res = await fetch(`${baseUrl}/api/v1/accounts/${accountId}/contacts`, {
+  const res = await apiFetch(`${baseUrl}/api/v1/accounts/${accountId}/contacts`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
     body: JSON.stringify(contactData)
@@ -59,7 +59,7 @@ export async function createAccountContact(accountId, contactData) {
 }
 
 export async function updateAccountContact(accountId, contactId, contactData) {
-  const res = await fetch(`${baseUrl}/api/v1/accounts/${accountId}/contacts/${contactId}`, {
+  const res = await apiFetch(`${baseUrl}/api/v1/accounts/${accountId}/contacts/${contactId}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
     body: JSON.stringify(contactData)
@@ -70,7 +70,7 @@ export async function updateAccountContact(accountId, contactId, contactData) {
 }
 
 export async function deleteAccountContact(accountId, contactId) {
-  const res = await fetch(`${baseUrl}/api/v1/accounts/${accountId}/contacts/${contactId}`, {
+  const res = await apiFetch(`${baseUrl}/api/v1/accounts/${accountId}/contacts/${contactId}`, {
     method: 'DELETE',
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() }
   });

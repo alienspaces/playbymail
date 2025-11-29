@@ -10,15 +10,19 @@
             <th>Type</th>
             <th>Turn Duration</th>
             <th>Created</th>
+            <th></th>
             <th>Actions</th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="game in games" :key="game.id">
-            <td>{{ game.name }}</td>
+            <td><a href="#" class="edit-link" @click.prevent="openEdit(game)">{{ game.name }}</a></td>
             <td>{{ game.game_type }}</td>
             <td>{{ formatTurnDuration(game.turn_duration_hours) }}</td>
             <td>{{ formatDate(game.created_at) }}</td>
+            <td class="select-cell">
+              <button class="select-btn" @click="selectGame(game)">Select</button>
+            </td>
             <td>
               <TableActionsMenu :actions="getActions(game)" />
             </td>
@@ -116,7 +120,8 @@ export default {
   },
   created() {
     this.gamesStore = useGamesStore();
-    this.gamesStore.fetchGames();
+    // Filter to only show games where the user has Designer subscription
+    this.gamesStore.fetchGames({ subscriptionType: 'Designer' });
   },
   methods: {
     formatDate(dateStr) {
@@ -222,11 +227,6 @@ export default {
           label: 'Delete',
           danger: true,
           handler: () => this.confirmDelete(game)
-        },
-        {
-          key: 'manage',
-          label: 'Manage',
-          handler: () => this.selectGame(game)
         }
       ];
     }
@@ -259,6 +259,38 @@ export default {
   padding-left: var(--space-sm);
   padding-right: var(--space-sm);
   vertical-align: middle;
+}
+
+.edit-link {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.edit-link:hover {
+  text-decoration: underline;
+}
+
+.select-cell {
+  text-align: center;
+  width: auto;
+  padding-left: var(--space-sm);
+  padding-right: var(--space-sm);
+}
+
+.select-btn {
+  background: var(--color-primary);
+  color: var(--color-text-light);
+  border: none;
+  padding: var(--space-xs) var(--space-md);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.select-btn:hover {
+  background: var(--color-primary-dark);
 }
 
 .modal-form {

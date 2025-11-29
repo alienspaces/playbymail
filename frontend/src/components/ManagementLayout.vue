@@ -1,175 +1,149 @@
 <!--
   ManagementLayout.vue
-  Layout component for the game management interface.
+  Layout component for the Game Management interface.
+  Uses the shared SidebarLayout component.
 -->
 <template>
-  <div class="management-layout">
-    <!-- Show ManagementEntryView for unauthenticated users -->
-    <ManagementEntryView v-if="!isLoggedIn" />
+  <SidebarLayout title="Game Management" icon-type="clipboard" icon-color="blue">
+    <!-- Entry view for unauthenticated users -->
+    <template #entry>
+      <ManagementEntryView />
+    </template>
 
-    <!-- Show full management interface for authenticated users -->
-    <div v-else>
-      <!-- Management Header -->
-      <MainPageHeader title="Game Management" icon-type="clipboard" icon-color="blue">
-        <template #actions>
-          <button class="help-btn" @click="showHelp = true">
+    <!-- Sidebar navigation -->
+    <template #sidebar>
+      <ul>
+        <li>
+          <router-link to="/admin" active-class="active" exact>
             <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
-              <path
-                d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z" />
+              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
             </svg>
-            Help
-          </button>
-        </template>
-      </MainPageHeader>
+            Games
+          </router-link>
+        </li>
+      </ul>
 
-      <!-- Main content area -->
-      <div class="management-body">
-        <section class="management-content">
-          <router-view />
-        </section>
-      </div>
-    </div>
-
-    <!-- Help Panel -->
-    <div v-if="showHelp" class="help-panel-overlay" @click.self="showHelp = false">
-      <div class="help-panel">
-        <div class="help-header">
-          <h2>Game Management Help</h2>
-          <button class="close-btn" @click="showHelp = false">
-            <svg viewBox="0 0 24 24" fill="currentColor">
-              <path
-                d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
-            </svg>
-          </button>
+      <!-- Game Context Section -->
+      <div v-if="selectedGame" class="game-context">
+        <div class="context-header">
+          <span class="context-label">Selected Game</span>
+          <span class="context-name">{{ selectedGame.name }}</span>
         </div>
-        <div class="help-content">
-          <h3>Managing Game Instances</h3>
-          <ul>
-            <li><strong>Games Dashboard:</strong> View all games you have access to and their current instances</li>
-            <li><strong>Create Instances:</strong> Start new game sessions for players to join</li>
-            <li><strong>Monitor Progress:</strong> Track turn processing, deadlines, and player activity</li>
-            <li><strong>Runtime Controls:</strong> Start, pause, resume, or cancel game instances</li>
-            <li><strong>Player Support:</strong> Review submissions and provide assistance</li>
-          </ul>
-
-          <h3>Game Types</h3>
-          <ul>
-            <li><strong>Adventure Games:</strong> Exploration and story-driven experiences</li>
-            <li><strong>Future Types:</strong> Economic, sports, and other game types coming soon</li>
-          </ul>
-        </div>
+        <ul>
+          <li>
+            <router-link :to="`/admin/games/${selectedGame.id}/instances`" active-class="active">
+              <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9h-4v4h-2v-4H9V9h4V5h2v4h4v2z" />
+              </svg>
+              Instances
+            </router-link>
+          </li>
+          <li>
+            <router-link :to="`/admin/games/${selectedGame.id}/turn-sheets`" active-class="active">
+              <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z" />
+              </svg>
+              Turn Sheets
+            </router-link>
+          </li>
+        </ul>
       </div>
-    </div>
-  </div>
+    </template>
+
+    <!-- Help content -->
+    <template #help>
+      <h2>Game Management Help</h2>
+      <h3>Managing Game Instances</h3>
+      <ul>
+        <li><strong>Games:</strong> View all games you have access to and select one to manage</li>
+        <li><strong>Instances:</strong> Create and manage game sessions for players</li>
+        <li><strong>Turn Sheets:</strong> Download join forms and upload scanned submissions</li>
+      </ul>
+
+      <h3>Game Context</h3>
+      <p>Select a game from the Games list to see game-specific options in the sidebar.</p>
+
+      <h3>Game Types</h3>
+      <ul>
+        <li><strong>Adventure Games:</strong> Exploration and story-driven experiences</li>
+        <li><strong>Future Types:</strong> Economic, sports, and other game types coming soon</li>
+      </ul>
+    </template>
+
+    <!-- Main content -->
+    <router-view />
+  </SidebarLayout>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
-import { useAuthStore } from '../stores/auth';
 import { storeToRefs } from 'pinia';
+import { useGamesStore } from '../stores/games';
+import SidebarLayout from './SidebarLayout.vue';
 import ManagementEntryView from '../views/ManagementEntryView.vue';
-import MainPageHeader from './MainPageHeader.vue';
 
-const authStore = useAuthStore();
-const { sessionToken } = storeToRefs(authStore);
-const isLoggedIn = computed(() => !!sessionToken.value);
-const showHelp = ref(false);
+const gamesStore = useGamesStore();
+const { selectedGame } = storeToRefs(gamesStore);
 </script>
 
 <style scoped>
-.management-layout {
-  min-height: 100vh;
+.game-context {
+  margin-top: var(--space-md);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--color-border);
 }
 
-/* Header styling now handled by MainPageHeader component */
-
-
-.management-body {
-  padding: var(--space-xl);
-}
-
-.management-content {
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-/* Help Panel */
-.help-panel-overlay {
-  position: fixed;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  width: 400px;
-  background: rgba(0, 0, 0, 0.5);
-  z-index: 1000;
-  display: flex;
-  justify-content: flex-end;
-}
-
-.help-panel {
-  width: 100%;
-  background: var(--color-bg);
-  border-left: 1px solid var(--color-border);
+.context-header {
   display: flex;
   flex-direction: column;
-}
-
-.help-header {
-  padding: var(--space-lg);
-  border-bottom: 1px solid var(--color-border);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.help-header h2 {
-  margin: 0;
-  font-size: var(--font-size-lg);
-}
-
-.close-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-md);
   padding: var(--space-sm);
-  border-radius: var(--radius-sm);
-  transition: background 0.2s;
-}
-
-.close-btn:hover {
   background: var(--color-bg-light);
+  border-radius: var(--radius-sm);
 }
 
-.close-btn svg {
-  width: 20px;
-  height: 20px;
-  color: var(--color-text);
+.context-label {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-.help-content {
-  padding: var(--space-lg);
-  flex: 1;
-  overflow-y: auto;
-}
-
-.help-content h3 {
-  margin: var(--space-lg) 0 var(--space-md) 0;
-  font-size: var(--font-size-md);
-  color: var(--color-text);
-}
-
-.help-content ul {
-  margin: 0 0 var(--space-lg) var(--space-lg);
-  padding: 0;
-}
-
-.help-content li {
-  margin-bottom: var(--space-sm);
+.context-name {
   font-size: var(--font-size-sm);
-  line-height: 1.4;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.help-content strong {
+.game-context ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.game-context li {
+  margin-bottom: var(--space-sm);
+}
+
+.game-context a {
   color: var(--color-text);
+  text-decoration: none;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.game-context a.active {
+  color: var(--color-primary);
+}
+
+.nav-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
 }
 </style>

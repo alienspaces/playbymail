@@ -9,6 +9,9 @@
         @action="openCreaturePlacementCreate" />
       <ResourceTable :columns="creaturePlacementColumns" :rows="enhancedCreaturePlacements"
         :loading="creaturePlacementsStore.loading" :error="creaturePlacementsStore.error">
+        <template #cell-creature_name="{ row }">
+          <a href="#" class="edit-link" @click.prevent="openCreaturePlacementEdit(row)">{{ row.creature_name }}</a>
+        </template>
         <template #actions="{ row }">
           <TableActionsMenu :actions="getActions(row)" />
         </template>
@@ -176,3 +179,14 @@ function getActions(row) {
   ];
 }
 </script>
+
+<style scoped>
+.edit-link {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.edit-link:hover {
+  text-decoration: underline;
+}
+</style>

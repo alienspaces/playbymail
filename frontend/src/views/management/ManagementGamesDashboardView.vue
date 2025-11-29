@@ -68,7 +68,8 @@ onMounted(async () => {
 
 const loadGames = async () => {
   try {
-    await gamesStore.fetchGames();
+    // Filter to only show games where the user has Manager subscription
+    await gamesStore.fetchGames({ subscriptionType: 'Manager' });
     await gameInstancesStore.fetchAllGameInstances();
   } catch (error) {
     console.error('Failed to load games:', error);
@@ -102,6 +103,7 @@ const getActiveInstanceCount = (gameId) => {
 };
 
 const viewGameInstances = (game) => {
+  gamesStore.setSelectedGame(game);
   router.push(`/admin/games/${game.id}/instances`);
 };
 </script>

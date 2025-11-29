@@ -4,9 +4,13 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/jackc/pgx/v5"
+	"github.com/riverqueue/river"
 	"github.com/stretchr/testify/require"
 
 	"gitlab.com/alienspaces/playbymail/core/server"
+	"gitlab.com/alienspaces/playbymail/core/type/logger"
+	"gitlab.com/alienspaces/playbymail/core/type/storer"
 	"gitlab.com/alienspaces/playbymail/internal/harness"
 	"gitlab.com/alienspaces/playbymail/internal/runner/server/game"
 	"gitlab.com/alienspaces/playbymail/internal/utils/testutil"
@@ -266,9 +270,17 @@ func Test_createOneGameInstanceHandler(t *testing.T) {
 		require.NoError(t, err, "Test data teardown returns without error")
 	}()
 
+	// Get account from harness data (must have Manager subscription)
+	accountRec, err := th.Data.GetAccountRecByRef(harness.AccountOneRef)
+	require.NoError(t, err, "GetAccountRecByRef returns without error")
+
 	// Get a game from the harness data
 	gameRec, err := th.Data.GetGameRecByRef(harness.GameOneRef)
 	require.NoError(t, err, "GetGameRecByRef returns without error")
+
+	// Get the Manager subscription for this account and game
+	gameSubscriptionRec, err := th.Data.GetGameSubscriptionRecByRef(harness.GameSubscriptionOneRef)
+	require.NoError(t, err, "GetGameSubscriptionRecByRef returns without error")
 
 	testCases := []struct {
 		testutil.TestCase
@@ -277,6 +289,10 @@ func Test_createOneGameInstanceHandler(t *testing.T) {
 		{
 			TestCase: testutil.TestCase{
 				Name: "API key with open access \\ create game instance with valid properties \\ returns created instance",
+				NewRunner: func(l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], d harness.Data) (testutil.TestRunnerer, error) {
+					// Use the actual account ID from the harness for authentication
+					return testutil.NewTestRunnerWithAccountID(l, s, j, accountRec.ID, accountRec.Email)
+				},
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[game.CreateOneGameInstance]
 				},
@@ -296,9 +312,10 @@ func Test_createOneGameInstanceHandler(t *testing.T) {
 			expectResponse: func(d harness.Data, req game_schema.GameInstanceRequest) game_schema.GameInstanceResponse {
 				return game_schema.GameInstanceResponse{
 					Data: &game_schema.GameInstanceResponseData{
-						GameID:      req.GameID,
-						Status:      "created",
-						CurrentTurn: 0,
+						GameID:             req.GameID,
+						GameSubscriptionID: gameSubscriptionRec.ID,
+						Status:             "created",
+						CurrentTurn:        0,
 					},
 				}
 			},
@@ -317,6 +334,7 @@ func Test_createOneGameInstanceHandler(t *testing.T) {
 
 				require.NotEmpty(t, aResp, "Response body is not empty")
 				require.Equal(t, xResp.GameID, aResp.GameID, "Game ID equals expected")
+				require.Equal(t, xResp.GameSubscriptionID, aResp.GameSubscriptionID, "GameSubscriptionID equals expected")
 				require.Equal(t, xResp.Status, aResp.Status, "Status equals expected")
 				require.Equal(t, xResp.CurrentTurn, aResp.CurrentTurn, "Current turn equals expected")
 				require.NotEmpty(t, aResp.ID, "Instance ID is not empty")

@@ -366,13 +366,34 @@ func createOneGameInstanceHandler(w http.ResponseWriter, r *http.Request, pp htt
 		return coreerror.RequiredPathParameter("game_id")
 	}
 
-	// Create record with just the GameID - domain layer will set defaults
-	rec := &game_record.GameInstance{
-		GameID: gameID,
+	// Get authenticated account ID
+	authenData := server.GetRequestAuthenData(l, r)
+	if authenData == nil || authenData.Account.ID == "" {
+		l.Warn("authenticated account is required to create game instance")
+		return coreerror.NewUnauthorizedError()
 	}
 
 	mm := m.(*domain.Domain)
-	rec, err := mm.CreateGameInstanceRec(rec)
+
+	// Find the Manager subscription for this user and game
+	managerSubscription, err := mm.GetGameSubscriptionRecByAccountAndGame(
+		authenData.Account.ID,
+		gameID,
+		game_record.GameSubscriptionTypeManager,
+	)
+	if err != nil {
+		l.Warn("failed to find manager subscription for account >%s< and game >%s<: %v",
+			authenData.Account.ID, gameID, err)
+		return coreerror.NewUnauthorizedError()
+	}
+
+	// Create record with GameID and GameSubscriptionID
+	rec := &game_record.GameInstance{
+		GameID:             gameID,
+		GameSubscriptionID: managerSubscription.ID,
+	}
+
+	rec, err = mm.CreateGameInstanceRec(rec)
 	if err != nil {
 		l.Warn("failed creating game instance record >%v<", err)
 		return err

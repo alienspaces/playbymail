@@ -17,6 +17,9 @@
         "game_id": {
             "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
         },
+        "game_subscription_id": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
+        },
         "id": {
             "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
         },
@@ -46,6 +49,7 @@
     "required": [
         "id",
         "game_id",
+        "game_subscription_id",
         "status",
         "current_turn",
         "created_at"

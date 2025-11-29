@@ -17,6 +17,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/jobclient"
 	"gitlab.com/alienspaces/playbymail/internal/jobqueue"
 	"gitlab.com/alienspaces/playbymail/internal/record/account_record"
+	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 	"gitlab.com/alienspaces/playbymail/internal/runner/server/account"
 	"gitlab.com/alienspaces/playbymail/internal/runner/server/adventure_game"
 	"gitlab.com/alienspaces/playbymail/internal/runner/server/game"
@@ -202,7 +203,8 @@ func (rnr *Runner) authenticateRequestTokenFunc(l logger.Logger, m domainer.Doma
 			}
 
 			return server.AuthenData{
-				Type: server.AuthenticatedTypeToken,
+				Type:    server.AuthenticatedTypeToken,
+				RLSType: server.RLSTypeRestricted,
 				Account: server.AuthenticatedAccount{
 					ID:    accountRec.ID,
 					Name:  accountName,
@@ -254,20 +256,27 @@ func (rnr *Runner) authenticateRequestTokenFunc(l logger.Logger, m domainer.Doma
 		accountName = contactRecs[0].Name
 	}
 
-	return server.AuthenData{
-		Type: server.AuthenticatedTypeToken,
+	authenData := server.AuthenData{
+		Type:    server.AuthenticatedTypeToken,
+		RLSType: server.RLSTypeRestricted,
 		Account: server.AuthenticatedAccount{
 			ID:    accountRec.ID,
 			Name:  accountName,
 			Email: accountRec.Email,
 		},
-	}, nil
+	}
+
+	l.Info("(playbymail) authenticated account: ID=%s Email=%s Name=%s",
+		authenData.Account.ID, authenData.Account.Email, authenData.Account.Name)
+
+	return authenData, nil
 }
 
 // rlsFunc determines what game resources the authenticated user has access to
 func (rnr *Runner) rlsFunc(l logger.Logger, m domainer.Domainer, authedReq server.AuthenData) (server.RLS, error) {
 
-	l.Info("(playbymail) rlsFunc called for account ID: %s", authedReq.Account.ID)
+	l.Info("(playbymail) rlsFunc called for account: ID=%s Email=%s",
+		authedReq.Account.ID, authedReq.Account.Email)
 
 	mm := m.(*domain.Domain)
 
@@ -275,7 +284,7 @@ func (rnr *Runner) rlsFunc(l logger.Logger, m domainer.Domainer, authedReq serve
 	gameSubscriptions, err := mm.GameSubscriptionRepository().GetMany(&coresql.Options{
 		Params: []coresql.Param{
 			{
-				Col: "account_id",
+				Col: game_record.FieldGameSubscriptionAccountID,
 				Val: authedReq.Account.ID,
 			},
 		},
@@ -291,40 +300,10 @@ func (rnr *Runner) rlsFunc(l logger.Logger, m domainer.Domainer, authedReq serve
 		gameIDs = append(gameIDs, sub.GameID)
 	}
 
-	// Get all games the user administers
-	gameAdministrations, err := mm.GameAdministrationRepository().GetMany(&coresql.Options{
-		Params: []coresql.Param{
-			{
-				Col: "account_id",
-				Val: authedReq.Account.ID,
-			},
-		},
-	})
-	if err != nil {
-		l.Warn("(playbymail) failed to get game administrations >%v<", err)
-		return server.RLS{}, err
-	}
-
-	// Add administered game IDs
-	for _, admin := range gameAdministrations {
-		gameIDs = append(gameIDs, admin.GameID)
-	}
-
-	// Get all games the user owns (if account_id is the owner field)
-	userGames, err := mm.GameRepository().GetMany(&coresql.Options{
-		Params: []coresql.Param{
-			{
-				Col: "account_id",
-				Val: authedReq.Account.ID,
-			},
-		},
-	})
-	if err != nil {
-		l.Warn("(playbymail) failed to get user-owned games >%v<", err)
-		return server.RLS{}, err
-	}
-	for _, game := range userGames {
-		gameIDs = append(gameIDs, game.ID)
+	// Get all game subscription IDs for the user
+	gameSubscriptionIDs := make([]string, 0, len(gameSubscriptions))
+	for _, sub := range gameSubscriptions {
+		gameSubscriptionIDs = append(gameSubscriptionIDs, sub.ID)
 	}
 
 	// Deduplicate gameIDs
@@ -347,7 +326,13 @@ func (rnr *Runner) rlsFunc(l logger.Logger, m domainer.Domainer, authedReq serve
 		identifiers["game_id"] = uniqueGameIDs
 	}
 
-	l.Info("(playbymail) RLS identifiers: %+v", identifiers)
+	// Add game subscription IDs
+	if len(gameSubscriptionIDs) > 0 {
+		identifiers["game_subscription_id"] = gameSubscriptionIDs
+	}
+
+	l.Info("(playbymail) RLS applied: account_id=%s game_ids=%v subscription_ids=%v",
+		authedReq.Account.ID, uniqueGameIDs, gameSubscriptionIDs)
 
 	return server.RLS{
 		Identifiers: identifiers,

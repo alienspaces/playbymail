@@ -24,9 +24,9 @@ const (
 )
 
 const (
-	GameSubscriptionTypePlayer       = "Player"
-	GameSubscriptionTypeManager      = "Manager"
-	GameSubscriptionTypeCollaborator = "Collaborator"
+	GameSubscriptionTypePlayer   = "Player"
+	GameSubscriptionTypeManager  = "Manager"
+	GameSubscriptionTypeDesigner = "Designer"
 )
 
 const (
@@ -35,7 +35,7 @@ const (
 	GameSubscriptionStatusRevoked         = "revoked"
 )
 
-// GameSubscription represents a subscription to a game (Player, Manager, Collaborator)
+// GameSubscription represents a subscription to a game (Player, Manager, Designer)
 type GameSubscription struct {
 	record.Record
 	GameID           string         `db:"game_id"`

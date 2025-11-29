@@ -1,7 +1,12 @@
 import { baseUrl, getAuthHeaders, apiFetch } from './baseUrl';
 
-export async function listGames() {
-  const res = await apiFetch(`${baseUrl}/api/v1/games`, {
+export async function listGames(options = {}) {
+  const { subscriptionType } = options;
+  let url = `${baseUrl}/api/v1/games`;
+  if (subscriptionType) {
+    url += `?subscription_type=${encodeURIComponent(subscriptionType)}`;
+  }
+  const res = await apiFetch(url, {
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
   });
   if (!res.ok) throw new Error('Failed to fetch games');

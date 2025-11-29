@@ -182,7 +182,68 @@ func getManyGamesHandler(w http.ResponseWriter, r *http.Request, pp httprouter.P
 
 	mm := m.(*domain.Domain)
 
+	// Check for subscription_type filter - this filters games by the user's
+	// subscription type (Designer, Manager, Player)
+	var subscriptionTypeFilter string
+	var gameIDsFilter []string
+	if subscriptionTypes, ok := qp.Params["subscription_type"]; ok && len(subscriptionTypes) > 0 {
+		subscriptionTypeFilter = subscriptionTypes[0].Val.(string)
+		l.Info("filtering games by subscription_type >%s<", subscriptionTypeFilter)
+
+		// Remove subscription_type from query params before converting to SQL options
+		delete(qp.Params, "subscription_type")
+
+		// Get authenticated account
+		authenData := server.GetRequestAuthenData(l, r)
+		if authenData == nil || authenData.Account.ID == "" {
+			l.Warn("authenticated account is required for subscription_type filter")
+			return coreerror.NewUnauthorizedError()
+		}
+
+		// Get the user's subscriptions of the specified type
+		subscriptions, err := mm.GameSubscriptionRepository().GetMany(&coresql.Options{
+			Params: []coresql.Param{
+				{Col: game_record.FieldGameSubscriptionAccountID, Val: authenData.Account.ID},
+				{Col: game_record.FieldGameSubscriptionSubscriptionType, Val: subscriptionTypeFilter},
+			},
+		})
+		if err != nil {
+			l.Warn("failed getting game subscriptions >%v<", err)
+			return err
+		}
+
+		// Extract game IDs from subscriptions
+		gameIDsFilter = make([]string, 0, len(subscriptions))
+		for _, sub := range subscriptions {
+			gameIDsFilter = append(gameIDsFilter, sub.GameID)
+		}
+
+		l.Info("user has >%d< subscriptions of type >%s< for games >%v<",
+			len(subscriptions), subscriptionTypeFilter, gameIDsFilter)
+
+		// If no subscriptions, return empty result
+		if len(gameIDsFilter) == 0 {
+			res, err := mapper.GameRecordsToCollectionResponse(l, []*game_record.Game{})
+			if err != nil {
+				return err
+			}
+			if err = server.WriteResponse(l, w, http.StatusOK, res, server.XPaginationHeader(0, qp.PageSize)); err != nil {
+				l.Warn("failed writing response >%v<", err)
+				return err
+			}
+			return nil
+		}
+	}
+
 	opts := queryparam.ToSQLOptionsWithDefaults(qp)
+
+	// Add game_id filter if we have subscription type filtering
+	if len(gameIDsFilter) > 0 {
+		opts.Params = append(opts.Params, coresql.Param{
+			Col: game_record.FieldGameID,
+			Val: gameIDsFilter,
+		})
+	}
 
 	recs, err := mm.GetManyGameRecs(opts)
 	if err != nil {

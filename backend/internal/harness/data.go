@@ -14,7 +14,6 @@ type Data struct {
 	AccountContactRecs        []*account_record.AccountContact
 	GameRecs                  []*game_record.Game
 	GameSubscriptionRecs      []*game_record.GameSubscription
-	GameAdministrationRecs    []*game_record.GameAdministration
 	GameInstanceRecs          []*game_record.GameInstance
 	GameInstanceParameterRecs []*game_record.GameInstanceParameter
 	GameTurnSheetRecs         []*game_record.GameTurnSheet
@@ -42,7 +41,6 @@ type DataRefs struct {
 	AccountRefs               map[string]string // Map of account refs to account records
 	GameRefs                  map[string]string // Map of game refs to game records
 	GameSubscriptionRefs      map[string]string // Map of refs to game_subscription records
-	GameAdministrationRefs    map[string]string // Map of refs to game_administration records
 	GameInstanceRefs          map[string]string // Map of refs to game_instance records
 	GameInstanceParameterRefs map[string]string // Map of refs to game_instance_parameter records
 	GameTurnSheetRefs         map[string]string // Map of refs to game_turn_sheet records
@@ -68,7 +66,6 @@ func initialiseDataStores() Data {
 			AccountRefs:               map[string]string{},
 			GameRefs:                  map[string]string{},
 			GameSubscriptionRefs:      map[string]string{},
-			GameAdministrationRefs:    map[string]string{},
 			GameInstanceRefs:          map[string]string{},
 			GameInstanceParameterRefs: map[string]string{},
 			GameTurnSheetRefs:         map[string]string{},
@@ -187,23 +184,12 @@ func (d *Data) GetGameSubscriptionRecByID(id string) (*game_record.GameSubscript
 	return nil, fmt.Errorf("failed getting game_subscription with ID >%s<", id)
 }
 
-func (d *Data) AddGameAdministrationRec(rec *game_record.GameAdministration) {
-	for idx := range d.GameAdministrationRecs {
-		if d.GameAdministrationRecs[idx].ID == rec.ID {
-			d.GameAdministrationRecs[idx] = rec
-			return
-		}
+func (d *Data) GetGameSubscriptionRecByRef(ref string) (*game_record.GameSubscription, error) {
+	subscriptionID, ok := d.Refs.GameSubscriptionRefs[ref]
+	if !ok {
+		return nil, fmt.Errorf("failed getting game_subscription with ref >%s<", ref)
 	}
-	d.GameAdministrationRecs = append(d.GameAdministrationRecs, rec)
-}
-
-func (d *Data) GetGameAdministrationRecByID(id string) (*game_record.GameAdministration, error) {
-	for _, rec := range d.GameAdministrationRecs {
-		if rec.ID == id {
-			return rec, nil
-		}
-	}
-	return nil, fmt.Errorf("game administration record not found for id >%s<", id)
+	return d.GetGameSubscriptionRecByID(subscriptionID)
 }
 
 // GameInstance

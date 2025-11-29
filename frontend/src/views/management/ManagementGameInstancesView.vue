@@ -1,6 +1,6 @@
 <!--
   ManagementGameInstancesView.vue
-  View for managing game instances of a specific game.
+  View for managing game instances of a specific game using ResourceTable.
 -->
 <template>
   <div class="game-instances-view">
@@ -17,142 +17,94 @@
       </div>
     </div>
 
-    <!-- Loading state -->
-    <div v-if="gameInstancesStore.loading" class="loading-state">
-      <p>Loading game instances...</p>
-    </div>
-
-    <!-- Error state -->
-    <div v-else-if="gameInstancesStore.error" class="error-state">
-      <p>Error loading game instances: {{ gameInstancesStore.error }}</p>
-      <button @click="loadGameInstances">Retry</button>
-    </div>
-
     <!-- Active Instances Section -->
-    <div class="instances-section">
-      <div class="section-header">
-        <div class="section-header-left">
-          <h3>
-            Active Instances
-            <span class="count">({{ activeInstances.length }})</span>
-          </h3>
-        </div>
-        <div class="section-header-right">
-          <Button @click="createInstance" variant="primary" size="small" class="create-button">
-            <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
-            </svg>
-            Create Instance
-          </Button>
-        </div>
+    <DataCard title="Active Instances" class="instances-card">
+      <template #header-extra>
+        <Button @click="createInstance" variant="primary" size="small">
+          <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+          </svg>
+          Create Instance
+        </Button>
+      </template>
+
+      <ResourceTable 
+        :columns="columns" 
+        :rows="activeInstances" 
+        :loading="gameInstancesStore.loading"
+        :error="gameInstancesStore.error"
+      >
+        <template #cell-id="{ row }">
+          <router-link :to="`/admin/games/${gameId}/instances/${row.id}`" class="instance-id-link">
+            {{ row.id.slice(0, 8) }}...
+          </router-link>
+        </template>
+
+        <template #cell-status="{ row }">
+          <span :class="['status-badge', `status-${row.status}`]">
+            {{ getStatusLabel(row.status) }}
+          </span>
+        </template>
+
+        <template #cell-current_turn="{ row }">
+          {{ row.current_turn || 0 }}
+        </template>
+
+        <template #cell-next_turn_due_at="{ row }">
+          {{ formatDeadline(row.next_turn_due_at) }}
+        </template>
+
+        <template #cell-started_at="{ row }">
+          {{ formatDate(row.started_at) }}
+        </template>
+
+        <template #actions="{ row }">
+          <TableActionsMenu :actions="getActiveInstanceActions(row)" />
+        </template>
+      </ResourceTable>
+
+      <div v-if="!gameInstancesStore.loading && activeInstances.length === 0" class="empty-state">
+        <p>No active instances. Create a new game instance to get started.</p>
       </div>
-      
-      <div v-if="activeInstances.length === 0" class="empty-state">
-        <h4>No Active Instances</h4>
-        <p>Create a new game instance to get started.</p>
-      </div>
-      
-      <div v-else class="instances-grid">
-        <DataCard
-          v-for="instance in activeInstances"
-          :key="instance.id"
-          :title="`Instance #${instance.id.slice(0, 8)}`"
-        >
-          <template #header-extra>
-            <span :class="['status-badge', `status-${instance.status}`]">
-              {{ getStatusLabel(instance.status) }}
-            </span>
-          </template>
-          <template #primary>
-            <Button @click="viewInstance(instance)" variant="primary" size="small">
-              View Details
-            </Button>
-          </template>
-          <template #secondary>
-            <Button 
-              v-if="instance.status === 'created'" 
-              @click="startInstance(instance)" 
-              variant="secondary" 
-              size="small"
-            >
-              Start
-            </Button>
-            <Button 
-              v-else-if="instance.status === 'started'" 
-              @click="pauseInstance(instance)" 
-              variant="secondary" 
-              size="small"
-            >
-              Pause
-            </Button>
-            <Button 
-              v-else-if="instance.status === 'paused'" 
-              @click="resumeInstance(instance)" 
-              variant="secondary" 
-              size="small"
-            >
-              Resume
-            </Button>
-          </template>
-          <template #tertiary>
-            <Button 
-              v-if="['created', 'started', 'paused'].includes(instance.status)" 
-              @click="cancelInstance(instance)" 
-              variant="danger" 
-              size="small"
-            >
-              Cancel
-            </Button>
-          </template>
-          
-          <div class="instance-info">
-            <DataItem label="Turn" :value="instance.current_turn || 0" />
-            <DataItem label="Next Turn Due" :value="formatDeadline(instance.next_turn_due_at)" />
-            <DataItem label="Started" :value="formatDate(instance.started_at)" />
-          </div>
-        </DataCard>
-      </div>
-    </div>
+    </DataCard>
 
     <!-- Completed Instances Section -->
-    <div class="instances-section">
-      <div class="section-header">
-        <div class="section-header-left">
-          <h3>
-            Completed Instances
-            <span class="count">({{ completedInstances.length }})</span>
-          </h3>
-        </div>
+    <DataCard title="Completed Instances" class="instances-card">
+      <ResourceTable 
+        :columns="completedColumns" 
+        :rows="completedInstances" 
+        :loading="gameInstancesStore.loading"
+        :error="null"
+      >
+        <template #cell-id="{ row }">
+          <router-link :to="`/admin/games/${gameId}/instances/${row.id}`" class="instance-id-link">
+            {{ row.id.slice(0, 8) }}...
+          </router-link>
+        </template>
+
+        <template #cell-status="{ row }">
+          <span :class="['status-badge', `status-${row.status}`]">
+            {{ getStatusLabel(row.status) }}
+          </span>
+        </template>
+
+        <template #cell-current_turn="{ row }">
+          {{ row.current_turn || 0 }}
+        </template>
+
+        <template #cell-completed_at="{ row }">
+          {{ formatDate(row.completed_at) }}
+        </template>
+
+        <template #actions="{ row }">
+          <TableActionsMenu :actions="getCompletedInstanceActions(row)" />
+        </template>
+      </ResourceTable>
+
+      <div v-if="!gameInstancesStore.loading && completedInstances.length === 0" class="empty-state">
+        <p>No completed instances yet.</p>
       </div>
-      <div v-if="completedInstances.length === 0" class="empty-state">
-        <h4>No Completed Instances</h4>
-        <p>Completed games will appear here.</p>
-      </div>
-      
-      <div v-else class="instances-grid">
-        <DataCard
-          v-for="instance in completedInstances"
-          :key="instance.id"
-          :title="`Instance #${instance.id.slice(0, 8)}`"
-        >
-          <template #header-extra>
-            <span :class="['status-badge', `status-${instance.status}`]">
-              {{ getStatusLabel(instance.status) }}
-            </span>
-          </template>
-          <template #primary>
-            <Button @click="viewInstance(instance)" variant="primary" size="small">
-              View Details
-            </Button>
-          </template>
-          
-          <div class="instance-info">
-            <DataItem label="Final Turn" :value="instance.current_turn || 0" />
-            <DataItem label="Completed" :value="formatDate(instance.completed_at)" />
-          </div>
-        </DataCard>
-      </div>
-    </div>
+    </DataCard>
   </div>
 </template>
 
@@ -163,7 +115,8 @@ import { useGamesStore } from '../../stores/games';
 import { useGameInstancesStore } from '../../stores/gameInstances';
 import Button from '../../components/Button.vue';
 import DataCard from '../../components/DataCard.vue';
-import DataItem from '../../components/DataItem.vue';
+import ResourceTable from '../../components/ResourceTable.vue';
+import TableActionsMenu from '../../components/TableActionsMenu.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -173,13 +126,30 @@ const gameInstancesStore = useGameInstancesStore();
 const gameId = computed(() => route.params.gameId);
 const selectedGame = computed(() => gamesStore.games.find(g => g.id === gameId.value));
 
+const columns = [
+  { key: 'id', label: 'Instance ID' },
+  { key: 'status', label: 'Status' },
+  { key: 'current_turn', label: 'Turn' },
+  { key: 'next_turn_due_at', label: 'Next Turn Due' },
+  { key: 'started_at', label: 'Started' }
+];
+
+const completedColumns = [
+  { key: 'id', label: 'Instance ID' },
+  { key: 'status', label: 'Status' },
+  { key: 'current_turn', label: 'Final Turn' },
+  { key: 'completed_at', label: 'Completed' }
+];
+
 const gameInstances = computed(() => gameInstancesStore.gameInstances);
+
 const activeInstances = computed(() => 
   gameInstances.value.filter(instance => 
     instance.game_id === gameId.value && 
     ['created', 'started', 'paused'].includes(instance.status)
   )
 );
+
 const completedInstances = computed(() => 
   gameInstances.value.filter(instance => 
     instance.game_id === gameId.value && 
@@ -188,9 +158,11 @@ const completedInstances = computed(() =>
 );
 
 onMounted(async () => {
-  // Load games first so selectedGame can be populated
   if (!gamesStore.games.length) {
     await gamesStore.fetchGames();
+  }
+  if (selectedGame.value) {
+    gamesStore.setSelectedGame(selectedGame.value);
   }
   await loadGameInstances();
 });
@@ -281,6 +253,32 @@ const cancelInstance = async (instance) => {
     console.error('Failed to cancel instance:', error);
   }
 };
+
+const getActiveInstanceActions = (instance) => {
+  const actions = [
+    { key: 'view', label: 'View Details', handler: () => viewInstance(instance) }
+  ];
+
+  if (instance.status === 'created') {
+    actions.push({ key: 'start', label: 'Start', handler: () => startInstance(instance) });
+  } else if (instance.status === 'started') {
+    actions.push({ key: 'pause', label: 'Pause', handler: () => pauseInstance(instance) });
+  } else if (instance.status === 'paused') {
+    actions.push({ key: 'resume', label: 'Resume', handler: () => resumeInstance(instance) });
+  }
+
+  if (['created', 'started', 'paused'].includes(instance.status)) {
+    actions.push({ key: 'cancel', label: 'Cancel', danger: true, handler: () => cancelInstance(instance) });
+  }
+
+  return actions;
+};
+
+const getCompletedInstanceActions = (instance) => {
+  return [
+    { key: 'view', label: 'View Details', handler: () => viewInstance(instance) }
+  ];
+};
 </script>
 
 <style scoped>
@@ -318,97 +316,24 @@ const cancelInstance = async (instance) => {
   align-self: flex-start;
 }
 
-.header-actions {
-  display: flex;
-  gap: var(--space-md);
-}
-
 .icon {
   width: 16px;
   height: 16px;
 }
 
-.loading-state,
-.error-state {
-  text-align: center;
-  padding: var(--space-xl);
-  background: var(--color-bg);
-  border-radius: var(--radius-lg);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-.error-state button {
-  margin-top: var(--space-md);
-  padding: var(--space-sm) var(--space-md);
-  background: transparent;
-  color: var(--color-button);
-  border: 2px solid var(--color-button);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.error-state button:hover {
-  background: var(--color-button);
-  color: var(--color-text-light);
-}
-
-.instances-section {
+.instances-card {
   margin-bottom: var(--space-xl);
 }
 
-.section-header {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: nowrap;
-  align-items: center;
-  width: 100%;
-  margin-bottom: var(--space-md);
-}
-
-.section-header-left {
-  flex: 0 0 auto;
-  margin-right: auto;
-}
-
-.section-header-right {
-  flex: 0 0 auto;
-  margin-left: auto;
-}
-
-.instances-section h3 {
-  margin: 0;
-  font-size: var(--font-size-lg);
-  color: var(--color-text);
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  white-space: nowrap;
-}
-
-.create-button {
-  flex-shrink: 0;
-}
-
-.instances-section h3 .count {
-  background: var(--color-primary);
-  color: var(--color-text-light);
-  padding: var(--space-xs) var(--space-sm);
-  border-radius: var(--radius-sm);
+.instance-id-link {
+  font-family: monospace;
   font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-normal);
+  color: var(--color-primary);
+  text-decoration: none;
 }
 
-.instances-grid {
-  display: grid;
-  gap: var(--space-md);
-  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
-}
-
-.instance-info {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-xs);
+.instance-id-link:hover {
+  text-decoration: underline;
 }
 
 .status-badge {
@@ -419,7 +344,7 @@ const cancelInstance = async (instance) => {
   text-transform: uppercase;
   color: var(--color-text-light);
   white-space: nowrap;
-  flex-shrink: 0;
+  display: inline-block;
 }
 
 .status-created {
@@ -445,20 +370,11 @@ const cancelInstance = async (instance) => {
 
 .empty-state {
   text-align: center;
-  padding: var(--space-xl);
-  background: var(--color-bg);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.empty-state h4 {
-  margin: 0 0 var(--space-sm) 0;
-  color: var(--color-text);
+  padding: var(--space-lg);
+  color: var(--color-text-muted);
 }
 
 .empty-state p {
   margin: 0;
-  color: var(--color-text-muted);
 }
-</style> 
+</style>

@@ -31,6 +31,10 @@ func validateGameInstanceRec(rec *game_record.GameInstance, requireID bool) erro
 		return err
 	}
 
+	if err := domain.ValidateUUIDField(game_record.FieldGameInstanceGameSubscriptionID, rec.GameSubscriptionID); err != nil {
+		return err
+	}
+
 	if rec.Status == "" {
 		rec.Status = game_record.GameInstanceStatusCreated
 	}

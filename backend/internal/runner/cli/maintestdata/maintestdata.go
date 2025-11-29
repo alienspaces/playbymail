@@ -232,22 +232,19 @@ func GameConfig() []harness.GameConfig {
 					},
 				},
 			},
-			// Game subscriptions for players
+			// Game subscriptions - Designer and Manager subscriptions for game ownership
 			GameSubscriptionConfigs: []harness.GameSubscriptionConfig{
 				{
 					Reference:        harness.GameSubscriptionOneRef,
 					AccountRef:       harness.AccountOneRef,
-					SubscriptionType: "Player",
+					SubscriptionType: game_record.GameSubscriptionTypeManager,
 					Record:           &game_record.GameSubscription{},
 				},
-			},
-			// Game administration
-			GameAdministrationConfigs: []harness.GameAdministrationConfig{
 				{
-					Reference:           harness.GameAdministrationOneRef,
-					AccountRef:          harness.AccountOneRef,
-					GrantedByAccountRef: harness.AccountOneRef,
-					Record:              &game_record.GameAdministration{},
+					Reference:        "game-subscription-one-designer",
+					AccountRef:       harness.AccountOneRef,
+					SubscriptionType: game_record.GameSubscriptionTypeDesigner,
+					Record:           &game_record.GameSubscription{},
 				},
 			},
 			// Game instances with all the resources
@@ -313,6 +310,21 @@ func GameConfig() []harness.GameConfig {
 				Name:              "The Desert Kingdom",
 				GameType:          game_record.GameTypeAdventure,
 				TurnDurationHours: 336, // 2 weeks
+			},
+			// Designer and Manager subscriptions for game ownership
+			GameSubscriptionConfigs: []harness.GameSubscriptionConfig{
+				{
+					Reference:        "game-subscription-two",
+					AccountRef:       harness.AccountTwoRef,
+					SubscriptionType: game_record.GameSubscriptionTypeManager,
+					Record:           &game_record.GameSubscription{},
+				},
+				{
+					Reference:        "game-subscription-two-designer",
+					AccountRef:       harness.AccountTwoRef,
+					SubscriptionType: game_record.GameSubscriptionTypeDesigner,
+					Record:           &game_record.GameSubscription{},
+				},
 			},
 			// Simpler world for the second game
 			AdventureGameLocationConfigs: []harness.AdventureGameLocationConfig{

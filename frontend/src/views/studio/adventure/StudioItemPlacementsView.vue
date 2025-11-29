@@ -9,6 +9,9 @@
         @action="openItemPlacementCreate" />
       <ResourceTable :columns="itemPlacementColumns" :rows="enhancedItemPlacements"
         :loading="itemPlacementsStore.loading" :error="itemPlacementsStore.error">
+        <template #cell-item_name="{ row }">
+          <a href="#" class="edit-link" @click.prevent="openItemPlacementEdit(row)">{{ row.item_name }}</a>
+        </template>
         <template #actions="{ row }">
           <TableActionsMenu :actions="getActions(row)" />
         </template>
@@ -175,3 +178,14 @@ function getActions(row) {
   ];
 }
 </script>
+
+<style scoped>
+.edit-link {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.edit-link:hover {
+  text-decoration: underline;
+}
+</style>

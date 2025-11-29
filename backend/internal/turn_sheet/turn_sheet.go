@@ -86,6 +86,7 @@ func (bp *BaseProcessor) GenerateDocument(ctx context.Context, format DocumentFo
 
 // ExtractTurnSheetCode extracts the turn sheet code from OCR text
 // This is common across all turn sheet types
+// Turn sheet codes are base64 URL-encoded JSON strings (100+ characters)
 func (bp *BaseProcessor) ExtractTurnSheetCode(text string) (string, error) {
 	log := bp.Log.WithFunctionContext("BaseProcessor/ExtractTurnSheetCode")
 
@@ -94,76 +95,69 @@ func (bp *BaseProcessor) ExtractTurnSheetCode(text string) (string, error) {
 
 	var allCodes []string
 
-	// Look for turn sheet code patterns - try with case-insensitive matching
-	patterns := []string{
-		`[Tt]urn [Ss]heet [Cc]ode:\s*([A-Z0-9\-]+)`,
-		`[Cc]ode:\s*([A-Z0-9\-]+)`,
-		`[Tt]urn [Cc]ode:\s*([A-Z0-9\-]+)`,
-		`[Ss]heet [Cc]ode:\s*([A-Z0-9\-]+)`,
+	// Primary pattern: Look for codes after "Turn Sheet Code:" label
+	// This captures both short test codes and long base64 production codes
+	// Base64 URL encoding uses: A-Za-z0-9_- and may have = padding
+	// The code may be on the same line or the next line after the label
+	labelPatterns := []string{
+		// Match "Turn Sheet Code:" followed by code on same line or next line
+		`[Tt]urn\s+[Ss]heet\s+[Cc]ode:\s*\**\s*\n?\s*([A-Za-z0-9_\-=]+)`,
+		// Match just "Code:" followed by code
+		`[Cc]ode:\s*\**\s*\n?\s*([A-Za-z0-9_\-=]+)`,
 	}
 
-	for _, pattern := range patterns {
+	for _, pattern := range labelPatterns {
 		re := regexp.MustCompile(pattern)
 		matches := re.FindAllStringSubmatch(text, -1)
 		for _, match := range matches {
 			if len(match) > 1 {
+				// Clean up the code - remove any whitespace/newlines that OCR might have added
 				code := strings.TrimSpace(match[1])
-				if len(code) > 0 {
+				code = strings.ReplaceAll(code, " ", "")
+				code = strings.ReplaceAll(code, "\n", "")
+				code = strings.ReplaceAll(code, "\r", "")
+				if len(code) >= 6 { // Minimum reasonable code length
 					allCodes = append(allCodes, code)
 				}
 			}
 		}
 	}
 
-	// Try a more flexible pattern - look for codes that appear AFTER "Turn Sheet Code" label
-	turnSheetCodeLabelPattern := regexp.MustCompile(`[Tt]urn [Ss]heet [Cc]ode:\s*.*?([A-Z0-9]{6,12})`)
-	matches := turnSheetCodeLabelPattern.FindAllStringSubmatch(text, -1)
-	for _, match := range matches {
-		if len(match) > 1 && len(match[1]) >= 6 {
-			allCodes = append(allCodes, match[1])
-		}
-	}
-
-	// Fallback: look for any long alphanumeric string (6+ characters)
-	flexiblePattern := regexp.MustCompile(`([A-Z0-9]{6,12})`)
-	longMatches := flexiblePattern.FindAllString(text, -1)
+	// Secondary: Look for long base64-like strings (50+ characters) anywhere in text
+	// This catches cases where the label wasn't recognized but the code is present
+	longBase64Pattern := regexp.MustCompile(`([A-Za-z0-9_\-]{50,}[A-Za-z0-9_\-=]*)`)
+	longMatches := longBase64Pattern.FindAllString(text, -1)
 	for _, match := range longMatches {
-		if len(match) >= 6 {
-			allCodes = append(allCodes, match)
+		// Clean up whitespace
+		cleanMatch := strings.ReplaceAll(match, " ", "")
+		cleanMatch = strings.ReplaceAll(cleanMatch, "\n", "")
+		if len(cleanMatch) >= 50 {
+			allCodes = append(allCodes, cleanMatch)
 		}
 	}
 
 	// Return the best matching code
-	// Prefer codes that look like game codes (alphanumeric, not just numeric)
 	if len(allCodes) > 0 {
 		var bestCode string
 		var bestScore int
 
 		for _, code := range allCodes {
 			score := 0
-			// Prefer alphanumeric over pure numeric
-			hasLetters := false
-			hasNumbers := false
-			for _, char := range code {
-				if char >= 'A' && char <= 'Z' {
-					hasLetters = true
-				} else if char >= '0' && char <= '9' {
-					hasNumbers = true
-				}
-			}
-			if hasLetters && hasNumbers {
-				score += 10 // Alphanumeric gets bonus
-			} else if hasLetters {
-				score += 5 // Letters only
+
+			// Strongly prefer longer codes - base64 encoded JSON is typically 100+ chars
+			if len(code) >= 100 {
+				score += 100
+			} else if len(code) >= 50 {
+				score += 50
 			}
 
-			// Prefer reasonable length (6-12 characters)
-			if len(code) >= 6 && len(code) <= 12 {
-				score += 5
-			}
+			// Add length bonus
+			score += len(code)
 
-			// Longer codes get slight bonus
-			score += len(code) / 2
+			// Check if it looks like valid base64 JSON (starts with "ey" which is "{" in base64)
+			if strings.HasPrefix(code, "ey") {
+				score += 50 // JSON objects start with "{" which encodes to "ey"
+			}
 
 			if score > bestScore {
 				bestScore = score
@@ -171,7 +165,7 @@ func (bp *BaseProcessor) ExtractTurnSheetCode(text string) (string, error) {
 			}
 		}
 
-		log.Info("extracted turn sheet code >%s< from candidates: %v", bestCode, allCodes)
+		log.Info("extracted turn sheet code >%s< (length: %d) from candidates: %v", bestCode, len(bestCode), allCodes)
 		return bestCode, nil
 	}
 

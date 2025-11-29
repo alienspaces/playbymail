@@ -35,7 +35,6 @@ func GameHandlerConfig(l logger.Logger, scanner turn_sheet.TurnSheetScanner) (ma
 		gameHandlerConfig,
 		gameParameterHandlerConfig,
 		gameSubscriptionHandlerConfig,
-		gameAdministrationHandlerConfig,
 		gameInstanceHandlerConfig,
 		gameInstanceParameterHandlerConfig,
 	}

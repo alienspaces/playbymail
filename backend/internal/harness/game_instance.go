@@ -28,6 +28,27 @@ func (t *Testing) createGameInstanceRec(cfg GameInstanceConfig, gameRec *game_re
 
 	rec.GameID = gameRec.ID
 
+	// Set game_subscription_id from the first Manager subscription for this game
+	// or fall back to the first subscription of any type
+	if rec.GameSubscriptionID == "" {
+		for _, subRec := range t.Data.GameSubscriptionRecs {
+			if subRec.GameID == gameRec.ID {
+				if subRec.SubscriptionType == game_record.GameSubscriptionTypeManager {
+					rec.GameSubscriptionID = subRec.ID
+					break
+				}
+				// Fall back to first subscription if no Manager found yet
+				if rec.GameSubscriptionID == "" {
+					rec.GameSubscriptionID = subRec.ID
+				}
+			}
+		}
+	}
+
+	if rec.GameSubscriptionID == "" {
+		return nil, fmt.Errorf("no subscription found for game >%s<, cannot create game instance without game_subscription_id", gameRec.ID)
+	}
+
 	l.Debug("creating game_instance record >%#v<", rec)
 
 	// Create record

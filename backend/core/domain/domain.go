@@ -122,6 +122,7 @@ func (m *Domain) NewRepositories(tx pgx.Tx) (map[string]repositor.Repositor, err
 
 // SetRLS -
 func (m *Domain) SetRLS(identifiers map[string][]string) {
+	m.Log.Info("(core/domain) SetRLS called with identifiers: %+v", identifiers)
 
 	// We'll be resetting the "id" key when we use the map
 	ri := maps.Clone(identifiers)
@@ -136,11 +137,14 @@ func (m *Domain) SetRLS(identifiers map[string][]string) {
 		// If that convention is not followed, then the following block would not work.
 		if _, ok := ri[tableName+"_id"]; ok {
 			ri["id"] = ri[tableName+"_id"]
+			m.Log.Debug("(core/domain) applying RLS to table >%s< with id constraint: %+v", tableName, ri)
 			m.Repositories[tableName].SetRLS(ri)
 			continue
 		}
 		m.Repositories[tableName].SetRLS(identifiers)
 	}
+
+	m.Log.Info("(core/domain) SetRLS completed for %d repositories", len(m.Repositories))
 }
 
 // SetTxLockTimeout -

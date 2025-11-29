@@ -59,15 +59,9 @@ defineProps({
   border-radius: var(--radius-lg);
   padding: var(--space-lg) var(--space-lg) calc(var(--space-lg) / 2);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  transition: transform 0.2s, box-shadow 0.2s;
   display: flex;
   flex-direction: column;
   min-height: 0;
-}
-
-.data-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
 }
 
 .data-card-completed {

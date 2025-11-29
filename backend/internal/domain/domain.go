@@ -24,7 +24,6 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/repository/adventure_game_location_link_requirement"
 	"gitlab.com/alienspaces/playbymail/internal/repository/adventure_game_turn_sheet"
 	"gitlab.com/alienspaces/playbymail/internal/repository/game"
-	"gitlab.com/alienspaces/playbymail/internal/repository/game_administration"
 	"gitlab.com/alienspaces/playbymail/internal/repository/game_instance"
 	"gitlab.com/alienspaces/playbymail/internal/repository/game_instance_parameter"
 	"gitlab.com/alienspaces/playbymail/internal/repository/game_subscription"
@@ -57,7 +56,6 @@ func NewDomain(l logger.Logger, cfg config.Config) (*Domain, error) {
 		game_instance.NewRepository,
 		game_instance_parameter.NewRepository,
 		game_subscription.NewRepository,
-		game_administration.NewRepository,
 		game_turn_sheet.NewRepository,
 
 		// Adventure game repositories
@@ -174,11 +172,6 @@ func (m *Domain) AdventureGameCharacterInstanceRepository() *repository.Generic[
 // GameSubscriptionRepository -
 func (m *Domain) GameSubscriptionRepository() *repository.Generic[game_record.GameSubscription, *game_record.GameSubscription] {
 	return m.Repositories[game_subscription.TableName].(*repository.Generic[game_record.GameSubscription, *game_record.GameSubscription])
-}
-
-// GameAdministrationRepository -
-func (m *Domain) GameAdministrationRepository() *repository.Generic[game_record.GameAdministration, *game_record.GameAdministration] {
-	return m.Repositories[game_administration.TableName].(*repository.Generic[game_record.GameAdministration, *game_record.GameAdministration])
 }
 
 // GameInstanceParameterRepository -

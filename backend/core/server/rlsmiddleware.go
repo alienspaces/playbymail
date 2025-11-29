@@ -54,6 +54,15 @@ func (rnr *Runner) RLSMiddleware(hc HandlerConfig, h Handle) (Handle, error) {
 				return err
 			}
 
+			l.Info("(rlsmiddleware) applying RLS identifiers to domain: %+v", rls.Identifiers)
+
+			// Apply RLS to the domain's repositories
+			if rlsSetter, ok := m.(interface{ SetRLS(map[string][]string) }); ok {
+				rlsSetter.SetRLS(rls.Identifiers)
+			} else {
+				l.Warn("(rlsmiddleware) domain does not implement SetRLS interface")
+			}
+
 			r, err = SetRequestRLSData(l, r, rls)
 			if err != nil {
 				l.Warn("(rlsmiddleware) failed to set RLS >%v<", err)

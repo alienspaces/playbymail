@@ -23,7 +23,7 @@
             "enum": [
                 "Player",
                 "Manager",
-                "Collaborator"
+                "Designer"
             ],
             "type": "string"
         },

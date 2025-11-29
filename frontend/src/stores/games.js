@@ -23,11 +23,11 @@ export const useGamesStore = defineStore('games', {
     clearSelectedGame() {
       this.selectedGame = null;
     },
-    async fetchGames() {
+    async fetchGames(options = {}) {
       this.loading = true;
       this.error = null;
       try {
-        const res = await listGames();
+        const res = await listGames(options);
         this.games = res.data || [];
       } catch (err) {
         this.error = err.message;

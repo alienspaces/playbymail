@@ -56,20 +56,20 @@ if [ -z "$PROJECT_NAME" ]; then
     exit 1
 fi
 
+# Always run db-setup to ensure database is running and has test data
+# db-setup is idempotent - it starts the container if needed and loads data
+print_status "Running db-setup to ensure database is ready with test data..."
+if ! ./tools/db-setup; then
+    echo "❌ Failed to setup database with db-setup."
+    exit 1
+fi
+
 DB_CONTAINER_NAME="${PROJECT_NAME}-shared"
 if ! docker ps --format '{{.Names}}' | grep -q "^${DB_CONTAINER_NAME}$"; then
-    print_warning "Database container '${DB_CONTAINER_NAME}' is not running. Running db-setup to start and initialize the database..."
-    if ! ./tools/db-setup; then
-        echo "❌ Failed to start and initialize the database with db-setup."
-        exit 1
-    fi
-    # Check again if the container is running
-    if ! docker ps --format '{{.Names}}' | grep -q "^${DB_CONTAINER_NAME}$"; then
-        echo "❌ Database container '${DB_CONTAINER_NAME}' is still not running after db-setup."
-        exit 1
-    fi
-    print_status "Database container '${DB_CONTAINER_NAME}' started and initialized."
+    echo "❌ Database container '${DB_CONTAINER_NAME}' is not running after db-setup."
+    exit 1
 fi
+print_status "Database ready."
 
 # Build backend binary in backend directory
 cd backend

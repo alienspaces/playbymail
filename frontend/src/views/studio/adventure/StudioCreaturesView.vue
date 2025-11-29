@@ -13,6 +13,9 @@
         @action="openCreate" />
       <ResourceTable :columns="columns" :rows="creaturesStore.creatures" :loading="creaturesStore.loading"
         :error="creaturesStore.error">
+        <template #cell-name="{ row }">
+          <a href="#" class="edit-link" @click.prevent="openEdit(row)">{{ row.name }}</a>
+        </template>
         <template #actions="{ row }">
           <TableActionsMenu :actions="getActions(row)" />
         </template>
@@ -139,3 +142,14 @@ function getActions(row) {
   ];
 }
 </script>
+
+<style scoped>
+.edit-link {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.edit-link:hover {
+  text-decoration: underline;
+}
+</style>

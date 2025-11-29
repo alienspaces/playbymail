@@ -59,6 +59,7 @@ const routes = [
       { path: 'games/:gameId/instances', name: 'ManagementGameInstances', component: () => import('../views/management/ManagementGameInstancesView.vue') },
       { path: 'games/:gameId/instances/create', name: 'ManagementCreateInstance', component: () => import('../views/management/ManagementCreateInstanceView.vue') },
       { path: 'games/:gameId/instances/:instanceId', name: 'ManagementInstanceDetail', component: () => import('../views/management/ManagementInstanceDetailView.vue') },
+      { path: 'games/:gameId/turn-sheets', name: 'ManagementTurnSheets', component: () => import('../views/management/ManagementTurnSheetsView.vue') },
     ],
   },
 ];

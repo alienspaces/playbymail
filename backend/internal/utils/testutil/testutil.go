@@ -61,7 +61,11 @@ func NewTestHarnessWithConfig(t *testing.T, dataConfig harness.DataConfig) *harn
 }
 
 func NewTestRunner(l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx]) (*runner.Runner, error) {
+	return NewTestRunnerWithAccountID(l, s, j, "", "")
+}
 
+// NewTestRunnerWithAccountID creates a runner with a specific account ID for authentication
+func NewTestRunnerWithAccountID(l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], accountID, email string) (*runner.Runner, error) {
 	cfg, err := config.Parse()
 	if err != nil {
 		return nil, err
@@ -72,10 +76,22 @@ func NewTestRunner(l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx]) (*
 		return nil, err
 	}
 
-	// By default all requests are authenticated as token type
+	// Default values if not provided
+	if accountID == "" {
+		accountID = "00000000-0000-0000-0000-000000000001"
+	}
+	if email == "" {
+		email = "test@example.com"
+	}
+
+	// By default all requests are authenticated as token type with the specified account
 	rnr.AuthenticateRequestFunc = func(l logger.Logger, m domainer.Domainer, r *http.Request, authType server.AuthenticationType) (server.AuthenData, error) {
 		return server.AuthenData{
 			Type: server.AuthenticatedTypeToken,
+			Account: server.AuthenticatedAccount{
+				ID:    accountID,
+				Email: email,
+			},
 		}, nil
 	}
 

@@ -62,8 +62,6 @@ const (
 
 	GameSubscriptionOneRef = "game-subscription-one"
 
-	GameAdministrationOneRef = "game-administration-one"
-
 	GameTurnSheetOneRef = "game-turn-sheet-one"
 )
 
@@ -78,7 +76,6 @@ type GameConfig struct {
 	Record                           *game_record.Game
 	GameInstanceConfigs              []GameInstanceConfig
 	GameSubscriptionConfigs          []GameSubscriptionConfig
-	GameAdministrationConfigs        []GameAdministrationConfig
 	AdventureGameLocationConfigs     []AdventureGameLocationConfig     // Locations associated with this game
 	AdventureGameLocationLinkConfigs []AdventureGameLocationLinkConfig // Links associated with this game
 	AdventureGameItemConfigs         []AdventureGameItemConfig
@@ -105,20 +102,13 @@ type GameInstanceConfig struct {
 type GameSubscriptionConfig struct {
 	Reference        string // Reference to the game_subscription record
 	AccountRef       string // Reference to the account
-	SubscriptionType string // Type of subscription (Player, Manager, Collaborator)
+	SubscriptionType string // Type of subscription (Player, Manager, Designer)
 	Record           *game_record.GameSubscription
 	// JoinGameScanData configures scan data for join game turn sheets
 	// If provided, the harness will create a join game turn sheet and process it
 	// For adventure games, use turn_sheet.AdventureGameJoinGameScanData
 	// For other game types, use the appropriate game-specific scan data type
 	JoinGameScanData any // Can be *turn_sheet.AdventureGameJoinGameScanData, etc.
-}
-
-type GameAdministrationConfig struct {
-	Reference           string // Reference to the game_administration record
-	AccountRef          string // Reference to the account
-	GrantedByAccountRef string // Reference to the account that granted the administration rights
-	Record              *game_record.GameAdministration
 }
 
 type GameTurnSheetConfig struct {
@@ -386,16 +376,8 @@ func DefaultDataConfig() DataConfig {
 					{
 						Reference:        GameSubscriptionOneRef,
 						AccountRef:       AccountOneRef,
-						SubscriptionType: "Player",
+						SubscriptionType: "Manager",
 						Record:           &game_record.GameSubscription{},
-					},
-				},
-				GameAdministrationConfigs: []GameAdministrationConfig{
-					{
-						Reference:           "game-administration-one",
-						AccountRef:          AccountOneRef,
-						GrantedByAccountRef: AccountOneRef,
-						Record:              &game_record.GameAdministration{},
 					},
 				},
 				// Adventure game specific resources
