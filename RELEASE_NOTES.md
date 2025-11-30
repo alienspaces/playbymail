@@ -17,63 +17,44 @@ These release notes cover development focused on building a complete turn sheet 
 
 ## 🗓️ November 2025
 
-**Theme**: AI Integration, Game Subscriptions & Management UI
+**Theme**: AI Integration, Game Subscriptions & Turn Sheet Art
 
 ### 🎯 Major Features
 
-**Game Subscription & Join Workflow**
-- Game subscription processing job worker
-- Subscription approval endpoint with email templates
-- Join game processor with complete workflow
-- Download endpoint for join game turn sheets
-- Renamed Collaborator subscription type to Designer for clarity
+**Turn Sheet Background Images**
+- Game-level background image upload for join game turn sheets
+- Location-level background image upload for location choice turn sheets
+- Location images fall back to game-level image if not set
+- Turn sheet preview with PDF display in modal
+- Image validation (WebP/PNG/JPEG, 1MB max, dimension constraints)
 
-**Subscription-Based Access Control**
-- Games API supports filtering by subscription type
-- Studio shows only games where user is Designer
-- Management shows only games where user is Manager
-- Removed redundant game_administration table
+**Game Subscription & Join Workflow**
+- Game subscription processing with approval workflow
+- Join game turn sheet generation and download
+- Subscription-based access control (Designer/Manager roles)
+
+**Turn Sheet Scanning**
+- Replaced OCR-based scanning with OpenAI vision integration
 
 **Starting Locations**
 - Starting location concept for adventure games
 - Starting location selection in frontend studio
 
-**Turn Sheet Scanning**
-- Replaced OCR-based scanning with OpenAI vision integration
-
-**Game Images & Turn Sheet Backgrounds**
-- Game image upload API for turn sheet backgrounds
-- Turn sheet PDF generation with custom background images
-- Session refresh endpoint for extended sessions
-
 ### 🎨 User Interface
 
-**Home Page**
-- Game genres section added
-
 **Game Designer Studio**
-- Subscription-based access control (Designer role)
-- Clickable table rows for quick editing
-- Prominent game selection button
+- Turn sheet image upload in game and location edit modals
+- Turn sheet preview button in resource tables
 - Shared sidebar layout with game context menu
-- Turn sheet image upload in game edit modal
-- Turn sheet preview modal with PDF display
 
 **Game Management**
-- Subscription-based access control (Manager role)
 - Turn sheet download and upload interface
 - Resource table layout for game instances
-- Game context menu in sidebar navigation
-- Clean flat layout matching Studio design
 
 **Layout & Navigation**
 - New SidebarLayout component for consistent layouts
-- Game context appears when a game is selected
-- Improved navigation with direct edit links in tables
-- Replaced dropdown action menus with inline action buttons
-- Consistent button sizing across all views
-- Unified spacing and layout between Studio and Management sections
-- Added h3 title level support with appropriate spacing
+- Inline action buttons replacing dropdown menus
+- Modal z-index fixes for mobile devices
 
 ---
 
