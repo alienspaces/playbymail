@@ -41,6 +41,11 @@ These release notes cover development focused on building a complete turn sheet 
 **Turn Sheet Scanning**
 - Replaced OCR-based scanning with OpenAI vision integration
 
+**Game Images & Turn Sheet Backgrounds**
+- Game image upload API for turn sheet backgrounds
+- Turn sheet PDF generation with custom background images
+- Session refresh endpoint for extended sessions
+
 ### 🎨 User Interface
 
 **Home Page**
@@ -51,17 +56,24 @@ These release notes cover development focused on building a complete turn sheet 
 - Clickable table rows for quick editing
 - Prominent game selection button
 - Shared sidebar layout with game context menu
+- Turn sheet image upload in game edit modal
+- Turn sheet preview modal with PDF display
 
 **Game Management**
 - Subscription-based access control (Manager role)
 - Turn sheet download and upload interface
 - Resource table layout for game instances
 - Game context menu in sidebar navigation
+- Clean flat layout matching Studio design
 
 **Layout & Navigation**
 - New SidebarLayout component for consistent layouts
 - Game context appears when a game is selected
 - Improved navigation with direct edit links in tables
+- Replaced dropdown action menus with inline action buttons
+- Consistent button sizing across all views
+- Unified spacing and layout between Studio and Management sections
+- Added h3 title level support with appropriate spacing
 
 ---
 
