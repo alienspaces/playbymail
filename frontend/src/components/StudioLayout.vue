@@ -151,7 +151,7 @@ const { selectedGame } = storeToRefs(gamesStore);
 }
 
 .game-context li {
-  margin-bottom: var(--space-sm);
+  margin-bottom: var(--menu-item-spacing);
 }
 
 .game-context a {

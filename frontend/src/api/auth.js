@@ -1,5 +1,22 @@
 import { baseUrl, getAuthHeaders } from './baseUrl';
 
+/**
+ * Get test bypass headers for development mode.
+ * When APP_ENV=develop and bypass headers are configured, returns the bypass
+ * header that allows using email as the verification code.
+ * @returns {Object} Headers object with bypass header if in develop mode
+ */
+function getTestBypassHeaders() {
+  const appEnv = import.meta.env.VITE_APP_ENV;
+  const bypassHeaderName = import.meta.env.VITE_TEST_BYPASS_HEADER_NAME;
+  const bypassHeaderValue = import.meta.env.VITE_TEST_BYPASS_HEADER_VALUE;
+
+  if (appEnv === 'develop' && bypassHeaderName && bypassHeaderValue) {
+    return { [bypassHeaderName]: bypassHeaderValue };
+  }
+  return {};
+}
+
 export async function requestAuth(email) {
   const res = await fetch(`${baseUrl}/api/v1/request-auth`, {
     method: 'POST',
@@ -12,7 +29,11 @@ export async function requestAuth(email) {
 export async function verifyAuth(email, verification_token) {
   const res = await fetch(`${baseUrl}/api/v1/verify-auth`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+    headers: {
+      'Content-Type': 'application/json',
+      ...getAuthHeaders(),
+      ...getTestBypassHeaders(),
+    },
     body: JSON.stringify({ email, verification_token }),
   });
   if (!res.ok) throw new Error('Verification failed');

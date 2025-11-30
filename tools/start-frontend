@@ -21,6 +21,14 @@ if [ ! -f "frontend/package.json" ]; then
     exit 1
 fi
 
+# Source environment variables (needed for development bypass headers)
+if [ -f ".env" ]; then
+    print_status "Loading environment variables from .env"
+    set -a
+    . "./.env"
+    set +a
+fi
+
 # Use nvm if available and .nvmrc exists
 if [ -f "frontend/.nvmrc" ]; then
     NVMRC_VERSION=$(cat frontend/.nvmrc)

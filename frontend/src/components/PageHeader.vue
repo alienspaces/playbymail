@@ -71,7 +71,7 @@ defineEmits(['action']);
   flex-direction: column;
   align-items: flex-start;
   gap: var(--space-md);
-  margin-bottom: var(--space-lg);
+  margin-bottom: var(--space-md);
 }
 
 .page-header h1,

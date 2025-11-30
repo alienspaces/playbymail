@@ -117,6 +117,9 @@
   /* Layout spacing - content padding to align with sidebar */
   --layout-content-padding: var(--space-lg);
 
+  /* Menu item spacing - consistent spacing between sidebar menu items */
+  --menu-item-spacing: var(--space-md);
+
   /* Border radius */
   --radius-sm: 4px;
   --radius-md: 8px;

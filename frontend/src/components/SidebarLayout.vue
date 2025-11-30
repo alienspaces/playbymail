@@ -338,7 +338,7 @@ function closeMenuOnMobile() {
 }
 
 .sidebar :deep(li) {
-  margin-bottom: var(--space-md);
+  margin-bottom: var(--menu-item-spacing);
 }
 
 .sidebar :deep(a) {
