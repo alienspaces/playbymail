@@ -71,7 +71,7 @@ defineEmits(['action']);
   flex-direction: column;
   align-items: flex-start;
   gap: var(--space-md);
-  margin-bottom: var(--space-md);
+  margin-bottom: calc(var(--space-md) / 2);
 }
 
 .page-header h1,
@@ -91,6 +91,7 @@ defineEmits(['action']);
   color: var(--color-text);
   text-transform: uppercase;
   letter-spacing: 0.8px;
+  margin-bottom: var(--space-sm);
 }
 
 /* Subsection titles (h3) - smaller with tighter spacing */
@@ -126,6 +127,7 @@ defineEmits(['action']);
 @media (max-width: 768px) {
   .page-header {
     gap: var(--space-sm);
+    margin-bottom: calc(var(--space-xl) / 2);
   }
 }
 </style>

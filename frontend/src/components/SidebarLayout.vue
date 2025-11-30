@@ -162,7 +162,7 @@ function closeMenuOnMobile() {
   width: 100%;
   flex-shrink: 0;
   position: relative;
-  z-index: 2998;
+  /* No z-index here to avoid creating stacking context that traps modals */
 }
 
 .layout-burger {
@@ -186,7 +186,7 @@ function closeMenuOnMobile() {
     width: 40px;
     height: 40px;
     margin-right: var(--space-lg);
-    z-index: 3002;
+    z-index: 10;
   }
 }
 
@@ -212,7 +212,7 @@ function closeMenuOnMobile() {
     right: 0;
     bottom: 0;
     background: rgba(0, 0, 0, 0.3);
-    z-index: 2999;
+    z-index: 200;
   }
 
   .sidebar.mobile {
@@ -226,7 +226,7 @@ function closeMenuOnMobile() {
     border-right: 1px solid var(--color-border);
     padding: var(--space-lg) var(--space-md) 0 var(--space-md);
     flex-direction: column;
-    z-index: 3000;
+    z-index: 300;
     box-shadow: 2px 0 16px rgba(0, 0, 0, 0.12);
     animation: slideInLeft 0.2s;
   }
@@ -389,7 +389,7 @@ function closeMenuOnMobile() {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 2000;
+  z-index: 4000;
 }
 
 .help-panel {

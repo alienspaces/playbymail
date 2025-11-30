@@ -32,62 +32,66 @@
     <TurnSheetPreviewModal :visible="showPreviewModal" :gameId="previewGameId" :gameName="previewGameName"
       title="Join Game Turn Sheet Preview" @close="closePreviewModal" />
 
-    <!-- Modal for create/edit -->
-    <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
-      <div class="modal modal-wide">
-        <h2>{{ modalMode === 'create' ? 'Create Game' : 'Edit Game' }}</h2>
-        <form @submit.prevent="modalMode === 'create' ? createGame() : updateGame()" class="modal-form">
-          <div class="form-group">
-            <label for="game-name">Name <span class="required">*</span></label>
-            <input v-model="modalForm.name" id="game-name" required maxlength="1024" autocomplete="off" />
-          </div>
-          <div class="form-group">
-            <label for="game-type">Type <span class="required">*</span></label>
-            <select v-model="modalForm.game_type" id="game-type" required>
-              <option value="adventure">Adventure</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="turn-duration">Turn Duration (hours) <span class="required">*</span></label>
-            <input v-model.number="modalForm.turn_duration_hours" id="turn-duration" type="number" min="1" required
-              placeholder="168 (1 week)" />
-          </div>
+    <!-- Modal for create/edit - Teleported to body to avoid z-index stacking issues -->
+    <Teleport to="body">
+      <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
+        <div class="modal modal-wide">
+          <h2>{{ modalMode === 'create' ? 'Create Game' : 'Edit Game' }}</h2>
+          <form @submit.prevent="modalMode === 'create' ? createGame() : updateGame()" class="modal-form">
+            <div class="form-group">
+              <label for="game-name">Name <span class="required">*</span></label>
+              <input v-model="modalForm.name" id="game-name" required maxlength="1024" autocomplete="off" />
+            </div>
+            <div class="form-group">
+              <label for="game-type">Type <span class="required">*</span></label>
+              <select v-model="modalForm.game_type" id="game-type" required>
+                <option value="adventure">Adventure</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="turn-duration">Turn Duration (hours) <span class="required">*</span></label>
+              <input v-model.number="modalForm.turn_duration_hours" id="turn-duration" type="number" min="1" required
+                placeholder="168 (1 week)" />
+            </div>
 
-          <!-- Turn Sheet Image Upload (only in edit mode) -->
-          <div v-if="modalMode === 'edit' && modalForm.id" class="form-section">
-            <TurnSheetImageUpload :gameId="modalForm.id" @imagesUpdated="onImagesUpdated"
-              @loadingChanged="onImageUploadLoadingChanged" />
-          </div>
+            <!-- Turn Sheet Image Upload (only in edit mode) -->
+            <div v-if="modalMode === 'edit' && modalForm.id" class="form-section">
+              <TurnSheetImageUpload :gameId="modalForm.id" @imagesUpdated="onImagesUpdated"
+                @loadingChanged="onImageUploadLoadingChanged" />
+            </div>
 
+            <div class="modal-actions">
+              <button type="submit" :disabled="imageUploadLoading">
+                {{ modalMode === 'create' ? 'Create' : 'Save' }}
+              </button>
+              <button type="button" @click="closeModal" :disabled="imageUploadLoading">
+                {{ imageUploadLoading ? 'Uploading...' : 'Cancel' }}
+              </button>
+            </div>
+          </form>
+          <div v-if="modalError" class="error">
+            <p>{{ modalError }}</p>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
+    <!-- Confirm delete dialog - Teleported to body to avoid z-index stacking issues -->
+    <Teleport to="body">
+      <div v-if="showDeleteConfirm" class="modal-overlay" @click.self="closeDelete">
+        <div class="modal">
+          <h2>Delete Game</h2>
+          <p>Are you sure you want to delete <b>{{ deleteTarget?.name }}</b>?</p>
           <div class="modal-actions">
-            <button type="submit" :disabled="imageUploadLoading">
-              {{ modalMode === 'create' ? 'Create' : 'Save' }}
-            </button>
-            <button type="button" @click="closeModal" :disabled="imageUploadLoading">
-              {{ imageUploadLoading ? 'Uploading...' : 'Cancel' }}
-            </button>
+            <button type="button" @click="deleteGame" class="danger-btn">Delete</button>
+            <button type="button" @click="closeDelete">Cancel</button>
           </div>
-        </form>
-        <div v-if="modalError" class="error">
-          <p>{{ modalError }}</p>
+          <div v-if="deleteError" class="error">
+            <p>{{ deleteError }}</p>
+          </div>
         </div>
       </div>
-    </div>
-
-    <!-- Confirm delete dialog -->
-    <div v-if="showDeleteConfirm" class="modal-overlay" @click.self="closeDelete">
-      <div class="modal">
-        <h2>Delete Game</h2>
-        <p>Are you sure you want to delete <b>{{ deleteTarget?.name }}</b>?</p>
-        <div class="modal-actions">
-          <button type="button" @click="deleteGame" class="danger-btn">Delete</button>
-          <button type="button" @click="closeDelete">Cancel</button>
-        </div>
-        <div v-if="deleteError" class="error">
-          <p>{{ deleteError }}</p>
-        </div>
-      </div>
-    </div>
+    </Teleport>
   </div>
 </template>
 

@@ -1,37 +1,40 @@
 <template>
-  <div v-if="visible" class="modal-overlay" @click.self="$emit('close')">
-    <div class="preview-modal">
-      <div class="modal-header">
-        <h2>{{ title }}</h2>
-        <button class="close-btn" @click="$emit('close')" aria-label="Close">✕</button>
-      </div>
-
-      <div class="modal-content">
-        <!-- Show loading spinner while iframe is loading -->
-        <div v-if="loading && !error" class="loading-state">
-          <div class="spinner"></div>
-          <p>Generating preview...</p>
+  <!-- Teleport modal to body to avoid z-index stacking context issues -->
+  <Teleport to="body">
+    <div v-if="visible" class="modal-overlay" @click.self="$emit('close')">
+      <div class="preview-modal">
+        <div class="modal-header">
+          <h2>{{ title }}</h2>
+          <button class="close-btn" @click="$emit('close')" aria-label="Close">✕</button>
         </div>
 
-        <!-- Show error state -->
-        <div v-if="error" class="error-state">
-          <p class="error-text">{{ error }}</p>
-          <button class="retry-btn" @click="retryPreview">Retry</button>
+        <div class="modal-content">
+          <!-- Show loading spinner while iframe is loading -->
+          <div v-if="loading && !error" class="loading-state">
+            <div class="spinner"></div>
+            <p>Generating preview...</p>
+          </div>
+
+          <!-- Show error state -->
+          <div v-if="error" class="error-state">
+            <p class="error-text">{{ error }}</p>
+            <button class="retry-btn" @click="retryPreview">Retry</button>
+          </div>
+
+          <!-- Always render iframe when visible (but hide it while loading) -->
+          <iframe v-show="!loading && !error" :key="iframeKey" :src="previewUrl" class="pdf-preview"
+            title="Turn Sheet Preview" @load="onIframeLoad" @error="onIframeError"></iframe>
         </div>
 
-        <!-- Always render iframe when visible (but hide it while loading) -->
-        <iframe v-show="!loading && !error" :key="iframeKey" :src="previewUrl" class="pdf-preview"
-          title="Turn Sheet Preview" @load="onIframeLoad" @error="onIframeError"></iframe>
-      </div>
-
-      <div class="modal-footer">
-        <a :href="downloadUrl" class="download-btn" target="_blank" rel="noopener noreferrer">
-          Download PDF
-        </a>
-        <button class="close-btn-secondary" @click="$emit('close')">Close</button>
+        <div class="modal-footer">
+          <a :href="downloadUrl" class="download-btn" target="_blank" rel="noopener noreferrer">
+            Download PDF
+          </a>
+          <button class="close-btn-secondary" @click="$emit('close')">Close</button>
+        </div>
       </div>
     </div>
-  </div>
+  </Teleport>
 </template>
 
 <script setup>

@@ -1,25 +1,28 @@
 <template>
-  <div v-if="visible" class="modal-overlay" @click.self="$emit('cancel')">
-    <div class="modal">
-      <h2>{{ title }}</h2>
-      <p>{{ message }}</p>
-      <p v-if="warning" class="warning-text">{{ warning }}</p>
+  <!-- Teleport modal to body to avoid z-index stacking context issues -->
+  <Teleport to="body">
+    <div v-if="visible" class="modal-overlay" @click.self="$emit('cancel')">
+      <div class="modal">
+        <h2>{{ title }}</h2>
+        <p>{{ message }}</p>
+        <p v-if="warning" class="warning-text">{{ warning }}</p>
 
-      <div v-if="requireConfirmation" class="confirmation-input">
-        <label :for="confirmationId">Type "{{ confirmationText }}" to confirm:</label>
-        <input :id="confirmationId" v-model="confirmationValue" :placeholder="confirmationText" class="confirm-input" />
+        <div v-if="requireConfirmation" class="confirmation-input">
+          <label :for="confirmationId">Type "{{ confirmationText }}" to confirm:</label>
+          <input :id="confirmationId" v-model="confirmationValue" :placeholder="confirmationText" class="confirm-input" />
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" @click="$emit('cancel')">{{ cancelText }}</button>
+          <button type="button" @click="$emit('confirm')" :disabled="isConfirmDisabled || loading" class="danger-btn">
+            {{ loading ? loadingText : confirmText }}
+          </button>
+        </div>
+
+        <p v-if="error" class="error-text">{{ error }}</p>
       </div>
-
-      <div class="modal-actions">
-        <button type="button" @click="$emit('cancel')">{{ cancelText }}</button>
-        <button type="button" @click="$emit('confirm')" :disabled="isConfirmDisabled || loading" class="danger-btn">
-          {{ loading ? loadingText : confirmText }}
-        </button>
-      </div>
-
-      <p v-if="error" class="error-text">{{ error }}</p>
     </div>
-  </div>
+  </Teleport>
 </template>
 
 <script setup>

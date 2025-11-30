@@ -35,6 +35,7 @@ defineProps({
   background: var(--color-bg);
   border-bottom: 1px solid var(--color-border);
   padding: var(--space-lg) var(--space-lg);
+  margin-bottom: 0;
   display: flex;
   justify-content: space-between;
   align-items: center;

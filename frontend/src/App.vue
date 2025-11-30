@@ -158,6 +158,7 @@ main.app-main> :not(.studio-layout):not(.account-layout):not(.management-layout)
   /* Accommodate 140px image with bleed */
   display: flex;
   align-items: center;
+  /* No z-index to avoid creating stacking context that traps modals */
 }
 
 .navbar {
@@ -289,7 +290,7 @@ main.app-main> :not(.studio-layout):not(.account-layout):not(.management-layout)
   width: 40px;
   height: 40px;
   margin-left: var(--space-md);
-  z-index: 1002;
+  z-index: 1;
 }
 
 .burger span {
@@ -324,7 +325,7 @@ main.app-main> :not(.studio-layout):not(.account-layout):not(.management-layout)
   background: var(--color-logo-teal-light);
   /* Lighter teal matching footer */
   padding: var(--space-lg) var(--space-lg) var(--space-lg) var(--space-lg);
-  z-index: 3000;
+  z-index: 500;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
   animation: fadeIn 0.2s;
 }
