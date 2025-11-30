@@ -153,6 +153,8 @@ func (g *PDFGenerator) loadTemplate(templatePath string) (*template.Template, er
 		"sub": func(a, b int) int { return a - b },
 		"mul": func(a, b int) int { return a * b },
 		"div": func(a, b int) int { return a / b },
+		// safeURL marks a string as safe for use in URL contexts (e.g., data: URLs)
+		"safeURL": func(s string) template.URL { return template.URL(s) },
 	})
 
 	// Parse base template first (located in turn_sheet/)
@@ -265,14 +267,15 @@ func (g *PDFGenerator) htmlToPDF(ctx context.Context, html string) ([]byte, erro
 		chromedp.ActionFunc(func(ctx context.Context) error {
 			l.Debug("calling Chrome PrintToPDF")
 			var err error
+			// A4 paper size: 210mm x 297mm = 8.27in x 11.69in
 			pdfData, _, err = page.PrintToPDF().
 				WithPrintBackground(true).
-				WithPaperWidth(8.5).
-				WithPaperHeight(11.0).
-				WithMarginTop(0.5).
-				WithMarginBottom(0.5).
-				WithMarginLeft(0.5).
-				WithMarginRight(0.5).
+				WithPaperWidth(8.27).
+				WithPaperHeight(11.69).
+				WithMarginTop(0).
+				WithMarginBottom(0).
+				WithMarginLeft(0).
+				WithMarginRight(0).
 				Do(ctx)
 			if err != nil {
 				l.Warn("chrome PrintToPDF failed error=%v", err)

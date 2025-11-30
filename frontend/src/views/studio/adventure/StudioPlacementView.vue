@@ -18,7 +18,7 @@
         <ResourceTable :columns="itemPlacementColumns" :rows="itemPlacementsStore.itemPlacements"
           :loading="itemPlacementsStore.loading" :error="itemPlacementsStore.error">
           <template #actions="{ row }">
-            <TableActionsMenu :actions="getItemPlacementActions(row)" />
+            <TableActions :actions="getItemPlacementActions(row)" />
           </template>
         </ResourceTable>
 
@@ -59,7 +59,7 @@
         <ResourceTable :columns="creaturePlacementColumns" :rows="creaturePlacementsStore.creaturePlacements"
           :loading="creaturePlacementsStore.loading" :error="creaturePlacementsStore.error">
           <template #actions="{ row }">
-            <TableActionsMenu :actions="getCreaturePlacementActions(row)" />
+            <TableActions :actions="getCreaturePlacementActions(row)" />
           </template>
         </ResourceTable>
         <ResourceModalForm :visible="showCreaturePlacementModal" :mode="creaturePlacementModalMode"
@@ -100,7 +100,7 @@ import { useGamesStore } from '../../../stores/games';
 import { storeToRefs } from 'pinia';
 import ResourceTable from '../../../components/ResourceTable.vue';
 import ResourceModalForm from '../../../components/ResourceModalForm.vue';
-import TableActionsMenu from '../../../components/TableActionsMenu.vue';
+import TableActions from '../../../components/TableActions.vue';
 import ConfirmationModal from '../../../components/ConfirmationModal.vue';
 
 const itemsStore = useItemsStore();

@@ -4,29 +4,29 @@
 -->
 <template>
   <div class="game-instances-view">
-    <div class="view-header">
-      <div class="header-content">
-        <h2>{{ selectedGame?.name }} - Game Instances</h2>
-        <p>Manage active game sessions and monitor player activity</p>
-        <Button @click="goBack" variant="secondary" size="small" class="back-button">
-          <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
-          </svg>
-          Back to Games
-        </Button>
-      </div>
-    </div>
+    <PageHeader 
+      :title="`${selectedGame?.name || ''} - Game Instances`"
+      subtitle="Manage active game sessions and monitor player activity"
+      :showIcon="false"
+      titleLevel="h2"
+    />
+    
+    <Button @click="goBack" variant="secondary" size="small" class="back-button">
+      <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+      </svg>
+      Back to Games
+    </Button>
 
     <!-- Active Instances Section -->
-    <DataCard title="Active Instances" class="instances-card">
-      <template #header-extra>
-        <Button @click="createInstance" variant="primary" size="small">
-          <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
-          </svg>
-          Create Instance
-        </Button>
-      </template>
+    <div class="section">
+      <PageHeader 
+        title="Active Instances"
+        actionText="Create Instance"
+        :showIcon="false"
+        titleLevel="h3"
+        @action="createInstance"
+      />
 
       <ResourceTable 
         :columns="columns" 
@@ -59,17 +59,23 @@
         </template>
 
         <template #actions="{ row }">
-          <TableActionsMenu :actions="getActiveInstanceActions(row)" />
+          <TableActions :actions="getActiveInstanceActions(row)" />
         </template>
       </ResourceTable>
 
-      <div v-if="!gameInstancesStore.loading && activeInstances.length === 0" class="empty-state">
-        <p>No active instances. Create a new game instance to get started.</p>
-      </div>
-    </DataCard>
+      <p v-if="!gameInstancesStore.loading && activeInstances.length === 0" class="empty-message">
+        No active instances. Create a new game instance to get started.
+      </p>
+    </div>
 
     <!-- Completed Instances Section -->
-    <DataCard title="Completed Instances" class="instances-card">
+    <div class="section">
+      <PageHeader 
+        title="Completed Instances"
+        :showIcon="false"
+        titleLevel="h3"
+      />
+
       <ResourceTable 
         :columns="completedColumns" 
         :rows="completedInstances" 
@@ -97,14 +103,14 @@
         </template>
 
         <template #actions="{ row }">
-          <TableActionsMenu :actions="getCompletedInstanceActions(row)" />
+          <TableActions :actions="getCompletedInstanceActions(row)" />
         </template>
       </ResourceTable>
 
-      <div v-if="!gameInstancesStore.loading && completedInstances.length === 0" class="empty-state">
-        <p>No completed instances yet.</p>
-      </div>
-    </DataCard>
+      <p v-if="!gameInstancesStore.loading && completedInstances.length === 0" class="empty-message">
+        No completed instances yet.
+      </p>
+    </div>
   </div>
 </template>
 
@@ -114,9 +120,9 @@ import { useRoute, useRouter } from 'vue-router';
 import { useGamesStore } from '../../stores/games';
 import { useGameInstancesStore } from '../../stores/gameInstances';
 import Button from '../../components/Button.vue';
-import DataCard from '../../components/DataCard.vue';
+import PageHeader from '../../components/PageHeader.vue';
 import ResourceTable from '../../components/ResourceTable.vue';
-import TableActionsMenu from '../../components/TableActionsMenu.vue';
+import TableActions from '../../components/TableActions.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -283,37 +289,11 @@ const getCompletedInstanceActions = (instance) => {
 
 <style scoped>
 .game-instances-view {
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.view-header {
-  margin-bottom: var(--space-lg);
-  padding-bottom: var(--space-lg);
-  border-bottom: 1px solid var(--color-border);
-}
-
-.header-content {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-sm);
-}
-
-.header-content h2 {
-  margin: 0;
-  font-size: var(--font-size-xl);
-  color: var(--color-text);
-}
-
-.header-content p {
-  margin: 0;
-  color: var(--color-text-muted);
-  font-size: var(--font-size-md);
+  width: 100%;
 }
 
 .back-button {
-  margin-top: var(--space-sm);
-  align-self: flex-start;
+  margin-bottom: var(--space-lg);
 }
 
 .icon {
@@ -321,7 +301,7 @@ const getCompletedInstanceActions = (instance) => {
   height: 16px;
 }
 
-.instances-card {
+.section {
   margin-bottom: var(--space-xl);
 }
 
@@ -368,13 +348,8 @@ const getCompletedInstanceActions = (instance) => {
   background: var(--color-danger);
 }
 
-.empty-state {
-  text-align: center;
-  padding: var(--space-lg);
+.empty-message {
   color: var(--color-text-muted);
-}
-
-.empty-state p {
-  margin: 0;
+  font-style: italic;
 }
 </style>

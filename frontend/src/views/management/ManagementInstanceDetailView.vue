@@ -126,7 +126,7 @@
             </span>
           </template>
           <template #actions="{ row }">
-            <TableActionsMenu v-if="instance && instance.status === 'created'" :actions="getParameterActions(row)" />
+            <TableActions v-if="instance && instance.status === 'created'" :actions="getParameterActions(row)" />
             <span v-else class="locked-message">
               <em>Locked</em>
             </span>
@@ -198,7 +198,7 @@ import { useGameInstancesStore } from '../../stores/gameInstances';
 import { useGameInstanceParametersStore } from '../../stores/gameInstanceParameters';
 import { useGameParametersStore } from '../../stores/gameParameters';
 import Button from '../../components/Button.vue';
-import TableActionsMenu from '../../components/TableActionsMenu.vue';
+import TableActions from '../../components/TableActions.vue';
 import DataCard from '../../components/DataCard.vue';
 import ResourceTable from '../../components/ResourceTable.vue';
 
@@ -517,8 +517,7 @@ const getEditingParameterDefault = () => {
 
 <style scoped>
 .instance-detail-view {
-  max-width: 1200px;
-  margin: 0 auto;
+  width: 100%;
 }
 
 .view-header {

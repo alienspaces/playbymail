@@ -38,6 +38,19 @@ func isEmailAddress(s string) bool {
 	return strings.Contains(afterAt, ".") && !strings.HasSuffix(afterAt, ".")
 }
 
+// Session token expiry duration
+const sessionTokenExpiryDuration = 15 * time.Minute
+
+// SessionTokenExpiryDuration returns the duration after which session tokens expire.
+func (m *Domain) SessionTokenExpiryDuration() time.Duration {
+	return sessionTokenExpiryDuration
+}
+
+// SessionTokenExpirySeconds returns the number of seconds until session tokens expire.
+func (m *Domain) SessionTokenExpirySeconds() int {
+	return int(sessionTokenExpiryDuration.Seconds())
+}
+
 // GetManyAccountRecs -
 func (m *Domain) GetManyAccountRecs(opts *coresql.Options) ([]*account_record.Account, error) {
 	l := m.Logger("GetManyAccountRecs")
@@ -268,7 +281,7 @@ func (m *Domain) VerifyAccountVerificationToken(token string, testBypassEnabled 
 	hashedSessionToken := hmacSHA256(m.config.TokenHMACKey, sessionToken)
 
 	rec.SessionToken = nullstring.FromString(hashedSessionToken)
-	rec.SessionTokenExpiresAt = nulltime.FromTime(corerecord.NewRecordTimestamp().Add(15 * time.Minute))
+	rec.SessionTokenExpiresAt = nulltime.FromTime(corerecord.NewRecordTimestamp().Add(sessionTokenExpiryDuration))
 
 	_, err := m.UpdateAccountRec(rec)
 	if err != nil {
@@ -343,7 +356,7 @@ func (m *Domain) VerifyAccountSessionToken(token string) (*account_record.Accoun
 	}
 
 	// Extend the expiration time of the session token
-	rec.SessionTokenExpiresAt = nulltime.FromTime(corerecord.NewRecordTimestamp().Add(15 * time.Minute))
+	rec.SessionTokenExpiresAt = nulltime.FromTime(corerecord.NewRecordTimestamp().Add(sessionTokenExpiryDuration))
 
 	_, err = m.UpdateAccountRec(rec)
 	if err != nil {

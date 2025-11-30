@@ -12,22 +12,21 @@
             --padding-horizontal: 18mm;
         }
 
-        /* Debug */
+        /* Debug - set to transparent to show background images */
         .debug-frame {
-            background-color: #ffffff;
+            background-color: transparent;
         }
 
         .debug-main {
-            background-color: #ffffff;
+            background-color: transparent;
         }
 
         .debug-section {
-            background-color: #ffffff;
+            background-color: transparent;
         }
 
         /* Base styles for PDF generation */
         body {
-            position: relative;
             font-family: 'Times New Roman', serif;
             margin: 0;
             padding: 0;
@@ -35,6 +34,8 @@
             color: #333;
             display: flex;
             justify-content: center;
+            print-color-adjust: exact;
+            -webkit-print-color-adjust: exact;
         }
         
         h1 {
@@ -52,53 +53,31 @@
             margin-bottom: 2mm;
         }
         
-        .background-container {
-            position: absolute;
-            inset: 0;
+        /* Page wrapper contains both background and content */
+        .page-wrapper {
+            position: relative;
+            width: var(--page-width);
+            height: var(--page-height);
             overflow: hidden;
+        }
+        
+        /* Single background image covering the page */
+        .background-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: var(--page-height);
+            object-fit: cover;
+            object-position: center;
             pointer-events: none;
-        }
-        
-        .background-top {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            z-index: 0;
-        }
-        
-        .background-middle {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            z-index: 1;
-        }
-        
-        .background-bottom {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
             z-index: 0;
         }
 
         .content {
             position: relative;
             z-index: 2;
-            width: var(--page-width);
+            width: 100%;
         }
 
         .header-content {
@@ -107,7 +86,7 @@
             height: 46mm;
             text-align: center;
             box-sizing: border-box;
-            background-color: #ffffff;
+            background-color: transparent;
         }
         
         .header-content h1 {
@@ -138,10 +117,10 @@
 
 
         .instruction-content {
-            margin: 0;
+            margin: 0 18mm;
             padding: 2mm;
             height: 10mm;
-            background-color: #ffffff;
+            background-color: transparent;
             border-left: 3px solid #546a7b;
             border-radius: 6px;
             color: #2c3e50;
@@ -163,7 +142,8 @@
         .main-content {
             margin: 0;
             padding: 2mm;
-            height: 166mm;
+            height: 140mm;
+            overflow: hidden;
         }
 
         /* Turn sheet content is contained within the main content*/
@@ -175,7 +155,7 @@
             width: 100%;
             margin: 0 auto;
             box-sizing: border-box;
-            background-color: #ffffff;
+            background-color: transparent;
         }
 
         .turn-sheet label,
@@ -221,7 +201,7 @@
         .turn-sheet-info {
             margin-top: 15px;
             padding: 10px;
-            background-color: #f8f9fa;
+            background-color: transparent;
             border: 1px solid #dee2e6;
             border-radius: 4px;
             font-family: 'Courier New', monospace;
@@ -243,11 +223,16 @@
         }
 
         .footer-content {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
             margin-top: 0;
-            padding: 2mm;
-            background-color: #ffffff;
+            padding: 4mm 18mm;
+            background-color: rgba(255, 255, 255, 0.7);
             border-top: 1px solid #dee2e6;
             border-radius: 0 0 8px 8px;
+            z-index: 3;
         }
 
         .footer-content-item {
@@ -326,12 +311,14 @@
                 background-color: white;
             }
             
-            .background-container {
-                display: none;
+            /* Keep background image visible in print/PDF mode */
+            .background-image {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
             }
             
             .content {
-                background-color: white;
+                background-color: transparent;
                 box-shadow: none;
                 margin: 0;
                 padding: 0;
@@ -343,23 +330,15 @@
     {{block "styles" .}}{{end}}
 </head>
 <body>
-    <!-- Background image container -->
-    <div class="background-container">
-        {{if .BackgroundTop}}
-        <div class="background-top" style="background-image: url('{{.BackgroundTop}}');"></div>
+    <!-- Page wrapper contains both background and content -->
+    <div class="page-wrapper">
+        <!-- Background image -->
+        {{if .BackgroundImage}}
+        <img class="background-image" src="{{.BackgroundImage | safeURL}}" alt="" />
         {{end}}
-        
-        {{if .BackgroundMiddle}}
-        <div class="background-middle" style="background-image: url('{{.BackgroundMiddle}}');"></div>
-        {{end}}
-        
-        {{if .BackgroundBottom}}
-        <div class="background-bottom" style="background-image: url('{{.BackgroundBottom}}');"></div>
-        {{end}}
-    </div>
 
-    <!-- Main content -->
-    <div class="content debug-frame">
+        <!-- Main content -->
+        <div class="content debug-frame">
 
         <!-- Header content -->
         <div class="header-content">
@@ -387,6 +366,8 @@
         <div class="main-content debug-main">
             {{template "content" .}}
         </div>
+
+    </div>
 
         <!-- Fixed footer content at bottom of page -->
         {{if or .TurnSheetDeadline .TurnSheetCode}}

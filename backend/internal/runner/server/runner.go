@@ -214,21 +214,31 @@ func (rnr *Runner) authenticateRequestTokenFunc(l logger.Logger, m domainer.Doma
 		}
 	}
 
-	// Extract token from Authorization header
+	// Try to extract token from multiple sources:
+	// 1. Authorization header (preferred)
+	// 2. Query parameter 'token' (for iframe/embed scenarios)
+	var token string
+
+	// First, try Authorization header
 	authHeader := r.Header.Get("Authorization")
-	if authHeader == "" {
-		l.Warn("(playbymail) no authorization header found")
-		return server.AuthenData{}, nil
+	if authHeader != "" && len(authHeader) >= 7 && authHeader[:7] == "Bearer " {
+		token = authHeader[7:]
+		l.Debug("(playbymail) token extracted from Authorization header")
 	}
 
-	// Check if it starts with "Bearer "
-	if len(authHeader) < 7 || authHeader[:7] != "Bearer " {
-		l.Warn("(playbymail) invalid authorization header format")
-		return server.AuthenData{}, nil
+	// If no header token, try query parameter (for iframe usage)
+	if token == "" {
+		token = r.URL.Query().Get("token")
+		if token != "" {
+			l.Debug("(playbymail) token extracted from query parameter")
+		}
 	}
 
-	// Extract the token (remove "Bearer " prefix)
-	token := authHeader[7:]
+	// No token found
+	if token == "" {
+		l.Warn("(playbymail) no token found in Authorization header or query parameter")
+		return server.AuthenData{}, nil
+	}
 
 	accountRec, err := mm.VerifyAccountSessionToken(token)
 	if err != nil {

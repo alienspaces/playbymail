@@ -56,6 +56,14 @@ type VerifyAuthResponse struct {
 	SessionToken string `json:"session_token"`
 }
 
+// RefreshSessionRequest maps to the /refresh-session request schema
+type RefreshSessionRequest struct{}
+
+type RefreshSessionResponse struct {
+	Status           string `json:"status"`
+	ExpiresInSeconds int    `json:"expires_in_seconds"`
+}
+
 // AccountContactResponseData -
 type AccountContactResponseData struct {
 	ID                 string     `json:"id"`

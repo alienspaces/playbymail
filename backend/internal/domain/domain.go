@@ -24,6 +24,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/repository/adventure_game_location_link_requirement"
 	"gitlab.com/alienspaces/playbymail/internal/repository/adventure_game_turn_sheet"
 	"gitlab.com/alienspaces/playbymail/internal/repository/game"
+	"gitlab.com/alienspaces/playbymail/internal/repository/game_image"
 	"gitlab.com/alienspaces/playbymail/internal/repository/game_instance"
 	"gitlab.com/alienspaces/playbymail/internal/repository/game_instance_parameter"
 	"gitlab.com/alienspaces/playbymail/internal/repository/game_subscription"
@@ -53,6 +54,7 @@ func NewDomain(l logger.Logger, cfg config.Config) (*Domain, error) {
 		account.NewRepository,
 		account_contact.NewRepository,
 		game.NewRepository,
+		game_image.NewRepository,
 		game_instance.NewRepository,
 		game_instance_parameter.NewRepository,
 		game_subscription.NewRepository,
@@ -187,6 +189,11 @@ func (m *Domain) GameTurnSheetRepository() *repository.Generic[game_record.GameT
 // AdventureGameTurnSheetRepository -
 func (m *Domain) AdventureGameTurnSheetRepository() *repository.Generic[adventure_game_record.AdventureGameTurnSheet, *adventure_game_record.AdventureGameTurnSheet] {
 	return m.Repositories[adventure_game_turn_sheet.TableName].(*repository.Generic[adventure_game_record.AdventureGameTurnSheet, *adventure_game_record.AdventureGameTurnSheet])
+}
+
+// GameImageRepository -
+func (m *Domain) GameImageRepository() *repository.Generic[game_record.GameImage, *game_record.GameImage] {
+	return m.Repositories[game_image.TableName].(*repository.Generic[game_record.GameImage, *game_record.GameImage])
 }
 
 // Logger - Returns a logger with package context and provided function context

@@ -819,20 +819,23 @@ th::after {
 @media (max-width: 900px) {
 
   .entry-card,
-  .game-table-section,
   .studio-section {
     padding: var(--space-md);
   }
 }
 
 /* Studio shared sections */
-.game-table-section,
 .studio-section {
   background: var(--color-bg);
   border-radius: var(--radius-lg);
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.07);
   padding: var(--space-xl);
   margin-bottom: var(--space-xl);
+  width: 100%;
+}
+
+/* Game table section - clean layout without card wrapper */
+.game-table-section {
   width: 100%;
 }
 

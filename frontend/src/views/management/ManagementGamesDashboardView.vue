@@ -4,13 +4,15 @@
 -->
 <template>
   <div class="games-dashboard">
-    <PageHeader title="Games & Instances" titleLevel="h2" :showIcon="false"
-      subtitle="Manage your game instances and monitor player activity" />
+    <PageHeader 
+      title="Games & Instances" 
+      titleLevel="h2" 
+      :showIcon="false"
+      subtitle="Manage your game instances and monitor player activity" 
+    />
 
     <!-- Loading state -->
-    <div v-if="gamesStore.loading" class="loading-state">
-      <p>Loading games...</p>
-    </div>
+    <p v-if="gamesStore.loading">Loading games...</p>
 
     <!-- Error state -->
     <div v-else-if="gamesStore.error" class="error-state">
@@ -18,31 +20,35 @@
       <button @click="loadGames">Retry</button>
     </div>
 
-    <!-- Games list -->
-    <div v-else class="games-grid">
-      <DataCard v-for="game in games" :key="game.id" :title="game.name" class="game-card">
-        <div class="game-info">
-          <DataItem label="Game Type" :value="game.game_type" />
-          <DataItem label="Description" :value="getGameDescription(game.game_type)" />
-          <div class="game-stats">
-            <DataItem label="Instances" :value="getGameInstanceCount(game.id)" />
-            <DataItem label="Active" :value="getActiveInstanceCount(game.id)" />
-          </div>
-        </div>
+    <!-- Games table -->
+    <ResourceTable 
+      v-else
+      :columns="columns" 
+      :rows="games" 
+      :loading="gamesStore.loading"
+      :error="gamesStore.error"
+    >
+      <template #cell-name="{ row }">
+        <a href="#" class="game-link" @click.prevent="viewGameInstances(row)">{{ row.name }}</a>
+      </template>
 
-        <template #primary>
-          <Button @click="viewGameInstances(game)" variant="primary" size="small">
-            Manage
-          </Button>
-        </template>
-      </DataCard>
-    </div>
+      <template #cell-instances="{ row }">
+        {{ getGameInstanceCount(row.id) }}
+      </template>
+
+      <template #cell-active="{ row }">
+        {{ getActiveInstanceCount(row.id) }}
+      </template>
+
+      <template #actions="{ row }">
+        <TableActions :actions="getGameActions(row)" />
+      </template>
+    </ResourceTable>
 
     <!-- Empty state -->
-    <div v-if="!gamesStore.loading && !gamesStore.error && games.length === 0" class="empty-state">
-      <h3>No Games Available</h3>
-      <p>You don't have access to any games yet. Contact an administrator to get access to games.</p>
-    </div>
+    <p v-if="!gamesStore.loading && !gamesStore.error && games.length === 0" class="empty-message">
+      You don't have access to any games yet. Contact an administrator to get access to games.
+    </p>
   </div>
 </template>
 
@@ -51,16 +57,22 @@ import { computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useGamesStore } from '../../stores/games';
 import { useGameInstancesStore } from '../../stores/gameInstances';
-import Button from '../../components/Button.vue';
-import DataCard from '../../components/DataCard.vue';
-import DataItem from '../../components/DataItem.vue';
 import PageHeader from '../../components/PageHeader.vue';
+import ResourceTable from '../../components/ResourceTable.vue';
+import TableActions from '../../components/TableActions.vue';
 
 const router = useRouter();
 const gamesStore = useGamesStore();
 const gameInstancesStore = useGameInstancesStore();
 
 const games = computed(() => gamesStore.games);
+
+const columns = [
+  { key: 'name', label: 'Name' },
+  { key: 'game_type', label: 'Type' },
+  { key: 'instances', label: 'Instances' },
+  { key: 'active', label: 'Active' }
+];
 
 onMounted(async () => {
   await loadGames();
@@ -76,26 +88,11 @@ const loadGames = async () => {
   }
 };
 
-const getGameDescription = (gameType) => {
-  const descriptions = {
-    'adventure': 'Exploration and story-driven experiences with locations, items, and creatures.',
-    'economic': 'Resource management and economic competition games.',
-    'sports': 'Sports team management and competition games.',
-    'mystery': 'Mystery solving and detective games.',
-    'fantasy': 'Fantasy kingdom management and warfare games.'
-  };
-  return descriptions[gameType] || 'Custom game type';
-};
-
 const getGameInstanceCount = (gameId) => {
-  // This would need to be implemented to get instance count per game
-  // For now, return a placeholder
   return gameInstancesStore.gameInstances.filter(instance => instance.game_id === gameId).length;
 };
 
 const getActiveInstanceCount = (gameId) => {
-  // This would need to be implemented to get active instance count per game
-  // For now, return a placeholder
   return gameInstancesStore.gameInstances.filter(instance =>
     instance.game_id === gameId &&
     ['started'].includes(instance.status)
@@ -106,22 +103,26 @@ const viewGameInstances = (game) => {
   gamesStore.setSelectedGame(game);
   router.push(`/admin/games/${game.id}/instances`);
 };
+
+const getGameActions = (game) => {
+  return [
+    {
+      key: 'manage',
+      label: 'Manage',
+      primary: true,
+      handler: () => viewGameInstances(game)
+    }
+  ];
+};
 </script>
 
 <style scoped>
 .games-dashboard {
-  max-width: 1200px;
-  margin: 0 auto;
+  width: 100%;
 }
 
-.loading-state,
-.error-state,
-.empty-state {
-  text-align: center;
-  padding: var(--space-xl);
-  background: var(--color-bg);
-  border-radius: var(--radius-lg);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+.error-state {
+  padding: var(--space-lg);
 }
 
 .error-state button {
@@ -134,29 +135,17 @@ const viewGameInstances = (game) => {
   cursor: pointer;
 }
 
-.games-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
-  gap: var(--space-lg);
+.game-link {
+  color: var(--color-primary);
+  text-decoration: none;
 }
 
-.game-card {
-  min-height: 280px;
+.game-link:hover {
+  text-decoration: underline;
 }
 
-.game-info {
-  margin-bottom: 0;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-sm);
-}
-
-.game-stats {
-  display: flex;
-  gap: var(--space-lg);
-  margin-top: var(--space-md);
-  padding-top: var(--space-md);
-  border-top: 1px solid var(--color-border);
+.empty-message {
+  color: var(--color-text-muted);
+  font-style: italic;
 }
 </style>

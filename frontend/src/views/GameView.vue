@@ -10,7 +10,6 @@
             <th>Type</th>
             <th>Turn Duration</th>
             <th>Created</th>
-            <th></th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -20,11 +19,8 @@
             <td>{{ game.game_type }}</td>
             <td>{{ formatTurnDuration(game.turn_duration_hours) }}</td>
             <td>{{ formatDate(game.created_at) }}</td>
-            <td class="select-cell">
-              <button class="select-btn" @click="selectGame(game)">Select</button>
-            </td>
             <td>
-              <TableActionsMenu :actions="getActions(game)" />
+              <TableActions :actions="getActions(game)" />
             </td>
           </tr>
         </tbody>
@@ -32,9 +28,13 @@
       <p v-else>No games found.</p>
     </div>
 
+    <!-- Turn Sheet Preview Modal -->
+    <TurnSheetPreviewModal :visible="showPreviewModal" :gameId="previewGameId" :gameName="previewGameName"
+      title="Join Game Turn Sheet Preview" @close="closePreviewModal" />
+
     <!-- Modal for create/edit -->
     <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
-      <div class="modal">
+      <div class="modal modal-wide">
         <h2>{{ modalMode === 'create' ? 'Create Game' : 'Edit Game' }}</h2>
         <form @submit.prevent="modalMode === 'create' ? createGame() : updateGame()" class="modal-form">
           <div class="form-group">
@@ -52,9 +52,20 @@
             <input v-model.number="modalForm.turn_duration_hours" id="turn-duration" type="number" min="1" required
               placeholder="168 (1 week)" />
           </div>
+
+          <!-- Turn Sheet Image Upload (only in edit mode) -->
+          <div v-if="modalMode === 'edit' && modalForm.id" class="form-section">
+            <TurnSheetImageUpload :gameId="modalForm.id" @imagesUpdated="onImagesUpdated"
+              @loadingChanged="onImageUploadLoadingChanged" />
+          </div>
+
           <div class="modal-actions">
-            <button type="submit">{{ modalMode === 'create' ? 'Create' : 'Save' }}</button>
-            <button type="button" @click="closeModal">Cancel</button>
+            <button type="submit" :disabled="imageUploadLoading">
+              {{ modalMode === 'create' ? 'Create' : 'Save' }}
+            </button>
+            <button type="button" @click="closeModal" :disabled="imageUploadLoading">
+              {{ imageUploadLoading ? 'Uploading...' : 'Cancel' }}
+            </button>
           </div>
         </form>
         <div v-if="modalError" class="error">
@@ -83,13 +94,17 @@
 <script>
 import { useGamesStore } from '../stores/games';
 import PageHeader from '../components/PageHeader.vue';
-import TableActionsMenu from '../components/TableActionsMenu.vue';
+import TableActions from '../components/TableActions.vue';
+import TurnSheetImageUpload from '../components/TurnSheetImageUpload.vue';
+import TurnSheetPreviewModal from '../components/TurnSheetPreviewModal.vue';
 
 export default {
   name: 'GameView',
   components: {
     PageHeader,
-    TableActionsMenu
+    TableActions,
+    TurnSheetImageUpload,
+    TurnSheetPreviewModal
   },
   data() {
     return {
@@ -104,7 +119,13 @@ export default {
       modalError: '',
       showDeleteConfirm: false,
       deleteTarget: null,
-      deleteError: ''
+      deleteError: '',
+      // Preview modal state
+      showPreviewModal: false,
+      previewGameId: '',
+      previewGameName: '',
+      // Image upload loading state
+      imageUploadLoading: false
     }
   },
   computed: {
@@ -159,6 +180,12 @@ export default {
       this.showModal = true
     },
     closeModal() {
+      // Don't close if images are being uploaded
+      if (this.imageUploadLoading) {
+        console.log('[GameView] Preventing modal close - upload in progress');
+        return;
+      }
+      console.log('[GameView] Closing modal');
       this.showModal = false
       this.modalError = ''
     },
@@ -218,6 +245,17 @@ export default {
     getActions(game) {
       return [
         {
+          key: 'manage',
+          label: 'Manage',
+          primary: true,
+          handler: () => this.selectGame(game)
+        },
+        {
+          key: 'preview',
+          label: 'Preview Turn Sheet',
+          handler: () => this.openPreview(game)
+        },
+        {
           key: 'edit',
           label: 'Edit',
           handler: () => this.openEdit(game)
@@ -229,6 +267,25 @@ export default {
           handler: () => this.confirmDelete(game)
         }
       ];
+    },
+    openPreview(game) {
+      this.previewGameId = game.id;
+      this.previewGameName = game.name;
+      this.showPreviewModal = true;
+    },
+    closePreviewModal() {
+      this.showPreviewModal = false;
+      this.previewGameId = '';
+      this.previewGameName = '';
+    },
+    onImagesUpdated() {
+      // Called when turn sheet images are updated
+      // Could refresh data or show a notification
+      console.log('[GameView] Turn sheet images updated');
+    },
+    onImageUploadLoadingChanged(isLoading) {
+      console.log(`[GameView] Image upload loading changed: ${isLoading}`);
+      this.imageUploadLoading = isLoading;
     }
   }
 }
@@ -254,7 +311,8 @@ export default {
 
 .game-table-section table th:last-child,
 .game-table-section table td:last-child {
-  width: 60px;
+  width: auto;
+  min-width: 180px;
   text-align: center;
   padding-left: var(--space-sm);
   padding-right: var(--space-sm);
@@ -268,29 +326,6 @@ export default {
 
 .edit-link:hover {
   text-decoration: underline;
-}
-
-.select-cell {
-  text-align: center;
-  width: auto;
-  padding-left: var(--space-sm);
-  padding-right: var(--space-sm);
-}
-
-.select-btn {
-  background: var(--color-primary);
-  color: var(--color-text-light);
-  border: none;
-  padding: var(--space-xs) var(--space-md);
-  border-radius: var(--radius-sm);
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-semibold);
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.select-btn:hover {
-  background: var(--color-primary-dark);
 }
 
 .modal-form {
@@ -325,6 +360,17 @@ export default {
 .danger-btn:hover {
   background: var(--color-danger-dark) !important;
   border-color: var(--color-danger-dark) !important;
+}
+
+.modal-wide {
+  max-width: 600px;
+  width: 100%;
+}
+
+.form-section {
+  margin-top: var(--space-md);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--color-border);
 }
 
 @media (max-width: 768px) {

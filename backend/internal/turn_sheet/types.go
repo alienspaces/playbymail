@@ -31,10 +31,8 @@ type TurnSheetTemplateData struct {
 	// Account data
 	AccountName *string `json:"account_name"`
 
-	// Background images
-	BackgroundTop    *string `json:"background_top"`
-	BackgroundMiddle *string `json:"background_middle"`
-	BackgroundBottom *string `json:"background_bottom"`
+	// Background image (single image covering the page)
+	BackgroundImage *string `json:"background_image"`
 
 	// Turn sheet
 	TurnSheetInstructions *string    `json:"turn_sheet_instructions"`

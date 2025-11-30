@@ -87,3 +87,10 @@ func MapVerifyAuthRequestToDomain(req *account_schema.VerifyAuthRequest) (string
 func MapVerifyAuthResponse(token string) *account_schema.VerifyAuthResponse {
 	return &account_schema.VerifyAuthResponse{SessionToken: token}
 }
+
+func MapRefreshSessionResponse(status string, expiresInSeconds int) *account_schema.RefreshSessionResponse {
+	return &account_schema.RefreshSessionResponse{
+		Status:           status,
+		ExpiresInSeconds: expiresInSeconds,
+	}
+}

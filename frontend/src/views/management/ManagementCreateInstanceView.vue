@@ -173,8 +173,7 @@ const goBack = () => {
 
 <style scoped>
 .create-instance-view {
-  max-width: 800px;
-  margin: 0 auto;
+  width: 100%;
 }
 
 .view-header {

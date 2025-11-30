@@ -4,9 +4,9 @@
       <HandDrawnIcon v-if="showIcon" :type="iconType" :color="iconColor" class="title-icon" />
       {{ title }}
     </component>
-    <button v-if="actionText" @click="$emit('action')" class="action-btn">
+    <Button v-if="actionText" @click="$emit('action')" variant="primary" size="small" :disabled="actionDisabled">
       {{ actionText }}
-    </button>
+    </Button>
     <p v-if="subtitle" class="page-subtitle">
       {{ subtitle }}
     </p>
@@ -16,6 +16,7 @@
 <script setup>
 import { computed } from 'vue';
 import HandDrawnIcon from './HandDrawnIcon.vue';
+import Button from './Button.vue';
 
 const props = defineProps({
   title: {
@@ -25,6 +26,10 @@ const props = defineProps({
   actionText: {
     type: String,
     default: ''
+  },
+  actionDisabled: {
+    type: Boolean,
+    default: false
   },
   iconType: {
     type: String,
@@ -40,8 +45,8 @@ const props = defineProps({
   },
   titleLevel: {
     type: String,
-    default: 'h1', // 'h1' for main titles, 'h2' for section titles
-    validator: (value) => ['h1', 'h2'].includes(value)
+    default: 'h1', // 'h1' for main titles, 'h2' for section titles, 'h3' for subsections
+    validator: (value) => ['h1', 'h2', 'h3'].includes(value)
   },
   subtitle: {
     type: String,
@@ -51,13 +56,16 @@ const props = defineProps({
 
 const titleTag = computed(() => props.titleLevel);
 const titleClass = computed(() => {
-  return props.titleLevel === 'h2' ? 'section-title' : '';
+  if (props.titleLevel === 'h2') return 'section-title';
+  if (props.titleLevel === 'h3') return 'subsection-title';
+  return '';
 });
 
 defineEmits(['action']);
 </script>
 
 <style scoped>
+/* Default page header - for h1 and h2 (main page titles) */
 .page-header {
   display: flex;
   flex-direction: column;
@@ -67,7 +75,8 @@ defineEmits(['action']);
 }
 
 .page-header h1,
-.page-header h2 {
+.page-header h2,
+.page-header h3 {
   margin: 0;
   display: flex;
   align-items: center;
@@ -82,6 +91,20 @@ defineEmits(['action']);
   color: var(--color-text);
   text-transform: uppercase;
   letter-spacing: 0.8px;
+}
+
+/* Subsection titles (h3) - smaller with tighter spacing */
+.page-header h3.subsection-title {
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Tighter spacing for h3 subsection headers */
+.page-header:has(h3) {
+  gap: var(--space-xs);
   margin-bottom: var(--space-sm);
 }
 
@@ -92,28 +115,12 @@ defineEmits(['action']);
 .page-subtitle {
   margin: 0;
   color: var(--color-text-muted);
-  font-size: var(--font-size-md);
+  font-size: var(--font-size-sm);
 }
 
 .title-icon {
   font-size: 0.8em;
   margin-right: 0.2em;
-}
-
-.action-btn {
-  background: transparent;
-  color: var(--color-button);
-  border: 2px solid var(--color-button);
-  padding: var(--space-sm) var(--space-md);
-  border-radius: var(--radius-sm);
-  font-weight: var(--font-weight-bold);
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.action-btn:hover {
-  background: var(--color-button);
-  color: var(--color-text-light);
 }
 
 @media (max-width: 768px) {

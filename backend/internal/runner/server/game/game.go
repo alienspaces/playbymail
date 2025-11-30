@@ -33,6 +33,7 @@ func GameHandlerConfig(l logger.Logger, scanner turn_sheet.TurnSheetScanner) (ma
 	// Additional handler configurations are added here
 	handlerConfigFuncs := []func(logger.Logger) (map[string]server.HandlerConfig, error){
 		gameHandlerConfig,
+		gameImageHandlerConfig,
 		gameParameterHandlerConfig,
 		gameSubscriptionHandlerConfig,
 		gameInstanceHandlerConfig,

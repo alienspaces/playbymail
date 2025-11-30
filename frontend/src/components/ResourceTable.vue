@@ -40,11 +40,12 @@ defineProps({
   width: 100%;
 }
 
-/* Actions column styling */
+/* Actions column styling - wider to accommodate inline buttons */
 .resource-table-section th:last-child,
 .resource-table-section td:last-child {
   text-align: center;
-  width: 60px;
+  width: auto;
+  min-width: 120px;
   white-space: nowrap;
   vertical-align: middle;
   padding-left: var(--space-sm);

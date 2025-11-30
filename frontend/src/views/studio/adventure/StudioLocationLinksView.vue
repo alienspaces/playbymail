@@ -17,7 +17,7 @@
           <a href="#" class="edit-link" @click.prevent="openEdit(row)">{{ row.name }}</a>
         </template>
         <template #actions="{ row }">
-          <TableActionsMenu :actions="getActions(row)" />
+          <TableActions :actions="getActions(row)" />
         </template>
       </ResourceTable>
 
@@ -45,7 +45,7 @@ import ResourceModalForm from '../../../components/ResourceModalForm.vue';
 import ConfirmationModal from '../../../components/ConfirmationModal.vue';
 import PageHeader from '../../../components/PageHeader.vue';
 import GameContext from '../../../components/GameContext.vue';
-import TableActionsMenu from '../../../components/TableActionsMenu.vue';
+import TableActions from '../../../components/TableActions.vue';
 
 const locationLinksStore = useLocationLinksStore();
 const locationsStore = useLocationsStore();

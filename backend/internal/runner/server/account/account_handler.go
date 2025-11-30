@@ -37,8 +37,9 @@ const (
 )
 
 const (
-	RequestAuth = "request-auth"
-	VerifyAuth  = "verify-auth"
+	RequestAuth    = "request-auth"
+	VerifyAuth     = "verify-auth"
+	RefreshSession = "refresh-session"
 )
 
 func accountHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error) {
@@ -287,6 +288,27 @@ func accountHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, err
 		},
 	}
 
+	accountConfig[RefreshSession] = server.HandlerConfig{
+		Method:      http.MethodPost,
+		Path:        "/api/v1/refresh-session",
+		HandlerFunc: refreshSessionHandler,
+		MiddlewareConfig: server.MiddlewareConfig{
+			AuthenTypes: []server.AuthenticationType{
+				server.AuthenticationTypeToken,
+			},
+			ValidateResponseSchema: jsonschema.SchemaWithReferences{
+				Main: jsonschema.Schema{
+					Location: "api/account_schema",
+					Name:     "account.refresh-session.response.schema.json",
+				},
+			},
+		},
+		DocumentationConfig: server.DocumentationConfig{
+			Document: true,
+			Title:    "Refresh session",
+		},
+	}
+
 	return accountConfig, nil
 }
 
@@ -519,6 +541,22 @@ func verifyAuthHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Par
 	l.Info("verified account verification token for email >%s<, session token >%s<", req.Email, sessionToken)
 
 	return server.WriteResponse(l, w, http.StatusOK, mapper.MapVerifyAuthResponse(sessionToken))
+}
+
+func refreshSessionHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
+	l = logging.LoggerWithFunctionContext(l, packageName, "refreshSessionHandler")
+
+	l.Info("refreshing session")
+
+	mm := m.(*domain.Domain)
+
+	// The session is already refreshed by the authentication middleware
+	// (VerifyAccountSessionToken extends the expiry on each call).
+	// This endpoint just confirms the session is valid and returns the new expiry.
+
+	l.Info("session refreshed successfully")
+
+	return server.WriteResponse(l, w, http.StatusOK, mapper.MapRefreshSessionResponse("ok", mm.SessionTokenExpirySeconds()))
 }
 
 func getMyAccountHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {

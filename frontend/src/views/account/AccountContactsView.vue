@@ -27,15 +27,8 @@
           <DataItem v-if="contact.postal_code" label="Postal Code" :value="contact.postal_code" />
         </div>
 
-        <template #primary>
-          <AppButton @click="editContact(contact)" variant="primary" size="small">
-            Edit
-          </AppButton>
-        </template>
-        <template #secondary>
-          <AppButton @click="openDelete(contact)" variant="danger" size="small">
-            Delete
-          </AppButton>
+        <template #actions>
+          <TableActions :actions="getContactActions(contact)" />
         </template>
       </DataCard>
     </div>
@@ -63,7 +56,7 @@ import ContactModal from '@/components/ContactModal.vue'
 import PageHeader from '@/components/PageHeader.vue'
 import DataCard from '@/components/DataCard.vue'
 import DataItem from '@/components/DataItem.vue'
-import AppButton from '@/components/Button.vue'
+import TableActions from '@/components/TableActions.vue'
 import ConfirmationModal from '@/components/ConfirmationModal.vue'
 
 export default {
@@ -73,7 +66,7 @@ export default {
     PageHeader,
     DataCard,
     DataItem,
-    AppButton,
+    TableActions,
     ConfirmationModal
   },
   data() {
@@ -161,6 +154,21 @@ export default {
     async handleContactSaved() {
       this.closeModal()
       await this.loadAccountAndContacts()
+    },
+    getContactActions(contact) {
+      return [
+        {
+          key: 'edit',
+          label: 'Edit',
+          handler: () => this.editContact(contact)
+        },
+        {
+          key: 'delete',
+          label: 'Delete',
+          danger: true,
+          handler: () => this.openDelete(contact)
+        }
+      ]
     }
   }
 }

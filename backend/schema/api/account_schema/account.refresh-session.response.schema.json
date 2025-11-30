@@ -1,0 +1,20 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "http://playbymail.games/schema/account_schema/account.refresh-session.response.schema.json",
+    "title": "RefreshSessionResponse",
+    "type": "object",
+    "properties": {
+        "status": {
+            "type": "string",
+            "description": "Status of the session refresh operation"
+        },
+        "expires_in_seconds": {
+            "type": "integer",
+            "description": "Number of seconds until the session expires"
+        }
+    },
+    "required": [
+        "status",
+        "expires_in_seconds"
+    ]
+}
