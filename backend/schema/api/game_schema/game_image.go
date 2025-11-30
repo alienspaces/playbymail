@@ -44,3 +44,16 @@ type GameTurnSheetImageData struct {
 	GameID     string                 `json:"game_id"`
 	Background *GameImageResponseData `json:"background,omitempty"`
 }
+
+// LocationTurnSheetImageResponse returns the turn sheet background image for a location
+type LocationTurnSheetImageResponse struct {
+	Data       *LocationTurnSheetImageData       `json:"data"`
+	Error      *common_schema.ResponseError      `json:"error,omitempty"`
+	Pagination *common_schema.ResponsePagination `json:"pagination,omitempty"`
+}
+
+type LocationTurnSheetImageData struct {
+	GameID     string                 `json:"game_id"`
+	LocationID string                 `json:"location_id"`
+	Background *GameImageResponseData `json:"background,omitempty"`
+}

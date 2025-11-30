@@ -42,6 +42,7 @@ func AdventureGameHandlerConfig(l logger.Logger) (map[string]server.HandlerConfi
 		adventureGameCreatureInstanceHandlerConfig,
 		adventureGameItemInstanceHandlerConfig,
 		adventureGameLocationLinkRequirementHandlerConfig,
+		adventureGameLocationTurnSheetImageHandlerConfig,
 	}
 
 	for _, fn := range handlerConfigFuncs {

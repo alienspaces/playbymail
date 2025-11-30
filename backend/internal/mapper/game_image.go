@@ -70,3 +70,24 @@ func GameTurnSheetImageToResponse(l logger.Logger, gameID string, img *game_reco
 		Data: data,
 	}, nil
 }
+
+func LocationTurnSheetImageToResponse(l logger.Logger, gameID, locationID string, img *game_record.GameImage) (*game_schema.LocationTurnSheetImageResponse, error) {
+	l.Debug("mapping location turn sheet image to response")
+
+	data := &game_schema.LocationTurnSheetImageData{
+		GameID:     gameID,
+		LocationID: locationID,
+	}
+
+	if img != nil {
+		responseData, err := GameImageRecordToResponseData(l, img)
+		if err != nil {
+			return nil, err
+		}
+		data.Background = responseData
+	}
+
+	return &game_schema.LocationTurnSheetImageResponse{
+		Data: data,
+	}, nil
+}
