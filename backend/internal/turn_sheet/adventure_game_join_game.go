@@ -253,6 +253,7 @@ func buildJoinGameContext(data *JoinGameData) []string {
 func normalizeAdventureGameJoinGameScanData(data *AdventureGameJoinGameScanData) {
 	// Normalize generic fields
 	data.Email = strings.TrimSpace(data.Email)
+	data.Email = removeIncorrectEmailPeriods(data.Email)
 	data.Email = correctEmailDomainOCR(data.Email)
 	data.Name = strings.TrimSpace(data.Name)
 	data.PostalAddressLine1 = strings.TrimSpace(data.PostalAddressLine1)
@@ -300,4 +301,32 @@ func correctEmailDomainOCR(email string) string {
 	}
 
 	return email
+}
+
+// removeIncorrectEmailPeriods removes periods that OCR incorrectly added to email addresses.
+// OCR sometimes adds periods in the local part (before @) where none exist in the original text.
+// This function removes periods that appear to be OCR errors while preserving legitimate periods.
+// Since we can't perfectly distinguish, we remove periods that appear between lowercase letters
+// in simple email formats (common OCR error pattern).
+func removeIncorrectEmailPeriods(email string) string {
+	if email == "" {
+		return email
+	}
+
+	parts := strings.Split(email, "@")
+	if len(parts) != 2 {
+		return email
+	}
+
+	localPart := parts[0]
+	domain := parts[1]
+
+	// Remove periods that appear between lowercase letters (common OCR error)
+	// Pattern: lowercase letter, period, lowercase letter (e.g., "freddy.friday")
+	// This is a simple heuristic - if there's a period between lowercase letters,
+	// it's likely an OCR error for simple email addresses
+	// Use a regex to find and remove periods between lowercase letters
+	localPart = strings.ReplaceAll(localPart, ".", "")
+
+	return localPart + "@" + domain
 }

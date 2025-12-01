@@ -1,18 +1,9 @@
 <template>
   <div class="table-actions">
-    <button
-      v-for="action in actions"
-      :key="action.key"
-      @click="action.handler"
-      class="action-btn"
-      :class="{
-        'action-btn-primary': action.primary,
-        'action-btn-danger': action.danger
-      }"
-      :title="action.label"
-      :aria-label="action.label"
-      type="button"
-    >
+    <button v-for="action in actions" :key="action.key" @click="action.handler" class="action-btn" :class="{
+      'action-btn-primary': action.primary,
+      'action-btn-danger': action.danger
+    }" :title="action.label" :aria-label="action.label" type="button">
       <component :is="getIcon(action)" class="action-icon" />
       <span v-if="showLabels" class="action-label">{{ action.label }}</span>
     </button>
@@ -27,7 +18,7 @@ defineProps({
     type: Array,
     required: true,
     validator: (actions) => {
-      return actions.every(action => 
+      return actions.every(action =>
         action.key && action.label && typeof action.handler === 'function'
       );
     }
@@ -179,4 +170,3 @@ function getIcon(action) {
   padding: 6px 10px;
 }
 </style>
-
