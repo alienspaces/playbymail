@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import ConfirmationModal from './ConfirmationModal.vue'
 
@@ -10,37 +10,56 @@ describe('ConfirmationModal', () => {
     confirmText: 'Delete'
   }
 
+  // Helper to find elements in document body (where Teleport renders)
+  const findInBody = (selector) => {
+    return document.body.querySelector(selector)
+  }
+
+  const findAllInBody = (selector) => {
+    return document.body.querySelectorAll(selector)
+  }
+
+  beforeEach(() => {
+    // Clear any existing modals from previous tests
+    document.body.innerHTML = ''
+  })
+
+  afterEach(() => {
+    // Clean up after each test
+    document.body.innerHTML = ''
+  })
+
   it('renders when visible is true', () => {
-    const wrapper = mount(ConfirmationModal, {
+    mount(ConfirmationModal, {
       props: defaultProps
     })
 
-    expect(wrapper.find('.modal-overlay').exists()).toBe(true)
-    expect(wrapper.find('h2').text()).toBe('Delete Item')
-    expect(wrapper.find('p').text()).toBe('Are you sure?')
+    expect(findInBody('.modal-overlay')).toBeTruthy()
+    expect(findInBody('h2').textContent).toBe('Delete Item')
+    expect(findInBody('p').textContent).toBe('Are you sure?')
   })
 
   it('does not render when visible is false', () => {
-    const wrapper = mount(ConfirmationModal, {
+    mount(ConfirmationModal, {
       props: { ...defaultProps, visible: false }
     })
 
-    expect(wrapper.find('.modal-overlay').exists()).toBe(false)
+    expect(findInBody('.modal-overlay')).toBeNull()
   })
 
   it('renders warning text when provided', () => {
-    const wrapper = mount(ConfirmationModal, {
+    mount(ConfirmationModal, {
       props: {
         ...defaultProps,
         warning: 'This action cannot be undone'
       }
     })
 
-    expect(wrapper.find('.warning-text').text()).toBe('This action cannot be undone')
+    expect(findInBody('.warning-text').textContent).toBe('This action cannot be undone')
   })
 
   it('renders confirmation input when requireConfirmation is true', () => {
-    const wrapper = mount(ConfirmationModal, {
+    mount(ConfirmationModal, {
       props: {
         ...defaultProps,
         requireConfirmation: true,
@@ -48,8 +67,8 @@ describe('ConfirmationModal', () => {
       }
     })
 
-    expect(wrapper.find('.confirmation-input').exists()).toBe(true)
-    expect(wrapper.find('input').attributes('placeholder')).toBe('DELETE')
+    expect(findInBody('.confirmation-input')).toBeTruthy()
+    expect(findInBody('input').getAttribute('placeholder')).toBe('DELETE')
   })
 
   it('emits cancel when overlay is clicked', async () => {
@@ -57,7 +76,10 @@ describe('ConfirmationModal', () => {
       props: defaultProps
     })
 
-    await wrapper.find('.modal-overlay').trigger('click')
+    const overlay = findInBody('.modal-overlay')
+    overlay.click()
+    await wrapper.vm.$nextTick()
+
     expect(wrapper.emitted('cancel')).toBeTruthy()
   })
 
@@ -66,7 +88,10 @@ describe('ConfirmationModal', () => {
       props: defaultProps
     })
 
-    await wrapper.find('.danger-btn').trigger('click')
+    const confirmBtn = findInBody('.danger-btn')
+    confirmBtn.click()
+    await wrapper.vm.$nextTick()
+
     expect(wrapper.emitted('confirm')).toBeTruthy()
   })
 
@@ -79,11 +104,13 @@ describe('ConfirmationModal', () => {
       }
     })
 
-    const input = wrapper.find('input')
-    await input.setValue('WRONG')
+    const input = findInBody('input')
+    input.value = 'WRONG'
+    input.dispatchEvent(new Event('input'))
+    await wrapper.vm.$nextTick()
 
-    const confirmBtn = wrapper.find('.danger-btn')
-    expect(confirmBtn.attributes('disabled')).toBeDefined()
+    const confirmBtn = findInBody('.danger-btn')
+    expect(confirmBtn.hasAttribute('disabled')).toBe(true)
   })
 
   it('enables confirm button when confirmation text matches', async () => {
@@ -95,15 +122,17 @@ describe('ConfirmationModal', () => {
       }
     })
 
-    const input = wrapper.find('input')
-    await input.setValue('DELETE')
+    const input = findInBody('input')
+    input.value = 'DELETE'
+    input.dispatchEvent(new Event('input'))
+    await wrapper.vm.$nextTick()
 
-    const confirmBtn = wrapper.find('.danger-btn')
-    expect(confirmBtn.attributes('disabled')).toBeUndefined()
+    const confirmBtn = findInBody('.danger-btn')
+    expect(confirmBtn.hasAttribute('disabled')).toBe(false)
   })
 
   it('shows loading text when loading is true', () => {
-    const wrapper = mount(ConfirmationModal, {
+    mount(ConfirmationModal, {
       props: {
         ...defaultProps,
         loading: true,
@@ -111,29 +140,29 @@ describe('ConfirmationModal', () => {
       }
     })
 
-    expect(wrapper.find('.danger-btn').text()).toBe('Deleting...')
+    expect(findInBody('.danger-btn').textContent).toBe('Deleting...')
   })
 
   it('renders custom cancel text', () => {
-    const wrapper = mount(ConfirmationModal, {
+    mount(ConfirmationModal, {
       props: {
         ...defaultProps,
         cancelText: 'Never mind'
       }
     })
 
-    const buttons = wrapper.findAll('button')
-    expect(buttons[0].text()).toBe('Never mind')
+    const buttons = findAllInBody('button')
+    expect(buttons[0].textContent).toBe('Never mind')
   })
 
   it('renders error text when provided', () => {
-    const wrapper = mount(ConfirmationModal, {
+    mount(ConfirmationModal, {
       props: {
         ...defaultProps,
         error: 'Something went wrong'
       }
     })
 
-    expect(wrapper.find('.error-text').text()).toBe('Something went wrong')
+    expect(findInBody('.error-text').textContent).toBe('Something went wrong')
   })
 }) 

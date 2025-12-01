@@ -261,7 +261,7 @@ func TestGenerateLocationChoiceFormatsForPrinting(t *testing.T) {
 	l, _, _, cfg := testutil.NewDefaultDependencies(t)
 	cfg.TemplatesPath = "../../templates"
 	// SaveTestFiles defaults to false - set SAVE_TEST_FILES=true to generate files
-	cfg.SaveTestFiles = true
+	// cfg.SaveTestFiles = true
 
 	processor, err := turn_sheet.NewLocationChoiceProcessor(l, cfg)
 	require.NoError(t, err)

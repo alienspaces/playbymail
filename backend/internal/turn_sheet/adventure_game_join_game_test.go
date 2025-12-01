@@ -251,9 +251,11 @@ func TestJoinGameProcessor_ScanTurnSheet(t *testing.T) {
 }
 
 func TestGenerateJoinGameFormatsForPrinting(t *testing.T) {
+
 	l, _, _, cfg := testutil.NewDefaultDependencies(t)
 	cfg.TemplatesPath = "../../templates"
-	cfg.SaveTestFiles = true
+	// SaveTestFiles defaults to false - set SAVE_TEST_FILES=true to generate files
+	// cfg.SaveTestFiles = true
 
 	processor, err := turn_sheet.NewJoinGameProcessor(l, cfg)
 	require.NoError(t, err)

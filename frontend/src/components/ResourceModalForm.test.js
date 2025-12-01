@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import ResourceModalForm from './ResourceModalForm.vue'
 
@@ -25,8 +25,27 @@ describe('ResourceModalForm', () => {
     ]
   }
 
+  // Helper to find elements in document body (where Teleport renders)
+  const findInBody = (selector) => {
+    return document.body.querySelector(selector)
+  }
+
+  const findAllInBody = (selector) => {
+    return document.body.querySelectorAll(selector)
+  }
+
+  beforeEach(() => {
+    // Clear any existing modals from previous tests
+    document.body.innerHTML = ''
+  })
+
+  afterEach(() => {
+    // Clean up after each test
+    document.body.innerHTML = ''
+  })
+
   it('renders modal when visible is true', () => {
-    const wrapper = mount(ResourceModalForm, {
+    mount(ResourceModalForm, {
       props: {
         visible: true,
         mode: 'create',
@@ -37,12 +56,12 @@ describe('ResourceModalForm', () => {
       }
     })
 
-    expect(wrapper.find('.modal-overlay').exists()).toBe(true)
-    expect(wrapper.find('.modal').exists()).toBe(true)
+    expect(findInBody('.modal-overlay')).toBeTruthy()
+    expect(findInBody('.modal')).toBeTruthy()
   })
 
   it('does not render when visible is false', () => {
-    const wrapper = mount(ResourceModalForm, {
+    mount(ResourceModalForm, {
       props: {
         visible: false,
         mode: 'create',
@@ -53,11 +72,11 @@ describe('ResourceModalForm', () => {
       }
     })
 
-    expect(wrapper.find('.modal-overlay').exists()).toBe(false)
+    expect(findInBody('.modal-overlay')).toBeNull()
   })
 
   it('displays correct title for create mode', () => {
-    const wrapper = mount(ResourceModalForm, {
+    mount(ResourceModalForm, {
       props: {
         visible: true,
         mode: 'create',
@@ -68,11 +87,11 @@ describe('ResourceModalForm', () => {
       }
     })
 
-    expect(wrapper.find('h2').text()).toBe('Create Item')
+    expect(findInBody('h2').textContent).toBe('Create Item')
   })
 
   it('displays correct title for edit mode', () => {
-    const wrapper = mount(ResourceModalForm, {
+    mount(ResourceModalForm, {
       props: {
         visible: true,
         mode: 'edit',
@@ -83,11 +102,11 @@ describe('ResourceModalForm', () => {
       }
     })
 
-    expect(wrapper.find('h2').text()).toBe('Edit Item')
+    expect(findInBody('h2').textContent).toBe('Edit Item')
   })
 
   it('renders form fields correctly', () => {
-    const wrapper = mount(ResourceModalForm, {
+    mount(ResourceModalForm, {
       props: {
         visible: true,
         mode: 'create',
@@ -98,30 +117,30 @@ describe('ResourceModalForm', () => {
       }
     })
 
-    const formGroups = wrapper.findAll('.form-group')
+    const formGroups = findAllInBody('.form-group')
     expect(formGroups).toHaveLength(2)
 
     // Check labels
-    const labels = wrapper.findAll('label')
-    expect(labels[0].text()).toBe('Name *')
-    expect(labels[1].text()).toBe('Description')
+    const labels = findAllInBody('label')
+    expect(labels[0].textContent.trim()).toBe('Name *')
+    expect(labels[1].textContent.trim()).toBe('Description')
 
     // Check inputs and textareas
-    const inputs = wrapper.findAll('input')
-    const textareas = wrapper.findAll('textarea')
+    const inputs = findAllInBody('input')
+    const textareas = findAllInBody('textarea')
     expect(inputs).toHaveLength(1)
     expect(textareas).toHaveLength(1)
     
-    expect(inputs[0].attributes('id')).toBe('name')
-    expect(inputs[0].attributes('required')).toBeDefined()
-    expect(inputs[0].attributes('maxlength')).toBe('100')
+    expect(inputs[0].getAttribute('id')).toBe('name')
+    expect(inputs[0].hasAttribute('required')).toBe(true)
+    expect(inputs[0].getAttribute('maxlength')).toBe('100')
     
-    expect(textareas[0].attributes('id')).toBe('description')
-    expect(textareas[0].attributes('maxlength')).toBe('500')
+    expect(textareas[0].getAttribute('id')).toBe('description')
+    expect(textareas[0].getAttribute('maxlength')).toBe('500')
   })
 
   it('renders select fields correctly', () => {
-    const wrapper = mount(ResourceModalForm, {
+    mount(ResourceModalForm, {
       props: {
         visible: true,
         mode: 'create',
@@ -133,19 +152,19 @@ describe('ResourceModalForm', () => {
       }
     })
 
-    const selects = wrapper.findAll('select')
-    const inputs = wrapper.findAll('input')
+    const selects = findAllInBody('select')
+    const inputs = findAllInBody('input')
     expect(selects).toHaveLength(1)
     expect(inputs).toHaveLength(1)
 
-    expect(selects[0].attributes('id')).toBe('category')
-    expect(selects[0].attributes('required')).toBeDefined()
+    expect(selects[0].getAttribute('id')).toBe('category')
+    expect(selects[0].hasAttribute('required')).toBe(true)
     
-    const options = selects[0].findAll('option')
+    const options = selects[0].querySelectorAll('option')
     expect(options).toHaveLength(3) // placeholder + 2 options
-    expect(options[0].text()).toBe('Select a category...')
-    expect(options[1].text()).toBe('Option 1')
-    expect(options[2].text()).toBe('Option 2')
+    expect(options[0].textContent).toBe('Select a category...')
+    expect(options[1].textContent).toBe('Option 1')
+    expect(options[2].textContent).toBe('Option 2')
   })
 
   it('populates form with modelValue', async () => {
@@ -162,11 +181,11 @@ describe('ResourceModalForm', () => {
 
     await wrapper.vm.$nextTick()
 
-    const nameInput = wrapper.find('#name')
-    const descriptionInput = wrapper.find('#description')
+    const nameInput = findInBody('#name')
+    const descriptionInput = findInBody('#description')
 
-    expect(nameInput.element.value).toBe('Test Item')
-    expect(descriptionInput.element.value).toBe('Test Description')
+    expect(nameInput.value).toBe('Test Item')
+    expect(descriptionInput.value).toBe('Test Description')
   })
 
   it('emits submit event with form data', async () => {
@@ -183,8 +202,9 @@ describe('ResourceModalForm', () => {
 
     await wrapper.vm.$nextTick()
 
-    const form = wrapper.find('form')
-    await form.trigger('submit')
+    const form = findInBody('form')
+    form.dispatchEvent(new Event('submit', { cancelable: true }))
+    await wrapper.vm.$nextTick()
 
     expect(wrapper.emitted('submit')).toBeTruthy()
     expect(wrapper.emitted('submit')[0][0]).toEqual(mockModelValue)
@@ -202,15 +222,16 @@ describe('ResourceModalForm', () => {
       }
     })
 
-    const cancelButton = wrapper.find('button[type="button"]')
-    await cancelButton.trigger('click')
+    const cancelButton = findInBody('button[type="button"]')
+    cancelButton.click()
+    await wrapper.vm.$nextTick()
 
     expect(wrapper.emitted('cancel')).toBeTruthy()
   })
 
   it('displays error message when error prop is provided', () => {
     const errorMessage = 'Validation failed'
-    const wrapper = mount(ResourceModalForm, {
+    mount(ResourceModalForm, {
       props: {
         visible: true,
         mode: 'create',
@@ -221,11 +242,11 @@ describe('ResourceModalForm', () => {
       }
     })
 
-    expect(wrapper.find('.error').text()).toBe(errorMessage)
+    expect(findInBody('.error').textContent).toBe(errorMessage)
   })
 
   it('does not display error when error prop is null', () => {
-    const wrapper = mount(ResourceModalForm, {
+    mount(ResourceModalForm, {
       props: {
         visible: true,
         mode: 'create',
@@ -236,11 +257,11 @@ describe('ResourceModalForm', () => {
       }
     })
 
-    expect(wrapper.find('.error').exists()).toBe(false)
+    expect(findInBody('.error')).toBeNull()
   })
 
   it('shows correct button text for create mode', () => {
-    const wrapper = mount(ResourceModalForm, {
+    mount(ResourceModalForm, {
       props: {
         visible: true,
         mode: 'create',
@@ -251,12 +272,12 @@ describe('ResourceModalForm', () => {
       }
     })
 
-    const submitButton = wrapper.find('button[type="submit"]')
-    expect(submitButton.text()).toBe('Create')
+    const submitButton = findInBody('button[type="submit"]')
+    expect(submitButton.textContent).toBe('Create')
   })
 
   it('shows correct button text for edit mode', () => {
-    const wrapper = mount(ResourceModalForm, {
+    mount(ResourceModalForm, {
       props: {
         visible: true,
         mode: 'edit',
@@ -267,12 +288,12 @@ describe('ResourceModalForm', () => {
       }
     })
 
-    const submitButton = wrapper.find('button[type="submit"]')
-    expect(submitButton.text()).toBe('Save')
+    const submitButton = findInBody('button[type="submit"]')
+    expect(submitButton.textContent).toBe('Save')
   })
 
   it('handles custom field slots', () => {
-    const wrapper = mount(ResourceModalForm, {
+    mount(ResourceModalForm, {
       props: {
         visible: true,
         mode: 'create',
@@ -286,7 +307,7 @@ describe('ResourceModalForm', () => {
       }
     })
 
-    const selects = wrapper.findAll('select')
+    const selects = findAllInBody('select')
     expect(selects).toHaveLength(2)
   })
 
@@ -303,13 +324,13 @@ describe('ResourceModalForm', () => {
     })
 
     await wrapper.vm.$nextTick()
-    expect(wrapper.find('#name').element.value).toBe('Initial Name')
+    expect(findInBody('#name').value).toBe('Initial Name')
 
     await wrapper.setProps({
       modelValue: { name: 'Updated Name' }
     })
 
     await wrapper.vm.$nextTick()
-    expect(wrapper.find('#name').element.value).toBe('Updated Name')
+    expect(findInBody('#name').value).toBe('Updated Name')
   })
 }) 

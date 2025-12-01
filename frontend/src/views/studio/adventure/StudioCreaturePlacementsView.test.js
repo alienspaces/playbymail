@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { ref } from 'vue'
@@ -76,10 +76,22 @@ describe('StudioCreaturePlacementsView', () => {
     })
   }
 
+  // Helper to find elements in document body (where Teleport renders)
+  const findInBody = (selector) => {
+    return document.body.querySelector(selector)
+  }
+
   beforeEach(() => {
     pinia = createPinia()
     setActivePinia(pinia)
     vi.clearAllMocks()
+    // Clear any existing modals from previous tests
+    document.body.innerHTML = ''
+  })
+
+  afterEach(() => {
+    // Clean up after each test
+    document.body.innerHTML = ''
   })
 
   it('renders prompt when no game is selected', () => {
@@ -148,7 +160,7 @@ describe('StudioCreaturePlacementsView', () => {
     wrapper.vm.creaturePlacementModalMode = 'create'
     await wrapper.vm.$nextTick()
 
-    expect(wrapper.find('.modal h2').text()).toBe('Create Creature Placement')
+    expect(findInBody('.modal h2').textContent).toBe('Create Creature Placement')
   })
 
   it('renders edit modal with correct title', async () => {
@@ -161,7 +173,7 @@ describe('StudioCreaturePlacementsView', () => {
     wrapper.vm.creaturePlacementModalMode = 'edit'
     await wrapper.vm.$nextTick()
 
-    expect(wrapper.find('.modal h2').text()).toBe('Edit Creature Placement')
+    expect(findInBody('.modal h2').textContent).toBe('Edit Creature Placement')
   })
 
   it('renders creature and location select options', async () => {
@@ -196,14 +208,14 @@ describe('StudioCreaturePlacementsView', () => {
     wrapper.vm.showCreaturePlacementModal = true
     await wrapper.vm.$nextTick()
 
-    const creatureSelect = wrapper.find('#adventure_game_creature_id')
-    const locationSelect = wrapper.find('#adventure_game_location_id')
+    const creatureSelect = findInBody('#adventure_game_creature_id')
+    const locationSelect = findInBody('#adventure_game_location_id')
 
-    expect(creatureSelect.exists()).toBe(true)
-    expect(locationSelect.exists()).toBe(true)
+    expect(creatureSelect).toBeTruthy()
+    expect(locationSelect).toBeTruthy()
 
-    const creatureOptions = creatureSelect.findAll('option')
-    const locationOptions = locationSelect.findAll('option')
+    const creatureOptions = creatureSelect.querySelectorAll('option')
+    const locationOptions = locationSelect.querySelectorAll('option')
 
     expect(creatureOptions).toHaveLength(3) // placeholder + 2 creatures
     expect(locationOptions).toHaveLength(3) // placeholder + 2 locations
@@ -218,8 +230,9 @@ describe('StudioCreaturePlacementsView', () => {
     wrapper.vm.showCreaturePlacementModal = true
     await wrapper.vm.$nextTick()
 
-    const cancelButton = wrapper.find('button[type="button"]')
-    await cancelButton.trigger('click')
+    const cancelButton = findInBody('button[type="button"]')
+    cancelButton.click()
+    await wrapper.vm.$nextTick()
 
     expect(wrapper.vm.showCreaturePlacementModal).toBe(false)
   })
@@ -234,7 +247,7 @@ describe('StudioCreaturePlacementsView', () => {
     wrapper.vm.creaturePlacementModalError = 'Validation failed'
     await wrapper.vm.$nextTick()
 
-    expect(wrapper.find('.modal .error').text()).toBe('Validation failed')
+    expect(findInBody('.modal .error').textContent).toBe('Validation failed')
   })
 
   it('renders delete confirmation modal', async () => {

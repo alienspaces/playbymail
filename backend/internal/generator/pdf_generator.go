@@ -8,6 +8,7 @@ import (
 	"html/template"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/chromedp/cdproto/page"
@@ -65,9 +66,13 @@ func (g *PDFGenerator) GenerateHTML(ctx context.Context, templatePath string, da
 		return "", fmt.Errorf("failed to execute template: %w", err)
 	}
 
-	l.Info("HTML generated successfully template=%s size=%d", templatePath, html.Len())
+	// Remove leading blank lines that can occur from template whitespace
+	htmlStr := html.String()
+	htmlStr = strings.TrimLeft(htmlStr, " \t\n\r")
 
-	return html.String(), nil
+	l.Info("HTML generated successfully template=%s size=%d", templatePath, len(htmlStr))
+
+	return htmlStr, nil
 }
 
 // GeneratePDF creates a PDF from an HTML template
