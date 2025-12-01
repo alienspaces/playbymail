@@ -24,6 +24,14 @@ func (t *Testing) createGameImageRecFromPath(gameID string, recordID string, ima
 		return nil, nil
 	}
 
+	// TODO: Adopt a standard approach to managing test images
+	// The current approach of trying multiple possible testdata locations
+	// is fragile and depends on the working directory. A standard approach
+	// should be adopted, such as:
+	// - Using a well-defined testdata root directory
+	// - Using embed.FS to bundle test images
+	// - Using a test helper that resolves paths consistently
+	// - Defining a standard testdata directory structure
 	// Resolve path relative to testdata directory
 	// Try multiple possible testdata locations
 	testdataPaths := []string{
@@ -137,4 +145,3 @@ func detectMimeType(imageData []byte) string {
 
 	return ""
 }
-

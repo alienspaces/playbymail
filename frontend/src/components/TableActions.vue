@@ -106,7 +106,7 @@ function getIcon(action) {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: var(--space-xs);
+  gap: var(--space-sm);
   flex-wrap: nowrap;
 }
 
