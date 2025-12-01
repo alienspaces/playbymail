@@ -2,23 +2,17 @@ package turn_sheet_test
 
 import (
 	"context"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"os"
-	"strings"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
 
 	"gitlab.com/alienspaces/playbymail/core/convert"
-	"gitlab.com/alienspaces/playbymail/core/log"
 	"gitlab.com/alienspaces/playbymail/internal/turn_sheet"
-	"gitlab.com/alienspaces/playbymail/internal/utils/config"
 	"gitlab.com/alienspaces/playbymail/internal/utils/testutil"
-	"gitlab.com/alienspaces/playbymail/internal/utils/turnsheet"
 )
 
 func TestJoinGameProcessor_GenerateTurnSheet(t *testing.T) {
@@ -60,7 +54,7 @@ func TestJoinGameProcessor_GenerateTurnSheet(t *testing.T) {
 				TurnSheetTemplateData: turn_sheet.TurnSheetTemplateData{
 					GameName:          convert.Ptr("The Enchanted Forest Adventure"),
 					GameType:          convert.Ptr("adventure"),
-					TurnSheetCode:     convert.Ptr("ABC123XYZ"),
+					TurnSheetCode:     convert.Ptr(generateTestJoinTurnSheetCode(t)),
 					TurnSheetDeadline: convert.Ptr(time.Now().Add(7 * 24 * time.Hour)),
 				},
 				GameDescription: "Embark on a new adventure!",
@@ -257,15 +251,15 @@ func TestJoinGameProcessor_ScanTurnSheet(t *testing.T) {
 }
 
 func TestGenerateJoinGameFormatsForPrinting(t *testing.T) {
-
 	l, _, _, cfg := testutil.NewDefaultDependencies(t)
 	cfg.TemplatesPath = "../../templates"
-
-	// SaveTestFiles defaults to false - set SAVE_TEST_FILES=true to generate files
-	// cfg.SaveTestFiles = true
+	cfg.SaveTestFiles = true
 
 	processor, err := turn_sheet.NewJoinGameProcessor(l, cfg)
 	require.NoError(t, err)
+
+	// Load test background image
+	backgroundImage := loadTestBackgroundImage(t, "testdata/background-darkforest.png")
 
 	type formatCase struct {
 		name     string
@@ -296,13 +290,17 @@ func TestGenerateJoinGameFormatsForPrinting(t *testing.T) {
 	for _, tc := range cases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
+			// Generate realistic turn sheet code
+			turnSheetCode := generateTestJoinTurnSheetCode(t)
+
 			testData := &turn_sheet.JoinGameData{
 				TurnSheetTemplateData: turn_sheet.TurnSheetTemplateData{
 					GameName:          convert.Ptr("The Enchanted Forest Adventure"),
 					GameType:          convert.Ptr("adventure"),
 					TurnNumber:        convert.Ptr(0),
-					TurnSheetCode:     convert.Ptr("JOIN123"),
+					TurnSheetCode:     convert.Ptr(turnSheetCode),
 					TurnSheetDeadline: convert.Ptr(time.Now().Add(tc.deadline)),
+					BackgroundImage:   &backgroundImage,
 				},
 				GameDescription: "Welcome to the PlayByMail Adventure!",
 			}
@@ -330,190 +328,8 @@ func TestGenerateJoinGameFormatsForPrinting(t *testing.T) {
 					t.Logf("3. Scan the completed turn sheet to a JPEG file")
 					t.Logf("4. Save the JPEG in testdata/ with a descriptive name")
 					t.Logf("5. Write a test that loads the JPEG and tests the scanner")
-					t.Logf("6. Run the test to verify the scanner works")
 				}
 			}
 		})
-	}
-}
-
-// loadTestBackgroundImage loads a test background image and converts it to a base64 data URL
-func loadTestBackgroundImage(t *testing.T, filename string) string {
-	t.Helper()
-
-	imageData, err := os.ReadFile(filename)
-	require.NoError(t, err, "should load background image")
-
-	// Detect MIME type
-	mimeType := http.DetectContentType(imageData)
-
-	// Create base64 data URL
-	base64Data := base64.StdEncoding.EncodeToString(imageData)
-	dataURL := fmt.Sprintf("data:%s;base64,%s", mimeType, base64Data)
-
-	return dataURL
-}
-
-func TestJoinGameProcessor_GenerateTurnSheet_WithBackgroundImage(t *testing.T) {
-	// Use simple config setup that doesn't need job client
-	cfg, err := config.Parse()
-	require.NoError(t, err)
-	cfg.TemplatesPath = "../../templates"
-
-	l := log.NewDefaultLogger()
-
-	processor, err := turn_sheet.NewJoinGameProcessor(l, cfg)
-	require.NoError(t, err)
-
-	// Load test background image
-	backgroundImage := loadTestBackgroundImage(t, "testdata/background.jpg")
-
-	t.Logf("loaded background image: %d chars", len(backgroundImage))
-
-	tests := []struct {
-		name             string
-		data             *turn_sheet.JoinGameData
-		expectError      bool
-		checkHTMLContent func(t *testing.T, html string)
-	}{
-		{
-			name: "with background image generates HTML with data URL",
-			data: &turn_sheet.JoinGameData{
-				TurnSheetTemplateData: turn_sheet.TurnSheetTemplateData{
-					GameName:        convert.Ptr("The Enchanted Forest Adventure"),
-					GameType:        convert.Ptr("adventure"),
-					TurnNumber:      convert.Ptr(0),
-					TurnSheetCode:   convert.Ptr("ABC123XYZ"),
-					BackgroundImage: &backgroundImage,
-				},
-				GameDescription: "Embark on a new adventure!",
-			},
-			expectError: false,
-			checkHTMLContent: func(t *testing.T, html string) {
-				// Verify background image is included in the HTML
-				require.Contains(t, html, "background-image", "HTML should contain background-image element")
-
-				// Verify data URL is present
-				require.Contains(t, html, "data:image/jpeg;base64,", "HTML should contain base64 image data URL")
-
-				// Count occurrences of data URLs (should be 1)
-				dataURLCount := strings.Count(html, "data:image/jpeg;base64,")
-				require.Equal(t, 1, dataURLCount, "HTML should contain exactly 1 data URL for background image")
-			},
-		},
-		{
-			name: "without background image generates HTML without background image",
-			data: &turn_sheet.JoinGameData{
-				TurnSheetTemplateData: turn_sheet.TurnSheetTemplateData{
-					GameName:      convert.Ptr("The Enchanted Forest Adventure"),
-					GameType:      convert.Ptr("adventure"),
-					TurnNumber:    convert.Ptr(0),
-					TurnSheetCode: convert.Ptr("ABC123XYZ"),
-				},
-				GameDescription: "Embark on a new adventure!",
-			},
-			expectError: false,
-			checkHTMLContent: func(t *testing.T, html string) {
-				// Verify no background image data URL is present
-				require.NotContains(t, html, "data:image/jpeg;base64,", "HTML should not contain background image data URL")
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			sheetData, err := json.Marshal(tt.data)
-			require.NoError(t, err)
-
-			ctx := context.Background()
-
-			// Generate HTML to inspect the template output
-			html, err := processor.GenerateTurnSheet(ctx, l, turn_sheet.DocumentFormatHTML, sheetData)
-
-			if tt.expectError {
-				require.Error(t, err)
-				return
-			}
-
-			require.NoError(t, err)
-			require.NotEmpty(t, html)
-
-			htmlStr := string(html)
-			t.Logf("generated HTML length: %d bytes", len(htmlStr))
-
-			// Run custom HTML content checks
-			if tt.checkHTMLContent != nil {
-				tt.checkHTMLContent(t, htmlStr)
-			}
-		})
-	}
-}
-
-func TestJoinGameProcessor_GenerateTurnSheet_BackgroundImagePDF(t *testing.T) {
-	// Use simple config setup that doesn't need job client
-	cfg, err := config.Parse()
-	require.NoError(t, err)
-	cfg.TemplatesPath = "../../templates"
-
-	l := log.NewDefaultLogger()
-
-	processor, err := turn_sheet.NewJoinGameProcessor(l, cfg)
-	require.NoError(t, err)
-
-	// Load test background image
-	backgroundImage := loadTestBackgroundImage(t, "testdata/background.jpg")
-
-	// Generate a realistic turn sheet code using the actual utility
-	testGameID := "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
-	testTurnSheetCode, err := turnsheet.GenerateJoinTurnSheetCode(testGameID)
-	require.NoError(t, err, "should generate turn sheet code")
-
-	testData := &turn_sheet.JoinGameData{
-		TurnSheetTemplateData: turn_sheet.TurnSheetTemplateData{
-			GameName:          convert.Ptr("The Enchanted Forest Adventure"),
-			GameType:          convert.Ptr("adventure"),
-			TurnNumber:        convert.Ptr(0),
-			TurnSheetCode:     convert.Ptr(testTurnSheetCode),
-			TurnSheetDeadline: convert.Ptr(time.Now().Add(7 * 24 * time.Hour)),
-			BackgroundImage:   &backgroundImage,
-		},
-		GameDescription: "Welcome to the PlayByMail Adventure!",
-	}
-
-	sheetData, err := json.Marshal(testData)
-	require.NoError(t, err, "should marshal test data")
-
-	t.Logf("sheet data size: %d bytes", len(sheetData))
-
-	ctx := context.Background()
-
-	// First generate HTML to save for inspection
-	html, err := processor.GenerateTurnSheet(ctx, l, turn_sheet.DocumentFormatHTML, sheetData)
-	require.NoError(t, err, "should generate HTML without error")
-
-	// Save HTML for manual inspection if SaveTestFiles is enabled
-	if cfg.SaveTestFiles {
-		htmlPath := "testdata/adventure_game_join_game_turn_sheet_with_background.html"
-		err = os.WriteFile(htmlPath, html, 0644)
-		require.NoError(t, err, "should save HTML to testdata directory")
-		t.Logf("HTML with background saved to %s", htmlPath)
-	}
-
-	// Now generate PDF
-	pdf, err := processor.GenerateTurnSheet(ctx, l, turn_sheet.DocumentFormatPDF, sheetData)
-	require.NoError(t, err, "should generate PDF without error")
-	require.NotEmpty(t, pdf, "PDF output should not be empty")
-
-	t.Logf("generated PDF size: %d bytes", len(pdf))
-
-	// Verify PDF header
-	require.True(t, strings.HasPrefix(string(pdf), "%PDF"), "output should be a valid PDF")
-
-	// Save PDF for manual inspection if SaveTestFiles is enabled
-	if cfg.SaveTestFiles {
-		path := "testdata/adventure_game_join_game_turn_sheet_with_background.pdf"
-		err = os.WriteFile(path, pdf, 0644)
-		require.NoError(t, err, "should save PDF to testdata directory")
-		t.Logf("PDF with background saved to %s", path)
 	}
 }

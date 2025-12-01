@@ -248,6 +248,21 @@ func (t *Testing) RemoveData() error {
 		}
 	}
 
+	// Remove game image records
+	l.Debug("removing >%d< game image records", len(t.teardownData.GameImageRecs))
+	for _, imageRec := range t.teardownData.GameImageRecs {
+		l.Debug("[teardown] game image ID: >%s<", imageRec.ID)
+		if imageRec.ID == "" {
+			l.Warn("[teardown] skipping game image with empty ID")
+			continue
+		}
+		err := t.Domain.(*domain.Domain).DeleteGameImageRec(imageRec.ID)
+		if err != nil {
+			l.Warn("failed removing game image record >%v<", err)
+			return err
+		}
+	}
+
 	// Remove games
 	l.Debug("removing >%d< game records", len(t.teardownData.GameRecs))
 	for _, gameRec := range t.teardownData.GameRecs {

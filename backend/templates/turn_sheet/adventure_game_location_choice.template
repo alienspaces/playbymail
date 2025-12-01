@@ -2,12 +2,6 @@
 
 {{define "styles"}}
 <style>
-    /* Compact location choice styles */
-    .location-choice-section {
-        margin-bottom: 10px;
-        padding: 6px;
-    }
-    
     .location-options {
         display: flex;
         flex-direction: column;
@@ -24,6 +18,7 @@
         padding: 10px 14px;
         width: 100%;
         box-sizing: border-box;
+        background-color: rgba(255, 255, 255, 0.75);
     }
 
     .location-option .location-option-radio {
@@ -47,34 +42,27 @@
 {{end}}
 
 {{define "content"}}
-<div class="turn-sheet debug-section">
-    <div class="turn-sheet-body">
-        <div class="location-choice-section">
-            <h3 class="content-section-title">Choose Your Next Location</h3>
-            <p class="content-section-subtitle">Select where you would like to go next from the available paths:</p>
-            
-            {{if .LocationOptions}}
-            <div class="location-options">
-                {{range .LocationOptions}}
-                <label class="location-option">
-                    <div class="location-option-radio">
-                        <input type="radio" name="location_choice" value="{{.LocationID}}">
-                    </div>
-                    <div class="location-option-content">
-                        <span class="form-field-title">{{.LocationLinkName}}</span>
-                        <span class="form-field-description">{{.LocationLinkDescription}}</span>
-                    </div>
-                </label>
-                {{end}}
-            </div>
-            {{else}}
-            <div class="no-options">
-                <p>No available paths from this location.</p>
-            </div>
-            {{end}}
-        </div>
-    </div>
+<h3 class="content-section-title">Choose Your Next Location</h3>
+<p class="content-section-subtitle">Select where you would like to go next from the available paths:</p>
 
+{{if .LocationOptions}}
+<div class="location-options">
+    {{range .LocationOptions}}
+    <label class="location-option">
+        <div class="location-option-radio">
+            <input type="radio" name="location_choice" value="{{.LocationID}}">
+        </div>
+        <div class="location-option-content">
+            <span class="form-field-title">{{.LocationLinkName}}</span>
+            <span class="form-field-description">{{.LocationLinkDescription}}</span>
+        </div>
+    </label>
+    {{end}}
 </div>
+{{else}}
+<div class="no-options">
+    <p>No available paths from this location.</p>
+</div>
+{{end}}
 {{end}}
 

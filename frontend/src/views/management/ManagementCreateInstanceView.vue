@@ -117,11 +117,6 @@ onMounted(async () => {
   if (!selectedGame.value) {
     await gamesStore.fetchGames();
   }
-  
-  // Fetch game parameters for the selected game type
-  if (selectedGame.value) {
-    // Removed: await gameParametersStore.fetchGameParametersByGameType(selectedGame.value.game_type);
-  }
 });
 
 const createInstance = async () => {
@@ -136,11 +131,10 @@ const createInstance = async () => {
   try {
     const instanceData = {
       game_id: gameId.value,
-      // Game parameters are now configured after instance creation
     };
 
     const createdInstance = await gameInstancesStore.createGameInstance(gameId.value, instanceData);
-    
+
     // Redirect to the instance details page instead of the instances list
     if (createdInstance && createdInstance.id) {
       console.log('Instance created successfully, redirecting to:', createdInstance.id);
@@ -157,14 +151,6 @@ const createInstance = async () => {
     loading.value = false;
   }
 };
-
-// Removed: const handleConfigValidationError = (configKey, error) => {
-//   if (error) {
-//     configValidationErrors.value[configKey] = error;
-//   } else {
-//     delete configValidationErrors.value[configKey];
-//   }
-// };
 
 const goBack = () => {
   router.push(`/admin/games/${gameId.value}/instances`);
@@ -207,7 +193,7 @@ const goBack = () => {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   padding: var(--space-xl);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .instance-form {
@@ -319,4 +305,4 @@ const goBack = () => {
   border-radius: var(--radius-sm);
   font-size: var(--font-size-sm);
 }
-</style> 
+</style>

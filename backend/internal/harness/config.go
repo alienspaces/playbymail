@@ -81,6 +81,9 @@ type GameConfig struct {
 	AdventureGameItemConfigs         []AdventureGameItemConfig
 	AdventureGameCreatureConfigs     []AdventureGameCreatureConfig
 	AdventureGameCharacterConfigs    []AdventureGameCharacterConfig
+	// Background image file path for game-level turn sheet backgrounds
+	// If set, creates a game_image record with type turn_sheet_background
+	BackgroundImagePath string // Path to image file relative to testdata directory
 }
 
 type AccountConfig struct {
@@ -164,6 +167,10 @@ type AdventureGameCreatureConfig struct {
 type AdventureGameLocationConfig struct {
 	Reference string // Reference to the game_location record
 	Record    *adventure_game_record.AdventureGameLocation
+	// Background image file path for location-specific turn sheet backgrounds
+	// If set, creates a game_image record with type turn_sheet_background
+	// associated with this location
+	BackgroundImagePath string // Path to image file relative to testdata directory
 }
 
 type AdventureGameLocationLinkConfig struct {

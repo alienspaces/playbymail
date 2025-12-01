@@ -10,6 +10,9 @@
             --page-height: 297mm;
             --padding-vertical: 8mm;
             --padding-horizontal: 18mm;
+            --content-container-width: 168mm; /* 80% of A4 width (210mm * 0.8) */
+            --content-container-margin-horizontal: 21mm; /* 10% margin on each side */
+            --content-container-margin-vertical: 6mm; /* Small space at top and bottom */
         }
 
         /* Debug - set to transparent to show background images */
@@ -80,21 +83,37 @@
             width: 100%;
         }
 
-        .header-content {
-            margin: 0;
-            padding: 2mm;
-            height: 46mm;
-            text-align: center;
+        /* Main container for all turn sheet content sections */
+        .content-container {
+            width: var(--content-container-width);
+            margin: var(--content-container-margin-vertical) var(--content-container-margin-horizontal);
             box-sizing: border-box;
-            background-color: transparent;
+        }
+
+        /* Common container for all content sections */
+        .content-section {
+            margin: 0 0 6mm 0;
+            padding: 2mm;
+            box-sizing: border-box;
+            border-radius: 8px;
+            background-color: rgba(255, 255, 255, 0.75);
+            width: 100%;
+        }
+
+        .header-content {
+            text-align: center;
+            height: 46mm;
+            background-color: rgba(255, 255, 255, 0.75);
         }
         
         .header-content h1 {
             color: #2c3e50;
+            text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8), -1px -1px 2px rgba(255, 255, 255, 0.8);
         }
         
         .header-content h2 {
             color: #7f8c8d;
+            text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8);
         }
 
         .header-content-title {
@@ -104,6 +123,7 @@
         .header-content-title h3 {
             color: #2c3e50;
             font-weight: 600;
+            text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8), -1px -1px 2px rgba(255, 255, 255, 0.8);
         }
 
         .header-content-title p {
@@ -113,16 +133,14 @@
             max-width: 560px;
             margin-left: auto;
             margin-right: auto;
+            text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8);
         }
 
 
         .instruction-content {
-            margin: 0 18mm;
-            padding: 2mm;
-            height: 10mm;
-            background-color: transparent;
+            min-height: 10mm;
+            background-color: rgba(255, 255, 255, 0.8);
             border-left: 3px solid #546a7b;
-            border-radius: 6px;
             color: #2c3e50;
         }
 
@@ -140,26 +158,13 @@
         }
 
         .main-content {
-            margin: 0;
-            padding: 2mm;
-            height: 140mm;
-            overflow: hidden;
+            min-height: 140mm;
+            overflow: visible;
         }
 
         /* Turn sheet content is contained within the main content*/
-        .turn-sheet {
-            margin: 0;
-            padding: 2mm;
-            border-radius: 8px;
-            max-width: 600px;
-            width: 100%;
-            margin: 0 auto;
-            box-sizing: border-box;
-            background-color: transparent;
-        }
-
-        .turn-sheet label,
-        .turn-sheet .form-field-title {
+        .main-content label,
+        .main-content .form-field-title {
             display: block;
             font-size: 14px;
             color: #2c3e50;
@@ -167,18 +172,18 @@
             margin-bottom: 4px;
         }
 
-        .turn-sheet .form-field-description {
+        .main-content .form-field-description {
             display: block;
-            font-size: 11px;
+            font-size: 12px;
             color: #6b7280;
             margin-top: 2px;
         }
 
-        .turn-sheet input[type="text"],
-        .turn-sheet input[type="email"],
-        .turn-sheet input[type="number"],
-        .turn-sheet select,
-        .turn-sheet textarea {
+        .main-content input[type="text"],
+        .main-content input[type="email"],
+        .main-content input[type="number"],
+        .main-content select,
+        .main-content textarea {
             width: 100%;
             padding: 6px 10px;
             border: 1px solid #d1d5db;
@@ -188,11 +193,11 @@
             box-sizing: border-box;
         }
 
-        .turn-sheet input[type="text"]:focus,
-        .turn-sheet input[type="email"]:focus,
-        .turn-sheet input[type="number"]:focus,
-        .turn-sheet select:focus,
-        .turn-sheet textarea:focus {
+        .main-content input[type="text"]:focus,
+        .main-content input[type="email"]:focus,
+        .main-content input[type="number"]:focus,
+        .main-content select:focus,
+        .main-content textarea:focus {
             outline: none;
             border-color: #6b7280;
             box-shadow: 0 0 0 1px rgba(107, 114, 128, 0.1);
@@ -219,20 +224,19 @@
             color: #6c757d;
         }
 
-        .turn-sheet-body {
-        }
-
         .footer-content {
             position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            margin-top: 0;
-            padding: 4mm 18mm;
+            bottom: var(--content-container-margin-vertical);
+            left: 50%;
+            transform: translateX(-50%);
+            width: var(--content-container-width);
+            margin: 0;
+            padding: 4mm 2mm;
             background-color: rgba(255, 255, 255, 0.7);
             border-top: 1px solid #dee2e6;
-            border-radius: 0 0 8px 8px;
+            border-radius: 8px;
             z-index: 3;
+            box-sizing: border-box;
         }
 
         .footer-content-item {
@@ -257,23 +261,25 @@
             color: #6c757d;
         }
 
-        .turn-sheet .section-title,
-        .turn-sheet .subsection-title,
-        .turn-sheet .form-section-title,
-        .turn-sheet .content-section-title {
+        .main-content .section-title,
+        .main-content .subsection-title,
+        .main-content .form-section-title,
+        .main-content .content-section-title {
             text-align: center;
             font-size: 16px;
             font-weight: 600;
             color: #2c3e50;
             margin: 14px 0 10px 0;
+            text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.9), -1px -1px 2px rgba(255, 255, 255, 0.9);
         }
 
-        .turn-sheet .section-subtitle,
-        .turn-sheet .content-section-subtitle {
+        .main-content .section-subtitle,
+        .main-content .content-section-subtitle {
             text-align: center;
-            font-size: 13px;
+            font-size: 14px;
             color: #555;
             margin: 0 0 12px 0;
+            text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.9);
         }
         
         /* Form styling */
@@ -339,35 +345,36 @@
 
         <!-- Main content -->
         <div class="content debug-frame">
+            <!-- Container for all turn sheet content sections -->
+            <div class="content-container">
+                <!-- Header content -->
+                <div class="content-section header-content">
+                    <h1>{{if .GameName}}{{.GameName}}{{else}}Game{{end}}</h1>
+                    <h2>Turn {{if .TurnNumber}}{{.TurnNumber}}{{else}}0{{end}}{{if .AccountName}} - {{.AccountName}}{{end}}</h2>
 
-        <!-- Header content -->
-        <div class="header-content">
-            <h1>{{if .GameName}}{{.GameName}}{{else}}Game{{end}}</h1>
-            <h2>Turn {{if .TurnNumber}}{{.TurnNumber}}{{else}}0{{end}}{{if .AccountName}} - {{.AccountName}}{{end}}</h2>
+                    {{if or .TurnSheetTitle .TurnSheetDescription}}
+                    <div class="header-content-title">
+                        {{if .TurnSheetTitle}}<h3>{{.TurnSheetTitle}}</h3>{{end}}
+                        {{if .TurnSheetDescription}}<p>{{.TurnSheetDescription}}</p>{{end}}
+                    </div>
+                    {{end}}
+                </div>
 
-            {{if or .TurnSheetTitle .TurnSheetDescription}}
-            <div class="header-content-title">
-                {{if .TurnSheetTitle}}<h3>{{.TurnSheetTitle}}</h3>{{end}}
-                {{if .TurnSheetDescription}}<p>{{.TurnSheetDescription}}</p>{{end}}
+                <!-- Instruction content -->
+                {{if .TurnSheetInstructions}}
+                <div class="content-section instruction-content">
+                    <p><strong>Instructions:</strong> {{.TurnSheetInstructions}}</p>
+                </div>
+                {{else}}
+                <div class="content-section instruction-content instruction-content--empty"></div>
+                {{end}}
+
+                <!-- Main content area -->
+                <div class="content-section main-content debug-main">
+                    {{template "content" .}}
+                </div>
             </div>
-            {{end}}
         </div>
-
-        <!-- Instruction content -->
-        {{if .TurnSheetInstructions}}
-        <div class="instruction-content">
-            <p><strong>Instructions:</strong> {{.TurnSheetInstructions}}</p>
-        </div>
-        {{else}}
-        <div class="instruction-content instruction-content--empty"></div>
-        {{end}}
-
-        <!-- Main content area -->
-        <div class="main-content debug-main">
-            {{template "content" .}}
-        </div>
-
-    </div>
 
         <!-- Fixed footer content at bottom of page -->
         {{if or .TurnSheetDeadline .TurnSheetCode}}

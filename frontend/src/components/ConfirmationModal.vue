@@ -9,7 +9,8 @@
 
         <div v-if="requireConfirmation" class="confirmation-input">
           <label :for="confirmationId">Type "{{ confirmationText }}" to confirm:</label>
-          <input :id="confirmationId" v-model="confirmationValue" :placeholder="confirmationText" class="confirm-input" />
+          <input :id="confirmationId" v-model="confirmationValue" :placeholder="confirmationText"
+            class="confirm-input" />
         </div>
 
         <div class="modal-actions">

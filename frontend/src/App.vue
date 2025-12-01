@@ -158,7 +158,6 @@ main.app-main> :not(.studio-layout):not(.account-layout):not(.management-layout)
   /* Accommodate 140px image with bleed */
   display: flex;
   align-items: center;
-  /* No z-index to avoid creating stacking context that traps modals */
 }
 
 .navbar {
@@ -171,7 +170,6 @@ main.app-main> :not(.studio-layout):not(.account-layout):not(.management-layout)
   position: relative;
   width: 100%;
   min-height: 67.5px;
-  /* Original narrower green band */
 }
 
 .navbar::before {

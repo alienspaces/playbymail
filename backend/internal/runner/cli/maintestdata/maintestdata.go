@@ -62,6 +62,7 @@ func GameConfig() []harness.GameConfig {
 						Description:        "A peaceful grove filled with ancient trees and magical flowers. The air shimmers with enchantment.",
 						IsStartingLocation: true,
 					},
+					BackgroundImagePath: "background-darkforest.png",
 				},
 				{
 					Reference: harness.GameLocationTwoRef,
@@ -69,6 +70,7 @@ func GameConfig() []harness.GameConfig {
 						Name:        "Crystal Caverns",
 						Description: "Deep underground caves filled with glowing crystals. Strange sounds echo from the depths.",
 					},
+					BackgroundImagePath: "background-dungeon.png",
 				},
 				{
 					Reference: harness.GameLocationThreeRef,
@@ -76,6 +78,7 @@ func GameConfig() []harness.GameConfig {
 						Name:        "Floating Islands",
 						Description: "Mysterious islands suspended in the sky by unknown magic. Wind howls between them.",
 					},
+					BackgroundImagePath: "background-cliffpath.png",
 				},
 				{
 					Reference: harness.GameLocationFourRef,
@@ -83,6 +86,7 @@ func GameConfig() []harness.GameConfig {
 						Name:        "Shadow Valley",
 						Description: "A dark valley shrouded in perpetual shadows. Danger lurks in every corner.",
 					},
+					BackgroundImagePath: "background-darkforest.png",
 				},
 			},
 			// Items that can be found and used

@@ -28,6 +28,16 @@ func (t *Testing) createAdventureGameRecords(gameConfig GameConfig, gameRec *gam
 			return err
 		}
 		l.Debug("created game location record ID >%s< Name >%s<", gameLocationRec.ID, gameLocationRec.Name)
+
+		// Create background image for location if specified
+		if locationConfig.BackgroundImagePath != "" {
+			_, err = t.createGameImageRecFromPath(gameRec.ID, gameLocationRec.ID, locationConfig.BackgroundImagePath)
+			if err != nil {
+				l.Warn("failed creating location background image >%v<", err)
+				return err
+			}
+			l.Debug("created location background image for location >%s<", gameLocationRec.ID)
+		}
 	}
 
 	for _, creatureConfig := range gameConfig.AdventureGameCreatureConfigs {

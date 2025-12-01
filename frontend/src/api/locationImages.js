@@ -8,21 +8,21 @@ import { baseUrl, getAuthHeaders, apiFetch } from './baseUrl';
  * @returns {Promise<Object>} - The created/updated image record
  */
 export async function uploadLocationTurnSheetImage(gameId, locationId, imageFile) {
-  const formData = new FormData();
-  formData.append('image', imageFile);
+    const formData = new FormData();
+    formData.append('image', imageFile);
 
-  const res = await apiFetch(`${baseUrl}/api/v1/adventure-games/${gameId}/locations/${locationId}/turn-sheet-image`, {
-    method: 'POST',
-    headers: { ...getAuthHeaders() },
-    body: formData,
-  });
+    const res = await apiFetch(`${baseUrl}/api/v1/adventure-games/${gameId}/locations/${locationId}/turn-sheet-image`, {
+        method: 'POST',
+        headers: { ...getAuthHeaders() },
+        body: formData,
+    });
 
-  if (!res.ok) {
-    const errorData = await res.json().catch(() => ({}));
-    throw new Error(errorData.error?.message || 'Failed to upload image');
-  }
+    if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error?.message || 'Failed to upload image');
+    }
 
-  return await res.json();
+    return await res.json();
 }
 
 /**
@@ -32,16 +32,16 @@ export async function uploadLocationTurnSheetImage(gameId, locationId, imageFile
  * @returns {Promise<Object>} - The turn sheet image data
  */
 export async function getLocationTurnSheetImage(gameId, locationId) {
-  const res = await apiFetch(`${baseUrl}/api/v1/adventure-games/${gameId}/locations/${locationId}/turn-sheet-image`, {
-    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
-  });
+    const res = await apiFetch(`${baseUrl}/api/v1/adventure-games/${gameId}/locations/${locationId}/turn-sheet-image`, {
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+    });
 
-  if (!res.ok) {
-    const errorData = await res.json().catch(() => ({}));
-    throw new Error(errorData.error?.message || 'Failed to fetch turn sheet image');
-  }
+    if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error?.message || 'Failed to fetch turn sheet image');
+    }
 
-  return await res.json();
+    return await res.json();
 }
 
 /**
@@ -51,15 +51,15 @@ export async function getLocationTurnSheetImage(gameId, locationId) {
  * @returns {Promise<void>}
  */
 export async function deleteLocationTurnSheetImage(gameId, locationId) {
-  const res = await apiFetch(`${baseUrl}/api/v1/adventure-games/${gameId}/locations/${locationId}/turn-sheet-image`, {
-    method: 'DELETE',
-    headers: { ...getAuthHeaders() },
-  });
+    const res = await apiFetch(`${baseUrl}/api/v1/adventure-games/${gameId}/locations/${locationId}/turn-sheet-image`, {
+        method: 'DELETE',
+        headers: { ...getAuthHeaders() },
+    });
 
-  if (!res.ok && res.status !== 204) {
-    const errorData = await res.json().catch(() => ({}));
-    throw new Error(errorData.error?.message || 'Failed to delete turn sheet image');
-  }
+    if (!res.ok && res.status !== 204) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error?.message || 'Failed to delete turn sheet image');
+    }
 }
 
 /**
@@ -69,6 +69,6 @@ export async function deleteLocationTurnSheetImage(gameId, locationId) {
  * @returns {string} - The preview URL
  */
 export function getLocationChoiceTurnSheetPreviewUrl(gameId, locationId) {
-  return `${baseUrl}/api/v1/adventure-games/${gameId}/locations/${locationId}/turn-sheets/preview`;
+    return `${baseUrl}/api/v1/adventure-games/${gameId}/locations/${locationId}/turn-sheets/preview`;
 }
 

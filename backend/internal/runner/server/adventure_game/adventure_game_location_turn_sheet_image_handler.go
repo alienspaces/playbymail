@@ -33,9 +33,9 @@ import (
 )
 
 const (
-	UploadLocationTurnSheetImage  = "upload-location-turn-sheet-image"
-	GetLocationTurnSheetImage     = "get-location-turn-sheet-image"
-	DeleteLocationTurnSheetImage  = "delete-location-turn-sheet-image"
+	UploadLocationTurnSheetImage   = "upload-location-turn-sheet-image"
+	GetLocationTurnSheetImage      = "get-location-turn-sheet-image"
+	DeleteLocationTurnSheetImage   = "delete-location-turn-sheet-image"
 	PreviewLocationChoiceTurnSheet = "preview-location-choice-turn-sheet"
 )
 
@@ -581,4 +581,3 @@ func getLocationOptionsForPreview(ctx context.Context, mm *domain.Domain, gameID
 
 	return options, nil
 }
-

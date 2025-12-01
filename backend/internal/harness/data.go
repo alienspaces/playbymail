@@ -13,6 +13,7 @@ type Data struct {
 	AccountRecs               []*account_record.Account
 	AccountContactRecs        []*account_record.AccountContact
 	GameRecs                  []*game_record.Game
+	GameImageRecs             []*game_record.GameImage
 	GameSubscriptionRecs      []*game_record.GameSubscription
 	GameInstanceRecs          []*game_record.GameInstance
 	GameInstanceParameterRecs []*game_record.GameInstanceParameter
@@ -163,6 +164,17 @@ func (d *Data) GetGameRecByRef(ref string) (*game_record.Game, error) {
 		return nil, fmt.Errorf("failed getting game with ref >%s<", ref)
 	}
 	return d.GetGameRecByID(gameID)
+}
+
+// GameImage
+func (d *Data) AddGameImageRec(rec *game_record.GameImage) {
+	for idx := range d.GameImageRecs {
+		if d.GameImageRecs[idx].ID == rec.ID {
+			d.GameImageRecs[idx] = rec
+			return
+		}
+	}
+	d.GameImageRecs = append(d.GameImageRecs, rec)
 }
 
 func (d *Data) AddGameSubscriptionRec(rec *game_record.GameSubscription) {

@@ -13,12 +13,7 @@
       <!-- Header expands entire screen width -->
       <div class="layout-header-wrapper">
         <!-- Burger menu (mobile only) -->
-        <button 
-          class="layout-burger icon-btn" 
-          @click="toggleMenu" 
-          aria-label="Open menu" 
-          v-if="isMobile"
-        >
+        <button class="layout-burger icon-btn" @click="toggleMenu" aria-label="Open menu" v-if="isMobile">
           <span></span>
           <span></span>
           <span></span>
@@ -162,7 +157,6 @@ function closeMenuOnMobile() {
   width: 100%;
   flex-shrink: 0;
   position: relative;
-  /* No z-index here to avoid creating stacking context that traps modals */
 }
 
 .layout-burger {
@@ -423,4 +417,3 @@ function closeMenuOnMobile() {
   display: none !important;
 }
 </style>
-

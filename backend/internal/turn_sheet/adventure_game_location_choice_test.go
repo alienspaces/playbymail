@@ -26,6 +26,9 @@ func TestLocationChoiceProcessor_GenerateTurnSheet(t *testing.T) {
 	processor, err := turn_sheet.NewLocationChoiceProcessor(l, cfg)
 	require.NoError(t, err)
 
+	// Load test background image for successful test case
+	backgroundImage := loadTestBackgroundImage(t, "testdata/background-darkforest.png")
+
 	tests := []struct {
 		name               string
 		data               any
@@ -52,11 +55,12 @@ func TestLocationChoiceProcessor_GenerateTurnSheet(t *testing.T) {
 			name: "given valid LocationChoiceData when generating turn sheet then PDF is generated successfully",
 			data: &turn_sheet.LocationChoiceData{
 				TurnSheetTemplateData: turn_sheet.TurnSheetTemplateData{
-					GameName:      convert.Ptr("Test Adventure"),
-					GameType:      convert.Ptr("adventure"),
-					TurnNumber:    convert.Ptr(1),
-					AccountName:   convert.Ptr("Test Player"),
-					TurnSheetCode: convert.Ptr("TEST123"),
+					GameName:        convert.Ptr("Test Adventure"),
+					GameType:        convert.Ptr("adventure"),
+					TurnNumber:      convert.Ptr(1),
+					AccountName:     convert.Ptr("Test Player"),
+					TurnSheetCode:   convert.Ptr(generateTestTurnSheetCode(t)),
+					BackgroundImage: &backgroundImage,
 				},
 				LocationName:        "Starting Location",
 				LocationDescription: "You are at the beginning",
@@ -257,7 +261,7 @@ func TestGenerateLocationChoiceFormatsForPrinting(t *testing.T) {
 	l, _, _, cfg := testutil.NewDefaultDependencies(t)
 	cfg.TemplatesPath = "../../templates"
 	// SaveTestFiles defaults to false - set SAVE_TEST_FILES=true to generate files
-	// cfg.SaveTestFiles = true
+	cfg.SaveTestFiles = true
 
 	processor, err := turn_sheet.NewLocationChoiceProcessor(l, cfg)
 	require.NoError(t, err)
@@ -283,14 +287,21 @@ func TestGenerateLocationChoiceFormatsForPrinting(t *testing.T) {
 		},
 	}
 
+	// Load test background image
+	backgroundImage := loadTestBackgroundImage(t, "testdata/background-cliffpath.png")
+
+	// Generate realistic turn sheet code
+	turnSheetCode := generateTestTurnSheetCode(t)
+
 	testData := &turn_sheet.LocationChoiceData{
 		TurnSheetTemplateData: turn_sheet.TurnSheetTemplateData{
 			GameName:          convert.Ptr("The Enchanted Forest Adventure"),
 			GameType:          convert.Ptr("adventure"),
 			TurnNumber:        convert.Ptr(1),
 			AccountName:       convert.Ptr("Test Player"),
-			TurnSheetCode:     convert.Ptr("ABC123XYZ"),
+			TurnSheetCode:     convert.Ptr(turnSheetCode),
 			TurnSheetDeadline: convert.Ptr(time.Now().Add(24 * time.Hour)),
+			BackgroundImage:   &backgroundImage,
 		},
 		LocationName:        "Mystic Grove",
 		LocationDescription: "You stand at the edge of an ancient forest. The trees whisper secrets of old magic.",
