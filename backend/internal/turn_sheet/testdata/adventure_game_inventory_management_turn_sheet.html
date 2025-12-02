@@ -346,8 +346,7 @@
     }
     
     .inventory-item {
-        display: table;
-        table-layout: fixed;
+        display: flex;
         border: 1px solid #dee2e6;
         border-radius: 4px;
         padding: 6px 8px;
@@ -356,23 +355,30 @@
         box-sizing: border-box;
         background-color: rgba(255, 255, 255, 0.75);
         break-inside: avoid;
+        gap: 8px;
     }
     
     .inventory-item-actions {
-        display: table-cell;
-        width: 110px;
-        vertical-align: middle;
-        padding-right: 6px;
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        min-width: 80px;
+        flex-shrink: 0;
+    }
+    
+    .inventory-item-action {
+        display: flex;
+        align-items: center;
+        gap: 4px;
     }
     
     .inventory-item-actions input[type="checkbox"] {
-        margin-right: 3px;
         cursor: pointer;
+        flex-shrink: 0;
     }
     
     .inventory-item-content {
-        display: table-cell;
-        vertical-align: top;
+        flex: 1;
         line-height: 1.2;
     }
     
@@ -393,8 +399,7 @@
     }
     
     .location-item {
-        display: table;
-        table-layout: fixed;
+        display: flex;
         border: 1px solid #dee2e6;
         border-radius: 4px;
         padding: 6px 8px;
@@ -402,22 +407,30 @@
         width: 100%;
         box-sizing: border-box;
         background-color: rgba(255, 255, 255, 0.75);
+        gap: 8px;
+    }
+    
+    .location-item-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        min-width: 80px;
+        flex-shrink: 0;
     }
     
     .location-item-action {
-        display: table-cell;
-        width: 60px;
-        vertical-align: middle;
-        padding-right: 6px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
     }
     
     .location-item-action input[type="checkbox"] {
         cursor: pointer;
+        flex-shrink: 0;
     }
     
     .location-item-content {
-        display: table-cell;
-        vertical-align: top;
+        flex: 1;
         line-height: 1.2;
     }
     
@@ -444,8 +457,7 @@
     .action-label {
         font-size: 8px;
         color: #6c757d;
-        display: inline-block;
-        margin-right: 4px;
+        white-space: nowrap;
     }
 </style>
 
@@ -478,7 +490,7 @@
                 
                 
                 <div class="content-section instruction-content">
-                    <p><strong>Instructions:</strong> Manage your inventory by checking boxes to pick up items, drop items, equip items, or unequip items. Return this form by the deadline.</p>
+                    <p><strong>Instructions:</strong> Manage your inventory by checking boxes to drop items, equip items, or move items to/from backpack. Return this form by the deadline.</p>
                 </div>
                 
 
@@ -500,9 +512,10 @@
         
         <div class="inventory-item">
             <div class="inventory-item-actions">
-                <span class="action-label">Drop:</span>
-                <input type="checkbox" name="drop" value="item-1">
-                
+                <div class="inventory-item-action">
+                    <input type="checkbox" name="drop" value="item-1">
+                    <span class="action-label">Drop</span>
+                </div>
                 
             </div>
             <div class="inventory-item-content">
@@ -515,15 +528,16 @@
         
         <div class="inventory-item">
             <div class="inventory-item-actions">
-                <span class="action-label">Drop:</span>
-                <input type="checkbox" name="drop" value="item-2">
+                <div class="inventory-item-action">
+                    <input type="checkbox" name="drop" value="item-2">
+                    <span class="action-label">Drop</span>
+                </div>
                 
-                <span class="action-label">Equip:</span>
-                <input type="checkbox" name="equip" value="item-2">
                 
-                
-                <span class="action-label">Unequip:</span>
-                <input type="checkbox" name="unequip" value="item-2">
+                <div class="inventory-item-action">
+                    <input type="checkbox" name="unequip" value="item-2">
+                    <span class="action-label">Backpack</span>
+                </div>
                 
             </div>
             <div class="inventory-item-content">
@@ -538,15 +552,16 @@
         
         <div class="inventory-item">
             <div class="inventory-item-actions">
-                <span class="action-label">Drop:</span>
-                <input type="checkbox" name="drop" value="item-3">
+                <div class="inventory-item-action">
+                    <input type="checkbox" name="drop" value="item-3">
+                    <span class="action-label">Drop</span>
+                </div>
                 
-                <span class="action-label">Equip:</span>
-                <input type="checkbox" name="equip" value="item-3">
                 
-                
-                <span class="action-label">Unequip:</span>
-                <input type="checkbox" name="unequip" value="item-3">
+                <div class="inventory-item-action">
+                    <input type="checkbox" name="unequip" value="item-3">
+                    <span class="action-label">Backpack</span>
+                </div>
                 
             </div>
             <div class="inventory-item-content">
@@ -561,9 +576,10 @@
         
         <div class="inventory-item">
             <div class="inventory-item-actions">
-                <span class="action-label">Drop:</span>
-                <input type="checkbox" name="drop" value="item-4">
-                
+                <div class="inventory-item-action">
+                    <input type="checkbox" name="drop" value="item-4">
+                    <span class="action-label">Drop</span>
+                </div>
                 
             </div>
             <div class="inventory-item-content">
@@ -576,12 +592,16 @@
         
         <div class="inventory-item">
             <div class="inventory-item-actions">
-                <span class="action-label">Drop:</span>
-                <input type="checkbox" name="drop" value="item-5">
+                <div class="inventory-item-action">
+                    <input type="checkbox" name="drop" value="item-5">
+                    <span class="action-label">Drop</span>
+                </div>
                 
-                <span class="action-label">Equip:</span>
-                <input type="checkbox" name="equip" value="item-5">
                 
+                <div class="inventory-item-action">
+                    <input type="checkbox" name="equip" value="item-5">
+                    <span class="action-label">Equip</span>
+                </div>
                 
             </div>
             <div class="inventory-item-content">
@@ -604,9 +624,16 @@
     
     
     <div class="location-item">
-        <div class="location-item-action">
-            <span class="action-label">Pick Up:</span>
-            <input type="checkbox" name="pick_up" value="item-6">
+        <div class="location-item-actions">
+            
+            <div class="location-item-action">
+                <input type="checkbox" name="equip" value="item-6">
+                <span class="action-label">Equip</span>
+            </div>
+            <div class="location-item-action">
+                <input type="checkbox" name="pick_up" value="item-6">
+                <span class="action-label">Backpack</span>
+            </div>
         </div>
         <div class="location-item-content">
             <div class="location-item-name">Shadow Cloak</div>
@@ -617,9 +644,16 @@
     </div>
     
     <div class="location-item">
-        <div class="location-item-action">
-            <span class="action-label">Pick Up:</span>
-            <input type="checkbox" name="pick_up" value="item-7">
+        <div class="location-item-actions">
+            
+            <div class="location-item-action">
+                <input type="checkbox" name="equip" value="item-7">
+                <span class="action-label">Equip</span>
+            </div>
+            <div class="location-item-action">
+                <input type="checkbox" name="pick_up" value="item-7">
+                <span class="action-label">Backpack</span>
+            </div>
         </div>
         <div class="location-item-content">
             <div class="location-item-name">Wind Charm</div>
@@ -643,7 +677,7 @@
             
             <div class="footer-content-item">
                 <div class="footer-content-label">Turn Sheet Deadline:</div>
-                <div class="footer-content-value">2025-12-03 09:40:50.601451529 &#43;0000 UTC</div>
+                <div class="footer-content-value">2025-12-03 18:03:55.341803987 &#43;0000 UTC</div>
             </div>
             
 
@@ -651,7 +685,7 @@
             
             <div class="footer-content-item">
                 <div class="footer-content-label">Turn Sheet Code:</div>
-                <div class="footer-content-value">eyJjb2RlX3R5cGUiOiJwbGF5aW5nIiwiZ2FtZV9pZCI6ImExYjJjM2Q0LWU1ZjYtNzg5MC1hYmNkLWVmMTIzNDU2Nzg5MCIsImdhbWVfaW5zdGFuY2VfaWQiOiJiMmMzZDRlNS1mNmE3LTg5MDEtYmNkZS1mMTIzNDU2Nzg5MDEiLCJhY2NvdW50X2lkIjoiYzNkNGU1ZjYtYTdiOC05MDEyLWNkZWYtMTIzNDU2Nzg5MDEyIiwiZ2FtZV90dXJuX3NoZWV0X2lkIjoiZDRlNWY2YTctYjhjOS0wMTIzLWRlZjAtMjM0NTY3ODkwMTIzIiwiZ2VuZXJhdGVkX2F0IjoiMjAyNS0xMi0wMlQwOTo0MDo1MC42MDE0MTY3MDVaIiwiY2hlY2tzdW0iOiJrWk54WGo0YjZWYUFBVkE2Yk5qMlJnZVd0c0NFdGFVZG1VS3RqYjVhLU5NPSJ9</div>
+                <div class="footer-content-value">eyJjb2RlX3R5cGUiOiJwbGF5aW5nIiwiZ2FtZV9pZCI6ImExYjJjM2Q0LWU1ZjYtNzg5MC1hYmNkLWVmMTIzNDU2Nzg5MCIsImdhbWVfaW5zdGFuY2VfaWQiOiJiMmMzZDRlNS1mNmE3LTg5MDEtYmNkZS1mMTIzNDU2Nzg5MDEiLCJhY2NvdW50X2lkIjoiYzNkNGU1ZjYtYTdiOC05MDEyLWNkZWYtMTIzNDU2Nzg5MDEyIiwiZ2FtZV90dXJuX3NoZWV0X2lkIjoiZDRlNWY2YTctYjhjOS0wMTIzLWRlZjAtMjM0NTY3ODkwMTIzIiwiZ2VuZXJhdGVkX2F0IjoiMjAyNS0xMi0wMlQxODowMzo1NS4zNDE3ODEwOTNaIiwiY2hlY2tzdW0iOiJRakU2TVBxZDhGY2dULWxlZGdTekdHQzUzQndlYXlPWmFYeE9EYnFqT3lFPSJ9</div>
             </div>
             
         </div>

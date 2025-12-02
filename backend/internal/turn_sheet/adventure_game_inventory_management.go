@@ -77,7 +77,7 @@ type EquipAction struct {
 	Slot           string `json:"slot"`
 }
 
-const defaultInventoryManagementInstructions = "Manage your inventory by checking boxes to pick up items, drop items, equip items, or unequip items. Return this form by the deadline."
+const defaultInventoryManagementInstructions = "Manage your inventory by checking boxes to drop items, equip items, or move items to/from backpack. Return this form by the deadline."
 
 const inventoryManagementTemplatePath = "turn_sheet/adventure_game_inventory_management.template"
 
@@ -214,12 +214,12 @@ func (p *InventoryManagementProcessor) ScanTurnSheet(ctx context.Context, l logg
 func buildInventoryManagementInstructions() string {
 	return `Compare the blank template image with the completed turn sheet.
 Determine which checkboxes are marked by the player for:
-- Pick Up: Items at location to pick up
-- Drop: Items in inventory to drop
-- Equip: Items in inventory to equip (with slot selection)
-- Unequip: Equipped items to unequip
+- Drop: Items to drop (remove from inventory/equipment)
+- Equip: Items to equip (from inventory or location)
+- Backpack: Items to move to backpack (unequip equipped items, or pick up location items)
 Respond with JSON containing arrays of item_instance_id values for each action.
-For equip actions, include both item_instance_id and slot.`
+For equip actions, include both item_instance_id and slot.
+Note: "Backpack" checkbox on location items uses name "pick_up", "Backpack" on equipped items uses name "unequip".`
 }
 
 // buildInventoryManagementContext returns additional context for the AI-driven OCR service

@@ -13,8 +13,7 @@
     }
     
     .inventory-item {
-        display: table;
-        table-layout: fixed;
+        display: flex;
         border: 1px solid #dee2e6;
         border-radius: 4px;
         padding: 6px 8px;
@@ -23,23 +22,30 @@
         box-sizing: border-box;
         background-color: rgba(255, 255, 255, 0.75);
         break-inside: avoid;
+        gap: 8px;
     }
     
     .inventory-item-actions {
-        display: table-cell;
-        width: 110px;
-        vertical-align: middle;
-        padding-right: 6px;
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        min-width: 80px;
+        flex-shrink: 0;
+    }
+    
+    .inventory-item-action {
+        display: flex;
+        align-items: center;
+        gap: 4px;
     }
     
     .inventory-item-actions input[type="checkbox"] {
-        margin-right: 3px;
         cursor: pointer;
+        flex-shrink: 0;
     }
     
     .inventory-item-content {
-        display: table-cell;
-        vertical-align: top;
+        flex: 1;
         line-height: 1.2;
     }
     
@@ -60,8 +66,7 @@
     }
     
     .location-item {
-        display: table;
-        table-layout: fixed;
+        display: flex;
         border: 1px solid #dee2e6;
         border-radius: 4px;
         padding: 6px 8px;
@@ -69,22 +74,30 @@
         width: 100%;
         box-sizing: border-box;
         background-color: rgba(255, 255, 255, 0.75);
+        gap: 8px;
+    }
+    
+    .location-item-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        min-width: 80px;
+        flex-shrink: 0;
     }
     
     .location-item-action {
-        display: table-cell;
-        width: 60px;
-        vertical-align: middle;
-        padding-right: 6px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
     }
     
     .location-item-action input[type="checkbox"] {
         cursor: pointer;
+        flex-shrink: 0;
     }
     
     .location-item-content {
-        display: table-cell;
-        vertical-align: top;
+        flex: 1;
         line-height: 1.2;
     }
     
@@ -111,8 +124,7 @@
     .action-label {
         font-size: 8px;
         color: #6c757d;
-        display: inline-block;
-        margin-right: 4px;
+        white-space: nowrap;
     }
 </style>
 {{end}}
@@ -133,15 +145,22 @@
         {{range .CurrentInventory}}
         <div class="inventory-item">
             <div class="inventory-item-actions">
-                <span class="action-label">Drop:</span>
-                <input type="checkbox" name="drop" value="{{.ItemInstanceID}}">
-                {{if .CanEquip}}
-                <span class="action-label">Equip:</span>
-                <input type="checkbox" name="equip" value="{{.ItemInstanceID}}">
-                {{end}}
+                <div class="inventory-item-action">
+                    <input type="checkbox" name="drop" value="{{.ItemInstanceID}}">
+                    <span class="action-label">Drop</span>
+                </div>
                 {{if .IsEquipped}}
-                <span class="action-label">Unequip:</span>
-                <input type="checkbox" name="unequip" value="{{.ItemInstanceID}}">
+                {{/* Equipped items: Drop and Backpack (move to backpack) */}}
+                <div class="inventory-item-action">
+                    <input type="checkbox" name="unequip" value="{{.ItemInstanceID}}">
+                    <span class="action-label">Backpack</span>
+                </div>
+                {{else if .CanEquip}}
+                {{/* Unequipped items in inventory: Drop and Equip */}}
+                <div class="inventory-item-action">
+                    <input type="checkbox" name="equip" value="{{.ItemInstanceID}}">
+                    <span class="action-label">Equip</span>
+                </div>
                 {{end}}
             </div>
             <div class="inventory-item-content">
@@ -170,9 +189,16 @@
     {{if .LocationItems}}
     {{range .LocationItems}}
     <div class="location-item">
-        <div class="location-item-action">
-            <span class="action-label">Pick Up:</span>
-            <input type="checkbox" name="pick_up" value="{{.ItemInstanceID}}">
+        <div class="location-item-actions">
+            {{/* Items at location: Equip and Backpack */}}
+            <div class="location-item-action">
+                <input type="checkbox" name="equip" value="{{.ItemInstanceID}}">
+                <span class="action-label">Equip</span>
+            </div>
+            <div class="location-item-action">
+                <input type="checkbox" name="pick_up" value="{{.ItemInstanceID}}">
+                <span class="action-label">Backpack</span>
+            </div>
         </div>
         <div class="location-item-content">
             <div class="location-item-name">{{.ItemName}}</div>
