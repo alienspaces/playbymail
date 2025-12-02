@@ -199,27 +199,47 @@ func (p *AdventureGameInventoryManagementProcessor) CreateNextTurnSheet(ctx cont
 			CanEquip:        itemDef.CanBeEquipped,
 		}
 		inventoryItemList = append(inventoryItemList, inventoryItem)
+	}
 
-		// Populate equipment slots for display
-		if itemInstance.IsEquipped && itemInstance.EquipmentSlot.Valid && displaySlot != "" {
-			equippedItem := &turn_sheet.EquippedItem{
-				ItemInstanceID: itemInstance.ID,
-				ItemName:       itemDef.Name,
-				SlotName:       displaySlot,
+	// Sort inventory items: equipped items first (weapon, armor, jewelry order), then unequipped
+	equippedItems := make([]turn_sheet.InventoryItem, 0)
+	unequippedItems := make([]turn_sheet.InventoryItem, 0)
+	
+	// Define slot priority for sorting equipped items
+	slotPriority := map[string]int{
+		"weapon":   1,
+		"armor":    2,
+		"clothing": 3,
+		"jewelry":  4,
+	}
+	
+	for _, item := range inventoryItemList {
+		if item.IsEquipped {
+			equippedItems = append(equippedItems, item)
+		} else {
+			unequippedItems = append(unequippedItems, item)
+		}
+	}
+	
+	// Sort equipped items by slot priority
+	for i := 0; i < len(equippedItems)-1; i++ {
+		for j := i + 1; j < len(equippedItems); j++ {
+			priorityI := slotPriority[equippedItems[i].EquipmentSlot]
+			priorityJ := slotPriority[equippedItems[j].EquipmentSlot]
+			if priorityI == 0 {
+				priorityI = 99 // Unknown slots go to end
 			}
-
-			switch displaySlot {
-			case "weapon":
-				equipmentSlots.Weapon = equippedItem
-			case "armor":
-				equipmentSlots.Armor = equippedItem
-			case "clothing":
-				equipmentSlots.Clothing = equippedItem
-			case "jewelry":
-				equipmentSlots.Jewelry = equippedItem
+			if priorityJ == 0 {
+				priorityJ = 99
+			}
+			if priorityI > priorityJ {
+				equippedItems[i], equippedItems[j] = equippedItems[j], equippedItems[i]
 			}
 		}
 	}
+	
+	// Combine: equipped first, then unequipped
+	inventoryItemList = append(equippedItems, unequippedItems...)
 
 	// Step 9: Build location items list
 	locationItemList := make([]turn_sheet.LocationItem, 0, len(locationItems))
