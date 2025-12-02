@@ -1,0 +1,259 @@
+{{template "base.template" .}}
+
+{{define "styles"}}
+<style>
+    .equipment-section {
+        margin-bottom: 12px;
+    }
+    
+    .equipment-slots {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        margin-bottom: 12px;
+    }
+    
+    .equipment-slot {
+        border: 2px solid #dee2e6;
+        border-radius: 4px;
+        padding: 8px;
+        background-color: rgba(255, 255, 255, 0.75);
+        min-height: 40px;
+    }
+    
+    .equipment-slot-label {
+        font-weight: bold;
+        font-size: 12px;
+        color: #495057;
+        margin-bottom: 4px;
+    }
+    
+    .equipment-slot-item {
+        font-size: 11px;
+        color: #6c757d;
+    }
+    
+    .equipment-slot-empty {
+        font-size: 11px;
+        color: #adb5bd;
+        font-style: italic;
+    }
+    
+    .inventory-section {
+        margin-bottom: 12px;
+    }
+    
+    .inventory-item {
+        display: table;
+        table-layout: fixed;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        padding: 8px 10px;
+        margin-bottom: 6px;
+        width: 100%;
+        box-sizing: border-box;
+        background-color: rgba(255, 255, 255, 0.75);
+    }
+    
+    .inventory-item-actions {
+        display: table-cell;
+        width: 120px;
+        vertical-align: middle;
+        padding-right: 8px;
+    }
+    
+    .inventory-item-actions input[type="checkbox"] {
+        margin-right: 4px;
+        cursor: pointer;
+    }
+    
+    .inventory-item-content {
+        display: table-cell;
+        vertical-align: top;
+        line-height: 1.3;
+    }
+    
+    .inventory-item-name {
+        font-weight: 600;
+        font-size: 12px;
+        color: #2c3e50;
+    }
+    
+    .inventory-item-meta {
+        font-size: 10px;
+        color: #6c757d;
+        margin-top: 2px;
+    }
+    
+    .location-items-section {
+        margin-bottom: 12px;
+    }
+    
+    .location-item {
+        display: table;
+        table-layout: fixed;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        padding: 8px 10px;
+        margin-bottom: 6px;
+        width: 100%;
+        box-sizing: border-box;
+        background-color: rgba(255, 255, 255, 0.75);
+    }
+    
+    .location-item-action {
+        display: table-cell;
+        width: 60px;
+        vertical-align: middle;
+        padding-right: 8px;
+    }
+    
+    .location-item-action input[type="checkbox"] {
+        cursor: pointer;
+    }
+    
+    .location-item-content {
+        display: table-cell;
+        vertical-align: top;
+        line-height: 1.3;
+    }
+    
+    .location-item-name {
+        font-weight: 600;
+        font-size: 12px;
+        color: #2c3e50;
+    }
+    
+    .location-item-description {
+        font-size: 10px;
+        color: #6c757d;
+        margin-top: 2px;
+    }
+    
+    .capacity-indicator {
+        text-align: center;
+        font-size: 11px;
+        color: #495057;
+        margin-bottom: 8px;
+        font-weight: 600;
+    }
+    
+    .action-label {
+        font-size: 9px;
+        color: #6c757d;
+        display: inline-block;
+        margin-right: 6px;
+    }
+</style>
+{{end}}
+
+{{define "content"}}
+<h3 class="content-section-title">Inventory Management</h3>
+<p class="content-section-subtitle">{{.CharacterName}} - {{.CurrentLocationName}}</p>
+
+<div class="capacity-indicator">
+    Carrying {{.InventoryCount}}/{{.InventoryCapacity}} items
+</div>
+
+<!-- Equipment Slots -->
+<div class="equipment-section">
+    <h4 class="subsection-title" style="font-size: 13px; margin: 8px 0 6px 0;">Equipped Items</h4>
+    <div class="equipment-slots">
+        <div class="equipment-slot">
+            <div class="equipment-slot-label">Weapon</div>
+            {{if .EquipmentSlots.Weapon}}
+            <div class="equipment-slot-item">{{.EquipmentSlots.Weapon.ItemName}}</div>
+            {{else}}
+            <div class="equipment-slot-empty">Empty</div>
+            {{end}}
+        </div>
+        <div class="equipment-slot">
+            <div class="equipment-slot-label">Armor</div>
+            {{if .EquipmentSlots.Armor}}
+            <div class="equipment-slot-item">{{.EquipmentSlots.Armor.ItemName}}</div>
+            {{else}}
+            <div class="equipment-slot-empty">Empty</div>
+            {{end}}
+        </div>
+        <div class="equipment-slot">
+            <div class="equipment-slot-label">Clothing</div>
+            {{if .EquipmentSlots.Clothing}}
+            <div class="equipment-slot-item">{{.EquipmentSlots.Clothing.ItemName}}</div>
+            {{else}}
+            <div class="equipment-slot-empty">Empty</div>
+            {{end}}
+        </div>
+        <div class="equipment-slot">
+            <div class="equipment-slot-label">Jewelry</div>
+            {{if .EquipmentSlots.Jewelry}}
+            <div class="equipment-slot-item">{{.EquipmentSlots.Jewelry.ItemName}}</div>
+            {{else}}
+            <div class="equipment-slot-empty">Empty</div>
+            {{end}}
+        </div>
+    </div>
+</div>
+
+<!-- Current Inventory -->
+<div class="inventory-section">
+    <h4 class="subsection-title" style="font-size: 13px; margin: 8px 0 6px 0;">Current Inventory</h4>
+    {{if .CurrentInventory}}
+    {{range .CurrentInventory}}
+    <div class="inventory-item">
+        <div class="inventory-item-actions">
+            <span class="action-label">Drop:</span>
+            <input type="checkbox" name="drop" value="{{.ItemInstanceID}}">
+            {{if .CanEquip}}
+            <span class="action-label">Equip:</span>
+            <input type="checkbox" name="equip" value="{{.ItemInstanceID}}">
+            {{end}}
+            {{if .IsEquipped}}
+            <span class="action-label">Unequip:</span>
+            <input type="checkbox" name="unequip" value="{{.ItemInstanceID}}">
+            {{end}}
+        </div>
+        <div class="inventory-item-content">
+            <div class="inventory-item-name">{{.ItemName}}</div>
+            <div class="inventory-item-meta">
+                {{if .IsEquipped}}
+                <span>Equipped: {{.EquipmentSlot}}</span>
+                {{else if .CanEquip}}
+                <span>Can be equipped</span>
+                {{end}}
+            </div>
+        </div>
+    </div>
+    {{end}}
+    {{else}}
+    <div class="no-items">
+        <p style="font-size: 11px; color: #6c757d; font-style: italic;">No items in inventory.</p>
+    </div>
+    {{end}}
+</div>
+
+<!-- Items at Location -->
+<div class="location-items-section">
+    <h4 class="subsection-title" style="font-size: 13px; margin: 8px 0 6px 0;">Items at Location</h4>
+    {{if .LocationItems}}
+    {{range .LocationItems}}
+    <div class="location-item">
+        <div class="location-item-action">
+            <span class="action-label">Pick Up:</span>
+            <input type="checkbox" name="pick_up" value="{{.ItemInstanceID}}">
+        </div>
+        <div class="location-item-content">
+            <div class="location-item-name">{{.ItemName}}</div>
+            {{if .ItemDescription}}
+            <div class="location-item-description">{{.ItemDescription}}</div>
+            {{end}}
+        </div>
+    </div>
+    {{end}}
+    {{else}}
+    <div class="no-items">
+        <p style="font-size: 11px; color: #6c757d; font-style: italic;">No items at this location.</p>
+    </div>
+    {{end}}
+</div>
+{{end}}
+

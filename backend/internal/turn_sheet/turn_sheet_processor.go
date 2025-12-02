@@ -77,5 +77,11 @@ func getAdventureGameDocumentProcessorMap(l logger.Logger, cfg config.Config) (m
 	}
 	processors[adventure_game_record.AdventureSheetTypeJoinGame] = joinGameProcessor
 
+	inventoryManagementProcessor, err := NewInventoryManagementProcessor(l, cfg)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create inventory management processor: %w", err)
+	}
+	processors[adventure_game_record.AdventureSheetTypeInventoryManagement] = inventoryManagementProcessor
+
 	return processors, nil
 }

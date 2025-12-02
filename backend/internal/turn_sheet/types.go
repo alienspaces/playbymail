@@ -12,6 +12,7 @@ const (
 // Turn sheet types
 const (
 	TurnSheetTypeLocationChoice string = "location_choice"
+	TurnSheetTypeInventoryManagement string = "inventory_management"
 )
 
 // TurnSheetData represents the data for a turn sheet
