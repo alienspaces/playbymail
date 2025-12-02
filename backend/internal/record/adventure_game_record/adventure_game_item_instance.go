@@ -19,6 +19,7 @@ const (
 	FieldAdventureGameItemInstanceAdventureGameCharacterInstanceID = "adventure_game_character_instance_id"
 	FieldAdventureGameItemInstanceAdventureGameCreatureInstanceID  = "adventure_game_creature_instance_id"
 	FieldAdventureGameItemInstanceIsEquipped                       = "is_equipped"
+	FieldAdventureGameItemInstanceEquipmentSlot                    = "equipment_slot"
 	FieldAdventureGameItemInstanceIsUsed                           = "is_used"
 	FieldAdventureGameItemInstanceUsesRemaining                    = "uses_remaining"
 )
@@ -33,6 +34,7 @@ type AdventureGameItemInstance struct {
 	AdventureGameCharacterInstanceID sql.NullString `db:"adventure_game_character_instance_id"`
 	AdventureGameCreatureInstanceID  sql.NullString `db:"adventure_game_creature_instance_id"`
 	IsEquipped                       bool           `db:"is_equipped"`
+	EquipmentSlot                    sql.NullString `db:"equipment_slot"`
 	IsUsed                           bool           `db:"is_used"`
 	UsesRemaining                    int            `db:"uses_remaining"`
 }
@@ -46,6 +48,7 @@ func (r *AdventureGameItemInstance) ToNamedArgs() pgx.NamedArgs {
 	args[FieldAdventureGameItemInstanceAdventureGameCharacterInstanceID] = r.AdventureGameCharacterInstanceID
 	args[FieldAdventureGameItemInstanceAdventureGameCreatureInstanceID] = r.AdventureGameCreatureInstanceID
 	args[FieldAdventureGameItemInstanceIsEquipped] = r.IsEquipped
+	args[FieldAdventureGameItemInstanceEquipmentSlot] = r.EquipmentSlot
 	args[FieldAdventureGameItemInstanceIsUsed] = r.IsUsed
 	args[FieldAdventureGameItemInstanceUsesRemaining] = r.UsesRemaining
 	return args
