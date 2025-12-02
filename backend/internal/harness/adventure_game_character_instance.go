@@ -74,5 +74,8 @@ func (t *Testing) applyAdventureGameCharacterInstanceRecDefaultValues(rec *adven
 		rec = &adventure_game_record.AdventureGameCharacterInstance{}
 	}
 	rec.Health = 100
+	if rec.InventoryCapacity == 0 {
+		rec.InventoryCapacity = 10
+	}
 	return rec
 }
