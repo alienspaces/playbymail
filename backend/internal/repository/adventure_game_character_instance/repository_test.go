@@ -35,6 +35,7 @@ func TestCreateOne(t *testing.T) {
 					AdventureGameCharacterID:        charRec.ID,
 					AdventureGameLocationInstanceID: locationInstanceRec.ID,
 					Health:                          100,
+					InventoryCapacity:               10,
 				}
 			},
 			hasErr: false,
@@ -54,6 +55,7 @@ func TestCreateOne(t *testing.T) {
 					AdventureGameCharacterID:        charRec.ID,
 					AdventureGameLocationInstanceID: locationInstanceRec.ID,
 					Health:                          100,
+					InventoryCapacity:               10,
 				}
 				id, _ := uuid.NewRandom()
 				rec.ID = id.String()
