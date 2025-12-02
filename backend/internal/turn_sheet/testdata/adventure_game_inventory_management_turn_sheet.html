@@ -335,45 +335,14 @@
     
     
 <style>
-    .equipment-section {
-        margin-bottom: 12px;
-    }
-    
-    .equipment-slots {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 8px;
-        margin-bottom: 12px;
-    }
-    
-    .equipment-slot {
-        border: 2px solid #dee2e6;
-        border-radius: 4px;
-        padding: 8px;
-        background-color: rgba(255, 255, 255, 0.75);
-        min-height: 40px;
-    }
-    
-    .equipment-slot-label {
-        font-weight: bold;
-        font-size: 12px;
-        color: #495057;
-        margin-bottom: 4px;
-    }
-    
-    .equipment-slot-item {
-        font-size: 11px;
-        color: #6c757d;
-    }
-    
-    .equipment-slot-empty {
-        font-size: 11px;
-        color: #adb5bd;
-        font-style: italic;
-    }
-    
     .inventory-section {
-        margin-bottom: 12px;
+        margin-bottom: 10px;
+    }
+    
+    .inventory-columns {
+        column-count: 2;
+        column-gap: 8px;
+        margin-bottom: 10px;
     }
     
     .inventory-item {
@@ -381,45 +350,46 @@
         table-layout: fixed;
         border: 1px solid #dee2e6;
         border-radius: 4px;
-        padding: 8px 10px;
-        margin-bottom: 6px;
+        padding: 6px 8px;
+        margin-bottom: 4px;
         width: 100%;
         box-sizing: border-box;
         background-color: rgba(255, 255, 255, 0.75);
+        break-inside: avoid;
     }
     
     .inventory-item-actions {
         display: table-cell;
-        width: 120px;
+        width: 110px;
         vertical-align: middle;
-        padding-right: 8px;
+        padding-right: 6px;
     }
     
     .inventory-item-actions input[type="checkbox"] {
-        margin-right: 4px;
+        margin-right: 3px;
         cursor: pointer;
     }
     
     .inventory-item-content {
         display: table-cell;
         vertical-align: top;
-        line-height: 1.3;
+        line-height: 1.2;
     }
     
     .inventory-item-name {
         font-weight: 600;
-        font-size: 12px;
+        font-size: 11px;
         color: #2c3e50;
     }
     
     .inventory-item-meta {
-        font-size: 10px;
+        font-size: 9px;
         color: #6c757d;
-        margin-top: 2px;
+        margin-top: 1px;
     }
     
     .location-items-section {
-        margin-bottom: 12px;
+        margin-bottom: 10px;
     }
     
     .location-item {
@@ -427,8 +397,8 @@
         table-layout: fixed;
         border: 1px solid #dee2e6;
         border-radius: 4px;
-        padding: 8px 10px;
-        margin-bottom: 6px;
+        padding: 6px 8px;
+        margin-bottom: 4px;
         width: 100%;
         box-sizing: border-box;
         background-color: rgba(255, 255, 255, 0.75);
@@ -438,7 +408,7 @@
         display: table-cell;
         width: 60px;
         vertical-align: middle;
-        padding-right: 8px;
+        padding-right: 6px;
     }
     
     .location-item-action input[type="checkbox"] {
@@ -448,34 +418,34 @@
     .location-item-content {
         display: table-cell;
         vertical-align: top;
-        line-height: 1.3;
+        line-height: 1.2;
     }
     
     .location-item-name {
         font-weight: 600;
-        font-size: 12px;
+        font-size: 11px;
         color: #2c3e50;
     }
     
     .location-item-description {
-        font-size: 10px;
+        font-size: 9px;
         color: #6c757d;
-        margin-top: 2px;
+        margin-top: 1px;
     }
     
     .capacity-indicator {
         text-align: center;
-        font-size: 11px;
+        font-size: 10px;
         color: #495057;
-        margin-bottom: 8px;
+        margin-bottom: 6px;
         font-weight: 600;
     }
     
     .action-label {
-        font-size: 9px;
+        font-size: 8px;
         color: #6c757d;
         display: inline-block;
-        margin-right: 6px;
+        margin-right: 4px;
     }
 </style>
 
@@ -523,143 +493,114 @@
 </div>
 
 
-<div class="equipment-section">
-    <h4 class="subsection-title" style="font-size: 13px; margin: 8px 0 6px 0;">Equipped Items</h4>
-    <div class="equipment-slots">
-        <div class="equipment-slot">
-            <div class="equipment-slot-label">Weapon</div>
-            
-            <div class="equipment-slot-item">Iron Sword</div>
-            
-        </div>
-        <div class="equipment-slot">
-            <div class="equipment-slot-label">Armor</div>
-            
-            <div class="equipment-slot-item">Leather Armor</div>
-            
-        </div>
-        <div class="equipment-slot">
-            <div class="equipment-slot-label">Clothing</div>
-            
-            <div class="equipment-slot-empty">Empty</div>
-            
-        </div>
-        <div class="equipment-slot">
-            <div class="equipment-slot-label">Jewelry</div>
-            
-            <div class="equipment-slot-empty">Empty</div>
-            
-        </div>
-    </div>
-</div>
-
-
 <div class="inventory-section">
-    <h4 class="subsection-title" style="font-size: 13px; margin: 8px 0 6px 0;">Current Inventory</h4>
+    <h4 class="subsection-title" style="font-size: 12px; margin: 6px 0 4px 0;">Inventory</h4>
     
-    
-    <div class="inventory-item">
-        <div class="inventory-item-actions">
-            <span class="action-label">Drop:</span>
-            <input type="checkbox" name="drop" value="item-1">
-            
-            
-        </div>
-        <div class="inventory-item-content">
-            <div class="inventory-item-name">Crystal Key</div>
-            <div class="inventory-item-meta">
+    <div class="inventory-columns">
+        
+        <div class="inventory-item">
+            <div class="inventory-item-actions">
+                <span class="action-label">Drop:</span>
+                <input type="checkbox" name="drop" value="item-1">
+                
                 
             </div>
-        </div>
-    </div>
-    
-    <div class="inventory-item">
-        <div class="inventory-item-actions">
-            <span class="action-label">Drop:</span>
-            <input type="checkbox" name="drop" value="item-2">
-            
-            <span class="action-label">Equip:</span>
-            <input type="checkbox" name="equip" value="item-2">
-            
-            
-            <span class="action-label">Unequip:</span>
-            <input type="checkbox" name="unequip" value="item-2">
-            
-        </div>
-        <div class="inventory-item-content">
-            <div class="inventory-item-name">Iron Sword</div>
-            <div class="inventory-item-meta">
-                
-                <span>Equipped: weapon</span>
-                
+            <div class="inventory-item-content">
+                <div class="inventory-item-name">Crystal Key</div>
+                <div class="inventory-item-meta">
+                    
+                </div>
             </div>
         </div>
-    </div>
-    
-    <div class="inventory-item">
-        <div class="inventory-item-actions">
-            <span class="action-label">Drop:</span>
-            <input type="checkbox" name="drop" value="item-3">
-            
-            <span class="action-label">Equip:</span>
-            <input type="checkbox" name="equip" value="item-3">
-            
-            
-            <span class="action-label">Unequip:</span>
-            <input type="checkbox" name="unequip" value="item-3">
-            
-        </div>
-        <div class="inventory-item-content">
-            <div class="inventory-item-name">Leather Armor</div>
-            <div class="inventory-item-meta">
+        
+        <div class="inventory-item">
+            <div class="inventory-item-actions">
+                <span class="action-label">Drop:</span>
+                <input type="checkbox" name="drop" value="item-2">
                 
-                <span>Equipped: armor</span>
+                <span class="action-label">Equip:</span>
+                <input type="checkbox" name="equip" value="item-2">
+                
+                
+                <span class="action-label">Unequip:</span>
+                <input type="checkbox" name="unequip" value="item-2">
                 
             </div>
-        </div>
-    </div>
-    
-    <div class="inventory-item">
-        <div class="inventory-item-actions">
-            <span class="action-label">Drop:</span>
-            <input type="checkbox" name="drop" value="item-4">
-            
-            
-        </div>
-        <div class="inventory-item-content">
-            <div class="inventory-item-name">Healing Potion</div>
-            <div class="inventory-item-meta">
-                
+            <div class="inventory-item-content">
+                <div class="inventory-item-name">Iron Sword</div>
+                <div class="inventory-item-meta">
+                    
+                    <span>Equipped: weapon</span>
+                    
+                </div>
             </div>
         </div>
-    </div>
-    
-    <div class="inventory-item">
-        <div class="inventory-item-actions">
-            <span class="action-label">Drop:</span>
-            <input type="checkbox" name="drop" value="item-5">
-            
-            <span class="action-label">Equip:</span>
-            <input type="checkbox" name="equip" value="item-5">
-            
-            
-        </div>
-        <div class="inventory-item-content">
-            <div class="inventory-item-name">Magic Ring</div>
-            <div class="inventory-item-meta">
+        
+        <div class="inventory-item">
+            <div class="inventory-item-actions">
+                <span class="action-label">Drop:</span>
+                <input type="checkbox" name="drop" value="item-3">
                 
-                <span>Can be equipped</span>
+                <span class="action-label">Equip:</span>
+                <input type="checkbox" name="equip" value="item-3">
+                
+                
+                <span class="action-label">Unequip:</span>
+                <input type="checkbox" name="unequip" value="item-3">
                 
             </div>
+            <div class="inventory-item-content">
+                <div class="inventory-item-name">Leather Armor</div>
+                <div class="inventory-item-meta">
+                    
+                    <span>Equipped: armor</span>
+                    
+                </div>
+            </div>
         </div>
+        
+        <div class="inventory-item">
+            <div class="inventory-item-actions">
+                <span class="action-label">Drop:</span>
+                <input type="checkbox" name="drop" value="item-4">
+                
+                
+            </div>
+            <div class="inventory-item-content">
+                <div class="inventory-item-name">Healing Potion</div>
+                <div class="inventory-item-meta">
+                    
+                </div>
+            </div>
+        </div>
+        
+        <div class="inventory-item">
+            <div class="inventory-item-actions">
+                <span class="action-label">Drop:</span>
+                <input type="checkbox" name="drop" value="item-5">
+                
+                <span class="action-label">Equip:</span>
+                <input type="checkbox" name="equip" value="item-5">
+                
+                
+            </div>
+            <div class="inventory-item-content">
+                <div class="inventory-item-name">Magic Ring</div>
+                <div class="inventory-item-meta">
+                    
+                    <span>Can be equipped</span>
+                    
+                </div>
+            </div>
+        </div>
+        
     </div>
-    
     
 </div>
 
 
 <div class="location-items-section">
-    <h4 class="subsection-title" style="font-size: 13px; margin: 8px 0 6px 0;">Items at Location</h4>
+    <h4 class="subsection-title" style="font-size: 12px; margin: 6px 0 4px 0;">Items at Location</h4>
     
     
     <div class="location-item">
@@ -702,7 +643,7 @@
             
             <div class="footer-content-item">
                 <div class="footer-content-label">Turn Sheet Deadline:</div>
-                <div class="footer-content-value">2025-12-03 09:14:32.237458209 &#43;0000 UTC</div>
+                <div class="footer-content-value">2025-12-03 09:40:50.601451529 &#43;0000 UTC</div>
             </div>
             
 
@@ -710,7 +651,7 @@
             
             <div class="footer-content-item">
                 <div class="footer-content-label">Turn Sheet Code:</div>
-                <div class="footer-content-value">eyJjb2RlX3R5cGUiOiJwbGF5aW5nIiwiZ2FtZV9pZCI6ImExYjJjM2Q0LWU1ZjYtNzg5MC1hYmNkLWVmMTIzNDU2Nzg5MCIsImdhbWVfaW5zdGFuY2VfaWQiOiJiMmMzZDRlNS1mNmE3LTg5MDEtYmNkZS1mMTIzNDU2Nzg5MDEiLCJhY2NvdW50X2lkIjoiYzNkNGU1ZjYtYTdiOC05MDEyLWNkZWYtMTIzNDU2Nzg5MDEyIiwiZ2FtZV90dXJuX3NoZWV0X2lkIjoiZDRlNWY2YTctYjhjOS0wMTIzLWRlZjAtMjM0NTY3ODkwMTIzIiwiZ2VuZXJhdGVkX2F0IjoiMjAyNS0xMi0wMlQwOToxNDozMi4yMzc0MDkzNjJaIiwiY2hlY2tzdW0iOiIyTzJ4X0JHX0lmLWFrcGFxX0I3TnlWQnYyNDc5Qy1jeFZ2ZFZQWlIwZl9BPSJ9</div>
+                <div class="footer-content-value">eyJjb2RlX3R5cGUiOiJwbGF5aW5nIiwiZ2FtZV9pZCI6ImExYjJjM2Q0LWU1ZjYtNzg5MC1hYmNkLWVmMTIzNDU2Nzg5MCIsImdhbWVfaW5zdGFuY2VfaWQiOiJiMmMzZDRlNS1mNmE3LTg5MDEtYmNkZS1mMTIzNDU2Nzg5MDEiLCJhY2NvdW50X2lkIjoiYzNkNGU1ZjYtYTdiOC05MDEyLWNkZWYtMTIzNDU2Nzg5MDEyIiwiZ2FtZV90dXJuX3NoZWV0X2lkIjoiZDRlNWY2YTctYjhjOS0wMTIzLWRlZjAtMjM0NTY3ODkwMTIzIiwiZ2VuZXJhdGVkX2F0IjoiMjAyNS0xMi0wMlQwOTo0MDo1MC42MDE0MTY3MDVaIiwiY2hlY2tzdW0iOiJrWk54WGo0YjZWYUFBVkE2Yk5qMlJnZVd0c0NFdGFVZG1VS3RqYjVhLU5NPSJ9</div>
             </div>
             
         </div>
