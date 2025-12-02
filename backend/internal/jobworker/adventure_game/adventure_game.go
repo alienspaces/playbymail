@@ -71,9 +71,16 @@ func (p *AdventureGame) initializeTurnSheetProcessors() (map[string]TurnSheetPro
 	}
 	processors[adventure_game_record.AdventureSheetTypeLocationChoice] = locationChoiceProcessor
 
+	// Register inventory management processor
+	inventoryManagementProcessor, err := turn_sheet_processor.NewAdventureGameInventoryManagementProcessor(l, p.Domain)
+	if err != nil {
+		l.Warn("failed to initialize inventory management processor >%v<", err)
+		return nil, err
+	}
+	processors[adventure_game_record.AdventureSheetTypeInventoryManagement] = inventoryManagementProcessor
+
 	// TODO: Add new adventure game turn sheet processors here
 	// Example: processors[adventure_game_record.AdventureSheetTypeCombat] = combatProcessor
-	// Example: processors[adventure_game_record.AdventureSheetTypeInventory] = inventoryProcessor
 	// Example: processors[adventure_game_record.AdventureSheetTypeDialogue] = dialogueProcessor
 
 	return processors, nil
