@@ -252,7 +252,6 @@ func (p *AdventureGameInventoryManagementProcessor) CreateNextTurnSheet(ctx cont
 		},
 		CharacterName:      characterRec.Name,
 		CurrentLocationName: locationRec.Name,
-		Health:              characterInstanceRec.Health,
 		InventoryCapacity:  characterInstanceRec.InventoryCapacity,
 		InventoryCount:      len(inventoryItemList),
 		CurrentInventory:   inventoryItemList,

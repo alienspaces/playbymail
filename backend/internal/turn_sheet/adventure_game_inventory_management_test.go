@@ -64,7 +64,6 @@ func TestInventoryManagementProcessor_GenerateTurnSheet(t *testing.T) {
 				},
 				CharacterName:       "Aria the Mage",
 				CurrentLocationName: "Mystic Grove",
-				Health:             100,
 				InventoryCapacity:  10,
 				InventoryCount:     3,
 				CurrentInventory: []turn_sheet.InventoryItem{
@@ -363,7 +362,6 @@ func TestGenerateInventoryManagementFormatsForPrinting(t *testing.T) {
 		},
 		CharacterName:       "Aria the Mage",
 		CurrentLocationName: "Mystic Grove",
-		Health:              85,
 		InventoryCapacity:   10,
 		InventoryCount:      5,
 		CurrentInventory: []turn_sheet.InventoryItem{

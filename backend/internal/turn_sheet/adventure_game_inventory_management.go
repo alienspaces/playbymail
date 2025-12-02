@@ -16,11 +16,10 @@ type InventoryManagementData struct {
 	TurnSheetTemplateData
 
 	// Character information
-	CharacterName        string `json:"character_name"`
-	CurrentLocationName  string `json:"current_location_name"`
-	Health               int    `json:"health"`
-	InventoryCapacity    int    `json:"inventory_capacity"`
-	InventoryCount       int    `json:"inventory_count"`
+	CharacterName       string `json:"character_name"`
+	CurrentLocationName string `json:"current_location_name"`
+	InventoryCapacity   int    `json:"inventory_capacity"`
+	InventoryCount      int    `json:"inventory_count"`
 
 	// Current inventory items
 	CurrentInventory []InventoryItem `json:"current_inventory"`
@@ -34,12 +33,12 @@ type InventoryManagementData struct {
 
 // InventoryItem represents an item in the character's inventory
 type InventoryItem struct {
-	ItemInstanceID string `json:"item_instance_id"`
-	ItemName       string `json:"item_name"`
+	ItemInstanceID  string `json:"item_instance_id"`
+	ItemName        string `json:"item_name"`
 	ItemDescription string `json:"item_description,omitempty"`
-	IsEquipped     bool   `json:"is_equipped"`
-	EquipmentSlot  string `json:"equipment_slot,omitempty"`
-	CanEquip       bool   `json:"can_equip"`
+	IsEquipped      bool   `json:"is_equipped"`
+	EquipmentSlot   string `json:"equipment_slot,omitempty"`
+	CanEquip        bool   `json:"can_equip"`
 }
 
 // EquipmentSlots represents the equipped items in simplified slots
@@ -59,17 +58,17 @@ type EquippedItem struct {
 
 // LocationItem represents an item available at the current location
 type LocationItem struct {
-	ItemInstanceID string `json:"item_instance_id"`
-	ItemName       string `json:"item_name"`
+	ItemInstanceID  string `json:"item_instance_id"`
+	ItemName        string `json:"item_name"`
 	ItemDescription string `json:"item_description,omitempty"`
 }
 
 // InventoryManagementScanData represents the scanned data from an inventory management turn sheet
 type InventoryManagementScanData struct {
-	PickUp  []string              `json:"pick_up,omitempty"`
-	Drop    []string              `json:"drop,omitempty"`
-	Equip   []EquipAction         `json:"equip,omitempty"`
-	Unequip []string              `json:"unequip,omitempty"`
+	PickUp  []string      `json:"pick_up,omitempty"`
+	Drop    []string      `json:"drop,omitempty"`
+	Equip   []EquipAction `json:"equip,omitempty"`
+	Unequip []string      `json:"unequip,omitempty"`
 }
 
 // EquipAction represents an equip action with slot
@@ -178,10 +177,10 @@ func (p *InventoryManagementProcessor) ScanTurnSheet(ctx context.Context, l logg
 	}
 
 	expected := map[string]any{
-		"pick_up":  []string{},
-		"drop":     []string{},
-		"equip":    []map[string]string{},
-		"unequip":  []string{},
+		"pick_up": []string{},
+		"drop":    []string{},
+		"equip":   []map[string]string{},
+		"unequip": []string{},
 	}
 
 	req := scanner.StructuredScanRequest{
@@ -230,14 +229,14 @@ func buildInventoryManagementContext(data *InventoryManagementData) []string {
 		ctx = append(ctx, fmt.Sprintf("Character: %s", data.CharacterName))
 		ctx = append(ctx, fmt.Sprintf("Location: %s", data.CurrentLocationName))
 		ctx = append(ctx, fmt.Sprintf("Inventory: %d/%d items", data.InventoryCount, data.InventoryCapacity))
-		
+
 		if len(data.CurrentInventory) > 0 {
 			ctx = append(ctx, "Current Inventory:")
 			for _, item := range data.CurrentInventory {
 				ctx = append(ctx, fmt.Sprintf("  - %s (ID: %s, Equipped: %v)", item.ItemName, item.ItemInstanceID, item.IsEquipped))
 			}
 		}
-		
+
 		if len(data.LocationItems) > 0 {
 			ctx = append(ctx, "Items at Location:")
 			for _, item := range data.LocationItems {
@@ -307,4 +306,3 @@ func validateInventoryActions(sheetData *InventoryManagementData, scanData *Inve
 
 	return nil
 }
-
