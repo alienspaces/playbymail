@@ -228,7 +228,7 @@ export default {
     },
     selectGame(game) {
       this.gamesStore.setSelectedGame(game)
-      this.$router.push(`/studio/${game.id}/locations`)
+      this.$router.push(`/studio/${game.id}/turn-sheet-backgrounds`)
     },
     getActions(game) {
       return [
