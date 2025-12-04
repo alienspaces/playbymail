@@ -39,10 +39,9 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, watch } from 'vue';
 import {
     uploadGameTurnSheetImage,
-    getGameTurnSheetImages,
     deleteGameTurnSheetImage
 } from '../api/gameImages';
 
