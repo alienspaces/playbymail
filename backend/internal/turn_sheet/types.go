@@ -9,12 +9,6 @@ const (
 	DocumentFormatHTML DocumentFormat = "html"
 )
 
-// Turn sheet types
-const (
-	TurnSheetTypeLocationChoice string = "location_choice"
-	TurnSheetTypeInventoryManagement string = "inventory_management"
-)
-
 // TurnSheetData represents the data for a turn sheet
 //
 // All turn sheet types use this same data structure
@@ -22,6 +16,7 @@ type TurnSheetTemplateData struct {
 	// Game data
 	GameName *string `json:"game_name"`
 	GameType *string `json:"game_type"`
+
 	// Display data
 	TurnSheetTitle       *string `json:"turn_sheet_title"`
 	TurnSheetDescription *string `json:"turn_sheet_description"`

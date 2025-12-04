@@ -72,6 +72,14 @@ func (g *PDFGenerator) GenerateHTML(ctx context.Context, templatePath string, da
 
 	l.Info("HTML generated successfully template=%s size=%d", templatePath, len(htmlStr))
 
+	// Debug: Save generated HTML to file for inspection
+	debugPath := "/tmp/turn_sheet_debug.html"
+	if err := os.WriteFile(debugPath, []byte(htmlStr), 0644); err != nil {
+		l.Warn("failed to write debug HTML file: %v", err)
+	} else {
+		l.Info("saved debug HTML to %s", debugPath)
+	}
+
 	return htmlStr, nil
 }
 

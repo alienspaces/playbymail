@@ -37,7 +37,7 @@ func NewAdventureGameLocationChoiceProcessor(l logger.Logger, d *domain.Domain) 
 
 // GetSheetType returns the sheet type this processor handles (implements TurnSheetProcessor interface)
 func (p *AdventureGameLocationChoiceProcessor) GetSheetType() string {
-	return adventure_game_record.AdventureSheetTypeLocationChoice
+	return adventure_game_record.AdventureGameTurnSheetTypeLocationChoice
 }
 
 // ProcessTurnSheetResponse processes a single turn sheet response (implements TurnSheetProcessor interface)
@@ -47,9 +47,9 @@ func (p *AdventureGameLocationChoiceProcessor) ProcessTurnSheetResponse(ctx cont
 	l.Info("processing location choice for turn sheet >%s< for character >%s<", turnSheet.ID, characterInstanceRec.ID)
 
 	// Verify this is a location choice sheet
-	if turnSheet.SheetType != adventure_game_record.AdventureSheetTypeLocationChoice {
+	if turnSheet.SheetType != adventure_game_record.AdventureGameTurnSheetTypeLocationChoice {
 		l.Warn("expected location choice sheet type, got >%s<", turnSheet.SheetType)
-		return fmt.Errorf("invalid sheet type: expected %s, got %s", adventure_game_record.AdventureSheetTypeLocationChoice, turnSheet.SheetType)
+		return fmt.Errorf("invalid sheet type: expected %s, got %s", adventure_game_record.AdventureGameTurnSheetTypeLocationChoice, turnSheet.SheetType)
 	}
 
 	// Step 1: Parse the player's location choice from ScannedData
@@ -216,7 +216,7 @@ func (p *AdventureGameLocationChoiceProcessor) CreateNextTurnSheet(ctx context.C
 		GameID:           gameInstanceRec.GameID,
 		AccountID:        characterRec.AccountID,
 		TurnNumber:       gameInstanceRec.CurrentTurn + 1,
-		SheetType:        adventure_game_record.AdventureSheetTypeLocationChoice,
+		SheetType:        adventure_game_record.AdventureGameTurnSheetTypeLocationChoice,
 		SheetOrder:       1,
 		SheetData:        json.RawMessage(sheetDataBytes),
 		IsCompleted:      false,

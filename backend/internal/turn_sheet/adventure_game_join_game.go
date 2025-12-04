@@ -94,6 +94,13 @@ func (p *JoinGameProcessor) GenerateTurnSheet(ctx context.Context, l logger.Logg
 		return nil, fmt.Errorf("failed to parse sheet data: %w", err)
 	}
 
+	// Debug: Log background image status
+	if data.BackgroundImage != nil {
+		l.Info("background image present in data, length >%d<", len(*data.BackgroundImage))
+	} else {
+		l.Info("no background image in data")
+	}
+
 	if err := p.ValidateBaseTemplateData(&data.TurnSheetTemplateData); err != nil {
 		l.Warn("failed to validate base template data >%v<", err)
 		return nil, fmt.Errorf("template data validation failed: %w", err)

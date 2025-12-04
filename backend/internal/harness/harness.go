@@ -9,6 +9,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
 	"gitlab.com/alienspaces/playbymail/core/type/storer"
 	"gitlab.com/alienspaces/playbymail/internal/domain"
+	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 	"gitlab.com/alienspaces/playbymail/internal/utils/config"
 )
 
@@ -256,10 +257,10 @@ func (t *Testing) RemoveData() error {
 			l.Warn("[teardown] skipping game image with empty ID")
 			continue
 		}
-		err := t.Domain.(*domain.Domain).DeleteGameImageRec(imageRec.ID)
+		err := t.Domain.(*domain.Domain).RemoveGameImageRec(imageRec.ID)
 		if err != nil {
 			l.Warn("failed removing game image record >%v<", err)
-			return err
+			// Don't return error - continue with other images and games
 		}
 	}
 
@@ -298,4 +299,11 @@ func (t *Testing) RemoveData() error {
 	l.Debug("removed test data")
 
 	return nil
+}
+
+// AddGameImageRecToTeardown adds a game image record to the teardown data store
+// so it will be cleaned up during teardown. This is useful for test cases that
+// create images in separate transactions.
+func (t *Testing) AddGameImageRecToTeardown(rec *game_record.GameImage) {
+	t.teardownData.AddGameImageRec(rec)
 }

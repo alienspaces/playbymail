@@ -1,4 +1,4 @@
-package maintestdata
+package seed_data
 
 import (
 	"gitlab.com/alienspaces/playbymail/core/nullstring"
@@ -9,10 +9,19 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 )
 
-// MainTestDataConfig returns the main test data configuration for
+// Image file names in seed_images directory
+const (
+	ImageJoinGame            = "join-game.png"
+	ImageInventoryManagement = "inventory-management.png"
+	ImageLocationDarkforest  = "location-darkforest.png"
+	ImageLocationDungeon     = "location-dungeon.png"
+	ImageLocationCliffpath   = "location-cliffpath.png"
+)
+
+// SeedDataConfig returns the seed data configuration for
 // test data that can be used for setting up automated tests in
 // the public space.
-func MainTestDataConfig() harness.DataConfig {
+func SeedDataConfig() harness.DataConfig {
 	return harness.DataConfig{
 		GameConfigs:    GameConfig(),
 		AccountConfigs: AccountConfig(),
@@ -43,7 +52,7 @@ func AccountConfig() []harness.AccountConfig {
 	}
 }
 
-// GameConfig returns the main test data configuration for games
+// GameConfig returns the seed data configuration for games
 func GameConfig() []harness.GameConfig {
 	return []harness.GameConfig{
 		{
@@ -52,6 +61,19 @@ func GameConfig() []harness.GameConfig {
 				Name:              "The Enchanted Forest Adventure",
 				GameType:          game_record.GameTypeAdventure,
 				TurnDurationHours: 168, // 1 week
+			},
+			// Game images for turn sheet backgrounds (loaded from seed_images/)
+			GameImageConfigs: []harness.GameImageConfig{
+				{
+					Reference:     harness.GameImageJoinGameRef,
+					ImagePath:     ImageJoinGame,
+					TurnSheetType: adventure_game_record.AdventureGameTurnSheetTypeJoinGame,
+				},
+				{
+					Reference:     harness.GameImageInventoryRef,
+					ImagePath:     ImageInventoryManagement,
+					TurnSheetType: adventure_game_record.AdventureGameTurnSheetTypeInventoryManagement,
+				},
 			},
 			// Rich world with multiple interconnected locations
 			AdventureGameLocationConfigs: []harness.AdventureGameLocationConfig{
@@ -62,7 +84,7 @@ func GameConfig() []harness.GameConfig {
 						Description:        "A peaceful grove filled with ancient trees and magical flowers. The air shimmers with enchantment.",
 						IsStartingLocation: true,
 					},
-					BackgroundImagePath: "background-darkforest.png",
+					BackgroundImagePath: ImageLocationDarkforest,
 				},
 				{
 					Reference: harness.GameLocationTwoRef,
@@ -70,7 +92,7 @@ func GameConfig() []harness.GameConfig {
 						Name:        "Crystal Caverns",
 						Description: "Deep underground caves filled with glowing crystals. Strange sounds echo from the depths.",
 					},
-					BackgroundImagePath: "background-dungeon.png",
+					BackgroundImagePath: ImageLocationDungeon,
 				},
 				{
 					Reference: harness.GameLocationThreeRef,
@@ -78,7 +100,7 @@ func GameConfig() []harness.GameConfig {
 						Name:        "Floating Islands",
 						Description: "Mysterious islands suspended in the sky by unknown magic. Wind howls between them.",
 					},
-					BackgroundImagePath: "background-cliffpath.png",
+					BackgroundImagePath: ImageLocationCliffpath,
 				},
 				{
 					Reference: harness.GameLocationFourRef,
@@ -86,7 +108,7 @@ func GameConfig() []harness.GameConfig {
 						Name:        "Shadow Valley",
 						Description: "A dark valley shrouded in perpetual shadows. Danger lurks in every corner.",
 					},
-					BackgroundImagePath: "background-darkforest.png",
+					BackgroundImagePath: ImageLocationDarkforest,
 				},
 			},
 			// Items that can be found and used
@@ -162,7 +184,9 @@ func GameConfig() []harness.GameConfig {
 				},
 			},
 			// Location links that connect the world
+			// Each location has 2-3 travel options for a richer interconnected world
 			AdventureGameLocationLinkConfigs: []harness.AdventureGameLocationLinkConfig{
+				// From Mystic Grove (starting location)
 				{
 					Reference:       harness.GameLocationLinkOneRef,
 					FromLocationRef: harness.GameLocationOneRef,
@@ -182,6 +206,43 @@ func GameConfig() []harness.GameConfig {
 					},
 				},
 				{
+					Reference:       "location-link-grove-to-islands",
+					FromLocationRef: harness.GameLocationOneRef,
+					ToLocationRef:   harness.GameLocationThreeRef,
+					Record: &adventure_game_record.AdventureGameLocationLink{
+						Name:        "The Sky Vine",
+						Description: "A massive enchanted vine that grows from the grove up to the floating islands.",
+					},
+					AdventureGameLocationLinkRequirementConfigs: []harness.AdventureGameLocationLinkRequirementConfig{
+						{
+							Reference:   "link-req-grove-to-islands",
+							GameItemRef: harness.GameItemFourRef,
+							Record: &adventure_game_record.AdventureGameLocationLinkRequirement{
+								Quantity: 1,
+							},
+						},
+					},
+				},
+				{
+					Reference:       "location-link-grove-to-shadow",
+					FromLocationRef: harness.GameLocationOneRef,
+					ToLocationRef:   harness.GameLocationFourRef,
+					Record: &adventure_game_record.AdventureGameLocationLink{
+						Name:        "The Dark Tunnel",
+						Description: "A hidden tunnel beneath ancient roots that leads directly to the shadow valley.",
+					},
+					AdventureGameLocationLinkRequirementConfigs: []harness.AdventureGameLocationLinkRequirementConfig{
+						{
+							Reference:   "link-req-grove-to-shadow",
+							GameItemRef: harness.GameItemTwoRef,
+							Record: &adventure_game_record.AdventureGameLocationLinkRequirement{
+								Quantity: 1,
+							},
+						},
+					},
+				},
+				// From Crystal Caverns
+				{
 					Reference:       harness.GameLocationLinkTwoRef,
 					FromLocationRef: harness.GameLocationTwoRef,
 					ToLocationRef:   harness.GameLocationThreeRef,
@@ -199,6 +260,34 @@ func GameConfig() []harness.GameConfig {
 						},
 					},
 				},
+				{
+					Reference:       "location-link-caverns-to-grove",
+					FromLocationRef: harness.GameLocationTwoRef,
+					ToLocationRef:   harness.GameLocationOneRef,
+					Record: &adventure_game_record.AdventureGameLocationLink{
+						Name:        "The Glowing Passage",
+						Description: "Crystal-lit tunnels that wind back up to the mystic grove.",
+					},
+				},
+				{
+					Reference:       "location-link-caverns-to-shadow",
+					FromLocationRef: harness.GameLocationTwoRef,
+					ToLocationRef:   harness.GameLocationFourRef,
+					Record: &adventure_game_record.AdventureGameLocationLink{
+						Name:        "The Deep Descent",
+						Description: "A treacherous path that plunges from the caverns into the shadow valley.",
+					},
+					AdventureGameLocationLinkRequirementConfigs: []harness.AdventureGameLocationLinkRequirementConfig{
+						{
+							Reference:   "link-req-caverns-to-shadow",
+							GameItemRef: harness.GameItemThreeRef,
+							Record: &adventure_game_record.AdventureGameLocationLinkRequirement{
+								Quantity: 1,
+							},
+						},
+					},
+				},
+				// From Floating Islands
 				{
 					Reference:       harness.GameLocationLinkThreeRef,
 					FromLocationRef: harness.GameLocationThreeRef,
@@ -218,6 +307,25 @@ func GameConfig() []harness.GameConfig {
 					},
 				},
 				{
+					Reference:       "location-link-islands-to-grove",
+					FromLocationRef: harness.GameLocationThreeRef,
+					ToLocationRef:   harness.GameLocationOneRef,
+					Record: &adventure_game_record.AdventureGameLocationLink{
+						Name:        "The Feather Fall",
+						Description: "Enchanted feathers allow a gentle descent from the islands to the grove below.",
+					},
+				},
+				{
+					Reference:       "location-link-islands-to-caverns",
+					FromLocationRef: harness.GameLocationThreeRef,
+					ToLocationRef:   harness.GameLocationTwoRef,
+					Record: &adventure_game_record.AdventureGameLocationLink{
+						Name:        "The Crystal Chute",
+						Description: "A smooth crystal slide that spirals down into the caverns.",
+					},
+				},
+				// From Shadow Valley
+				{
 					Reference:       harness.GameLocationLinkFourRef,
 					FromLocationRef: harness.GameLocationFourRef,
 					ToLocationRef:   harness.GameLocationOneRef,
@@ -229,6 +337,33 @@ func GameConfig() []harness.GameConfig {
 						{
 							Reference:   harness.GameLocationLinkRequirementFourRef,
 							GameItemRef: harness.GameItemThreeRef,
+							Record: &adventure_game_record.AdventureGameLocationLinkRequirement{
+								Quantity: 1,
+							},
+						},
+					},
+				},
+				{
+					Reference:       "location-link-shadow-to-caverns",
+					FromLocationRef: harness.GameLocationFourRef,
+					ToLocationRef:   harness.GameLocationTwoRef,
+					Record: &adventure_game_record.AdventureGameLocationLink{
+						Name:        "The Echoing Stairs",
+						Description: "Ancient stone stairs that climb from the valley up to the crystal caverns.",
+					},
+				},
+				{
+					Reference:       "location-link-shadow-to-islands",
+					FromLocationRef: harness.GameLocationFourRef,
+					ToLocationRef:   harness.GameLocationThreeRef,
+					Record: &adventure_game_record.AdventureGameLocationLink{
+						Name:        "The Shadow Ascent",
+						Description: "Dark tendrils of shadow that can lift travelers to the floating islands.",
+					},
+					AdventureGameLocationLinkRequirementConfigs: []harness.AdventureGameLocationLinkRequirementConfig{
+						{
+							Reference:   "link-req-shadow-to-islands",
+							GameItemRef: harness.GameItemTwoRef,
 							Record: &adventure_game_record.AdventureGameLocationLinkRequirement{
 								Quantity: 1,
 							},

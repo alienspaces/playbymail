@@ -69,19 +69,19 @@ func getAdventureGameDocumentProcessorMap(l logger.Logger, cfg config.Config) (m
 	if err != nil {
 		return nil, fmt.Errorf("failed to create location choice processor: %w", err)
 	}
-	processors[adventure_game_record.AdventureSheetTypeLocationChoice] = locationChoiceProcessor
+	processors[adventure_game_record.AdventureGameTurnSheetTypeLocationChoice] = locationChoiceProcessor
 
 	joinGameProcessor, err := NewJoinGameProcessor(l, cfg)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create join game processor: %w", err)
 	}
-	processors[adventure_game_record.AdventureSheetTypeJoinGame] = joinGameProcessor
+	processors[adventure_game_record.AdventureGameTurnSheetTypeJoinGame] = joinGameProcessor
 
 	inventoryManagementProcessor, err := NewInventoryManagementProcessor(l, cfg)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create inventory management processor: %w", err)
 	}
-	processors[adventure_game_record.AdventureSheetTypeInventoryManagement] = inventoryManagementProcessor
+	processors[adventure_game_record.AdventureGameTurnSheetTypeInventoryManagement] = inventoryManagementProcessor
 
 	return processors, nil
 }

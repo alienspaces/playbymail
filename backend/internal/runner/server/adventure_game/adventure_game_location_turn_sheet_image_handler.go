@@ -25,6 +25,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/mapper"
+	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 	"gitlab.com/alienspaces/playbymail/internal/turn_sheet"
 	"gitlab.com/alienspaces/playbymail/internal/utils/config"
@@ -238,15 +239,17 @@ func uploadLocationTurnSheetImageHandler(w http.ResponseWriter, r *http.Request,
 	}
 
 	// Create or update image record with location ID as record_id
+	turnSheetType := adventure_game_record.AdventureGameTurnSheetTypeLocationChoice
 	rec := &game_record.GameImage{
-		GameID:    gameID,
-		RecordID:  nullstring.FromString(locationID),
-		Type:      game_record.GameImageTypeTurnSheetBackground,
-		ImageData: imageData,
-		MimeType:  mimeType,
-		FileSize:  len(imageData),
-		Width:     width,
-		Height:    height,
+		GameID:        gameID,
+		RecordID:      nullstring.FromString(locationID),
+		Type:          game_record.GameImageTypeTurnSheetBackground,
+		TurnSheetType: turnSheetType,
+		ImageData:     imageData,
+		MimeType:      mimeType,
+		FileSize:      len(imageData),
+		Width:         width,
+		Height:        height,
 	}
 
 	l.Info("upserting location image record for location >%s<", locationID)
@@ -318,7 +321,8 @@ func getLocationTurnSheetImageHandler(w http.ResponseWriter, r *http.Request, pp
 
 	// Get image for this specific location
 	recordID := nullstring.FromString(locationID)
-	img, err := mm.GetGameImageRecByGameAndType(gameID, recordID, game_record.GameImageTypeTurnSheetBackground)
+	turnSheetType := adventure_game_record.AdventureGameTurnSheetTypeLocationChoice
+	img, err := mm.GetGameImageRecByGameAndType(gameID, recordID, game_record.GameImageTypeTurnSheetBackground, turnSheetType)
 	if err != nil {
 		l.Warn("failed to get location turn sheet image >%v<", err)
 		return err
@@ -380,7 +384,8 @@ func deleteLocationTurnSheetImageHandler(w http.ResponseWriter, r *http.Request,
 	}
 
 	recordID := nullstring.FromString(locationID)
-	err = mm.DeleteGameImageByGameAndType(gameID, recordID, game_record.GameImageTypeTurnSheetBackground)
+	turnSheetType := adventure_game_record.AdventureGameTurnSheetTypeLocationChoice
+	err = mm.DeleteGameImageByGameAndType(gameID, recordID, game_record.GameImageTypeTurnSheetBackground, turnSheetType)
 	if err != nil {
 		l.Warn("failed to delete location image >%v<", err)
 		return err
@@ -496,7 +501,7 @@ func previewLocationChoiceTurnSheetHandler(w http.ResponseWriter, r *http.Reques
 
 	// Get uploaded turn sheet background image for this location
 	// Falls back to game-level image if location doesn't have one
-	backgroundImage, err := mm.GetLocationTurnSheetImageDataURL(gameID, locationID)
+	backgroundImage, err := mm.GetAdventureGameLocationChoiceTurnSheetImageDataURL(gameID, locationID)
 	if err != nil {
 		l.Warn("failed to get turn sheet background image >%v<", err)
 		// Continue without image - not a fatal error
@@ -549,7 +554,7 @@ func previewLocationChoiceTurnSheetHandler(w http.ResponseWriter, r *http.Reques
 }
 
 // getLocationOptionsForPreview retrieves location links as location options for the preview
-func getLocationOptionsForPreview(ctx context.Context, mm *domain.Domain, gameID, locationID string) ([]turn_sheet.LocationOption, error) {
+func getLocationOptionsForPreview(_ context.Context, mm *domain.Domain, gameID, locationID string) ([]turn_sheet.LocationOption, error) {
 	// Get location links from this location
 	opts := &coresql.Options{
 		Params: []coresql.Param{

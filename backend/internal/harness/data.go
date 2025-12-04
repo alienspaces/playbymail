@@ -41,6 +41,7 @@ type Data struct {
 type DataRefs struct {
 	AccountRefs               map[string]string // Map of account refs to account records
 	GameRefs                  map[string]string // Map of game refs to game records
+	GameImageRefs             map[string]string // Map of refs to game_image records
 	GameSubscriptionRefs      map[string]string // Map of refs to game_subscription records
 	GameInstanceRefs          map[string]string // Map of refs to game_instance records
 	GameInstanceParameterRefs map[string]string // Map of refs to game_instance_parameter records
@@ -66,6 +67,7 @@ func initialiseDataStores() Data {
 		Refs: DataRefs{
 			AccountRefs:               map[string]string{},
 			GameRefs:                  map[string]string{},
+			GameImageRefs:             map[string]string{},
 			GameSubscriptionRefs:      map[string]string{},
 			GameInstanceRefs:          map[string]string{},
 			GameInstanceParameterRefs: map[string]string{},
@@ -175,6 +177,23 @@ func (d *Data) AddGameImageRec(rec *game_record.GameImage) {
 		}
 	}
 	d.GameImageRecs = append(d.GameImageRecs, rec)
+}
+
+func (d *Data) GetGameImageRecByID(imageID string) (*game_record.GameImage, error) {
+	for _, rec := range d.GameImageRecs {
+		if rec.ID == imageID {
+			return rec, nil
+		}
+	}
+	return nil, fmt.Errorf("failed getting game image with ID >%s<", imageID)
+}
+
+func (d *Data) GetGameImageRecByRef(ref string) (*game_record.GameImage, error) {
+	imageID, ok := d.Refs.GameImageRefs[ref]
+	if !ok {
+		return nil, fmt.Errorf("failed getting game image with ref >%s<", ref)
+	}
+	return d.GetGameImageRecByID(imageID)
 }
 
 func (d *Data) AddGameSubscriptionRec(rec *game_record.GameSubscription) {

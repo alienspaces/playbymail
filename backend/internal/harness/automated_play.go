@@ -182,13 +182,13 @@ func (t *Testing) SimulateTurnSheetUpload(ctx context.Context, turnSheetRef stri
 	// Construct scan data based on sheet type
 	var scanDataBytes []byte
 	switch turnSheetRec.SheetType {
-	case adventure_game_record.AdventureSheetTypeLocationChoice:
+	case adventure_game_record.AdventureGameTurnSheetTypeLocationChoice:
 		scanDataBytes, err = t.constructLocationChoiceScanData(turnSheetRec, choice)
 		if err != nil {
 			l.Warn("failed to construct location choice scan data >%v<", err)
 			return fmt.Errorf("failed to construct location choice scan data: %w", err)
 		}
-	case adventure_game_record.AdventureSheetTypeJoinGame:
+	case adventure_game_record.AdventureGameTurnSheetTypeJoinGame:
 		// Join game turn sheets are typically handled during upload, not automated play
 		// For now, we'll skip these or handle them separately if needed
 		l.Info("skipping join game turn sheet >%s< for automated play", turnSheetRec.ID)

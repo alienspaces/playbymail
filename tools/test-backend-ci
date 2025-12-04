@@ -12,7 +12,7 @@ fi
 
 . ./tools/db-migrate-up || exit $?
 
-. ./tools/db-load-test-reference-data || exit $?
+. ./tools/db-load-seed-reference-data || exit $?
 
 # test core
 . ./tools/test-backend-core || exit $?

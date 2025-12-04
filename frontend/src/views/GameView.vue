@@ -54,18 +54,12 @@
                 placeholder="168 (1 week)" />
             </div>
 
-            <!-- Turn Sheet Image Upload (only in edit mode) -->
-            <div v-if="modalMode === 'edit' && modalForm.id" class="form-section">
-              <TurnSheetImageUpload :gameId="modalForm.id" @imagesUpdated="onImagesUpdated"
-                @loadingChanged="onImageUploadLoadingChanged" />
-            </div>
-
             <div class="modal-actions">
-              <button type="submit" :disabled="imageUploadLoading">
+              <button type="submit">
                 {{ modalMode === 'create' ? 'Create' : 'Save' }}
               </button>
-              <button type="button" @click="closeModal" :disabled="imageUploadLoading">
-                {{ imageUploadLoading ? 'Uploading...' : 'Cancel' }}
+              <button type="button" @click="closeModal">
+                Cancel
               </button>
             </div>
           </form>
@@ -99,7 +93,6 @@
 import { useGamesStore } from '../stores/games';
 import PageHeader from '../components/PageHeader.vue';
 import TableActions from '../components/TableActions.vue';
-import TurnSheetImageUpload from '../components/TurnSheetImageUpload.vue';
 import TurnSheetPreviewModal from '../components/TurnSheetPreviewModal.vue';
 
 export default {
@@ -107,7 +100,6 @@ export default {
   components: {
     PageHeader,
     TableActions,
-    TurnSheetImageUpload,
     TurnSheetPreviewModal
   },
   data() {
@@ -127,9 +119,7 @@ export default {
       // Preview modal state
       showPreviewModal: false,
       previewGameId: '',
-      previewGameName: '',
-      // Image upload loading state
-      imageUploadLoading: false
+      previewGameName: ''
     }
   },
   computed: {
@@ -184,12 +174,6 @@ export default {
       this.showModal = true
     },
     closeModal() {
-      // Don't close if images are being uploaded
-      if (this.imageUploadLoading) {
-        console.log('[GameView] Preventing modal close - upload in progress');
-        return;
-      }
-      console.log('[GameView] Closing modal');
       this.showModal = false
       this.modalError = ''
     },
@@ -281,15 +265,6 @@ export default {
       this.showPreviewModal = false;
       this.previewGameId = '';
       this.previewGameName = '';
-    },
-    onImagesUpdated() {
-      // Called when turn sheet images are updated
-      // Could refresh data or show a notification
-      console.log('[GameView] Turn sheet images updated');
-    },
-    onImageUploadLoadingChanged(isLoading) {
-      console.log(`[GameView] Image upload loading changed: ${isLoading}`);
-      this.imageUploadLoading = isLoading;
     }
   }
 }

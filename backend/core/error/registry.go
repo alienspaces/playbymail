@@ -209,6 +209,12 @@ func RequiredPathParameter(parameter string) Error {
 	return NewInvalidError(parameter, "Path parameter '%s' is required", parameter)
 }
 
+// RequiredQueryParameter is a convenience function for missing query parameter errors that
+// provides a standard formatted error message.
+func RequiredQueryParameter(parameter string) Error {
+	return NewInvalidError(parameter, "Query parameter '%s' is required", parameter)
+}
+
 // ImmutableField is a convenience function for immutable field errors that
 // provides a standard formatted error message.
 func ImmutableField(field string) Error {

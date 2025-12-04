@@ -22,16 +22,22 @@ const (
 // Turn sheet type constants for different game types
 const (
 	// Adventure game sheet types
-	AdventureSheetTypeLocationChoice = "location_choice"
-	AdventureSheetTypeJoinGame       = "join_game"
-	AdventureSheetTypeInventoryManagement = "inventory_management"
+	AdventureGameTurnSheetTypeLocationChoice      = "adventure_game_location_choice"
+	AdventureGameTurnSheetTypeJoinGame            = "adventure_game_join_game"
+	AdventureGameTurnSheetTypeInventoryManagement = "adventure_game_inventory_management"
+	AdventureGameTurnSheetTypeCombat              = "adventure_game_combat"
+	AdventureGameTurnSheetTypePuzzle              = "adventure_game_puzzle"
+	AdventureGameTurnSheetTypeMonster             = "adventure_game_monster"
 )
 
 // GetAdventureGameSheetTypes returns the sheet types for adventure games
 var AdventureGameSheetTypes = set.New(
-	AdventureSheetTypeLocationChoice,
-	AdventureSheetTypeJoinGame,
-	AdventureSheetTypeInventoryManagement,
+	AdventureGameTurnSheetTypeLocationChoice,
+	AdventureGameTurnSheetTypeJoinGame,
+	AdventureGameTurnSheetTypeInventoryManagement,
+	AdventureGameTurnSheetTypeCombat,
+	AdventureGameTurnSheetTypePuzzle,
+	AdventureGameTurnSheetTypeMonster,
 )
 
 type AdventureGameTurnSheet struct {

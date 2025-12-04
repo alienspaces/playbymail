@@ -73,6 +73,18 @@ func validateGameImageRec(args *validateGameImageArgs) error {
 		return err
 	}
 
+	// Validate turn_sheet_type: required when type is turn_sheet_background
+	if rec.Type == game_record.GameImageTypeTurnSheetBackground {
+		if rec.TurnSheetType == "" {
+			return InvalidField(game_record.FieldGameImageTurnSheetType, "", "turn_sheet_type is required when type is turn_sheet_background")
+		}
+	} else {
+		// turn_sheet_type must be empty for non-turn-sheet-background types
+		if rec.TurnSheetType != "" {
+			return InvalidField(game_record.FieldGameImageTurnSheetType, rec.TurnSheetType, "turn_sheet_type must be empty when type is not turn_sheet_background")
+		}
+	}
+
 	// Validate mime_type
 	if err := domain.ValidateEnumField(game_record.FieldGameImageMimeType, rec.MimeType, game_record.GameImageMimeTypes); err != nil {
 		return err

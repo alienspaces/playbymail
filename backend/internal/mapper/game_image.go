@@ -11,16 +11,17 @@ import (
 func GameImageRecordToResponseData(l logger.Logger, rec *game_record.GameImage) (*game_schema.GameImageResponseData, error) {
 	l.Debug("mapping game image record to response data")
 	return &game_schema.GameImageResponseData{
-		ID:        rec.ID,
-		GameID:    rec.GameID,
-		RecordID:  nullstring.ToString(rec.RecordID),
-		Type:      rec.Type,
-		MimeType:  rec.MimeType,
-		FileSize:  rec.FileSize,
-		Width:     rec.Width,
-		Height:    rec.Height,
-		CreatedAt: rec.CreatedAt,
-		UpdatedAt: nulltime.ToTimePtr(rec.UpdatedAt),
+		ID:            rec.ID,
+		GameID:        rec.GameID,
+		RecordID:      nullstring.ToString(rec.RecordID),
+		Type:          rec.Type,
+		TurnSheetType: rec.TurnSheetType,
+		MimeType:      rec.MimeType,
+		FileSize:      rec.FileSize,
+		Width:         rec.Width,
+		Height:        rec.Height,
+		CreatedAt:     rec.CreatedAt,
+		UpdatedAt:     nulltime.ToTimePtr(rec.UpdatedAt),
 	}, nil
 }
 

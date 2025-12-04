@@ -41,7 +41,7 @@ func (t *Testing) createGameRec(gameConfig GameConfig) (*game_record.Game, error
 		t.Data.Refs.GameRefs[gameConfig.Reference] = rec.ID
 	}
 
-	// Create background image for game if specified
+	// Create background image for game if specified (legacy support)
 	if gameConfig.BackgroundImagePath != "" {
 		_, err = t.createGameImageRecFromPath(rec.ID, "", gameConfig.BackgroundImagePath)
 		if err != nil {
@@ -49,6 +49,16 @@ func (t *Testing) createGameRec(gameConfig GameConfig) (*game_record.Game, error
 			return nil, err
 		}
 		l.Debug("created game background image for game >%s<", rec.ID)
+	}
+
+	// Create game images from config
+	for _, imageConfig := range gameConfig.GameImageConfigs {
+		_, err = t.createGameImageRecFromConfig(rec.ID, imageConfig)
+		if err != nil {
+			l.Warn("failed creating game image from config >%v<", err)
+			return nil, err
+		}
+		l.Debug("created game image from config for game >%s<", rec.ID)
 	}
 
 	return rec, nil

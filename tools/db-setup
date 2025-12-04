@@ -14,5 +14,5 @@ fi
 . ./tools/environment || exit $?
 . ./tools/db-start || exit $?
 . ./tools/db-migrate-up || exit $?
-. ./tools/db-load-test-reference-data || exit $?
-. ./tools/db-load-test-data || exit $?
+. ./tools/db-load-seed-reference-data || exit $?
+. ./tools/db-load-seed-data || exit $?

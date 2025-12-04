@@ -310,7 +310,7 @@ test.describe('Feature Name', () => {
 
 ### Common Issues
 1. **Backend not running**: Ensure `./tools/start-backend` is running
-2. **Test data missing**: Run `./tools/db-load-test-data`
+2. **Test data missing**: Run `./tools/db-load-seed-data`
 3. **Port conflicts**: Check if ports 3000 and 8080 are available
 4. **Browser dependencies**: Run `npx playwright install-deps`
 

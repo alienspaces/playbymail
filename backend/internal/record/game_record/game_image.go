@@ -14,15 +14,16 @@ const TableGameImage string = "game_image"
 
 // GameImage field names
 const (
-	FieldGameImageID        string = "id"
-	FieldGameImageGameID    string = "game_id"
-	FieldGameImageRecordID  string = "record_id"
-	FieldGameImageType      string = "type"
-	FieldGameImageImageData string = "image_data"
-	FieldGameImageMimeType  string = "mime_type"
-	FieldGameImageFileSize  string = "file_size"
-	FieldGameImageWidth     string = "width"
-	FieldGameImageHeight    string = "height"
+	FieldGameImageID            string = "id"
+	FieldGameImageGameID        string = "game_id"
+	FieldGameImageRecordID      string = "record_id"
+	FieldGameImageType          string = "type"
+	FieldGameImageTurnSheetType string = "turn_sheet_type"
+	FieldGameImageImageData     string = "image_data"
+	FieldGameImageMimeType      string = "mime_type"
+	FieldGameImageFileSize      string = "file_size"
+	FieldGameImageWidth         string = "width"
+	FieldGameImageHeight        string = "height"
 )
 
 // GameImage type constants
@@ -72,14 +73,15 @@ const (
 // GameImage struct represents a game image record
 type GameImage struct {
 	record.Record
-	GameID    string         `db:"game_id"`
-	RecordID  sql.NullString `db:"record_id"`
-	Type      string         `db:"type"`
-	ImageData []byte         `db:"image_data"`
-	MimeType  string         `db:"mime_type"`
-	FileSize  int            `db:"file_size"`
-	Width     int            `db:"width"`
-	Height    int            `db:"height"`
+	GameID        string         `db:"game_id"`
+	RecordID      sql.NullString `db:"record_id"`
+	Type          string         `db:"type"`
+	TurnSheetType string         `db:"turn_sheet_type"`
+	ImageData     []byte         `db:"image_data"`
+	MimeType      string         `db:"mime_type"`
+	FileSize      int            `db:"file_size"`
+	Width         int            `db:"width"`
+	Height        int            `db:"height"`
 }
 
 // ToNamedArgs converts the GameImage record to named arguments for database operations
@@ -88,6 +90,7 @@ func (r *GameImage) ToNamedArgs() pgx.NamedArgs {
 	args[FieldGameImageGameID] = r.GameID
 	args[FieldGameImageRecordID] = r.RecordID
 	args[FieldGameImageType] = r.Type
+	args[FieldGameImageTurnSheetType] = r.TurnSheetType
 	args[FieldGameImageImageData] = r.ImageData
 	args[FieldGameImageMimeType] = r.MimeType
 	args[FieldGameImageFileSize] = r.FileSize

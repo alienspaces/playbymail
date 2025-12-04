@@ -63,6 +63,9 @@ const (
 	GameSubscriptionOneRef = "game-subscription-one"
 
 	GameTurnSheetOneRef = "game-turn-sheet-one"
+
+	GameImageJoinGameRef  = "game-image-join-game"
+	GameImageInventoryRef = "game-image-inventory"
 )
 
 // DataConfig -
@@ -81,8 +84,10 @@ type GameConfig struct {
 	AdventureGameItemConfigs         []AdventureGameItemConfig
 	AdventureGameCreatureConfigs     []AdventureGameCreatureConfig
 	AdventureGameCharacterConfigs    []AdventureGameCharacterConfig
+	GameImageConfigs                 []GameImageConfig // Game image configurations
 	// Background image file path for game-level turn sheet backgrounds
 	// If set, creates a game_image record with type turn_sheet_background
+	// DEPRECATED: Use GameImageConfigs instead
 	BackgroundImagePath string // Path to image file relative to testdata directory
 }
 
@@ -170,7 +175,8 @@ type AdventureGameLocationConfig struct {
 	// Background image file path for location-specific turn sheet backgrounds
 	// If set, creates a game_image record with type turn_sheet_background
 	// associated with this location
-	BackgroundImagePath string // Path to image file relative to testdata directory
+	// Path is relative to seed_images or testdata directories
+	BackgroundImagePath string
 }
 
 type AdventureGameLocationLinkConfig struct {
@@ -231,6 +237,16 @@ type AdventureGameItemInstanceConfig struct {
 	GameCreatureRef  string // Reference to the game_creature
 
 	Record *adventure_game_record.AdventureGameItemInstance
+}
+
+type GameImageConfig struct {
+	Reference string // Reference to the game_image record
+	// Path to image file relative to seed_images or testdata directories
+	// (loaded at runtime). If set, the image is loaded from file.
+	// If not set, the Record field must contain the image data.
+	ImagePath     string
+	TurnSheetType string // The turn sheet type for this image
+	Record        *game_record.GameImage
 }
 
 // Helper methods for modifying DataConfig
@@ -385,6 +401,19 @@ func DefaultDataConfig() DataConfig {
 						AccountRef:       AccountOneRef,
 						SubscriptionType: "Manager",
 						Record:           &game_record.GameSubscription{},
+					},
+				},
+				// Game images for turn sheet backgrounds (loaded at runtime from testdata)
+				GameImageConfigs: []GameImageConfig{
+					{
+						Reference:     GameImageJoinGameRef,
+						ImagePath:     "background-darkforest.png",
+						TurnSheetType: adventure_game_record.AdventureGameTurnSheetTypeJoinGame,
+					},
+					{
+						Reference:     GameImageInventoryRef,
+						ImagePath:     "background-dungeon.png",
+						TurnSheetType: adventure_game_record.AdventureGameTurnSheetTypeInventoryManagement,
 					},
 				},
 				// Adventure game specific resources

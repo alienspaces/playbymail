@@ -99,6 +99,11 @@ func (m *Domain) Init(tx pgx.Tx) (err error) {
 	return nil
 }
 
+// Tx returns the current transaction
+func (m *Domain) GetTx() (pgx.Tx, error) {
+	return m.Tx, nil
+}
+
 // NewQueries returns a list of queries that will be used
 func (m *Domain) NewQueries(tx pgx.Tx) ([]querier.Querier, error) {
 	return nil, nil

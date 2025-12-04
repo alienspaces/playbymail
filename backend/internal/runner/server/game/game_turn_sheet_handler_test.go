@@ -41,7 +41,7 @@ func Test_uploadTurnSheetHandler(t *testing.T) {
 					GameTurnSheetConfig: harness.GameTurnSheetConfig{
 						Reference:        harness.GameTurnSheetOneRef,
 						AccountRef:       harness.AccountOneRef,
-						SheetType:        adventure_game_record.AdventureSheetTypeLocationChoice,
+						SheetType:        adventure_game_record.AdventureGameTurnSheetTypeLocationChoice,
 						ProcessingStatus: game_record.TurnSheetProcessingStatusPending,
 					},
 					GameCharacterInstanceRef: harness.GameCharacterInstanceOneRef,
@@ -212,7 +212,7 @@ func Test_uploadTurnSheetHandler(t *testing.T) {
 			},
 			expectResponse: func(d harness.Data, body game.TurnSheetUploadResponse) bool {
 				// Response should have turn sheet ID for join game
-				return body.TurnSheetID != "" && body.SheetType == adventure_game_record.AdventureSheetTypeJoinGame
+				return body.TurnSheetID != "" && body.SheetType == adventure_game_record.AdventureGameTurnSheetTypeJoinGame
 			},
 		},
 		{
@@ -277,7 +277,7 @@ func Test_uploadTurnSheetHandler(t *testing.T) {
 			},
 			expectResponse: func(d harness.Data, body game.TurnSheetUploadResponse) bool {
 				// Response should have turn sheet ID for join game
-				return body.TurnSheetID != "" && body.SheetType == adventure_game_record.AdventureSheetTypeJoinGame
+				return body.TurnSheetID != "" && body.SheetType == adventure_game_record.AdventureGameTurnSheetTypeJoinGame
 			},
 		},
 	}

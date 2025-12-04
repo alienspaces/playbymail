@@ -4,17 +4,17 @@ import (
 	"github.com/urfave/cli/v2"
 
 	"gitlab.com/alienspaces/playbymail/internal/harness"
-	"gitlab.com/alienspaces/playbymail/internal/runner/cli/maintestdata"
+	"gitlab.com/alienspaces/playbymail/internal/runner/cli/seed_data"
 )
 
-// loadMainTestData seeds the database with test data
-func (rnr *Runner) loadMainTestData(c *cli.Context) error {
-	l := loggerWithFunctionContext(rnr.Log, "loadMainTestData")
+// loadSeedData seeds the database with seed data
+func (rnr *Runner) loadSeedData(c *cli.Context) error {
+	l := loggerWithFunctionContext(rnr.Log, "loadSeedData")
 
-	l.Info("** Load Main Test Data **")
+	l.Info("** Load Seed Data **")
 
 	// harness
-	config := maintestdata.MainTestDataConfig()
+	config := seed_data.SeedDataConfig()
 
 	err := rnr.InitDomain()
 	if err != nil {

@@ -162,7 +162,7 @@ func (w *ProcessSubscriptionWorker) findProcessSubscription(m *domain.Domain, su
 	// Find the join game turn sheet for this game
 	for _, turnSheetRec := range turnSheetRecs {
 		if turnSheetRec.GameID == subscriptionRec.GameID &&
-			turnSheetRec.SheetType == adventure_game_record.AdventureSheetTypeJoinGame {
+			turnSheetRec.SheetType == adventure_game_record.AdventureGameTurnSheetTypeJoinGame {
 			return turnSheetRec, nil
 		}
 	}

@@ -34,7 +34,7 @@ func NewAdventureGameInventoryManagementProcessor(l logger.Logger, d *domain.Dom
 
 // GetSheetType returns the sheet type this processor handles (implements TurnSheetProcessor interface)
 func (p *AdventureGameInventoryManagementProcessor) GetSheetType() string {
-	return adventure_game_record.AdventureSheetTypeInventoryManagement
+	return adventure_game_record.AdventureGameTurnSheetTypeInventoryManagement
 }
 
 // ProcessTurnSheetResponse processes a single turn sheet response (implements TurnSheetProcessor interface)
@@ -44,9 +44,9 @@ func (p *AdventureGameInventoryManagementProcessor) ProcessTurnSheetResponse(ctx
 	l.Info("processing inventory management for turn sheet >%s< for character >%s<", turnSheet.ID, characterInstanceRec.ID)
 
 	// Verify this is an inventory management sheet
-	if turnSheet.SheetType != adventure_game_record.AdventureSheetTypeInventoryManagement {
+	if turnSheet.SheetType != adventure_game_record.AdventureGameTurnSheetTypeInventoryManagement {
 		l.Warn("expected inventory management sheet type, got >%s<", turnSheet.SheetType)
-		return fmt.Errorf("invalid sheet type: expected %s, got %s", adventure_game_record.AdventureSheetTypeInventoryManagement, turnSheet.SheetType)
+		return fmt.Errorf("invalid sheet type: expected %s, got %s", adventure_game_record.AdventureGameTurnSheetTypeInventoryManagement, turnSheet.SheetType)
 	}
 
 	// Step 1: Parse the player's inventory actions from ScannedData
@@ -290,7 +290,7 @@ func (p *AdventureGameInventoryManagementProcessor) CreateNextTurnSheet(ctx cont
 		GameID:           gameInstanceRec.GameID,
 		AccountID:        characterRec.AccountID,
 		TurnNumber:       gameInstanceRec.CurrentTurn + 1,
-		SheetType:        adventure_game_record.AdventureSheetTypeInventoryManagement,
+		SheetType:        adventure_game_record.AdventureGameTurnSheetTypeInventoryManagement,
 		SheetOrder:       1,
 		SheetData:        json.RawMessage(sheetDataBytes),
 		IsCompleted:      false,

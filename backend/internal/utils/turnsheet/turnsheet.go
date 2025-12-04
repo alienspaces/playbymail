@@ -61,6 +61,25 @@ func GenerateTurnSheetCode(gameID, gameInstanceID, accountID, gameTurnSheetID st
 	return encoded, nil
 }
 
+// GeneratePreviewTurnSheetCode generates a turn sheet code for preview purposes.
+// This uses placeholder values for instance/account/turn sheet IDs since previews
+// don't have real game session data.
+func GeneratePreviewTurnSheetCode(gameID string) (string, error) {
+	if gameID == "" {
+		return "", fmt.Errorf("gameID is required")
+	}
+	if _, err := uuid.Parse(gameID); err != nil {
+		return "", fmt.Errorf("invalid gameID format: %w", err)
+	}
+
+	// Use placeholder UUIDs for preview
+	previewInstanceID := "00000000-0000-0000-0000-000000000001"
+	previewAccountID := "00000000-0000-0000-0000-000000000002"
+	previewTurnSheetID := "00000000-0000-0000-0000-000000000003"
+
+	return GenerateTurnSheetCode(gameID, previewInstanceID, previewAccountID, previewTurnSheetID)
+}
+
 // GenerateJoinTurnSheetCode returns a structured code for join-game sheets using the same
 // encoding format as playing-game turn sheets but only including the game identifier.
 func GenerateJoinTurnSheetCode(gameID string) (string, error) {

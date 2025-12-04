@@ -8,7 +8,7 @@ print_warning() {
     echo -e "\033[1;33m⚠️  $1\033[0m"
 }
 
-echo "** Loading backend test reference data"
+echo "** Loading seed reference data"
 echo
 
 # Check if we're in the right directory
@@ -49,12 +49,12 @@ if [ ! -f "playbymail-cli" ]; then
     exit 1
 fi
 
-print_status "Running CLI to load test reference data"
+print_status "Running CLI to load seed reference data"
 
 # Run CLI from project root
-./playbymail-cli db-load-main-test-reference-data || exit $?
+./playbymail-cli db-load-seed-reference-data || exit $?
 
-print_status "Test reference data loaded successfully"
+print_status "Seed reference data loaded successfully"
 
 # Remove CLI binary after use
 rm playbymail-cli

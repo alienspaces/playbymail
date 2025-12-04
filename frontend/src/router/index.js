@@ -25,6 +25,7 @@ const routes = [
       { path: ':gameId/creatures', component: () => import('../views/studio/adventure/StudioCreaturesView.vue') },
       { path: ':gameId/item-placements', component: () => import('../views/studio/adventure/StudioItemPlacementsView.vue') },
       { path: ':gameId/creature-placements', component: () => import('../views/studio/adventure/StudioCreaturePlacementsView.vue') },
+      { path: ':gameId/turn-sheet-backgrounds', component: () => import('../views/studio/adventure/StudioTurnSheetBackgroundsView.vue') },
 
     ],
   },

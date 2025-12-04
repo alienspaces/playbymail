@@ -344,7 +344,7 @@ func (t *Testing) processJoinGameSubscriptionInSetup(ctx context.Context, subscr
 		GameID:           gameRec.ID,
 		AccountID:        accountRec.ID,
 		TurnNumber:       0,
-		SheetType:        adventure_game_record.AdventureSheetTypeJoinGame,
+		SheetType:        adventure_game_record.AdventureGameTurnSheetTypeJoinGame,
 		SheetOrder:       1,
 		SheetData:        json.RawMessage(sheetDataBytes),
 		ScannedData:      json.RawMessage(scanDataBytes),
@@ -448,7 +448,7 @@ func (t *Testing) applyScanDataToTurnSheet(_ context.Context, turnSheetID string
 
 	var scanDataBytes []byte
 	switch turnSheetRec.SheetType {
-	case adventure_game_record.AdventureSheetTypeLocationChoice:
+	case adventure_game_record.AdventureGameTurnSheetTypeLocationChoice:
 		locationChoiceScanData, ok := scanDataConfig.(*turn_sheet.LocationChoiceScanData)
 		if !ok {
 			l.Warn("invalid scan data type for location choice turn sheet, expected *turn_sheet.LocationChoiceScanData")

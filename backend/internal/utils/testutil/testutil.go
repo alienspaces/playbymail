@@ -395,21 +395,28 @@ func RunTestCase(t *testing.T, th *harness.Testing, tc TestCaser, tf func(method
 		var requestBody bytes.Buffer
 		w := multipart.NewWriter(&requestBody)
 		for key, val := range multipartForms {
-			if key == "file" {
-				fileContent := val.([]byte)
+			// Check if value is a byte slice (file upload) or string (form field)
+			if fileContent, ok := val.([]byte); ok {
+				// Determine file extension from key or use default
+				filename := "testfile"
+				if key == "image" {
+					filename = "testimage.png"
+				} else if key == "file" {
+					filename = "testfile.csv"
+				}
 
 				// Create a form field in the multipart request with a byte slice
-				part, err := w.CreateFormFile(key, "fakefile.csv")
+				part, err := w.CreateFormFile(key, filename)
 				if err != nil {
-					t.Errorf("WriteField returns error >%v<", err)
+					t.Errorf("CreateFormFile returns error >%v<", err)
 				}
 
 				_, err = part.Write(fileContent)
 				if err != nil {
-					t.Errorf("CreateFormFile returns error >%v<", err)
+					t.Errorf("WriteFormFile returns error >%v<", err)
 				}
-			} else {
-				err = w.WriteField(key, val.(string))
+			} else if strVal, ok := val.(string); ok {
+				err := w.WriteField(key, strVal)
 				if err != nil {
 					t.Errorf("WriteField returns error >%v<", err)
 				}

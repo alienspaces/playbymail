@@ -8,17 +8,18 @@ import (
 
 // GameImageResponseData -
 type GameImageResponseData struct {
-	ID        string     `json:"id"`
-	GameID    string     `json:"game_id"`
-	RecordID  string     `json:"record_id,omitempty"`
-	Type      string     `json:"type"`
-	MimeType  string     `json:"mime_type"`
-	FileSize  int        `json:"file_size"`
-	Width     int        `json:"width"`
-	Height    int        `json:"height"`
-	Warning   string     `json:"warning,omitempty"`
-	CreatedAt time.Time  `json:"created_at"`
-	UpdatedAt *time.Time `json:"updated_at,omitempty"`
+	ID            string     `json:"id"`
+	GameID        string     `json:"game_id"`
+	RecordID      string     `json:"record_id,omitempty"`
+	Type          string     `json:"type"`
+	TurnSheetType string     `json:"turn_sheet_type,omitempty"`
+	MimeType      string     `json:"mime_type"`
+	FileSize      int        `json:"file_size"`
+	Width         int        `json:"width"`
+	Height        int        `json:"height"`
+	Warning       string     `json:"warning,omitempty"`
+	CreatedAt     time.Time  `json:"created_at"`
+	UpdatedAt     *time.Time `json:"updated_at,omitempty"`
 }
 
 type GameImageResponse struct {

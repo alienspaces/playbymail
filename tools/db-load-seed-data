@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 
 echo
-echo "** Loading backend test data"
+echo "** Loading seed data"
 echo
 
 # Colors for output
@@ -55,12 +55,12 @@ if [ ! -f "playbymail-cli" ]; then
     exit 1
 fi
 
-print_status "Running CLI to load test data"
+print_status "Running CLI to load seed data"
 
 # Run CLI from project root
-./playbymail-cli db-load-main-test-data || exit $?
+./playbymail-cli db-load-seed-data || exit $?
 
-print_status "Test data loaded successfully"
+print_status "Seed data loaded successfully"
 
 # Remove CLI binary after use
 rm playbymail-cli

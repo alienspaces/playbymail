@@ -63,10 +63,10 @@ func (p *AdventureGame) createCharacterTurnSheets(ctx context.Context, gameInsta
 
 	var createdTurnSheets []*game_record.GameTurnSheet
 
-	// For each turn sheet type supported by the game create a turn sheet for this character
-	for _, turnSheetType := range adventure_game_record.AdventureGameSheetTypes.ToSlice() {
+	// For each turn sheet type that has a processor, create a turn sheet for this character
+	for turnSheetType := range p.Processors {
 		// Join game turn sheets are handled through the subscription workflow, not turn processing.
-		if turnSheetType == adventure_game_record.AdventureSheetTypeJoinGame {
+		if turnSheetType == adventure_game_record.AdventureGameTurnSheetTypeJoinGame {
 			continue
 		}
 

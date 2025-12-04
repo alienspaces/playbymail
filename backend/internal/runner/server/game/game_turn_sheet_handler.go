@@ -197,7 +197,7 @@ func handleJoinTurnSheetUpload(ctx context.Context, l logger.Logger, scanner tur
 		return nil, 0, coreerror.NewInternalError("failed to marshal join game sheet data")
 	}
 
-	scannedData, err := scanner.GetTurnSheetScanData(ctx, l, adventure_game_record.AdventureSheetTypeJoinGame, sheetDataBytes, imageData)
+	scannedData, err := scanner.GetTurnSheetScanData(ctx, l, adventure_game_record.AdventureGameTurnSheetTypeJoinGame, sheetDataBytes, imageData)
 	if err != nil {
 		l.Warn("failed to scan join game turn sheet >%v< for game >%s< turn sheet code >%s<", err, identifier.GameID, turnSheetCode)
 		return nil, 0, coreerror.NewInvalidDataError("failed to process join game turn sheet: %v", err)
@@ -256,7 +256,7 @@ func handleJoinTurnSheetUpload(ctx context.Context, l logger.Logger, scanner tur
 		GameID:           gameRec.ID,
 		AccountID:        accountRec.ID,
 		TurnNumber:       0,
-		SheetType:        adventure_game_record.AdventureSheetTypeJoinGame,
+		SheetType:        adventure_game_record.AdventureGameTurnSheetTypeJoinGame,
 		SheetOrder:       1,
 		SheetData:        json.RawMessage(sheetDataBytes),
 		ScannedData:      json.RawMessage(scannedData),
