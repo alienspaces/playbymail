@@ -22,9 +22,7 @@ type Runner struct {
 }
 
 const (
-	applicationName                = "cli"
-	requesterTypeSeedData          = "seed-data"
-	requesterTypeSeedReferenceData = "seed-reference-data"
+	applicationName = "cli"
 )
 
 func NewRunner(l logger.Logger, j *river.Client[pgx.Tx], cfg config.Config) (*Runner, error) {
