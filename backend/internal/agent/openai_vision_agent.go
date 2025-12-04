@@ -19,7 +19,7 @@ import (
 const (
 	openAIResponsesEndpoint       = "https://api.openai.com/v1/responses"
 	openAIImageTranscriptionModel = "gpt-4o-mini"
-	openAIImagePrompt             = "Transcribe all text visible in this turn sheet image."
+	openAIImagePrompt             = "Transcribe ALL text visible in this turn sheet image exactly as it appears. Include every character, especially any long alphanumeric codes or strings at the bottom of the page. Do not summarize or describe the code - output the actual characters."
 	defaultImageMimeType          = "image/png"
 )
 
