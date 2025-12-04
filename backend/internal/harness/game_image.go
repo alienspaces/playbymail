@@ -263,6 +263,8 @@ func (t *Testing) loadImageFromPath(imagePath string) ([]byte, string, int, int,
 		"backend/internal/turn_sheet/testdata",
 		"internal/turn_sheet/testdata",
 		"turn_sheet/testdata",
+		// Relative paths from harness package to turn_sheet testdata
+		"../turn_sheet/testdata",
 	}
 
 	var fullPath string
