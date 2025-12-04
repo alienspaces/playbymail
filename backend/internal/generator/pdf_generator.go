@@ -273,8 +273,58 @@ func (g *PDFGenerator) htmlToPDF(ctx context.Context, html string) ([]byte, erro
 		}),
 		chromedp.ActionFunc(func(ctx context.Context) error {
 			l.Debug("waiting for page to load and render")
-			// Simple wait for page to load - no specific element waiting
-			time.Sleep(3 * time.Second)
+			// Wait for the page to be ready
+			if err := chromedp.WaitReady("body").Do(ctx); err != nil {
+				l.Warn("failed to wait for body to be ready >%v<", err)
+				// Continue anyway - page might still work
+			}
+			
+			// Wait for background image to load if it exists
+			// First check if the image element exists
+			var imageExists bool
+			err := chromedp.Evaluate(`document.querySelector('.background-image') !== null`, &imageExists).Do(ctx)
+			if err != nil {
+				l.Warn("failed to check for background image element >%v<, continuing anyway", err)
+			} else if imageExists {
+				l.Debug("background image element found, waiting for it to load")
+				// Wait for the image to be visible (this ensures it's in the DOM)
+				if err := chromedp.WaitVisible(".background-image", chromedp.ByQuery).Do(ctx); err != nil {
+					l.Warn("failed to wait for background image to be visible >%v<, continuing anyway", err)
+				}
+				
+				// Wait for the image to actually load by checking its complete property
+				// Poll until the image is loaded or timeout after 10 seconds
+				timeout := time.After(10 * time.Second)
+				ticker := time.NewTicker(100 * time.Millisecond)
+				
+				imageLoaded := false
+				for !imageLoaded {
+					select {
+					case <-timeout:
+						l.Warn("timeout waiting for background image to load, continuing anyway")
+						ticker.Stop()
+						imageLoaded = true // Break out of loop
+					case <-ticker.C:
+						var imageComplete bool
+						err := chromedp.Evaluate(`
+							(() => {
+								const img = document.querySelector('.background-image');
+								return img && img.complete && img.naturalHeight !== 0;
+							})()
+						`, &imageComplete).Do(ctx)
+						if err == nil && imageComplete {
+							l.Debug("background image loaded successfully")
+							ticker.Stop()
+							imageLoaded = true
+						}
+					}
+				}
+			} else {
+				l.Debug("no background image element found, skipping image load wait")
+			}
+			
+			// Additional wait to ensure all rendering is complete
+			time.Sleep(500 * time.Millisecond)
 			return nil
 		}),
 		chromedp.ActionFunc(func(ctx context.Context) error {
