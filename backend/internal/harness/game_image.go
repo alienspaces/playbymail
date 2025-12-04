@@ -267,6 +267,16 @@ func (t *Testing) loadImageFromPath(imagePath string) ([]byte, string, int, int,
 		"../turn_sheet/testdata",
 	}
 
+	// Use TEMPLATES_PATH to derive backend directory (most reliable)
+	// TEMPLATES_PATH is typically .../backend/templates
+	if templatesPath := os.Getenv("TEMPLATES_PATH"); templatesPath != "" {
+		backendDir := filepath.Dir(templatesPath)
+		imagePaths = append(imagePaths,
+			filepath.Join(backendDir, "internal/runner/cli/seed_images"),
+			filepath.Join(backendDir, "internal/turn_sheet/testdata"),
+		)
+	}
+
 	var fullPath string
 	var found bool
 	for _, basePath := range imagePaths {
