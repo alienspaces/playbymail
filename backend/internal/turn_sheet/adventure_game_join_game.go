@@ -73,12 +73,12 @@ func createAdventureGameJoinGameData(gameRec *game_record.Game, turnSheetCode st
 			TurnNumber:            convert.Ptr(0),
 			AccountName:           nil,
 			TurnSheetTitle:        convert.Ptr("Join Game"),
-			TurnSheetDescription:  convert.Ptr(fmt.Sprintf("Welcome to %s! Welcome to the PlayByMail Adventure!", gameRec.Name)),
+			TurnSheetDescription:  convert.Ptr(gameRec.Description),
 			TurnSheetInstructions: convert.Ptr(DefaultJoinGameInstructions()),
 			TurnSheetDeadline:     nil,
 			TurnSheetCode:         convert.Ptr(turnSheetCode),
 		},
-		GameDescription: fmt.Sprintf("Welcome to %s! Welcome to the PlayByMail Adventure!", gameRec.Name),
+		GameDescription: gameRec.Description,
 	}
 }
 
@@ -119,9 +119,6 @@ func (p *JoinGameProcessor) GenerateTurnSheet(ctx context.Context, l logger.Logg
 	if data.TurnSheetDescription == nil || strings.TrimSpace(*data.TurnSheetDescription) == "" {
 		if data.GameDescription != "" {
 			desc := data.GameDescription
-			data.TurnSheetDescription = &desc
-		} else if data.GameName != nil && strings.TrimSpace(*data.GameName) != "" {
-			desc := fmt.Sprintf("Welcome to %s! Welcome to the PlayByMail Adventure!", *data.GameName)
 			data.TurnSheetDescription = &desc
 		}
 	}

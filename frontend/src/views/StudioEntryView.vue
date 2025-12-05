@@ -32,7 +32,8 @@
       Sign in to access current tools and track new features as they become available.
     </p>
     <div class="entry-cta">
-      <router-link :to="{ path: '/login', query: { redirect: '/studio' } }" class="cta-button">Sign In to Studio</router-link>
+      <router-link :to="{ path: '/login', query: { redirect: '/studio' } }" class="cta-button">Sign In to
+        Studio</router-link>
     </div>
   </div>
 </template>

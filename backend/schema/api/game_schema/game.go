@@ -10,6 +10,7 @@ import (
 type GameResponseData struct {
 	ID                string     `json:"id"`
 	Name              string     `json:"name"`
+	Description       string     `json:"description"`
 	GameType          string     `json:"game_type"`
 	TurnDurationHours int        `json:"turn_duration_hours"`
 	CreatedAt         time.Time  `json:"created_at"`
@@ -31,6 +32,7 @@ type GameCollectionResponse struct {
 type GameRequest struct {
 	common_schema.Request
 	Name              string `json:"name"`
+	Description       string `json:"description"`
 	GameType          string `json:"game_type"`
 	TurnDurationHours int    `json:"turn_duration_hours"`
 }

@@ -26,10 +26,12 @@ func GameRequestToRecord(l logger.Logger, r *http.Request, rec *game_record.Game
 		rec.Name = req.Name
 		rec.GameType = req.GameType
 		rec.TurnDurationHours = req.TurnDurationHours
+		rec.Description = req.Description
 	case server.HttpMethodPut, server.HttpMethodPatch:
 		rec.Name = req.Name
 		rec.GameType = req.GameType
 		rec.TurnDurationHours = req.TurnDurationHours
+		rec.Description = req.Description
 	default:
 		return nil, fmt.Errorf("unsupported HTTP method")
 	}
@@ -44,6 +46,7 @@ func GameRecordToResponseData(l logger.Logger, rec *game_record.Game) (*game_sch
 		Name:              rec.Name,
 		GameType:          rec.GameType,
 		TurnDurationHours: rec.TurnDurationHours,
+		Description:       rec.Description,
 		CreatedAt:         rec.CreatedAt,
 		UpdatedAt:         nulltime.ToTimePtr(rec.UpdatedAt),
 	}, nil

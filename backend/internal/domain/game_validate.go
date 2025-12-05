@@ -67,6 +67,10 @@ func validateGameRec(args *validateGameArgs) error {
 		return InvalidField(game_record.FieldGameTurnDurationHours, fmt.Sprintf("%d", rec.TurnDurationHours), "turn duration hours must be greater than 0")
 	}
 
+	if err := domain.ValidateStringField(game_record.FieldGameDescription, rec.Description); err != nil {
+		return err
+	}
+
 	return nil
 }
 

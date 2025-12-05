@@ -78,6 +78,7 @@ export default {
   flex-direction: column;
   align-items: stretch;
 }
+
 h1 {
   margin-bottom: var(--space-lg);
   font-size: var(--font-size-xl);
@@ -96,6 +97,7 @@ h1 {
   font-size: 0.8em;
   margin-right: 0.2em;
 }
+
 button {
   background: transparent;
   color: var(--color-button);
@@ -106,21 +108,24 @@ button {
   cursor: pointer;
   font-weight: var(--font-weight-bold);
   transition: all 0.2s;
-  box-shadow: 
-    0 1px 2px rgba(0,0,0,0.05),
-    inset 0 1px 0 rgba(255,255,255,0.1);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
+
 button:hover,
 button:focus {
   background: var(--color-button);
   color: var(--color-text-light);
 }
+
 button:disabled {
   background: var(--color-border);
   color: #aaa;
   cursor: not-allowed;
   opacity: 0.6;
 }
+
 .login-form {
   display: flex;
   flex-direction: column;
@@ -136,4 +141,4 @@ button:disabled {
   border-radius: var(--radius-sm);
   border: 1px solid var(--color-warning);
 }
-</style> 
+</style>

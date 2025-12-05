@@ -390,6 +390,19 @@ func downloadJoinGameTurnSheetsHandler() server.Handle {
 			return coreerror.NewInvalidDataError("failed to create join game data: %v", err)
 		}
 
+		// Get uploaded turn sheet background image and add it to the data
+		turnSheetType := adventure_game_record.AdventureGameTurnSheetTypeJoinGame
+		backgroundImage, err := mm.GetGameTurnSheetImageDataURL(gameID, turnSheetType)
+		if err != nil {
+			l.Warn("failed to get turn sheet background image >%v<", err)
+			// Continue without image - not a fatal error
+		} else if backgroundImage != "" {
+			joinData.BackgroundImage = &backgroundImage
+			l.Info("loaded background image for turn sheet, length >%d<", len(backgroundImage))
+		} else {
+			l.Info("no background image found for turn sheet")
+		}
+
 		// Marshal join data to JSON
 		sheetDataBytes, err := json.Marshal(joinData)
 		if err != nil {

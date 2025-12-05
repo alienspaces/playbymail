@@ -49,6 +49,11 @@
               <input v-model.number="modalForm.turn_duration_hours" id="turn-duration" type="number" min="1" required
                 placeholder="168 (1 week)" />
             </div>
+            <div class="form-group">
+              <label for="game-description">Description <span class="required">*</span></label>
+              <textarea v-model="modalForm.description" id="game-description" rows="4" maxlength="4096" required
+                placeholder="Game description that appears on the join game turn sheet"></textarea>
+            </div>
 
             <div class="modal-actions">
               <button type="submit">
@@ -104,7 +109,8 @@ export default {
         id: '',
         name: '',
         game_type: 'adventure',
-        turn_duration_hours: 168 // Default to 1 week
+        turn_duration_hours: 168, // Default to 1 week
+        description: ''
       },
       modalError: '',
       showDeleteConfirm: false,
@@ -148,7 +154,7 @@ export default {
     },
     openCreate() {
       this.modalMode = 'create'
-      this.modalForm = { id: '', name: '', game_type: 'adventure', turn_duration_hours: 168 }
+      this.modalForm = { id: '', name: '', game_type: 'adventure', turn_duration_hours: 168, description: '' }
       this.modalError = ''
       this.showModal = true
     },
@@ -158,7 +164,8 @@ export default {
         id: game.id,
         name: game.name,
         game_type: game.game_type,
-        turn_duration_hours: game.turn_duration_hours || 168
+        turn_duration_hours: game.turn_duration_hours || 168,
+        description: game.description || ''
       }
       this.modalError = ''
       this.showModal = true
@@ -173,7 +180,8 @@ export default {
         const created = await this.gamesStore.createGame({
           name: this.modalForm.name,
           game_type: this.modalForm.game_type,
-          turn_duration_hours: this.modalForm.turn_duration_hours
+          turn_duration_hours: this.modalForm.turn_duration_hours,
+          description: this.modalForm.description.trim()
         });
         this.closeModal();
         if (created && created.id) {
@@ -189,7 +197,8 @@ export default {
         await this.gamesStore.updateGame(this.modalForm.id, {
           name: this.modalForm.name,
           game_type: this.modalForm.game_type,
-          turn_duration_hours: this.modalForm.turn_duration_hours
+          turn_duration_hours: this.modalForm.turn_duration_hours,
+          description: this.modalForm.description.trim()
         });
         this.closeModal();
       } catch (err) {

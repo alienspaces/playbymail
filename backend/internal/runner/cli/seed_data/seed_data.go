@@ -59,6 +59,7 @@ func GameConfig() []harness.GameConfig {
 			Reference: harness.GameOneRef,
 			Record: &game_record.Game{
 				Name:              "The Enchanted Forest Adventure",
+				Description:       "Welcome to The Enchanted Forest Adventure! Step into a world of magic and mystery where ancient forests hold secrets waiting to be discovered. As you journey through mystical groves, crystal caverns, and floating islands, you'll encounter magical creatures, solve puzzles, and uncover the mysteries of this enchanted realm. Your choices matter here - every decision shapes your adventure and determines your fate. Whether you're a brave warrior, a cunning mage, or a stealthy scout, this world offers endless possibilities for exploration and discovery. Join us in this classic PlayByMail adventure where your imagination is the only limit!",
 				GameType:          game_record.GameTypeAdventure,
 				TurnDurationHours: 168, // 1 week
 			},
@@ -447,6 +448,7 @@ func GameConfig() []harness.GameConfig {
 			Reference: harness.GameTwoRef,
 			Record: &game_record.Game{
 				Name:              "The Desert Kingdom",
+				Description:       "Welcome to The Desert Kingdom! Embark on an epic journey across vast sand dunes, ancient ruins, and hidden oases in this sprawling desert adventure. The sun beats down mercilessly as you navigate treacherous terrain, encounter nomadic tribes, and uncover the lost secrets of a forgotten civilization. In this harsh but beautiful landscape, survival requires wit, courage, and careful planning. Every turn brings new challenges and opportunities - will you seek out legendary treasures, forge alliances with powerful factions, or carve your own path through the shifting sands? The Desert Kingdom awaits those brave enough to face its trials and discover its hidden wonders. Join us in this immersive PlayByMail adventure where strategy and storytelling combine to create an unforgettable experience!",
 				GameType:          game_record.GameTypeAdventure,
 				TurnDurationHours: 336, // 2 weeks
 			},

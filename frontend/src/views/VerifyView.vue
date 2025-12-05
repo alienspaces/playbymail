@@ -62,19 +62,22 @@ export default {
   padding: var(--space-lg);
   background: var(--color-bg);
   border-radius: var(--radius-md);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
   display: flex;
   flex-direction: column;
   align-items: stretch;
 }
+
 h2 {
   margin-bottom: var(--space-lg);
   text-align: center;
 }
+
 label {
   margin-bottom: var(--space-sm);
   font-weight: 500;
 }
+
 input {
   padding: var(--space-sm);
   margin-bottom: var(--space-md);
@@ -82,8 +85,10 @@ input {
   border-radius: var(--radius-sm);
   font-size: var(--font-size-base);
 }
+
 button {
-  background: #11181c; /* Keep specific dark color for verify */
+  background: #11181c;
+  /* Keep specific dark color for verify */
   color: var(--color-text-light);
   border: none;
   padding: var(--space-md);
@@ -92,28 +97,33 @@ button {
   cursor: pointer;
   font-weight: var(--font-weight-bold);
 }
+
 button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
+
 .message {
   color: var(--color-error);
   margin-top: var(--space-md);
   text-align: center;
 }
+
 .verify-form {
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
 }
+
 .form-group {
   display: flex;
   flex-direction: column;
   gap: var(--space-xs);
   margin-bottom: var(--space-md);
 }
+
 .form-actions {
   display: flex;
   justify-content: center;
 }
-</style> 
+</style>

@@ -1,6 +1,8 @@
 package harness
 
 import (
+	"fmt"
+
 	"github.com/brianvoe/gofakeit"
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
@@ -79,6 +81,10 @@ func (t *Testing) applyGameRecDefaultValues(rec *game_record.Game) *game_record.
 
 	if rec.TurnDurationHours == 0 {
 		rec.TurnDurationHours = 168 // Default to 1 week
+	}
+
+	if rec.Description == "" {
+		rec.Description = fmt.Sprintf("Welcome to %s! Welcome to the PlayByMail Adventure!", rec.Name)
 	}
 
 	return rec

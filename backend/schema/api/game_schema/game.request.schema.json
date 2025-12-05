@@ -26,10 +26,17 @@
             "description": "Duration of each turn in hours.",
             "minimum": 1,
             "type": "integer"
+        },
+        "description": {
+            "description": "Game description that appears on the join game turn sheet.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
         }
     },
     "required": [
         "name",
+        "description",
         "game_type",
         "turn_duration_hours"
     ],

@@ -33,6 +33,12 @@
             "minLength": 1,
             "type": "string"
         },
+        "description": {
+            "description": "Game description that appears on the join game turn sheet.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+        },
         "turn_duration_hours": {
             "description": "Duration of each turn in hours.",
             "minimum": 1,
@@ -45,6 +51,7 @@
     "required": [
         "id",
         "name",
+        "description",
         "game_type",
         "turn_duration_hours",
         "created_at"

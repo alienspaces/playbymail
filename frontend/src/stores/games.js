@@ -35,11 +35,11 @@ export const useGamesStore = defineStore('games', {
         this.loading = false;
       }
     },
-    async createGame({ name, game_type, turn_duration_hours }) {
+    async createGame({ name, game_type, turn_duration_hours, description }) {
       this.loading = true;
       this.error = null;
       try {
-        const res = await apiCreateGame({ name, game_type, turn_duration_hours });
+        const res = await apiCreateGame({ name, game_type, turn_duration_hours, description });
         if (res.data) {
           this.games.push(res.data);
         }
@@ -51,11 +51,11 @@ export const useGamesStore = defineStore('games', {
         this.loading = false;
       }
     },
-    async updateGame(id, { name, game_type, turn_duration_hours }) {
+    async updateGame(id, { name, game_type, turn_duration_hours, description }) {
       this.loading = true;
       this.error = null;
       try {
-        const res = await apiUpdateGame(id, { name, game_type, turn_duration_hours });
+        const res = await apiUpdateGame(id, { name, game_type, turn_duration_hours, description });
         if (res.data) {
           const idx = this.games.findIndex(g => g.id === id);
           if (idx !== -1) this.games[idx] = res.data;

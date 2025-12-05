@@ -154,6 +154,7 @@ func Test_createUpdateDeleteGameHandler(t *testing.T) {
 						Name:              "Test Game",
 						GameType:          game_record.GameTypeAdventure,
 						TurnDurationHours: 168, // 1 week
+						Description:       "A test adventure game description",
 					}
 				},
 				ResponseDecoder: testCaseResponseDecoder,
@@ -186,6 +187,7 @@ func Test_createUpdateDeleteGameHandler(t *testing.T) {
 						Name:              "Test Game",
 						GameType:          game_record.GameTypeAdventure,
 						TurnDurationHours: 336, // 2 weeks
+						Description:       "An updated test adventure game description",
 					}
 				},
 				ResponseDecoder: testCaseResponseDecoder,
