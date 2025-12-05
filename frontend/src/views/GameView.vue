@@ -28,10 +28,6 @@
       <p v-else>No games found.</p>
     </div>
 
-    <!-- Turn Sheet Preview Modal -->
-    <TurnSheetPreviewModal :visible="showPreviewModal" :gameId="previewGameId" :gameName="previewGameName"
-      title="Join Game Turn Sheet Preview" @close="closePreviewModal" />
-
     <!-- Modal for create/edit - Teleported to body to avoid z-index stacking issues -->
     <Teleport to="body">
       <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
@@ -93,14 +89,12 @@
 import { useGamesStore } from '../stores/games';
 import PageHeader from '../components/PageHeader.vue';
 import TableActions from '../components/TableActions.vue';
-import TurnSheetPreviewModal from '../components/TurnSheetPreviewModal.vue';
 
 export default {
   name: 'GameView',
   components: {
     PageHeader,
-    TableActions,
-    TurnSheetPreviewModal
+    TableActions
   },
   data() {
     return {
@@ -115,11 +109,7 @@ export default {
       modalError: '',
       showDeleteConfirm: false,
       deleteTarget: null,
-      deleteError: '',
-      // Preview modal state
-      showPreviewModal: false,
-      previewGameId: '',
-      previewGameName: ''
+      deleteError: ''
     }
   },
   computed: {
@@ -239,11 +229,6 @@ export default {
           handler: () => this.selectGame(game)
         },
         {
-          key: 'preview',
-          label: 'Preview Turn Sheet',
-          handler: () => this.openPreview(game)
-        },
-        {
           key: 'edit',
           label: 'Edit',
           handler: () => this.openEdit(game)
@@ -255,16 +240,6 @@ export default {
           handler: () => this.confirmDelete(game)
         }
       ];
-    },
-    openPreview(game) {
-      this.previewGameId = game.id;
-      this.previewGameName = game.name;
-      this.showPreviewModal = true;
-    },
-    closePreviewModal() {
-      this.showPreviewModal = false;
-      this.previewGameId = '';
-      this.previewGameName = '';
     }
   }
 }
