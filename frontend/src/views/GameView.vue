@@ -28,65 +28,14 @@
       <p v-else>No games found.</p>
     </div>
 
-    <!-- Modal for create/edit - Teleported to body to avoid z-index stacking issues -->
-    <Teleport to="body">
-      <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
-        <div class="modal modal-wide">
-          <h2>{{ modalMode === 'create' ? 'Create Game' : 'Edit Game' }}</h2>
-          <form @submit.prevent="modalMode === 'create' ? createGame() : updateGame()" class="modal-form">
-            <div class="form-group">
-              <label for="game-name">Name <span class="required">*</span></label>
-              <input v-model="modalForm.name" id="game-name" required maxlength="1024" autocomplete="off" />
-            </div>
-            <div class="form-group">
-              <label for="game-type">Type <span class="required">*</span></label>
-              <select v-model="modalForm.game_type" id="game-type" required>
-                <option value="adventure">Adventure</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label for="turn-duration">Turn Duration (hours) <span class="required">*</span></label>
-              <input v-model.number="modalForm.turn_duration_hours" id="turn-duration" type="number" min="1" required
-                placeholder="168 (1 week)" />
-            </div>
-            <div class="form-group">
-              <label for="game-description">Description <span class="required">*</span></label>
-              <textarea v-model="modalForm.description" id="game-description" rows="4" maxlength="4096" required
-                placeholder="Game description that appears on the join game turn sheet"></textarea>
-            </div>
+    <!-- Modal for create/edit using ResourceModalForm -->
+    <ResourceModalForm :visible="showModal" :mode="modalMode" title="Game" :fields="gameFields" :modelValue="modalForm"
+      :error="modalError" @submit="handleSubmit" @cancel="closeModal" />
 
-            <div class="modal-actions">
-              <button type="submit">
-                {{ modalMode === 'create' ? 'Create' : 'Save' }}
-              </button>
-              <button type="button" @click="closeModal">
-                Cancel
-              </button>
-            </div>
-          </form>
-          <div v-if="modalError" class="error">
-            <p>{{ modalError }}</p>
-          </div>
-        </div>
-      </div>
-    </Teleport>
-
-    <!-- Confirm delete dialog - Teleported to body to avoid z-index stacking issues -->
-    <Teleport to="body">
-      <div v-if="showDeleteConfirm" class="modal-overlay" @click.self="closeDelete">
-        <div class="modal">
-          <h2>Delete Game</h2>
-          <p>Are you sure you want to delete <b>{{ deleteTarget?.name }}</b>?</p>
-          <div class="modal-actions">
-            <button type="button" @click="deleteGame" class="danger-btn">Delete</button>
-            <button type="button" @click="closeDelete">Cancel</button>
-          </div>
-          <div v-if="deleteError" class="error">
-            <p>{{ deleteError }}</p>
-          </div>
-        </div>
-      </div>
-    </Teleport>
+    <!-- Confirm delete dialog -->
+    <ConfirmationModal :visible="showDeleteConfirm" title="Delete Game"
+      :message="`Are you sure you want to delete '${deleteTarget?.name}'?`" :error="deleteError" @confirm="deleteGame"
+      @cancel="closeDelete" />
   </div>
 </template>
 
@@ -94,12 +43,16 @@
 import { useGamesStore } from '../stores/games';
 import PageHeader from '../components/PageHeader.vue';
 import TableActions from '../components/TableActions.vue';
+import ResourceModalForm from '../components/ResourceModalForm.vue';
+import ConfirmationModal from '../components/ConfirmationModal.vue';
 
 export default {
   name: 'GameView',
   components: {
     PageHeader,
-    TableActions
+    TableActions,
+    ResourceModalForm,
+    ConfirmationModal
   },
   data() {
     return {
@@ -115,7 +68,13 @@ export default {
       modalError: '',
       showDeleteConfirm: false,
       deleteTarget: null,
-      deleteError: ''
+      deleteError: '',
+      gameFields: [
+        { key: 'name', label: 'Name', required: true, maxlength: 1024 },
+        { key: 'game_type', label: 'Type', required: true, type: 'select', options: [{ value: 'adventure', label: 'Adventure' }] },
+        { key: 'turn_duration_hours', label: 'Turn Duration (hours)', required: true, type: 'number', min: 1, placeholder: '168 (1 week)' },
+        { key: 'description', label: 'Description', required: true, maxlength: 512, type: 'textarea', rows: 4, placeholder: 'Game description that appears on the join game turn sheet' }
+      ]
     }
   },
   computed: {
@@ -174,35 +133,27 @@ export default {
       this.showModal = false
       this.modalError = ''
     },
-    async createGame() {
+    async handleSubmit(formData) {
       this.modalError = ''
       try {
-        const created = await this.gamesStore.createGame({
-          name: this.modalForm.name,
-          game_type: this.modalForm.game_type,
-          turn_duration_hours: this.modalForm.turn_duration_hours,
-          description: this.modalForm.description.trim()
-        });
-        this.closeModal();
-        if (created && created.id) {
-          this.selectGame(created);
+        const data = {
+          name: formData.name,
+          game_type: formData.game_type,
+          turn_duration_hours: typeof formData.turn_duration_hours === 'string' ? parseInt(formData.turn_duration_hours, 10) : formData.turn_duration_hours,
+          description: formData.description.trim()
+        }
+        if (this.modalMode === 'create') {
+          const created = await this.gamesStore.createGame(data)
+          this.closeModal()
+          if (created && created.id) {
+            this.selectGame(created)
+          }
+        } else {
+          await this.gamesStore.updateGame(this.modalForm.id, data)
+          this.closeModal()
         }
       } catch (err) {
-        this.modalError = err.message;
-      }
-    },
-    async updateGame() {
-      this.modalError = ''
-      try {
-        await this.gamesStore.updateGame(this.modalForm.id, {
-          name: this.modalForm.name,
-          game_type: this.modalForm.game_type,
-          turn_duration_hours: this.modalForm.turn_duration_hours,
-          description: this.modalForm.description.trim()
-        });
-        this.closeModal();
-      } catch (err) {
-        this.modalError = err.message;
+        this.modalError = err.message || 'Failed to save.'
       }
     },
     confirmDelete(game) {
@@ -289,60 +240,5 @@ export default {
 
 .edit-link:hover {
   text-decoration: underline;
-}
-
-.modal-form {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.required {
-  color: var(--color-danger);
-}
-
-.error {
-  color: var(--color-warning-dark);
-  background: var(--color-warning-light);
-  padding: var(--space-sm) var(--space-md);
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--color-warning);
-  margin-top: var(--space-md);
-}
-
-.error p {
-  margin: 0;
-}
-
-.danger-btn {
-  background: var(--color-danger) !important;
-  color: var(--color-text-light) !important;
-  border-color: var(--color-danger) !important;
-}
-
-.danger-btn:hover {
-  background: var(--color-danger-dark) !important;
-  border-color: var(--color-danger-dark) !important;
-}
-
-.modal-wide {
-  max-width: 600px;
-  width: 100%;
-}
-
-.form-section {
-  margin-top: var(--space-md);
-  padding-top: var(--space-md);
-  border-top: 1px solid var(--color-border);
-}
-
-@media (max-width: 768px) {
-  .modal-actions {
-    flex-direction: column-reverse;
-  }
-
-  .modal-actions button {
-    width: 100%;
-  }
 }
 </style>

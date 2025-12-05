@@ -19,9 +19,9 @@
                 </option>
               </select>
               <!-- Render textarea for textarea type -->
-              <textarea v-else-if="field.type === 'textarea'" v-model="form[field.key]" :id="field.key"
-                :required="field.required" :maxlength="field.maxlength" :placeholder="field.placeholder"
-                :rows="field.rows || 4" autocomplete="off" />
+              <TextareaWithCounter v-else-if="field.type === 'textarea'" :id="field.key" v-model="form[field.key]"
+                :max-length="field.maxlength" :required="field.required" :placeholder="field.placeholder"
+                :rows="field.rows || 4" />
               <!-- Render checkbox for checkbox type -->
               <div v-else-if="field.type === 'checkbox'" class="checkbox-group">
                 <input v-model="form[field.key]" :id="field.key" type="checkbox" :required="field.required" />
@@ -50,6 +50,7 @@
 
 <script setup>
 import { reactive, watch } from 'vue';
+import TextareaWithCounter from './TextareaWithCounter.vue';
 const props = defineProps({
   visible: Boolean,
   mode: String, // 'create' or 'edit'
