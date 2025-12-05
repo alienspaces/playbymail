@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 
 	"gitlab.com/alienspaces/playbymail/core/domain"
 	coreerror "gitlab.com/alienspaces/playbymail/core/error"
+	"gitlab.com/alienspaces/playbymail/core/nullstring"
 	"gitlab.com/alienspaces/playbymail/core/nulltime"
 	"gitlab.com/alienspaces/playbymail/core/record"
 	coresql "gitlab.com/alienspaces/playbymail/core/sql"
@@ -81,6 +83,29 @@ func (m *Domain) CreateGameInstanceRec(rec *game_record.GameInstance) (*game_rec
 		rec.CurrentTurn = 0
 	}
 	// no per-instance turn deadline config here; configs are handled separately
+
+	// Set default delivery methods if not set (default to physical_post for backward compatibility)
+	// Note: Since these are booleans, we can't detect if they were explicitly set to false
+	// So we only set defaults if all are false (meaning they weren't set)
+	if !rec.DeliveryPhysicalPost && !rec.DeliveryPhysicalLocal && !rec.DeliveryEmail {
+		rec.DeliveryPhysicalPost = true
+	}
+
+	// Set default required_player_count if not set (0 means no check, >= 1 means check is enforced)
+	// Only set default if it's truly uninitialized (we can't distinguish 0 from uninitialized in Go)
+	// So we rely on the harness/API layer to set appropriate defaults
+	// For production, API should set required_player_count >= 1
+	// For tests, harness sets required_player_count = 0
+
+	// Generate join_game_key if closed testing is enabled
+	if rec.IsClosedTesting && (!rec.JoinGameKey.Valid || rec.JoinGameKey.String == "") {
+		joinGameKey, err := generateUUID()
+		if err != nil {
+			l.Warn("failed to generate join game key >%v<", err)
+			return rec, err
+		}
+		rec.JoinGameKey = nullstring.FromString(joinGameKey)
+	}
 
 	var err error
 	rec, err = r.CreateOne(rec)
@@ -208,6 +233,19 @@ func (m *Domain) StartGameInstance(instanceID string) (*game_record.GameInstance
 
 	if instance.Status != game_record.GameInstanceStatusCreated {
 		return nil, fmt.Errorf("game instance must be in 'created' status to start")
+	}
+
+	// Check player count meets required count (only if required_player_count > 0)
+	if instance.RequiredPlayerCount > 0 {
+		playerCount, err := m.GetPlayerCountForGameInstance(instanceID)
+		if err != nil {
+			l.Warn("failed to get player count for game instance >%s< >%v<", instanceID, err)
+			return nil, err
+		}
+
+		if playerCount < instance.RequiredPlayerCount {
+			return nil, fmt.Errorf("insufficient players: have %d, need %d", playerCount, instance.RequiredPlayerCount)
+		}
 	}
 
 	now := time.Now()
@@ -366,4 +404,108 @@ func (m *Domain) CancelGameInstance(instanceID string) (*game_record.GameInstanc
 
 	l.Info("cancelled game instance >%s<", instanceID)
 	return instanceRec, nil
+}
+
+// GetPlayerCountForGameInstance counts active Player subscriptions for the game instance's game
+func (m *Domain) GetPlayerCountForGameInstance(gameInstanceID string) (int, error) {
+	l := m.Logger("GetPlayerCountForGameInstance")
+
+	instance, err := m.GetGameInstanceRec(gameInstanceID, nil)
+	if err != nil {
+		return 0, err
+	}
+
+	// Get all active Player subscriptions for this game
+	subscriptions, err := m.GetManyGameSubscriptionRecs(&coresql.Options{
+		Params: []coresql.Param{
+			{Col: game_record.FieldGameSubscriptionGameID, Val: instance.GameID},
+			{Col: game_record.FieldGameSubscriptionSubscriptionType, Val: game_record.GameSubscriptionTypePlayer},
+			{Col: game_record.FieldGameSubscriptionStatus, Val: game_record.GameSubscriptionStatusActive},
+		},
+	})
+	if err != nil {
+		l.Warn("failed to get player subscriptions for game ID >%s< >%v<", instance.GameID, err)
+		return 0, err
+	}
+
+	return len(subscriptions), nil
+}
+
+// GenerateJoinGameKey generates a UUID join game key for closed testing instances
+func (m *Domain) GenerateJoinGameKey(gameInstanceID string) (string, error) {
+	l := m.Logger("GenerateJoinGameKey")
+
+	instance, err := m.GetGameInstanceRec(gameInstanceID, coresql.ForUpdateNoWait)
+	if err != nil {
+		return "", err
+	}
+
+	if !instance.IsClosedTesting {
+		return "", fmt.Errorf("game instance is not in closed testing mode")
+	}
+
+	// Generate UUID for join game key
+	joinGameKey, err := generateUUID()
+	if err != nil {
+		l.Warn("failed to generate join game key >%v<", err)
+		return "", err
+	}
+
+	instance.JoinGameKey = nullstring.FromString(joinGameKey)
+
+	instance, err = m.UpdateGameInstanceRec(instance)
+	if err != nil {
+		l.Warn("failed updating game instance with join game key >%v<", err)
+		return "", err
+	}
+
+	l.Info("generated join game key for game instance >%s<", gameInstanceID)
+	return joinGameKey, nil
+}
+
+// GetGameInstanceByJoinGameKey looks up a game instance by join game key
+func (m *Domain) GetGameInstanceByJoinGameKey(joinGameKey string) (*game_record.GameInstance, error) {
+	l := m.Logger("GetGameInstanceByJoinGameKey")
+
+	if joinGameKey == "" {
+		return nil, coreerror.NewInvalidDataError("join_game_key is required")
+	}
+
+	// Get game instance by join_game_key
+	instances, err := m.GetManyGameInstanceRecs(&coresql.Options{
+		Params: []coresql.Param{
+			{Col: game_record.FieldGameInstanceJoinGameKey, Val: joinGameKey},
+		},
+		Limit: 1,
+	})
+	if err != nil {
+		l.Warn("failed to get game instance by join game key >%s< >%v<", joinGameKey, err)
+		return nil, err
+	}
+
+	if len(instances) == 0 {
+		return nil, coreerror.NewNotFoundError(game_record.TableGameInstance, joinGameKey)
+	}
+
+	instance := instances[0]
+
+	// Validate it's in closed testing mode
+	if !instance.IsClosedTesting {
+		return nil, fmt.Errorf("game instance is not in closed testing mode")
+	}
+
+	// Check expiration if set
+	if instance.JoinGameKeyExpiresAt.Valid {
+		if time.Now().After(instance.JoinGameKeyExpiresAt.Time) {
+			return nil, fmt.Errorf("join game key has expired")
+		}
+	}
+
+	return instance, nil
+}
+
+// generateUUID generates a UUID string
+func generateUUID() (string, error) {
+	uuidVal := uuid.New()
+	return uuidVal.String(), nil
 }

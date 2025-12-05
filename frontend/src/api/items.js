@@ -1,4 +1,4 @@
-import { baseUrl, getAuthHeaders, apiFetch } from './baseUrl';
+import { baseUrl, getAuthHeaders, apiFetch, handleApiError } from './baseUrl';
 
 /**
  * Fetch all items for a game.
@@ -9,7 +9,7 @@ export async function fetchItems(gameId) {
   const res = await apiFetch(`${baseUrl}/api/v1/adventure-games/${encodeURIComponent(gameId)}/items`, {
     headers: { ...getAuthHeaders() },
   });
-  if (!res.ok) throw new Error('Failed to fetch items');
+  await handleApiError(res, 'Failed to fetch items');
   const json = await res.json();
   return json.data || [];
 }
@@ -26,7 +26,7 @@ export async function createItem(gameId, data) {
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
     body: JSON.stringify(data)
   });
-  if (!res.ok) throw new Error('Failed to create item');
+  await handleApiError(res, 'Failed to create item');
   const json = await res.json();
   return json.data;
 }
@@ -44,7 +44,7 @@ export async function updateItem(gameId, itemId, data) {
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
     body: JSON.stringify(data)
   });
-  if (!res.ok) throw new Error('Failed to update item');
+  await handleApiError(res, 'Failed to update item');
   const json = await res.json();
   return json.data;
 }
@@ -60,5 +60,5 @@ export async function deleteItem(gameId, itemId) {
     method: 'DELETE',
     headers: { ...getAuthHeaders() },
   });
-  if (!res.ok) throw new Error('Failed to delete item');
+  await handleApiError(res, 'Failed to delete item');
 } 

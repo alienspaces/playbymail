@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"gitlab.com/alienspaces/playbymail/core/nullstring"
 	"gitlab.com/alienspaces/playbymail/core/nulltime"
 	"gitlab.com/alienspaces/playbymail/core/server"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
@@ -22,6 +23,8 @@ func GameInstanceRequestToRecord(l logger.Logger, r *http.Request, rec *game_rec
 
 	switch server.HttpMethod(r.Method) {
 	case server.HttpMethodPost:
+		l.Debug("mapping POST request: delivery_physical_post=%v, delivery_physical_local=%v, delivery_email=%v",
+			req.DeliveryPhysicalPost, req.DeliveryPhysicalLocal, req.DeliveryEmail)
 		rec.GameID = req.GameID
 		rec.Status = req.Status
 		rec.CurrentTurn = req.CurrentTurn
@@ -29,6 +32,15 @@ func GameInstanceRequestToRecord(l logger.Logger, r *http.Request, rec *game_rec
 		rec.NextTurnDueAt = nulltime.FromTimePtr(req.NextTurnDueAt)
 		rec.StartedAt = nulltime.FromTimePtr(req.StartedAt)
 		rec.CompletedAt = nulltime.FromTimePtr(req.CompletedAt)
+		rec.DeliveryPhysicalPost = req.DeliveryPhysicalPost
+		rec.DeliveryPhysicalLocal = req.DeliveryPhysicalLocal
+		rec.DeliveryEmail = req.DeliveryEmail
+		l.Debug("after mapping: rec.DeliveryPhysicalPost=%v, rec.DeliveryPhysicalLocal=%v, rec.DeliveryEmail=%v",
+			rec.DeliveryPhysicalPost, rec.DeliveryPhysicalLocal, rec.DeliveryEmail)
+		if req.RequiredPlayerCount > 0 {
+			rec.RequiredPlayerCount = req.RequiredPlayerCount
+		}
+		rec.IsClosedTesting = req.IsClosedTesting
 	case server.HttpMethodPut, server.HttpMethodPatch:
 		if req.Status != "" {
 			rec.Status = req.Status
@@ -40,6 +52,16 @@ func GameInstanceRequestToRecord(l logger.Logger, r *http.Request, rec *game_rec
 		rec.NextTurnDueAt = nulltime.FromTimePtr(req.NextTurnDueAt)
 		rec.StartedAt = nulltime.FromTimePtr(req.StartedAt)
 		rec.CompletedAt = nulltime.FromTimePtr(req.CompletedAt)
+		// Only update delivery flags if they're explicitly set (check if any are true)
+		if req.DeliveryPhysicalPost || req.DeliveryPhysicalLocal || req.DeliveryEmail {
+			rec.DeliveryPhysicalPost = req.DeliveryPhysicalPost
+			rec.DeliveryPhysicalLocal = req.DeliveryPhysicalLocal
+			rec.DeliveryEmail = req.DeliveryEmail
+		}
+		if req.RequiredPlayerCount > 0 {
+			rec.RequiredPlayerCount = req.RequiredPlayerCount
+		}
+		rec.IsClosedTesting = req.IsClosedTesting
 	default:
 		return nil, fmt.Errorf("unsupported HTTP method")
 	}
@@ -47,26 +69,34 @@ func GameInstanceRequestToRecord(l logger.Logger, r *http.Request, rec *game_rec
 	return rec, nil
 }
 
-func GameInstanceRecordToResponseData(l logger.Logger, rec *game_record.GameInstance) (*game_schema.GameInstanceResponseData, error) {
+func GameInstanceRecordToResponseData(l logger.Logger, rec *game_record.GameInstance, playerCount int) (*game_schema.GameInstanceResponseData, error) {
 	l.Debug("mapping game_instance record to response data")
 	return &game_schema.GameInstanceResponseData{
-		ID:                  rec.ID,
-		GameID:              rec.GameID,
-		GameSubscriptionID:  rec.GameSubscriptionID,
-		Status:              rec.Status,
-		CurrentTurn:         rec.CurrentTurn,
-		LastTurnProcessedAt: nulltime.ToTimePtr(rec.LastTurnProcessedAt),
-		NextTurnDueAt:       nulltime.ToTimePtr(rec.NextTurnDueAt),
-		StartedAt:           nulltime.ToTimePtr(rec.StartedAt),
-		CompletedAt:         nulltime.ToTimePtr(rec.CompletedAt),
-		CreatedAt:           rec.CreatedAt,
-		UpdatedAt:           nulltime.ToTimePtr(rec.UpdatedAt),
+		ID:                   rec.ID,
+		GameID:               rec.GameID,
+		GameSubscriptionID:   rec.GameSubscriptionID,
+		Status:               rec.Status,
+		CurrentTurn:          rec.CurrentTurn,
+		LastTurnProcessedAt:  nulltime.ToTimePtr(rec.LastTurnProcessedAt),
+		NextTurnDueAt:        nulltime.ToTimePtr(rec.NextTurnDueAt),
+		StartedAt:                nulltime.ToTimePtr(rec.StartedAt),
+		CompletedAt:              nulltime.ToTimePtr(rec.CompletedAt),
+		DeliveryPhysicalPost:     rec.DeliveryPhysicalPost,
+		DeliveryPhysicalLocal:    rec.DeliveryPhysicalLocal,
+		DeliveryEmail:            rec.DeliveryEmail,
+		RequiredPlayerCount:      rec.RequiredPlayerCount,
+		PlayerCount:              playerCount,
+		IsClosedTesting:          rec.IsClosedTesting,
+		JoinGameKey:          nullstring.ToStringPtr(rec.JoinGameKey),
+		JoinGameKeyExpiresAt: nulltime.ToTimePtr(rec.JoinGameKeyExpiresAt),
+		CreatedAt:            rec.CreatedAt,
+		UpdatedAt:            nulltime.ToTimePtr(rec.UpdatedAt),
 	}, nil
 }
 
-func GameInstanceRecordToResponse(l logger.Logger, rec *game_record.GameInstance) (*game_schema.GameInstanceResponse, error) {
+func GameInstanceRecordToResponse(l logger.Logger, rec *game_record.GameInstance, playerCount int) (*game_schema.GameInstanceResponse, error) {
 	l.Debug("mapping game_instance record to response")
-	data, err := GameInstanceRecordToResponseData(l, rec)
+	data, err := GameInstanceRecordToResponseData(l, rec, playerCount)
 	if err != nil {
 		return nil, err
 	}
@@ -75,11 +105,21 @@ func GameInstanceRecordToResponse(l logger.Logger, rec *game_record.GameInstance
 	}, nil
 }
 
-func GameInstanceRecordsToCollectionResponse(l logger.Logger, recs []*game_record.GameInstance) (game_schema.GameInstanceCollectionResponse, error) {
+func GameInstanceRecordsToCollectionResponse(l logger.Logger, recs []*game_record.GameInstance, getPlayerCount func(string) (int, error)) (game_schema.GameInstanceCollectionResponse, error) {
 	l.Debug("mapping game_instance records to collection response")
 	data := []*game_schema.GameInstanceResponseData{}
 	for _, rec := range recs {
-		d, err := GameInstanceRecordToResponseData(l, rec)
+		playerCount := 0
+		if getPlayerCount != nil {
+			count, err := getPlayerCount(rec.ID)
+			if err != nil {
+				l.Warn("failed to get player count for instance >%s< >%v<", rec.ID, err)
+				// Continue with 0 if we can't get the count
+			} else {
+				playerCount = count
+			}
+		}
+		d, err := GameInstanceRecordToResponseData(l, rec, playerCount)
 		if err != nil {
 			return game_schema.GameInstanceCollectionResponse{}, err
 		}

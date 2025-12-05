@@ -1,4 +1,4 @@
-import { baseUrl, getAuthHeaders, apiFetch } from './baseUrl';
+import { baseUrl, getAuthHeaders, apiFetch, handleApiError } from './baseUrl';
 
 /**
  * Fetch all creatures for a game.
@@ -9,7 +9,7 @@ export async function fetchCreatures(gameId) {
   const res = await apiFetch(`${baseUrl}/api/v1/adventure-games/${encodeURIComponent(gameId)}/creatures`, {
     headers: { ...getAuthHeaders() },
   });
-  if (!res.ok) throw new Error('Failed to fetch creatures');
+  await handleApiError(res, 'Failed to fetch creatures');
   const json = await res.json();
   return json.data || [];
 }
@@ -26,7 +26,7 @@ export async function createCreature(gameId, data) {
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
     body: JSON.stringify(data)
   });
-  if (!res.ok) throw new Error('Failed to create creature');
+  await handleApiError(res, 'Failed to create creature');
   const json = await res.json();
   return json.data;
 }
@@ -44,7 +44,7 @@ export async function updateCreature(gameId, creatureId, data) {
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
     body: JSON.stringify(data)
   });
-  if (!res.ok) throw new Error('Failed to update creature');
+  await handleApiError(res, 'Failed to update creature');
   const json = await res.json();
   return json.data;
 }
@@ -60,5 +60,5 @@ export async function deleteCreature(gameId, creatureId) {
     method: 'DELETE',
     headers: { ...getAuthHeaders() },
   });
-  if (!res.ok) throw new Error('Failed to delete creature');
+  await handleApiError(res, 'Failed to delete creature');
 } 

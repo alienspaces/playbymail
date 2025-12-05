@@ -1,4 +1,4 @@
-import { baseUrl, getAuthHeaders, apiFetch } from './baseUrl';
+import { baseUrl, getAuthHeaders, apiFetch, handleApiError } from './baseUrl';
 
 /**
  * Fetch all location links for a game.
@@ -9,7 +9,7 @@ export async function fetchLocationLinks(gameId) {
   const res = await apiFetch(`${baseUrl}/api/v1/adventure-games/${encodeURIComponent(gameId)}/location-links`, {
     headers: { ...getAuthHeaders() },
   });
-  if (!res.ok) throw new Error('Failed to fetch location links');
+  await handleApiError(res, 'Failed to fetch location links');
   const json = await res.json();
   return json.data || [];
 }
@@ -26,7 +26,7 @@ export async function createLocationLink(gameId, data) {
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
     body: JSON.stringify(data)
   });
-  if (!res.ok) throw new Error('Failed to create location link');
+  await handleApiError(res, 'Failed to create location link');
   const json = await res.json();
   return json.data;
 }
@@ -44,7 +44,7 @@ export async function updateLocationLink(gameId, locationLinkId, data) {
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
     body: JSON.stringify(data)
   });
-  if (!res.ok) throw new Error('Failed to update location link');
+  await handleApiError(res, 'Failed to update location link');
   const json = await res.json();
   return json.data;
 }
@@ -60,5 +60,5 @@ export async function deleteLocationLink(gameId, locationLinkId) {
     method: 'DELETE',
     headers: { ...getAuthHeaders() },
   });
-  if (!res.ok) throw new Error('Failed to delete location link');
+  await handleApiError(res, 'Failed to delete location link');
 } 

@@ -135,6 +135,17 @@ func getWorkers(l logger.Logger, cfg config.Config, s storer.Storer, e emailer.E
 		return nil, fmt.Errorf("failed to add NewSendGameSubscriptionApprovalEmailWorker worker: %w", err)
 	}
 
+	// Add tester invitation email worker
+	// Sends invitation emails to testers for closed testing game instances with join game links.
+	sendTesterInvitationEmailWorker, err := jobworker.NewSendTesterInvitationEmailWorker(l, cfg, s, e)
+	if err != nil {
+		return nil, fmt.Errorf("failed NewSendTesterInvitationEmailWorker worker: %w", err)
+	}
+
+	if err := river.AddWorkerSafely(w, sendTesterInvitationEmailWorker); err != nil {
+		return nil, fmt.Errorf("failed to add NewSendTesterInvitationEmailWorker worker: %w", err)
+	}
+
 	// Add game turn processing execution worker
 	// Executes game turn processing by running game logic, updating game state, and handling player actions.
 	// Manages turn progression, game rules enforcement, and state transitions.

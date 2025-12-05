@@ -8,6 +8,7 @@ import (
 	"github.com/riverqueue/river"
 	"github.com/stretchr/testify/require"
 
+	coreerror "gitlab.com/alienspaces/playbymail/core/error"
 	"gitlab.com/alienspaces/playbymail/core/server"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
 	"gitlab.com/alienspaces/playbymail/core/type/storer"
@@ -744,6 +745,73 @@ func Test_cancelGameInstanceHandler(t *testing.T) {
 			}
 
 			testutil.RunTestCase(t, th, &testCase.TestCase, testFunc)
+		})
+	}
+}
+
+func Test_createGameInstanceHandlerValidation(t *testing.T) {
+	t.Parallel()
+
+	th := testutil.NewTestHarness(t)
+	require.NotNil(t, th, "TestHarness returns without error")
+
+	_, err := th.Setup()
+	require.NoError(t, err, "Test data setup returns without error")
+	defer func() {
+		err = th.Teardown()
+		require.NoError(t, err, "Test data teardown returns without error")
+	}()
+
+	// Get account from harness data (must have Manager subscription)
+	accountRec, err := th.Data.GetAccountRecByRef(harness.AccountOneRef)
+	require.NoError(t, err, "GetAccountRecByRef returns without error")
+
+	// Get a game from the harness data
+	gameRec, err := th.Data.GetGameRecByRef(harness.GameOneRef)
+	require.NoError(t, err, "GetGameRecByRef returns without error")
+
+	testCases := []testutil.TestCase{
+		{
+			Name: "API key with open access \\ create game instance with closed testing but no email delivery \\ returns validation error",
+			NewRunner: func(l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], d harness.Data) (testutil.TestRunnerer, error) {
+				return testutil.NewTestRunnerWithAccountID(l, s, j, accountRec.ID, accountRec.Email)
+			},
+			HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
+				return rnr.GetHandlerConfig()[game.CreateOneGameInstance]
+			},
+			RequestPathParams: func(d harness.Data) map[string]string {
+				return map[string]string{
+					":game_id": gameRec.ID,
+				}
+			},
+			RequestBody: func(d harness.Data) interface{} {
+				return game_schema.GameInstanceRequest{
+					GameID:                gameRec.ID,
+					DeliveryPhysicalPost:  true,
+					DeliveryPhysicalLocal: false,
+					DeliveryEmail:         false, // Email delivery is false, but closed testing is true
+					IsClosedTesting:       true,
+				}
+			},
+			ResponseDecoder: testutil.TestCaseResponseDecoderGeneric[coreerror.Error],
+			ResponseCode:    http.StatusBadRequest,
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Logf("Running test >%s<\n", testCase.Name)
+
+		t.Run(testCase.Name, func(t *testing.T) {
+			testFunc := func(method string, body interface{}) {
+				if body != nil {
+					errResp := body.(coreerror.Error)
+					require.NotEmpty(t, errResp.Message, "Error response contains error message")
+					require.Contains(t, errResp.Message, "closed testing requires email delivery", "Error message contains expected validation text")
+				}
+				// If body is nil, the error was already logged and we just need to verify the status code
+			}
+
+			testutil.RunTestCase(t, th, &testCase, testFunc)
 		})
 	}
 }

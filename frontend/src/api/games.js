@@ -1,4 +1,4 @@
-import { baseUrl, getAuthHeaders, apiFetch } from './baseUrl';
+import { baseUrl, getAuthHeaders, apiFetch, handleApiError } from './baseUrl';
 
 export async function listGames(options = {}) {
   const { subscriptionType } = options;
@@ -9,7 +9,7 @@ export async function listGames(options = {}) {
   const res = await apiFetch(url, {
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
   });
-  if (!res.ok) throw new Error('Failed to fetch games');
+  await handleApiError(res, 'Failed to fetch games');
   return await res.json();
 }
 
@@ -19,7 +19,7 @@ export async function createGame({ name, game_type, turn_duration_hours, descrip
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
     body: JSON.stringify({ name, game_type, turn_duration_hours, description }),
   });
-  if (!res.ok) throw new Error('Failed to create game');
+  await handleApiError(res, 'Failed to create game');
   return await res.json();
 }
 
@@ -29,7 +29,7 @@ export async function updateGame(id, { name, game_type, turn_duration_hours, des
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
     body: JSON.stringify({ name, game_type, turn_duration_hours, description }),
   });
-  if (!res.ok) throw new Error('Failed to update game');
+  await handleApiError(res, 'Failed to update game');
   return await res.json();
 }
 
@@ -38,6 +38,6 @@ export async function deleteGame(id) {
     method: 'DELETE',
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
   });
-  if (!res.ok) throw new Error('Failed to delete game');
+  await handleApiError(res, 'Failed to delete game');
   return await res.json();
 } 

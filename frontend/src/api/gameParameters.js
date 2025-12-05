@@ -1,4 +1,4 @@
-import { baseUrl, getAuthHeaders, apiFetch } from './baseUrl';
+import { baseUrl, getAuthHeaders, apiFetch, handleApiError } from './baseUrl';
 
 // Get all game parameters (with optional filtering by game type)
 export async function listGameParameters(params = {}) {
@@ -10,7 +10,7 @@ export async function listGameParameters(params = {}) {
   const res = await apiFetch(url, {
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
   });
-  if (!res.ok) throw new Error('Failed to fetch game parameters');
+  await handleApiError(res, 'Failed to fetch game parameters');
   return await res.json();
 }
 
@@ -19,7 +19,7 @@ export async function getGameParameter(id) {
   const res = await apiFetch(`${baseUrl}/api/v1/game-parameters/${id}`, {
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
   });
-  if (!res.ok) throw new Error('Failed to fetch game parameter');
+  await handleApiError(res, 'Failed to fetch game parameter');
   return await res.json();
 }
 
@@ -30,7 +30,7 @@ export async function createGameParameter(data) {
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
     body: JSON.stringify(data),
   });
-  if (!res.ok) throw new Error('Failed to create game parameter');
+  await handleApiError(res, 'Failed to create game parameter');
   return await res.json();
 }
 
@@ -41,7 +41,7 @@ export async function updateGameParameter(id, data) {
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
     body: JSON.stringify(data),
   });
-  if (!res.ok) throw new Error('Failed to update game parameter');
+  await handleApiError(res, 'Failed to update game parameter');
   return await res.json();
 }
 
@@ -51,6 +51,6 @@ export async function deleteGameParameter(id) {
     method: 'DELETE',
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
   });
-  if (!res.ok) throw new Error('Failed to delete game parameter');
+  await handleApiError(res, 'Failed to delete game parameter');
   return await res.json();
 }

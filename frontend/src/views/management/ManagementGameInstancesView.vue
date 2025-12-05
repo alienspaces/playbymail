@@ -50,6 +50,18 @@
           {{ row.current_turn || 0 }}
         </template>
 
+        <template #cell-player_count="{ row }">
+          {{ row.player_count || 0 }}{{ row.required_player_count > 0 ? ` / ${row.required_player_count}` : '' }}
+        </template>
+
+        <template #cell-delivery_methods="{ row }">
+          <span class="delivery-methods">
+            <span v-if="row.delivery_physical_post" class="delivery-badge">Post</span>
+            <span v-if="row.delivery_physical_local" class="delivery-badge">Local</span>
+            <span v-if="row.delivery_email" class="delivery-badge">Email</span>
+          </span>
+        </template>
+
         <template #cell-next_turn_due_at="{ row }">
           {{ formatDeadline(row.next_turn_due_at) }}
         </template>
@@ -111,6 +123,18 @@
         No completed instances yet.
       </p>
     </div>
+
+    <!-- Create Instance Modal -->
+    <ResourceModalForm
+      :visible="showCreateModal"
+      mode="create"
+      title="Game Instance"
+      :fields="instanceFields"
+      :model-value="instanceForm"
+      :error="createModalError"
+      @submit="handleCreateInstance"
+      @cancel="closeCreateModal"
+    />
   </div>
 </template>
 
@@ -119,10 +143,12 @@ import { computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useGamesStore } from '../../stores/games';
 import { useGameInstancesStore } from '../../stores/gameInstances';
+import { ref } from 'vue';
 import Button from '../../components/Button.vue';
 import PageHeader from '../../components/PageHeader.vue';
 import ResourceTable from '../../components/ResourceTable.vue';
 import TableActions from '../../components/TableActions.vue';
+import ResourceModalForm from '../../components/ResourceModalForm.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -132,10 +158,58 @@ const gameInstancesStore = useGameInstancesStore();
 const gameId = computed(() => route.params.gameId);
 const selectedGame = computed(() => gamesStore.games.find(g => g.id === gameId.value));
 
+// Create instance modal state
+const showCreateModal = ref(false);
+const createModalError = ref('');
+const instanceForm = ref({
+  delivery_physical_post: true,
+  delivery_physical_local: false,
+  delivery_email: false,
+  required_player_count: 1,
+  is_closed_testing: false
+});
+
+const instanceFields = [
+  {
+    key: 'delivery_physical_post',
+    label: 'Physical Post Delivery',
+    type: 'checkbox',
+    checkboxLabel: 'Enable physical post delivery (traditional mail-based)'
+  },
+  {
+    key: 'delivery_physical_local',
+    label: 'Physical Local Delivery',
+    type: 'checkbox',
+    checkboxLabel: 'Enable physical local delivery (convention/classroom - game master prints locally, players fill at table, manual scanning/submission)'
+  },
+  {
+    key: 'delivery_email',
+    label: 'Email Delivery',
+    type: 'checkbox',
+    checkboxLabel: 'Enable email delivery (web-based turn sheet viewer)'
+  },
+  {
+    key: 'required_player_count',
+    label: 'Required Player Count',
+    type: 'number',
+    required: true,
+    min: 1,
+    placeholder: 'Minimum number of players required before game can start'
+  },
+  {
+    key: 'is_closed_testing',
+    label: 'Closed Testing',
+    type: 'checkbox',
+    checkboxLabel: 'Enable closed testing mode (requires join game key for players to join)'
+  }
+];
+
 const columns = [
   { key: 'id', label: 'Instance ID' },
   { key: 'status', label: 'Status' },
   { key: 'current_turn', label: 'Turn' },
+  { key: 'player_count', label: 'Players' },
+  { key: 'delivery_methods', label: 'Delivery Methods' },
   { key: 'next_turn_due_at', label: 'Next Turn Due' },
   { key: 'started_at', label: 'Started' }
 ];
@@ -215,7 +289,61 @@ const goBack = () => {
 };
 
 const createInstance = () => {
-  router.push(`/admin/games/${gameId.value}/instances/create`);
+  // Reset form to defaults
+  instanceForm.value = {
+    delivery_physical_post: true,
+    delivery_physical_local: false,
+    delivery_email: false,
+    required_player_count: 1,
+    is_closed_testing: false
+  };
+  createModalError.value = '';
+  showCreateModal.value = true;
+};
+
+const closeCreateModal = () => {
+  showCreateModal.value = false;
+  createModalError.value = '';
+};
+
+const handleCreateInstance = async (formData) => {
+  createModalError.value = '';
+  
+  // Ensure boolean values are properly set (checkboxes can be undefined)
+  const deliveryPhysicalPost = Boolean(formData.delivery_physical_post);
+  const deliveryPhysicalLocal = Boolean(formData.delivery_physical_local);
+  const deliveryEmail = Boolean(formData.delivery_email);
+  
+  // Validate at least one delivery method is selected
+  if (!deliveryPhysicalPost && !deliveryPhysicalLocal && !deliveryEmail) {
+    createModalError.value = 'At least one delivery method must be enabled';
+    return;
+  }
+
+  try {
+    const instanceData = {
+      game_id: gameId.value,
+      delivery_physical_post: deliveryPhysicalPost,
+      delivery_physical_local: deliveryPhysicalLocal,
+      delivery_email: deliveryEmail,
+      required_player_count: formData.required_player_count || 1,
+      is_closed_testing: Boolean(formData.is_closed_testing)
+    };
+
+    const createdInstance = await gameInstancesStore.createGameInstance(gameId.value, instanceData);
+    
+    // Close modal and refresh list
+    closeCreateModal();
+    await loadGameInstances();
+    
+    // Navigate to instance details
+    if (createdInstance && createdInstance.id) {
+      router.push(`/admin/games/${gameId.value}/instances/${createdInstance.id}`);
+    }
+  } catch (err) {
+    console.error('Failed to create instance:', err);
+    createModalError.value = err.message || 'Failed to create game instance';
+  }
 };
 
 const viewInstance = (instance) => {
@@ -351,5 +479,22 @@ const getCompletedInstanceActions = (instance) => {
 .empty-message {
   color: var(--color-text-muted);
   font-style: italic;
+}
+
+.delivery-methods {
+  display: flex;
+  gap: var(--space-xs);
+  flex-wrap: wrap;
+}
+
+.delivery-badge {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: var(--radius-xs);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  background: var(--color-bg-light);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
 }
 </style>

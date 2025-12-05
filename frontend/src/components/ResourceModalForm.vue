@@ -63,12 +63,27 @@ const props = defineProps({
 const emit = defineEmits(['submit', 'cancel']);
 const form = reactive({});
 
+// Watch for modelValue changes to sync form data
 watch(
   () => props.modelValue,
   (val) => {
-    if (val) Object.assign(form, val);
+    if (val) {
+      Object.assign(form, val);
+    }
   },
   { immediate: true, deep: true }
+);
+
+// Watch for modal visibility to reset form when it opens
+watch(
+  () => props.visible,
+  (isVisible) => {
+    if (isVisible && props.modelValue) {
+      // Reset form with modelValue when modal opens
+      Object.keys(form).forEach(key => delete form[key]);
+      Object.assign(form, props.modelValue);
+    }
+  }
 );
 
 function getFieldOptions(field) {
@@ -90,7 +105,13 @@ function handleSubmit() {
 .modal-form {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: var(--space-md);
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
 }
 
 .required {
@@ -113,18 +134,25 @@ function handleSubmit() {
 .checkbox-group {
   display: flex;
   align-items: center;
-  gap: var(--space-xs);
+  gap: var(--space-sm);
+  padding: var(--space-xs) 0;
 }
 
 .checkbox-group input[type="checkbox"] {
-  width: auto;
+  width: 1.5em;
+  height: 1.5em;
   margin: 0;
+  flex-shrink: 0;
+  cursor: pointer;
+  min-width: 1.5em;
+  min-height: 1.5em;
 }
 
 .checkbox-label {
   margin: 0;
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-normal);
   color: var(--color-text);
+  line-height: 1.5;
 }
 
 @media (max-width: 768px) {

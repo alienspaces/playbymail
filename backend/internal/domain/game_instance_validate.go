@@ -51,6 +51,33 @@ func validateGameInstanceRec(rec *game_record.GameInstance, requireID bool) erro
 		)
 	}
 
+	// Validate at least one delivery method is enabled
+	if !rec.DeliveryPhysicalPost && !rec.DeliveryPhysicalLocal && !rec.DeliveryEmail {
+		return InvalidField(
+			game_record.FieldGameInstanceDeliveryPhysicalPost,
+			"false",
+			"at least one delivery method must be enabled (delivery_physical_post, delivery_physical_local, or delivery_email)",
+		)
+	}
+
+	// Validate closed testing requires email delivery
+	if rec.IsClosedTesting && !rec.DeliveryEmail {
+		return InvalidField(
+			game_record.FieldGameInstanceIsClosedTesting,
+			"true",
+			"closed testing requires email delivery to be enabled",
+		)
+	}
+
+	// Validate required_player_count (0 means no check, >= 1 means check is enforced)
+	if rec.RequiredPlayerCount < 0 {
+		return InvalidField(
+			game_record.FieldGameInstanceRequiredPlayerCount,
+			fmt.Sprintf("%d", rec.RequiredPlayerCount),
+			"required_player_count must be 0 or greater",
+		)
+	}
+
 	return nil
 }
 

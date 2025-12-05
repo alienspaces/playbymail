@@ -1,4 +1,4 @@
-import { baseUrl, getAuthHeaders, apiFetch } from './baseUrl';
+import { baseUrl, getAuthHeaders, apiFetch, handleApiError } from './baseUrl';
 
 /**
  * Fetch all creature placements for a game.
@@ -9,7 +9,7 @@ export async function fetchCreaturePlacements(gameId) {
   const res = await apiFetch(`${baseUrl}/api/v1/adventure-games/${encodeURIComponent(gameId)}/creature-placements`, {
     headers: { ...getAuthHeaders() },
   });
-  if (!res.ok) throw new Error('Failed to fetch creature placements');
+  await handleApiError(res, 'Failed to fetch creature placements');
   const json = await res.json();
   return json.data || [];
 }
@@ -26,7 +26,7 @@ export async function createCreaturePlacement(gameId, data) {
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
     body: JSON.stringify(data)
   });
-  if (!res.ok) throw new Error('Failed to create creature placement');
+  await handleApiError(res, 'Failed to create creature placement');
   const json = await res.json();
   return json.data;
 }
@@ -44,7 +44,7 @@ export async function updateCreaturePlacement(gameId, placementId, data) {
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
     body: JSON.stringify(data)
   });
-  if (!res.ok) throw new Error('Failed to update creature placement');
+  await handleApiError(res, 'Failed to update creature placement');
   const json = await res.json();
   return json.data;
 }
@@ -60,5 +60,5 @@ export async function deleteCreaturePlacement(gameId, placementId) {
     method: 'DELETE',
     headers: { ...getAuthHeaders() },
   });
-  if (!res.ok) throw new Error('Failed to delete creature placement');
+  await handleApiError(res, 'Failed to delete creature placement');
 } 

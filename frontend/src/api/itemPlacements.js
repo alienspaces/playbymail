@@ -1,4 +1,4 @@
-import { baseUrl, getAuthHeaders, apiFetch } from './baseUrl';
+import { baseUrl, getAuthHeaders, apiFetch, handleApiError } from './baseUrl';
 
 /**
  * Fetch all item placements for a game.
@@ -9,7 +9,7 @@ export async function fetchItemPlacements(gameId) {
   const res = await apiFetch(`${baseUrl}/api/v1/adventure-games/${encodeURIComponent(gameId)}/item-placements`, {
     headers: { ...getAuthHeaders() },
   });
-  if (!res.ok) throw new Error('Failed to fetch item placements');
+  await handleApiError(res, 'Failed to fetch item placements');
   const json = await res.json();
   return json.data || [];
 }
@@ -26,7 +26,7 @@ export async function createItemPlacement(gameId, data) {
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
     body: JSON.stringify(data)
   });
-  if (!res.ok) throw new Error('Failed to create item placement');
+  await handleApiError(res, 'Failed to create item placement');
   const json = await res.json();
   return json.data;
 }
@@ -44,7 +44,7 @@ export async function updateItemPlacement(gameId, placementId, data) {
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
     body: JSON.stringify(data)
   });
-  if (!res.ok) throw new Error('Failed to update item placement');
+  await handleApiError(res, 'Failed to update item placement');
   const json = await res.json();
   return json.data;
 }
@@ -60,5 +60,5 @@ export async function deleteItemPlacement(gameId, placementId) {
     method: 'DELETE',
     headers: { ...getAuthHeaders() },
   });
-  if (!res.ok) throw new Error('Failed to delete item placement');
+  await handleApiError(res, 'Failed to delete item placement');
 } 

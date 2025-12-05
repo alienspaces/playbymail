@@ -42,6 +42,35 @@
             ],
             "type": "string"
         },
+        "delivery_physical_post": {
+            "type": "boolean"
+        },
+        "delivery_physical_local": {
+            "type": "boolean"
+        },
+        "delivery_email": {
+            "type": "boolean"
+        },
+        "required_player_count": {
+            "minimum": 0,
+            "type": "integer"
+        },
+        "player_count": {
+            "minimum": 0,
+            "type": "integer"
+        },
+        "is_closed_testing": {
+            "type": "boolean"
+        },
+        "join_game_key": {
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "join_game_key_expires_at": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/updated_at"
+        },
         "updated_at": {
             "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/updated_at"
         }
@@ -52,6 +81,12 @@
         "game_subscription_id",
         "status",
         "current_turn",
+        "delivery_physical_post",
+        "delivery_physical_local",
+        "delivery_email",
+        "required_player_count",
+        "player_count",
+        "is_closed_testing",
         "created_at"
     ],
     "additionalProperties": false

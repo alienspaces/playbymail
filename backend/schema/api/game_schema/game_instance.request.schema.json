@@ -32,6 +32,22 @@
                 "cancelled"
             ],
             "type": "string"
+        },
+        "delivery_physical_post": {
+            "type": "boolean"
+        },
+        "delivery_physical_local": {
+            "type": "boolean"
+        },
+        "delivery_email": {
+            "type": "boolean"
+        },
+        "required_player_count": {
+            "minimum": 0,
+            "type": "integer"
+        },
+        "is_closed_testing": {
+            "type": "boolean"
         }
     },
     "required": [

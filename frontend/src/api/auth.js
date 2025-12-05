@@ -1,4 +1,4 @@
-import { baseUrl, getAuthHeaders } from './baseUrl';
+import { baseUrl, getAuthHeaders, handleApiError } from './baseUrl';
 
 /**
  * Get test bypass headers for development mode.
@@ -36,7 +36,7 @@ export async function verifyAuth(email, verification_token) {
     },
     body: JSON.stringify({ email, verification_token }),
   });
-  if (!res.ok) throw new Error('Verification failed');
+  await handleApiError(res, 'Verification failed');
   const data = await res.json();
   return data.session_token;
 }
@@ -52,8 +52,6 @@ export async function refreshSession() {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
   });
-  if (!res.ok) {
-    throw new Error('Session refresh failed');
-  }
+  await handleApiError(res, 'Session refresh failed');
   return await res.json();
 } 

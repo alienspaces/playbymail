@@ -82,6 +82,18 @@ func (t *Testing) applyGameInstanceRecDefaultValues(rec *game_record.GameInstanc
 		rec.Status = game_record.GameInstanceStatusCreated
 	}
 
+	// Set default delivery methods if not already set (default to physical_post for backward compatibility)
+	if !rec.DeliveryPhysicalPost && !rec.DeliveryPhysicalLocal && !rec.DeliveryEmail {
+		rec.DeliveryPhysicalPost = true
+	}
+
+	// Set default required_player_count to 0 for tests (no check)
+	// Tests can explicitly set required_player_count > 0 if they want to test that feature
+	// Production code will set required_player_count >= 1 when creating instances
+	if rec.RequiredPlayerCount == 0 {
+		rec.RequiredPlayerCount = 0
+	}
+
 	// Set timestamps if not already set
 	now := time.Now()
 	if rec.CreatedAt.IsZero() {

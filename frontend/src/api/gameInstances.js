@@ -1,10 +1,10 @@
-import { baseUrl, getAuthHeaders, apiFetch } from './baseUrl';
+import { baseUrl, getAuthHeaders, apiFetch, handleApiError } from './baseUrl';
 
 export async function listAllGameInstances() {
   const res = await apiFetch(`${baseUrl}/api/v1/game-instances`, {
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
   });
-  if (!res.ok) throw new Error('Failed to fetch all game instances');
+  await handleApiError(res, 'Failed to fetch all game instances');
   return await res.json();
 }
 
@@ -12,7 +12,7 @@ export async function listGameInstances(gameId) {
   const res = await apiFetch(`${baseUrl}/api/v1/games/${gameId}/instances`, {
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
   });
-  if (!res.ok) throw new Error('Failed to fetch game instances');
+  await handleApiError(res, 'Failed to fetch game instances');
   return await res.json();
 }
 
@@ -20,7 +20,7 @@ export async function getGameInstance(gameId, instanceId) {
   const res = await apiFetch(`${baseUrl}/api/v1/games/${gameId}/instances/${instanceId}`, {
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
   });
-  if (!res.ok) throw new Error('Failed to fetch game instance');
+  await handleApiError(res, 'Failed to fetch game instance');
   return await res.json();
 }
 
@@ -30,7 +30,7 @@ export async function createGameInstance(gameId, data) {
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
     body: JSON.stringify(data),
   });
-  if (!res.ok) throw new Error('Failed to create game instance');
+  await handleApiError(res, 'Failed to create game instance');
   return await res.json();
 }
 
@@ -40,7 +40,7 @@ export async function updateGameInstance(gameId, instanceId, data) {
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
     body: JSON.stringify(data),
   });
-  if (!res.ok) throw new Error('Failed to update game instance');
+  await handleApiError(res, 'Failed to update game instance');
   return await res.json();
 }
 
@@ -49,7 +49,7 @@ export async function deleteGameInstance(gameId, instanceId) {
     method: 'DELETE',
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
   });
-  if (!res.ok) throw new Error('Failed to delete game instance');
+  await handleApiError(res, 'Failed to delete game instance');
   return await res.json();
 }
 
@@ -59,7 +59,7 @@ export async function startGameInstance(gameId, instanceId) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
   });
-  if (!res.ok) throw new Error('Failed to start game instance');
+  await handleApiError(res, 'Failed to start game instance');
   return await res.json();
 }
 
@@ -68,7 +68,7 @@ export async function pauseGameInstance(gameId, instanceId) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
   });
-  if (!res.ok) throw new Error('Failed to pause game instance');
+  await handleApiError(res, 'Failed to pause game instance');
   return await res.json();
 }
 
@@ -77,7 +77,7 @@ export async function resumeGameInstance(gameId, instanceId) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
   });
-  if (!res.ok) throw new Error('Failed to resume game instance');
+  await handleApiError(res, 'Failed to resume game instance');
   return await res.json();
 }
 
@@ -86,6 +86,6 @@ export async function cancelGameInstance(gameId, instanceId) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
   });
-  if (!res.ok) throw new Error('Failed to cancel game instance');
+  await handleApiError(res, 'Failed to cancel game instance');
   return await res.json();
 } 

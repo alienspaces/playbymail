@@ -1,4 +1,4 @@
-import { baseUrl, getAuthHeaders, apiFetch } from './baseUrl';
+import { baseUrl, getAuthHeaders, apiFetch, handleApiError } from './baseUrl';
 
 /**
  * Upload a turn sheet background image for a game
@@ -20,10 +20,7 @@ export async function uploadGameTurnSheetImage(gameId, imageFile, turnSheetType 
     body: formData,
   });
 
-  if (!res.ok) {
-    const errorData = await res.json().catch(() => ({}));
-    throw new Error(errorData.error?.message || 'Failed to upload image');
-  }
+  await handleApiError(res, 'Failed to upload image');
 
   return await res.json();
 }
@@ -44,10 +41,7 @@ export async function getGameTurnSheetImages(gameId, turnSheetType = null) {
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
   });
 
-  if (!res.ok) {
-    const errorData = await res.json().catch(() => ({}));
-    throw new Error(errorData.error?.message || 'Failed to fetch turn sheet images');
-  }
+  await handleApiError(res, 'Failed to fetch turn sheet images');
 
   return await res.json();
 }
@@ -63,10 +57,7 @@ export async function getGameTurnSheetImage(gameId, imageId) {
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
   });
 
-  if (!res.ok) {
-    const errorData = await res.json().catch(() => ({}));
-    throw new Error(errorData.error?.message || 'Failed to fetch turn sheet image');
-  }
+  await handleApiError(res, 'Failed to fetch turn sheet image');
 
   return await res.json();
 }
@@ -83,9 +74,8 @@ export async function deleteGameTurnSheetImage(gameId, imageId) {
     headers: { ...getAuthHeaders() },
   });
 
-  if (!res.ok && res.status !== 204) {
-    const errorData = await res.json().catch(() => ({}));
-    throw new Error(errorData.error?.message || 'Failed to delete turn sheet image');
+  if (res.status !== 204) {
+    await handleApiError(res, 'Failed to delete turn sheet image');
   }
 }
 

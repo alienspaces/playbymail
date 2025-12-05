@@ -26,6 +26,13 @@ const (
 	FieldGameInstanceCreatedAt           string = "created_at"
 	FieldGameInstanceUpdatedAt           string = "updated_at"
 	FieldGameInstanceDeletedAt           string = "deleted_at"
+	FieldGameInstanceDeliveryPhysicalPost  string = "delivery_physical_post"
+	FieldGameInstanceDeliveryPhysicalLocal string = "delivery_physical_local"
+	FieldGameInstanceDeliveryEmail         string = "delivery_email"
+	FieldGameInstanceRequiredPlayerCount string = "required_player_count"
+	FieldGameInstanceIsClosedTesting     string = "is_closed_testing"
+	FieldGameInstanceJoinGameKey         string = "join_game_key"
+	FieldGameInstanceJoinGameKeyExpiresAt string = "join_game_key_expires_at"
 )
 
 // Game instance status constants
@@ -39,14 +46,21 @@ const (
 
 type GameInstance struct {
 	record.Record
-	GameID              string       `db:"game_id"`
-	GameSubscriptionID  string       `db:"game_subscription_id"`
-	Status              string       `db:"status"`
-	CurrentTurn         int          `db:"current_turn"`
-	LastTurnProcessedAt sql.NullTime `db:"last_turn_processed_at"`
-	NextTurnDueAt       sql.NullTime `db:"next_turn_due_at"`
-	StartedAt           sql.NullTime `db:"started_at"`
-	CompletedAt         sql.NullTime `db:"completed_at"`
+	GameID                  string       `db:"game_id"`
+	GameSubscriptionID      string       `db:"game_subscription_id"`
+	Status                  string       `db:"status"`
+	CurrentTurn             int          `db:"current_turn"`
+	LastTurnProcessedAt     sql.NullTime `db:"last_turn_processed_at"`
+	NextTurnDueAt           sql.NullTime `db:"next_turn_due_at"`
+	StartedAt                  sql.NullTime `db:"started_at"`
+	CompletedAt                sql.NullTime `db:"completed_at"`
+	DeliveryPhysicalPost       bool         `db:"delivery_physical_post"`
+	DeliveryPhysicalLocal      bool         `db:"delivery_physical_local"`
+	DeliveryEmail              bool         `db:"delivery_email"`
+	RequiredPlayerCount        int          `db:"required_player_count"`
+	IsClosedTesting            bool         `db:"is_closed_testing"`
+	JoinGameKey                sql.NullString `db:"join_game_key"`
+	JoinGameKeyExpiresAt       sql.NullTime `db:"join_game_key_expires_at"`
 }
 
 func (r *GameInstance) ToNamedArgs() pgx.NamedArgs {
@@ -59,5 +73,12 @@ func (r *GameInstance) ToNamedArgs() pgx.NamedArgs {
 	args[FieldGameInstanceNextTurnDueAt] = r.NextTurnDueAt
 	args[FieldGameInstanceStartedAt] = r.StartedAt
 	args[FieldGameInstanceCompletedAt] = r.CompletedAt
+	args[FieldGameInstanceDeliveryPhysicalPost] = r.DeliveryPhysicalPost
+	args[FieldGameInstanceDeliveryPhysicalLocal] = r.DeliveryPhysicalLocal
+	args[FieldGameInstanceDeliveryEmail] = r.DeliveryEmail
+	args[FieldGameInstanceRequiredPlayerCount] = r.RequiredPlayerCount
+	args[FieldGameInstanceIsClosedTesting] = r.IsClosedTesting
+	args[FieldGameInstanceJoinGameKey] = r.JoinGameKey
+	args[FieldGameInstanceJoinGameKeyExpiresAt] = r.JoinGameKeyExpiresAt
 	return args
 }

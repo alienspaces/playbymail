@@ -1,6 +1,8 @@
 package game
 
 import (
+	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/jackc/pgx/v5"
@@ -14,6 +16,8 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/type/domainer"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
 	"gitlab.com/alienspaces/playbymail/internal/domain"
+	"gitlab.com/alienspaces/playbymail/internal/jobqueue"
+	"gitlab.com/alienspaces/playbymail/internal/jobworker"
 	"gitlab.com/alienspaces/playbymail/internal/mapper"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 	"gitlab.com/alienspaces/playbymail/internal/utils/logging"
@@ -48,6 +52,8 @@ const (
 	PauseGameInstance       = "pause-game-instance"
 	ResumeGameInstance      = "resume-game-instance"
 	CancelGameInstance      = "cancel-game-instance"
+	GetJoinGameLink         = "get-join-game-link"
+	InviteTester            = "invite-tester"
 )
 
 func gameInstanceHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error) {
@@ -255,6 +261,40 @@ func gameInstanceHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig
 		},
 	}
 
+	gameInstanceConfig[GetJoinGameLink] = server.HandlerConfig{
+		Method:      http.MethodGet,
+		Path:        "/api/v1/games/:game_id/instances/:instance_id/join-link",
+		HandlerFunc: getJoinGameLinkHandler,
+		MiddlewareConfig: server.MiddlewareConfig{
+			AuthenTypes: []server.AuthenticationType{
+				server.AuthenticationTypeToken,
+			},
+		},
+		DocumentationConfig: server.DocumentationConfig{
+			Document: true,
+			Title:    "Get join game link",
+			Description: "Get the join game link for a closed testing game instance. " +
+				"Returns the URL that can be shared with testers to join the game.",
+		},
+	}
+
+	gameInstanceConfig[InviteTester] = server.HandlerConfig{
+		Method:      http.MethodPost,
+		Path:        "/api/v1/games/:game_id/instances/:instance_id/invite-tester",
+		HandlerFunc: inviteTesterHandler,
+		MiddlewareConfig: server.MiddlewareConfig{
+			AuthenTypes: []server.AuthenticationType{
+				server.AuthenticationTypeToken,
+			},
+		},
+		DocumentationConfig: server.DocumentationConfig{
+			Document: true,
+			Title:    "Invite tester",
+			Description: "Send an email invitation to a tester for a closed testing game instance. " +
+				"The email will include a join game link.",
+		},
+	}
+
 	return gameInstanceConfig, nil
 }
 
@@ -270,7 +310,11 @@ func searchManyGameInstancesHandler(w http.ResponseWriter, r *http.Request, pp h
 		return err
 	}
 
-	res, err := mapper.GameInstanceRecordsToCollectionResponse(l, recs)
+	getPlayerCount := func(instanceID string) (int, error) {
+		return mm.GetPlayerCountForGameInstance(instanceID)
+	}
+
+	res, err := mapper.GameInstanceRecordsToCollectionResponse(l, recs, getPlayerCount)
 	if err != nil {
 		return err
 	}
@@ -305,7 +349,11 @@ func getManyGameInstancesHandler(w http.ResponseWriter, r *http.Request, pp http
 		return err
 	}
 
-	res, err := mapper.GameInstanceRecordsToCollectionResponse(l, recs)
+	getPlayerCount := func(instanceID string) (int, error) {
+		return mm.GetPlayerCountForGameInstance(instanceID)
+	}
+
+	res, err := mapper.GameInstanceRecordsToCollectionResponse(l, recs, getPlayerCount)
 	if err != nil {
 		return err
 	}
@@ -344,7 +392,14 @@ func getOneGameInstanceHandler(w http.ResponseWriter, r *http.Request, pp httpro
 		return coreerror.NewNotFoundError("game instance", instanceID)
 	}
 
-	res, err := mapper.GameInstanceRecordToResponse(l, rec)
+	playerCount, err := mm.GetPlayerCountForGameInstance(instanceID)
+	if err != nil {
+		l.Warn("failed to get player count for game instance >%s< >%v<", instanceID, err)
+		// Continue with 0 if we can't get the count
+		playerCount = 0
+	}
+
+	res, err := mapper.GameInstanceRecordToResponse(l, rec, playerCount)
 	if err != nil {
 		return err
 	}
@@ -393,13 +448,29 @@ func createOneGameInstanceHandler(w http.ResponseWriter, r *http.Request, pp htt
 		GameSubscriptionID: managerSubscription.ID,
 	}
 
+	// Map request data to record
+	rec, err = mapper.GameInstanceRequestToRecord(l, r, rec)
+	if err != nil {
+		l.Warn("failed mapping request to record >%v<", err)
+		return coreerror.NewInvalidDataError("invalid request data")
+	}
+
+	l.Debug("mapped request to record: delivery_physical_post=%v, delivery_physical_local=%v, delivery_email=%v",
+		rec.DeliveryPhysicalPost, rec.DeliveryPhysicalLocal, rec.DeliveryEmail)
+
 	rec, err = mm.CreateGameInstanceRec(rec)
 	if err != nil {
 		l.Warn("failed creating game instance record >%v<", err)
 		return err
 	}
 
-	res, err := mapper.GameInstanceRecordToResponse(l, rec)
+	playerCount, err := mm.GetPlayerCountForGameInstance(rec.ID)
+	if err != nil {
+		l.Warn("failed to get player count for game instance >%s< >%v<", rec.ID, err)
+		playerCount = 0
+	}
+
+	res, err := mapper.GameInstanceRecordToResponse(l, rec, playerCount)
 	if err != nil {
 		return err
 	}
@@ -442,7 +513,13 @@ func updateOneGameInstanceHandler(w http.ResponseWriter, r *http.Request, pp htt
 		return err
 	}
 
-	res, err := mapper.GameInstanceRecordToResponse(l, rec)
+	playerCount, err := mm.GetPlayerCountForGameInstance(instanceID)
+	if err != nil {
+		l.Warn("failed to get player count for game instance >%s< >%v<", instanceID, err)
+		playerCount = 0
+	}
+
+	res, err := mapper.GameInstanceRecordToResponse(l, rec, playerCount)
 	if err != nil {
 		return err
 	}
@@ -513,8 +590,14 @@ func startGameInstanceHandler(w http.ResponseWriter, r *http.Request, pp httprou
 		return err
 	}
 
+	playerCount, err := mm.GetPlayerCountForGameInstance(instanceID)
+	if err != nil {
+		l.Warn("failed to get player count for game instance >%s< >%v<", instanceID, err)
+		playerCount = 0
+	}
+
 	// Convert to response
-	res, err := mapper.GameInstanceRecordToResponse(l, instance)
+	res, err := mapper.GameInstanceRecordToResponse(l, instance, playerCount)
 	if err != nil {
 		return err
 	}
@@ -551,8 +634,14 @@ func pauseGameInstanceHandler(w http.ResponseWriter, r *http.Request, pp httprou
 		return err
 	}
 
+	playerCount, err := mm.GetPlayerCountForGameInstance(instanceID)
+	if err != nil {
+		l.Warn("failed to get player count for game instance >%s< >%v<", instanceID, err)
+		playerCount = 0
+	}
+
 	// Convert to response
-	res, err := mapper.GameInstanceRecordToResponse(l, instance)
+	res, err := mapper.GameInstanceRecordToResponse(l, instance, playerCount)
 	if err != nil {
 		return err
 	}
@@ -589,8 +678,14 @@ func resumeGameInstanceHandler(w http.ResponseWriter, r *http.Request, pp httpro
 		return err
 	}
 
+	playerCount, err := mm.GetPlayerCountForGameInstance(instanceID)
+	if err != nil {
+		l.Warn("failed to get player count for game instance >%s< >%v<", instanceID, err)
+		playerCount = 0
+	}
+
 	// Convert to response
-	res, err := mapper.GameInstanceRecordToResponse(l, instance)
+	res, err := mapper.GameInstanceRecordToResponse(l, instance, playerCount)
 	if err != nil {
 		return err
 	}
@@ -627,13 +722,162 @@ func cancelGameInstanceHandler(w http.ResponseWriter, r *http.Request, pp httpro
 		return err
 	}
 
+	playerCount, err := mm.GetPlayerCountForGameInstance(instanceID)
+	if err != nil {
+		l.Warn("failed to get player count for game instance >%s< >%v<", instanceID, err)
+		playerCount = 0
+	}
+
 	// Convert to response
-	res, err := mapper.GameInstanceRecordToResponse(l, instance)
+	res, err := mapper.GameInstanceRecordToResponse(l, instance, playerCount)
 	if err != nil {
 		return err
 	}
 
 	if err = server.WriteResponse(l, w, http.StatusOK, res); err != nil {
+		l.Warn("failed writing response >%v<", err)
+		return err
+	}
+
+	return nil
+}
+
+// getJoinGameLinkHandler returns the join game link for a closed testing game instance
+func getJoinGameLinkHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
+	l = logging.LoggerWithFunctionContext(l, packageName, "getJoinGameLinkHandler")
+
+	l.Info("getting join game link")
+
+	// Get path parameters
+	gameID := pp.ByName("game_id")
+	instanceID := pp.ByName("instance_id")
+
+	if gameID == "" || instanceID == "" {
+		l.Warn("game id and instance id are required")
+		return coreerror.NewNotFoundError("game instance", instanceID)
+	}
+
+	mm := m.(*domain.Domain)
+
+	// Get the game instance
+	instance, err := mm.GetGameInstanceRec(instanceID, nil)
+	if err != nil {
+		l.Warn("failed to get game instance >%v<", err)
+		return err
+	}
+
+	// Validate it's in closed testing mode
+	if !instance.IsClosedTesting {
+		return coreerror.NewInvalidDataError("game instance is not in closed testing mode")
+	}
+
+	// Generate join game key if it doesn't exist
+	if !instance.JoinGameKey.Valid || instance.JoinGameKey.String == "" {
+		_, err = mm.GenerateJoinGameKey(instanceID)
+		if err != nil {
+			l.Warn("failed to generate join game key >%v<", err)
+			return err
+		}
+		// Re-fetch to get the new key
+		instance, err = mm.GetGameInstanceRec(instanceID, nil)
+		if err != nil {
+			l.Warn("failed to get game instance after key generation >%v<", err)
+			return err
+		}
+	}
+
+	// Build join game URL
+	joinURL := fmt.Sprintf("/player/join-game/%s", instance.JoinGameKey.String)
+
+	// Return response
+	response := map[string]interface{}{
+		"join_game_url": joinURL,
+		"join_game_key": instance.JoinGameKey.String,
+	}
+
+	if err = server.WriteResponse(l, w, http.StatusOK, response); err != nil {
+		l.Warn("failed writing response >%v<", err)
+		return err
+	}
+
+	return nil
+}
+
+// inviteTesterHandler sends an email invitation to a tester
+func inviteTesterHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
+	l = logging.LoggerWithFunctionContext(l, packageName, "inviteTesterHandler")
+
+	l.Info("inviting tester")
+
+	// Get path parameters
+	gameID := pp.ByName("game_id")
+	instanceID := pp.ByName("instance_id")
+
+	if gameID == "" || instanceID == "" {
+		l.Warn("game id and instance id are required")
+		return coreerror.NewNotFoundError("game instance", instanceID)
+	}
+
+	mm := m.(*domain.Domain)
+
+	// Get the game instance
+	instance, err := mm.GetGameInstanceRec(instanceID, nil)
+	if err != nil {
+		l.Warn("failed to get game instance >%v<", err)
+		return err
+	}
+
+	// Validate it's in closed testing mode
+	if !instance.IsClosedTesting {
+		return coreerror.NewInvalidDataError("game instance is not in closed testing mode")
+	}
+
+	// Read request body for email
+	var req struct {
+		Email string `json:"email"`
+	}
+	_, err = server.ReadRequest(l, r, &req)
+	if err != nil {
+		return err
+	}
+
+	if req.Email == "" {
+		return coreerror.NewInvalidDataError("email is required")
+	}
+
+	// Generate join game key if it doesn't exist
+	if !instance.JoinGameKey.Valid || instance.JoinGameKey.String == "" {
+		_, err = mm.GenerateJoinGameKey(instanceID)
+		if err != nil {
+			l.Warn("failed to generate join game key >%v<", err)
+			return err
+		}
+		// Re-fetch to get the new key
+		instance, err = mm.GetGameInstanceRec(instanceID, nil)
+		if err != nil {
+			l.Warn("failed to get game instance after key generation >%v<", err)
+			return err
+		}
+	}
+
+	// Queue email job
+	l.Info("queuing tester invitation email for >%s< game instance >%s<", req.Email, instanceID)
+
+	_, err = jc.InsertTx(context.Background(), mm.Tx, &jobworker.SendTesterInvitationEmailWorkerArgs{
+		GameInstanceID: instanceID,
+		Email:          req.Email,
+	}, &river.InsertOpts{Queue: jobqueue.QueueDefault})
+	if err != nil {
+		l.Warn("failed to enqueue tester invitation email job >%v<", err)
+		return coreerror.NewInternalError("failed to queue tester invitation email: %v", err)
+	}
+
+	response := map[string]interface{}{
+		"message": "tester invitation queued",
+		"email":   req.Email,
+	}
+
+	if err = server.WriteResponse(l, w, http.StatusOK, response); err != nil {
 		l.Warn("failed writing response >%v<", err)
 		return err
 	}

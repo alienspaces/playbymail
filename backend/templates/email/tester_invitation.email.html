@@ -1,0 +1,32 @@
+{{define "content"}}
+<div style="font-weight: 700; font-size: 24px; line-height: 30px; margin-bottom: 24px; color: #11181C;">
+    You're invited to test {{.GameName}}
+</div>
+<div style="font-size: 16px; line-height: 24px; margin-bottom: 24px; color: #11181C;">
+    You've been invited to participate in closed testing for <strong>{{.GameName}}</strong>.
+    <br /><br />
+    Click the button below to join the game and fill out your turn sheet.
+</div>
+<div style="text-align: center; margin: 32px 0;">
+    <a href="{{.JoinURL}}" style="display: inline-block; background: #006ECD; color: #FFFFFF; font-size: 16px; font-weight: 600; text-decoration: none; padding: 12px 32px; border-radius: 8px; line-height: 24px;">
+        Join Game
+    </a>
+</div>
+<div style="font-size: 14px; line-height: 20px; color: #6B7280; margin-bottom: 24px; padding: 16px; background: #F5F7FA; border-radius: 8px;">
+    <strong>Note:</strong> If the button doesn't work, you can copy and paste this link into your browser:<br />
+    <a href="{{.JoinURL}}" style="color: #006ECD; word-break: break-all;">{{.JoinURL}}</a>
+</div>
+<div style="font-size: 16px; line-height: 24px; margin-bottom: 24px; color: #11181C;">
+    This is a closed testing invitation. If you did not expect this invitation, you can safely ignore this email.
+</div>
+{{end}}
+
+{{define "footer"}}
+<div style="margin-bottom: 8px;">
+    For help or questions, contact us at <a href="mailto:{{.SupportEmail}}" style="color: #006ECD; text-decoration: none;">{{.SupportEmail}}</a>.
+</div>
+<div>
+    &copy; {{.Year}} PlayByMail. All rights reserved.
+</div>
+{{end}}
+

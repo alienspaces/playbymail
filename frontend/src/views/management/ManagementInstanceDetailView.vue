@@ -30,42 +30,63 @@
 
     <!-- Instance details -->
     <div v-else-if="instance" class="instance-details">
-      <!-- Status and Progress Section -->
-      <DataCard title="Status & Progress">
-        <div class="status-grid">
-          <div class="status-item">
+      <!-- Instance Information Section -->
+      <DataCard :title="`Instance - ${instance.id.slice(0, 8)}...`">
+        <div class="instance-info-grid">
+          <div class="info-item">
+            <span class="label">Instance ID</span>
+            <span class="value instance-id">{{ instance.id }}</span>
+          </div>
+          <div class="info-item">
             <span class="label">Status</span>
             <span :class="['status-badge', `status-${instance.status}`]">
               {{ getStatusLabel(instance.status) }}
             </span>
           </div>
-          <div class="status-item">
+          <div class="info-item">
             <span class="label">Current Turn</span>
             <span class="value">{{ instance.current_turn }}</span>
           </div>
-          <div class="status-item" v-if="instance.next_turn_due_at">
+          <div class="info-item">
+            <span class="label">Players</span>
+            <span class="value">
+              {{ instance.player_count || 0 }}{{ instance.required_player_count > 0 ? ` / ${instance.required_player_count}` : '' }}
+            </span>
+          </div>
+          <div class="info-item">
+            <span class="label">Delivery Methods</span>
+            <span class="delivery-methods">
+              <span v-if="instance.delivery_physical_post" class="delivery-badge delivery-physical-post">Post</span>
+              <span v-if="instance.delivery_physical_local" class="delivery-badge delivery-physical-local">Local</span>
+              <span v-if="instance.delivery_email" class="delivery-badge delivery-email">Email</span>
+              <span v-if="!instance.delivery_physical_post && !instance.delivery_physical_local && !instance.delivery_email" class="no-delivery-methods">
+                <em>None</em>
+              </span>
+            </span>
+          </div>
+          <div class="info-item">
+            <span class="label">Closed Testing</span>
+            <span :class="['testing-badge', instance.is_closed_testing ? 'testing-enabled' : 'testing-disabled']">
+              {{ instance.is_closed_testing ? 'Enabled' : 'Disabled' }}
+            </span>
+          </div>
+          <div class="info-item" v-if="instance.next_turn_due_at">
             <span class="label">Next Turn Due</span>
             <span class="value">{{ formatDeadline(instance.next_turn_due_at) }}</span>
           </div>
-        </div>
-      </DataCard>
-
-      <!-- Timeline Section -->
-      <DataCard title="Timeline">
-        <div class="timeline-grid">
-          <div class="timeline-item">
+          <div class="info-item">
             <span class="label">Created</span>
             <span class="value">{{ formatDate(instance.created_at) }}</span>
           </div>
-          <div class="timeline-item" v-if="instance.started_at">
+          <div class="info-item" v-if="instance.started_at">
             <span class="label">Started</span>
             <span class="value">{{ formatDate(instance.started_at) }}</span>
           </div>
-          <div class="timeline-item" v-if="instance.last_turn_processed_at">
+          <div class="info-item" v-if="instance.last_turn_processed_at">
             <span class="label">Last Turn Processed</span>
             <span class="value">{{ formatDate(instance.last_turn_processed_at) }}</span>
           </div>
-          <div class="timeline-item" v-if="instance.completed_at">
+          <div class="info-item" v-if="instance.completed_at">
             <span class="label">Completed</span>
             <span class="value">{{ formatDate(instance.completed_at) }}</span>
           </div>
@@ -579,6 +600,12 @@ const getEditingParameterDefault = () => {
   gap: var(--space-xl);
 }
 
+.instance-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: var(--space-md);
+}
+
 .status-grid,
 .timeline-grid {
   display: grid;
@@ -613,11 +640,18 @@ const getEditingParameterDefault = () => {
   gap: var(--space-xs);
 }
 
+.info-item,
 .status-item,
 .timeline-item {
   display: flex;
   flex-direction: column;
   gap: var(--space-xs);
+}
+
+.instance-id {
+  font-family: monospace;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
 }
 
 .label {
@@ -919,5 +953,59 @@ const getEditingParameterDefault = () => {
   font-size: var(--font-size-xs);
   color: var(--color-text-muted);
   margin-top: var(--space-xs);
+}
+
+.delivery-methods {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  align-items: center;
+}
+
+.delivery-badge {
+  display: inline-block;
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  text-transform: uppercase;
+  color: white;
+}
+
+.delivery-physical-post {
+  background: var(--color-primary);
+}
+
+.delivery-physical-local {
+  background: var(--color-info);
+}
+
+.delivery-email {
+  background: var(--color-success);
+}
+
+.no-delivery-methods {
+  color: var(--color-text-muted);
+  font-style: italic;
+  font-size: var(--font-size-sm);
+}
+
+.testing-badge {
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  text-transform: uppercase;
+  display: inline-block;
+}
+
+.testing-enabled {
+  background: var(--color-warning-light);
+  color: var(--color-warning);
+}
+
+.testing-disabled {
+  background: var(--color-bg-light);
+  color: var(--color-text-muted);
 }
 </style>
