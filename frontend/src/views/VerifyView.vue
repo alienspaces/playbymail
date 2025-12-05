@@ -43,7 +43,8 @@ export default {
       try {
         const sessionToken = await verifyAuth(this.email, this.code);
         this.authStore.setSessionToken(sessionToken);
-        this.$router.push('/');
+        const redirect = this.$route.query.redirect || '/';
+        this.$router.push(redirect);
       } catch {
         this.message = 'Invalid code or verification failed.';
       } finally {

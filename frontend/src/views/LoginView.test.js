@@ -145,6 +145,34 @@ describe('LoginView', () => {
     })
   })
 
+  it('preserves redirect parameter when navigating to verify page', async () => {
+    const { requestAuth } = await import('../api/auth')
+    requestAuth.mockResolvedValue(true)
+
+    const mockPush = vi.fn()
+    const wrapper = mount(LoginView, {
+      global: {
+        mocks: {
+          $route: { query: { redirect: '/studio' } },
+          $router: {
+            push: mockPush
+          }
+        }
+      }
+    })
+
+    const emailInput = wrapper.find('#email')
+    await emailInput.setValue('test@example.com')
+
+    const form = wrapper.find('form')
+    await form.trigger('submit')
+
+    expect(mockPush).toHaveBeenCalledWith({
+      path: '/verify',
+      query: { email: 'test@example.com', redirect: '/studio' }
+    })
+  })
+
   it('clears message when form is submitted', async () => {
     const { requestAuth } = await import('../api/auth')
     requestAuth.mockResolvedValue(true)

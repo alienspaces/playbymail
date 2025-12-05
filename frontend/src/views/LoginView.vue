@@ -51,7 +51,12 @@ export default {
       try {
         const ok = await requestAuth(this.email);
         if (ok) {
-          this.$router.push({ path: '/verify', query: { email: this.email } });
+          const query = { email: this.email };
+          const redirect = this.$route.query.redirect;
+          if (redirect) {
+            query.redirect = redirect;
+          }
+          this.$router.push({ path: '/verify', query });
         } else {
           this.message = 'Failed to send verification email.';
         }
