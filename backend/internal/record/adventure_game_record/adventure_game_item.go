@@ -15,6 +15,7 @@ const (
 	FieldAdventureGameItemCanBeEquipped = "can_be_equipped"
 	FieldAdventureGameItemCategory    = "item_category"
 	FieldAdventureGameItemEquipmentSlot = "equipment_slot"
+	FieldAdventureGameItemIsStartingItem = "is_starting_item"
 )
 
 type AdventureGameItem struct {
@@ -25,6 +26,7 @@ type AdventureGameItem struct {
 	CanBeEquipped bool    `db:"can_be_equipped"`
 	ItemCategory  *string `db:"item_category"`
 	EquipmentSlot *string `db:"equipment_slot"`
+	IsStartingItem bool   `db:"is_starting_item"`
 }
 
 func (r *AdventureGameItem) ToNamedArgs() pgx.NamedArgs {
@@ -35,5 +37,6 @@ func (r *AdventureGameItem) ToNamedArgs() pgx.NamedArgs {
 	args[FieldAdventureGameItemCanBeEquipped] = r.CanBeEquipped
 	args[FieldAdventureGameItemCategory] = r.ItemCategory
 	args[FieldAdventureGameItemEquipmentSlot] = r.EquipmentSlot
+	args[FieldAdventureGameItemIsStartingItem] = r.IsStartingItem
 	return args
 }

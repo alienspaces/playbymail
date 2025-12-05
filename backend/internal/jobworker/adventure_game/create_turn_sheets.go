@@ -64,6 +64,8 @@ func (p *AdventureGame) createCharacterTurnSheets(ctx context.Context, gameInsta
 	var createdTurnSheets []*game_record.GameTurnSheet
 
 	// For each turn sheet type that has a processor, create a turn sheet for this character
+	// This includes location_choice and inventory_management turn sheets
+	// Inventory turn sheets are always generated (characters always have items or items are always available to pick up)
 	for turnSheetType := range p.Processors {
 		// Join game turn sheets are handled through the subscription workflow, not turn processing.
 		if turnSheetType == adventure_game_record.AdventureGameTurnSheetTypeJoinGame {

@@ -10,8 +10,7 @@
     <div v-else class="game-table-section">
       <GameContext :gameName="selectedGame.name" />
       <PageHeader title="Items" actionText="Create New Item" :showIcon="false" titleLevel="h2" @action="openCreate" />
-      <ResourceTable :columns="columns" :rows="itemsStore.items" :loading="itemsStore.loading"
-        :error="itemsStore.error">
+      <ResourceTable :columns="columns" :rows="formattedItems" :loading="itemsStore.loading" :error="itemsStore.error">
         <template #cell-name="{ row }">
           <a href="#" class="edit-link" @click.prevent="openEdit(row)">{{ row.name }}</a>
         </template>
@@ -31,7 +30,7 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useItemsStore } from '../../../stores/items';
 import { useGamesStore } from '../../../stores/games';
@@ -46,19 +45,29 @@ const itemsStore = useItemsStore();
 const gamesStore = useGamesStore();
 const { selectedGame } = storeToRefs(gamesStore);
 
+// Format items for table display
+const formattedItems = computed(() => {
+  return itemsStore.items.map(item => ({
+    ...item,
+    is_starting_item: item.is_starting_item ? 'Yes' : 'No'
+  }));
+});
+
 const columns = [
   { key: 'name', label: 'Name' },
-  { key: 'description', label: 'Description' }
+  { key: 'description', label: 'Description' },
+  { key: 'is_starting_item', label: 'Starting Item' }
 ];
 
 const fields = [
   { key: 'name', label: 'Name', required: true, maxlength: 1024 },
-  { key: 'description', label: 'Description', required: true, maxlength: 4096, type: 'textarea' }
+  { key: 'description', label: 'Description', required: true, maxlength: 4096, type: 'textarea' },
+  { key: 'is_starting_item', label: 'Starting Item', type: 'checkbox', help: 'If checked, this item will be automatically assigned to characters when they join the game' }
 ];
 
 const showModal = ref(false);
 const modalMode = ref('create');
-const modalForm = ref({ name: '', description: '' });
+const modalForm = ref({ name: '', description: '', is_starting_item: false });
 const modalError = ref('');
 const showDeleteModal = ref(false);
 const itemToDelete = ref(null);
@@ -76,7 +85,7 @@ watch(
 
 function openCreate() {
   modalMode.value = 'create';
-  modalForm.value = { name: '', description: '' };
+  modalForm.value = { name: '', description: '', is_starting_item: false };
   modalError.value = '';
   showModal.value = true;
 }
@@ -111,7 +120,7 @@ function getActions(row) {
 
 function closeModal() {
   showModal.value = false;
-  modalForm.value = { name: '', description: '' };
+  modalForm.value = { name: '', description: '', is_starting_item: false };
   modalError.value = '';
 }
 

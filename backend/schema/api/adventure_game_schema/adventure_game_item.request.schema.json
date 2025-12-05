@@ -11,6 +11,9 @@
             "maxLength": 255,
             "minLength": 1,
             "type": "string"
+        },
+        "is_starting_item": {
+            "type": "boolean"
         }
     },
     "required": [

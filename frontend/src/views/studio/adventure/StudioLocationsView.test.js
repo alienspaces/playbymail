@@ -1,16 +1,21 @@
 // StudioLocationsView.test.js
-// This test file follows the same pattern as StudioItemsView.test.js and StudioCreaturesView.test.js.
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { shallowMount } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
 import StudioLocationsView from './StudioLocationsView.vue';
-import ResourceTable from '../../../components/ResourceTable.vue';
-import ResourceModalForm from '../../../components/ResourceModalForm.vue';
+import {
+  createStudioResourceMountHelper,
+  setupGamesStore,
+  setupStore,
+  waitForVueUpdate
+} from '../../../test-utils/studio-resource-helpers';
+
+const mockLocations = [
+  { id: 'loc1', name: 'Cave', description: 'Dark cave', created_at: '2024-07-10T12:00:00Z' }
+];
 
 vi.mock('../../../api/locations', () => ({
-  fetchLocations: vi.fn(async () => [
-    { id: 'loc1', name: 'Cave', description: 'Dark cave', created_at: '2024-07-10T12:00:00Z' }
-  ]),
+  fetchLocations: vi.fn(async () => mockLocations),
   createLocation: vi.fn(),
   updateLocation: vi.fn(),
   deleteLocation: vi.fn()
@@ -21,17 +26,7 @@ describe('StudioLocationsView', () => {
     setActivePinia(createPinia());
   });
 
-  function mountWithRealComponents() {
-    return shallowMount(StudioLocationsView, {
-      global: {
-        stubs: {
-          ResourceTable: false,
-          ResourceModalForm: false
-        },
-        components: { ResourceTable, ResourceModalForm }
-      }
-    });
-  }
+  const mountWithRealComponents = createStudioResourceMountHelper(StudioLocationsView);
 
   it('shows prompt if no game is selected', () => {
     const wrapper = shallowMount(StudioLocationsView, {
@@ -41,18 +36,16 @@ describe('StudioLocationsView', () => {
   });
 
   it('renders table headers and data when locations are loaded', async () => {
-    const { useGamesStore } = await import('../../../stores/games');
-    const gamesStore = useGamesStore();
-    gamesStore.selectedGame = { id: 'game1', name: 'Test Game' };
+    await setupGamesStore();
     const wrapper = mountWithRealComponents();
-    await new Promise(r => setTimeout(r));
-    // Check table headers
+    await waitForVueUpdate();
+
     const ths = wrapper.findAll('th');
     const headerTexts = ths.map(th => th.text());
     expect(headerTexts).toContain('Name');
     expect(headerTexts).toContain('Description');
     expect(headerTexts).toContain('Actions');
-    // Check table row data
+
     const tds = wrapper.findAll('td');
     const cellTexts = tds.map(td => td.text());
     expect(cellTexts).toContain('Cave');
@@ -60,15 +53,9 @@ describe('StudioLocationsView', () => {
   });
 
   it('shows loading state', async () => {
-    const { useLocationsStore } = await import('../../../stores/locations');
-    const { useGamesStore } = await import('../../../stores/games');
-    const gamesStore = useGamesStore();
-    gamesStore.selectedGame = { id: 'game1', name: 'Test Game' };
-    const store = useLocationsStore();
-    store.loading = true;
-    store.error = null;
+    await setupGamesStore();
+    await setupStore('locations', { loading: true, error: null });
     const wrapper = mountWithRealComponents();
-    // Look for loading indicator
     expect(wrapper.html()).toContain('Loading...');
   });
 }); 

@@ -278,7 +278,7 @@ func (g *PDFGenerator) htmlToPDF(ctx context.Context, html string) ([]byte, erro
 				l.Warn("failed to wait for body to be ready >%v<", err)
 				// Continue anyway - page might still work
 			}
-			
+
 			// Wait for background image to load if it exists
 			// First check if the image element exists
 			var imageExists bool
@@ -291,12 +291,12 @@ func (g *PDFGenerator) htmlToPDF(ctx context.Context, html string) ([]byte, erro
 				if err := chromedp.WaitVisible(".background-image", chromedp.ByQuery).Do(ctx); err != nil {
 					l.Warn("failed to wait for background image to be visible >%v<, continuing anyway", err)
 				}
-				
+
 				// Wait for the image to actually load by checking its complete property
 				// Poll until the image is loaded or timeout after 10 seconds
 				timeout := time.After(10 * time.Second)
 				ticker := time.NewTicker(100 * time.Millisecond)
-				
+
 				imageLoaded := false
 				for !imageLoaded {
 					select {
@@ -322,7 +322,7 @@ func (g *PDFGenerator) htmlToPDF(ctx context.Context, html string) ([]byte, erro
 			} else {
 				l.Debug("no background image element found, skipping image load wait")
 			}
-			
+
 			// Additional wait to ensure all rendering is complete
 			time.Sleep(500 * time.Millisecond)
 			return nil

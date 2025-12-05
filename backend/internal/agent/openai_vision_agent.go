@@ -157,6 +157,14 @@ func (a *openAIVisionAgent) ExtractText(ctx context.Context, req TextExtractionR
 			return backoff.Permanent(fmt.Errorf("OpenAI API error: %s", apiResp.Error.Message))
 		}
 
+		// Check for content policy refusals in the response text (before returning from retry loop)
+		// This allows us to retry if we get a refusal
+		text := extractOpenAIText(apiResp)
+		if text != "" && IsContentPolicyRefusal(text) {
+			l.Debug("content policy refusal detected in response, will retry")
+			return fmt.Errorf("OpenAI content policy refusal detected")
+		}
+
 		return nil
 	}, backoffConfig, func(err error, duration time.Duration) {
 		l.Debug("retrying OpenAI request after %v error=%v", duration, err)
@@ -176,6 +184,9 @@ func (a *openAIVisionAgent) ExtractText(ctx context.Context, req TextExtractionR
 		l.Warn("OpenAI response contained no text output_count=%d", len(apiResp.Output))
 		return "", fmt.Errorf("OpenAI did not return any text")
 	}
+
+	// Note: Content policy refusal check is now done inside the retry loop
+	// so we don't need to check again here (it would have already triggered a retry)
 
 	totalDuration := time.Since(start)
 
@@ -357,6 +368,13 @@ func (a *openAIVisionAgent) ExtractStructuredData(ctx context.Context, req Struc
 			return backoff.Permanent(fmt.Errorf("OpenAI API error: %s", apiResp.Error.Message))
 		}
 
+		// Check for content policy refusals in structured extraction response
+		text := extractOpenAIText(apiResp)
+		if text != "" && IsContentPolicyRefusal(text) {
+			l.Debug("content policy refusal detected in structured extraction response, will retry")
+			return fmt.Errorf("OpenAI content policy refusal detected")
+		}
+
 		return nil
 	}, backoffConfig, func(err error, duration time.Duration) {
 		l.Debug("retrying OpenAI structured extraction request after %v error=%v", duration, err)
@@ -459,7 +477,9 @@ func isRetryableError(err error, statusCode int, errorMessage string) bool {
 			strings.Contains(lowerMsg, "error occurred while processing") ||
 			strings.Contains(lowerMsg, "rate limit") ||
 			strings.Contains(lowerMsg, "server error") ||
-			strings.Contains(lowerMsg, "temporary") {
+			strings.Contains(lowerMsg, "temporary") ||
+			strings.Contains(lowerMsg, "content policy") ||
+			strings.Contains(lowerMsg, "refusal") {
 			return true
 		}
 	}

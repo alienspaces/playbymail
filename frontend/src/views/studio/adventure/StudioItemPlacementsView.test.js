@@ -2,16 +2,16 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { ref } from 'vue'
-import StudioCreaturePlacementsView from './StudioCreaturePlacementsView.vue'
+import StudioItemPlacementsView from './StudioItemPlacementsView.vue'
 import { findInBody, setupModalTestCleanup } from '../../../test-utils/studio-resource-helpers'
 
 // Mock the stores
-vi.mock('../../../stores/creatures', () => ({
-  useCreaturesStore: vi.fn(() => ({
-    creatures: [],
+vi.mock('../../../stores/items', () => ({
+  useItemsStore: vi.fn(() => ({
+    items: [],
     loading: false,
     error: null,
-    fetchCreatures: vi.fn()
+    fetchItems: vi.fn()
   }))
 }))
 
@@ -24,15 +24,15 @@ vi.mock('../../../stores/locations', () => ({
   }))
 }))
 
-vi.mock('../../../stores/creaturePlacements', () => ({
-  useCreaturePlacementsStore: vi.fn(() => ({
-    creaturePlacements: [],
+vi.mock('../../../stores/itemPlacements', () => ({
+  useItemPlacementsStore: vi.fn(() => ({
+    itemPlacements: [],
     loading: false,
     error: null,
-    createCreaturePlacement: vi.fn(),
-    updateCreaturePlacement: vi.fn(),
-    deleteCreaturePlacement: vi.fn(),
-    fetchCreaturePlacements: vi.fn()
+    createItemPlacement: vi.fn(),
+    updateItemPlacement: vi.fn(),
+    deleteItemPlacement: vi.fn(),
+    fetchItemPlacements: vi.fn()
   }))
 }))
 
@@ -42,24 +42,24 @@ vi.mock('../../../stores/games', () => ({
   }))
 }))
 
-describe('StudioCreaturePlacementsView', () => {
+describe('StudioItemPlacementsView', () => {
   let pinia
   const modalCleanup = setupModalTestCleanup()
 
   const setupStoreMocks = async (selectedGame = null) => {
     const { useGamesStore } = await import('../../../stores/games')
-    const { useCreaturesStore } = await import('../../../stores/creatures')
+    const { useItemsStore } = await import('../../../stores/items')
     const { useLocationsStore } = await import('../../../stores/locations')
-    const { useCreaturePlacementsStore } = await import('../../../stores/creaturePlacements')
+    const { useItemPlacementsStore } = await import('../../../stores/itemPlacements')
 
     useGamesStore.mockReturnValue({
       selectedGame: ref(selectedGame)
     })
-    useCreaturesStore.mockReturnValue({
-      creatures: [],
+    useItemsStore.mockReturnValue({
+      items: [],
       loading: false,
       error: null,
-      fetchCreatures: vi.fn()
+      fetchItems: vi.fn()
     })
     useLocationsStore.mockReturnValue({
       locations: [],
@@ -67,14 +67,14 @@ describe('StudioCreaturePlacementsView', () => {
       error: null,
       fetchLocations: vi.fn()
     })
-    useCreaturePlacementsStore.mockReturnValue({
-      creaturePlacements: [],
+    useItemPlacementsStore.mockReturnValue({
+      itemPlacements: [],
       loading: false,
       error: null,
-      createCreaturePlacement: vi.fn(),
-      updateCreaturePlacement: vi.fn(),
-      deleteCreaturePlacement: vi.fn(),
-      fetchCreaturePlacements: vi.fn()
+      createItemPlacement: vi.fn(),
+      updateItemPlacement: vi.fn(),
+      deleteItemPlacement: vi.fn(),
+      fetchItemPlacements: vi.fn()
     })
   }
 
@@ -90,43 +90,43 @@ describe('StudioCreaturePlacementsView', () => {
   })
 
   it('renders prompt when no game is selected', () => {
-    const wrapper = mount(StudioCreaturePlacementsView)
+    const wrapper = mount(StudioItemPlacementsView)
 
-    expect(wrapper.text()).toContain('Please select or create a game to manage creature placements.')
+    expect(wrapper.text()).toContain('Please select or create a game to manage item placements.')
     expect(wrapper.find('.game-table-section').exists()).toBe(false)
   })
 
-  it('renders creature placements table when game is selected', async () => {
+  it('renders item placements table when game is selected', async () => {
     await setupStoreMocks({ id: 1, name: 'Test Game' })
 
-    const wrapper = mount(StudioCreaturePlacementsView)
+    const wrapper = mount(StudioItemPlacementsView)
 
     expect(wrapper.find('.game-table-section').exists()).toBe(true)
     const contextLabel = wrapper.find('.game-context-label')
     const contextName = wrapper.find('.game-context-name')
     expect(contextLabel.text()).toBe('Game:')
     expect(contextName.text()).toBe('Test Game')
-    expect(wrapper.find('h2').text()).toBe('Creature Placements')
+    expect(wrapper.find('h2').text()).toBe('Item Placements')
   })
 
   it('renders create button when game is selected', async () => {
     await setupStoreMocks({ id: 1, name: 'Test Game' })
 
-    const wrapper = mount(StudioCreaturePlacementsView)
+    const wrapper = mount(StudioItemPlacementsView)
 
     const createButton = wrapper.find('button')
-    expect(createButton.text()).toBe('Create Creature Placement')
+    expect(createButton.text()).toBe('Create Item Placement')
   })
 
   it('renders ResourceTable with correct props', async () => {
     await setupStoreMocks({ id: 1, name: 'Test Game' })
 
-    const wrapper = mount(StudioCreaturePlacementsView)
+    const wrapper = mount(StudioItemPlacementsView)
 
     const resourceTable = wrapper.findComponent({ name: 'ResourceTable' })
     expect(resourceTable.exists()).toBe(true)
     expect(resourceTable.props('columns')).toEqual([
-      { key: 'creature_name', label: 'Creature' },
+      { key: 'item_name', label: 'Item' },
       { key: 'location_name', label: 'Location' },
       { key: 'initial_count', label: 'Count' },
       { key: 'created_at', label: 'Created' }
@@ -136,56 +136,56 @@ describe('StudioCreaturePlacementsView', () => {
   it('opens create modal when create button is clicked', async () => {
     await setupStoreMocks({ id: 1, name: 'Test Game' })
 
-    const wrapper = mount(StudioCreaturePlacementsView)
+    const wrapper = mount(StudioItemPlacementsView)
 
     const createButton = wrapper.find('button')
     await createButton.trigger('click')
 
-    expect(wrapper.vm.showCreaturePlacementModal).toBe(true)
-    expect(wrapper.vm.creaturePlacementModalMode).toBe('create')
+    expect(wrapper.vm.showItemPlacementModal).toBe(true)
+    expect(wrapper.vm.itemPlacementModalMode).toBe('create')
   })
 
   it('renders create modal with correct title', async () => {
     await setupStoreMocks({ id: 1, name: 'Test Game' })
 
-    const wrapper = mount(StudioCreaturePlacementsView)
+    const wrapper = mount(StudioItemPlacementsView)
 
     // Open modal
-    wrapper.vm.showCreaturePlacementModal = true
-    wrapper.vm.creaturePlacementModalMode = 'create'
+    wrapper.vm.showItemPlacementModal = true
+    wrapper.vm.itemPlacementModalMode = 'create'
     await wrapper.vm.$nextTick()
 
-    expect(findInBody('.modal h2').textContent).toBe('Create Creature Placement')
+    expect(findInBody('.modal h2').textContent).toBe('Create Item Placement')
   })
 
   it('renders edit modal with correct title', async () => {
     await setupStoreMocks({ id: 1, name: 'Test Game' })
 
-    const wrapper = mount(StudioCreaturePlacementsView)
+    const wrapper = mount(StudioItemPlacementsView)
 
     // Open modal in edit mode
-    wrapper.vm.showCreaturePlacementModal = true
-    wrapper.vm.creaturePlacementModalMode = 'edit'
+    wrapper.vm.showItemPlacementModal = true
+    wrapper.vm.itemPlacementModalMode = 'edit'
     await wrapper.vm.$nextTick()
 
-    expect(findInBody('.modal h2').textContent).toBe('Edit Creature Placement')
+    expect(findInBody('.modal h2').textContent).toBe('Edit Item Placement')
   })
 
-  it('renders creature and location select options', async () => {
+  it('renders item and location select options', async () => {
     await setupStoreMocks({ id: 1, name: 'Test Game' })
 
-    // Override the creatures and locations for this specific test
-    const { useCreaturesStore } = await import('../../../stores/creatures')
+    // Override the items and locations for this specific test
+    const { useItemsStore } = await import('../../../stores/items')
     const { useLocationsStore } = await import('../../../stores/locations')
 
-    useCreaturesStore.mockReturnValue({
-      creatures: [
-        { id: 1, name: 'Dragon' },
-        { id: 2, name: 'Goblin' }
+    useItemsStore.mockReturnValue({
+      items: [
+        { id: 1, name: 'Sword' },
+        { id: 2, name: 'Shield' }
       ],
       loading: false,
       error: null,
-      fetchCreatures: vi.fn()
+      fetchItems: vi.fn()
     })
     useLocationsStore.mockReturnValue({
       locations: [
@@ -197,49 +197,49 @@ describe('StudioCreaturePlacementsView', () => {
       fetchLocations: vi.fn()
     })
 
-    const wrapper = mount(StudioCreaturePlacementsView)
+    const wrapper = mount(StudioItemPlacementsView)
 
     // Open modal
-    wrapper.vm.showCreaturePlacementModal = true
+    wrapper.vm.showItemPlacementModal = true
     await wrapper.vm.$nextTick()
 
-    const creatureSelect = findInBody('#adventure_game_creature_id')
+    const itemSelect = findInBody('#adventure_game_item_id')
     const locationSelect = findInBody('#adventure_game_location_id')
 
-    expect(creatureSelect).toBeTruthy()
+    expect(itemSelect).toBeTruthy()
     expect(locationSelect).toBeTruthy()
 
-    const creatureOptions = creatureSelect.querySelectorAll('option')
+    const itemOptions = itemSelect.querySelectorAll('option')
     const locationOptions = locationSelect.querySelectorAll('option')
 
-    expect(creatureOptions).toHaveLength(3) // placeholder + 2 creatures
+    expect(itemOptions).toHaveLength(3) // placeholder + 2 items
     expect(locationOptions).toHaveLength(3) // placeholder + 2 locations
   })
 
   it('closes modal when cancel button is clicked', async () => {
     await setupStoreMocks({ id: 1, name: 'Test Game' })
 
-    const wrapper = mount(StudioCreaturePlacementsView)
+    const wrapper = mount(StudioItemPlacementsView)
 
     // Open modal
-    wrapper.vm.showCreaturePlacementModal = true
+    wrapper.vm.showItemPlacementModal = true
     await wrapper.vm.$nextTick()
 
     const cancelButton = findInBody('button[type="button"]')
     cancelButton.click()
     await wrapper.vm.$nextTick()
 
-    expect(wrapper.vm.showCreaturePlacementModal).toBe(false)
+    expect(wrapper.vm.showItemPlacementModal).toBe(false)
   })
 
   it('displays error message in modal', async () => {
     await setupStoreMocks({ id: 1, name: 'Test Game' })
 
-    const wrapper = mount(StudioCreaturePlacementsView)
+    const wrapper = mount(StudioItemPlacementsView)
 
     // Open modal and set error
-    wrapper.vm.showCreaturePlacementModal = true
-    wrapper.vm.creaturePlacementModalError = 'Validation failed'
+    wrapper.vm.showItemPlacementModal = true
+    wrapper.vm.itemPlacementModalError = 'Validation failed'
     await wrapper.vm.$nextTick()
 
     expect(findInBody('.modal .error').textContent).toBe('Validation failed')
@@ -248,24 +248,24 @@ describe('StudioCreaturePlacementsView', () => {
   it('renders delete confirmation modal', async () => {
     await setupStoreMocks({ id: 1, name: 'Test Game' })
 
-    const wrapper = mount(StudioCreaturePlacementsView)
+    const wrapper = mount(StudioItemPlacementsView)
 
     // Open delete confirmation
-    wrapper.vm.showCreaturePlacementDeleteConfirm = true
+    wrapper.vm.showItemPlacementDeleteConfirm = true
     await wrapper.vm.$nextTick()
 
     // Check that ConfirmationModal is rendered with correct props
     const confirmationModal = wrapper.findComponent({ name: 'ConfirmationModal' })
     expect(confirmationModal.exists()).toBe(true)
     expect(confirmationModal.props('visible')).toBe(true)
-    expect(confirmationModal.props('title')).toBe('Delete Creature Placement')
-    expect(confirmationModal.props('message')).toBe('Are you sure you want to delete this creature placement?')
+    expect(confirmationModal.props('title')).toBe('Delete Item Placement')
+    expect(confirmationModal.props('message')).toBe('Are you sure you want to delete this item placement?')
   })
 
   it('has correct CSS classes for styling', async () => {
     await setupStoreMocks({ id: 1, name: 'Test Game' })
 
-    const wrapper = mount(StudioCreaturePlacementsView)
+    const wrapper = mount(StudioItemPlacementsView)
 
     expect(wrapper.find('.game-table-section').exists()).toBe(true)
     expect(wrapper.find('.game-context-name').exists()).toBe(true)
@@ -275,18 +275,18 @@ describe('StudioCreaturePlacementsView', () => {
   it('watches for selectedGame changes', async () => {
     const selectedGameRef = ref(null)
     const { useGamesStore } = await import('../../../stores/games')
-    const { useCreaturesStore } = await import('../../../stores/creatures')
+    const { useItemsStore } = await import('../../../stores/items')
     const { useLocationsStore } = await import('../../../stores/locations')
-    const { useCreaturePlacementsStore } = await import('../../../stores/creaturePlacements')
+    const { useItemPlacementsStore } = await import('../../../stores/itemPlacements')
 
     useGamesStore.mockReturnValue({
       selectedGame: selectedGameRef
     })
-    useCreaturesStore.mockReturnValue({
-      creatures: [],
+    useItemsStore.mockReturnValue({
+      items: [],
       loading: false,
       error: null,
-      fetchCreatures: vi.fn()
+      fetchItems: vi.fn()
     })
     useLocationsStore.mockReturnValue({
       locations: [],
@@ -294,17 +294,17 @@ describe('StudioCreaturePlacementsView', () => {
       error: null,
       fetchLocations: vi.fn()
     })
-    useCreaturePlacementsStore.mockReturnValue({
-      creaturePlacements: [],
+    useItemPlacementsStore.mockReturnValue({
+      itemPlacements: [],
       loading: false,
       error: null,
-      createCreaturePlacement: vi.fn(),
-      updateCreaturePlacement: vi.fn(),
-      deleteCreaturePlacement: vi.fn(),
-      fetchCreaturePlacements: vi.fn()
+      createItemPlacement: vi.fn(),
+      updateItemPlacement: vi.fn(),
+      deleteItemPlacement: vi.fn(),
+      fetchItemPlacements: vi.fn()
     })
 
-    const wrapper = mount(StudioCreaturePlacementsView)
+    const wrapper = mount(StudioItemPlacementsView)
 
     // Initially no game selected
     expect(wrapper.text()).toContain('Please select or create a game')
@@ -316,4 +316,5 @@ describe('StudioCreaturePlacementsView', () => {
     const contextName = wrapper.find('.game-context-name')
     expect(contextName.text()).toBe('New Game')
   })
-}) 
+})
+

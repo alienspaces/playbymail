@@ -105,6 +105,17 @@ func (p *AdventureGameProcessSubscriptionProcessor) ProcessProcessSubscription(c
 
 	l.Info("created character instance ID >%s< for character ID >%s< game instance ID >%s<", characterInstanceRec.ID, characterRec.ID, gameInstanceRec.ID)
 
+	// Assign starting items to the character instance
+	err = p.Domain.AssignStartingItemsToCharacterInstance(characterInstanceRec)
+	if err != nil {
+		l.Warn("failed to assign starting items to character instance >%s< >%v<", characterInstanceRec.ID, err)
+		// Don't fail the entire process if starting items assignment fails
+		// Log the error but continue
+		l.Warn("continuing despite starting items assignment failure")
+	} else {
+		l.Info("assigned starting items to character instance >%s<", characterInstanceRec.ID)
+	}
+
 	return nil
 }
 

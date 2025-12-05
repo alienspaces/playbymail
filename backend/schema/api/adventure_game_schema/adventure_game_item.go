@@ -8,13 +8,14 @@ import (
 
 // AdventureGameItemResponseData -
 type AdventureGameItemResponseData struct {
-	ID          string     `json:"id"`
-	GameID      string     `json:"game_id"`
-	Name        string     `json:"name"`
-	Description string     `json:"description"`
-	CreatedAt   time.Time  `json:"created_at"`
-	UpdatedAt   *time.Time `json:"updated_at,omitempty"`
-	DeletedAt   *time.Time `json:"deleted_at,omitempty"`
+	ID             string     `json:"id"`
+	GameID         string     `json:"game_id"`
+	Name           string     `json:"name"`
+	Description    string     `json:"description"`
+	IsStartingItem bool       `json:"is_starting_item"`
+	CreatedAt      time.Time  `json:"created_at"`
+	UpdatedAt      *time.Time `json:"updated_at,omitempty"`
+	DeletedAt      *time.Time `json:"deleted_at,omitempty"`
 }
 
 type AdventureGameItemResponse struct {
@@ -31,8 +32,9 @@ type AdventureGameItemCollectionResponse struct {
 
 type AdventureGameItemRequest struct {
 	common_schema.Request
-	Name        string `json:"name"`
-	Description string `json:"description"`
+	Name           string `json:"name"`
+	Description    string `json:"description"`
+	IsStartingItem bool   `json:"is_starting_item"`
 }
 
 type AdventureGameItemQueryParams struct {
