@@ -1,0 +1,45 @@
+{{define "content"}}
+<div style="font-weight: 700; font-size: 24px; line-height: 30px; margin-bottom: 24px; color: #11181C;">
+    Turn {{.TurnNumber}} is ready for {{.GameName}}
+</div>
+<div style="font-size: 16px; line-height: 24px; margin-bottom: 24px; color: #11181C;">
+    A new turn is ready for <strong>{{.GameName}}</strong>.
+    <br /><br />
+    Click the button below to view and fill out your turn sheet.
+</div>
+<div style="text-align: center; margin: 32px 0;">
+    <a href="{{.TurnSheetURL}}"
+        style="display: inline-block; background: #006ECD; color: #FFFFFF; font-size: 16px; font-weight: 600; text-decoration: none; padding: 12px 32px; border-radius: 8px; line-height: 24px;">
+        View Turn Sheet
+    </a>
+</div>
+<div
+    style="font-size: 14px; line-height: 20px; color: #6B7280; margin-bottom: 24px; padding: 16px; background: #F5F7FA; border-radius: 8px;">
+    <strong>Note:</strong> If the button doesn't work, you can copy and paste this link into your browser:<br />
+    <a href="{{.TurnSheetURL}}" style="color: #006ECD; word-break: break-all;">{{.TurnSheetURL}}</a>
+</div>
+<div
+    style="font-size: 16px; line-height: 24px; margin-bottom: 24px; padding: 16px; background: #FEF3C7; border-radius: 8px; border-left: 4px solid #F59E0B;">
+    <strong>Important:</strong> This link will expire on <strong>{{.ExpirationDate}}</strong> at
+    <strong>{{.ExpirationTime}}</strong>. Please complete your turn sheet before then.
+</div>
+<div style="font-size: 16px; line-height: 24px; margin-bottom: 24px; color: #11181C;">
+    <strong>Instructions:</strong>
+    <ul style="margin: 8px 0; padding-left: 24px;">
+        <li>Fill out all required fields on your turn sheet</li>
+        <li>Your progress will be saved automatically as you type</li>
+        <li>Click "Submit Turn" when you're ready to submit</li>
+        <li>Once submitted, you'll receive an email when the next turn is ready</li>
+    </ul>
+</div>
+{{end}}
+
+{{define "footer"}}
+<div style="margin-bottom: 8px;">
+    For help or questions, contact us at <a href="mailto:{{.SupportEmail}}"
+        style="color: #006ECD; text-decoration: none;">{{.SupportEmail}}</a>.
+</div>
+<div>
+    &copy; {{.Year}} PlayByMail. All rights reserved.
+</div>
+{{end}}

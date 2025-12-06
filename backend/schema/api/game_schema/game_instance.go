@@ -77,6 +77,6 @@ type InviteTesterResponseData struct {
 }
 
 type InviteTesterResponse struct {
-	Data  *InviteTesterResponseData     `json:"data"`
+	Data  *InviteTesterResponseData    `json:"data"`
 	Error *common_schema.ResponseError `json:"error,omitempty"`
 }

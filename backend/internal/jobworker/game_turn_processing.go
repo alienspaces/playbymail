@@ -21,6 +21,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/riverqueue/river"
 
+	"gitlab.com/alienspaces/playbymail/core/collection/set"
 	corejobworker "gitlab.com/alienspaces/playbymail/core/jobworker"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
 	"gitlab.com/alienspaces/playbymail/core/type/storer"
@@ -169,10 +170,19 @@ func (w *GameTurnProcessingWorker) DoWork(ctx context.Context, m *domain.Domain,
 	l.Info("generating new turn sheets for game instance >%s< turn >%d<", gameInstanceRec.ID, gameInstanceRec.CurrentTurn)
 
 	// Generate turn sheets using the same processor
-	_, err = processor.CreateTurnSheets(ctx, gameInstanceRec)
+	createdTurnSheets, err := processor.CreateTurnSheets(ctx, gameInstanceRec)
 	if err != nil {
 		l.Warn("failed to generate new turn sheets for game instance ID >%s< turn >%d<; cannot process game turn >%v<", j.Args.GameInstanceID, j.Args.TurnNumber, err)
 		return nil, err
+	}
+
+	// Queue email notifications if email delivery is enabled
+	if gameInstanceRec.DeliveryEmail && len(createdTurnSheets) > 0 {
+		err = w.queueTurnSheetNotificationEmails(ctx, c, m, gameInstanceRec, createdTurnSheets)
+		if err != nil {
+			l.Warn("failed to queue turn sheet notification emails for game instance ID >%s< turn >%d< >%v<", j.Args.GameInstanceID, j.Args.TurnNumber, err)
+			// Don't fail the turn processing if email queuing fails
+		}
 	}
 
 	return &GameTurnProcessingDoWorkResult{
@@ -198,4 +208,70 @@ func (w *GameTurnProcessingWorker) initializeProcessors(l logger.Logger, d *doma
 	// Example: processors[game_record.GameTypePuzzle] = puzzleProcessor
 
 	return processors, nil
+}
+
+// queueTurnSheetNotificationEmails queues email notification jobs for all players who have turn sheets
+func (w *GameTurnProcessingWorker) queueTurnSheetNotificationEmails(ctx context.Context, c *river.Client[pgx.Tx], m *domain.Domain, gameInstanceRec *game_record.GameInstance, turnSheets []*game_record.GameTurnSheet) error {
+	l := w.JobWorker.Log.WithFunctionContext("GameTurnProcessingWorker/queueTurnSheetNotificationEmails")
+
+	l.Info("queueing turn sheet notification emails for game instance >%s< turn >%d<", gameInstanceRec.ID, gameInstanceRec.CurrentTurn)
+
+	// Get unique account IDs from turn sheets
+	accountIDs := set.New[string]()
+	for _, turnSheet := range turnSheets {
+		if turnSheet.AccountID != "" {
+			accountIDs.Add(turnSheet.AccountID)
+		}
+	}
+
+	if len(accountIDs) == 0 {
+		l.Info("no account IDs found in turn sheets, skipping email notifications")
+		return nil
+	}
+
+	l.Info("found >%d< unique accounts for email notifications", len(accountIDs))
+
+	// For each account, get the subscription and queue email job
+	queuedCount := 0
+	for accountID := range accountIDs {
+		// Get the subscription for this account and game
+		subscriptionRec, err := m.GetGameSubscriptionRecByAccountAndGame(accountID, gameInstanceRec.GameID, game_record.GameSubscriptionTypePlayer)
+		if err != nil {
+			l.Warn("failed to get game subscription for account >%s< game >%s< >%v<", accountID, gameInstanceRec.GameID, err)
+			continue
+		}
+
+		// Only send emails for active subscriptions
+		if subscriptionRec.Status != game_record.GameSubscriptionStatusActive {
+			l.Debug("skipping email for subscription >%s< with status >%s<", subscriptionRec.ID, subscriptionRec.Status)
+			continue
+		}
+
+		// Generate turn sheet key for this subscription
+		_, err = m.GenerateTurnSheetKey(subscriptionRec.ID)
+		if err != nil {
+			l.Warn("failed to generate turn sheet key for subscription >%s< >%v<", subscriptionRec.ID, err)
+			continue
+		}
+
+		// Queue email notification job
+		args := SendTurnSheetNotificationEmailWorkerArgs{
+			GameSubscriptionID: subscriptionRec.ID,
+			GameInstanceID:     gameInstanceRec.ID,
+			TurnNumber:         gameInstanceRec.CurrentTurn,
+		}
+
+		_, err = c.Insert(ctx, args, nil)
+		if err != nil {
+			l.Warn("failed to queue turn sheet notification email job for subscription >%s< >%v<", subscriptionRec.ID, err)
+			continue
+		}
+
+		queuedCount++
+		l.Debug("queued turn sheet notification email for subscription >%s< account >%s<", subscriptionRec.ID, accountID)
+	}
+
+	l.Info("queued >%d< turn sheet notification emails for game instance >%s< turn >%d<", queuedCount, gameInstanceRec.ID, gameInstanceRec.CurrentTurn)
+
+	return nil
 }

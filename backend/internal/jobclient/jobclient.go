@@ -146,6 +146,17 @@ func getWorkers(l logger.Logger, cfg config.Config, s storer.Storer, e emailer.E
 		return nil, fmt.Errorf("failed to add NewSendTesterInvitationEmailWorker worker: %w", err)
 	}
 
+	// Add turn sheet notification email worker
+	// Sends notification emails to players when new turn sheets are ready with secure links.
+	sendTurnSheetNotificationEmailWorker, err := jobworker.NewSendTurnSheetNotificationEmailWorker(l, cfg, s, e)
+	if err != nil {
+		return nil, fmt.Errorf("failed NewSendTurnSheetNotificationEmailWorker worker: %w", err)
+	}
+
+	if err := river.AddWorkerSafely(w, sendTurnSheetNotificationEmailWorker); err != nil {
+		return nil, fmt.Errorf("failed to add NewSendTurnSheetNotificationEmailWorker worker: %w", err)
+	}
+
 	// Add game turn processing execution worker
 	// Executes game turn processing by running game logic, updating game state, and handling player actions.
 	// Manages turn progression, game rules enforcement, and state transitions.
