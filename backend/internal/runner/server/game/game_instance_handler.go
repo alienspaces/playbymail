@@ -261,6 +261,14 @@ func gameInstanceHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig
 		},
 	}
 
+	joinGameLinkResponseSchema := jsonschema.SchemaWithReferences{
+		Main: jsonschema.Schema{
+			Location: "api/game_schema",
+			Name:     "join_game_link.response.schema.json",
+		},
+		References: referenceSchemas,
+	}
+
 	gameInstanceConfig[GetJoinGameLink] = server.HandlerConfig{
 		Method:      http.MethodGet,
 		Path:        "/api/v1/games/:game_id/instances/:instance_id/join-link",
@@ -269,6 +277,7 @@ func gameInstanceHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig
 			AuthenTypes: []server.AuthenticationType{
 				server.AuthenticationTypeToken,
 			},
+			ValidateResponseSchema: joinGameLinkResponseSchema,
 		},
 		DocumentationConfig: server.DocumentationConfig{
 			Document: true,
@@ -276,6 +285,22 @@ func gameInstanceHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig
 			Description: "Get the join game link for a closed testing game instance. " +
 				"Returns the URL that can be shared with testers to join the game.",
 		},
+	}
+
+	inviteTesterRequestSchema := jsonschema.SchemaWithReferences{
+		Main: jsonschema.Schema{
+			Location: "api/game_schema",
+			Name:     "invite_tester.request.schema.json",
+		},
+		References: referenceSchemas,
+	}
+
+	inviteTesterResponseSchema := jsonschema.SchemaWithReferences{
+		Main: jsonschema.Schema{
+			Location: "api/game_schema",
+			Name:     "invite_tester.response.schema.json",
+		},
+		References: referenceSchemas,
 	}
 
 	gameInstanceConfig[InviteTester] = server.HandlerConfig{
@@ -286,6 +311,8 @@ func gameInstanceHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig
 			AuthenTypes: []server.AuthenticationType{
 				server.AuthenticationTypeToken,
 			},
+			ValidateRequestSchema:  inviteTesterRequestSchema,
+			ValidateResponseSchema: inviteTesterResponseSchema,
 		},
 		DocumentationConfig: server.DocumentationConfig{
 			Document: true,
@@ -772,8 +799,8 @@ func getJoinGameLinkHandler(w http.ResponseWriter, r *http.Request, pp httproute
 	}
 
 	// Generate join game key if it doesn't exist
-	if !instance.JoinGameKey.Valid || instance.JoinGameKey.String == "" {
-		_, err = mm.GenerateJoinGameKey(instanceID)
+	if !instance.ClosedTestingJoinGameKey.Valid || instance.ClosedTestingJoinGameKey.String == "" {
+		_, err = mm.GenerateClosedTestingJoinGameKey(instanceID)
 		if err != nil {
 			l.Warn("failed to generate join game key >%v<", err)
 			return err
@@ -787,15 +814,16 @@ func getJoinGameLinkHandler(w http.ResponseWriter, r *http.Request, pp httproute
 	}
 
 	// Build join game URL
-	joinURL := fmt.Sprintf("/player/join-game/%s", instance.JoinGameKey.String)
+	joinURL := fmt.Sprintf("/player/join-game/%s", instance.ClosedTestingJoinGameKey.String)
 
-	// Return response
-	response := map[string]interface{}{
-		"join_game_url": joinURL,
-		"join_game_key": instance.JoinGameKey.String,
+	// Map to response
+	res, err := mapper.JoinGameLinkToResponse(l, joinURL, instance.ClosedTestingJoinGameKey.String)
+	if err != nil {
+		l.Warn("failed mapping join game link to response >%v<", err)
+		return err
 	}
 
-	if err = server.WriteResponse(l, w, http.StatusOK, response); err != nil {
+	if err = server.WriteResponse(l, w, http.StatusOK, res); err != nil {
 		l.Warn("failed writing response >%v<", err)
 		return err
 	}
@@ -833,51 +861,41 @@ func inviteTesterHandler(w http.ResponseWriter, r *http.Request, pp httprouter.P
 	}
 
 	// Read request body for email
-	var req struct {
-		Email string `json:"email"`
-	}
-	_, err = server.ReadRequest(l, r, &req)
+	email, err := mapper.InviteTesterRequestToEmail(l, r)
 	if err != nil {
-		return err
-	}
-
-	if req.Email == "" {
-		return coreerror.NewInvalidDataError("email is required")
+		l.Warn("failed to read invite tester request >%v<", err)
+		return coreerror.NewInvalidDataError("invalid request: %s", err.Error())
 	}
 
 	// Generate join game key if it doesn't exist
-	if !instance.JoinGameKey.Valid || instance.JoinGameKey.String == "" {
-		_, err = mm.GenerateJoinGameKey(instanceID)
+	if !instance.ClosedTestingJoinGameKey.Valid || instance.ClosedTestingJoinGameKey.String == "" {
+		_, err = mm.GenerateClosedTestingJoinGameKey(instanceID)
 		if err != nil {
 			l.Warn("failed to generate join game key >%v<", err)
-			return err
-		}
-		// Re-fetch to get the new key
-		instance, err = mm.GetGameInstanceRec(instanceID, nil)
-		if err != nil {
-			l.Warn("failed to get game instance after key generation >%v<", err)
 			return err
 		}
 	}
 
 	// Queue email job
-	l.Info("queuing tester invitation email for >%s< game instance >%s<", req.Email, instanceID)
+	l.Info("queuing tester invitation email for >%s< game instance >%s<", email, instanceID)
 
 	_, err = jc.InsertTx(context.Background(), mm.Tx, &jobworker.SendTesterInvitationEmailWorkerArgs{
 		GameInstanceID: instanceID,
-		Email:          req.Email,
+		Email:          email,
 	}, &river.InsertOpts{Queue: jobqueue.QueueDefault})
 	if err != nil {
 		l.Warn("failed to enqueue tester invitation email job >%v<", err)
 		return coreerror.NewInternalError("failed to queue tester invitation email: %v", err)
 	}
 
-	response := map[string]interface{}{
-		"message": "tester invitation queued",
-		"email":   req.Email,
+	// Map to response
+	res, err := mapper.InviteTesterToResponse(l, email)
+	if err != nil {
+		l.Warn("failed mapping invite tester to response >%v<", err)
+		return err
 	}
 
-	if err = server.WriteResponse(l, w, http.StatusOK, response); err != nil {
+	if err = server.WriteResponse(l, w, http.StatusOK, res); err != nil {
 		l.Warn("failed writing response >%v<", err)
 		return err
 	}

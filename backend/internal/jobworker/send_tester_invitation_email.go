@@ -123,8 +123,8 @@ func (w *SendTesterInvitationEmailWorker) DoWork(ctx context.Context, m *domain.
 	}
 
 	// Get join game key (should already exist, but generate if not)
-	if !instanceRec.JoinGameKey.Valid || instanceRec.JoinGameKey.String == "" {
-		_, err = m.GenerateJoinGameKey(j.Args.GameInstanceID)
+	if !instanceRec.ClosedTestingJoinGameKey.Valid || instanceRec.ClosedTestingJoinGameKey.String == "" {
+		_, err = m.GenerateClosedTestingJoinGameKey(j.Args.GameInstanceID)
 		if err != nil {
 			l.Warn("failed to generate join game key >%v<", err)
 			return nil, err
@@ -145,7 +145,7 @@ func (w *SendTesterInvitationEmailWorker) DoWork(ctx context.Context, m *domain.
 	}
 
 	// Build join game URL
-	joinPath := fmt.Sprintf("/player/join-game/%s", instanceRec.JoinGameKey.String)
+	joinPath := fmt.Sprintf("/player/join-game/%s", instanceRec.ClosedTestingJoinGameKey.String)
 	joinURL := fmt.Sprintf("%s%s", w.Config.AppHost, joinPath)
 
 	// Render the HTML email template
@@ -191,4 +191,3 @@ func (w *SendTesterInvitationEmailWorker) DoWork(ctx context.Context, m *domain.
 
 	return &SendTesterInvitationEmailDoWorkResult{RecordCount: 1}, nil
 }
-

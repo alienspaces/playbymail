@@ -399,9 +399,10 @@ func RunTestCase(t *testing.T, th *harness.Testing, tc TestCaser, tf func(method
 			if fileContent, ok := val.([]byte); ok {
 				// Determine file extension from key or use default
 				filename := "testfile"
-				if key == "image" {
+				switch key {
+				case "image":
 					filename = "testimage.png"
-				} else if key == "file" {
+				case "file":
 					filename = "testfile.csv"
 				}
 

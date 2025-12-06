@@ -99,13 +99,13 @@ func (m *Domain) CreateGameInstanceRec(rec *game_record.GameInstance) (*game_rec
 	// For tests, harness sets required_player_count = 0
 
 	// Generate join_game_key if closed testing is enabled
-	if rec.IsClosedTesting && (!rec.JoinGameKey.Valid || rec.JoinGameKey.String == "") {
-		joinGameKey, err := generateUUID()
+	if rec.IsClosedTesting && (!rec.ClosedTestingJoinGameKey.Valid || rec.ClosedTestingJoinGameKey.String == "") {
+		ClosedTestingJoinGameKey, err := generateUUID()
 		if err != nil {
 			l.Warn("failed to generate join game key >%v<", err)
 			return rec, err
 		}
-		rec.JoinGameKey = nullstring.FromString(joinGameKey)
+		rec.ClosedTestingJoinGameKey = nullstring.FromString(ClosedTestingJoinGameKey)
 	}
 
 	var err error
@@ -196,7 +196,7 @@ func (m *Domain) DeleteGameInstanceRec(recID string) error {
 
 	if err := r.DeleteOne(recID); err != nil {
 		return databaseError(err)
-}
+	}
 
 	return nil
 }
@@ -432,60 +432,72 @@ func (m *Domain) GetPlayerCountForGameInstance(gameInstanceID string) (int, erro
 	return len(subscriptions), nil
 }
 
-// GenerateJoinGameKey generates a UUID join game key for closed testing instances
-func (m *Domain) GenerateJoinGameKey(gameInstanceID string) (string, error) {
-	l := m.Logger("GenerateJoinGameKey")
+// GenerateClosedTestingJoinGameKey generates a UUID join game key for closed testing instances.
+// Will return the existing key if it exists and has not expired, otherwise it will generate a new one.
+func (m *Domain) GenerateClosedTestingJoinGameKey(gameInstanceID string) (string, error) {
+	l := m.Logger("GenerateClosedTestingJoinGameKey")
 
-	instance, err := m.GetGameInstanceRec(gameInstanceID, coresql.ForUpdateNoWait)
+	gameInstanceRec, err := m.GetGameInstanceRec(gameInstanceID, coresql.ForUpdateNoWait)
 	if err != nil {
 		return "", err
 	}
 
-	if !instance.IsClosedTesting {
+	if !gameInstanceRec.IsClosedTesting {
 		return "", fmt.Errorf("game instance is not in closed testing mode")
 	}
 
-	// Generate UUID for join game key
-	joinGameKey, err := generateUUID()
+	// Check if there is already a key and it has not expired
+	if nullstring.IsValid(gameInstanceRec.ClosedTestingJoinGameKey) && nulltime.IsValid(gameInstanceRec.ClosedTestingJoinGameKeyExpiresAt) {
+		if time.Now().Before(nulltime.ToTime(gameInstanceRec.ClosedTestingJoinGameKeyExpiresAt)) {
+			return nullstring.ToString(gameInstanceRec.ClosedTestingJoinGameKey), nil
+		}
+	}
+
+	// Generate UUID for closed testing join game key
+	closedTestingJoinGameKey, err := generateUUID()
 	if err != nil {
-		l.Warn("failed to generate join game key >%v<", err)
+		l.Warn("failed to generate closed testing join game key >%v<", err)
 		return "", err
 	}
 
-	instance.JoinGameKey = nullstring.FromString(joinGameKey)
+	// Set closed testing join game key and expiration
+	gameInstanceRec.ClosedTestingJoinGameKey = nullstring.FromString(closedTestingJoinGameKey)
+	gameInstanceRec.ClosedTestingJoinGameKeyExpiresAt = nulltime.FromTime(time.Now().Add(3 * 24 * time.Hour))
 
-	instance, err = m.UpdateGameInstanceRec(instance)
+	// Update game instance with closed testing join game key
+	_, err = m.UpdateGameInstanceRec(gameInstanceRec)
 	if err != nil {
-		l.Warn("failed updating game instance with join game key >%v<", err)
+		l.Warn("failed updating game instance with closed testing join game key >%v<", err)
 		return "", err
 	}
 
-	l.Info("generated join game key for game instance >%s<", gameInstanceID)
-	return joinGameKey, nil
+	l.Info("generated closed testing join game key for game instance >%s<", gameInstanceID)
+
+	return closedTestingJoinGameKey, nil
 }
 
-// GetGameInstanceByJoinGameKey looks up a game instance by join game key
-func (m *Domain) GetGameInstanceByJoinGameKey(joinGameKey string) (*game_record.GameInstance, error) {
-	l := m.Logger("GetGameInstanceByJoinGameKey")
+// GetGameInstanceByClosedTestingJoinGameKey looks up a game instance by join game key
+func (m *Domain) GetGameInstanceByClosedTestingJoinGameKey(ClosedTestingJoinGameKey string) (*game_record.GameInstance, error) {
+	l := m.Logger("GetGameInstanceByClosedTestingJoinGameKey")
 
-	if joinGameKey == "" {
+	if ClosedTestingJoinGameKey == "" {
 		return nil, coreerror.NewInvalidDataError("join_game_key is required")
 	}
 
 	// Get game instance by join_game_key
 	instances, err := m.GetManyGameInstanceRecs(&coresql.Options{
 		Params: []coresql.Param{
-			{Col: game_record.FieldGameInstanceJoinGameKey, Val: joinGameKey},
+			{Col: game_record.FieldGameInstanceClosedTestingJoinGameKey, Val: ClosedTestingJoinGameKey},
 		},
 		Limit: 1,
 	})
 	if err != nil {
-		l.Warn("failed to get game instance by join game key >%s< >%v<", joinGameKey, err)
+		l.Warn("failed to get game instance by join game key >%s< >%v<", ClosedTestingJoinGameKey, err)
 		return nil, err
 	}
 
 	if len(instances) == 0 {
-		return nil, coreerror.NewNotFoundError(game_record.TableGameInstance, joinGameKey)
+		return nil, coreerror.NewNotFoundError(game_record.TableGameInstance, ClosedTestingJoinGameKey)
 	}
 
 	instance := instances[0]
@@ -496,8 +508,8 @@ func (m *Domain) GetGameInstanceByJoinGameKey(joinGameKey string) (*game_record.
 	}
 
 	// Check expiration if set
-	if instance.JoinGameKeyExpiresAt.Valid {
-		if time.Now().After(instance.JoinGameKeyExpiresAt.Time) {
+	if instance.ClosedTestingJoinGameKeyExpiresAt.Valid {
+		if time.Now().After(instance.ClosedTestingJoinGameKeyExpiresAt.Time) {
 			return nil, fmt.Errorf("join game key has expired")
 		}
 	}

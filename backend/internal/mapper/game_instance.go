@@ -72,25 +72,25 @@ func GameInstanceRequestToRecord(l logger.Logger, r *http.Request, rec *game_rec
 func GameInstanceRecordToResponseData(l logger.Logger, rec *game_record.GameInstance, playerCount int) (*game_schema.GameInstanceResponseData, error) {
 	l.Debug("mapping game_instance record to response data")
 	return &game_schema.GameInstanceResponseData{
-		ID:                   rec.ID,
-		GameID:               rec.GameID,
-		GameSubscriptionID:   rec.GameSubscriptionID,
-		Status:               rec.Status,
-		CurrentTurn:          rec.CurrentTurn,
-		LastTurnProcessedAt:  nulltime.ToTimePtr(rec.LastTurnProcessedAt),
-		NextTurnDueAt:        nulltime.ToTimePtr(rec.NextTurnDueAt),
-		StartedAt:                nulltime.ToTimePtr(rec.StartedAt),
-		CompletedAt:              nulltime.ToTimePtr(rec.CompletedAt),
-		DeliveryPhysicalPost:     rec.DeliveryPhysicalPost,
-		DeliveryPhysicalLocal:    rec.DeliveryPhysicalLocal,
-		DeliveryEmail:            rec.DeliveryEmail,
-		RequiredPlayerCount:      rec.RequiredPlayerCount,
-		PlayerCount:              playerCount,
-		IsClosedTesting:          rec.IsClosedTesting,
-		JoinGameKey:          nullstring.ToStringPtr(rec.JoinGameKey),
-		JoinGameKeyExpiresAt: nulltime.ToTimePtr(rec.JoinGameKeyExpiresAt),
-		CreatedAt:            rec.CreatedAt,
-		UpdatedAt:            nulltime.ToTimePtr(rec.UpdatedAt),
+		ID:                                rec.ID,
+		GameID:                            rec.GameID,
+		GameSubscriptionID:                rec.GameSubscriptionID,
+		Status:                            rec.Status,
+		CurrentTurn:                       rec.CurrentTurn,
+		LastTurnProcessedAt:               nulltime.ToTimePtr(rec.LastTurnProcessedAt),
+		NextTurnDueAt:                     nulltime.ToTimePtr(rec.NextTurnDueAt),
+		StartedAt:                         nulltime.ToTimePtr(rec.StartedAt),
+		CompletedAt:                       nulltime.ToTimePtr(rec.CompletedAt),
+		DeliveryPhysicalPost:              rec.DeliveryPhysicalPost,
+		DeliveryPhysicalLocal:             rec.DeliveryPhysicalLocal,
+		DeliveryEmail:                     rec.DeliveryEmail,
+		RequiredPlayerCount:               rec.RequiredPlayerCount,
+		PlayerCount:                       playerCount,
+		IsClosedTesting:                   rec.IsClosedTesting,
+		ClosedTestingJoinGameKey:          nullstring.ToStringPtr(rec.ClosedTestingJoinGameKey),
+		ClosedTestingJoinGameKeyExpiresAt: nulltime.ToTimePtr(rec.ClosedTestingJoinGameKeyExpiresAt),
+		CreatedAt:                         rec.CreatedAt,
+		UpdatedAt:                         nulltime.ToTimePtr(rec.UpdatedAt),
 	}, nil
 }
 
@@ -127,5 +127,41 @@ func GameInstanceRecordsToCollectionResponse(l logger.Logger, recs []*game_recor
 	}
 	return game_schema.GameInstanceCollectionResponse{
 		Data: data,
+	}, nil
+}
+
+func JoinGameLinkToResponse(l logger.Logger, joinGameURL, joinGameKey string) (*game_schema.JoinGameLinkResponse, error) {
+	l.Debug("mapping join game link to response")
+	return &game_schema.JoinGameLinkResponse{
+		Data: &game_schema.JoinGameLinkResponseData{
+			JoinGameURL: joinGameURL,
+			JoinGameKey: joinGameKey,
+		},
+	}, nil
+}
+
+func InviteTesterRequestToEmail(l logger.Logger, r *http.Request) (string, error) {
+	l.Debug("mapping invite tester request to email")
+
+	var req game_schema.InviteTesterRequest
+	_, err := server.ReadRequest(l, r, &req)
+	if err != nil {
+		return "", err
+	}
+
+	if req.Email == "" {
+		return "", fmt.Errorf("email is required")
+	}
+
+	return req.Email, nil
+}
+
+func InviteTesterToResponse(l logger.Logger, email string) (*game_schema.InviteTesterResponse, error) {
+	l.Debug("mapping invite tester to response")
+	return &game_schema.InviteTesterResponse{
+		Data: &game_schema.InviteTesterResponseData{
+			Message: "tester invitation queued",
+			Email:   email,
+		},
 	}, nil
 }

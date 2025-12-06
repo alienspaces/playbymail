@@ -815,3 +815,181 @@ func Test_createGameInstanceHandlerValidation(t *testing.T) {
 		})
 	}
 }
+
+func Test_getJoinGameLinkHandler(t *testing.T) {
+	t.Parallel()
+
+	th := testutil.NewTestHarness(t)
+	require.NotNil(t, th, "TestHarness returns without error")
+
+	// Configure the first game instance as closed testing before setup
+	th.DataConfig.GameConfigs[0].GameInstanceConfigs[0].Record.IsClosedTesting = true
+	th.DataConfig.GameConfigs[0].GameInstanceConfigs[0].Record.DeliveryEmail = true
+	th.DataConfig.GameConfigs[0].GameInstanceConfigs[0].Record.DeliveryPhysicalPost = false
+	th.DataConfig.GameConfigs[0].GameInstanceConfigs[0].Record.DeliveryPhysicalLocal = false
+
+	_, err := th.Setup()
+	require.NoError(t, err, "Test data setup returns without error")
+	defer func() {
+		err = th.Teardown()
+		require.NoError(t, err, "Test data teardown returns without error")
+	}()
+
+	// Get account from harness data (must have Manager subscription)
+	accountRec, err := th.Data.GetAccountRecByRef(harness.AccountOneRef)
+	require.NoError(t, err, "GetAccountRecByRef returns without error")
+
+	// Get a game from the harness data
+	gameRec, err := th.Data.GetGameRecByRef(harness.GameOneRef)
+	require.NoError(t, err, "GetGameRecByRef returns without error")
+
+	// Get the closed testing instance
+	closedTestingInstanceRec, err := th.Data.GetGameInstanceRecByRef(harness.GameInstanceOneRef)
+	require.NoError(t, err, "GetGameInstanceRecByRef returns without error")
+	require.True(t, closedTestingInstanceRec.IsClosedTesting, "Instance is in closed testing mode")
+	require.True(t, closedTestingInstanceRec.DeliveryEmail, "Instance has email delivery enabled")
+
+	testCases := []struct {
+		testutil.TestCase
+		expectResponse func(d harness.Data) game_schema.JoinGameLinkResponse
+	}{
+		{
+			TestCase: testutil.TestCase{
+				Name: "API key with open access \\ get join game link for closed testing instance \\ returns join link",
+				NewRunner: func(l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], d harness.Data) (testutil.TestRunnerer, error) {
+					return testutil.NewTestRunnerWithAccountID(l, s, j, accountRec.ID, accountRec.Email)
+				},
+				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
+					return rnr.GetHandlerConfig()[game.GetJoinGameLink]
+				},
+				RequestPathParams: func(d harness.Data) map[string]string {
+					return map[string]string{
+						":game_id":     gameRec.ID,
+						":instance_id": closedTestingInstanceRec.ID,
+					}
+				},
+				ResponseDecoder: testutil.TestCaseResponseDecoderGeneric[game_schema.JoinGameLinkResponse],
+				ResponseCode:    http.StatusOK,
+			},
+			expectResponse: func(d harness.Data) game_schema.JoinGameLinkResponse {
+				return game_schema.JoinGameLinkResponse{
+					Data: &game_schema.JoinGameLinkResponseData{
+						JoinGameURL: "/player/join-game/",
+						JoinGameKey: "",
+					},
+				}
+			},
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Logf("Running test >%s<\n", testCase.Name)
+
+		t.Run(testCase.Name, func(t *testing.T) {
+			testFunc := func(method string, body interface{}) {
+				require.NotNil(t, body, "Response body is not nil")
+
+				aResp := body.(game_schema.JoinGameLinkResponse).Data
+
+				require.NotEmpty(t, aResp, "Response body is not empty")
+				require.NotEmpty(t, aResp.JoinGameURL, "Join game URL is not empty")
+				require.Contains(t, aResp.JoinGameURL, "/player/join-game/", "Join game URL contains expected path")
+				require.NotEmpty(t, aResp.JoinGameKey, "Join game key is not empty")
+				require.Contains(t, aResp.JoinGameURL, aResp.JoinGameKey, "Join game URL contains the join game key")
+			}
+
+			testutil.RunTestCase(t, th, &testCase.TestCase, testFunc)
+		})
+	}
+}
+
+func Test_inviteTesterHandler(t *testing.T) {
+	t.Parallel()
+
+	th := testutil.NewTestHarness(t)
+	require.NotNil(t, th, "TestHarness returns without error")
+
+	// Configure the first game instance as closed testing before setup
+	th.DataConfig.GameConfigs[0].GameInstanceConfigs[0].Record.IsClosedTesting = true
+	th.DataConfig.GameConfigs[0].GameInstanceConfigs[0].Record.DeliveryEmail = true
+	th.DataConfig.GameConfigs[0].GameInstanceConfigs[0].Record.DeliveryPhysicalPost = false
+	th.DataConfig.GameConfigs[0].GameInstanceConfigs[0].Record.DeliveryPhysicalLocal = false
+
+	_, err := th.Setup()
+	require.NoError(t, err, "Test data setup returns without error")
+	defer func() {
+		err = th.Teardown()
+		require.NoError(t, err, "Test data teardown returns without error")
+	}()
+
+	// Get account from harness data (must have Manager subscription)
+	accountRec, err := th.Data.GetAccountRecByRef(harness.AccountOneRef)
+	require.NoError(t, err, "GetAccountRecByRef returns without error")
+
+	// Get a game from the harness data
+	gameRec, err := th.Data.GetGameRecByRef(harness.GameOneRef)
+	require.NoError(t, err, "GetGameRecByRef returns without error")
+
+	// Get the closed testing instance
+	closedTestingInstanceRec, err := th.Data.GetGameInstanceRecByRef(harness.GameInstanceOneRef)
+	require.NoError(t, err, "GetGameInstanceRecByRef returns without error")
+	require.True(t, closedTestingInstanceRec.IsClosedTesting, "Instance is in closed testing mode")
+	require.True(t, closedTestingInstanceRec.DeliveryEmail, "Instance has email delivery enabled")
+
+	testCases := []struct {
+		testutil.TestCase
+		expectResponse func(d harness.Data) game_schema.InviteTesterResponse
+	}{
+		{
+			TestCase: testutil.TestCase{
+				Name: "API key with open access \\ invite tester to closed testing instance \\ returns success",
+				NewRunner: func(l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], d harness.Data) (testutil.TestRunnerer, error) {
+					return testutil.NewTestRunnerWithAccountID(l, s, j, accountRec.ID, accountRec.Email)
+				},
+				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
+					return rnr.GetHandlerConfig()[game.InviteTester]
+				},
+				RequestPathParams: func(d harness.Data) map[string]string {
+					return map[string]string{
+						":game_id":     gameRec.ID,
+						":instance_id": closedTestingInstanceRec.ID,
+					}
+				},
+				RequestBody: func(d harness.Data) interface{} {
+					return game_schema.InviteTesterRequest{
+						Email: "tester@example.com",
+					}
+				},
+				ResponseDecoder: testutil.TestCaseResponseDecoderGeneric[game_schema.InviteTesterResponse],
+				ResponseCode:    http.StatusOK,
+			},
+			expectResponse: func(d harness.Data) game_schema.InviteTesterResponse {
+				return game_schema.InviteTesterResponse{
+					Data: &game_schema.InviteTesterResponseData{
+						Message: "tester invitation queued",
+						Email:   "tester@example.com",
+					},
+				}
+			},
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Logf("Running test >%s<\n", testCase.Name)
+
+		t.Run(testCase.Name, func(t *testing.T) {
+			testFunc := func(method string, body interface{}) {
+				require.NotNil(t, body, "Response body is not nil")
+
+				aResp := body.(game_schema.InviteTesterResponse).Data
+				xResp := testCase.expectResponse(th.Data).Data
+
+				require.NotEmpty(t, aResp, "Response body is not empty")
+				require.Equal(t, xResp.Message, aResp.Message, "Message equals expected")
+				require.Equal(t, xResp.Email, aResp.Email, "Email equals expected")
+			}
+
+			testutil.RunTestCase(t, th, &testCase.TestCase, testFunc)
+		})
+	}
+}
