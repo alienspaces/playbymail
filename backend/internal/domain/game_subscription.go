@@ -2,12 +2,16 @@ package domain
 
 import (
 	"errors"
+	"fmt"
+	"time"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 
 	"gitlab.com/alienspaces/playbymail/core/domain"
 	coreerror "gitlab.com/alienspaces/playbymail/core/error"
 	"gitlab.com/alienspaces/playbymail/core/nullstring"
+	"gitlab.com/alienspaces/playbymail/core/nulltime"
 	"gitlab.com/alienspaces/playbymail/core/sql"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 )
@@ -265,4 +269,80 @@ func (m *Domain) ApproveGameSubscription(subscriptionID, email string) (*game_re
 	l.Info("approved game subscription ID >%s< for account ID >%s<", subscriptionID, rec.AccountID)
 
 	return updated, nil
+}
+
+// GenerateTurnSheetKey generates a UUID turn sheet key and sets expiration to 3 days from now.
+// This invalidates any existing key by generating a new one.
+func (m *Domain) GenerateTurnSheetKey(subscriptionID string) (string, error) {
+	l := m.Logger("GenerateTurnSheetKey")
+
+	rec, err := m.GetGameSubscriptionRec(subscriptionID, sql.ForUpdateNoWait)
+	if err != nil {
+		l.Warn("failed to get game subscription record >%v<", err)
+		return "", err
+	}
+
+	// Generate UUID for turn sheet key
+	turnSheetKey := uuid.New().String()
+
+	// Set turn sheet key and expiration (3 days from now)
+	rec.TurnSheetKey = nullstring.FromString(turnSheetKey)
+	rec.TurnSheetKeyExpiresAt = nulltime.FromTime(time.Now().Add(3 * 24 * time.Hour))
+
+	// Update subscription with new key
+	_, err = m.UpdateGameSubscriptionRec(rec)
+	if err != nil {
+		l.Warn("failed updating game subscription with turn sheet key >%v<", err)
+		return "", err
+	}
+
+	l.Info("generated turn sheet key for game subscription >%s<", subscriptionID)
+
+	return turnSheetKey, nil
+}
+
+// VerifyTurnSheetKey verifies that a turn sheet key exists, is not expired, and matches the subscription.
+func (m *Domain) VerifyTurnSheetKey(turnSheetKey string) (*game_record.GameSubscription, error) {
+	l := m.Logger("VerifyTurnSheetKey")
+	l.Debug("verifying turn sheet key")
+
+	if turnSheetKey == "" {
+		return nil, coreerror.NewInvalidDataError("turn_sheet_key is required")
+	}
+
+	// Get subscription by turn_sheet_key
+	recs, err := m.GetManyGameSubscriptionRecs(&sql.Options{
+		Params: []sql.Param{
+			{Col: game_record.FieldGameSubscriptionTurnSheetKey, Val: turnSheetKey},
+		},
+		Limit: 1,
+	})
+	if err != nil {
+		l.Warn("failed to get game subscription by turn sheet key >%s< >%v<", turnSheetKey, err)
+		return nil, err
+	}
+
+	if len(recs) == 0 {
+		return nil, coreerror.NewNotFoundError(game_record.TableGameSubscription, "turn_sheet_key="+turnSheetKey)
+	}
+
+	gameSubscriptionRec := recs[0]
+
+	// Check expiration
+	if !nulltime.IsValid(gameSubscriptionRec.TurnSheetKeyExpiresAt) {
+		return nil, fmt.Errorf("turn sheet key has no expiration set")
+	}
+
+	if time.Now().After(nulltime.ToTime(gameSubscriptionRec.TurnSheetKeyExpiresAt)) {
+		return nil, fmt.Errorf("turn sheet key has expired")
+	}
+
+	// Verify key matches
+	if !nullstring.IsValid(gameSubscriptionRec.TurnSheetKey) || nullstring.ToString(gameSubscriptionRec.TurnSheetKey) != turnSheetKey {
+		return nil, fmt.Errorf("turn sheet key does not match subscription")
+	}
+
+	l.Debug("turn sheet key verified successfully for subscription >%s<", gameSubscriptionRec.ID)
+
+	return gameSubscriptionRec, nil
 }
