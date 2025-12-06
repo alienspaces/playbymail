@@ -34,7 +34,7 @@
                         <h3>{{ activeSheetType.label }} Turn Sheet Background</h3>
                         <p class="sheet-description">{{ activeSheetType.description }}</p>
 
-                        <GameTurnSheetImageUpload :gameId="selectedGame.id" :turnSheetType="activeSheetType.value"
+                        <GameTurnSheetImageUpload :gameId="String(selectedGame.id)" :turnSheetType="activeSheetType.value"
                             :image="getImageForType(activeSheetType.value)" @imagesUpdated="handleImagesUpdated"
                             @loadingChanged="handleLoadingChanged" />
 
@@ -49,7 +49,7 @@
         </div>
 
         <!-- Preview Modal -->
-        <GameTurnSheetPreviewModal :visible="showPreviewModal" :gameId="selectedGame?.id || ''"
+        <GameTurnSheetPreviewModal :visible="showPreviewModal" :gameId="selectedGame?.id ? String(selectedGame.id) : ''"
             :gameName="selectedGame?.name || 'Game'" :turnSheetType="previewTurnSheetType"
             :title="`${getSheetTypeLabel(previewTurnSheetType)} Turn Sheet Preview`" @close="closePreviewModal" />
     </div>

@@ -62,19 +62,6 @@ func (m *Domain) CreateGameInstanceRec(rec *game_record.GameInstance) (*game_rec
 
 	l.Debug("creating game_instance record >%#v<", rec)
 
-	if err := m.validateGameInstanceRecForCreate(rec); err != nil {
-		l.Warn("failed to validate game_instance record >%v<", err)
-		return rec, err
-	}
-
-	// Validate adventure game has starting location
-	if err := m.validateAdventureGameInstanceCreation(rec.GameID); err != nil {
-		l.Warn("failed adventure game instance validation >%v<", err)
-		return rec, err
-	}
-
-	r := m.GameInstanceRepository()
-
 	// Set initial status and default values if not already set
 	if rec.Status == "" {
 		rec.Status = game_record.GameInstanceStatusCreated
@@ -87,9 +74,23 @@ func (m *Domain) CreateGameInstanceRec(rec *game_record.GameInstance) (*game_rec
 	// Set default delivery methods if not set (default to physical_post for backward compatibility)
 	// Note: Since these are booleans, we can't detect if they were explicitly set to false
 	// So we only set defaults if all are false (meaning they weren't set)
+	// IMPORTANT: Apply defaults BEFORE validation so validation can check the defaults
 	if !rec.DeliveryPhysicalPost && !rec.DeliveryPhysicalLocal && !rec.DeliveryEmail {
 		rec.DeliveryPhysicalPost = true
 	}
+
+	if err := m.validateGameInstanceRecForCreate(rec); err != nil {
+		l.Warn("failed to validate game_instance record >%v<", err)
+		return rec, err
+	}
+
+	// Validate adventure game has starting location
+	if err := m.validateAdventureGameInstanceCreation(rec.GameID); err != nil {
+		l.Warn("failed adventure game instance validation >%v<", err)
+		return rec, err
+	}
+
+	r := m.GameInstanceRepository()
 
 	// Set default required_player_count if not set (0 means no check, >= 1 means check is enforced)
 	// Only set default if it's truly uninitialized (we can't distinguish 0 from uninitialized in Go)

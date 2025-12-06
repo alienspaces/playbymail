@@ -50,7 +50,8 @@
           <div class="info-item">
             <span class="label">Players</span>
             <span class="value">
-              {{ instance.player_count || 0 }}{{ instance.required_player_count > 0 ? ` / ${instance.required_player_count}` : '' }}
+              {{ instance.player_count || 0 }}{{ instance.required_player_count > 0 ? ` /
+              ${instance.required_player_count}` : '' }}
             </span>
           </div>
           <div class="info-item">
@@ -59,7 +60,9 @@
               <span v-if="instance.delivery_physical_post" class="delivery-badge delivery-physical-post">Post</span>
               <span v-if="instance.delivery_physical_local" class="delivery-badge delivery-physical-local">Local</span>
               <span v-if="instance.delivery_email" class="delivery-badge delivery-email">Email</span>
-              <span v-if="!instance.delivery_physical_post && !instance.delivery_physical_local && !instance.delivery_email" class="no-delivery-methods">
+              <span
+                v-if="!instance.delivery_physical_post && !instance.delivery_physical_local && !instance.delivery_email"
+                class="no-delivery-methods">
                 <em>None</em>
               </span>
             </span>
@@ -95,23 +98,71 @@
 
       <!-- Runtime Controls Section -->
       <DataCard title="Runtime Controls">
-        <div class="controls-grid">
-          <Button v-if="instance.status === 'created'" @click="startInstance" variant="primary"
-            :disabled="controlLoading">
-            Start Game
-          </Button>
-          <Button v-if="instance.status === 'started'" @click="pauseInstance" variant="warning"
-            :disabled="controlLoading">
-            Pause Game
-          </Button>
-          <Button v-if="instance.status === 'paused'" @click="resumeInstance" variant="success"
-            :disabled="controlLoading">
-            Resume Game
-          </Button>
-          <Button v-if="['created', 'started', 'paused'].includes(instance.status)" @click="cancelInstance"
-            variant="danger" :disabled="controlLoading">
-            Cancel Game
-          </Button>
+        <div class="controls-section">
+          <div v-if="instance.status === 'created'" class="player-status">
+            <p v-if="instance.required_player_count > 0" class="status-message">
+              <span v-if="canStartGame" class="status-ready">
+                ✓ Ready to start ({{ instance.player_count || 0 }}/{{ instance.required_player_count }} players)
+              </span>
+              <span v-else class="status-waiting">
+                ⏳ Waiting for players ({{ instance.player_count || 0 }}/{{ instance.required_player_count }})
+              </span>
+            </p>
+          </div>
+          <div class="controls-grid">
+            <Button v-if="instance.status === 'created'" @click="startInstance" variant="primary"
+              :disabled="controlLoading || !canStartGame">
+              Start Game
+            </Button>
+            <Button v-if="instance.status === 'started'" @click="pauseInstance" variant="warning"
+              :disabled="controlLoading">
+              Pause Game
+            </Button>
+            <Button v-if="instance.status === 'paused'" @click="resumeInstance" variant="success"
+              :disabled="controlLoading">
+              Resume Game
+            </Button>
+            <Button v-if="['created', 'started', 'paused'].includes(instance.status)" @click="cancelInstance"
+              variant="danger" :disabled="controlLoading">
+              Cancel Game
+            </Button>
+          </div>
+        </div>
+      </DataCard>
+
+      <!-- Closed Testing Section -->
+      <DataCard v-if="instance.is_closed_testing" title="Closed Testing">
+        <div class="closed-testing-section">
+          <div class="closed-testing-info">
+            <p class="info-text">This instance is in closed testing mode. Share the join link with testers or invite
+              them via email.</p>
+          </div>
+          <div class="closed-testing-controls">
+            <div class="join-link-control">
+              <Button @click="copyJoinLink" variant="secondary" :disabled="joinLinkLoading">
+                {{ joinLinkCopied ? '✓ Link Copied!' : 'Copy Join Game Link' }}
+              </Button>
+              <input v-if="joinLinkUrl" type="text" :value="fullJoinLinkUrl" readonly class="join-link-input"
+                ref="joinLinkInput" />
+            </div>
+            <div class="invite-tester-control">
+              <form @submit.prevent="inviteTester" class="invite-form">
+                <div class="form-group">
+                  <input v-model="testerEmail" type="email" placeholder="Enter tester email address" required
+                    class="email-input" :disabled="inviteLoading" />
+                  <Button type="submit" variant="primary" :disabled="inviteLoading">
+                    {{ inviteLoading ? 'Sending...' : 'Invite Tester' }}
+                  </Button>
+                </div>
+                <div v-if="inviteError" class="error-message">
+                  {{ inviteError }}
+                </div>
+                <div v-if="inviteSuccess" class="success-message">
+                  ✓ Invitation sent successfully!
+                </div>
+              </form>
+            </div>
+          </div>
         </div>
       </DataCard>
 
@@ -218,6 +269,7 @@ import { useGamesStore } from '../../stores/games';
 import { useGameInstancesStore } from '../../stores/gameInstances';
 import { useGameInstanceParametersStore } from '../../stores/gameInstanceParameters';
 import { useGameParametersStore } from '../../stores/gameParameters';
+import { getJoinGameLink, inviteTester as apiInviteTester } from '../../api/gameInstances';
 import Button from '../../components/Button.vue';
 import TableActions from '../../components/TableActions.vue';
 import DataCard from '../../components/DataCard.vue';
@@ -240,6 +292,24 @@ const instanceParametersLoading = ref(false);
 const error = ref('');
 const instance = ref(null);
 const instanceParameters = ref([]);
+
+// Closed testing state
+const joinLinkUrl = ref('');
+const joinLinkLoading = ref(false);
+const joinLinkCopied = ref(false);
+const joinLinkInput = ref(null);
+const testerEmail = ref('');
+const inviteLoading = ref(false);
+const inviteError = ref('');
+const inviteSuccess = ref(false);
+
+// Computed: Check if game can be started
+const canStartGame = computed(() => {
+  if (!instance.value) return false;
+  if (instance.value.status !== 'created') return false;
+  if (instance.value.required_player_count === 0) return true; // No requirement
+  return (instance.value.player_count || 0) >= instance.value.required_player_count;
+});
 
 // Parameter management state
 const showEditParameterModal = ref(false);
@@ -400,6 +470,67 @@ const performAction = async (action, errorMessage) => {
 
 const goBack = () => {
   router.push(`/admin/games/${gameId.value}/instances`);
+};
+
+// Closed testing functions
+const copyJoinLink = async () => {
+  joinLinkLoading.value = true;
+  joinLinkCopied.value = false;
+
+  try {
+    // Fetch join link if not already loaded
+    if (!joinLinkUrl.value) {
+      const response = await getJoinGameLink(gameId.value, instanceId.value);
+      joinLinkUrl.value = response.join_game_url || response.data?.join_game_url;
+    }
+
+    // Build full URL
+    const fullUrl = `${window.location.origin}${joinLinkUrl.value}`;
+
+    // Copy to clipboard
+    await navigator.clipboard.writeText(fullUrl);
+    joinLinkCopied.value = true;
+
+    // Reset copied state after 2 seconds
+    setTimeout(() => {
+      joinLinkCopied.value = false;
+    }, 2000);
+  } catch (err) {
+    error.value = err.message || 'Failed to get join game link';
+  } finally {
+    joinLinkLoading.value = false;
+  }
+};
+
+const fullJoinLinkUrl = computed(() => {
+  if (!joinLinkUrl.value) return '';
+  return `${window.location.origin}${joinLinkUrl.value}`;
+});
+
+const inviteTester = async () => {
+  if (!testerEmail.value) {
+    inviteError.value = 'Please enter an email address';
+    return;
+  }
+
+  inviteLoading.value = true;
+  inviteError.value = '';
+  inviteSuccess.value = false;
+
+  try {
+    await apiInviteTester(gameId.value, instanceId.value, testerEmail.value);
+    inviteSuccess.value = true;
+    testerEmail.value = '';
+
+    // Clear success message after 3 seconds
+    setTimeout(() => {
+      inviteSuccess.value = false;
+    }, 3000);
+  } catch (err) {
+    inviteError.value = err.message || 'Failed to invite tester';
+  } finally {
+    inviteLoading.value = false;
+  }
 };
 
 const getParameterPlaceholder = () => {
@@ -1007,5 +1138,113 @@ const getEditingParameterDefault = () => {
 .testing-disabled {
   background: var(--color-bg-light);
   color: var(--color-text-muted);
+}
+
+.controls-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.player-status {
+  margin-bottom: var(--space-sm);
+}
+
+.status-message {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+}
+
+.status-ready {
+  color: var(--color-success);
+}
+
+.status-waiting {
+  color: var(--color-warning);
+}
+
+.closed-testing-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.closed-testing-info {
+  margin-bottom: var(--space-sm);
+}
+
+.info-text {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.closed-testing-controls {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.join-link-control {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.join-link-input {
+  padding: var(--space-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  font-family: monospace;
+  background: var(--color-bg-light);
+  color: var(--color-text);
+}
+
+.invite-tester-control {
+  display: flex;
+  flex-direction: column;
+}
+
+.invite-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.invite-form .form-group {
+  display: flex;
+  flex-direction: row;
+  gap: var(--space-sm);
+  align-items: flex-start;
+}
+
+.email-input {
+  flex: 1;
+  padding: var(--space-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  background: var(--color-bg-secondary);
+}
+
+.email-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-primary-light);
+}
+
+.email-input:disabled {
+  background: var(--color-bg-light);
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+}
+
+.success-message {
+  color: var(--color-success);
+  font-size: var(--font-size-sm);
+  margin-top: var(--space-xs);
 }
 </style>

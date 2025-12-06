@@ -173,13 +173,13 @@ func getWorkers(l logger.Logger, cfg config.Config, s storer.Storer, e emailer.E
 	// Add join game turn sheet worker
 	// Processes join game turn sheets when a game subscription is approved,
 	// creating the necessary game entities (game instance, character, character instance, etc.)
-	joinGameTurnSheetWorker, err := jobworker.NewProcessSubscriptionWorker(l, cfg, s)
+	joinGameTurnSheetWorker, err := jobworker.NewGameSubscriptionProcessingWorker(l, cfg, s)
 	if err != nil {
-		return nil, fmt.Errorf("failed NewProcessSubscriptionWorker worker: %w", err)
+		return nil, fmt.Errorf("failed NewGameSubscriptionProcessingWorker worker: %w", err)
 	}
 
 	if err := river.AddWorkerSafely(w, joinGameTurnSheetWorker); err != nil {
-		return nil, fmt.Errorf("failed to add NewProcessSubscriptionWorker worker: %w", err)
+		return nil, fmt.Errorf("failed to add NewGameSubscriptionProcessingWorker worker: %w", err)
 	}
 
 	return w, nil

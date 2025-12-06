@@ -363,19 +363,19 @@ func (t *Testing) processJoinGameSubscriptionInSetup(ctx context.Context, subscr
 	t.teardownData.AddGameTurnSheetRec(createdTurnSheetRec)
 
 	// Process the subscription using the job worker
-	worker, err := jobworker.NewProcessSubscriptionWorker(t.Log, t.Config, t.Store)
+	worker, err := jobworker.NewGameSubscriptionProcessingWorker(t.Log, t.Config, t.Store)
 	if err != nil {
-		l.Warn("failed to create process subscription worker >%v<", err)
-		return nil, fmt.Errorf("failed to create process subscription worker: %w", err)
+		l.Warn("failed to create game subscription processing worker >%v<", err)
+		return nil, fmt.Errorf("failed to create game subscription processing worker: %w", err)
 	}
 
 	// Create job args
-	jobArgs := jobworker.ProcessSubscriptionWorkerArgs{
+	jobArgs := jobworker.GameSubscriptionProcessingWorkerArgs{
 		GameSubscriptionID: subscriptionRec.ID,
 	}
 
 	// Create a minimal job struct for DoWork
-	job := &river.Job[jobworker.ProcessSubscriptionWorkerArgs]{
+	job := &river.Job[jobworker.GameSubscriptionProcessingWorkerArgs]{
 		Args: jobArgs,
 	}
 

@@ -4,6 +4,13 @@ import { createPinia, setActivePinia } from 'pinia'
 import { ref } from 'vue'
 import StudioTurnSheetBackgroundsView from './StudioTurnSheetBackgroundsView.vue'
 
+// Mock router-link component
+const RouterLinkStub = {
+  name: 'RouterLink',
+  template: '<a><slot /></a>',
+  props: ['to']
+}
+
 // Mock the API
 vi.mock('../../../api/gameImages', () => ({
   getGameTurnSheetImages: vi.fn(async () => ({
@@ -30,8 +37,10 @@ describe('StudioTurnSheetBackgroundsView', () => {
 
   const setupStoreMocks = async (selectedGame = null) => {
     const { useGamesStore } = await import('../../../stores/games')
+    // Convert id to string if it exists to match component prop types
+    const gameWithStringId = selectedGame ? { ...selectedGame, id: String(selectedGame.id) } : null
     useGamesStore.mockReturnValue({
-      selectedGame: ref(selectedGame)
+      selectedGame: ref(gameWithStringId)
     })
   }
 
@@ -41,8 +50,18 @@ describe('StudioTurnSheetBackgroundsView', () => {
     vi.clearAllMocks()
   })
 
+  const mountWithStubs = (component) => {
+    return mount(component, {
+      global: {
+        stubs: {
+          RouterLink: RouterLinkStub
+        }
+      }
+    })
+  }
+
   it('renders prompt when no game is selected', () => {
-    const wrapper = mount(StudioTurnSheetBackgroundsView)
+    const wrapper = mountWithStubs(StudioTurnSheetBackgroundsView)
 
     expect(wrapper.text()).toContain('Select a game to manage turn sheet backgrounds.')
     expect(wrapper.find('.game-table-section').exists()).toBe(false)
@@ -51,7 +70,7 @@ describe('StudioTurnSheetBackgroundsView', () => {
   it('renders turn sheet backgrounds section when game is selected', async () => {
     await setupStoreMocks({ id: 1, name: 'Test Game' })
 
-    const wrapper = mount(StudioTurnSheetBackgroundsView)
+    const wrapper = mountWithStubs(StudioTurnSheetBackgroundsView)
 
     expect(wrapper.find('.game-table-section').exists()).toBe(true)
     const contextLabel = wrapper.find('.game-context-label')
@@ -64,18 +83,19 @@ describe('StudioTurnSheetBackgroundsView', () => {
   it('renders description with link to locations page', async () => {
     await setupStoreMocks({ id: 1, name: 'Test Game' })
 
-    const wrapper = mount(StudioTurnSheetBackgroundsView)
+    const wrapper = mountWithStubs(StudioTurnSheetBackgroundsView)
 
     expect(wrapper.text()).toContain('Upload background images for game-level turn sheets')
     expect(wrapper.text()).toContain('Location-specific backgrounds are managed from')
     // Check that the text mentions locations page
     expect(wrapper.text()).toContain('Locations')
-    // router-link may be stubbed in test environment, so check for router-link component
+    // router-link is stubbed, check for the component and its props
     const routerLink = wrapper.findComponent({ name: 'RouterLink' })
     if (routerLink.exists()) {
-      expect(routerLink.attributes('to')).toBe('/studio/1/locations')
+      // Stubbed router-link should have the 'to' prop
+      expect(routerLink.props('to')).toBe('/studio/1/locations')
     } else {
-      // If router-link is stubbed, just verify the text is present
+      // If router-link doesn't exist, just verify the text is present
       expect(wrapper.html()).toContain('Locations')
     }
   })
@@ -83,7 +103,7 @@ describe('StudioTurnSheetBackgroundsView', () => {
   it('renders tabs for available turn sheet types', async () => {
     await setupStoreMocks({ id: 1, name: 'Test Game' })
 
-    const wrapper = mount(StudioTurnSheetBackgroundsView)
+    const wrapper = mountWithStubs(StudioTurnSheetBackgroundsView)
 
     const tabs = wrapper.findAll('.tab')
     expect(tabs).toHaveLength(2)
@@ -94,7 +114,7 @@ describe('StudioTurnSheetBackgroundsView', () => {
   it('sets active tab when clicked', async () => {
     await setupStoreMocks({ id: 1, name: 'Test Game' })
 
-    const wrapper = mount(StudioTurnSheetBackgroundsView)
+    const wrapper = mountWithStubs(StudioTurnSheetBackgroundsView)
 
     // Initially first tab should be active
     const tabs = wrapper.findAll('.tab')
@@ -113,19 +133,19 @@ describe('StudioTurnSheetBackgroundsView', () => {
   it('renders GameTurnSheetImageUpload component with correct props', async () => {
     await setupStoreMocks({ id: 1, name: 'Test Game' })
 
-    const wrapper = mount(StudioTurnSheetBackgroundsView)
+    const wrapper = mountWithStubs(StudioTurnSheetBackgroundsView)
 
     const uploadComponent = wrapper.findComponent({ name: 'GameTurnSheetImageUpload' })
     expect(uploadComponent.exists()).toBe(true)
-    // gameId is passed as selectedGame.id which is a number
-    expect(uploadComponent.props('gameId')).toBe(1)
+    // gameId is passed as selectedGame.id which is now converted to string
+    expect(uploadComponent.props('gameId')).toBe('1')
     expect(uploadComponent.props('turnSheetType')).toBe('adventure_game_join_game')
   })
 
   it('updates GameTurnSheetImageUpload props when tab changes', async () => {
     await setupStoreMocks({ id: 1, name: 'Test Game' })
 
-    const wrapper = mount(StudioTurnSheetBackgroundsView)
+    const wrapper = mountWithStubs(StudioTurnSheetBackgroundsView)
 
     // Click second tab
     const tabs = wrapper.findAll('.tab')
@@ -139,7 +159,7 @@ describe('StudioTurnSheetBackgroundsView', () => {
   it('renders preview button', async () => {
     await setupStoreMocks({ id: 1, name: 'Test Game' })
 
-    const wrapper = mount(StudioTurnSheetBackgroundsView)
+    const wrapper = mountWithStubs(StudioTurnSheetBackgroundsView)
 
     const previewButton = wrapper.find('.preview-btn')
     expect(previewButton.exists()).toBe(true)
@@ -149,7 +169,7 @@ describe('StudioTurnSheetBackgroundsView', () => {
   it('opens preview modal when preview button is clicked', async () => {
     await setupStoreMocks({ id: 1, name: 'Test Game' })
 
-    const wrapper = mount(StudioTurnSheetBackgroundsView)
+    const wrapper = mountWithStubs(StudioTurnSheetBackgroundsView)
     await wrapper.vm.$nextTick()
 
     const previewButton = wrapper.find('.preview-btn')
@@ -168,7 +188,7 @@ describe('StudioTurnSheetBackgroundsView', () => {
   it('renders GameTurnSheetPreviewModal with correct props when preview is open', async () => {
     await setupStoreMocks({ id: 1, name: 'Test Game' })
 
-    const wrapper = mount(StudioTurnSheetBackgroundsView)
+    const wrapper = mountWithStubs(StudioTurnSheetBackgroundsView)
 
     // Open preview
     wrapper.vm.showPreviewModal = true
@@ -179,9 +199,7 @@ describe('StudioTurnSheetBackgroundsView', () => {
     expect(previewModal.exists()).toBe(true)
     expect(previewModal.props('visible')).toBe(true)
     // gameId is converted to string in template: selectedGame?.id || ''
-    // But if id is a number, it might be passed as number - check both
-    const gameId = previewModal.props('gameId')
-    expect(gameId === '1' || gameId === 1).toBe(true)
+    expect(previewModal.props('gameId')).toBe('1')
     expect(previewModal.props('gameName')).toBe('Test Game')
     expect(previewModal.props('turnSheetType')).toBe('adventure_game_join_game')
   })
@@ -189,7 +207,7 @@ describe('StudioTurnSheetBackgroundsView', () => {
   it('closes preview modal when close event is emitted', async () => {
     await setupStoreMocks({ id: 1, name: 'Test Game' })
 
-    const wrapper = mount(StudioTurnSheetBackgroundsView)
+    const wrapper = mountWithStubs(StudioTurnSheetBackgroundsView)
 
     // Open preview
     wrapper.vm.showPreviewModal = true
@@ -205,7 +223,7 @@ describe('StudioTurnSheetBackgroundsView', () => {
   it('disables preview button when loading', async () => {
     await setupStoreMocks({ id: 1, name: 'Test Game' })
 
-    const wrapper = mount(StudioTurnSheetBackgroundsView)
+    const wrapper = mountWithStubs(StudioTurnSheetBackgroundsView)
     await wrapper.vm.$nextTick()
 
     // Trigger loading changed event from child component
@@ -235,23 +253,23 @@ describe('StudioTurnSheetBackgroundsView', () => {
       selectedGame: selectedGameRef
     })
 
-    const wrapper = mount(StudioTurnSheetBackgroundsView)
+    const wrapper = mountWithStubs(StudioTurnSheetBackgroundsView)
 
     // Initially no game selected
     expect(wrapper.text()).toContain('Select a game to manage turn sheet backgrounds')
 
-    // Change selected game
-    selectedGameRef.value = { id: 1, name: 'New Game' }
+    // Change selected game (id as string to match component expectations)
+    selectedGameRef.value = { id: '1', name: 'New Game' }
     await wrapper.vm.$nextTick()
 
-    // Should have called getGameTurnSheetImages
-    expect(getGameTurnSheetImages).toHaveBeenCalledWith(1)
+    // Should have called getGameTurnSheetImages with string id
+    expect(getGameTurnSheetImages).toHaveBeenCalledWith('1')
   })
 
   it('renders correct sheet type label and description', async () => {
     await setupStoreMocks({ id: 1, name: 'Test Game' })
 
-    const wrapper = mount(StudioTurnSheetBackgroundsView)
+    const wrapper = mountWithStubs(StudioTurnSheetBackgroundsView)
 
     // Check first tab content
     expect(wrapper.text()).toContain('Join Game Turn Sheet Background')

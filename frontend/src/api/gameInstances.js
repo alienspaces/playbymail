@@ -88,4 +88,23 @@ export async function cancelGameInstance(gameId, instanceId) {
   });
   await handleApiError(res, 'Failed to cancel game instance');
   return await res.json();
+}
+
+// Closed testing features
+export async function getJoinGameLink(gameId, instanceId) {
+  const res = await apiFetch(`${baseUrl}/api/v1/games/${gameId}/instances/${instanceId}/join-link`, {
+    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+  });
+  await handleApiError(res, 'Failed to get join game link');
+  return await res.json();
+}
+
+export async function inviteTester(gameId, instanceId, email) {
+  const res = await apiFetch(`${baseUrl}/api/v1/games/${gameId}/instances/${instanceId}/invite-tester`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+    body: JSON.stringify({ email }),
+  });
+  await handleApiError(res, 'Failed to invite tester');
+  return await res.json();
 } 

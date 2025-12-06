@@ -18,48 +18,48 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/utils/config"
 )
 
-// ProcessSubscriptionWorkerArgs defines the job payload for processing join game turn sheets
+// GameSubscriptionProcessingWorkerArgs defines the job payload for processing join game turn sheets
 // when a game subscription is approved.
-type ProcessSubscriptionWorkerArgs struct {
+type GameSubscriptionProcessingWorkerArgs struct {
 	GameSubscriptionID string
 }
 
-func (ProcessSubscriptionWorkerArgs) Kind() string {
+func (GameSubscriptionProcessingWorkerArgs) Kind() string {
 	return "join-game-turn-sheet"
 }
 
-func (ProcessSubscriptionWorkerArgs) InsertOpts() river.InsertOpts {
+func (GameSubscriptionProcessingWorkerArgs) InsertOpts() river.InsertOpts {
 	return river.InsertOpts{Queue: jobqueue.QueueDefault}
 }
 
-// ProcessSubscriptionProcessor defines the interface for processing join game turn sheets
+// GameSubscriptionProcessingProcessor defines the interface for processing join game turn sheets
 // for different game types.
-type ProcessSubscriptionProcessor interface {
-	// ProcessProcessSubscription processes a join game turn sheet and creates the
+type GameSubscriptionProcessingProcessor interface {
+	// ProcessGameSubscriptionProcessing processes a join game turn sheet and creates the
 	// necessary game entities (game instance, character, character instance, etc.)
-	ProcessProcessSubscription(ctx context.Context, subscriptionRec *game_record.GameSubscription, turnSheetRec *game_record.GameTurnSheet) error
+	ProcessGameSubscriptionProcessing(ctx context.Context, subscriptionRec *game_record.GameSubscription, turnSheetRec *game_record.GameTurnSheet) error
 }
 
-// ProcessSubscriptionWorker processes join game turn sheets when a game subscription
+// GameSubscriptionProcessingWorker processes join game turn sheets when a game subscription
 // is approved, creating the necessary game entities for the player to participate.
-type ProcessSubscriptionWorker struct {
-	river.WorkerDefaults[ProcessSubscriptionWorkerArgs]
+type GameSubscriptionProcessingWorker struct {
+	river.WorkerDefaults[GameSubscriptionProcessingWorkerArgs]
 	JobWorker
 }
 
-func NewProcessSubscriptionWorker(l logger.Logger, cfg config.Config, s storer.Storer) (*ProcessSubscriptionWorker, error) {
+func NewGameSubscriptionProcessingWorker(l logger.Logger, cfg config.Config, s storer.Storer) (*GameSubscriptionProcessingWorker, error) {
 	jw, err := NewJobWorker(l, cfg, s)
 	if err != nil {
 		return nil, err
 	}
 
-	return &ProcessSubscriptionWorker{
+	return &GameSubscriptionProcessingWorker{
 		JobWorker: *jw,
 	}, nil
 }
 
-func (w *ProcessSubscriptionWorker) Work(ctx context.Context, j *river.Job[ProcessSubscriptionWorkerArgs]) error {
-	l := w.JobWorker.Log.WithFunctionContext("ProcessSubscriptionWorker/Work")
+func (w *GameSubscriptionProcessingWorker) Work(ctx context.Context, j *river.Job[GameSubscriptionProcessingWorkerArgs]) error {
+	l := w.JobWorker.Log.WithFunctionContext("GameSubscriptionProcessingWorker/Work")
 
 	l.Info("running job ID >%s< Args >%#v<", strconv.FormatInt(j.ID, 10), j.Args)
 
@@ -73,20 +73,20 @@ func (w *ProcessSubscriptionWorker) Work(ctx context.Context, j *river.Job[Proce
 
 	_, err = w.DoWork(ctx, d, c, j)
 	if err != nil {
-		l.Error("ProcessSubscriptionWorker job ID >%s< Args >%#v< failed >%v<", strconv.FormatInt(j.ID, 10), j.Args, err)
+		l.Error("GameSubscriptionProcessingWorker job ID >%s< Args >%#v< failed >%v<", strconv.FormatInt(j.ID, 10), j.Args, err)
 		return err
 	}
 
 	return corejobworker.CompleteJob(ctx, d.Tx, j)
 }
 
-type ProcessSubscriptionDoWorkResult struct {
+type GameSubscriptionProcessingDoWorkResult struct {
 	GameSubscriptionID string
 	ProcessedAt        string
 }
 
-func (w *ProcessSubscriptionWorker) DoWork(ctx context.Context, m *domain.Domain, c *river.Client[pgx.Tx], j *river.Job[ProcessSubscriptionWorkerArgs]) (*ProcessSubscriptionDoWorkResult, error) {
-	l := w.JobWorker.Log.WithFunctionContext("ProcessSubscriptionWorker/DoWork")
+func (w *GameSubscriptionProcessingWorker) DoWork(ctx context.Context, m *domain.Domain, c *river.Client[pgx.Tx], j *river.Job[GameSubscriptionProcessingWorkerArgs]) (*GameSubscriptionProcessingDoWorkResult, error) {
+	l := w.JobWorker.Log.WithFunctionContext("GameSubscriptionProcessingWorker/DoWork")
 
 	l.Info("processing join game turn sheet for subscription ID >%s<", j.Args.GameSubscriptionID)
 
@@ -110,8 +110,8 @@ func (w *ProcessSubscriptionWorker) DoWork(ctx context.Context, m *domain.Domain
 		return nil, err
 	}
 
-	// Find the join game turn sheet for this subscription
-	turnSheetRec, err := w.findProcessSubscription(m, subscriptionRec)
+	// Find the join game turn sheet processing record for this subscription
+	turnSheetRec, err := w.findGameSubscriptionProcessing(m, subscriptionRec)
 	if err != nil {
 		l.Warn("failed to find join game turn sheet >%v<", err)
 		return nil, err
@@ -137,7 +137,7 @@ func (w *ProcessSubscriptionWorker) DoWork(ctx context.Context, m *domain.Domain
 	}
 
 	// Process join game turn sheet using the game-specific processor
-	err = processor.ProcessProcessSubscription(ctx, subscriptionRec, turnSheetRec)
+	err = processor.ProcessGameSubscriptionProcessing(ctx, subscriptionRec, turnSheetRec)
 	if err != nil {
 		l.Warn("failed to process join game turn sheet for subscription ID >%s< >%v<", j.Args.GameSubscriptionID, err)
 		return nil, err
@@ -145,14 +145,14 @@ func (w *ProcessSubscriptionWorker) DoWork(ctx context.Context, m *domain.Domain
 
 	l.Info("completed processing join game turn sheet for subscription ID >%s<", j.Args.GameSubscriptionID)
 
-	return &ProcessSubscriptionDoWorkResult{
+	return &GameSubscriptionProcessingDoWorkResult{
 		GameSubscriptionID: j.Args.GameSubscriptionID,
 		ProcessedAt:        "now",
 	}, nil
 }
 
-// findProcessSubscription finds the join game turn sheet for a subscription
-func (w *ProcessSubscriptionWorker) findProcessSubscription(m *domain.Domain, subscriptionRec *game_record.GameSubscription) (*game_record.GameTurnSheet, error) {
+// findGameSubscriptionProcessing finds the join game turn sheet for a subscription
+func (w *GameSubscriptionProcessingWorker) findGameSubscriptionProcessing(m *domain.Domain, subscriptionRec *game_record.GameSubscription) (*game_record.GameTurnSheet, error) {
 	// Get all turn sheets for this account
 	turnSheetRecs, err := m.GetGameTurnSheetRecsByAccount(subscriptionRec.AccountID)
 	if err != nil {
@@ -171,11 +171,11 @@ func (w *ProcessSubscriptionWorker) findProcessSubscription(m *domain.Domain, su
 }
 
 // initializeProcessors creates and registers all available game type processors
-func (w *ProcessSubscriptionWorker) initializeProcessors(l logger.Logger, d *domain.Domain) (map[string]ProcessSubscriptionProcessor, error) {
-	processors := make(map[string]ProcessSubscriptionProcessor)
+func (w *GameSubscriptionProcessingWorker) initializeProcessors(l logger.Logger, d *domain.Domain) (map[string]GameSubscriptionProcessingProcessor, error) {
+	processors := make(map[string]GameSubscriptionProcessingProcessor)
 
 	// Register adventure game processor
-	adventureProcessor, err := adventure_game.NewAdventureGameProcessSubscriptionProcessor(l, d)
+	adventureProcessor, err := adventure_game.NewAdventureGameSubscriptionProcessingProcessor(l, d)
 	if err != nil {
 		return nil, err
 	}

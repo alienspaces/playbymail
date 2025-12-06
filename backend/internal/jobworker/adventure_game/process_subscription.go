@@ -14,26 +14,26 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/turn_sheet"
 )
 
-// AdventureGameProcessSubscriptionProcessor processes process subscription for adventure games
-type AdventureGameProcessSubscriptionProcessor struct {
+// AdventureGameSubscriptionProcessingProcessor processes game subscription processing for adventure games
+type AdventureGameSubscriptionProcessingProcessor struct {
 	Logger logger.Logger
 	Domain *domain.Domain
 }
 
-// NewAdventureGameJoinGameProcessor creates a new adventure game join game processor
-func NewAdventureGameProcessSubscriptionProcessor(l logger.Logger, d *domain.Domain) (*AdventureGameProcessSubscriptionProcessor, error) {
-	l = l.WithFunctionContext("NewAdventureGameProcessSubscriptionProcessor")
+// NewAdventureGameSubscriptionProcessingProcessor creates a new adventure game subscription processing processor
+func NewAdventureGameSubscriptionProcessingProcessor(l logger.Logger, d *domain.Domain) (*AdventureGameSubscriptionProcessingProcessor, error) {
+	l = l.WithFunctionContext("NewAdventureGameSubscriptionProcessingProcessor")
 
-	return &AdventureGameProcessSubscriptionProcessor{
+	return &AdventureGameSubscriptionProcessingProcessor{
 		Logger: l,
 		Domain: d,
 	}, nil
 }
 
-// ProcessProcessSubscription processes a join game turn sheet and creates the necessary
+// ProcessGameSubscriptionProcessing processes a join game turn sheet and creates the necessary
 // game entities (game instance, character, character instance, etc.)
-func (p *AdventureGameProcessSubscriptionProcessor) ProcessProcessSubscription(ctx context.Context, subscriptionRec *game_record.GameSubscription, turnSheetRec *game_record.GameTurnSheet) error {
-	l := p.Logger.WithFunctionContext("AdventureGameProcessSubscriptionProcessor/ProcessProcessSubscription")
+func (p *AdventureGameSubscriptionProcessingProcessor) ProcessGameSubscriptionProcessing(ctx context.Context, subscriptionRec *game_record.GameSubscription, turnSheetRec *game_record.GameTurnSheet) error {
+	l := p.Logger.WithFunctionContext("AdventureGameSubscriptionProcessingProcessor/ProcessGameSubscriptionProcessing")
 
 	l.Info("processing join game turn sheet for subscription ID >%s< turn sheet ID >%s<", subscriptionRec.ID, turnSheetRec.ID)
 
@@ -120,7 +120,7 @@ func (p *AdventureGameProcessSubscriptionProcessor) ProcessProcessSubscription(c
 }
 
 // getOrCreateGameInstance gets the first active game instance for a game, or creates a new one
-func (p *AdventureGameProcessSubscriptionProcessor) getOrCreateGameInstance(gameID string) (*game_record.GameInstance, error) {
+func (p *AdventureGameSubscriptionProcessingProcessor) getOrCreateGameInstance(gameID string) (*game_record.GameInstance, error) {
 	l := p.Logger.WithFunctionContext("getOrCreateGameInstance")
 
 	// Try to get an existing active game instance that has started
@@ -178,7 +178,7 @@ func (p *AdventureGameProcessSubscriptionProcessor) getOrCreateGameInstance(game
 }
 
 // getOrCreateAdventureGameCharacter gets or creates an adventure game character
-func (p *AdventureGameProcessSubscriptionProcessor) getOrCreateAdventureGameCharacter(gameID, accountID, characterName string) (*adventure_game_record.AdventureGameCharacter, error) {
+func (p *AdventureGameSubscriptionProcessingProcessor) getOrCreateAdventureGameCharacter(gameID, accountID, characterName string) (*adventure_game_record.AdventureGameCharacter, error) {
 	l := p.Logger.WithFunctionContext("getOrCreateAdventureGameCharacter")
 
 	// Check if character already exists
@@ -218,7 +218,7 @@ func (p *AdventureGameProcessSubscriptionProcessor) getOrCreateAdventureGameChar
 
 // getStartingLocationInstance gets the starting location instance for a game instance
 // It finds starting locations for the game and then finds the corresponding location instance
-func (p *AdventureGameProcessSubscriptionProcessor) getStartingLocationInstance(gameID, gameInstanceID string) (string, error) {
+func (p *AdventureGameSubscriptionProcessingProcessor) getStartingLocationInstance(gameID, gameInstanceID string) (string, error) {
 	l := p.Logger.WithFunctionContext("getStartingLocationInstance")
 
 	// Get starting locations for this game

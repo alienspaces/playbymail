@@ -288,8 +288,8 @@ func approveGameSubscriptionHandler(w http.ResponseWriter, r *http.Request, pp h
 		return err
 	}
 
-	// Enqueue process subscription job to create game entities
-	if _, err := jc.InsertTx(r.Context(), mm.Tx, &jobworker.ProcessSubscriptionWorkerArgs{
+	// Enqueue game subscription processing job to create game entities
+	if _, err := jc.InsertTx(r.Context(), mm.Tx, &jobworker.GameSubscriptionProcessingWorkerArgs{
 		GameSubscriptionID: rec.ID,
 	}, &river.InsertOpts{Queue: jobqueue.QueueDefault}); err != nil {
 		l.Warn("failed to enqueue process subscription job >%v<", err)
