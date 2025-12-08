@@ -16,3 +16,4 @@ COMMENT ON COLUMN game_instance.closed_testing_join_game_key IS 'Unique token fo
 COMMENT ON COLUMN game_instance.closed_testing_join_game_key_expires_at IS 'Optional expiration timestamp for closed testing join game token';
 
 
+

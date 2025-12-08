@@ -5,10 +5,6 @@ type RequestGameSubscriptionTokenRequest struct {
 	Email string `json:"email"`
 }
 
-type RequestGameSubscriptionTokenResponse struct {
-	Message string `json:"message"`
-}
-
 // VerifyGameSubscriptionTokenRequest maps to the /verify-game-subscription-token request schema
 type VerifyGameSubscriptionTokenRequest struct {
 	Email          string `json:"email"`
@@ -18,5 +14,3 @@ type VerifyGameSubscriptionTokenRequest struct {
 type VerifyGameSubscriptionTokenResponse struct {
 	SessionToken string `json:"session_token"`
 }
-
-

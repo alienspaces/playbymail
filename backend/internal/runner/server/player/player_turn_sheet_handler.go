@@ -97,13 +97,6 @@ func playerTurnSheetHandlerConfig(l logger.Logger) (map[string]server.HandlerCon
 				},
 				References: referenceSchemas,
 			},
-			ValidateResponseSchema: jsonschema.SchemaWithReferences{
-				Main: jsonschema.Schema{
-					Location: "api/player_schema",
-					Name:     "player.request-game-subscription-token.response.schema.json",
-				},
-				References: referenceSchemas,
-			},
 		},
 		DocumentationConfig: server.DocumentationConfig{
 			Document: true,
