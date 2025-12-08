@@ -272,7 +272,7 @@ func Test_createOneGameInstanceHandler(t *testing.T) {
 	}()
 
 	// Get account from harness data (must have Manager subscription)
-	accountRec, err := th.Data.GetAccountRecByRef(harness.AccountOneRef)
+	accountRec, err := th.Data.GetAccountRecByRef(harness.AccountTwoRef)
 	require.NoError(t, err, "GetAccountRecByRef returns without error")
 
 	// Get a game from the harness data
@@ -280,7 +280,7 @@ func Test_createOneGameInstanceHandler(t *testing.T) {
 	require.NoError(t, err, "GetGameRecByRef returns without error")
 
 	// Get the Manager subscription for this account and game
-	gameSubscriptionRec, err := th.Data.GetGameSubscriptionRecByRef(harness.GameSubscriptionOneRef)
+	gameSubscriptionRec, err := th.Data.GetGameSubscriptionRecByRef(harness.GameSubscriptionManagerOneRef)
 	require.NoError(t, err, "GetGameSubscriptionRecByRef returns without error")
 
 	testCases := []struct {
@@ -763,7 +763,7 @@ func Test_createGameInstanceHandlerValidation(t *testing.T) {
 	}()
 
 	// Get account from harness data (must have Manager subscription)
-	accountRec, err := th.Data.GetAccountRecByRef(harness.AccountOneRef)
+	accountRec, err := th.Data.GetAccountRecByRef(harness.AccountTwoRef)
 	require.NoError(t, err, "GetAccountRecByRef returns without error")
 
 	// Get a game from the harness data
@@ -836,7 +836,7 @@ func Test_getJoinGameLinkHandler(t *testing.T) {
 	}()
 
 	// Get account from harness data (must have Manager subscription)
-	accountRec, err := th.Data.GetAccountRecByRef(harness.AccountOneRef)
+	accountRec, err := th.Data.GetAccountRecByRef(harness.AccountTwoRef)
 	require.NoError(t, err, "GetAccountRecByRef returns without error")
 
 	// Get a game from the harness data
@@ -923,7 +923,7 @@ func Test_inviteTesterHandler(t *testing.T) {
 	}()
 
 	// Get account from harness data (must have Manager subscription)
-	accountRec, err := th.Data.GetAccountRecByRef(harness.AccountOneRef)
+	accountRec, err := th.Data.GetAccountRecByRef(harness.AccountTwoRef)
 	require.NoError(t, err, "GetAccountRecByRef returns without error")
 
 	// Get a game from the harness data

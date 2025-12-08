@@ -21,6 +21,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/runner/server/account"
 	"gitlab.com/alienspaces/playbymail/internal/runner/server/adventure_game"
 	"gitlab.com/alienspaces/playbymail/internal/runner/server/game"
+	"gitlab.com/alienspaces/playbymail/internal/runner/server/player"
 	"gitlab.com/alienspaces/playbymail/internal/turn_sheet"
 	"gitlab.com/alienspaces/playbymail/internal/utils/config"
 )
@@ -77,6 +78,8 @@ func NewRunnerWithConfig(l logger.Logger, s storer.Storer, j *river.Client[pgx.T
 		account.AccountHandlerConfig,
 		// Adventure Game handlers
 		adventure_game.AdventureGameHandlerConfig,
+		// Player handlers
+		player.PlayerHandlerConfig,
 	}
 
 	for _, fn := range handlerConfigFuncs {

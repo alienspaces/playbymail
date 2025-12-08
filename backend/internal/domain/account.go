@@ -275,9 +275,25 @@ func (m *Domain) VerifyAccountVerificationToken(token string, testBypassEnabled 
 	l.Info("account found for verification token >%s<", token)
 
 	// Generate session token
+	sessionToken, err := m.GenerateAccountSessionToken(rec)
+	if err != nil {
+		l.Warn("failed to generate session token >%v<", err)
+		return "", err
+	}
+
+	return sessionToken, nil
+}
+
+// GenerateAccountSessionToken generates a session token for an account record.
+func (m *Domain) GenerateAccountSessionToken(rec *account_record.Account) (string, error) {
+	l := m.Logger("GenerateAccountSessionToken")
+
+	l.Debug("generating session token for account ID >%s<", rec.ID)
+
+	// Generate session token
 	sessionToken := corerecord.NewRecordID()
 
-	// Hash the session token (keep using bcrypt or switch to HMAC as well if desired)
+	// Hash the session token
 	hashedSessionToken := hmacSHA256(m.config.TokenHMACKey, sessionToken)
 
 	rec.SessionToken = nullstring.FromString(hashedSessionToken)

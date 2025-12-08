@@ -36,11 +36,53 @@ func AccountConfig() []harness.AccountConfig {
 			Record: &account_record.Account{
 				Email: "test-account-one@example.com",
 			},
+			// Game subscriptions for account one
+			GameSubscriptionConfigs: []harness.GameSubscriptionConfig{
+				{
+					Reference:        harness.GameSubscriptionDesignerOneRef,
+					GameRef:          harness.GameOneRef,
+					SubscriptionType: game_record.GameSubscriptionTypeDesigner,
+					Record:           &game_record.GameSubscription{},
+				},
+				{
+					Reference:        harness.GameSubscriptionManagerOneRef,
+					GameRef:          harness.GameOneRef,
+					SubscriptionType: game_record.GameSubscriptionTypeManager,
+					Record:           &game_record.GameSubscription{},
+				},
+				{
+					Reference:        harness.GameSubscriptionPlayerOneRef,
+					GameRef:          harness.GameOneRef,
+					SubscriptionType: game_record.GameSubscriptionTypePlayer,
+					Record:           &game_record.GameSubscription{},
+				},
+			},
 		},
 		{
 			Reference: harness.AccountTwoRef,
 			Record: &account_record.Account{
 				Email: "test-account-two@example.com",
+			},
+			// Game subscriptions for account two
+			GameSubscriptionConfigs: []harness.GameSubscriptionConfig{
+				{
+					Reference:        harness.GameSubscriptionPlayerTwoRef,
+					GameRef:          harness.GameOneRef,
+					SubscriptionType: game_record.GameSubscriptionTypePlayer,
+					Record:           &game_record.GameSubscription{},
+				},
+				{
+					Reference:        "game-subscription-two",
+					GameRef:          harness.GameTwoRef,
+					SubscriptionType: game_record.GameSubscriptionTypeManager,
+					Record:           &game_record.GameSubscription{},
+				},
+				{
+					Reference:        "game-subscription-two-designer",
+					GameRef:          harness.GameTwoRef,
+					SubscriptionType: game_record.GameSubscriptionTypeDesigner,
+					Record:           &game_record.GameSubscription{},
+				},
 			},
 		},
 		{
@@ -372,21 +414,6 @@ func GameConfig() []harness.GameConfig {
 					},
 				},
 			},
-			// Game subscriptions - Designer and Manager subscriptions for game ownership
-			GameSubscriptionConfigs: []harness.GameSubscriptionConfig{
-				{
-					Reference:        harness.GameSubscriptionOneRef,
-					AccountRef:       harness.AccountOneRef,
-					SubscriptionType: game_record.GameSubscriptionTypeManager,
-					Record:           &game_record.GameSubscription{},
-				},
-				{
-					Reference:        "game-subscription-one-designer",
-					AccountRef:       harness.AccountOneRef,
-					SubscriptionType: game_record.GameSubscriptionTypeDesigner,
-					Record:           &game_record.GameSubscription{},
-				},
-			},
 			// Game instances with all the resources
 			GameInstanceConfigs: []harness.GameInstanceConfig{
 				{
@@ -451,21 +478,6 @@ func GameConfig() []harness.GameConfig {
 				Description:       "Welcome to The Desert Kingdom! Embark on an epic journey across vast sand dunes, ancient ruins, and hidden oases in this sprawling desert adventure. Navigate treacherous terrain, encounter nomadic tribes, and uncover the lost secrets of a forgotten civilization. In this harsh but beautiful landscape, survival requires wit, courage, and careful planning. Every turn brings new challenges - seek out legendary treasures, forge alliances, or carve your own path through the shifting sands. Join us!",
 				GameType:          game_record.GameTypeAdventure,
 				TurnDurationHours: 336, // 2 weeks
-			},
-			// Designer and Manager subscriptions for game ownership
-			GameSubscriptionConfigs: []harness.GameSubscriptionConfig{
-				{
-					Reference:        "game-subscription-two",
-					AccountRef:       harness.AccountTwoRef,
-					SubscriptionType: game_record.GameSubscriptionTypeManager,
-					Record:           &game_record.GameSubscription{},
-				},
-				{
-					Reference:        "game-subscription-two-designer",
-					AccountRef:       harness.AccountTwoRef,
-					SubscriptionType: game_record.GameSubscriptionTypeDesigner,
-					Record:           &game_record.GameSubscription{},
-				},
 			},
 			// Simpler world for the second game
 			AdventureGameLocationConfigs: []harness.AdventureGameLocationConfig{

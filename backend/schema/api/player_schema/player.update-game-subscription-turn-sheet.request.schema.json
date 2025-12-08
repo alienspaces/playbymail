@@ -1,0 +1,16 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "http://playbymail.games/schema/player_schema/player.update-game-subscription-turn-sheet.request.schema.json",
+    "title": "UpdateGameSubscriptionTurnSheetRequest",
+    "type": "object",
+    "properties": {
+        "scanned_data": {
+            "type": "object"
+        }
+    },
+    "required": [
+        "scanned_data"
+    ]
+}
+
+

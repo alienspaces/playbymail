@@ -27,7 +27,7 @@ func TestCreateOne(t *testing.T) {
 				require.NoError(t, err)
 				charRec, err := d.GetAdventureGameCharacterRecByRef(harness.GameCharacterTwoRef)
 				require.NoError(t, err)
-				locationInstanceRec, err := d.GetAdventureGameLocationInstanceRecByRef(harness.GameLocationInstanceOneRef)
+				locationInstanceRec, err := d.GetAdventureGameLocationInstanceRecByGameInstanceAndLocationRef(harness.GameInstanceOneRef, harness.GameLocationOneRef)
 				require.NoError(t, err)
 				return &adventure_game_record.AdventureGameCharacterInstance{
 					GameID:                          gameInstanceRec.GameID,
@@ -47,7 +47,7 @@ func TestCreateOne(t *testing.T) {
 				require.NoError(t, err)
 				charRec, err := d.GetAdventureGameCharacterRecByRef(harness.GameCharacterTwoRef)
 				require.NoError(t, err)
-				locationInstanceRec, err := d.GetAdventureGameLocationInstanceRecByRef(harness.GameLocationInstanceOneRef)
+				locationInstanceRec, err := d.GetAdventureGameLocationInstanceRecByGameInstanceAndLocationRef(harness.GameInstanceOneRef, harness.GameLocationOneRef)
 				require.NoError(t, err)
 				rec := &adventure_game_record.AdventureGameCharacterInstance{
 					GameID:                          gameInstanceRec.GameID,

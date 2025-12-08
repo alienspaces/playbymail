@@ -146,27 +146,27 @@ func (w *SendTurnSheetNotificationEmailWorker) DoWork(ctx context.Context, m *do
 	}
 
 	// Generate or get the turn sheet key
-	turnSheetKey, err := m.GenerateTurnSheetKey(j.Args.GameSubscriptionID)
+	turnSheetToken, err := m.GenerateGameSubscriptionTurnSheetToken(j.Args.GameSubscriptionID)
 	if err != nil {
-		l.Warn("failed to generate turn sheet key >%v<", err)
+		l.Warn("failed to generate game susbcription turn sheet token >%v<", err)
 		return nil, err
 	}
 
 	// Get the subscription again to get the expiration time
 	subscriptionRec, err = m.GetGameSubscriptionRec(j.Args.GameSubscriptionID, nil)
 	if err != nil {
-		l.Warn("failed to get game subscription record after key generation >%v<", err)
+		l.Warn("failed to get game subscription record after token generation >%v<", err)
 		return nil, err
 	}
 
-	// Build turn sheet viewer URL
-	turnSheetPath := fmt.Sprintf("/player/turn-sheets/%s", turnSheetKey)
+	// Build turn sheet viewer login URL
+	turnSheetPath := fmt.Sprintf("/player/game-subscriptions/%s/game-instances/%s/login/%s", j.Args.GameSubscriptionID, j.Args.GameInstanceID, turnSheetToken)
 	turnSheetURL := fmt.Sprintf("%s%s", w.Config.AppHost, turnSheetPath)
 
 	// Format expiration date/time
 	var expirationDate, expirationTime string
-	if subscriptionRec.TurnSheetKeyExpiresAt.Valid {
-		expirationTimeVal := subscriptionRec.TurnSheetKeyExpiresAt.Time
+	if subscriptionRec.TurnSheetTokenExpiresAt.Valid {
+		expirationTimeVal := subscriptionRec.TurnSheetTokenExpiresAt.Time
 		expirationDate = expirationTimeVal.Format("January 2, 2006")
 		expirationTime = expirationTimeVal.Format("3:04 PM MST")
 	} else {
@@ -200,7 +200,7 @@ func (w *SendTurnSheetNotificationEmailWorker) DoWork(ctx context.Context, m *do
 		TurnSheetURL:   turnSheetURL,
 		ExpirationDate: expirationDate,
 		ExpirationTime: expirationTime,
-		SupportEmail:   "support@playbymail.games",
+		SupportEmail:   w.Config.SupportEmailAddress,
 		Year:           time.Now().Year(),
 	}
 
@@ -210,7 +210,7 @@ func (w *SendTurnSheetNotificationEmailWorker) DoWork(ctx context.Context, m *do
 	}
 
 	emailMsg := &emailer.Message{
-		From:    "noreply@playbymail.games",
+		From:    w.Config.NoReplyEmailAddress,
 		To:      []string{accountRec.Email},
 		Subject: fmt.Sprintf("Turn %d is ready for %s", j.Args.TurnNumber, gameRec.Name),
 		Body:    body.String(),

@@ -6,18 +6,26 @@ import (
 
 	"gitlab.com/alienspaces/playbymail/core/nullstring"
 	"gitlab.com/alienspaces/playbymail/internal/domain"
+	"gitlab.com/alienspaces/playbymail/internal/record/account_record"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 )
 
-func (t *Testing) createGameSubscriptionRec(subscriptionConfig GameSubscriptionConfig, gameRec *game_record.Game) (*game_record.GameSubscription, error) {
+func (t *Testing) createGameSubscriptionRec(subscriptionConfig GameSubscriptionConfig, accountRec *account_record.Account) (*game_record.GameSubscription, error) {
 	l := t.Logger("createGameSubscriptionRec")
 
-	if gameRec == nil {
-		return nil, fmt.Errorf("game record is nil for game_subscription record >%#v<", subscriptionConfig)
+	if accountRec == nil {
+		return nil, fmt.Errorf("account record is nil for game_subscription record >%#v<", subscriptionConfig)
 	}
 
-	if subscriptionConfig.AccountRef == "" {
-		return nil, fmt.Errorf("game_subscription record >%#v< must have an AccountRef set", subscriptionConfig)
+	if subscriptionConfig.GameRef == "" {
+		return nil, fmt.Errorf("game_subscription record >%#v< must have a GameRef set", subscriptionConfig)
+	}
+
+	// Get game record
+	gameRec, err := t.Data.GetGameRecByRef(subscriptionConfig.GameRef)
+	if err != nil {
+		l.Warn("failed resolving game ref >%s<: %v", subscriptionConfig.GameRef, err)
+		return nil, err
 	}
 
 	var rec *game_record.GameSubscription
@@ -31,13 +39,6 @@ func (t *Testing) createGameSubscriptionRec(subscriptionConfig GameSubscriptionC
 	rec = t.applyGameSubscriptionRecDefaultValues(rec)
 
 	rec.GameID = gameRec.ID
-
-	// Get account record
-	accountRec, err := t.Data.GetAccountRecByRef(subscriptionConfig.AccountRef)
-	if err != nil {
-		l.Warn("failed resolving account ref >%s<: %v", subscriptionConfig.AccountRef, err)
-		return nil, err
-	}
 	rec.AccountID = accountRec.ID
 
 	// Set subscription type if provided

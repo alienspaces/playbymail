@@ -271,10 +271,10 @@ func (m *Domain) ApproveGameSubscription(subscriptionID, email string) (*game_re
 	return updated, nil
 }
 
-// GenerateTurnSheetKey generates a UUID turn sheet key and sets expiration to 3 days from now.
+// GenerateGameSubscriptionTurnSheetToken generates a UUID turn sheet key and sets expiration to 3 days from now.
 // This invalidates any existing key by generating a new one.
-func (m *Domain) GenerateTurnSheetKey(subscriptionID string) (string, error) {
-	l := m.Logger("GenerateTurnSheetKey")
+func (m *Domain) GenerateGameSubscriptionTurnSheetToken(subscriptionID string) (string, error) {
+	l := m.Logger("GenerateGameSubscriptionTurnSheetToken")
 
 	rec, err := m.GetGameSubscriptionRec(subscriptionID, sql.ForUpdateNoWait)
 	if err != nil {
@@ -286,63 +286,56 @@ func (m *Domain) GenerateTurnSheetKey(subscriptionID string) (string, error) {
 	turnSheetKey := uuid.New().String()
 
 	// Set turn sheet key and expiration (3 days from now)
-	rec.TurnSheetKey = nullstring.FromString(turnSheetKey)
-	rec.TurnSheetKeyExpiresAt = nulltime.FromTime(time.Now().Add(3 * 24 * time.Hour))
+	rec.TurnSheetToken = nullstring.FromString(turnSheetKey)
+	rec.TurnSheetTokenExpiresAt = nulltime.FromTime(time.Now().Add(3 * 24 * time.Hour))
 
 	// Update subscription with new key
 	_, err = m.UpdateGameSubscriptionRec(rec)
 	if err != nil {
-		l.Warn("failed updating game subscription with turn sheet key >%v<", err)
+		l.Warn("failed updating game subscription with turn sheet token >%v<", err)
 		return "", err
 	}
 
-	l.Info("generated turn sheet key for game subscription >%s<", subscriptionID)
+	l.Info("generated turn sheet token for game subscription >%s<", subscriptionID)
 
 	return turnSheetKey, nil
 }
 
-// VerifyTurnSheetKey verifies that a turn sheet key exists, is not expired, and matches the subscription.
-func (m *Domain) VerifyTurnSheetKey(turnSheetKey string) (*game_record.GameSubscription, error) {
-	l := m.Logger("VerifyTurnSheetKey")
-	l.Debug("verifying turn sheet key")
+// VerifyGameSubscriptionTurnSheetKey verifies that a turn sheet key exists, is not expired, and matches the subscription.
+func (m *Domain) VerifyGameSubscriptionTurnSheetKey(subscriptionID, turnSheetKey string) (*game_record.GameSubscription, error) {
+	l := m.Logger("VerifyGameSubscriptionTurnSheetKey")
+	l.Debug("verifying game subscription turn sheet key >%s<", turnSheetKey)
+
+	if subscriptionID == "" {
+		return nil, coreerror.NewInvalidDataError("subscription_id is required")
+	}
 
 	if turnSheetKey == "" {
 		return nil, coreerror.NewInvalidDataError("turn_sheet_key is required")
 	}
 
-	// Get subscription by turn_sheet_key
-	recs, err := m.GetManyGameSubscriptionRecs(&sql.Options{
-		Params: []sql.Param{
-			{Col: game_record.FieldGameSubscriptionTurnSheetKey, Val: turnSheetKey},
-		},
-		Limit: 1,
-	})
+	// Get subscription by subscription_id
+	rec, err := m.GetGameSubscriptionRec(subscriptionID, sql.ForUpdateNoWait)
 	if err != nil {
-		l.Warn("failed to get game subscription by turn sheet key >%s< >%v<", turnSheetKey, err)
+		l.Warn("failed to get game subscription record >%v<", err)
 		return nil, err
 	}
 
-	if len(recs) == 0 {
-		return nil, coreerror.NewNotFoundError(game_record.TableGameSubscription, "turn_sheet_key="+turnSheetKey)
-	}
-
-	gameSubscriptionRec := recs[0]
-
 	// Check expiration
-	if !nulltime.IsValid(gameSubscriptionRec.TurnSheetKeyExpiresAt) {
-		return nil, fmt.Errorf("turn sheet key has no expiration set")
+	if !nulltime.IsValid(rec.TurnSheetTokenExpiresAt) {
+		return nil, fmt.Errorf("turn sheet token has no expiration set")
 	}
 
-	if time.Now().After(nulltime.ToTime(gameSubscriptionRec.TurnSheetKeyExpiresAt)) {
-		return nil, fmt.Errorf("turn sheet key has expired")
+	if time.Now().After(nulltime.ToTime(rec.TurnSheetTokenExpiresAt)) {
+		return nil, fmt.Errorf("turn sheet token has expired")
 	}
 
 	// Verify key matches
-	if !nullstring.IsValid(gameSubscriptionRec.TurnSheetKey) || nullstring.ToString(gameSubscriptionRec.TurnSheetKey) != turnSheetKey {
-		return nil, fmt.Errorf("turn sheet key does not match subscription")
+	if !nullstring.IsValid(rec.TurnSheetToken) || nullstring.ToString(rec.TurnSheetToken) != turnSheetKey {
+		return nil, fmt.Errorf("turn sheet token does not match subscription")
 	}
 
-	l.Debug("turn sheet key verified successfully for subscription >%s<", gameSubscriptionRec.ID)
+	l.Debug("turn sheet token verified successfully for subscription >%s<", rec.ID)
 
-	return gameSubscriptionRec, nil
+	return rec, nil
 }

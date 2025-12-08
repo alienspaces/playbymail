@@ -166,7 +166,7 @@ func (w *SendTesterInvitationEmailWorker) DoWork(ctx context.Context, m *domain.
 	}{
 		GameName:     gameRec.Name,
 		JoinURL:      joinURL,
-		SupportEmail: "support@playbymail.games",
+		SupportEmail: w.Config.SupportEmailAddress,
 		Year:         time.Now().Year(),
 	}
 
@@ -176,7 +176,7 @@ func (w *SendTesterInvitationEmailWorker) DoWork(ctx context.Context, m *domain.
 	}
 
 	emailMsg := &emailer.Message{
-		From:    "noreply@playbymail.games",
+		From:    w.Config.NoReplyEmailAddress,
 		To:      []string{j.Args.Email},
 		Subject: fmt.Sprintf("You're invited to test %s", gameRec.Name),
 		Body:    body.String(),

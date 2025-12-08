@@ -200,3 +200,12 @@ func (m *Domain) GameImageRepository() *repository.Generic[game_record.GameImage
 func (m *Domain) Logger(functionName string) logger.Logger {
 	return m.Log.WithFunctionContext(functionName)
 }
+
+// TODO: The player turn sheet handler is the only place we are accessing the config from the domain
+// object. Perhaps config should be passed in as a parameter to the handler as an argument consistently
+// before the logger and this method removed.
+
+// Config - Returns the domain configuration
+func (m *Domain) Config() config.Config {
+	return m.config
+}

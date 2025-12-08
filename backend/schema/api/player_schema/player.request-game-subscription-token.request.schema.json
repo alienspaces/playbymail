@@ -1,0 +1,17 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "http://playbymail.games/schema/player_schema/player.request-game-subscription-token.request.schema.json",
+    "title": "RequestGameSubscriptionTokenRequest",
+    "type": "object",
+    "properties": {
+        "email": {
+            "format": "email",
+            "type": "string"
+        }
+    },
+    "required": [
+        "email"
+    ]
+}
+
+

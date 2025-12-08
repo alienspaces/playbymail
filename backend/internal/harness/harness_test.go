@@ -30,20 +30,31 @@ func TestHarnessSetupTeardown_DefaultDataConfig(t *testing.T) {
 		require.NoError(t, err, "Teardown returns without error")
 	}()
 
-	// Check that the default data config created the expected records
-	require.NotEmpty(t, h.Data.AccountRecs, "Account records should be created")
-	require.NotEmpty(t, h.Data.GameRecs, "Game records should be created")
-	require.NotEmpty(t, h.Data.AdventureGameLocationRecs, "Adventure game location records should be created")
-	require.NotEmpty(t, h.Data.AdventureGameLocationLinkRecs, "Adventure game location link records should be created")
-	require.NotEmpty(t, h.Data.AdventureGameLocationLinkRequirementRecs, "Adventure game location link requirement records should be created")
-	require.NotEmpty(t, h.Data.AdventureGameCharacterRecs, "Adventure game character records should be created")
-	require.NotEmpty(t, h.Data.AdventureGameCreatureRecs, "Adventure game creature records should be created")
-	require.NotEmpty(t, h.Data.AdventureGameItemRecs, "Adventure game item records should be created")
-	require.NotEmpty(t, h.Data.AdventureGameLocationLinkRequirementRecs, "Adventure game location link requirement records should be created")
-	require.NotEmpty(t, h.Data.AdventureGameLocationInstanceRecs, "Adventure game location instance records should be created")
-	require.NotEmpty(t, h.Data.AdventureGameCharacterInstanceRecs, "Adventure game character instance records should be created")
-	require.NotEmpty(t, h.Data.AdventureGameCreatureInstanceRecs, "Adventure game creature instance records should be created")
-	require.NotEmpty(t, h.Data.AdventureGameItemInstanceRecs, "Adventure game item instance records should be created")
+	// Check that the default data config created the expected records with exact counts
+	// Accounts: 3 (AccountOneRef, AccountTwoRef, AccountThreeRef)
+	require.Len(t, h.Data.AccountRecs, 3, "Should have exactly 3 account records")
+	// Games: 1 (GameOneRef)
+	require.Len(t, h.Data.GameRecs, 1, "Should have exactly 1 game record")
+	// Locations: 2 (GameLocationOneRef, GameLocationTwoRef)
+	require.Len(t, h.Data.AdventureGameLocationRecs, 2, "Should have exactly 2 adventure game location records")
+	// Location links: 1 (GameLocationLinkOneRef)
+	require.Len(t, h.Data.AdventureGameLocationLinkRecs, 1, "Should have exactly 1 adventure game location link record")
+	// Location link requirements: 1 (GameLocationLinkRequirementOneRef)
+	require.Len(t, h.Data.AdventureGameLocationLinkRequirementRecs, 1, "Should have exactly 1 adventure game location link requirement record")
+	// Characters: 2 (GameCharacterOneRef, GameCharacterTwoRef)
+	require.Len(t, h.Data.AdventureGameCharacterRecs, 2, "Should have exactly 2 adventure game character records")
+	// Creatures: 2 (GameCreatureOneRef, GameCreatureTwoRef)
+	require.Len(t, h.Data.AdventureGameCreatureRecs, 2, "Should have exactly 2 adventure game creature records")
+	// Items: 2 (GameItemOneRef, GameItemTwoRef)
+	require.Len(t, h.Data.AdventureGameItemRecs, 2, "Should have exactly 2 adventure game item records")
+	// Location instances: 2 locations * 2 game instances = 4 (auto-generated for each game instance)
+	require.Len(t, h.Data.AdventureGameLocationInstanceRecs, 4, "Should have exactly 4 adventure game location instance records (2 locations * 2 game instances)")
+	// Character instances: 1 (GameCharacterInstanceOneRef) - only for GameInstanceOneRef
+	require.Len(t, h.Data.AdventureGameCharacterInstanceRecs, 1, "Should have exactly 1 adventure game character instance record")
+	// Creature instances: 1 (GameCreatureInstanceOneRef) - only for GameInstanceOneRef
+	require.Len(t, h.Data.AdventureGameCreatureInstanceRecs, 1, "Should have exactly 1 adventure game creature instance record")
+	// Item instances: 1 (GameItemInstanceOneRef) - only for GameInstanceOneRef
+	require.Len(t, h.Data.AdventureGameItemInstanceRecs, 1, "Should have exactly 1 adventure game item instance record")
 
 	// Check that references are set
 	for ref, id := range h.Data.Refs.AccountRefs {

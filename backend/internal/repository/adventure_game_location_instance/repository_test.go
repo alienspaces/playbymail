@@ -78,7 +78,7 @@ func TestGetOne(t *testing.T) {
 		{
 			name: "valid",
 			id: func(data *harness.Data, t *testing.T) string {
-				rec, err := h.Data.GetAdventureGameLocationInstanceRecByRef(harness.GameLocationInstanceOneRef)
+				rec, err := h.Data.GetAdventureGameLocationInstanceRecByGameInstanceAndLocationRef(harness.GameInstanceOneRef, harness.GameLocationOneRef)
 				require.NoError(t, err)
 				return rec.ID
 			},
@@ -121,7 +121,7 @@ func TestUpdateOne(t *testing.T) {
 		{
 			name: "valid",
 			rec: func(data *harness.Data, t *testing.T) *adventure_game_record.AdventureGameLocationInstance {
-				rec, err := h.Data.GetAdventureGameLocationInstanceRecByRef(harness.GameLocationInstanceOneRef)
+				rec, err := h.Data.GetAdventureGameLocationInstanceRecByGameInstanceAndLocationRef(harness.GameInstanceOneRef, harness.GameLocationOneRef)
 				require.NoError(t, err)
 				return rec
 			},
@@ -130,7 +130,7 @@ func TestUpdateOne(t *testing.T) {
 		{
 			name: "not found",
 			rec: func(data *harness.Data, t *testing.T) *adventure_game_record.AdventureGameLocationInstance {
-				rec, err := h.Data.GetAdventureGameLocationInstanceRecByRef(harness.GameLocationInstanceOneRef)
+				rec, err := h.Data.GetAdventureGameLocationInstanceRecByGameInstanceAndLocationRef(harness.GameInstanceOneRef, harness.GameLocationOneRef)
 				require.NoError(t, err)
 				rec.ID = uuid.NewString()
 				return rec
@@ -167,7 +167,7 @@ func TestDeleteOne(t *testing.T) {
 		{
 			name: "valid",
 			id: func(data *harness.Data, t *testing.T) string {
-				rec, err := h.Data.GetAdventureGameLocationInstanceRecByRef(harness.GameLocationInstanceOneRef)
+				rec, err := h.Data.GetAdventureGameLocationInstanceRecByGameInstanceAndLocationRef(harness.GameInstanceOneRef, harness.GameLocationOneRef)
 				require.NoError(t, err)
 				return rec.ID
 			},

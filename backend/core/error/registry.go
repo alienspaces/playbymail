@@ -105,14 +105,6 @@ func NewMalformedDataError(message string, args ...any) Error {
 	return err
 }
 
-func NewMissingDataError(message string, args ...any) Error {
-	err := GetRegistryError(ErrorCodeMissingData)
-	if message != "" {
-		err.Message = fmt.Sprintf(message, args...)
-	}
-	return err
-}
-
 func NewUnauthorizedError() Error {
 	return GetRegistryError(ErrorCodeUnauthorized)
 }
@@ -135,6 +127,14 @@ func NewParamError(message string, args ...any) Error {
 
 func NewHeaderError(message string, args ...any) Error {
 	err := GetRegistryError(ErrorCodeInvalidHeader)
+	if message != "" {
+		err.Message = fmt.Sprintf(message, args...)
+	}
+	return err
+}
+
+func NewMissingDataError(message string, args ...any) Error {
+	err := GetRegistryError(ErrorCodeMissingData)
 	if message != "" {
 		err.Message = fmt.Sprintf(message, args...)
 	}

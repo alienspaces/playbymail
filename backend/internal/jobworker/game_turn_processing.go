@@ -247,13 +247,6 @@ func (w *GameTurnProcessingWorker) queueTurnSheetNotificationEmails(ctx context.
 			continue
 		}
 
-		// Generate turn sheet key for this subscription
-		_, err = m.GenerateTurnSheetKey(subscriptionRec.ID)
-		if err != nil {
-			l.Warn("failed to generate turn sheet key for subscription >%s< >%v<", subscriptionRec.ID, err)
-			continue
-		}
-
 		// Queue email notification job
 		args := SendTurnSheetNotificationEmailWorkerArgs{
 			GameSubscriptionID: subscriptionRec.ID,

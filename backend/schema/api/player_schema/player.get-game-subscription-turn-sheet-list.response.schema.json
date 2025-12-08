@@ -1,0 +1,32 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "http://playbymail.games/schema/player_schema/player.get-game-subscription-turn-sheet-list.response.schema.json",
+    "title": "GetGameSubscriptionTurnSheetListResponse",
+    "type": "object",
+    "properties": {
+        "subscription_id": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
+        },
+        "game_id": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
+        },
+        "account_id": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
+        },
+        "turn_sheets": {
+            "type": "array",
+            "items": {
+                "$ref": "http://playbymail.games/schema/player_schema/game_turn_sheet.schema.json"
+            }
+        }
+    },
+    "required": [
+        "subscription_id",
+        "game_id",
+        "account_id",
+        "turn_sheets"
+    ],
+    "additionalProperties": false
+}
+
+

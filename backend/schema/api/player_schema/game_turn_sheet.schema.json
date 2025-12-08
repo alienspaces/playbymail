@@ -1,0 +1,111 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "http://playbymail.games/schema/player_schema/game_turn_sheet.schema.json",
+    "title": "GameTurnSheet",
+    "type": "object",
+    "properties": {
+        "id": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
+        },
+        "game_id": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
+        },
+        "game_instance_id": {
+            "oneOf": [
+                {
+                    "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
+                },
+                {
+                    "type": "null"
+                }
+            ]
+        },
+        "account_id": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
+        },
+        "turn_number": {
+            "minimum": 0,
+            "type": "integer"
+        },
+        "sheet_type": {
+            "type": "string",
+            "minLength": 1
+        },
+        "sheet_order": {
+            "minimum": 0,
+            "type": "integer"
+        },
+        "sheet_data": {
+            "type": "object"
+        },
+        "is_completed": {
+            "type": "boolean"
+        },
+        "completed_at": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/updated_at"
+        },
+        "scanned_data": {
+            "oneOf": [
+                {
+                    "type": "object"
+                },
+                {
+                    "type": "null"
+                }
+            ]
+        },
+        "scanned_at": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/updated_at"
+        },
+        "scanned_by": {
+            "oneOf": [
+                {
+                    "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
+                },
+                {
+                    "type": "null"
+                }
+            ]
+        },
+        "processing_status": {
+            "enum": [
+                "pending",
+                "processed",
+                "error"
+            ],
+            "type": "string"
+        },
+        "error_message": {
+            "oneOf": [
+                {
+                    "type": "string",
+                    "minLength": 1
+                },
+                {
+                    "type": "null"
+                }
+            ]
+        },
+        "created_at": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/created_at"
+        },
+        "updated_at": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/updated_at"
+        }
+    },
+    "required": [
+        "id",
+        "game_id",
+        "account_id",
+        "turn_number",
+        "sheet_type",
+        "sheet_order",
+        "sheet_data",
+        "is_completed",
+        "processing_status",
+        "created_at"
+    ],
+    "additionalProperties": false
+}
+
+

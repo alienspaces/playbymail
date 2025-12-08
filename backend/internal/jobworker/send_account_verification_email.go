@@ -143,7 +143,7 @@ func (w *SendAccountVerificationEmailWorker) DoWork(ctx context.Context, m *doma
 		Year             int
 	}{
 		VerificationCode: token,
-		SupportEmail:     "support@playbymail.games",
+		SupportEmail:     w.Config.SupportEmailAddress,
 		Year:             time.Now().Year(),
 	}
 
@@ -153,7 +153,7 @@ func (w *SendAccountVerificationEmailWorker) DoWork(ctx context.Context, m *doma
 	}
 
 	emailMsg := &emailer.Message{
-		From:    "noreply@playbymail.games",
+		From:    w.Config.NoReplyEmailAddress,
 		To:      []string{accountRec.Email},
 		Subject: "Your PlayByMail verification code",
 		Body:    body.String(),

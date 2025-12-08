@@ -30,7 +30,7 @@ func TestCreateOne(t *testing.T) {
 				require.NoError(t, err, "GetGameItemRecByRef returns without error")
 				gameInstanceRec, err := d.GetGameInstanceRecByRef(harness.GameInstanceOneRef)
 				require.NoError(t, err, "GetGameInstanceRecByRef returns without error")
-				locationInstanceRec, err := d.GetAdventureGameLocationInstanceRecByRef(harness.GameLocationInstanceOneRef)
+				locationInstanceRec, err := d.GetAdventureGameLocationInstanceRecByGameInstanceAndLocationRef(harness.GameInstanceOneRef, harness.GameLocationOneRef)
 				require.NoError(t, err, "GetGameLocationRecByRef returns without error")
 				return &adventure_game_record.AdventureGameItemInstance{
 					GameID:                          gameRec.ID,
@@ -50,7 +50,7 @@ func TestCreateOne(t *testing.T) {
 				require.NoError(t, err, "GetGameItemRecByRef returns without error")
 				gameInstanceRec, err := d.GetGameInstanceRecByRef(harness.GameInstanceOneRef)
 				require.NoError(t, err, "GetGameInstanceRecByRef returns without error")
-				locationInstanceRec, err := d.GetAdventureGameLocationInstanceRecByRef(harness.GameLocationInstanceOneRef)
+				locationInstanceRec, err := d.GetAdventureGameLocationInstanceRecByGameInstanceAndLocationRef(harness.GameInstanceOneRef, harness.GameLocationOneRef)
 				require.NoError(t, err, "GetGameLocationRecByRef returns without error")
 				rec := &adventure_game_record.AdventureGameItemInstance{
 					GameID:                          gameRec.ID,

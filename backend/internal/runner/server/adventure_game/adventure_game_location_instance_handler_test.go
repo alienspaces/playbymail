@@ -37,8 +37,8 @@ func Test_getAdventureGameLocationInstancesHandler(t *testing.T) {
 	testCaseResponseDecoder := testutil.TestCaseResponseDecoderGeneric[adventure_game_schema.AdventureGameLocationInstanceResponse]
 
 	// Setup: get a location instance for reference
-	locationInstanceRec, err := th.Data.GetAdventureGameLocationInstanceRecByRef(harness.GameLocationInstanceOneRef)
-	require.NoError(t, err, "GetGameLocationInstanceRecByLocationRef returns without error")
+	locationInstanceRec, err := th.Data.GetAdventureGameLocationInstanceRecByGameInstanceAndLocationRef(harness.GameInstanceOneRef, harness.GameLocationOneRef)
+	require.NoError(t, err, "GetAdventureGameLocationInstanceRecByGameInstanceAndLocationRef returns without error")
 	require.NotNil(t, locationInstanceRec, "Location instance exists for reference")
 
 	// Get the game instance to get the game_id

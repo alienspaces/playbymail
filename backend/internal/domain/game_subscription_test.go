@@ -17,6 +17,7 @@ import (
 )
 
 func TestApproveGameSubscription(t *testing.T) {
+
 	// Create test harness with custom configuration
 	dataConfig := harness.DataConfig{
 		GameConfigs: []harness.GameConfig{
@@ -27,24 +28,6 @@ func TestApproveGameSubscription(t *testing.T) {
 					GameType:          game_record.GameTypeAdventure,
 					TurnDurationHours: 168,
 				},
-				GameSubscriptionConfigs: []harness.GameSubscriptionConfig{
-					{
-						Reference:        "pending-subscription",
-						AccountRef:       "pending-account",
-						SubscriptionType: game_record.GameSubscriptionTypePlayer,
-						Record: &game_record.GameSubscription{
-							Status: game_record.GameSubscriptionStatusPendingApproval,
-						},
-					},
-					{
-						Reference:        "active-subscription",
-						AccountRef:       "pending-account-two",
-						SubscriptionType: game_record.GameSubscriptionTypePlayer,
-						Record: &game_record.GameSubscription{
-							Status: game_record.GameSubscriptionStatusActive,
-						},
-					},
-				},
 			},
 		},
 		AccountConfigs: []harness.AccountConfig{
@@ -54,12 +37,32 @@ func TestApproveGameSubscription(t *testing.T) {
 					Email:  harness.UniqueEmail("pending@example.com"),
 					Status: account_record.AccountStatusPendingApproval,
 				},
+				GameSubscriptionConfigs: []harness.GameSubscriptionConfig{
+					{
+						Reference:        "pending-subscription",
+						GameRef:          harness.GameOneRef,
+						SubscriptionType: game_record.GameSubscriptionTypePlayer,
+						Record: &game_record.GameSubscription{
+							Status: game_record.GameSubscriptionStatusPendingApproval,
+						},
+					},
+				},
 			},
 			{
 				Reference: "pending-account-two",
 				Record: &account_record.Account{
 					Email:  harness.UniqueEmail("pending-two@example.com"),
 					Status: account_record.AccountStatusPendingApproval,
+				},
+				GameSubscriptionConfigs: []harness.GameSubscriptionConfig{
+					{
+						Reference:        "active-subscription",
+						GameRef:          harness.GameOneRef,
+						SubscriptionType: game_record.GameSubscriptionTypePlayer,
+						Record: &game_record.GameSubscription{
+							Status: game_record.GameSubscriptionStatusActive,
+						},
+					},
 				},
 			},
 			{
@@ -187,7 +190,7 @@ func TestApproveGameSubscription(t *testing.T) {
 	}
 }
 
-func TestGenerateTurnSheetKey(t *testing.T) {
+func TestGenerateGameSubscriptionTurnSheetToken(t *testing.T) {
 	dataConfig := harness.DataConfig{
 		GameConfigs: []harness.GameConfig{
 			{
@@ -197,16 +200,6 @@ func TestGenerateTurnSheetKey(t *testing.T) {
 					GameType:          game_record.GameTypeAdventure,
 					TurnDurationHours: 168,
 				},
-				GameSubscriptionConfigs: []harness.GameSubscriptionConfig{
-					{
-						Reference:        "active-subscription",
-						AccountRef:       "test-account",
-						SubscriptionType: game_record.GameSubscriptionTypePlayer,
-						Record: &game_record.GameSubscription{
-							Status: game_record.GameSubscriptionStatusActive,
-						},
-					},
-				},
 			},
 		},
 		AccountConfigs: []harness.AccountConfig{
@@ -215,6 +208,16 @@ func TestGenerateTurnSheetKey(t *testing.T) {
 				Record: &account_record.Account{
 					Email:  harness.UniqueEmail("test@example.com"),
 					Status: account_record.AccountStatusActive,
+				},
+				GameSubscriptionConfigs: []harness.GameSubscriptionConfig{
+					{
+						Reference:        "active-subscription",
+						GameRef:          harness.GameOneRef,
+						SubscriptionType: game_record.GameSubscriptionTypePlayer,
+						Record: &game_record.GameSubscription{
+							Status: game_record.GameSubscriptionStatusActive,
+						},
+					},
 				},
 			},
 		},
@@ -246,16 +249,16 @@ func TestGenerateTurnSheetKey(t *testing.T) {
 		subscriptionID string
 		expectError    bool
 		errorCode      coreerror.Code
-		validate       func(t *testing.T, key string, rec *game_record.GameSubscription)
+		validate       func(t *testing.T, token string, rec *game_record.GameSubscription)
 	}{
 		{
-			name:           "successfully generates turn sheet key",
+			name:           "successfully generates turn sheet token",
 			subscriptionID: subscriptionID,
 			expectError:    false,
-			validate: func(t *testing.T, key string, rec *game_record.GameSubscription) {
-				require.NotEmpty(t, key, "Key should not be empty")
-				require.True(t, nulltime.IsValid(rec.TurnSheetKeyExpiresAt), "Expiration should be set")
-				expirationTime := nulltime.ToTime(rec.TurnSheetKeyExpiresAt)
+			validate: func(t *testing.T, token string, rec *game_record.GameSubscription) {
+				require.NotEmpty(t, token, "Token should not be empty")
+				require.True(t, nulltime.IsValid(rec.TurnSheetTokenExpiresAt), "Expiration should be set")
+				expirationTime := nulltime.ToTime(rec.TurnSheetTokenExpiresAt)
 				expectedExpiration := time.Now().Add(3 * 24 * time.Hour)
 				// Allow 1 minute tolerance for test execution time
 				require.WithinDuration(t, expectedExpiration, expirationTime, 1*time.Minute, "Expiration should be approximately 3 days from now")
@@ -273,7 +276,7 @@ func TestGenerateTurnSheetKey(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			m := th.Domain.(*domain.Domain)
 
-			key, err := m.GenerateTurnSheetKey(tc.subscriptionID)
+			token, err := m.GenerateGameSubscriptionTurnSheetToken(tc.subscriptionID)
 
 			if tc.expectError {
 				require.Error(t, err, "Should return error")
@@ -282,23 +285,23 @@ func TestGenerateTurnSheetKey(t *testing.T) {
 					require.ErrorAs(t, err, &coreErr, "Error should be a coreerror.Error")
 					require.Equal(t, tc.errorCode, coreErr.ErrorCode, "Error code matches expected")
 				}
-				require.Empty(t, key, "Key should be empty on error")
+				require.Empty(t, token, "Token should be empty on error")
 			} else {
 				require.NoError(t, err, "Should not return error")
-				require.NotEmpty(t, key, "Key should not be empty")
+				require.NotEmpty(t, token, "Token should not be empty")
 
-				// Verify the key was saved
+				// Verify the token was saved
 				rec, err := m.GetGameSubscriptionRec(tc.subscriptionID, nil)
 				require.NoError(t, err, "Should be able to retrieve subscription")
 				if tc.validate != nil {
-					tc.validate(t, key, rec)
+					tc.validate(t, token, rec)
 				}
 			}
 		})
 	}
 }
 
-func TestVerifyTurnSheetKey(t *testing.T) {
+func TestVerifyGameSubscriptionTurnSheetKey(t *testing.T) {
 	dataConfig := harness.DataConfig{
 		GameConfigs: []harness.GameConfig{
 			{
@@ -308,16 +311,6 @@ func TestVerifyTurnSheetKey(t *testing.T) {
 					GameType:          game_record.GameTypeAdventure,
 					TurnDurationHours: 168,
 				},
-				GameSubscriptionConfigs: []harness.GameSubscriptionConfig{
-					{
-						Reference:        "active-subscription",
-						AccountRef:       "test-account",
-						SubscriptionType: game_record.GameSubscriptionTypePlayer,
-						Record: &game_record.GameSubscription{
-							Status: game_record.GameSubscriptionStatusActive,
-						},
-					},
-				},
 			},
 		},
 		AccountConfigs: []harness.AccountConfig{
@@ -326,6 +319,16 @@ func TestVerifyTurnSheetKey(t *testing.T) {
 				Record: &account_record.Account{
 					Email:  harness.UniqueEmail("test@example.com"),
 					Status: account_record.AccountStatusActive,
+				},
+				GameSubscriptionConfigs: []harness.GameSubscriptionConfig{
+					{
+						Reference:        "active-subscription",
+						GameRef:          harness.GameOneRef,
+						SubscriptionType: game_record.GameSubscriptionTypePlayer,
+						Record: &game_record.GameSubscription{
+							Status: game_record.GameSubscriptionStatusActive,
+						},
+					},
 				},
 			},
 		},
@@ -354,39 +357,55 @@ func TestVerifyTurnSheetKey(t *testing.T) {
 
 	m := th.Domain.(*domain.Domain)
 
-	// Generate a valid key
-	validKey, err := m.GenerateTurnSheetKey(subscriptionID)
-	require.NoError(t, err, "GenerateTurnSheetKey returns without error")
+	// Generate a valid token
+	validToken, err := m.GenerateGameSubscriptionTurnSheetToken(subscriptionID)
+	require.NoError(t, err, "GenerateGameSubscriptionTurnSheetToken returns without error")
 
 	testCases := []struct {
-		name         string
-		turnSheetKey string
-		expectError  bool
-		validate     func(t *testing.T, rec *game_record.GameSubscription)
+		name           string
+		subscriptionID string
+		turnSheetToken string
+		expectError    bool
+		validate       func(t *testing.T, rec *game_record.GameSubscription)
 	}{
 		{
-			name:         "successfully validates valid turn sheet key",
-			turnSheetKey: validKey,
-			expectError:  false,
+			name:           "successfully validates valid turn sheet token",
+			subscriptionID: subscriptionID,
+			turnSheetToken: validToken,
+			expectError:    false,
 			validate: func(t *testing.T, rec *game_record.GameSubscription) {
 				require.Equal(t, subscriptionID, rec.ID, "Subscription ID matches")
 			},
 		},
 		{
-			name:         "returns error when turn sheet key is empty",
-			turnSheetKey: "",
-			expectError:  true,
+			name:           "returns error when subscription ID is empty",
+			subscriptionID: "",
+			turnSheetToken: validToken,
+			expectError:    true,
 		},
 		{
-			name:         "returns error when turn sheet key does not exist",
-			turnSheetKey: "00000000-0000-0000-0000-000000000000",
-			expectError:  true,
+			name:           "returns error when turn sheet token is empty",
+			subscriptionID: subscriptionID,
+			turnSheetToken: "",
+			expectError:    true,
+		},
+		{
+			name:           "returns error when turn sheet token does not match",
+			subscriptionID: subscriptionID,
+			turnSheetToken: "00000000-0000-0000-0000-000000000000",
+			expectError:    true,
+		},
+		{
+			name:           "returns error when subscription does not exist",
+			subscriptionID: "00000000-0000-0000-0000-000000000000",
+			turnSheetToken: validToken,
+			expectError:    true,
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			rec, err := m.VerifyTurnSheetKey(tc.turnSheetKey)
+			rec, err := m.VerifyGameSubscriptionTurnSheetKey(tc.subscriptionID, tc.turnSheetToken)
 
 			if tc.expectError {
 				require.Error(t, err, "Should return error")
@@ -402,7 +421,7 @@ func TestVerifyTurnSheetKey(t *testing.T) {
 	}
 }
 
-func TestGenerateTurnSheetKeyInvalidatesOldKey(t *testing.T) {
+func TestGenerateGameSubscriptionTurnSheetTokenInvalidatesOldToken(t *testing.T) {
 	dataConfig := harness.DataConfig{
 		GameConfigs: []harness.GameConfig{
 			{
@@ -412,16 +431,6 @@ func TestGenerateTurnSheetKeyInvalidatesOldKey(t *testing.T) {
 					GameType:          game_record.GameTypeAdventure,
 					TurnDurationHours: 168,
 				},
-				GameSubscriptionConfigs: []harness.GameSubscriptionConfig{
-					{
-						Reference:        "active-subscription",
-						AccountRef:       "test-account",
-						SubscriptionType: game_record.GameSubscriptionTypePlayer,
-						Record: &game_record.GameSubscription{
-							Status: game_record.GameSubscriptionStatusActive,
-						},
-					},
-				},
 			},
 		},
 		AccountConfigs: []harness.AccountConfig{
@@ -430,6 +439,16 @@ func TestGenerateTurnSheetKeyInvalidatesOldKey(t *testing.T) {
 				Record: &account_record.Account{
 					Email:  harness.UniqueEmail("test@example.com"),
 					Status: account_record.AccountStatusActive,
+				},
+				GameSubscriptionConfigs: []harness.GameSubscriptionConfig{
+					{
+						Reference:        "active-subscription",
+						GameRef:          harness.GameOneRef,
+						SubscriptionType: game_record.GameSubscriptionTypePlayer,
+						Record: &game_record.GameSubscription{
+							Status: game_record.GameSubscriptionStatusActive,
+						},
+					},
 				},
 			},
 		},
@@ -458,26 +477,26 @@ func TestGenerateTurnSheetKeyInvalidatesOldKey(t *testing.T) {
 
 	m := th.Domain.(*domain.Domain)
 
-	// Generate initial key
-	initialKey, err := m.GenerateTurnSheetKey(subscriptionID)
-	require.NoError(t, err, "GenerateTurnSheetKey returns without error")
-	require.NotEmpty(t, initialKey, "Initial key should not be empty")
+	// Generate initial token
+	initialToken, err := m.GenerateGameSubscriptionTurnSheetToken(subscriptionID)
+	require.NoError(t, err, "GenerateGameSubscriptionTurnSheetToken returns without error")
+	require.NotEmpty(t, initialToken, "Initial token should not be empty")
 
 	// Wait a moment to ensure different timestamp
 	time.Sleep(100 * time.Millisecond)
 
-	// Generate a new key (this invalidates the old one)
-	newKey, err := m.GenerateTurnSheetKey(subscriptionID)
-	require.NoError(t, err, "GenerateTurnSheetKey returns without error")
-	require.NotEmpty(t, newKey, "New key should not be empty")
-	require.NotEqual(t, initialKey, newKey, "New key should be different from initial key")
+	// Generate a new token (this invalidates the old one)
+	newToken, err := m.GenerateGameSubscriptionTurnSheetToken(subscriptionID)
+	require.NoError(t, err, "GenerateGameSubscriptionTurnSheetToken returns without error")
+	require.NotEmpty(t, newToken, "New token should not be empty")
+	require.NotEqual(t, initialToken, newToken, "New token should be different from initial token")
 
-	// Verify old key is invalidated (should not validate)
-	_, err = m.VerifyTurnSheetKey(initialKey)
-	require.Error(t, err, "Old key should not validate")
+	// Verify old token is invalidated (should not validate)
+	_, err = m.VerifyGameSubscriptionTurnSheetKey(subscriptionID, initialToken)
+	require.Error(t, err, "Old token should not validate")
 
-	// Verify new key works
-	rec, err := m.VerifyTurnSheetKey(newKey)
-	require.NoError(t, err, "New key should validate")
+	// Verify new token works
+	rec, err := m.VerifyGameSubscriptionTurnSheetKey(subscriptionID, newToken)
+	require.NoError(t, err, "New token should validate")
 	require.Equal(t, subscriptionID, rec.ID, "Subscription ID matches")
 }

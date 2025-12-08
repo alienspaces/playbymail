@@ -29,6 +29,101 @@ type QueryParams struct {
 	PageNumber  int
 }
 
+// GetParam returns the first query param for the given key
+func (qp *QueryParams) GetParam(key string) []QueryParam {
+	return qp.Params[key]
+}
+
+// GetParamValue returns the value of the first query param for the given key
+func (qp *QueryParams) GetParamValue(key string) any {
+	return qp.Params[key][0].Val
+}
+
+// GetParamValueString returns the value of the first query param for the given key as a string
+func (qp *QueryParams) GetParamValueString(key string) string {
+	return qp.Params[key][0].Val.(string)
+}
+
+// GetParamValueInt returns the value of the first query param for the given key as an int
+func (qp *QueryParams) GetParamValueInt(key string) int {
+	return qp.Params[key][0].Val.(int)
+}
+
+// GetParamValueFloat returns the value of the first query param for the given key as a float64
+func (qp *QueryParams) GetParamValueFloat(key string) float64 {
+	return qp.Params[key][0].Val.(float64)
+}
+
+// GetParamValueBool returns the value of the first query param for the given key as a bool
+func (qp *QueryParams) GetParamValueBool(key string) bool {
+	return qp.Params[key][0].Val.(bool)
+}
+
+// GetParamValues returns all values for the given key
+func (qp *QueryParams) GetParamValues(key string) []any {
+	params, exists := qp.Params[key]
+	if !exists || len(params) == 0 {
+		return []any{}
+	}
+	values := make([]any, len(params))
+	for i, param := range params {
+		values[i] = param.Val
+	}
+	return values
+}
+
+// GetParamValuesString returns all values for the given key as strings
+func (qp *QueryParams) GetParamValuesString(key string) []string {
+	params, exists := qp.Params[key]
+	if !exists || len(params) == 0 {
+		return []string{}
+	}
+	values := make([]string, len(params))
+	for i, param := range params {
+		values[i] = param.Val.(string)
+	}
+	return values
+}
+
+// GetParamValuesInt returns all values for the given key as ints
+func (qp *QueryParams) GetParamValuesInt(key string) []int {
+	params, exists := qp.Params[key]
+	if !exists || len(params) == 0 {
+		return []int{}
+	}
+	values := make([]int, len(params))
+	for i, param := range params {
+		values[i] = param.Val.(int)
+	}
+	return values
+}
+
+// GetParamValuesFloat returns all values for the given key as float64s
+func (qp *QueryParams) GetParamValuesFloat(key string) []float64 {
+	params, exists := qp.Params[key]
+	if !exists || len(params) == 0 {
+		return []float64{}
+	}
+	values := make([]float64, len(params))
+	for i, param := range params {
+		values[i] = param.Val.(float64)
+	}
+	return values
+}
+
+// GetParamValuesBool returns all values for the given key as bools
+func (qp *QueryParams) GetParamValuesBool(key string) []bool {
+	params, exists := qp.Params[key]
+	if !exists || len(params) == 0 {
+		return []bool{}
+	}
+	values := make([]bool, len(params))
+	for i, param := range params {
+		values[i] = param.Val.(bool)
+	}
+	return values
+}
+
 type QueryParam struct {
 	Val any
 	Op  Operator

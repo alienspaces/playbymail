@@ -1,0 +1,21 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "http://playbymail.games/schema/player_schema/player.verify-game-subscription-token.request.schema.json",
+    "title": "VerifyGameSubscriptionTokenRequest",
+    "type": "object",
+    "properties": {
+        "email": {
+            "format": "email",
+            "type": "string"
+        },
+        "turn_sheet_token": {
+            "type": "string"
+        }
+    },
+    "required": [
+        "email",
+        "turn_sheet_token"
+    ]
+}
+
+

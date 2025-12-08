@@ -1,0 +1,23 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "http://playbymail.games/schema/player_schema/player.submit-game-subscription-turn-sheets.response.schema.json",
+    "title": "SubmitGameSubscriptionTurnSheetsResponse",
+    "type": "object",
+    "properties": {
+        "submitted_count": {
+            "minimum": 0,
+            "type": "integer"
+        },
+        "total_count": {
+            "minimum": 0,
+            "type": "integer"
+        }
+    },
+    "required": [
+        "submitted_count",
+        "total_count"
+    ],
+    "additionalProperties": false
+}
+
+

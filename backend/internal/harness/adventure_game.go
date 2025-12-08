@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"gitlab.com/alienspaces/playbymail/internal/domain"
+	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 )
 
@@ -80,11 +81,26 @@ func (t *Testing) createAdventureGameRecords(gameConfig GameConfig, gameRec *gam
 }
 
 // createAdventureGameInstanceRecords creates the adventure game instance records for a game instance
-func (t *Testing) createAdventureGameInstanceRecords(gameInstanceConfig GameInstanceConfig, gameInstanceRec *game_record.GameInstance) error {
+func (t *Testing) createAdventureGameInstanceRecords(gameConfig GameConfig, gameInstanceConfig GameInstanceConfig, gameInstanceRec *game_record.GameInstance) error {
 	l := t.Logger("createAdventureGameInstanceRecords")
 
 	// Create game location instance records for this game instance
-	for _, locationInstanceConfig := range gameInstanceConfig.AdventureGameLocationInstanceConfigs {
+	// If no location instances are explicitly configured, automatically create instances for all game locations
+	locationInstanceConfigs := gameInstanceConfig.AdventureGameLocationInstanceConfigs
+	if len(locationInstanceConfigs) == 0 {
+		// Auto-generate location instances for all locations in the game
+		for _, locationConfig := range gameConfig.AdventureGameLocationConfigs {
+			// Create a reference name based on the location reference for test lookup
+			locationInstanceRef := fmt.Sprintf("%s-instance", locationConfig.Reference)
+			locationInstanceConfigs = append(locationInstanceConfigs, AdventureGameLocationInstanceConfig{
+				Reference:       locationInstanceRef,
+				GameLocationRef: locationConfig.Reference,
+				Record:          &adventure_game_record.AdventureGameLocationInstance{},
+			})
+		}
+	}
+
+	for _, locationInstanceConfig := range locationInstanceConfigs {
 		locationInstanceRec, err := t.createAdventureGameLocationInstanceRec(locationInstanceConfig, gameInstanceRec)
 		if err != nil {
 			l.Warn("failed creating adventure game location instance record >%v<", err)

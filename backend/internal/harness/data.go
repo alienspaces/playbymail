@@ -527,6 +527,32 @@ func (d *Data) GetAdventureGameLocationInstanceRecByRef(ref string) (*adventure_
 	return d.GetAdventureGameLocationInstanceRecByID(id)
 }
 
+// GetAdventureGameLocationInstanceRecByGameInstanceAndLocationRef gets a location instance
+// by game instance reference and location reference. This is useful when location instances
+// are auto-generated and don't have explicit references.
+func (d *Data) GetAdventureGameLocationInstanceRecByGameInstanceAndLocationRef(gameInstanceRef, locationRef string) (*adventure_game_record.AdventureGameLocationInstance, error) {
+	// Get game instance
+	gameInstanceID, ok := d.Refs.GameInstanceRefs[gameInstanceRef]
+	if !ok {
+		return nil, fmt.Errorf("failed getting game instance with ref >%s<", gameInstanceRef)
+	}
+
+	// Get location
+	locationID, ok := d.Refs.AdventureGameLocationRefs[locationRef]
+	if !ok {
+		return nil, fmt.Errorf("failed getting game location with ref >%s<", locationRef)
+	}
+
+	// Find location instance that matches both
+	for _, rec := range d.AdventureGameLocationInstanceRecs {
+		if rec.GameInstanceID == gameInstanceID && rec.AdventureGameLocationID == locationID {
+			return rec, nil
+		}
+	}
+
+	return nil, fmt.Errorf("failed getting game_location_instance with game_instance ref >%s< and location ref >%s<", gameInstanceRef, locationRef)
+}
+
 func (d *Data) GetAdventureGameLocationInstanceRecByLocationRef(ref string) (*adventure_game_record.AdventureGameLocationInstance, error) {
 	id, ok := d.Refs.AdventureGameLocationRefs[ref]
 	if !ok {

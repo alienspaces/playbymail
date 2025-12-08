@@ -172,7 +172,7 @@ func (w *SendGameSubscriptionApprovalEmailWorker) DoWork(ctx context.Context, m 
 		AccountName:  accountName,
 		GameName:     gameRec.Name,
 		ApprovalURL:  approvalURL,
-		SupportEmail: "support@playbymail.games",
+		SupportEmail: w.Config.SupportEmailAddress,
 		Year:         time.Now().Year(),
 	}
 
@@ -182,7 +182,7 @@ func (w *SendGameSubscriptionApprovalEmailWorker) DoWork(ctx context.Context, m 
 	}
 
 	emailMsg := &emailer.Message{
-		From:    "noreply@playbymail.games",
+		From:    w.Config.NoReplyEmailAddress,
 		To:      []string{accountRec.Email},
 		Subject: fmt.Sprintf("Confirm your subscription to %s", gameRec.Name),
 		Body:    body.String(),

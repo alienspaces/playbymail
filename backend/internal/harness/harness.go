@@ -76,6 +76,7 @@ func (t *Testing) CreateData() error {
 
 	l.Debug("creating test data")
 
+	// First pass: Create all accounts
 	for _, accountConfig := range t.DataConfig.AccountConfigs {
 		accountRec, err := t.createAccountRec(accountConfig)
 		if err != nil {
@@ -93,6 +94,7 @@ func (t *Testing) CreateData() error {
 		l.Debug("created account contact record for account ID >%s<", accountRec.ID)
 	}
 
+	// Second pass: Create all games (without instances yet)
 	for _, gameConfig := range t.DataConfig.GameConfigs {
 
 		// Create game record
@@ -102,16 +104,6 @@ func (t *Testing) CreateData() error {
 			return err
 		}
 		l.Debug("created game record ID >%s< Name >%s<", gameRec.ID, gameRec.Name)
-
-		// Create game subscription records for this game
-		for _, subscriptionConfig := range gameConfig.GameSubscriptionConfigs {
-			_, err = t.createGameSubscriptionRec(subscriptionConfig, gameRec)
-			if err != nil {
-				l.Warn("failed creating game_subscription record >%v<", err)
-				return err
-			}
-			l.Debug("created game_subscription record for game >%s<", gameRec.ID)
-		}
 
 		// ------------------------------------------------------------
 		// Adventure game specific records for this game
@@ -123,6 +115,35 @@ func (t *Testing) CreateData() error {
 			return err
 		}
 		l.Debug("created adventure game records for game >%s<", gameRec.ID)
+	}
+
+	// Third pass: Create all game subscriptions (accounts subscribe to games)
+	// This must happen before game instances since instances require subscriptions
+	for _, accountConfig := range t.DataConfig.AccountConfigs {
+		accountRec, err := t.Data.GetAccountRecByRef(accountConfig.Reference)
+		if err != nil {
+			l.Warn("failed getting account record for reference >%s<: %v", accountConfig.Reference, err)
+			return err
+		}
+
+		// Create game subscription records for this account
+		for _, subscriptionConfig := range accountConfig.GameSubscriptionConfigs {
+			_, err = t.createGameSubscriptionRec(subscriptionConfig, accountRec)
+			if err != nil {
+				l.Warn("failed creating game_subscription record >%v<", err)
+				return err
+			}
+			l.Debug("created game_subscription record for account >%s<", accountRec.ID)
+		}
+	}
+
+	// Fourth pass: Create all game instances (now that subscriptions exist)
+	for _, gameConfig := range t.DataConfig.GameConfigs {
+		gameRec, err := t.Data.GetGameRecByRef(gameConfig.Reference)
+		if err != nil {
+			l.Warn("failed getting game record for reference >%s<: %v", gameConfig.Reference, err)
+			return err
+		}
 
 		// Create game instance records for this game
 		for _, gameInstanceConfig := range gameConfig.GameInstanceConfigs {
@@ -147,7 +168,7 @@ func (t *Testing) CreateData() error {
 			// Adventure game specific instance records
 			// ------------------------------------------------------------
 
-			err = t.createAdventureGameInstanceRecords(gameInstanceConfig, gameInstanceRec)
+			err = t.createAdventureGameInstanceRecords(gameConfig, gameInstanceConfig, gameInstanceRec)
 			if err != nil {
 				l.Warn("failed creating adventure game instance records >%v<", err)
 				return err

@@ -13,6 +13,10 @@ type Config struct {
 	// Emailer
 	EmailerFaked bool `env:"EMAILER_FAKED" envDefault:"false"`
 
+	// Email addresses
+	SupportEmailAddress string `env:"SUPPORT_EMAIL_ADDRESS" envDefault:"support@playbymail.games"`
+	NoReplyEmailAddress string `env:"NO_REPLY_EMAIL_ADDRESS" envDefault:"noreply@playbymail.games"`
+
 	// Save test PDFs (set SAVE_TEST_FILES=true to save, KEEP_TEST_FILES=true to keep after tests)
 	SaveTestFiles bool `env:"SAVE_TEST_FILES" envDefault:"false"`
 
