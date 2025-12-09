@@ -5,11 +5,52 @@ import (
 
 	"gitlab.com/alienspaces/playbymail/core/domain"
 	coreerror "gitlab.com/alienspaces/playbymail/core/error"
+	coresql "gitlab.com/alienspaces/playbymail/core/sql"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 )
 
 func (m *Domain) validateGameInstanceRecForCreate(rec *game_record.GameInstance) error {
-	return validateGameInstanceRec(rec, false)
+	if err := validateGameInstanceRec(rec, false); err != nil {
+		return err
+	}
+
+	// Validate that game_subscription_id references a Manager subscription
+	subscriptionRec, err := m.GetGameSubscriptionRec(rec.GameSubscriptionID, nil)
+	if err != nil {
+		return coreerror.NewInvalidDataError("game_subscription_id references invalid game subscription")
+	}
+
+	if subscriptionRec.SubscriptionType != game_record.GameSubscriptionTypeManager {
+		return coreerror.NewInvalidDataError("game_subscription_id must reference a Manager subscription")
+	}
+
+	// Enforce 10 instance limit per manager subscription
+	existingInstances, err := m.GetManyGameInstanceRecs(&coresql.Options{
+		Params: []coresql.Param{
+			{
+				Col: game_record.FieldGameInstanceGameSubscriptionID,
+				Val: rec.GameSubscriptionID,
+			},
+		},
+	})
+	if err != nil {
+		return coreerror.NewInvalidDataError("failed to check existing game instances")
+	}
+
+	// Count non-deleted instances
+	activeInstanceCount := 0
+	for _, instance := range existingInstances {
+		if !instance.DeletedAt.Valid {
+			activeInstanceCount++
+		}
+	}
+
+	const maxInstancesPerManager = 10
+	if activeInstanceCount >= maxInstancesPerManager {
+		return coreerror.NewInvalidDataError("manager subscription has reached the maximum of %d game instances", maxInstancesPerManager)
+	}
+
+	return nil
 }
 
 func (m *Domain) validateGameInstanceRecForUpdate(rec *game_record.GameInstance) error {

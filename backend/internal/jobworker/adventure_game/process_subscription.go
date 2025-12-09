@@ -7,6 +7,7 @@ import (
 
 	corerecord "gitlab.com/alienspaces/playbymail/core/record"
 	coresql "gitlab.com/alienspaces/playbymail/core/sql"
+	"gitlab.com/alienspaces/playbymail/core/nullstring"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
@@ -37,7 +38,7 @@ func (p *AdventureGameSubscriptionProcessingProcessor) ProcessGameSubscriptionPr
 
 	l.Info("processing join game turn sheet for subscription ID >%s< turn sheet ID >%s<", subscriptionRec.ID, turnSheetRec.ID)
 
-	// Parse the scanned data to get character name
+	// Parse the scanned data to get character name and manager subscription ID
 	var scanData turn_sheet.AdventureGameJoinGameScanData
 	if err := json.Unmarshal(turnSheetRec.ScannedData, &scanData); err != nil {
 		l.Warn("failed to unmarshal join game scan data >%v<", err)
@@ -49,12 +50,45 @@ func (p *AdventureGameSubscriptionProcessingProcessor) ProcessGameSubscriptionPr
 		return fmt.Errorf("character name is required")
 	}
 
-	// Get or create game instance for this game
-	gameInstanceRec, err := p.getOrCreateGameInstance(subscriptionRec.GameID)
+	// Validate scan data for processing (includes game_subscription_id requirement)
+	if err := scanData.ValidateForProcessing(); err != nil {
+		l.Warn("failed to validate scan data for processing >%v<", err)
+		return fmt.Errorf("failed to validate scan data: %w", err)
+	}
+
+	// Validate that the manager subscription exists and is a Manager type
+	managerSubscriptionRec, err := p.Domain.GetGameSubscriptionRec(scanData.GameSubscriptionID, nil)
+	if err != nil {
+		l.Warn("failed to get manager subscription >%s< >%v<", scanData.GameSubscriptionID, err)
+		return fmt.Errorf("failed to get manager subscription: %w", err)
+	}
+
+	if managerSubscriptionRec.SubscriptionType != game_record.GameSubscriptionTypeManager {
+		l.Warn("subscription >%s< is not a Manager subscription, type is >%s<", scanData.GameSubscriptionID, managerSubscriptionRec.SubscriptionType)
+		return fmt.Errorf("game_subscription_id must reference a Manager subscription")
+	}
+
+	if managerSubscriptionRec.GameID != subscriptionRec.GameID {
+		l.Warn("manager subscription >%s< is for game >%s< but player subscription is for game >%s<", scanData.GameSubscriptionID, managerSubscriptionRec.GameID, subscriptionRec.GameID)
+		return fmt.Errorf("manager subscription must be for the same game")
+	}
+
+	// Get or create game instance for this manager subscription
+	gameInstanceRec, err := p.getOrCreateGameInstance(subscriptionRec.GameID, scanData.GameSubscriptionID)
 	if err != nil {
 		l.Warn("failed to get or create game instance >%v<", err)
 		return fmt.Errorf("failed to get or create game instance: %w", err)
 	}
+
+	// Update player subscription to set game_instance_id
+	subscriptionRec.GameInstanceID = nullstring.FromString(gameInstanceRec.ID)
+	subscriptionRec, err = p.Domain.UpdateGameSubscriptionRec(subscriptionRec)
+	if err != nil {
+		l.Warn("failed to update player subscription with game_instance_id >%v<", err)
+		return fmt.Errorf("failed to update player subscription: %w", err)
+	}
+
+	l.Info("updated player subscription >%s< with game_instance_id >%s<", subscriptionRec.ID, gameInstanceRec.ID)
 
 	// Create or get adventure game character
 	characterRec, err := p.getOrCreateAdventureGameCharacter(subscriptionRec.GameID, subscriptionRec.AccountID, scanData.CharacterName)
@@ -119,51 +153,71 @@ func (p *AdventureGameSubscriptionProcessingProcessor) ProcessGameSubscriptionPr
 	return nil
 }
 
-// getOrCreateGameInstance gets the first active game instance for a game, or creates a new one
-func (p *AdventureGameSubscriptionProcessingProcessor) getOrCreateGameInstance(gameID string) (*game_record.GameInstance, error) {
+// getOrCreateGameInstance gets an existing game instance for a manager subscription with capacity,
+// or creates a new one if none exist or all are full
+func (p *AdventureGameSubscriptionProcessingProcessor) getOrCreateGameInstance(gameID, managerSubscriptionID string) (*game_record.GameInstance, error) {
 	l := p.Logger.WithFunctionContext("getOrCreateGameInstance")
 
-	// Try to get an existing active game instance that has started
+	// Get all game instances for this manager subscription
 	gameInstanceRecs, err := p.Domain.GetManyGameInstanceRecs(&coresql.Options{
 		Params: []coresql.Param{
 			{Col: game_record.FieldGameInstanceGameID, Val: gameID},
-			{Col: game_record.FieldGameInstanceStatus, Val: game_record.GameInstanceStatusStarted},
+			{Col: game_record.FieldGameInstanceGameSubscriptionID, Val: managerSubscriptionID},
 		},
-		Limit: 1,
 	})
 	if err != nil {
-		l.Warn("failed to get game instances by game ID >%s< status >%s< >%v<", gameID, game_record.GameInstanceStatusStarted, err)
+		l.Warn("failed to get game instances by game ID >%s< manager subscription ID >%s< >%v<", gameID, managerSubscriptionID, err)
 		return nil, err
 	}
 
-	if len(gameInstanceRecs) > 0 {
-		l.Info("found existing game instance ID >%s< for game ID >%s<", gameInstanceRecs[0].ID, gameID)
-		return gameInstanceRecs[0], nil
+	// Filter to only active (non-deleted) instances
+	var activeInstances []*game_record.GameInstance
+	for _, instance := range gameInstanceRecs {
+		if !instance.DeletedAt.Valid {
+			activeInstances = append(activeInstances, instance)
+		}
 	}
 
-	// Also check for created status instances that have not started
-	createdInstanceRecs, err := p.Domain.GetManyGameInstanceRecs(&coresql.Options{
-		Params: []coresql.Param{
-			{Col: game_record.FieldGameInstanceGameID, Val: gameID},
-			{Col: game_record.FieldGameInstanceStatus, Val: game_record.GameInstanceStatusCreated},
-		},
-		Limit: 1,
-	})
-	if err != nil {
-		l.Warn("failed to get game instances by game ID >%s< status >%s< >%v<", gameID, game_record.GameInstanceStatusCreated, err)
-		return nil, err
+	// Try to find an instance with capacity (status created or started)
+	// For now, we'll use instances that are created or started and haven't reached required_player_count
+	// TODO: Add logic to check actual player count vs capacity if needed
+	for _, instance := range activeInstances {
+		if instance.Status == game_record.GameInstanceStatusCreated || instance.Status == game_record.GameInstanceStatusStarted {
+			// Check if instance has capacity by counting player subscriptions
+			playerSubscriptions, err := p.Domain.GetManyGameSubscriptionRecs(&coresql.Options{
+				Params: []coresql.Param{
+					{Col: game_record.FieldGameSubscriptionGameID, Val: gameID},
+					{Col: game_record.FieldGameSubscriptionGameInstanceID, Val: instance.ID},
+					{Col: game_record.FieldGameSubscriptionSubscriptionType, Val: game_record.GameSubscriptionTypePlayer},
+				},
+			})
+			if err != nil {
+				l.Warn("failed to get player subscriptions for game instance >%s< >%v<", instance.ID, err)
+				continue
+			}
+
+			// Count active player subscriptions
+			activePlayerCount := 0
+			for _, sub := range playerSubscriptions {
+				if !sub.DeletedAt.Valid && sub.Status == game_record.GameSubscriptionStatusActive {
+					activePlayerCount++
+				}
+			}
+
+			// If instance has no required_player_count (0) or hasn't reached it, use this instance
+			if instance.RequiredPlayerCount == 0 || activePlayerCount < instance.RequiredPlayerCount {
+				l.Info("found game instance ID >%s< with capacity (players: %d/%d) for game ID >%s< manager subscription ID >%s<", instance.ID, activePlayerCount, instance.RequiredPlayerCount, gameID, managerSubscriptionID)
+				return instance, nil
+			}
+		}
 	}
 
-	if len(createdInstanceRecs) > 0 {
-		l.Info("found existing created game instance ID >%s< for game ID >%s<", createdInstanceRecs[0].ID, gameID)
-		return createdInstanceRecs[0], nil
-	}
-
-	// No existing instance found, create a new one
-	l.Info("creating new game instance for game ID >%s<", gameID)
+	// No instance with capacity found, create a new one
+	l.Info("creating new game instance for game ID >%s< manager subscription ID >%s<", gameID, managerSubscriptionID)
 	gameInstanceRec := &game_record.GameInstance{
-		GameID: gameID,
-		Status: game_record.GameInstanceStatusCreated,
+		GameID:            gameID,
+		GameSubscriptionID: managerSubscriptionID,
+		Status:            game_record.GameInstanceStatusCreated,
 	}
 
 	gameInstanceRec, err = p.Domain.CreateGameInstanceRec(gameInstanceRec)
@@ -172,7 +226,7 @@ func (p *AdventureGameSubscriptionProcessingProcessor) getOrCreateGameInstance(g
 		return nil, err
 	}
 
-	l.Info("created new game instance ID >%s< for game ID >%s<", gameInstanceRec.ID, gameID)
+	l.Info("created new game instance ID >%s< for game ID >%s< manager subscription ID >%s<", gameInstanceRec.ID, gameID, managerSubscriptionID)
 
 	return gameInstanceRec, nil
 }

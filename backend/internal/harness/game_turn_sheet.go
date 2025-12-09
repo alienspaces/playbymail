@@ -273,9 +273,24 @@ func (t *Testing) processJoinGameSubscriptionInSetup(ctx context.Context, subscr
 		return nil, fmt.Errorf("invalid scan data type for join game subscription")
 	}
 
+	// Find manager subscription for this game
+	var managerSubscriptionID string
+	for _, subRec := range t.Data.GameSubscriptionRecs {
+		if subRec.GameID == gameRec.ID && subRec.SubscriptionType == game_record.GameSubscriptionTypeManager {
+			managerSubscriptionID = subRec.ID
+			break
+		}
+	}
+
+	if managerSubscriptionID == "" {
+		l.Warn("no manager subscription found for game >%s<", gameRec.ID)
+		return nil, fmt.Errorf("no manager subscription found for game")
+	}
+
 	// Construct join game scan data
 	scanData := turn_sheet.AdventureGameJoinGameScanData{
 		JoinGameScanData: turn_sheet.JoinGameScanData{
+			GameSubscriptionID: managerSubscriptionID,
 			Email:              adventureScanData.Email,
 			Name:               adventureScanData.Name,
 			PostalAddressLine1: adventureScanData.PostalAddressLine1,

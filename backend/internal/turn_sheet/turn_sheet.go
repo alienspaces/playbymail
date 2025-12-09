@@ -254,6 +254,7 @@ func (bp *BaseProcessor) ValidateBaseTemplateData(data *TurnSheetTemplateData) e
 // JoinGameScanData captures the generic fields extracted from a scanned join game turn sheet
 // This includes email and contact information that is common across all game types
 type JoinGameScanData struct {
+	GameSubscriptionID string `json:"game_subscription_id"` // Manager subscription ID for the game instance
 	Email              string `json:"email"`
 	Name               string `json:"name"`
 	PostalAddressLine1 string `json:"postal_address_line1"`
@@ -264,6 +265,8 @@ type JoinGameScanData struct {
 }
 
 // Validate ensures required fields are present in the scanned data
+// Note: game_subscription_id is optional during scanning (added during processing)
+// but required when processing the join game turn sheet
 func (d *JoinGameScanData) Validate() error {
 	switch {
 	case d.Email == "":
@@ -281,4 +284,16 @@ func (d *JoinGameScanData) Validate() error {
 	default:
 		return nil
 	}
+}
+
+// ValidateForProcessing ensures all required fields including game_subscription_id are present
+// This should be called when processing the join game turn sheet, not during scanning
+func (d *JoinGameScanData) ValidateForProcessing() error {
+	if err := d.Validate(); err != nil {
+		return err
+	}
+	if d.GameSubscriptionID == "" {
+		return fmt.Errorf("game_subscription_id is required")
+	}
+	return nil
 }

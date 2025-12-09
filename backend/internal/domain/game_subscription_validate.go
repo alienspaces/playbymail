@@ -37,6 +37,23 @@ func (m *Domain) validateGameSubscriptionRecForCreate(rec *game_record.GameSubsc
 		return err
 	}
 
+	// Validate game_instance_id: only valid for Player subscriptions
+	if rec.GameInstanceID.Valid && rec.GameInstanceID.String != "" {
+		if rec.SubscriptionType != game_record.GameSubscriptionTypePlayer {
+			return coreerror.NewInvalidDataError("game_instance_id is only valid for Player subscriptions")
+		}
+
+		// Validate that the game_instance exists and belongs to the same game
+		gameInstanceRec, err := m.GetGameInstanceRec(rec.GameInstanceID.String, nil)
+		if err != nil {
+			return coreerror.NewInvalidDataError("game_instance_id references invalid game instance")
+		}
+
+		if gameInstanceRec.GameID != rec.GameID {
+			return coreerror.NewInvalidDataError("game_instance_id must reference a game instance for the same game")
+		}
+	}
+
 	return nil
 }
 
@@ -63,6 +80,23 @@ func (m *Domain) validateGameSubscriptionRecForUpdate(nextRec, currRec *game_rec
 
 	if err := validateGameSubscriptionStatus(nextRec.Status); err != nil {
 		return err
+	}
+
+	// Validate game_instance_id: only valid for Player subscriptions
+	if nextRec.GameInstanceID.Valid && nextRec.GameInstanceID.String != "" {
+		if nextRec.SubscriptionType != game_record.GameSubscriptionTypePlayer {
+			return coreerror.NewInvalidDataError("game_instance_id is only valid for Player subscriptions")
+		}
+
+		// Validate that the game_instance exists and belongs to the same game
+		gameInstanceRec, err := m.GetGameInstanceRec(nextRec.GameInstanceID.String, nil)
+		if err != nil {
+			return coreerror.NewInvalidDataError("game_instance_id references invalid game instance")
+		}
+
+		if gameInstanceRec.GameID != nextRec.GameID {
+			return coreerror.NewInvalidDataError("game_instance_id must reference a game instance for the same game")
+		}
 	}
 
 	return nil

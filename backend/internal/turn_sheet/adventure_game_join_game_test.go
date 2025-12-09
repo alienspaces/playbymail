@@ -157,6 +157,7 @@ func TestJoinGameProcessor_ScanTurnSheet(t *testing.T) {
 			expectedTurnSheetCode: "", // Will be extracted from image dynamically
 			expectedScanData: &turn_sheet.AdventureGameJoinGameScanData{
 				JoinGameScanData: turn_sheet.JoinGameScanData{
+					GameSubscriptionID: "00000000-0000-0000-0000-000000000001", // Test manager subscription ID
 					Email:              "freddyfriday@gmail.com",
 					Name:               "mr Freddy",
 					PostalAddressLine1: "732 main Road",

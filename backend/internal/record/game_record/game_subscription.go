@@ -21,6 +21,7 @@ const (
 	FieldGameSubscriptionSubscriptionType        = "subscription_type"
 	FieldGameSubscriptionCreatedAt               = "created_at"
 	FieldGameSubscriptionStatus                  = "status"
+	FieldGameSubscriptionGameInstanceID          = "game_instance_id"
 	FieldGameSubscriptionTurnSheetToken          = "turn_sheet_token"
 	FieldGameSubscriptionTurnSheetTokenExpiresAt = "turn_sheet_token_expires_at"
 )
@@ -45,6 +46,7 @@ type GameSubscription struct {
 	AccountContactID        sql.NullString `db:"account_contact_id"`
 	SubscriptionType        string         `db:"subscription_type"`
 	Status                  string         `db:"status"`
+	GameInstanceID          sql.NullString `db:"game_instance_id"`
 	TurnSheetToken          sql.NullString `db:"turn_sheet_token"`
 	TurnSheetTokenExpiresAt sql.NullTime   `db:"turn_sheet_token_expires_at"`
 }
@@ -56,6 +58,7 @@ func (r *GameSubscription) ToNamedArgs() pgx.NamedArgs {
 	args[FieldGameSubscriptionAccountContactID] = r.AccountContactID
 	args[FieldGameSubscriptionSubscriptionType] = r.SubscriptionType
 	args[FieldGameSubscriptionStatus] = r.Status
+	args[FieldGameSubscriptionGameInstanceID] = r.GameInstanceID
 	args[FieldGameSubscriptionTurnSheetToken] = r.TurnSheetToken
 	args[FieldGameSubscriptionTurnSheetTokenExpiresAt] = r.TurnSheetTokenExpiresAt
 	return args
