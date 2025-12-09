@@ -307,12 +307,22 @@ func createGameHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Par
 
 	l.Info("creating game record with path params >%#v<", pp)
 
+	// Get authenticated account ID
+	authenData := server.GetRequestAuthenData(l, r)
+	if authenData == nil || authenData.Account.ID == "" {
+		l.Warn("authenticated account is required to create game")
+		return coreerror.NewUnauthorizedError()
+	}
+
 	mm := m.(*domain.Domain)
 
 	rec, err := mapper.GameRequestToRecord(l, r, &game_record.Game{})
 	if err != nil {
 		return err
 	}
+
+	// Set account_id from authenticated account
+	rec.AccountID = authenData.Account.ID
 
 	rec, err = mm.CreateGameRec(rec)
 	if err != nil {

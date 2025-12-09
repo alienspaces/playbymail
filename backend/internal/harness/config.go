@@ -97,6 +97,7 @@ type DataConfig struct {
 
 type GameConfig struct {
 	Reference                        string // Reference to the game record
+	AccountRef                       string // Reference to the account that owns this game
 	Record                           *game_record.Game
 	GameInstanceConfigs              []GameInstanceConfig
 	AdventureGameLocationConfigs     []AdventureGameLocationConfig     // Locations associated with this game
@@ -458,7 +459,8 @@ func DefaultDataConfig() DataConfig {
 		GameConfigs: []GameConfig{
 			// Adventure game example
 			{
-				Reference: GameOneRef,
+				Reference:  GameOneRef,
+				AccountRef: AccountOneRef,
 				Record: &game_record.Game{
 					Name:              UniqueName("Default Game One"),
 					GameType:          game_record.GameTypeAdventure,

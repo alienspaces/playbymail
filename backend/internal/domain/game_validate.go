@@ -55,6 +55,10 @@ func validateGameRecForUpdate(args *validateGameArgs) error {
 func validateGameRec(args *validateGameArgs) error {
 	rec := args.nextRec
 
+	if err := domain.ValidateUUIDField(game_record.FieldGameAccountID, rec.AccountID); err != nil {
+		return err
+	}
+
 	if err := domain.ValidateStringField(game_record.FieldGameName, rec.Name); err != nil {
 		return err
 	}

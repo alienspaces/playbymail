@@ -4,9 +4,13 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/jackc/pgx/v5"
+	"github.com/riverqueue/river"
 	"github.com/stretchr/testify/require"
 
 	"gitlab.com/alienspaces/playbymail/core/server"
+	"gitlab.com/alienspaces/playbymail/core/type/logger"
+	"gitlab.com/alienspaces/playbymail/core/type/storer"
 	"gitlab.com/alienspaces/playbymail/internal/harness"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 	"gitlab.com/alienspaces/playbymail/internal/runner/server/game"
@@ -142,10 +146,17 @@ func Test_createUpdateDeleteGameHandler(t *testing.T) {
 
 	testCaseResponseDecoder := testutil.TestCaseResponseDecoderGeneric[game_schema.GameResponse]
 
+	// Setup: get an account for authentication
+	accountRec, err := th.Data.GetAccountRecByRef(harness.AccountOneRef)
+	require.NoError(t, err, "GetAccountRecByRef returns without error")
+
 	testCases := []testCase{
 		{
 			TestCase: testutil.TestCase{
 				Name: "API key with open access \\ create game with valid properties \\ returns created game",
+				NewRunner: func(l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], d harness.Data) (testutil.TestRunnerer, error) {
+					return testutil.NewTestRunnerWithAccountID(l, s, j, accountRec.ID, accountRec.Email)
+				},
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[game.CreateOneGame]
 				},
@@ -171,6 +182,9 @@ func Test_createUpdateDeleteGameHandler(t *testing.T) {
 		{
 			TestCase: testutil.TestCase{
 				Name: "API key with open access \\ update game with valid properties \\ returns updated game",
+				NewRunner: func(l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], d harness.Data) (testutil.TestRunnerer, error) {
+					return testutil.NewTestRunnerWithAccountID(l, s, j, accountRec.ID, accountRec.Email)
+				},
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[game.UpdateOneGame]
 				},
@@ -204,6 +218,9 @@ func Test_createUpdateDeleteGameHandler(t *testing.T) {
 		{
 			TestCase: testutil.TestCase{
 				Name: "API key with open access \\ delete game with valid game ID \\ returns no content",
+				NewRunner: func(l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], d harness.Data) (testutil.TestRunnerer, error) {
+					return testutil.NewTestRunnerWithAccountID(l, s, j, accountRec.ID, accountRec.Email)
+				},
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[game.DeleteOneGame]
 				},

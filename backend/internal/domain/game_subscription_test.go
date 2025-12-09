@@ -22,7 +22,8 @@ func TestApproveGameSubscription(t *testing.T) {
 	dataConfig := harness.DataConfig{
 		GameConfigs: []harness.GameConfig{
 			{
-				Reference: harness.GameOneRef,
+				Reference:  harness.GameOneRef,
+				AccountRef: "pending-account",
 				Record: &game_record.Game{
 					Name:              harness.UniqueName("Test Game"),
 					GameType:          game_record.GameTypeAdventure,
@@ -194,7 +195,8 @@ func TestGenerateGameSubscriptionTurnSheetToken(t *testing.T) {
 	dataConfig := harness.DataConfig{
 		GameConfigs: []harness.GameConfig{
 			{
-				Reference: harness.GameOneRef,
+				Reference:  harness.GameOneRef,
+				AccountRef: "test-account",
 				Record: &game_record.Game{
 					Name:              harness.UniqueName("Test Game"),
 					GameType:          game_record.GameTypeAdventure,
@@ -305,7 +307,8 @@ func TestVerifyGameSubscriptionTurnSheetKey(t *testing.T) {
 	dataConfig := harness.DataConfig{
 		GameConfigs: []harness.GameConfig{
 			{
-				Reference: harness.GameOneRef,
+				Reference:  harness.GameOneRef,
+				AccountRef: "test-account",
 				Record: &game_record.Game{
 					Name:              harness.UniqueName("Test Game"),
 					GameType:          game_record.GameTypeAdventure,
@@ -425,7 +428,8 @@ func TestGenerateGameSubscriptionTurnSheetTokenInvalidatesOldToken(t *testing.T)
 	dataConfig := harness.DataConfig{
 		GameConfigs: []harness.GameConfig{
 			{
-				Reference: harness.GameOneRef,
+				Reference:  harness.GameOneRef,
+				AccountRef: "test-account",
 				Record: &game_record.Game{
 					Name:              harness.UniqueName("Test Game"),
 					GameType:          game_record.GameTypeAdventure,

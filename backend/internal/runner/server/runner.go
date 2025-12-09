@@ -307,10 +307,10 @@ func (rnr *Runner) rlsFunc(l logger.Logger, m domainer.Domainer, authedReq serve
 		return server.RLS{}, err
 	}
 
-	// Extract game IDs from subscriptions
-	gameIDs := make([]string, 0, len(gameSubscriptions))
+	// Extract game IDs from subscriptions (for subscription-based access)
+	subscriptionGameIDs := make([]string, 0, len(gameSubscriptions))
 	for _, sub := range gameSubscriptions {
-		gameIDs = append(gameIDs, sub.GameID)
+		subscriptionGameIDs = append(subscriptionGameIDs, sub.GameID)
 	}
 
 	// Get all game subscription IDs for the user
@@ -319,24 +319,15 @@ func (rnr *Runner) rlsFunc(l logger.Logger, m domainer.Domainer, authedReq serve
 		gameSubscriptionIDs = append(gameSubscriptionIDs, sub.ID)
 	}
 
-	// Deduplicate gameIDs
-	gameIDSet := make(map[string]struct{})
-	for _, id := range gameIDs {
-		gameIDSet[id] = struct{}{}
-	}
-	uniqueGameIDs := make([]string, 0, len(gameIDSet))
-	for id := range gameIDSet {
-		uniqueGameIDs = append(uniqueGameIDs, id)
-	}
-
 	// Create RLS identifiers map
+	// account_id will automatically filter games owned by this account
 	identifiers := map[string][]string{
 		"account_id": {authedReq.Account.ID},
 	}
 
-	// Add game IDs if user has access to any games
-	if len(uniqueGameIDs) > 0 {
-		identifiers["game_id"] = uniqueGameIDs
+	// Add game IDs for subscription-based access
+	if len(subscriptionGameIDs) > 0 {
+		identifiers["game_id"] = subscriptionGameIDs
 	}
 
 	// Add game subscription IDs
@@ -344,8 +335,8 @@ func (rnr *Runner) rlsFunc(l logger.Logger, m domainer.Domainer, authedReq serve
 		identifiers["game_subscription_id"] = gameSubscriptionIDs
 	}
 
-	l.Info("(playbymail) RLS applied: account_id=%s game_ids=%v subscription_ids=%v",
-		authedReq.Account.ID, uniqueGameIDs, gameSubscriptionIDs)
+	l.Info("(playbymail) RLS applied: account_id=%s subscription_games=%d game_ids=%v subscription_ids=%v",
+		authedReq.Account.ID, len(subscriptionGameIDs), subscriptionGameIDs, gameSubscriptionIDs)
 
 	return server.RLS{
 		Identifiers: identifiers,

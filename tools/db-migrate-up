@@ -1,5 +1,9 @@
 #!/bin/sh
 
+# Copy .env.develop to .env and source environment
+cp .env.develop .env
+. "$(dirname "$0")"/environment || exit $?
+
 # golang migrate
 # https://github.com/golang-migrate/migrate/releases
 migrate_tool_path=$(which migrate)

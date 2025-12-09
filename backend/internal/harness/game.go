@@ -23,6 +23,16 @@ func (t *Testing) createGameRec(gameConfig GameConfig) (*game_record.Game, error
 
 	rec = t.applyGameRecDefaultValues(rec)
 
+	// Set account_id from AccountRef if provided
+	if gameConfig.AccountRef != "" {
+		accountRec, err := t.Data.GetAccountRecByRef(gameConfig.AccountRef)
+		if err != nil {
+			l.Warn("failed resolving account ref >%s< for game: %v", gameConfig.AccountRef, err)
+			return nil, err
+		}
+		rec.AccountID = accountRec.ID
+	}
+
 	// Create record
 	l.Debug("creating game record >%#v<", rec)
 
