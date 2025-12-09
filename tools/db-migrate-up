@@ -1,7 +1,10 @@
 #!/bin/sh
 
 # Copy .env.develop to .env and source environment
-cp .env.develop .env
+# Note: In CI, DATABASE_URL is already set and should not be overwritten
+if [ -z "$CI" ]; then
+    cp .env.develop .env
+fi
 . "$(dirname "$0")"/environment || exit $?
 
 # golang migrate

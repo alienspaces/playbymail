@@ -50,7 +50,16 @@ fi
 if [ -f "$dotfile_path/.env" ]; then
     echo "=> (env) Loading environment file"
     set -a
+    # Store existing DATABASE_URL if set (e.g., from CI environment)
+    if [ -n "$DATABASE_URL" ]; then
+        _existing_database_url="$DATABASE_URL"
+    fi
     . "$dotfile_path/.env"
+    # Restore DATABASE_URL from environment if it was set before loading .env
+    if [ -n "$_existing_database_url" ]; then
+        DATABASE_URL="$_existing_database_url"
+        echo "=> (env) Preserving DATABASE_URL from environment"
+    fi
     set +a
 fi
 
