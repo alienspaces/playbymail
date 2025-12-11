@@ -18,7 +18,7 @@ import (
 func TestLocationChoiceProcessor_GenerateTurnSheet(t *testing.T) {
 
 	// Setup test harness
-	l, _, _, cfg := testutil.NewDefaultDependencies(t)
+	cfg, l, _, _, _ := testutil.NewDefaultDependencies(t)
 
 	// Create a mock config for the processor
 	cfg.TemplatesPath = "../../templates"
@@ -110,7 +110,7 @@ func TestLocationChoiceProcessor_GenerateTurnSheet(t *testing.T) {
 func TestLocationChoiceProcessor_ScanTurnSheet(t *testing.T) {
 
 	// Setup test harness
-	l, _, _, cfg := testutil.NewDefaultDependencies(t)
+	cfg, l, _, _, _ := testutil.NewDefaultDependencies(t)
 
 	// Create a mock config for the processor
 	cfg.TemplatesPath = "../../templates"
@@ -263,7 +263,8 @@ func TestLocationChoiceProcessor_ScanTurnSheet(t *testing.T) {
 // Set SAVE_TEST_FILES=true to save the PDF to testdata directory
 func TestGenerateLocationChoiceFormatsForPrinting(t *testing.T) {
 
-	l, _, _, cfg := testutil.NewDefaultDependencies(t)
+	cfg, l, _, _, _ := testutil.NewDefaultDependencies(t)
+
 	cfg.TemplatesPath = "../../templates"
 	// SaveTestFiles defaults to false - set SAVE_TEST_FILES=true to generate files
 	cfg.SaveTestFiles = true

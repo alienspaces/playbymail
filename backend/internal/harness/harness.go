@@ -10,20 +10,22 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/type/storer"
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
+	"gitlab.com/alienspaces/playbymail/internal/turn_sheet"
 	"gitlab.com/alienspaces/playbymail/internal/utils/config"
 )
 
 // Testing -
 type Testing struct {
 	*harness.Testing
+	Config       config.Config
+	Scanner      turn_sheet.TurnSheetScanner
+	DataConfig   DataConfig
 	Data         Data
 	teardownData Data
-	DataConfig   DataConfig
-	Config       config.Config
 }
 
 // NewTesting -
-func NewTesting(l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], cfg config.Config, dcfg DataConfig) (t *Testing, err error) {
+func NewTesting(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], scanner turn_sheet.TurnSheetScanner, dcfg DataConfig) (t *Testing, err error) {
 
 	h, err := harness.NewTesting(l, s, j)
 	if err != nil {
@@ -33,6 +35,7 @@ func NewTesting(l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], cfg c
 	t = &Testing{
 		Testing: h,
 		Config:  cfg,
+		Scanner: scanner,
 	}
 
 	// domainer

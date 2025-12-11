@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"gitlab.com/alienspaces/playbymail/core/nullstring"
 	corerecord "gitlab.com/alienspaces/playbymail/core/record"
 	coresql "gitlab.com/alienspaces/playbymail/core/sql"
-	"gitlab.com/alienspaces/playbymail/core/nullstring"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
@@ -215,9 +215,9 @@ func (p *AdventureGameSubscriptionProcessingProcessor) getOrCreateGameInstance(g
 	// No instance with capacity found, create a new one
 	l.Info("creating new game instance for game ID >%s< manager subscription ID >%s<", gameID, managerSubscriptionID)
 	gameInstanceRec := &game_record.GameInstance{
-		GameID:            gameID,
+		GameID:             gameID,
 		GameSubscriptionID: managerSubscriptionID,
-		Status:            game_record.GameInstanceStatusCreated,
+		Status:             game_record.GameInstanceStatusCreated,
 	}
 
 	gameInstanceRec, err = p.Domain.CreateGameInstanceRec(gameInstanceRec)

@@ -22,10 +22,10 @@ type turnSheetScanner struct {
 }
 
 // NewScanner creates a new turn sheet scanner instance
-func NewScanner(cfg config.Config) TurnSheetScanner {
+func NewScanner(cfg config.Config) (TurnSheetScanner, error) {
 	return &turnSheetScanner{
 		cfg: cfg,
-	}
+	}, nil
 }
 
 // GetTurnSheetCodeFromImage extracts the turn sheet code from image data

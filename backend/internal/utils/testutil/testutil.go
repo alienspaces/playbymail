@@ -35,14 +35,14 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/utils/deps"
 )
 
-func NewDefaultDependencies(t *testing.T) (logger.Logger, storer.Storer, *river.Client[pgx.Tx], config.Config) {
+func NewDefaultDependencies(t *testing.T) (config.Config, logger.Logger, storer.Storer, *river.Client[pgx.Tx], turn_sheet.TurnSheetScanner) {
 	cfg, err := config.Parse()
 	require.NoError(t, err, "Parse returns without error")
 
-	l, s, j, err := deps.NewDefaultDependencies(cfg)
+	l, s, j, scanner, err := deps.NewDefaultDependencies(cfg)
 	require.NoError(t, err, "NewDefaultDependencies returns without error")
 
-	return l, s, j, cfg
+	return cfg, l, s, j, scanner
 }
 
 func NewTestHarness(t *testing.T) *harness.Testing {
@@ -51,27 +51,28 @@ func NewTestHarness(t *testing.T) *harness.Testing {
 }
 
 func NewTestHarnessWithConfig(t *testing.T, dataConfig harness.DataConfig) *harness.Testing {
-	l, s, j, cfg := NewDefaultDependencies(t)
-	h, err := harness.NewTesting(l, s, j, cfg, dataConfig)
+
+	cfg, l, s, j, scanner := NewDefaultDependencies(t)
+
+	h, err := harness.NewTesting(cfg, l, s, j, scanner, dataConfig)
 	require.NoError(t, err, "NewTesting returns without error")
+
 	h.ShouldCommitData = true
+
 	err = h.Teardown()
 	require.NoError(t, err, "Teardown returns without error")
+
 	return h
 }
 
-func NewTestRunner(l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx]) (*runner.Runner, error) {
-	return NewTestRunnerWithAccountID(l, s, j, "", "")
+func NewTestRunner(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], scanner turn_sheet.TurnSheetScanner) (*runner.Runner, error) {
+	return NewTestRunnerWithAccountID(cfg, l, s, j, scanner, "", "")
 }
 
-// NewTestRunnerWithAccountID creates a runner with a specific account ID for authentication
-func NewTestRunnerWithAccountID(l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], accountID, email string) (*runner.Runner, error) {
-	cfg, err := config.Parse()
-	if err != nil {
-		return nil, err
-	}
+// AuthenticatedTestRunner creates a runner with a specific account ID for authentication
+func NewTestRunnerWithAccountID(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], scanner turn_sheet.TurnSheetScanner, accountID, email string) (*runner.Runner, error) {
 
-	rnr, err := runner.NewRunnerWithConfig(l, s, j, cfg)
+	rnr, err := runner.NewRunner(cfg, l, s, j, scanner)
 	if err != nil {
 		return nil, err
 	}
@@ -126,14 +127,14 @@ func (m *MockTurnSheetScanner) GetTurnSheetScanData(ctx context.Context, l logge
 }
 
 // NewTestRunnerWithTurnSheetScanner creates a test runner with a custom turn sheet scanner
-func NewTestRunnerWithTurnSheetScanner(l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], scanner turn_sheet.TurnSheetScanner) (TestRunnerer, error) {
-	rnr, err := NewTestRunner(l, s, j)
+func NewTestRunnerWithTurnSheetScanner(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], scanner turn_sheet.TurnSheetScanner) (TestRunnerer, error) {
+	rnr, err := NewTestRunner(cfg, l, s, j, scanner)
 	if err != nil {
 		return nil, err
 	}
 
 	// Get the handler config with the custom scanner
-	gameConfig, err := game.GameHandlerConfig(l, scanner)
+	gameConfig, err := game.GameHandlerConfig(cfg, l, scanner)
 	if err != nil {
 		return nil, err
 	}
@@ -161,7 +162,7 @@ type TestRunnerer interface {
 // (restored after accidental deletion)
 type TestCaser interface {
 	TestName() string
-	TestNewRunner(l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], d harness.Data) (TestRunnerer, error)
+	TestNewRunner(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], scanner turn_sheet.TurnSheetScanner, d harness.Data) (TestRunnerer, error)
 	TestHandlerConfig(rnr TestRunnerer) server.HandlerConfig
 	TestRequestHeaders(data harness.Data) map[string]string
 	TestRequestPathParams(data harness.Data) map[string]string
@@ -180,7 +181,7 @@ type TestCaser interface {
 type TestCase struct {
 	Skip                      bool
 	Name                      string
-	NewRunner                 func(l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], d harness.Data) (TestRunnerer, error)
+	NewRunner                 func(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], scanner turn_sheet.TurnSheetScanner, d harness.Data) (TestRunnerer, error)
 	HandlerConfig             func(rnr TestRunnerer) server.HandlerConfig
 	RequestHeaders            func(d harness.Data) map[string]string
 	RequestPathParams         func(d harness.Data) map[string]string
@@ -200,12 +201,12 @@ type TestCase struct {
 // Update TestCase to implement TestCaser with TestRunnerer
 func (t *TestCase) TestName() string { return t.Name }
 
-func (t *TestCase) TestNewRunner(l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], d harness.Data) (TestRunnerer, error) {
+func (t *TestCase) TestNewRunner(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], scanner turn_sheet.TurnSheetScanner, d harness.Data) (TestRunnerer, error) {
 	if t.NewRunner != nil {
-		return t.NewRunner(l, s, j, d)
+		return t.NewRunner(cfg, l, s, j, scanner, d)
 	}
 
-	rnr, err := NewTestRunner(l, s, j)
+	rnr, err := NewTestRunner(cfg, l, s, j, scanner)
 	if err != nil {
 		return nil, err
 	}
@@ -300,7 +301,7 @@ func TestCaseResponseDecoderGeneric[T any](body io.Reader) (any, error) {
 func RunTestCase(t *testing.T, th *harness.Testing, tc TestCaser, tf func(method string, body any)) {
 	require.NotNil(t, th, "Test harness is not nil")
 
-	rnr, err := tc.TestNewRunner(th.Log, th.Store, th.JobClient, th.Data)
+	rnr, err := tc.TestNewRunner(th.Config, th.Log, th.Store, th.JobClient, th.Scanner, th.Data)
 	require.NoError(t, err, "TestNewRunner returns without error")
 	require.NotNil(t, rnr, "TestNewRunner returns a new Runner")
 

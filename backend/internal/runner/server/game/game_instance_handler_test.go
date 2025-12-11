@@ -14,6 +14,8 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/type/storer"
 	"gitlab.com/alienspaces/playbymail/internal/harness"
 	"gitlab.com/alienspaces/playbymail/internal/runner/server/game"
+	"gitlab.com/alienspaces/playbymail/internal/turn_sheet"
+	"gitlab.com/alienspaces/playbymail/internal/utils/config"
 	"gitlab.com/alienspaces/playbymail/internal/utils/testutil"
 	"gitlab.com/alienspaces/playbymail/schema/api/game_schema"
 )
@@ -290,9 +292,9 @@ func Test_createOneGameInstanceHandler(t *testing.T) {
 		{
 			TestCase: testutil.TestCase{
 				Name: "API key with open access \\ create game instance with valid properties \\ returns created instance",
-				NewRunner: func(l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], d harness.Data) (testutil.TestRunnerer, error) {
+				NewRunner: func(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], scanner turn_sheet.TurnSheetScanner, d harness.Data) (testutil.TestRunnerer, error) {
 					// Use the actual account ID from the harness for authentication
-					return testutil.NewTestRunnerWithAccountID(l, s, j, accountRec.ID, accountRec.Email)
+					return testutil.NewTestRunnerWithAccountID(cfg, l, s, j, scanner, accountRec.ID, accountRec.Email)
 				},
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[game.CreateOneGameInstance]
@@ -773,8 +775,8 @@ func Test_createGameInstanceHandlerValidation(t *testing.T) {
 	testCases := []testutil.TestCase{
 		{
 			Name: "API key with open access \\ create game instance with closed testing but no email delivery \\ returns validation error",
-			NewRunner: func(l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], d harness.Data) (testutil.TestRunnerer, error) {
-				return testutil.NewTestRunnerWithAccountID(l, s, j, accountRec.ID, accountRec.Email)
+			NewRunner: func(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], scanner turn_sheet.TurnSheetScanner, d harness.Data) (testutil.TestRunnerer, error) {
+				return testutil.NewTestRunnerWithAccountID(cfg, l, s, j, scanner, accountRec.ID, accountRec.Email)
 			},
 			HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 				return rnr.GetHandlerConfig()[game.CreateOneGameInstance]
@@ -856,8 +858,8 @@ func Test_getJoinGameLinkHandler(t *testing.T) {
 		{
 			TestCase: testutil.TestCase{
 				Name: "API key with open access \\ get join game link for closed testing instance \\ returns join link",
-				NewRunner: func(l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], d harness.Data) (testutil.TestRunnerer, error) {
-					return testutil.NewTestRunnerWithAccountID(l, s, j, accountRec.ID, accountRec.Email)
+				NewRunner: func(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], scanner turn_sheet.TurnSheetScanner, d harness.Data) (testutil.TestRunnerer, error) {
+					return testutil.NewTestRunnerWithAccountID(cfg, l, s, j, scanner, accountRec.ID, accountRec.Email)
 				},
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[game.GetJoinGameLink]
@@ -943,8 +945,8 @@ func Test_inviteTesterHandler(t *testing.T) {
 		{
 			TestCase: testutil.TestCase{
 				Name: "API key with open access \\ invite tester to closed testing instance \\ returns success",
-				NewRunner: func(l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], d harness.Data) (testutil.TestRunnerer, error) {
-					return testutil.NewTestRunnerWithAccountID(l, s, j, accountRec.ID, accountRec.Email)
+				NewRunner: func(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], scanner turn_sheet.TurnSheetScanner, d harness.Data) (testutil.TestRunnerer, error) {
+					return testutil.NewTestRunnerWithAccountID(cfg, l, s, j, scanner, accountRec.ID, accountRec.Email)
 				},
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[game.InviteTester]

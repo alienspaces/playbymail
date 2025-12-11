@@ -2,6 +2,7 @@ package scanner
 
 import (
 	"context"
+	"net/http"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -51,6 +52,13 @@ func TestNewImageScanner(t *testing.T) {
 		logger := log.NewDefaultLogger()
 		cfg := config.Config{}
 		scanner, err := NewImageScanner(logger, cfg)
+
+		// Cleanup: Close idle HTTP connections created by the real agent
+		defer func() {
+			if transport, ok := http.DefaultTransport.(*http.Transport); ok {
+				transport.CloseIdleConnections()
+			}
+		}()
 
 		require.NoError(t, err, "Should not return error")
 		require.NotNil(t, scanner, "Scanner should not be nil")
@@ -114,6 +122,13 @@ func TestImageScanner_ExtractTextFromImage(t *testing.T) {
 			scanner, err := NewImageScanner(logger, cfg)
 			require.NoError(t, err)
 
+			// Cleanup: Close idle HTTP connections created by the real agent
+			defer func() {
+				if transport, ok := http.DefaultTransport.(*http.Transport); ok {
+					transport.CloseIdleConnections()
+				}
+			}()
+
 			if tt.mock != nil {
 				scanner.SetAgent(tt.mock)
 			}
@@ -132,6 +147,16 @@ func TestImageScanner_ExtractStructuredData(t *testing.T) {
 	cfg := config.Config{}
 	scanner, err := NewImageScanner(logger, cfg)
 	require.NoError(t, err)
+
+	// Cleanup: Close idle HTTP connections created by the real agent
+	// This prevents the test from hanging due to open connections
+	defer func() {
+		// Close idle connections on the default HTTP transport
+		// This ensures the test process can exit cleanly
+		if transport, ok := http.DefaultTransport.(*http.Transport); ok {
+			transport.CloseIdleConnections()
+		}
+	}()
 
 	mockResponse := []byte(`{"email":"alienspaces@gmail.com"}`)
 	mockAgent := &mockMultiModalAgent{

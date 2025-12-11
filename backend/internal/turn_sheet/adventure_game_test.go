@@ -20,10 +20,11 @@ import (
 
 // Test IDs for generating deterministic turn sheet codes
 const (
-	testGameID          = "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
-	testGameInstanceID  = "b2c3d4e5-f6a7-8901-bcde-f12345678901"
-	testAccountID       = "c3d4e5f6-a7b8-9012-cdef-123456789012"
-	testGameTurnSheetID = "d4e5f6a7-b8c9-0123-def0-234567890123"
+	testGameID             = "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+	testGameInstanceID     = "b2c3d4e5-f6a7-8901-bcde-f12345678901"
+	testAccountID          = "c3d4e5f6-a7b8-9012-cdef-123456789012"
+	testGameTurnSheetID    = "d4e5f6a7-b8c9-0123-def0-234567890123"
+	testGameSubscriptionID = "e5f6a7b8-c9d0-1234-ef01-345678901234"
 )
 
 // loadTestBackgroundImage loads a test background image and converts it to a base64 data URL.
@@ -45,11 +46,11 @@ func loadTestBackgroundImage(t *testing.T, filename string) string {
 }
 
 // generateTestJoinTurnSheetCode generates a realistic join game turn sheet code for testing.
-// It uses the actual GenerateJoinTurnSheetCode function with a deterministic test game ID.
+// It uses the actual GenerateJoinTurnSheetCode function with deterministic test IDs.
 func generateTestJoinTurnSheetCode(t *testing.T) string {
 	t.Helper()
 
-	code, err := turnsheet.GenerateJoinTurnSheetCode(testGameID)
+	code, err := turnsheet.GenerateJoinTurnSheetCode(testGameID, testGameSubscriptionID)
 	require.NoError(t, err, "should generate join turn sheet code")
 
 	return code

@@ -18,13 +18,13 @@ func main() {
 		os.Exit(1)
 	}
 
-	l, s, j, err := deps.NewDefaultDependencies(cfg)
+	l, s, j, scnr, err := deps.NewDefaultDependencies(cfg)
 	if err != nil {
 		fmt.Printf("(cmd) failed default dependencies >%v<\n", err)
 		os.Exit(0)
 	}
 
-	r, err := runner.NewRunnerWithConfig(l, s, j, cfg)
+	r, err := runner.NewRunner(cfg, l, s, j, scnr)
 	if err != nil {
 		fmt.Printf("(cmd) failed new runner >%v<\n", err)
 		os.Exit(0)

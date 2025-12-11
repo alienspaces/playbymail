@@ -16,6 +16,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 	"gitlab.com/alienspaces/playbymail/internal/turn_sheet"
+	"gitlab.com/alienspaces/playbymail/internal/utils/turnsheet"
 )
 
 // GenerateTurnSheetsForGameInstance runs the adventure game job worker to create turn sheets
@@ -331,9 +332,14 @@ func (t *Testing) processJoinGameSubscriptionInSetup(ctx context.Context, subscr
 		return nil, fmt.Errorf("invalid join game scan data: %w", err)
 	}
 
-	// For join game turn sheets, the code is just the game ID
-	// (join game codes are simple identifiers, not full encoded identifiers)
-	turnSheetCode := gameRec.ID
+	// Generate join game turn sheet code using the proper encoding format
+	// (base64-encoded JSON with checksum, same format as playing codes but
+	// with only game ID and manager subscription ID populated)
+	turnSheetCode, err := turnsheet.GenerateJoinTurnSheetCode(gameRec.ID, managerSubscriptionID)
+	if err != nil {
+		l.Warn("failed to generate join turn sheet code >%v<", err)
+		return nil, fmt.Errorf("failed to generate join turn sheet code: %w", err)
+	}
 
 	// Get join game data
 	joinData, err := turn_sheet.GetTurnSheetJoinGameData(gameRec, turnSheetCode)

@@ -535,8 +535,26 @@ func previewGameTurnSheetHandler(w http.ResponseWriter, r *http.Request, pp http
 	var sheetDataBytes []byte
 	switch turnSheetType {
 	case adventure_game_record.AdventureGameTurnSheetTypeJoinGame:
+		// Get manager subscription for this game
+		managerSubs, err := mm.GetManyGameSubscriptionRecs(&coresql.Options{
+			Params: []coresql.Param{
+				{Col: game_record.FieldGameSubscriptionGameID, Val: gameID},
+				{Col: game_record.FieldGameSubscriptionSubscriptionType, Val: game_record.GameSubscriptionTypeManager},
+			},
+			Limit: 1,
+		})
+		if err != nil {
+			l.Warn("failed to get manager subscription >%v<", err)
+			return coreerror.NewInternalError("failed to get manager subscription: %v", err)
+		}
+		if len(managerSubs) == 0 {
+			l.Warn("no manager subscription found for game >%s<", gameID)
+			return coreerror.NewInvalidDataError("no manager subscription found for game")
+		}
+		managerSubscriptionID := managerSubs[0].ID
+
 		// Generate join turn sheet code for this game
-		turnSheetCode, err := turnsheet.GenerateJoinTurnSheetCode(gameID)
+		turnSheetCode, err := turnsheet.GenerateJoinTurnSheetCode(gameID, managerSubscriptionID)
 		if err != nil {
 			l.Warn("failed to generate join turn sheet code >%v<", err)
 			return coreerror.NewInternalError("failed to generate turn sheet code: %v", err)

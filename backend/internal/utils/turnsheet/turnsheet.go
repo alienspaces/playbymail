@@ -13,7 +13,7 @@ import (
 
 // TurnSheetCodeType represents the encoding format for a turn sheet code
 // "playing" codes include full identifiers encoded as base64 JSON with checksum validation
-// "joining" codes are simple identifiers that contain only the game ID (used for join sheets)
+// "joining" codes include game ID and manager subscription ID encoded as base64 JSON with checksum validation
 type TurnSheetCodeType string
 
 const (
@@ -23,13 +23,14 @@ const (
 
 // TurnSheetIdentifier contains the unique identifiers for a turn sheet
 type TurnSheetIdentifier struct {
-	CodeType        TurnSheetCodeType `json:"code_type"`
-	GameID          string            `json:"game_id"`
-	GameInstanceID  string            `json:"game_instance_id"`
-	AccountID       string            `json:"account_id"`
-	GameTurnSheetID string            `json:"game_turn_sheet_id"`
-	GeneratedAt     time.Time         `json:"generated_at"`
-	Checksum        string            `json:"checksum"`
+	CodeType           TurnSheetCodeType `json:"code_type"`
+	GameID             string            `json:"game_id"`
+	GameInstanceID     string            `json:"game_instance_id"`
+	AccountID          string            `json:"account_id"`
+	GameTurnSheetID    string            `json:"game_turn_sheet_id"`
+	GameSubscriptionID string            `json:"game_subscription_id"` // Manager subscription ID for join game codes
+	GeneratedAt        time.Time         `json:"generated_at"`
+	Checksum           string            `json:"checksum"`
 }
 
 // GenerateTurnSheetCode creates a unique, scannable code for a turn sheet
@@ -81,22 +82,30 @@ func GeneratePreviewTurnSheetCode(gameID string) (string, error) {
 }
 
 // GenerateJoinTurnSheetCode returns a structured code for join-game sheets using the same
-// encoding format as playing-game turn sheets but only including the game identifier.
-func GenerateJoinTurnSheetCode(gameID string) (string, error) {
+// encoding format as playing-game turn sheets but only including the game identifier
+// and manager subscription identifier.
+func GenerateJoinTurnSheetCode(gameID, gameSubscriptionID string) (string, error) {
 	if gameID == "" {
 		return "", fmt.Errorf("gameID is required")
 	}
 	if _, err := uuid.Parse(gameID); err != nil {
 		return "", fmt.Errorf("invalid gameID format: %w", err)
 	}
+	if gameSubscriptionID == "" {
+		return "", fmt.Errorf("gameSubscriptionID is required")
+	}
+	if _, err := uuid.Parse(gameSubscriptionID); err != nil {
+		return "", fmt.Errorf("invalid gameSubscriptionID format: %w", err)
+	}
 
 	identifier := TurnSheetIdentifier{
-		CodeType:        TurnSheetCodeTypeJoiningGame,
-		GameID:          gameID,
-		GeneratedAt:     time.Now(),
-		GameInstanceID:  "",
-		AccountID:       "",
-		GameTurnSheetID: "",
+		CodeType:           TurnSheetCodeTypeJoiningGame,
+		GameID:             gameID,
+		GameSubscriptionID: gameSubscriptionID,
+		GeneratedAt:        time.Now(),
+		GameInstanceID:     "",
+		AccountID:          "",
+		GameTurnSheetID:    "",
 	}
 
 	checksum, err := generateChecksum(identifier)
@@ -147,12 +156,13 @@ func generateChecksum(identifier TurnSheetIdentifier) (string, error) {
 	secretKey := "playbymail-turn-sheet-secret-key"
 
 	// Create data for checksum (exclude the checksum field itself)
-	data := fmt.Sprintf("%s:%s:%s:%s:%s:%d",
+	data := fmt.Sprintf("%s:%s:%s:%s:%s:%s:%d",
 		identifier.CodeType,
 		identifier.GameID,
 		identifier.GameInstanceID,
 		identifier.AccountID,
 		identifier.GameTurnSheetID,
+		identifier.GameSubscriptionID,
 		identifier.GeneratedAt.Unix())
 
 	h := hmac.New(sha256.New, []byte(secretKey))

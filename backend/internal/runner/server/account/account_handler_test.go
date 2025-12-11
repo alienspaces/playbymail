@@ -15,6 +15,8 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/type/storer"
 	"gitlab.com/alienspaces/playbymail/internal/harness"
 	"gitlab.com/alienspaces/playbymail/internal/runner/server/account"
+	"gitlab.com/alienspaces/playbymail/internal/turn_sheet"
+	"gitlab.com/alienspaces/playbymail/internal/utils/config"
 	"gitlab.com/alienspaces/playbymail/internal/utils/testutil"
 	"gitlab.com/alienspaces/playbymail/schema/api/account_schema"
 )
@@ -280,8 +282,8 @@ func Test_accountMeHandler(t *testing.T) {
 	testCases := []testutil.TestCase{
 		{
 			Name: "API key with open access \\ get my account \\ returns authenticated user account",
-			NewRunner: func(l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], d harness.Data) (testutil.TestRunnerer, error) {
-				rnr, err := testutil.NewTestRunner(l, s, j)
+			NewRunner: func(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], scanner turn_sheet.TurnSheetScanner, d harness.Data) (testutil.TestRunnerer, error) {
+				rnr, err := testutil.NewTestRunner(cfg, l, s, j, scanner)
 				if err != nil {
 					return nil, err
 				}
@@ -308,8 +310,8 @@ func Test_accountMeHandler(t *testing.T) {
 		},
 		{
 			Name: "API key with open access \\ update my account \\ updates authenticated user account name",
-			NewRunner: func(l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], d harness.Data) (testutil.TestRunnerer, error) {
-				rnr, err := testutil.NewTestRunner(l, s, j)
+			NewRunner: func(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], scanner turn_sheet.TurnSheetScanner, d harness.Data) (testutil.TestRunnerer, error) {
+				rnr, err := testutil.NewTestRunner(cfg, l, s, j, scanner)
 				if err != nil {
 					return nil, err
 				}
@@ -339,8 +341,8 @@ func Test_accountMeHandler(t *testing.T) {
 		},
 		{
 			Name: "API key with open access \\ delete my account \\ deletes authenticated user account",
-			NewRunner: func(l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], d harness.Data) (testutil.TestRunnerer, error) {
-				rnr, err := testutil.NewTestRunner(l, s, j)
+			NewRunner: func(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], scanner turn_sheet.TurnSheetScanner, d harness.Data) (testutil.TestRunnerer, error) {
+				rnr, err := testutil.NewTestRunner(cfg, l, s, j, scanner)
 				if err != nil {
 					return nil, err
 				}

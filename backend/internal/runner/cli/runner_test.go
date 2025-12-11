@@ -9,26 +9,25 @@ import (
 
 	"gitlab.com/alienspaces/playbymail/core/log"
 	"gitlab.com/alienspaces/playbymail/core/store"
+	"gitlab.com/alienspaces/playbymail/internal/turn_sheet"
 	"gitlab.com/alienspaces/playbymail/internal/utils/config"
 	"gitlab.com/alienspaces/playbymail/internal/utils/deps"
 )
 
-func newDefaultDependencies(t *testing.T) (*log.Log, *store.Store, *river.Client[pgx.Tx]) {
+func newDefaultDependencies(t *testing.T) (config.Config, *log.Log, *store.Store, *river.Client[pgx.Tx], turn_sheet.TurnSheetScanner) {
 	cfg, err := config.Parse()
 	require.NoError(t, err, "Parse returns without error")
 
-	l, s, j, err := deps.NewDefaultDependencies(cfg)
+	// The CLI runner does not need a turn sheet scanner
+	l, s, j, scanner, err := deps.NewDefaultDependencies(cfg)
 	require.NoError(t, err, "NewDefaultDependencies returns without error")
 
-	return l, s, j
+	return cfg, l, s, j, scanner
 }
 
-func newTestRunner(t *testing.T, l *log.Log, s *store.Store, j *river.Client[pgx.Tx]) *Runner {
+func newTestRunner(t *testing.T, cfg config.Config, l *log.Log, s *store.Store, j *river.Client[pgx.Tx], scanner turn_sheet.TurnSheetScanner) *Runner {
 
-	cfg, err := config.Parse()
-	require.NoError(t, err, "Parse returns without error")
-
-	r, err := NewRunner(l, j, cfg)
+	r, err := NewRunner(cfg, l, j, scanner)
 	require.NoError(t, err, "NewRunner returns without error")
 
 	err = r.Init(s)
@@ -40,8 +39,8 @@ func newTestRunner(t *testing.T, l *log.Log, s *store.Store, j *river.Client[pgx
 func TestNewRunner(t *testing.T) {
 	t.Parallel()
 
-	l, s, j := newDefaultDependencies(t)
+	cfg, l, s, j, scanner := newDefaultDependencies(t)
 
-	r := newTestRunner(t, l, s, j)
+	r := newTestRunner(t, cfg, l, s, j, scanner)
 	require.NotNil(t, r, "newTestRunner returns a new Runner")
 }

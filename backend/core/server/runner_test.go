@@ -44,8 +44,8 @@ func (rnr *TestRunner) mockAuthenticateRequestFunc(l logger.Logger, m domainer.D
 	}, nil
 }
 
-func newTestRunner(l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], cfg config.Config) (*TestRunner, error) {
-	cRnr, err := NewRunnerWithConfig(l, s, j, cfg)
+func newTestRunner(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx]) (*TestRunner, error) {
+	cRnr, err := NewRunner(cfg, l, s, j)
 	if err != nil {
 		return nil, err
 	}
@@ -72,7 +72,7 @@ func TestRunnerInit(t *testing.T) {
 		require.NoError(t, err, "ClosePool should return no error")
 	}()
 
-	tr, err := newTestRunner(l, s, j, config.Config{})
+	tr, err := newTestRunner(config.Config{}, l, s, j)
 	require.NoError(t, err, "newTestRunner returns without error")
 
 	err = tr.Init(l, s)
@@ -96,7 +96,7 @@ func Test_RunnerServerError(t *testing.T) {
 		require.NoError(t, err, "ClosePool should return no error")
 	}()
 
-	tr, err := newTestRunner(l, s, j, config.Config{})
+	tr, err := newTestRunner(config.Config{}, l, s, j)
 	require.NoError(t, err, "newTestRunner returns without error")
 
 	tr.RunHTTPFunc = func(args map[string]interface{}) error {
@@ -124,7 +124,7 @@ func Test_RunnerDaemonError(t *testing.T) {
 		require.NoError(t, err, "ClosePool should return no error")
 	}()
 
-	tr, err := newTestRunner(l, s, j, config.Config{})
+	tr, err := newTestRunner(config.Config{}, l, s, j)
 	require.NoError(t, err, "newTestRunner returns without error")
 
 	tr.RunHTTPFunc = func(args map[string]interface{}) error {
@@ -151,7 +151,7 @@ func Test_registerRoutes(t *testing.T) {
 		require.NoError(t, err, "ClosePool should return no error")
 	}()
 
-	tr, err := newTestRunner(l, s, j, config.Config{})
+	tr, err := newTestRunner(config.Config{}, l, s, j)
 	require.NoError(t, err, "newTestRunner returns without error")
 
 	err = tr.Init(l, s)
@@ -205,7 +205,7 @@ func Test_ApplyMiddleware(t *testing.T) {
 		require.NoError(t, err, "ClosePool should return no error")
 	}()
 
-	tr, err := newTestRunner(l, s, j, config.Config{})
+	tr, err := newTestRunner(config.Config{}, l, s, j)
 	require.NoError(t, err, "newTestRunner returns without error")
 
 	err = tr.Init(l, s)

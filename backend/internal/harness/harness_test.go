@@ -17,10 +17,11 @@ func TestHarnessSetupTeardown_DefaultDataConfig(t *testing.T) {
 	cfg, err := config.Parse()
 	require.NoError(t, err, "Parse returns without error")
 
-	l, s, j, err := deps.NewDefaultDependencies(cfg)
+	// The harness does not need a turn sheet scanner
+	l, s, j, scanner, err := deps.NewDefaultDependencies(cfg)
 	require.NoError(t, err, "Default dependencies returns without error")
 
-	h, err := harness.NewTesting(l, s, j, cfg, dcfg)
+	h, err := harness.NewTesting(cfg, l, s, j, scanner, dcfg)
 	require.NoError(t, err, "NewTesting returns without error")
 
 	_, err = h.Setup()

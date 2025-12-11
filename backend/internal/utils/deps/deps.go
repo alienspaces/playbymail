@@ -16,16 +16,22 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/harness"
 	"gitlab.com/alienspaces/playbymail/internal/jobclient"
 	"gitlab.com/alienspaces/playbymail/internal/jobqueue"
+	"gitlab.com/alienspaces/playbymail/internal/turn_sheet"
 	"gitlab.com/alienspaces/playbymail/internal/utils/config"
 )
 
 func NewHarness(t *testing.T) *harness.Testing {
+
 	dcfg := harness.DefaultDataConfig()
+
 	cfg, err := config.Parse()
 	require.NoError(t, err)
-	l, s, j, err := NewDefaultDependencies(cfg)
+
+	// The test harness does not need a turn sheet scanner
+	l, s, j, scanner, err := NewDefaultDependencies(cfg)
 	require.NoError(t, err)
-	h, err := harness.NewTesting(l, s, j, cfg, dcfg)
+
+	h, err := harness.NewTesting(cfg, l, s, j, scanner, dcfg)
 	require.NoError(t, err)
 
 	// We setup and teardown within the context of the test
@@ -45,21 +51,21 @@ func NewHandlerTestHarness(t *testing.T) *harness.Testing {
 	return h
 }
 
-func NewDefaultDependencies(cfg config.Config) (*log.Log, *store.Store, *river.Client[pgx.Tx], error) {
+func NewDefaultDependencies(cfg config.Config) (*log.Log, *store.Store, *river.Client[pgx.Tx], turn_sheet.TurnSheetScanner, error) {
 
 	// Logger
 	l, err := log.NewLogger(cfg.Config)
 	if err != nil {
 		// NOTE: Cannot use a logger when we failed to create it!
 		fmt.Printf("failed new logger >%v<", err)
-		return nil, nil, nil, err
+		return nil, nil, nil, nil, err
 	}
 
 	// Storer
 	s, err := store.NewStore(cfg.Config)
 	if err != nil {
 		l.Warn("failed new store >%v<", err)
-		return nil, nil, nil, err
+		return nil, nil, nil, nil, err
 	}
 
 	// Emailer
@@ -73,15 +79,22 @@ func NewDefaultDependencies(cfg config.Config) (*log.Log, *store.Store, *river.C
 	}
 	if err != nil {
 		l.Warn("failed new emailer >%v<", err)
-		return nil, nil, nil, err
+		return nil, nil, nil, nil, err
 	}
 
 	// River
 	j, err := jobclient.NewJobClient(l, cfg, s, e, []string{jobqueue.QueueDefault, jobqueue.QueueGame})
 	if err != nil {
 		l.Warn("failed new job client >%v<", err)
-		return nil, nil, nil, err
+		return nil, nil, nil, nil, err
 	}
 
-	return l, s, j, nil
+	// Turn sheet scanner
+	scnr, err := turn_sheet.NewScanner(cfg)
+	if err != nil {
+		l.Warn("failed new turn sheet scanner >%v<", err)
+		return nil, nil, nil, nil, err
+	}
+
+	return l, s, j, scnr, nil
 }

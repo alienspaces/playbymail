@@ -27,8 +27,6 @@ import (
 	"gitlab.com/alienspaces/playbymail/schema/api/player_schema"
 )
 
-// referenceSchemas is imported from player.go
-
 const (
 	VerifyGameSubscriptionToken           = "verify-game-subscription-token"
 	RequestGameSubscriptionTurnSheetToken = "request-game-subscription-turn-sheet-token"

@@ -17,10 +17,10 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/jobclient"
 	"gitlab.com/alienspaces/playbymail/internal/jobqueue"
 	"gitlab.com/alienspaces/playbymail/internal/record/account_record"
-	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 	"gitlab.com/alienspaces/playbymail/internal/runner/server/account"
 	"gitlab.com/alienspaces/playbymail/internal/runner/server/adventure_game"
 	"gitlab.com/alienspaces/playbymail/internal/runner/server/game"
+	"gitlab.com/alienspaces/playbymail/internal/runner/server/handler_rls"
 	"gitlab.com/alienspaces/playbymail/internal/runner/server/player"
 	"gitlab.com/alienspaces/playbymail/internal/turn_sheet"
 	"gitlab.com/alienspaces/playbymail/internal/utils/config"
@@ -39,10 +39,10 @@ type Runner struct {
 var _ runnable.Runnable = &Runner{}
 
 // NewRunner -
-func NewRunnerWithConfig(l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], cfg config.Config) (*Runner, error) {
+func NewRunner(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], scnr turn_sheet.TurnSheetScanner) (*Runner, error) {
 	l = l.WithPackageContext("runner")
 
-	cr, err := server.NewRunnerWithConfig(l, s, j, cfg.Config)
+	cr, err := server.NewRunner(cfg.Config, l, s, j)
 	if err != nil {
 		err := fmt.Errorf("failed core runner >%v<", err)
 		l.Warn(err.Error())
@@ -70,33 +70,27 @@ func NewRunnerWithConfig(l logger.Logger, s storer.Storer, j *river.Client[pgx.T
 	r.AuthenticateRequestFunc = r.authenticateRequestFunc
 
 	l.Warn("(playbymail) setting RLS function")
-	r.RLSFunc = r.rlsFunc
+	r.RLSFunc = handler_rls.HandlerRLSFunc
 
 	// Additional handler configurations are added here
-	handlerConfigFuncs := []func(logger.Logger) (map[string]server.HandlerConfig, error){
+	handlerConfigFuncs := []func(config.Config, logger.Logger, turn_sheet.TurnSheetScanner) (map[string]server.HandlerConfig, error){
 		// Account related handlers
 		account.AccountHandlerConfig,
 		// Adventure Game handlers
 		adventure_game.AdventureGameHandlerConfig,
 		// Player handlers
 		player.PlayerHandlerConfig,
+		// Game handlers
+		game.GameHandlerConfig,
 	}
 
 	for _, fn := range handlerConfigFuncs {
-		cfg, err := fn(l)
+		handlerConfig, err := fn(cfg, l, scnr)
 		if err != nil {
 			return nil, err
 		}
-		r.HandlerConfig = server.MergeHandlerConfigs(r.HandlerConfig, cfg)
+		r.HandlerConfig = server.MergeHandlerConfigs(r.HandlerConfig, handlerConfig)
 	}
-
-	// Game handler config needs a turn sheet scanner
-	turnSheetScanner := turn_sheet.NewScanner(cfg)
-	gameConfig, err := game.GameHandlerConfig(l, turnSheetScanner)
-	if err != nil {
-		return nil, err
-	}
-	r.HandlerConfig = server.MergeHandlerConfigs(r.HandlerConfig, gameConfig)
 
 	return &r, nil
 }
@@ -283,62 +277,4 @@ func (rnr *Runner) authenticateRequestTokenFunc(l logger.Logger, m domainer.Doma
 		authenData.Account.ID, authenData.Account.Email, authenData.Account.Name)
 
 	return authenData, nil
-}
-
-// rlsFunc determines what game resources the authenticated user has access to
-func (rnr *Runner) rlsFunc(l logger.Logger, m domainer.Domainer, authedReq server.AuthenData) (server.RLS, error) {
-
-	l.Info("(playbymail) rlsFunc called for account: ID=%s Email=%s",
-		authedReq.Account.ID, authedReq.Account.Email)
-
-	mm := m.(*domain.Domain)
-
-	// Get all games the user has access to through subscriptions
-	gameSubscriptions, err := mm.GameSubscriptionRepository().GetMany(&coresql.Options{
-		Params: []coresql.Param{
-			{
-				Col: game_record.FieldGameSubscriptionAccountID,
-				Val: authedReq.Account.ID,
-			},
-		},
-	})
-	if err != nil {
-		l.Warn("(playbymail) failed to get game subscriptions >%v<", err)
-		return server.RLS{}, err
-	}
-
-	// Extract game IDs from subscriptions (for subscription-based access)
-	subscriptionGameIDs := make([]string, 0, len(gameSubscriptions))
-	for _, sub := range gameSubscriptions {
-		subscriptionGameIDs = append(subscriptionGameIDs, sub.GameID)
-	}
-
-	// Get all game subscription IDs for the user
-	gameSubscriptionIDs := make([]string, 0, len(gameSubscriptions))
-	for _, sub := range gameSubscriptions {
-		gameSubscriptionIDs = append(gameSubscriptionIDs, sub.ID)
-	}
-
-	// Create RLS identifiers map
-	// account_id will automatically filter games owned by this account
-	identifiers := map[string][]string{
-		"account_id": {authedReq.Account.ID},
-	}
-
-	// Add game IDs for subscription-based access
-	if len(subscriptionGameIDs) > 0 {
-		identifiers["game_id"] = subscriptionGameIDs
-	}
-
-	// Add game subscription IDs
-	if len(gameSubscriptionIDs) > 0 {
-		identifiers["game_subscription_id"] = gameSubscriptionIDs
-	}
-
-	l.Info("(playbymail) RLS applied: account_id=%s subscription_games=%d game_ids=%v subscription_ids=%v",
-		authedReq.Account.ID, len(subscriptionGameIDs), subscriptionGameIDs, gameSubscriptionIDs)
-
-	return server.RLS{
-		Identifiers: identifiers,
-	}, nil
 }

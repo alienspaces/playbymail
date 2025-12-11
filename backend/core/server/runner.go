@@ -215,14 +215,14 @@ var _ runnable.Runnable = &Runner{}
 
 // NewRunnerWithConfig - creates a new runner with provided configuration. This is useful for testing
 // with configuration that is not sourced from the environment or defaults.
-func NewRunnerWithConfig(l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], cfg config.Config) (*Runner, error) {
+func NewRunner(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx]) (*Runner, error) {
 	l = l.WithPackageContext("runner")
 
 	rnr := &Runner{
+		Config:                 cfg,
 		Log:                    l,
 		Store:                  s,
 		JobClient:              j,
-		Config:                 cfg,
 		HandlerConfig:          make(map[string]HandlerConfig),
 		HandlerMiddlewareFuncs: nil,
 	}

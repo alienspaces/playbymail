@@ -15,10 +15,10 @@ func TestNewRunner(t *testing.T) {
 	cfg, err := config.Parse()
 	require.NoError(t, err, "Parse returns without error")
 
-	l, s, j, err := deps.NewDefaultDependencies(cfg)
+	l, s, j, scanner, err := deps.NewDefaultDependencies(cfg)
 	require.NoError(t, err, "NewDefaultDependencies returns without error")
 
-	r, err := testutil.NewTestRunner(l, s, j)
+	r, err := testutil.NewTestRunner(cfg, l, s, j, scanner)
 	require.NoError(t, err, "NewTestRunner returns without error")
 
 	err = r.Init(s)

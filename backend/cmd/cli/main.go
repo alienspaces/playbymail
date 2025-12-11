@@ -19,13 +19,14 @@ func main() {
 		os.Exit(1)
 	}
 
-	l, s, j, err := deps.NewDefaultDependencies(cfg)
+	// The CLI does not need a turn sheet scanner
+	l, s, j, scanner, err := deps.NewDefaultDependencies(cfg)
 	if err != nil {
 		fmt.Printf("(cmd) failed default dependencies >%v<\n", err)
 		os.Exit(1)
 	}
 
-	r, err := runner.NewRunner(l, j, cfg)
+	r, err := runner.NewRunner(cfg, l, j, scanner)
 	if err != nil {
 		fmt.Printf("(cmd) failed new runner >%v<\n", err)
 		os.Exit(1)

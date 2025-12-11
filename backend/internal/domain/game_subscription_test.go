@@ -81,10 +81,10 @@ func TestApproveGameSubscription(t *testing.T) {
 	cfg, err := config.Parse()
 	require.NoError(t, err, "Parse returns without error")
 
-	l, s, j, err := deps.NewDefaultDependencies(cfg)
+	l, s, j, scanner, err := deps.NewDefaultDependencies(cfg)
 	require.NoError(t, err, "NewDefaultDependencies returns without error")
 
-	th, err := harness.NewTesting(l, s, j, cfg, dataConfig)
+	th, err := harness.NewTesting(cfg, l, s, j, scanner, dataConfig)
 	require.NoError(t, err, "NewTesting returns without error")
 
 	// Domain tests use transactions that can be rolled back
@@ -230,10 +230,10 @@ func TestGenerateGameSubscriptionTurnSheetToken(t *testing.T) {
 	cfg, err := config.Parse()
 	require.NoError(t, err, "Parse returns without error")
 
-	l, s, j, err := deps.NewDefaultDependencies(cfg)
+	l, s, j, scanner, err := deps.NewDefaultDependencies(cfg)
 	require.NoError(t, err, "NewDefaultDependencies returns without error")
 
-	th, err := harness.NewTesting(l, s, j, cfg, dataConfig)
+	th, err := harness.NewTesting(cfg, l, s, j, scanner, dataConfig)
 	require.NoError(t, err, "NewTesting returns without error")
 
 	th.ShouldCommitData = false
@@ -342,10 +342,10 @@ func TestVerifyGameSubscriptionTurnSheetKey(t *testing.T) {
 	cfg, err := config.Parse()
 	require.NoError(t, err, "Parse returns without error")
 
-	l, s, j, err := deps.NewDefaultDependencies(cfg)
+	l, s, j, scanner, err := deps.NewDefaultDependencies(cfg)
 	require.NoError(t, err, "NewDefaultDependencies returns without error")
 
-	th, err := harness.NewTesting(l, s, j, cfg, dataConfig)
+	th, err := harness.NewTesting(cfg, l, s, j, scanner, dataConfig)
 	require.NoError(t, err, "NewTesting returns without error")
 
 	th.ShouldCommitData = false
@@ -463,10 +463,10 @@ func TestGenerateGameSubscriptionTurnSheetTokenInvalidatesOldToken(t *testing.T)
 	cfg, err := config.Parse()
 	require.NoError(t, err, "Parse returns without error")
 
-	l, s, j, err := deps.NewDefaultDependencies(cfg)
+	l, s, j, scanner, err := deps.NewDefaultDependencies(cfg)
 	require.NoError(t, err, "NewDefaultDependencies returns without error")
 
-	th, err := harness.NewTesting(l, s, j, cfg, dataConfig)
+	th, err := harness.NewTesting(cfg, l, s, j, scanner, dataConfig)
 	require.NoError(t, err, "NewTesting returns without error")
 
 	th.ShouldCommitData = false
@@ -522,8 +522,8 @@ func TestGameSubscriptionGameInstanceIDValidation(t *testing.T) {
 					{
 						Reference: "starting-location",
 						Record: &adventure_game_record.AdventureGameLocation{
-							Name:              harness.UniqueName("Starting Location"),
-							Description:       "A starting location for testing",
+							Name:               harness.UniqueName("Starting Location"),
+							Description:        "A starting location for testing",
 							IsStartingLocation: true,
 						},
 					},
@@ -570,10 +570,10 @@ func TestGameSubscriptionGameInstanceIDValidation(t *testing.T) {
 	cfg, err := config.Parse()
 	require.NoError(t, err, "Parse returns without error")
 
-	l, s, j, err := deps.NewDefaultDependencies(cfg)
+	l, s, j, scanner, err := deps.NewDefaultDependencies(cfg)
 	require.NoError(t, err, "NewDefaultDependencies returns without error")
 
-	th, err := harness.NewTesting(l, s, j, cfg, dataConfig)
+	th, err := harness.NewTesting(cfg, l, s, j, scanner, dataConfig)
 	require.NoError(t, err, "NewTesting returns without error")
 
 	th.ShouldCommitData = false

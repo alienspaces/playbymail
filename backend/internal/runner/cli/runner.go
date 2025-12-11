@@ -11,6 +11,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/type/domainer"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
 	"gitlab.com/alienspaces/playbymail/internal/domain"
+	"gitlab.com/alienspaces/playbymail/internal/turn_sheet"
 	"gitlab.com/alienspaces/playbymail/internal/utils/config"
 	"gitlab.com/alienspaces/playbymail/internal/utils/logging"
 )
@@ -18,14 +19,15 @@ import (
 // Runner -
 type Runner struct {
 	corecli.Runner
-	Config config.Config
+	Config  config.Config
+	Scanner turn_sheet.TurnSheetScanner
 }
 
 const (
 	applicationName = "cli"
 )
 
-func NewRunner(l logger.Logger, j *river.Client[pgx.Tx], cfg config.Config) (*Runner, error) {
+func NewRunner(cfg config.Config, l logger.Logger, j *river.Client[pgx.Tx], scanner turn_sheet.TurnSheetScanner) (*Runner, error) {
 	l = l.WithApplicationContext(applicationName)
 
 	cr, err := corecli.NewRunnerWithConfig(l, j, cfg.Config)
@@ -36,8 +38,9 @@ func NewRunner(l logger.Logger, j *river.Client[pgx.Tx], cfg config.Config) (*Ru
 	}
 
 	r := Runner{
-		Runner: *cr,
-		Config: cfg,
+		Runner:  *cr,
+		Config:  cfg,
+		Scanner: scanner,
 	}
 
 	r.DeferDomainInitialisation = true

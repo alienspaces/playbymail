@@ -18,7 +18,7 @@ import (
 func TestInventoryManagementProcessor_GenerateTurnSheet(t *testing.T) {
 
 	// Setup test harness
-	l, _, _, cfg := testutil.NewDefaultDependencies(t)
+	cfg, l, _, _, _ := testutil.NewDefaultDependencies(t)
 
 	// Create a mock config for the processor
 	cfg.TemplatesPath = "../../templates"
@@ -155,7 +155,7 @@ func TestInventoryManagementProcessor_GenerateTurnSheet(t *testing.T) {
 func TestInventoryManagementProcessor_ScanTurnSheet(t *testing.T) {
 
 	// Setup test harness
-	l, _, _, cfg := testutil.NewDefaultDependencies(t)
+	cfg, l, _, _, _ := testutil.NewDefaultDependencies(t)
 
 	// Create a mock config for the processor
 	cfg.TemplatesPath = "../../templates"
@@ -315,7 +315,8 @@ func TestInventoryManagementProcessor_ScanTurnSheet(t *testing.T) {
 // Set SAVE_TEST_FILES=true to save the files to testdata directory
 func TestGenerateInventoryManagementFormatsForPrinting(t *testing.T) {
 
-	l, _, _, cfg := testutil.NewDefaultDependencies(t)
+	cfg, l, _, _, _ := testutil.NewDefaultDependencies(t)
+
 	cfg.TemplatesPath = "../../templates"
 	// SaveTestFiles defaults to false - set SAVE_TEST_FILES=true to generate files
 	cfg.SaveTestFiles = true
