@@ -2,28 +2,22 @@
 
 <!-- markdownlint-disable MD033-->
 
-A platform to revitalize play-by-mail (PBM) games for all ages, supporting a wide variety of genres (RPG, strategy, adventure, sports, and more).
+A play-by-mail platform for all types of turn-based games, supporting both email and physical mail, for all ages.
 
 <img alt="logo" src="playbymail.png" height=400/>
 
 <a href="https://playbymail.games">playbymail.games</a>
 
-All game content, communication, and visuals are delivered via printed materials mailed to players, with automated turn processing and game state updates.
+Game content, communication, and visuals are delivered by email or physical mail. Turn processing and game state updates are automated; players submit turns by email or by returning forms and puzzles through the mail, with human review only when needed.
 
-Players return completed forms and puzzles by mail for processing, with human review only when needed.
-
-The platform is being built to support the full spectrum of classic and modern play-by-mail game types. For designers, this means flexible tools to create adventure games, strategy and wargames, fantasy empire-building campaigns, space 4X and science-fiction strategy games, diplomacy and political negotiation games, hybrid strategy/RPG formats, sports simulations, economic simulations, and more. For players, this translates to diverse gaming experiences—from narrative-driven adventures to complex strategic campaigns—all delivered through the tactile experience of physical mail.
-
-Game writers have tools to create, manage, and publish new games, storylines, maps, and puzzles, all optimized for print.
+The platform supports the full spectrum of turn-based game types: RPG, strategy, wargames, adventure, sports, diplomacy, 4X, economic simulations, and more. Designers get flexible tools to create and publish games, storylines, maps, and puzzles, optimized for both digital and print delivery. Players get diverse turn-based experiences—from narrative adventures to complex strategic campaigns—whether they prefer email or physical mail.
 
 Privacy, security, age-appropriateness, and inclusivity are core principles, with support for parental controls and accessibility.
 
 AI is integrated where appropriate, always subject to human review for narrative and safety.
 
-The system is designed for flexibility, supporting diverse PBM game types and print-and-mail workflows.
-
 ## License
 
 Yet to be determined.
 
-**Important**: PlayByMail is a **physical play-by-mail gaming platform**, not a web-based game. The web interface is for game designers, managers, and administrators to create and manage games that are physically mailed to players.
+**Important**: PlayByMail is a **play-by-mail platform** (email and physical mail), not a real-time web game. The web interface is for game designers, managers, and administrators to create and manage turn-based games that are played via email or physical mail.
