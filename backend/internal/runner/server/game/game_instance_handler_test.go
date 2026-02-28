@@ -14,7 +14,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/type/storer"
 	"gitlab.com/alienspaces/playbymail/internal/harness"
 	"gitlab.com/alienspaces/playbymail/internal/runner/server/game"
-	"gitlab.com/alienspaces/playbymail/internal/turn_sheet"
+	"gitlab.com/alienspaces/playbymail/internal/turnsheet"
 	"gitlab.com/alienspaces/playbymail/internal/utils/config"
 	"gitlab.com/alienspaces/playbymail/internal/utils/testutil"
 	"gitlab.com/alienspaces/playbymail/schema/api/game_schema"
@@ -43,9 +43,12 @@ func Test_searchManyGameInstancesHandler(t *testing.T) {
 	}{
 		{
 			TestCase: testutil.TestCase{
-				Name: "API key with open access \\ search many game instances \\ returns expected instances",
+				Name: "authenticated manager when search many game instances then returns expected instances",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[game.SearchManyGameInstances]
+				},
+				RequestHeaders: func(d harness.Data) map[string]string {
+					return testutil.AuthHeaderProManager(d)
 				},
 				RequestQueryParams: func(d harness.Data) map[string]any {
 					return map[string]any{
@@ -61,9 +64,12 @@ func Test_searchManyGameInstancesHandler(t *testing.T) {
 		},
 		{
 			TestCase: testutil.TestCase{
-				Name: "API key with open access \\ search many game instances with pagination \\ returns expected instances",
+				Name: "authenticated manager when search many game instances with pagination then returns expected instances",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[game.SearchManyGameInstances]
+				},
+				RequestHeaders: func(d harness.Data) map[string]string {
+					return testutil.AuthHeaderProManager(d)
 				},
 				RequestQueryParams: func(d harness.Data) map[string]any {
 					return map[string]any{
@@ -83,7 +89,7 @@ func Test_searchManyGameInstancesHandler(t *testing.T) {
 		t.Logf("Running test >%s<\n", testCase.Name)
 
 		t.Run(testCase.Name, func(t *testing.T) {
-			testFunc := func(method string, body interface{}) {
+			testFunc := func(method string, body any) {
 				require.NotNil(t, body, "Response body is not nil")
 
 				resp := body.(game_schema.GameInstanceCollectionResponse)
@@ -126,9 +132,12 @@ func Test_getManyGameInstancesHandler(t *testing.T) {
 	}{
 		{
 			TestCase: testutil.TestCase{
-				Name: "API key with open access \\ get many game instances \\ returns expected instances",
+				Name: "authenticated manager when get many game instances then returns expected instances",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[game.GetManyGameInstances]
+				},
+				RequestHeaders: func(d harness.Data) map[string]string {
+					return testutil.AuthHeaderProManager(d)
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
@@ -142,9 +151,12 @@ func Test_getManyGameInstancesHandler(t *testing.T) {
 		},
 		{
 			TestCase: testutil.TestCase{
-				Name: "API key with open access \\ get many game instances with pagination \\ returns expected instances",
+				Name: "authenticated manager when get many game instances with pagination then returns expected instances",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[game.GetManyGameInstances]
+				},
+				RequestHeaders: func(d harness.Data) map[string]string {
+					return testutil.AuthHeaderProManager(d)
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
@@ -168,7 +180,7 @@ func Test_getManyGameInstancesHandler(t *testing.T) {
 		t.Logf("Running test >%s<\n", testCase.Name)
 
 		t.Run(testCase.Name, func(t *testing.T) {
-			testFunc := func(method string, body interface{}) {
+			testFunc := func(method string, body any) {
 				require.NotNil(t, body, "Response body is not nil")
 
 				resp := body.(game_schema.GameInstanceCollectionResponse)
@@ -214,9 +226,12 @@ func Test_getOneGameInstanceHandler(t *testing.T) {
 	}{
 		{
 			TestCase: testutil.TestCase{
-				Name: "API key with open access \\ get one game instance with valid instance ID \\ returns expected instance",
+				Name: "authenticated manager when get one game instance with valid instance ID then returns expected instance",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[game.GetOneGameInstance]
+				},
+				RequestHeaders: func(d harness.Data) map[string]string {
+					return testutil.AuthHeaderProManager(d)
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
@@ -242,7 +257,7 @@ func Test_getOneGameInstanceHandler(t *testing.T) {
 		t.Logf("Running test >%s<\n", testCase.Name)
 
 		t.Run(testCase.Name, func(t *testing.T) {
-			testFunc := func(method string, body interface{}) {
+			testFunc := func(method string, body any) {
 				require.NotNil(t, body, "Response body is not nil")
 
 				aResp := body.(game_schema.GameInstanceResponse).Data
@@ -273,17 +288,9 @@ func Test_createOneGameInstanceHandler(t *testing.T) {
 		require.NoError(t, err, "Test data teardown returns without error")
 	}()
 
-	// Get account from harness data (must have Manager subscription)
-	accountRec, err := th.Data.GetAccountRecByRef(harness.AccountTwoRef)
-	require.NoError(t, err, "GetAccountRecByRef returns without error")
-
 	// Get a game from the harness data
 	gameRec, err := th.Data.GetGameRecByRef(harness.GameOneRef)
 	require.NoError(t, err, "GetGameRecByRef returns without error")
-
-	// Get the Manager subscription for this account and game
-	gameSubscriptionRec, err := th.Data.GetGameSubscriptionRecByRef(harness.GameSubscriptionManagerOneRef)
-	require.NoError(t, err, "GetGameSubscriptionRecByRef returns without error")
 
 	testCases := []struct {
 		testutil.TestCase
@@ -291,13 +298,15 @@ func Test_createOneGameInstanceHandler(t *testing.T) {
 	}{
 		{
 			TestCase: testutil.TestCase{
-				Name: "API key with open access \\ create game instance with valid properties \\ returns created instance",
-				NewRunner: func(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], scanner turn_sheet.TurnSheetScanner, d harness.Data) (testutil.TestRunnerer, error) {
-					// Use the actual account ID from the harness for authentication
-					return testutil.NewTestRunnerWithAccountID(cfg, l, s, j, scanner, accountRec.ID, accountRec.Email)
+				Name: "authenticated manager when create game instance with valid properties then returns created instance",
+				NewRunner: func(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], scanner turnsheet.TurnSheetScanner, d harness.Data) (testutil.TestRunnerer, error) {
+					return testutil.NewTestRunner(cfg, l, s, j, scanner)
 				},
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[game.CreateOneGameInstance]
+				},
+				RequestHeaders: func(d harness.Data) map[string]string {
+					return testutil.AuthHeaderProManager(d)
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
@@ -315,10 +324,9 @@ func Test_createOneGameInstanceHandler(t *testing.T) {
 			expectResponse: func(d harness.Data, req game_schema.GameInstanceRequest) game_schema.GameInstanceResponse {
 				return game_schema.GameInstanceResponse{
 					Data: &game_schema.GameInstanceResponseData{
-						GameID:             req.GameID,
-						GameSubscriptionID: gameSubscriptionRec.ID,
-						Status:             "created",
-						CurrentTurn:        0,
+						GameID:      req.GameID,
+						Status:      "created",
+						CurrentTurn: 0,
 					},
 				}
 			},
@@ -329,7 +337,7 @@ func Test_createOneGameInstanceHandler(t *testing.T) {
 		t.Logf("Running test >%s<\n", testCase.Name)
 
 		t.Run(testCase.Name, func(t *testing.T) {
-			testFunc := func(method string, body interface{}) {
+			testFunc := func(method string, body any) {
 				require.NotNil(t, body, "Response body is not nil")
 
 				aResp := body.(game_schema.GameInstanceResponse).Data
@@ -337,7 +345,6 @@ func Test_createOneGameInstanceHandler(t *testing.T) {
 
 				require.NotEmpty(t, aResp, "Response body is not empty")
 				require.Equal(t, xResp.GameID, aResp.GameID, "Game ID equals expected")
-				require.Equal(t, xResp.GameSubscriptionID, aResp.GameSubscriptionID, "GameSubscriptionID equals expected")
 				require.Equal(t, xResp.Status, aResp.Status, "Status equals expected")
 				require.Equal(t, xResp.CurrentTurn, aResp.CurrentTurn, "Current turn equals expected")
 				require.NotEmpty(t, aResp.ID, "Instance ID is not empty")
@@ -375,9 +382,12 @@ func Test_updateOneGameInstanceHandler(t *testing.T) {
 	}{
 		{
 			TestCase: testutil.TestCase{
-				Name: "API key with open access \\ update game instance with valid properties \\ returns updated instance",
+				Name: "authenticated manager when update game instance with valid properties then returns updated instance",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[game.UpdateOneGameInstance]
+				},
+				RequestHeaders: func(d harness.Data) map[string]string {
+					return testutil.AuthHeaderProManager(d)
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
@@ -410,7 +420,7 @@ func Test_updateOneGameInstanceHandler(t *testing.T) {
 		t.Logf("Running test >%s<\n", testCase.Name)
 
 		t.Run(testCase.Name, func(t *testing.T) {
-			testFunc := func(method string, body interface{}) {
+			testFunc := func(method string, body any) {
 				require.NotNil(t, body, "Response body is not nil")
 
 				aResp := body.(game_schema.GameInstanceResponse).Data
@@ -454,9 +464,12 @@ func Test_deleteOneGameInstanceHandler(t *testing.T) {
 	}{
 		{
 			TestCase: testutil.TestCase{
-				Name: "API key with open access \\ delete game instance with valid instance ID \\ returns no content",
+				Name: "authenticated manager when delete game instance with valid instance ID then returns no content",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[game.DeleteOneGameInstance]
+				},
+				RequestHeaders: func(d harness.Data) map[string]string {
+					return testutil.AuthHeaderProManager(d)
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
@@ -473,7 +486,7 @@ func Test_deleteOneGameInstanceHandler(t *testing.T) {
 		t.Logf("Running test >%s<\n", testCase.Name)
 
 		t.Run(testCase.Name, func(t *testing.T) {
-			testFunc := func(method string, body interface{}) {
+			testFunc := func(method string, body any) {
 				// DELETE requests should return no content
 				require.Nil(t, body, "Response body is nil for DELETE request")
 			}
@@ -509,9 +522,12 @@ func Test_startGameInstanceHandler(t *testing.T) {
 	}{
 		{
 			TestCase: testutil.TestCase{
-				Name: "API key with open access \\ start game instance with valid instance ID \\ returns started instance",
+				Name: "authenticated manager when start game instance with valid instance ID then returns started instance",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[game.StartGameInstance]
+				},
+				RequestHeaders: func(d harness.Data) map[string]string {
+					return testutil.AuthHeaderProManager(d)
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
@@ -537,7 +553,7 @@ func Test_startGameInstanceHandler(t *testing.T) {
 		t.Logf("Running test >%s<\n", testCase.Name)
 
 		t.Run(testCase.Name, func(t *testing.T) {
-			testFunc := func(method string, body interface{}) {
+			testFunc := func(method string, body any) {
 				require.NotNil(t, body, "Response body is not nil")
 
 				aResp := body.(game_schema.GameInstanceResponse).Data
@@ -585,9 +601,12 @@ func Test_pauseGameInstanceHandler(t *testing.T) {
 	}{
 		{
 			TestCase: testutil.TestCase{
-				Name: "API key with open access \\ pause game instance with non-started status \\ returns error",
+				Name: "authenticated manager when pause game instance with non-started status then returns error",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[game.PauseGameInstance]
+				},
+				RequestHeaders: func(d harness.Data) map[string]string {
+					return testutil.AuthHeaderProManager(d)
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
@@ -606,7 +625,7 @@ func Test_pauseGameInstanceHandler(t *testing.T) {
 		t.Logf("Running test >%s<\n", testCase.Name)
 
 		t.Run(testCase.Name, func(t *testing.T) {
-			testFunc := func(method string, body interface{}) {
+			testFunc := func(method string, body any) {
 				// For error responses, we don't need to validate the response body
 				// The important thing is that the API correctly returns an error
 				// when trying to pause a non-started instance
@@ -647,9 +666,12 @@ func Test_resumeGameInstanceHandler(t *testing.T) {
 	}{
 		{
 			TestCase: testutil.TestCase{
-				Name: "API key with open access \\ resume game instance with non-paused status \\ returns error",
+				Name: "authenticated manager when resume game instance with non-paused status then returns error",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[game.ResumeGameInstance]
+				},
+				RequestHeaders: func(d harness.Data) map[string]string {
+					return testutil.AuthHeaderProManager(d)
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
@@ -668,7 +690,7 @@ func Test_resumeGameInstanceHandler(t *testing.T) {
 		t.Logf("Running test >%s<\n", testCase.Name)
 
 		t.Run(testCase.Name, func(t *testing.T) {
-			testFunc := func(method string, body interface{}) {
+			testFunc := func(method string, body any) {
 				// For error responses, we don't need to validate the response body
 				// The important thing is that the API correctly returns an error
 				// when trying to resume a non-paused instance
@@ -705,9 +727,12 @@ func Test_cancelGameInstanceHandler(t *testing.T) {
 	}{
 		{
 			TestCase: testutil.TestCase{
-				Name: "API key with open access \\ cancel game instance with valid instance ID \\ returns cancelled instance",
+				Name: "authenticated manager when cancel game instance with valid instance ID then returns cancelled instance",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[game.CancelGameInstance]
+				},
+				RequestHeaders: func(d harness.Data) map[string]string {
+					return testutil.AuthHeaderProManager(d)
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
@@ -733,7 +758,7 @@ func Test_cancelGameInstanceHandler(t *testing.T) {
 		t.Logf("Running test >%s<\n", testCase.Name)
 
 		t.Run(testCase.Name, func(t *testing.T) {
-			testFunc := func(method string, body interface{}) {
+			testFunc := func(method string, body any) {
 				require.NotNil(t, body, "Response body is not nil")
 
 				aResp := body.(game_schema.GameInstanceResponse).Data
@@ -764,22 +789,21 @@ func Test_createGameInstanceHandlerValidation(t *testing.T) {
 		require.NoError(t, err, "Test data teardown returns without error")
 	}()
 
-	// Get account from harness data (must have Manager subscription)
-	accountRec, err := th.Data.GetAccountRecByRef(harness.AccountTwoRef)
-	require.NoError(t, err, "GetAccountRecByRef returns without error")
-
 	// Get a game from the harness data
 	gameRec, err := th.Data.GetGameRecByRef(harness.GameOneRef)
 	require.NoError(t, err, "GetGameRecByRef returns without error")
 
 	testCases := []testutil.TestCase{
 		{
-			Name: "API key with open access \\ create game instance with closed testing but no email delivery \\ returns validation error",
-			NewRunner: func(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], scanner turn_sheet.TurnSheetScanner, d harness.Data) (testutil.TestRunnerer, error) {
-				return testutil.NewTestRunnerWithAccountID(cfg, l, s, j, scanner, accountRec.ID, accountRec.Email)
+			Name: "authenticated manager when create game instance with closed testing but no email delivery then returns validation error",
+			NewRunner: func(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], scanner turnsheet.TurnSheetScanner, d harness.Data) (testutil.TestRunnerer, error) {
+				return testutil.NewTestRunner(cfg, l, s, j, scanner)
 			},
 			HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 				return rnr.GetHandlerConfig()[game.CreateOneGameInstance]
+			},
+			RequestHeaders: func(d harness.Data) map[string]string {
+				return testutil.AuthHeaderProManager(d)
 			},
 			RequestPathParams: func(d harness.Data) map[string]string {
 				return map[string]string{
@@ -804,7 +828,7 @@ func Test_createGameInstanceHandlerValidation(t *testing.T) {
 		t.Logf("Running test >%s<\n", testCase.Name)
 
 		t.Run(testCase.Name, func(t *testing.T) {
-			testFunc := func(method string, body interface{}) {
+			testFunc := func(method string, body any) {
 				if body != nil {
 					errResp := body.(coreerror.Error)
 					require.NotEmpty(t, errResp.Message, "Error response contains error message")
@@ -837,19 +861,15 @@ func Test_getJoinGameLinkHandler(t *testing.T) {
 		require.NoError(t, err, "Test data teardown returns without error")
 	}()
 
-	// Get account from harness data (must have Manager subscription)
-	accountRec, err := th.Data.GetAccountRecByRef(harness.AccountTwoRef)
-	require.NoError(t, err, "GetAccountRecByRef returns without error")
-
 	// Get a game from the harness data
 	gameRec, err := th.Data.GetGameRecByRef(harness.GameOneRef)
 	require.NoError(t, err, "GetGameRecByRef returns without error")
 
 	// Get the closed testing instance
-	closedTestingInstanceRec, err := th.Data.GetGameInstanceRecByRef(harness.GameInstanceOneRef)
+	gameInstanceRec, err := th.Data.GetGameInstanceRecByRef(harness.GameInstanceOneRef)
 	require.NoError(t, err, "GetGameInstanceRecByRef returns without error")
-	require.True(t, closedTestingInstanceRec.IsClosedTesting, "Instance is in closed testing mode")
-	require.True(t, closedTestingInstanceRec.DeliveryEmail, "Instance has email delivery enabled")
+	require.True(t, gameInstanceRec.IsClosedTesting, "Instance is in closed testing mode")
+	require.True(t, gameInstanceRec.DeliveryEmail, "Instance has email delivery enabled")
 
 	testCases := []struct {
 		testutil.TestCase
@@ -857,17 +877,20 @@ func Test_getJoinGameLinkHandler(t *testing.T) {
 	}{
 		{
 			TestCase: testutil.TestCase{
-				Name: "API key with open access \\ get join game link for closed testing instance \\ returns join link",
-				NewRunner: func(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], scanner turn_sheet.TurnSheetScanner, d harness.Data) (testutil.TestRunnerer, error) {
-					return testutil.NewTestRunnerWithAccountID(cfg, l, s, j, scanner, accountRec.ID, accountRec.Email)
+				Name: "authenticated manager when get join game link for closed testing instance then returns join link",
+				NewRunner: func(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], scanner turnsheet.TurnSheetScanner, d harness.Data) (testutil.TestRunnerer, error) {
+					return testutil.NewTestRunner(cfg, l, s, j, scanner)
 				},
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[game.GetJoinGameLink]
 				},
+				RequestHeaders: func(d harness.Data) map[string]string {
+					return testutil.AuthHeaderProManager(d)
+				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
 						":game_id":     gameRec.ID,
-						":instance_id": closedTestingInstanceRec.ID,
+						":instance_id": gameInstanceRec.ID,
 					}
 				},
 				ResponseDecoder: testutil.TestCaseResponseDecoderGeneric[game_schema.JoinGameLinkResponse],
@@ -888,7 +911,7 @@ func Test_getJoinGameLinkHandler(t *testing.T) {
 		t.Logf("Running test >%s<\n", testCase.Name)
 
 		t.Run(testCase.Name, func(t *testing.T) {
-			testFunc := func(method string, body interface{}) {
+			testFunc := func(method string, body any) {
 				require.NotNil(t, body, "Response body is not nil")
 
 				aResp := body.(game_schema.JoinGameLinkResponse).Data
@@ -924,10 +947,6 @@ func Test_inviteTesterHandler(t *testing.T) {
 		require.NoError(t, err, "Test data teardown returns without error")
 	}()
 
-	// Get account from harness data (must have Manager subscription)
-	accountRec, err := th.Data.GetAccountRecByRef(harness.AccountTwoRef)
-	require.NoError(t, err, "GetAccountRecByRef returns without error")
-
 	// Get a game from the harness data
 	gameRec, err := th.Data.GetGameRecByRef(harness.GameOneRef)
 	require.NoError(t, err, "GetGameRecByRef returns without error")
@@ -944,12 +963,15 @@ func Test_inviteTesterHandler(t *testing.T) {
 	}{
 		{
 			TestCase: testutil.TestCase{
-				Name: "API key with open access \\ invite tester to closed testing instance \\ returns success",
-				NewRunner: func(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], scanner turn_sheet.TurnSheetScanner, d harness.Data) (testutil.TestRunnerer, error) {
-					return testutil.NewTestRunnerWithAccountID(cfg, l, s, j, scanner, accountRec.ID, accountRec.Email)
+				Name: "authenticated manager when invite tester to closed testing instance then returns success",
+				NewRunner: func(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], scanner turnsheet.TurnSheetScanner, d harness.Data) (testutil.TestRunnerer, error) {
+					return testutil.NewTestRunner(cfg, l, s, j, scanner)
 				},
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[game.InviteTester]
+				},
+				RequestHeaders: func(d harness.Data) map[string]string {
+					return testutil.AuthHeaderProManager(d)
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
@@ -980,7 +1002,7 @@ func Test_inviteTesterHandler(t *testing.T) {
 		t.Logf("Running test >%s<\n", testCase.Name)
 
 		t.Run(testCase.Name, func(t *testing.T) {
-			testFunc := func(method string, body interface{}) {
+			testFunc := func(method string, body any) {
 				require.NotNil(t, body, "Response body is not nil")
 
 				aResp := body.(game_schema.InviteTesterResponse).Data

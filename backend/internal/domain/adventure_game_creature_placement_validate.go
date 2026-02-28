@@ -8,15 +8,46 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 )
 
+type validateAdventureGameCreaturePlacementArgs struct {
+	nextRec *adventure_game_record.AdventureGameCreaturePlacement
+	currRec *adventure_game_record.AdventureGameCreaturePlacement
+}
+
+func (m *Domain) populateAdventureGameCreaturePlacementValidateArgs(currRec, nextRec *adventure_game_record.AdventureGameCreaturePlacement) (*validateAdventureGameCreaturePlacementArgs, error) {
+	args := &validateAdventureGameCreaturePlacementArgs{
+		currRec: currRec,
+		nextRec: nextRec,
+	}
+	return args, nil
+}
+
 func (m *Domain) validateAdventureGameCreaturePlacementRecForCreate(rec *adventure_game_record.AdventureGameCreaturePlacement) error {
-	return validateAdventureGameCreaturePlacementRec(rec, false)
+	args, err := m.populateAdventureGameCreaturePlacementValidateArgs(nil, rec)
+	if err != nil {
+		return err
+	}
+	return validateAdventureGameCreaturePlacementRecForCreate(args)
 }
 
-func (m *Domain) validateAdventureGameCreaturePlacementRecForUpdate(rec *adventure_game_record.AdventureGameCreaturePlacement) error {
-	return validateAdventureGameCreaturePlacementRec(rec, true)
+func (m *Domain) validateAdventureGameCreaturePlacementRecForUpdate(currRec, nextRec *adventure_game_record.AdventureGameCreaturePlacement) error {
+	args, err := m.populateAdventureGameCreaturePlacementValidateArgs(currRec, nextRec)
+	if err != nil {
+		return err
+	}
+	return validateAdventureGameCreaturePlacementRecForUpdate(args)
 }
 
-func validateAdventureGameCreaturePlacementRec(rec *adventure_game_record.AdventureGameCreaturePlacement, requireID bool) error {
+func validateAdventureGameCreaturePlacementRecForCreate(args *validateAdventureGameCreaturePlacementArgs) error {
+	return validateAdventureGameCreaturePlacementRec(args, false)
+}
+
+func validateAdventureGameCreaturePlacementRecForUpdate(args *validateAdventureGameCreaturePlacementArgs) error {
+	return validateAdventureGameCreaturePlacementRec(args, true)
+}
+
+func validateAdventureGameCreaturePlacementRec(args *validateAdventureGameCreaturePlacementArgs, requireID bool) error {
+	rec := args.nextRec
+
 	if rec == nil {
 		return coreerror.NewInvalidDataError("record is nil")
 	}

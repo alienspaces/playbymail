@@ -7,14 +7,17 @@
 // - For game-scoped resources: fetch*, create*, update*, delete* with gameId
 
 import { defineStore } from 'pinia';
-import { listGames, createGame as apiCreateGame, updateGame as apiUpdateGame, deleteGame as apiDeleteGame } from '../api/games';
+import { listGames, createGame as apiCreateGame, updateGame as apiUpdateGame, deleteGame as apiDeleteGame, validateGame as apiValidateGame } from '../api/games';
 
 export const useGamesStore = defineStore('games', {
   state: () => ({
     games: [],
     loading: false,
     error: null,
-    selectedGame: null, // Holds the currently selected game object
+    selectedGame: null,
+    validationIssues: [],
+    validationLoading: false,
+    validationError: null,
   }),
   actions: {
     setSelectedGame(game) {
@@ -80,6 +83,23 @@ export const useGamesStore = defineStore('games', {
       } finally {
         this.loading = false;
       }
+    },
+    async fetchValidation(gameId) {
+      this.validationLoading = true;
+      this.validationError = null;
+      try {
+        const res = await apiValidateGame(gameId);
+        this.validationIssues = res.data?.issues || [];
+      } catch (err) {
+        this.validationError = err.message;
+        this.validationIssues = [];
+      } finally {
+        this.validationLoading = false;
+      }
+    },
+    clearValidation() {
+      this.validationIssues = [];
+      this.validationError = null;
     },
   },
 }); 

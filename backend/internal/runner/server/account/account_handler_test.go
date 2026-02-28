@@ -5,18 +5,11 @@ import (
 	"testing"
 
 	"github.com/brianvoe/gofakeit"
-	"github.com/jackc/pgx/v5"
-	"github.com/riverqueue/river"
 	"github.com/stretchr/testify/require"
 
 	"gitlab.com/alienspaces/playbymail/core/server"
-	"gitlab.com/alienspaces/playbymail/core/type/domainer"
-	"gitlab.com/alienspaces/playbymail/core/type/logger"
-	"gitlab.com/alienspaces/playbymail/core/type/storer"
 	"gitlab.com/alienspaces/playbymail/internal/harness"
 	"gitlab.com/alienspaces/playbymail/internal/runner/server/account"
-	"gitlab.com/alienspaces/playbymail/internal/turn_sheet"
-	"gitlab.com/alienspaces/playbymail/internal/utils/config"
 	"gitlab.com/alienspaces/playbymail/internal/utils/testutil"
 	"gitlab.com/alienspaces/playbymail/schema/api/account_schema"
 )
@@ -43,20 +36,18 @@ func Test_getAccountHandler(t *testing.T) {
 	testCaseCollectionResponseDecoder := testutil.TestCaseResponseDecoderGeneric[account_schema.AccountCollectionResponse]
 	testCaseResponseDecoder := testutil.TestCaseResponseDecoderGeneric[account_schema.AccountResponse]
 
-	// Setup: get an account for reference
-	accountRec, err := th.Data.GetAccountRecByRef(harness.AccountOneRef)
-	require.NoError(t, err, "GetAccountRecByRef returns without error")
-
 	testCases := []testCase{
 		{
 			TestCase: testutil.TestCase{
-				Name: "API key with open access \\ get many accounts \\ returns expected accounts",
+				Name: "authenticated user when get many accounts then returns expected accounts",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[account.GetManyAccounts]
 				},
+				RequestHeaders: func(d harness.Data) map[string]string {
+					return testutil.AuthHeaderStandard(d)
+				},
 				RequestQueryParams: func(d harness.Data) map[string]any {
 					return map[string]any{
-						"id":          accountRec.ID,
 						"page_size":   10,
 						"page_number": 1,
 					}
@@ -69,15 +60,18 @@ func Test_getAccountHandler(t *testing.T) {
 		},
 		{
 			TestCase: testutil.TestCase{
-				Name: "API key with open access \\ get one account with valid account ID \\ returns expected account",
+				Name: "authenticated user when get one account with valid account ID then returns expected account",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[account.GetOneAccount]
 				},
+				RequestHeaders: func(d harness.Data) map[string]string {
+					return testutil.AuthHeaderStandard(d)
+				},
 				RequestPathParams: func(d harness.Data) map[string]string {
-					accountRec, err := d.GetAccountRecByRef(harness.AccountOneRef)
-					require.NoError(t, err, "GetAccountRecByRef returns without error")
+					accountRec, err := d.GetAccountUserRecByRef(harness.StandardAccountRef)
+					require.NoError(t, err, "GetAccountUserRecByRef returns without error")
 					params := map[string]string{
-						":account_id": accountRec.ID,
+						":account_id": accountRec.AccountID,
 					}
 					return params
 				},
@@ -93,7 +87,7 @@ func Test_getAccountHandler(t *testing.T) {
 		t.Logf("Running test >%s<\n", testCase.Name)
 
 		t.Run(testCase.Name, func(t *testing.T) {
-			testFunc := func(method string, body interface{}) {
+			testFunc := func(method string, body any) {
 				if testCase.TestResponseCode() != http.StatusOK {
 					return
 				}
@@ -119,7 +113,7 @@ func Test_getAccountHandler(t *testing.T) {
 
 				for _, d := range responses {
 					require.NotEmpty(t, d.ID, "Account ID is not empty")
-					require.NotEmpty(t, d.Email, "Account Email is not empty")
+					require.NotEmpty(t, d.Status, "Account Status is not empty")
 				}
 			}
 
@@ -151,14 +145,14 @@ func Test_createUpdateDeleteAccountHandler(t *testing.T) {
 	testCases := []testCase{
 		{
 			TestCase: testutil.TestCase{
-				Name: "API key with open access \\ create account with valid properties \\ returns created account",
+				Name: "public access when create account with valid properties then returns created account",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[account.CreateOneAccount]
 				},
 				RequestBody: func(d harness.Data) any {
-					email := gofakeit.Email()
+					name := gofakeit.Company()
 					return account_schema.AccountRequest{
-						Email: &email,
+						Name: &name,
 					}
 				},
 				ResponseDecoder: testCaseResponseDecoder,
@@ -167,57 +161,59 @@ func Test_createUpdateDeleteAccountHandler(t *testing.T) {
 			expectResponse: func(d harness.Data, req account_schema.AccountRequest) account_schema.AccountResponse {
 				return account_schema.AccountResponse{
 					Data: &account_schema.AccountResponseData{
-						Email: *req.Email,
+						Name: *req.Name,
 					},
 				}
 			},
 		},
 		{
 			TestCase: testutil.TestCase{
-				Name: "API key with open access \\ update account with valid properties \\ returns updated account",
+				Name: "authenticated user when update account with valid properties then returns updated account",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[account.UpdateOneAccount]
 				},
+				RequestHeaders: func(d harness.Data) map[string]string {
+					return testutil.AuthHeaderStandard(d)
+				},
 				RequestPathParams: func(d harness.Data) map[string]string {
-					accountRec, err := d.GetAccountRecByRef(harness.AccountOneRef)
-					require.NoError(t, err, "GetAccountRecByRef returns without error")
+					accountRec, err := d.GetAccountUserRecByRef(harness.StandardAccountRef)
+					require.NoError(t, err, "GetAccountUserRecByRef returns without error")
 					params := map[string]string{
-						":account_id": accountRec.ID,
+						":account_id": accountRec.AccountID,
 					}
 					return params
 				},
 				RequestBody: func(d harness.Data) any {
-					email := harness.UniqueEmail(gofakeit.Email())
+					name := gofakeit.Company()
 					return account_schema.AccountRequest{
-						Email: &email,
+						Name: &name,
 					}
 				},
 				ResponseDecoder: testCaseResponseDecoder,
 				ResponseCode:    http.StatusOK,
 			},
 			expectResponse: func(d harness.Data, req account_schema.AccountRequest) account_schema.AccountResponse {
-				// Get the original account to get the original email (email cannot be updated)
-				accountRec, err := d.GetAccountRecByRef(harness.AccountOneRef)
-				require.NoError(t, err, "GetAccountRecByRef returns without error")
-
 				return account_schema.AccountResponse{
 					Data: &account_schema.AccountResponseData{
-						Email: accountRec.Email, // Email should remain unchanged
+						Name: *req.Name,
 					},
 				}
 			},
 		},
 		{
 			TestCase: testutil.TestCase{
-				Name: "API key with open access \\ delete account with valid account ID \\ returns no content",
+				Name: "authenticated user when delete account with valid account ID then returns no content",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[account.DeleteOneAccount]
 				},
+				RequestHeaders: func(d harness.Data) map[string]string {
+					return testutil.AuthHeaderStandard(d)
+				},
 				RequestPathParams: func(d harness.Data) map[string]string {
-					accountRec, err := d.GetAccountRecByRef(harness.AccountOneRef)
-					require.NoError(t, err, "GetAccountRecByRef returns without error")
+					accountRec, err := d.GetAccountUserRecByRef(harness.StandardAccountRef)
+					require.NoError(t, err, "GetAccountUserRecByRef returns without error")
 					params := map[string]string{
-						":account_id": accountRec.ID,
+						":account_id": accountRec.AccountID,
 					}
 					return params
 				},
@@ -231,9 +227,8 @@ func Test_createUpdateDeleteAccountHandler(t *testing.T) {
 		t.Logf("Running test >%s<", testCase.Name)
 
 		t.Run(testCase.Name, func(t *testing.T) {
-			testFunc := func(method string, body interface{}) {
+			testFunc := func(method string, body any) {
 				if testCase.TestResponseCode() == http.StatusNoContent {
-					// No content expected
 					return
 				}
 
@@ -245,14 +240,13 @@ func Test_createUpdateDeleteAccountHandler(t *testing.T) {
 				require.NotNil(t, aResp, "AccountResponseData is not nil")
 				t.Logf("AccountResponseData: %#v", aResp)
 				require.NotEmpty(t, aResp.ID, "Account ID is not empty")
-				require.NotEmpty(t, aResp.Email, "Account Email is not empty")
+				require.NotEmpty(t, aResp.Name, "Account Name is not empty")
 				xResp := testCase.expectResponse(
 					th.Data,
 					testCase.TestRequestBody(th.Data).(account_schema.AccountRequest),
 				).Data
-				require.Equal(t, xResp.Email, aResp.Email, "Account Email matches expected")
+				require.Equal(t, xResp.Name, aResp.Name, "Account Name matches expected")
 				require.False(t, aResp.CreatedAt.IsZero(), "Account CreatedAt is not zero")
-				// UpdatedAt is allowed to be nil, so do not assert on it
 			}
 
 			testutil.RunTestCase(t, th, &testCase, testFunc)
@@ -260,7 +254,7 @@ func Test_createUpdateDeleteAccountHandler(t *testing.T) {
 	}
 }
 
-func Test_accountMeHandler(t *testing.T) {
+func Test_getMeHandler(t *testing.T) {
 	t.Parallel()
 
 	th := testutil.NewTestHarness(t)
@@ -273,98 +267,22 @@ func Test_accountMeHandler(t *testing.T) {
 		require.NoError(t, err, "Test data teardown returns without error")
 	}()
 
-	testCaseResponseDecoder := testutil.TestCaseResponseDecoderGeneric[account_schema.AccountResponse]
+	testCaseResponseDecoder := testutil.TestCaseResponseDecoderGeneric[account_schema.AccountUserResponse]
 
-	// Setup: get an account for reference
-	accountRec, err := th.Data.GetAccountRecByRef(harness.AccountOneRef)
-	require.NoError(t, err, "GetAccountRecByRef returns without error")
+	accountUserRec, err := th.Data.GetAccountUserRecByRef(harness.StandardAccountRef)
+	require.NoError(t, err, "GetAccountUserRecByRef returns without error")
 
 	testCases := []testutil.TestCase{
 		{
-			Name: "API key with open access \\ get my account \\ returns authenticated user account",
-			NewRunner: func(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], scanner turn_sheet.TurnSheetScanner, d harness.Data) (testutil.TestRunnerer, error) {
-				rnr, err := testutil.NewTestRunner(cfg, l, s, j, scanner)
-				if err != nil {
-					return nil, err
-				}
-
-				// Mock authentication to return the test account
-				rnr.AuthenticateRequestFunc = func(l logger.Logger, m domainer.Domainer, r *http.Request, authType server.AuthenticationType) (server.AuthenData, error) {
-					return server.AuthenData{
-						Type: server.AuthenticatedTypeToken,
-						Account: server.AuthenticatedAccount{
-							ID:    accountRec.ID,
-							Name:  "", // Name is now in account_contact
-							Email: accountRec.Email,
-						},
-					}, nil
-				}
-
-				return rnr, nil
-			},
+			Name: "authenticated user when get me then returns authenticated account user",
 			HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
-				return rnr.GetHandlerConfig()[account.GetMyAccount]
+				return rnr.GetHandlerConfig()[account.GetMe]
+			},
+			RequestHeaders: func(d harness.Data) map[string]string {
+				return testutil.AuthHeaderStandard(d)
 			},
 			ResponseDecoder: testCaseResponseDecoder,
 			ResponseCode:    http.StatusOK,
-		},
-		{
-			Name: "API key with open access \\ update my account \\ updates authenticated user account name",
-			NewRunner: func(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], scanner turn_sheet.TurnSheetScanner, d harness.Data) (testutil.TestRunnerer, error) {
-				rnr, err := testutil.NewTestRunner(cfg, l, s, j, scanner)
-				if err != nil {
-					return nil, err
-				}
-
-				// Mock authentication to return the test account
-				rnr.AuthenticateRequestFunc = func(l logger.Logger, m domainer.Domainer, r *http.Request, authType server.AuthenticationType) (server.AuthenData, error) {
-					return server.AuthenData{
-						Type: server.AuthenticatedTypeToken,
-						Account: server.AuthenticatedAccount{
-							ID:    accountRec.ID,
-							Name:  "", // Name is now in account_contact
-							Email: accountRec.Email,
-						},
-					}, nil
-				}
-
-				return rnr, nil
-			},
-			HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
-				return rnr.GetHandlerConfig()[account.UpdateMyAccount]
-			},
-			RequestBody: func(d harness.Data) any {
-				return account_schema.AccountRequest{}
-			},
-			ResponseDecoder: testCaseResponseDecoder,
-			ResponseCode:    http.StatusOK,
-		},
-		{
-			Name: "API key with open access \\ delete my account \\ deletes authenticated user account",
-			NewRunner: func(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], scanner turn_sheet.TurnSheetScanner, d harness.Data) (testutil.TestRunnerer, error) {
-				rnr, err := testutil.NewTestRunner(cfg, l, s, j, scanner)
-				if err != nil {
-					return nil, err
-				}
-
-				// Mock authentication to return the test account
-				rnr.AuthenticateRequestFunc = func(l logger.Logger, m domainer.Domainer, r *http.Request, authType server.AuthenticationType) (server.AuthenData, error) {
-					return server.AuthenData{
-						Type: server.AuthenticatedTypeToken,
-						Account: server.AuthenticatedAccount{
-							ID:    accountRec.ID,
-							Name:  "", // Name is now in account_contact
-							Email: accountRec.Email,
-						},
-					}, nil
-				}
-
-				return rnr, nil
-			},
-			HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
-				return rnr.GetHandlerConfig()[account.DeleteMyAccount]
-			},
-			ResponseCode: http.StatusNoContent,
 		},
 	}
 
@@ -372,25 +290,18 @@ func Test_accountMeHandler(t *testing.T) {
 		t.Logf("Running test >%s<", testCase.Name)
 
 		t.Run(testCase.Name, func(t *testing.T) {
-			testFunc := func(method string, body interface{}) {
-				if testCase.TestResponseCode() == http.StatusNoContent {
-					// No content expected
-					return
-				}
-
+			testFunc := func(method string, body any) {
 				require.NotNil(t, body, "Response body is not nil")
-				t.Logf("Actual response body: %#v", body)
-				resp, ok := body.(account_schema.AccountResponse)
-				require.True(t, ok, "Response body is of type account_schema.AccountResponse")
+				resp, ok := body.(account_schema.AccountUserResponse)
+				require.True(t, ok, "Response body is of type account_schema.AccountUserResponse")
 				aResp := resp.Data
-				require.NotNil(t, aResp, "AccountResponseData is not nil")
-				t.Logf("AccountResponseData: %#v", aResp)
-				require.NotEmpty(t, aResp.ID, "Account ID is not empty")
-				require.NotEmpty(t, aResp.Email, "Account Email is not empty")
-				require.Equal(t, accountRec.ID, aResp.ID, "Account ID matches authenticated user")
-				require.Equal(t, accountRec.Email, aResp.Email, "Account Email matches authenticated user")
-
-				require.False(t, aResp.CreatedAt.IsZero(), "Account CreatedAt is not zero")
+				require.NotNil(t, aResp, "AccountUserResponseData is not nil")
+				require.NotEmpty(t, aResp.ID, "AccountUser ID is not empty")
+				require.NotEmpty(t, aResp.AccountID, "AccountUser AccountID is not empty")
+				require.NotEmpty(t, aResp.Email, "AccountUser Email is not empty")
+				require.Equal(t, accountUserRec.ID, aResp.ID, "AccountUser ID matches authenticated user")
+				require.Equal(t, accountUserRec.Email, aResp.Email, "AccountUser Email matches authenticated user")
+				require.False(t, aResp.CreatedAt.IsZero(), "AccountUser CreatedAt is not zero")
 			}
 
 			testutil.RunTestCase(t, th, &testCase, testFunc)

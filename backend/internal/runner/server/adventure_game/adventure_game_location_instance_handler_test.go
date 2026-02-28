@@ -51,9 +51,12 @@ func Test_getAdventureGameLocationInstancesHandler(t *testing.T) {
 	testCases := []testCase{
 		{
 			TestCase: testutil.TestCase{
-				Name: "API key with open access \\ get many location instances \\ returns expected instances",
+				Name: "authenticated manager when get many location instances then returns expected instances",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[adventure_game.GetManyAdventureGameLocationInstances]
+				},
+				RequestHeaders: func(d harness.Data) map[string]string {
+					return testutil.AuthHeaderProManager(d)
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
@@ -74,9 +77,12 @@ func Test_getAdventureGameLocationInstancesHandler(t *testing.T) {
 		},
 		{
 			TestCase: testutil.TestCase{
-				Name: "API key with open access \\ get one location instance with valid ID \\ returns expected instance",
+				Name: "authenticated manager when get one location instance with valid ID then returns expected instance",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[adventure_game.GetOneAdventureGameLocationInstance]
+				},
+				RequestHeaders: func(d harness.Data) map[string]string {
+					return testutil.AuthHeaderProManager(d)
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
@@ -96,7 +102,7 @@ func Test_getAdventureGameLocationInstancesHandler(t *testing.T) {
 		t.Logf("Running test >%s<", testCase.Name)
 
 		t.Run(testCase.Name, func(t *testing.T) {
-			testFunc := func(method string, body interface{}) {
+			testFunc := func(method string, body any) {
 				if testCase.TestResponseCode() != http.StatusOK {
 					return
 				}

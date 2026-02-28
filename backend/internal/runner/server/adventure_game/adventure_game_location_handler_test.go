@@ -45,9 +45,12 @@ func Test_getGameLocationHandler(t *testing.T) {
 	testCases := []testCase{
 		{
 			TestCase: testutil.TestCase{
-				Name: "API key with open access \\ get many locations \\ returns expected locations",
+				Name: "authenticated user when get many locations then returns expected locations",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[adventure_game.GetManyAdventureGameLocations]
+				},
+				RequestHeaders: func(d harness.Data) map[string]string {
+					return testutil.AuthHeaderStandard(d)
 				},
 				RequestQueryParams: func(d harness.Data) map[string]any {
 					return map[string]any{
@@ -68,9 +71,12 @@ func Test_getGameLocationHandler(t *testing.T) {
 		},
 		{
 			TestCase: testutil.TestCase{
-				Name: "API key with open access \\ get one location with valid location ID \\ returns expected location",
+				Name: "authenticated user when get one location with valid location ID then returns expected location",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[adventure_game.GetOneAdventureGameLocation]
+				},
+				RequestHeaders: func(d harness.Data) map[string]string {
+					return testutil.AuthHeaderStandard(d)
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					params := map[string]string{
@@ -90,7 +96,7 @@ func Test_getGameLocationHandler(t *testing.T) {
 		t.Logf("Running test >%s<", testCase.Name)
 
 		t.Run(testCase.Name, func(t *testing.T) {
-			testFunc := func(method string, body interface{}) {
+			testFunc := func(method string, body any) {
 				if testCase.TestResponseCode() != http.StatusOK {
 					return
 				}
@@ -154,9 +160,12 @@ func Test_createUpdateDeleteGameLocationHandler(t *testing.T) {
 	testCases := []testCase{
 		{
 			TestCase: testutil.TestCase{
-				Name: "API key with open access \\ create location with valid properties \\ returns created location",
+				Name: "authenticated designer when create location with valid properties then returns created location",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[adventure_game.CreateOneAdventureGameLocation]
+				},
+				RequestHeaders: func(d harness.Data) map[string]string {
+					return testutil.AuthHeaderProDesigner(d)
 				},
 				RequestBody: func(d harness.Data) any {
 					return adventure_game_schema.AdventureGameLocationRequest{
@@ -184,9 +193,12 @@ func Test_createUpdateDeleteGameLocationHandler(t *testing.T) {
 		},
 		{
 			TestCase: testutil.TestCase{
-				Name: "API key with open access \\ update location with valid properties \\ returns updated location",
+				Name: "authenticated designer when update location with valid properties then returns updated location",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[adventure_game.UpdateOneAdventureGameLocation]
+				},
+				RequestHeaders: func(d harness.Data) map[string]string {
+					return testutil.AuthHeaderProDesigner(d)
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					params := map[string]string{
@@ -216,9 +228,12 @@ func Test_createUpdateDeleteGameLocationHandler(t *testing.T) {
 		},
 		{
 			TestCase: testutil.TestCase{
-				Name: "API key with open access \\ delete location with valid location ID \\ returns no content",
+				Name: "authenticated designer when delete location with valid location ID then returns no content",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[adventure_game.DeleteOneAdventureGameLocation]
+				},
+				RequestHeaders: func(d harness.Data) map[string]string {
+					return testutil.AuthHeaderProDesigner(d)
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					params := map[string]string{
@@ -238,7 +253,7 @@ func Test_createUpdateDeleteGameLocationHandler(t *testing.T) {
 		t.Logf("Running test >%s<", testCase.Name)
 
 		t.Run(testCase.Name, func(t *testing.T) {
-			testFunc := func(method string, body interface{}) {
+			testFunc := func(method string, body any) {
 				if testCase.TestResponseCode() == http.StatusNoContent {
 					// No content expected
 					return

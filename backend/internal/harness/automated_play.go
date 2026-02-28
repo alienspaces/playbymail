@@ -12,7 +12,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/jobworker"
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
-	"gitlab.com/alienspaces/playbymail/internal/turn_sheet"
+	"gitlab.com/alienspaces/playbymail/internal/turnsheet"
 )
 
 // ProcessTurn executes turn processing workers for a game instance
@@ -241,7 +241,7 @@ func (t *Testing) constructLocationChoiceScanData(turnSheetRec *game_record.Game
 	l := t.Logger("constructLocationChoiceScanData")
 
 	// Parse the sheet data to get available location options
-	var locationChoiceData turn_sheet.LocationChoiceData
+	var locationChoiceData turnsheet.LocationChoiceData
 	if err := json.Unmarshal(turnSheetRec.SheetData, &locationChoiceData); err != nil {
 		l.Warn("failed to unmarshal location choice data >%v<", err)
 		return nil, fmt.Errorf("failed to parse location choice data: %w", err)
@@ -282,7 +282,7 @@ func (t *Testing) constructLocationChoiceScanData(turnSheetRec *game_record.Game
 	}
 
 	// Construct the scan data
-	scanData := turn_sheet.LocationChoiceScanData{
+	scanData := turnsheet.LocationChoiceScanData{
 		Choices: []string{chosenLocationID},
 	}
 

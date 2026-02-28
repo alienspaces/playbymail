@@ -28,6 +28,14 @@
         },
         "updated_at": {
             "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/updated_at"
+        },
+        "status": {
+            "description": "Filter games by status (draft, published)",
+            "type": "string",
+            "enum": [
+                "draft",
+                "published"
+            ]
         }
     },
     "additionalProperties": true

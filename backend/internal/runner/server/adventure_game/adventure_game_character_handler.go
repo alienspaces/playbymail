@@ -17,6 +17,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/mapper"
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
+	"gitlab.com/alienspaces/playbymail/internal/runner/server/handler_auth"
 	"gitlab.com/alienspaces/playbymail/internal/utils/logging"
 	"gitlab.com/alienspaces/playbymail/schema/api/adventure_game_schema"
 )
@@ -145,6 +146,9 @@ func adventureGameCharacterHandlerConfig(l logger.Logger) (map[string]server.Han
 			AuthenTypes: []server.AuthenticationType{
 				server.AuthenticationTypeToken,
 			},
+			AuthzPermissions: []server.AuthorizedPermission{
+				handler_auth.PermissionGameDesign,
+			},
 			ValidateRequestSchema:  requestSchema,
 			ValidateResponseSchema: responseSchema,
 		},
@@ -162,6 +166,9 @@ func adventureGameCharacterHandlerConfig(l logger.Logger) (map[string]server.Han
 			AuthenTypes: []server.AuthenticationType{
 				server.AuthenticationTypeToken,
 			},
+			AuthzPermissions: []server.AuthorizedPermission{
+				handler_auth.PermissionGameDesign,
+			},
 			ValidateRequestSchema:  requestSchema,
 			ValidateResponseSchema: responseSchema,
 		},
@@ -178,6 +185,9 @@ func adventureGameCharacterHandlerConfig(l logger.Logger) (map[string]server.Han
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
 				server.AuthenticationTypeToken,
+			},
+			AuthzPermissions: []server.AuthorizedPermission{
+				handler_auth.PermissionGameDesign,
 			},
 		},
 		DocumentationConfig: server.DocumentationConfig{
@@ -306,6 +316,23 @@ func createOneAdventureGameCharacterHandler(w http.ResponseWriter, r *http.Reque
 
 	mm := m.(*domain.Domain)
 
+	// Populate AccountID (Owner) from AccountUserID (Player)
+	if rec.AccountUserID != "" {
+		auth := server.GetRequestAuthenData(l, r)
+		if auth != nil && auth.AccountUser.ID == rec.AccountUserID {
+			rec.AccountID = auth.AccountUser.AccountID
+		} else {
+			accountUserRec, err := mm.GetAccountRec(rec.AccountUserID, nil)
+			if err != nil {
+				l.Warn("failed getting account user record >%s< >%v<", rec.AccountUserID, err)
+				return err
+			}
+			rec.AccountID = accountUserRec.AccountID
+		}
+	} else {
+		return coreerror.NewParamError("account_id is required")
+	}
+
 	rec, err = mm.CreateAdventureGameCharacterRec(rec)
 	if err != nil {
 		l.Warn("failed creating adventure game character record >%v<", err)
@@ -355,6 +382,18 @@ func updateOneAdventureGameCharacterHandler(w http.ResponseWriter, r *http.Reque
 	rec, err = mapper.AdventureGameCharacterRequestToRecord(l, r, rec)
 	if err != nil {
 		return err
+	}
+
+	// If AccountUserID changed, update AccountID
+	if rec.AccountUserID != "" {
+		accountUserRec, err := mm.GetAccountRec(rec.AccountUserID, nil)
+		if err != nil {
+			l.Warn("failed getting account user record >%s< >%v<", rec.AccountUserID, err)
+			return err
+		}
+		rec.AccountID = accountUserRec.AccountID
+	} else {
+		return coreerror.NewParamError("account_id is required")
 	}
 
 	rec, err = mm.UpdateAdventureGameCharacterRec(rec)

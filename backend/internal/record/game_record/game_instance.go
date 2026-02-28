@@ -16,7 +16,6 @@ const (
 const (
 	FieldGameInstanceID                                string = "id"
 	FieldGameInstanceGameID                            string = "game_id"
-	FieldGameInstanceGameSubscriptionID                string = "game_subscription_id"
 	FieldGameInstanceStatus                            string = "status"
 	FieldGameInstanceCurrentTurn                       string = "current_turn"
 	FieldGameInstanceDeliveryPhysicalPost              string = "delivery_physical_post"
@@ -47,7 +46,6 @@ const (
 type GameInstance struct {
 	record.Record
 	GameID                            string         `db:"game_id"`
-	GameSubscriptionID                string         `db:"game_subscription_id"`
 	Status                            string         `db:"status"`
 	CurrentTurn                       int            `db:"current_turn"`
 	LastTurnProcessedAt               sql.NullTime   `db:"last_turn_processed_at"`
@@ -66,7 +64,6 @@ type GameInstance struct {
 func (r *GameInstance) ToNamedArgs() pgx.NamedArgs {
 	args := r.Record.ToNamedArgs()
 	args[FieldGameInstanceGameID] = r.GameID
-	args[FieldGameInstanceGameSubscriptionID] = r.GameSubscriptionID
 	args[FieldGameInstanceStatus] = r.Status
 	args[FieldGameInstanceCurrentTurn] = r.CurrentTurn
 	args[FieldGameInstanceLastTurnProcessedAt] = r.LastTurnProcessedAt

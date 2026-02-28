@@ -14,7 +14,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/harness"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 	"gitlab.com/alienspaces/playbymail/internal/runner/server/game"
-	"gitlab.com/alienspaces/playbymail/internal/turn_sheet"
+	"gitlab.com/alienspaces/playbymail/internal/turnsheet"
 	"gitlab.com/alienspaces/playbymail/internal/utils/config"
 	"gitlab.com/alienspaces/playbymail/internal/utils/testutil"
 	"gitlab.com/alienspaces/playbymail/schema/api/game_schema"
@@ -49,9 +49,12 @@ func Test_getGameHandler(t *testing.T) {
 	testCases := []testCase{
 		{
 			TestCase: testutil.TestCase{
-				Name: "API key with open access \\ get many games \\ returns expected games",
+				Name: "authenticated user when get many games then returns expected games",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[game.GetManyGames]
+				},
+				RequestHeaders: func(d harness.Data) map[string]string {
+					return testutil.AuthHeaderStandard(d)
 				},
 				RequestQueryParams: func(d harness.Data) map[string]any {
 					return map[string]any{
@@ -68,9 +71,12 @@ func Test_getGameHandler(t *testing.T) {
 		},
 		{
 			TestCase: testutil.TestCase{
-				Name: "API key with open access \\ get one game with valid game ID \\ returns expected game",
+				Name: "authenticated user when get one game with valid game ID then returns expected game",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[game.GetOneGame]
+				},
+				RequestHeaders: func(d harness.Data) map[string]string {
+					return testutil.AuthHeaderStandard(d)
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					gameRec, err := d.GetGameRecByRef(harness.GameOneRef)
@@ -92,7 +98,7 @@ func Test_getGameHandler(t *testing.T) {
 		t.Logf("Running test >%s<", testCase.Name)
 
 		t.Run(testCase.Name, func(t *testing.T) {
-			testFunc := func(method string, body interface{}) {
+			testFunc := func(method string, body any) {
 				if testCase.TestResponseCode() != http.StatusOK {
 					return
 				}
@@ -148,19 +154,18 @@ func Test_createUpdateDeleteGameHandler(t *testing.T) {
 
 	testCaseResponseDecoder := testutil.TestCaseResponseDecoderGeneric[game_schema.GameResponse]
 
-	// Setup: get an account for authentication
-	accountRec, err := th.Data.GetAccountRecByRef(harness.AccountOneRef)
-	require.NoError(t, err, "GetAccountRecByRef returns without error")
-
 	testCases := []testCase{
 		{
 			TestCase: testutil.TestCase{
-				Name: "API key with open access \\ create game with valid properties \\ returns created game",
-				NewRunner: func(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], scanner turn_sheet.TurnSheetScanner, d harness.Data) (testutil.TestRunnerer, error) {
-					return testutil.NewTestRunnerWithAccountID(cfg, l, s, j, scanner, accountRec.ID, accountRec.Email)
+				Name: "authenticated designer when create game with valid properties then returns created game",
+				NewRunner: func(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], scanner turnsheet.TurnSheetScanner, d harness.Data) (testutil.TestRunnerer, error) {
+					return testutil.NewTestRunner(cfg, l, s, j, scanner)
 				},
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[game.CreateOneGame]
+				},
+				RequestHeaders: func(d harness.Data) map[string]string {
+					return testutil.AuthHeaderProDesigner(d)
 				},
 				RequestBody: func(d harness.Data) any {
 					return game_schema.GameRequest{
@@ -183,12 +188,15 @@ func Test_createUpdateDeleteGameHandler(t *testing.T) {
 		},
 		{
 			TestCase: testutil.TestCase{
-				Name: "API key with open access \\ update game with valid properties \\ returns updated game",
-				NewRunner: func(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], scanner turn_sheet.TurnSheetScanner, d harness.Data) (testutil.TestRunnerer, error) {
-					return testutil.NewTestRunnerWithAccountID(cfg, l, s, j, scanner, accountRec.ID, accountRec.Email)
+				Name: "authenticated designer when update game with valid properties then returns updated game",
+				NewRunner: func(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], scanner turnsheet.TurnSheetScanner, d harness.Data) (testutil.TestRunnerer, error) {
+					return testutil.NewTestRunner(cfg, l, s, j, scanner)
 				},
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[game.UpdateOneGame]
+				},
+				RequestHeaders: func(d harness.Data) map[string]string {
+					return testutil.AuthHeaderProDesigner(d)
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					gameRec, err := d.GetGameRecByRef(harness.GameOneRef)
@@ -199,11 +207,13 @@ func Test_createUpdateDeleteGameHandler(t *testing.T) {
 					return params
 				},
 				RequestBody: func(d harness.Data) any {
+					gameRec, err := d.GetGameRecByRef(harness.GameOneRef)
+					require.NoError(t, err, "GetGameRecByRef returns without error")
 					return game_schema.GameRequest{
-						Name:              "Test Game",
-						GameType:          game_record.GameTypeAdventure,
-						TurnDurationHours: 336, // 2 weeks
-						Description:       "An updated test adventure game description",
+						Name:              gameRec.Name,
+						GameType:          gameRec.GameType,
+						TurnDurationHours: gameRec.TurnDurationHours,
+						Description:       gameRec.Description,
 					}
 				},
 				ResponseDecoder: testCaseResponseDecoder,
@@ -219,12 +229,15 @@ func Test_createUpdateDeleteGameHandler(t *testing.T) {
 		},
 		{
 			TestCase: testutil.TestCase{
-				Name: "API key with open access \\ delete game with valid game ID \\ returns no content",
-				NewRunner: func(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], scanner turn_sheet.TurnSheetScanner, d harness.Data) (testutil.TestRunnerer, error) {
-					return testutil.NewTestRunnerWithAccountID(cfg, l, s, j, scanner, accountRec.ID, accountRec.Email)
+				Name: "authenticated designer when delete game with valid game ID then returns no content",
+				NewRunner: func(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], scanner turnsheet.TurnSheetScanner, d harness.Data) (testutil.TestRunnerer, error) {
+					return testutil.NewTestRunner(cfg, l, s, j, scanner)
 				},
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[game.DeleteOneGame]
+				},
+				RequestHeaders: func(d harness.Data) map[string]string {
+					return testutil.AuthHeaderProDesigner(d)
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					gameRec, err := d.GetGameRecByRef(harness.GameOneRef)
@@ -245,7 +258,7 @@ func Test_createUpdateDeleteGameHandler(t *testing.T) {
 		t.Logf("Running test >%s<\n", testCase.Name)
 
 		t.Run(testCase.Name, func(t *testing.T) {
-			testFunc := func(method string, body interface{}) {
+			testFunc := func(method string, body any) {
 				if testCase.TestResponseCode() != http.StatusCreated {
 					return
 				}

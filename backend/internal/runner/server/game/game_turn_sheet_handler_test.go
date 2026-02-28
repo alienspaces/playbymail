@@ -22,10 +22,10 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 	"gitlab.com/alienspaces/playbymail/internal/runner/server/game"
-	"gitlab.com/alienspaces/playbymail/internal/turn_sheet"
+	"gitlab.com/alienspaces/playbymail/internal/turnsheet"
 	"gitlab.com/alienspaces/playbymail/internal/utils/config"
 	"gitlab.com/alienspaces/playbymail/internal/utils/testutil"
-	"gitlab.com/alienspaces/playbymail/internal/utils/turnsheet"
+	"gitlab.com/alienspaces/playbymail/internal/utils/turnsheetutil"
 )
 
 func Test_uploadTurnSheetHandler(t *testing.T) {
@@ -42,7 +42,7 @@ func Test_uploadTurnSheetHandler(t *testing.T) {
 				{
 					GameTurnSheetConfig: harness.GameTurnSheetConfig{
 						Reference:        harness.GameTurnSheetOneRef,
-						AccountRef:       harness.AccountOneRef,
+						AccountRef:       harness.StandardAccountRef,
 						SheetType:        adventure_game_record.AdventureGameTurnSheetTypeLocationChoice,
 						ProcessingStatus: game_record.TurnSheetProcessingStatusPending,
 					},
@@ -87,7 +87,7 @@ func Test_uploadTurnSheetHandler(t *testing.T) {
 	testCases := []testCase{
 		{
 			TestCase: testutil.TestCase{
-				Name: "authenticated user \\ upload empty image \\ returns error",
+				Name: "authenticated user when upload empty image then returns error",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[game.UploadTurnSheet]
 				},
@@ -95,9 +95,9 @@ func Test_uploadTurnSheetHandler(t *testing.T) {
 					return []byte{}
 				},
 				RequestHeaders: func(d harness.Data) map[string]string {
-					return map[string]string{
-						"Content-Type": "image/jpeg",
-					}
+					headers := testutil.AuthHeaderStandard(d)
+					headers["Content-Type"] = "image/jpeg"
+					return headers
 				},
 				ResponseDecoder: testCaseResponseDecoder,
 				ResponseCode:    http.StatusBadRequest,
@@ -108,20 +108,38 @@ func Test_uploadTurnSheetHandler(t *testing.T) {
 		},
 		{
 			TestCase: testutil.TestCase{
-				Name: "existing game with existing player \\ upload location choice turn sheet \\ returns processed turn sheet",
-				NewRunner: func(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], scanner turn_sheet.TurnSheetScanner, d harness.Data) (testutil.TestRunnerer, error) {
+				Name: "existing game with existing player when upload location choice turn sheet then returns processed turn sheet",
+				NewRunner: func(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], scanner turnsheet.TurnSheetScanner, d harness.Data) (testutil.TestRunnerer, error) {
+
 					// Get turn sheet from harness
 					turnSheetRec, err := d.GetGameTurnSheetRecByRef(harness.GameTurnSheetOneRef)
 					if err != nil {
 						return nil, fmt.Errorf("failed to get turn sheet from harness: %w", err)
 					}
 
-					gameID := turnSheetRec.GameID
 					gameInstanceID := nullstring.ToString(turnSheetRec.GameInstanceID)
 					accountID := turnSheetRec.AccountID
 
+					// Get game subscription instance for this account and instance
+					var gameSubscriptionInstanceID string
+					for _, gameSubscriptionInstanceRec := range d.GameSubscriptionInstanceRecs {
+						if gameSubscriptionInstanceRec.GameInstanceID == gameInstanceID &&
+							gameSubscriptionInstanceRec.AccountID == accountID {
+							gameSubscriptionInstanceID = gameSubscriptionInstanceRec.ID
+							break
+						}
+					}
+
+					if gameSubscriptionInstanceID == "" {
+						fmt.Printf("DEBUG: Looking for AccountID: %s, GameInstanceID: %s\n", accountID, gameInstanceID)
+						for _, rec := range d.GameSubscriptionInstanceRecs {
+							fmt.Printf("DEBUG: Available Rec - AccountID: %s, GameInstanceID: %s\n", rec.AccountID, rec.GameInstanceID)
+						}
+						return nil, fmt.Errorf("failed to find game subscription instance for account %s and instance %s", accountID, gameInstanceID)
+					}
+
 					// Generate a valid turn sheet code using harness turn sheet
-					turnSheetCode, err := turnsheet.GenerateTurnSheetCode(gameID, gameInstanceID, accountID, turnSheetRec.ID)
+					turnSheetCode, err := turnsheetutil.GeneratePlayGameTurnSheetCode(turnSheetRec.ID)
 					if err != nil {
 						return nil, fmt.Errorf("failed to generate turn sheet code: %w", err)
 					}
@@ -149,9 +167,9 @@ func Test_uploadTurnSheetHandler(t *testing.T) {
 					return []byte("fake-image-data")
 				},
 				RequestHeaders: func(d harness.Data) map[string]string {
-					return map[string]string{
-						"Content-Type": "image/jpeg",
-					}
+					headers := testutil.AuthHeaderByAccountRef(d, harness.StandardAccountRef)
+					headers["Content-Type"] = "image/jpeg"
+					return headers
 				},
 				ResponseDecoder: testCaseResponseDecoder,
 				ResponseCode:    http.StatusOK,
@@ -163,14 +181,8 @@ func Test_uploadTurnSheetHandler(t *testing.T) {
 		},
 		{
 			TestCase: testutil.TestCase{
-				Name: "existing game that has not started and new player \\ upload join game turn sheet \\ returns processed join game turn sheet",
-				NewRunner: func(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], scanner turn_sheet.TurnSheetScanner, d harness.Data) (testutil.TestRunnerer, error) {
-					// Get game from harness (game instance status is "created" by default)
-					gameID, ok := d.Refs.GameRefs[harness.GameOneRef]
-					if !ok {
-						return nil, fmt.Errorf("game ref %s not found", harness.GameOneRef)
-					}
-
+				Name: "existing game that has not started and new player when upload join game turn sheet then returns processed join game turn sheet",
+				NewRunner: func(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], scanner turnsheet.TurnSheetScanner, d harness.Data) (testutil.TestRunnerer, error) {
 					// Get manager subscription for this game
 					managerSubscriptionID, ok := d.Refs.GameSubscriptionRefs[harness.GameSubscriptionManagerOneRef]
 					if !ok {
@@ -178,7 +190,7 @@ func Test_uploadTurnSheetHandler(t *testing.T) {
 					}
 
 					// Generate a valid join game turn sheet code (no turn sheet record needed)
-					turnSheetCode, err := turnsheet.GenerateJoinTurnSheetCode(gameID, managerSubscriptionID)
+					turnSheetCode, err := turnsheetutil.GenerateJoinGameTurnSheetCode(managerSubscriptionID)
 					if err != nil {
 						return nil, fmt.Errorf("failed to generate join turn sheet code: %w", err)
 					}
@@ -211,9 +223,9 @@ func Test_uploadTurnSheetHandler(t *testing.T) {
 					return []byte("fake-image-data")
 				},
 				RequestHeaders: func(d harness.Data) map[string]string {
-					return map[string]string{
-						"Content-Type": "image/jpeg",
-					}
+					headers := testutil.AuthHeaderByAccountRef(d, harness.ProPlayerAccountRef)
+					headers["Content-Type"] = "image/jpeg"
+					return headers
 				},
 				ResponseDecoder: testCaseResponseDecoder,
 				ResponseCode:    http.StatusAccepted,
@@ -225,13 +237,8 @@ func Test_uploadTurnSheetHandler(t *testing.T) {
 		},
 		{
 			TestCase: testutil.TestCase{
-				Name: "existing game that has started and new player \\ upload join game turn sheet \\ returns processed join game turn sheet",
-				NewRunner: func(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], scanner turn_sheet.TurnSheetScanner, d harness.Data) (testutil.TestRunnerer, error) {
-					// Get game from harness (use game instance two which has "started" status)
-					gameID, ok := d.Refs.GameRefs[harness.GameOneRef]
-					if !ok {
-						return nil, fmt.Errorf("game ref %s not found", harness.GameOneRef)
-					}
+				Name: "existing game that has started and new player when upload join game turn sheet then returns processed join game turn sheet",
+				NewRunner: func(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], scanner turnsheet.TurnSheetScanner, d harness.Data) (testutil.TestRunnerer, error) {
 
 					// Verify game instance two is started
 					gameInstanceRec, err := d.GetGameInstanceRecByRef(harness.GameInstanceTwoRef)
@@ -249,7 +256,7 @@ func Test_uploadTurnSheetHandler(t *testing.T) {
 					}
 
 					// Generate a valid join game turn sheet code
-					turnSheetCode, err := turnsheet.GenerateJoinTurnSheetCode(gameID, managerSubscriptionID)
+					turnSheetCode, err := turnsheetutil.GenerateJoinGameTurnSheetCode(managerSubscriptionID)
 					if err != nil {
 						return nil, fmt.Errorf("failed to generate join turn sheet code: %w", err)
 					}
@@ -282,9 +289,9 @@ func Test_uploadTurnSheetHandler(t *testing.T) {
 					return []byte("fake-image-data")
 				},
 				RequestHeaders: func(d harness.Data) map[string]string {
-					return map[string]string{
-						"Content-Type": "image/jpeg",
-					}
+					headers := testutil.AuthHeaderByAccountRef(d, harness.ProPlayerAccountRef)
+					headers["Content-Type"] = "image/jpeg"
+					return headers
 				},
 				ResponseDecoder: testCaseResponseDecoder,
 				ResponseCode:    http.StatusAccepted,
@@ -300,7 +307,7 @@ func Test_uploadTurnSheetHandler(t *testing.T) {
 		t.Logf("Running test >%s<", testCase.Name)
 
 		t.Run(testCase.Name, func(t *testing.T) {
-			testFunc := func(method string, body interface{}) {
+			testFunc := func(method string, body any) {
 				if testCase.TestResponseCode() == http.StatusOK {
 					require.NotNil(t, body, "Response body is not nil")
 					response := body.(game.TurnSheetUploadResponse)
@@ -315,7 +322,7 @@ func Test_uploadTurnSheetHandler(t *testing.T) {
 }
 
 func Test_downloadJoinGameTurnSheetsHandler(t *testing.T) {
-	t.Parallel()
+	// t.Parallel()
 
 	th := testutil.NewTestHarness(t)
 	require.NotNil(t, th, "newTestHarness returns without error")
@@ -343,15 +350,9 @@ func Test_downloadJoinGameTurnSheetsHandler(t *testing.T) {
 	testCases := []testCase{
 		{
 			TestCase: testutil.TestCase{
-				Name: "authenticated manager \\ download join game turn sheet for adventure game \\ returns PDF",
-				NewRunner: func(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], scanner turn_sheet.TurnSheetScanner, d harness.Data) (testutil.TestRunnerer, error) {
-					// Get manager account (AccountTwoRef has manager subscription)
-					managerAccountRec, err := d.GetAccountRecByRef(harness.AccountTwoRef)
-					if err != nil {
-						return nil, fmt.Errorf("failed to get manager account: %w", err)
-					}
-
-					rnr, err := testutil.NewTestRunnerWithAccountID(cfg, l, s, j, scanner, managerAccountRec.ID, managerAccountRec.Email)
+				Name: "authenticated manager when download join game turn sheet for adventure game then returns PDF",
+				NewRunner: func(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], scanner turnsheet.TurnSheetScanner, d harness.Data) (testutil.TestRunnerer, error) {
+					rnr, err := testutil.NewTestRunner(cfg, l, s, j, scanner)
 					if err != nil {
 						return nil, err
 					}
@@ -360,6 +361,9 @@ func Test_downloadJoinGameTurnSheetsHandler(t *testing.T) {
 				},
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[game.DownloadJoinGameTurnSheets]
+				},
+				RequestHeaders: func(d harness.Data) map[string]string {
+					return testutil.AuthHeaderProManager(d)
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					gameID, ok := d.Refs.GameRefs[harness.GameOneRef]
@@ -378,15 +382,9 @@ func Test_downloadJoinGameTurnSheetsHandler(t *testing.T) {
 		},
 		{
 			TestCase: testutil.TestCase{
-				Name: "authenticated player \\ download join game turn sheet with game_subscription_id query param \\ returns PDF",
-				NewRunner: func(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], scanner turn_sheet.TurnSheetScanner, d harness.Data) (testutil.TestRunnerer, error) {
-					// Use player account (AccountThreeRef)
-					playerAccountRec, err := d.GetAccountRecByRef(harness.AccountThreeRef)
-					if err != nil {
-						return nil, fmt.Errorf("failed to get player account: %w", err)
-					}
-
-					rnr, err := testutil.NewTestRunnerWithAccountID(cfg, l, s, j, scanner, playerAccountRec.ID, playerAccountRec.Email)
+				Name: "authenticated player when download join game turn sheet with game_subscription_id query param then returns PDF",
+				NewRunner: func(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], scanner turnsheet.TurnSheetScanner, d harness.Data) (testutil.TestRunnerer, error) {
+					rnr, err := testutil.NewTestRunner(cfg, l, s, j, scanner)
 					if err != nil {
 						return nil, err
 					}
@@ -421,15 +419,9 @@ func Test_downloadJoinGameTurnSheetsHandler(t *testing.T) {
 		},
 		{
 			TestCase: testutil.TestCase{
-				Name: "authenticated non-manager \\ download join game turn sheet without game_subscription_id \\ returns error",
-				NewRunner: func(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], scanner turn_sheet.TurnSheetScanner, d harness.Data) (testutil.TestRunnerer, error) {
-					// Use player account (AccountThreeRef) which is not a manager
-					playerAccountRec, err := d.GetAccountRecByRef(harness.AccountThreeRef)
-					if err != nil {
-						return nil, fmt.Errorf("failed to get player account: %w", err)
-					}
-
-					rnr, err := testutil.NewTestRunnerWithAccountID(cfg, l, s, j, scanner, playerAccountRec.ID, playerAccountRec.Email)
+				Name: "authenticated non-manager when download join game turn sheet without game_subscription_id then returns error",
+				NewRunner: func(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], scanner turnsheet.TurnSheetScanner, d harness.Data) (testutil.TestRunnerer, error) {
+					rnr, err := testutil.NewTestRunner(cfg, l, s, j, scanner)
 					if err != nil {
 						return nil, err
 					}
@@ -455,15 +447,9 @@ func Test_downloadJoinGameTurnSheetsHandler(t *testing.T) {
 		},
 		{
 			TestCase: testutil.TestCase{
-				Name: "authenticated user \\ download join game turn sheet with invalid game_subscription_id \\ returns error",
-				NewRunner: func(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], scanner turn_sheet.TurnSheetScanner, d harness.Data) (testutil.TestRunnerer, error) {
-					// Use any account
-					accountRec, err := d.GetAccountRecByRef(harness.AccountOneRef)
-					if err != nil {
-						return nil, fmt.Errorf("failed to get account: %w", err)
-					}
-
-					rnr, err := testutil.NewTestRunnerWithAccountID(cfg, l, s, j, scanner, accountRec.ID, accountRec.Email)
+				Name: "authenticated user when download join game turn sheet with invalid game_subscription_id then returns error",
+				NewRunner: func(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], scanner turnsheet.TurnSheetScanner, d harness.Data) (testutil.TestRunnerer, error) {
+					rnr, err := testutil.NewTestRunner(cfg, l, s, j, scanner)
 					if err != nil {
 						return nil, err
 					}
@@ -495,15 +481,9 @@ func Test_downloadJoinGameTurnSheetsHandler(t *testing.T) {
 		},
 		{
 			TestCase: testutil.TestCase{
-				Name: "authenticated user \\ download join game turn sheet with game_subscription_id for wrong game \\ returns error",
-				NewRunner: func(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], scanner turn_sheet.TurnSheetScanner, d harness.Data) (testutil.TestRunnerer, error) {
-					// Use any account
-					accountRec, err := d.GetAccountRecByRef(harness.AccountOneRef)
-					if err != nil {
-						return nil, fmt.Errorf("failed to get account: %w", err)
-					}
-
-					rnr, err := testutil.NewTestRunnerWithAccountID(cfg, l, s, j, scanner, accountRec.ID, accountRec.Email)
+				Name: "authenticated user when download join game turn sheet with game_subscription_id for wrong game then returns error",
+				NewRunner: func(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], scanner turnsheet.TurnSheetScanner, d harness.Data) (testutil.TestRunnerer, error) {
+					rnr, err := testutil.NewTestRunner(cfg, l, s, j, scanner)
 					if err != nil {
 						return nil, err
 					}
@@ -537,7 +517,7 @@ func Test_downloadJoinGameTurnSheetsHandler(t *testing.T) {
 		},
 		{
 			TestCase: testutil.TestCase{
-				Name: "authenticated user \\ download join game turn sheet with invalid game ID \\ returns error",
+				Name: "authenticated user when download join game turn sheet with invalid game ID then returns error",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[game.DownloadJoinGameTurnSheets]
 				},
@@ -559,7 +539,7 @@ func Test_downloadJoinGameTurnSheetsHandler(t *testing.T) {
 		t.Logf("Running test >%s<", testCase.Name)
 
 		t.Run(testCase.Name, func(t *testing.T) {
-			testFunc := func(method string, body interface{}) {
+			testFunc := func(method string, body any) {
 				if testCase.TestResponseCode() == http.StatusOK {
 					require.NotNil(t, body, "Response body is not nil")
 					pdfData, ok := body.([]byte)

@@ -6,15 +6,46 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 )
 
+type validateAdventureGameItemArgs struct {
+	nextRec *adventure_game_record.AdventureGameItem
+	currRec *adventure_game_record.AdventureGameItem
+}
+
+func (m *Domain) populateAdventureGameItemValidateArgs(currRec, nextRec *adventure_game_record.AdventureGameItem) (*validateAdventureGameItemArgs, error) {
+	args := &validateAdventureGameItemArgs{
+		currRec: currRec,
+		nextRec: nextRec,
+	}
+	return args, nil
+}
+
 func (m *Domain) validateAdventureGameItemRecForCreate(rec *adventure_game_record.AdventureGameItem) error {
-	return validateAdventureGameItemRec(rec, false)
+	args, err := m.populateAdventureGameItemValidateArgs(nil, rec)
+	if err != nil {
+		return err
+	}
+	return validateAdventureGameItemRecForCreate(args)
 }
 
-func (m *Domain) validateAdventureGameItemRecForUpdate(rec *adventure_game_record.AdventureGameItem) error {
-	return validateAdventureGameItemRec(rec, true)
+func (m *Domain) validateAdventureGameItemRecForUpdate(currRec, nextRec *adventure_game_record.AdventureGameItem) error {
+	args, err := m.populateAdventureGameItemValidateArgs(currRec, nextRec)
+	if err != nil {
+		return err
+	}
+	return validateAdventureGameItemRecForUpdate(args)
 }
 
-func validateAdventureGameItemRec(rec *adventure_game_record.AdventureGameItem, requireID bool) error {
+func validateAdventureGameItemRecForCreate(args *validateAdventureGameItemArgs) error {
+	return validateAdventureGameItemRec(args, false)
+}
+
+func validateAdventureGameItemRecForUpdate(args *validateAdventureGameItemArgs) error {
+	return validateAdventureGameItemRec(args, true)
+}
+
+func validateAdventureGameItemRec(args *validateAdventureGameItemArgs, requireID bool) error {
+	rec := args.nextRec
+
 	if rec == nil {
 		return coreerror.NewInvalidDataError("record is nil")
 	}

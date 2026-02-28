@@ -120,7 +120,7 @@ func Test_Generic(t *testing.T) {
 	var cRec, gRec, uRec *TestRecord
 	var gRecs []*TestRecord
 
-	tname := "generic \\ create one \\ ok"
+	tname := "generic when create one then ok"
 	t.Run(tname, func(t *testing.T) {
 		t.Logf("Running %s", tname)
 		cRec, err = r.CreateOne(testRec)
@@ -135,7 +135,7 @@ func Test_Generic(t *testing.T) {
 		require.False(t, nulltime.IsValid(cRec.DeletedAt), "CreateOne record DeletedAt is not valid")
 	})
 
-	tname = "generic \\ get one \\ ok"
+	tname = "generic when get one then ok"
 	t.Run(tname, func(t *testing.T) {
 		t.Logf("Running %s", tname)
 		gRec, err = r.GetOne(cRec.ID, nil)
@@ -150,7 +150,7 @@ func Test_Generic(t *testing.T) {
 		require.False(t, nulltime.IsValid(gRec.DeletedAt), "GetOne record DeletedAt is not valid")
 	})
 
-	tname = "generic \\ get many \\ ok"
+	tname = "generic when get many then ok"
 	t.Run(tname, func(t *testing.T) {
 		t.Logf("Running %s", tname)
 		gRecs, err = r.GetMany(&coresql.Options{
@@ -172,7 +172,7 @@ func Test_Generic(t *testing.T) {
 		require.False(t, nulltime.IsValid(gRecs[0].DeletedAt), "GetMany record DeletedAt is not valid")
 	})
 
-	tname = "generic \\ update one \\ ok"
+	tname = "generic when update one then ok"
 	t.Run(tname, func(t *testing.T) {
 		t.Logf("Running %s", tname)
 		uRec, err = r.UpdateOne(gRec)
@@ -193,28 +193,28 @@ func Test_Generic(t *testing.T) {
 		require.NotEqual(t, currUpdatedAt, uRec.UpdatedAt, "UpdateOne returns modified UpdatedAt")
 	})
 
-	tname = "generic \\ delete one \\ ok"
+	tname = "generic when delete one then ok"
 	t.Run(tname, func(t *testing.T) {
 		t.Logf("Running %s", tname)
 		err = r.DeleteOne(uRec.ID)
 		require.NoError(t, err, "DeleteOne returns without error")
 	})
 
-	tname = "generic \\ get one deleted \\ error"
+	tname = "generic when get one deleted then error"
 	t.Run(tname, func(t *testing.T) {
 		t.Logf("Running %s", tname)
 		_, err = r.GetOne(uRec.ID, nil)
 		require.Error(t, err, "GetOne after delete returns with error")
 	})
 
-	tname = "generic \\ remove one \\ ok"
+	tname = "generic when remove one then ok"
 	t.Run(tname, func(t *testing.T) {
 		t.Logf("Running %s", tname)
 		err = r.RemoveOne(uRec.ID)
 		require.NoError(t, err, "RemoveOne returns without error")
 	})
 
-	tname = "generic \\ create one not null constraint \\ error"
+	tname = "generic when create one not null constraint then error"
 	t.Run(tname, func(t *testing.T) {
 		t.Logf("Running %s", tname)
 
@@ -240,7 +240,7 @@ func Test_Generic(t *testing.T) {
 		require.Nil(t, cErrRec, "CreateOne with error does not return a record")
 	})
 
-	tname = "generic \\ get one unknown ID \\ not found error"
+	tname = "generic when get one unknown ID then not found error"
 	t.Run(tname, func(t *testing.T) {
 		t.Logf("Running %s", tname)
 
@@ -264,7 +264,7 @@ func Test_Generic(t *testing.T) {
 		require.Nil(t, gErrRec, "GetOne does not return a record")
 	})
 
-	tname = "generic \\ get one invalid ID \\ invalid input error"
+	tname = "generic when get one invalid ID then invalid input error"
 	t.Run(tname, func(t *testing.T) {
 		t.Logf("Running %s", tname)
 

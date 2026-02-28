@@ -5,15 +5,46 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 )
 
+type validateAdventureGameCharacterArgs struct {
+	nextRec *adventure_game_record.AdventureGameCharacter
+	currRec *adventure_game_record.AdventureGameCharacter
+}
+
+func (m *Domain) populateAdventureGameCharacterValidateArgs(currRec, nextRec *adventure_game_record.AdventureGameCharacter) (*validateAdventureGameCharacterArgs, error) {
+	args := &validateAdventureGameCharacterArgs{
+		currRec: currRec,
+		nextRec: nextRec,
+	}
+	return args, nil
+}
+
 func (m *Domain) validateAdventureGameCharacterRecForCreate(rec *adventure_game_record.AdventureGameCharacter) error {
-	return validateAdventureGameCharacterRec(rec, false)
+	args, err := m.populateAdventureGameCharacterValidateArgs(nil, rec)
+	if err != nil {
+		return err
+	}
+	return validateAdventureGameCharacterRecForCreate(args)
 }
 
-func (m *Domain) validateAdventureGameCharacterRecForUpdate(rec *adventure_game_record.AdventureGameCharacter) error {
-	return validateAdventureGameCharacterRec(rec, true)
+func (m *Domain) validateAdventureGameCharacterRecForUpdate(currRec, nextRec *adventure_game_record.AdventureGameCharacter) error {
+	args, err := m.populateAdventureGameCharacterValidateArgs(currRec, nextRec)
+	if err != nil {
+		return err
+	}
+	return validateAdventureGameCharacterRecForUpdate(args)
 }
 
-func validateAdventureGameCharacterRec(rec *adventure_game_record.AdventureGameCharacter, requireID bool) error {
+func validateAdventureGameCharacterRecForCreate(args *validateAdventureGameCharacterArgs) error {
+	return validateAdventureGameCharacterRec(args, false)
+}
+
+func validateAdventureGameCharacterRecForUpdate(args *validateAdventureGameCharacterArgs) error {
+	return validateAdventureGameCharacterRec(args, true)
+}
+
+func validateAdventureGameCharacterRec(args *validateAdventureGameCharacterArgs, requireID bool) error {
+	rec := args.nextRec
+
 	if requireID {
 		if err := domain.ValidateUUIDField(adventure_game_record.FieldAdventureGameCharacterID, rec.ID); err != nil {
 			return err

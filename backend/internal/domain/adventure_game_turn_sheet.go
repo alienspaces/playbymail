@@ -75,14 +75,14 @@ func (m *Domain) CreateAdventureGameTurnSheetRec(rec *adventure_game_record.Adve
 func (m *Domain) UpdateAdventureGameTurnSheetRec(rec *adventure_game_record.AdventureGameTurnSheet) (*adventure_game_record.AdventureGameTurnSheet, error) {
 	l := m.Logger("UpdateAdventureGameTurnSheetRec")
 
-	_, err := m.GetAdventureGameTurnSheetRec(rec.ID, coresql.ForUpdateNoWait)
+	currRec, err := m.GetAdventureGameTurnSheetRec(rec.ID, coresql.ForUpdateNoWait)
 	if err != nil {
 		return rec, err
 	}
 
 	l.Debug("updating adventure_game_turn_sheet record >%#v<", rec)
 
-	if err := m.validateAdventureGameTurnSheetRecForUpdate(rec); err != nil {
+	if err := m.validateAdventureGameTurnSheetRecForUpdate(currRec, rec); err != nil {
 		l.Warn("failed to validate adventure_game_turn_sheet record >%v<", err)
 		return rec, err
 	}

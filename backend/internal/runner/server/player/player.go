@@ -4,10 +4,12 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/jsonschema"
 	"gitlab.com/alienspaces/playbymail/core/server"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
-	"gitlab.com/alienspaces/playbymail/internal/turn_sheet"
+	"gitlab.com/alienspaces/playbymail/internal/turnsheet"
 	"gitlab.com/alienspaces/playbymail/internal/utils/config"
 	"gitlab.com/alienspaces/playbymail/internal/utils/logging"
 )
+
+// The set of player API's are APIs meant to be accessed by individual players.
 
 const (
 	packageName = "player"
@@ -24,7 +26,7 @@ var referenceSchemas = []jsonschema.Schema{
 	},
 }
 
-func PlayerHandlerConfig(cfg config.Config, l logger.Logger, scnr turn_sheet.TurnSheetScanner) (map[string]server.HandlerConfig, error) {
+func PlayerHandlerConfig(cfg config.Config, l logger.Logger, scnr turnsheet.TurnSheetScanner) (map[string]server.HandlerConfig, error) {
 	l = logging.LoggerWithFunctionContext(l, packageName, "PlayerHandlerConfig")
 
 	l.Debug("Adding player handler configuration")

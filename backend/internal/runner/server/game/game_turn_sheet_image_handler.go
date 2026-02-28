@@ -3,7 +3,6 @@ package game
 import (
 	"bytes"
 	"database/sql"
-	"encoding/json"
 	"fmt"
 	"image"
 	_ "image/jpeg"
@@ -26,10 +25,10 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/mapper"
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
-	"gitlab.com/alienspaces/playbymail/internal/turn_sheet"
+	"gitlab.com/alienspaces/playbymail/internal/runner/server/handler_auth"
+	"gitlab.com/alienspaces/playbymail/internal/turnsheet"
 	"gitlab.com/alienspaces/playbymail/internal/utils/config"
 	"gitlab.com/alienspaces/playbymail/internal/utils/logging"
-	"gitlab.com/alienspaces/playbymail/internal/utils/turnsheet"
 )
 
 const (
@@ -56,6 +55,9 @@ func gameImageHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, e
 			AuthenTypes: []server.AuthenticationType{
 				server.AuthenticationTypeToken,
 			},
+			AuthzPermissions: []server.AuthorizedPermission{
+				handler_auth.PermissionGameDesign,
+			},
 		},
 		DocumentationConfig: server.DocumentationConfig{
 			Document: true,
@@ -77,7 +79,7 @@ func gameImageHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, e
 		HandlerFunc: getManyGameTurnSheetImagesHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
-				server.AuthenticationTypeToken,
+				server.AuthenticationTypeOptionalToken,
 			},
 		},
 		DocumentationConfig: server.DocumentationConfig{
@@ -98,6 +100,9 @@ func gameImageHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, e
 			AuthenTypes: []server.AuthenticationType{
 				server.AuthenticationTypeToken,
 			},
+			AuthzPermissions: []server.AuthorizedPermission{
+				handler_auth.PermissionGameDesign,
+			},
 		},
 		DocumentationConfig: server.DocumentationConfig{
 			Document:    true,
@@ -115,6 +120,9 @@ func gameImageHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, e
 			AuthenTypes: []server.AuthenticationType{
 				server.AuthenticationTypeToken,
 			},
+			AuthzPermissions: []server.AuthorizedPermission{
+				handler_auth.PermissionGameDesign,
+			},
 		},
 		DocumentationConfig: server.DocumentationConfig{
 			Document:    true,
@@ -123,7 +131,8 @@ func gameImageHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, e
 		},
 	}
 
-	// Preview game turn sheet with uploaded images
+	// Preview game turn sheet with uploaded images.
+	// Both game designers and game managers who might be considering running the game can preview turn sheets.
 	gameImageConfig[PreviewGameTurnSheet] = server.HandlerConfig{
 		Method:      http.MethodGet,
 		Path:        "/api/v1/games/:game_id/turn-sheets/preview",
@@ -131,6 +140,10 @@ func gameImageHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, e
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
 				server.AuthenticationTypeToken,
+			},
+			AuthzPermissions: []server.AuthorizedPermission{
+				handler_auth.PermissionGameDesign,
+				handler_auth.PermissionGameManagement,
 			},
 		},
 		DocumentationConfig: server.DocumentationConfig{
@@ -306,8 +319,8 @@ func getManyGameTurnSheetImagesHandler(w http.ResponseWriter, r *http.Request, p
 
 	l.Info("fetching turn sheet images for game >%s<", gameID)
 
-	// Verify game exists and user has access (RLS check)
-	_, err := mm.GetGameRec(gameID, nil)
+	// Verify game exists - bypass RLS since turn sheet images are publicly accessible
+	_, err := mm.GetGameRecByIDForJoinProcess(gameID)
 	if err != nil {
 		l.Warn("failed to get game record >%s< >%v<", gameID, err)
 		return err
@@ -494,11 +507,17 @@ func previewGameTurnSheetHandler(w http.ResponseWriter, r *http.Request, pp http
 
 	gameID := pp.ByName("game_id")
 	if gameID == "" {
-		l.Warn("game ID is empty")
+		l.Warn("path parameter game_id is required")
 		return coreerror.RequiredPathParameter("game_id")
 	}
 
-	l.Info("generating turn sheet preview for game >%s<", gameID)
+	turnSheetType := qp.GetParamValueString("turn_sheet_type")
+	if turnSheetType == "" {
+		l.Warn("query parameter turn_sheet_type is required")
+		return coreerror.RequiredQueryParameter("turn_sheet_type")
+	}
+
+	l.Info("generating turn sheet preview for game >%s< type >%s<", gameID, turnSheetType)
 
 	// Get game record (RLS check)
 	gameRec, err := mm.GetGameRec(gameID, nil)
@@ -507,15 +526,7 @@ func previewGameTurnSheetHandler(w http.ResponseWriter, r *http.Request, pp http
 		return err
 	}
 
-	l.Info("found game >%s< type >%s<", gameRec.Name, gameRec.GameType)
-
-	// Get turn_sheet_type from query parameter (required)
-	turnSheetType := r.URL.Query().Get("turn_sheet_type")
-	if turnSheetType == "" {
-		l.Warn("turn_sheet_type query parameter is required for turn sheet preview")
-		return coreerror.RequiredQueryParameter("turn_sheet_type")
-	}
-	l.Info("using turn_sheet_type >%s< for preview", turnSheetType)
+	l.Info("have game record ID >%s< Name >%s< GameType >%s<", gameRec.ID, gameRec.Name, gameRec.GameType)
 
 	// Parse config for processor
 	cfg, err := config.Parse()
@@ -525,168 +536,38 @@ func previewGameTurnSheetHandler(w http.ResponseWriter, r *http.Request, pp http
 	}
 
 	// Get the appropriate processor for the turn sheet type
-	processor, err := turn_sheet.GetDocumentProcessor(l, cfg, turnSheetType)
+	processor, err := turnsheet.GetDocumentProcessor(l, cfg, turnSheetType)
 	if err != nil {
 		l.Warn("failed to get document processor for turn sheet type >%s< >%v<", turnSheetType, err)
 		return coreerror.NewInvalidDataError("turn sheet type %s is not supported for preview", turnSheetType)
 	}
 
-	// Generate turn sheet data based on type
-	var sheetDataBytes []byte
-	switch turnSheetType {
-	case adventure_game_record.AdventureGameTurnSheetTypeJoinGame:
-		// Get manager subscription for this game
-		managerSubs, err := mm.GetManyGameSubscriptionRecs(&coresql.Options{
-			Params: []coresql.Param{
-				{Col: game_record.FieldGameSubscriptionGameID, Val: gameID},
-				{Col: game_record.FieldGameSubscriptionSubscriptionType, Val: game_record.GameSubscriptionTypeManager},
-			},
-			Limit: 1,
-		})
-		if err != nil {
-			l.Warn("failed to get manager subscription >%v<", err)
-			return coreerror.NewInternalError("failed to get manager subscription: %v", err)
+	// Get uploaded turn sheet background image
+	backgroundImage, err := mm.GetGameTurnSheetImageDataURL(gameID, turnSheetType)
+	if err != nil {
+		l.Warn("failed to get turn sheet background image >%v<", err)
+		// Continue without image - not a fatal error
+	} else if backgroundImage != "" {
+		// Log image presence for debugging
+		prefixLen := 50
+		if len(backgroundImage) < prefixLen {
+			prefixLen = len(backgroundImage)
 		}
-		if len(managerSubs) == 0 {
-			l.Warn("no manager subscription found for game >%s<", gameID)
-			return coreerror.NewInvalidDataError("no manager subscription found for game")
-		}
-		managerSubscriptionID := managerSubs[0].ID
+		l.Info("loaded background image for turn sheet, length >%d< prefix >%s<", len(backgroundImage), backgroundImage[:prefixLen])
+	} else {
+		l.Info("no background image found for turn sheet")
+	}
 
-		// Generate join turn sheet code for this game
-		turnSheetCode, err := turnsheet.GenerateJoinTurnSheetCode(gameID, managerSubscriptionID)
-		if err != nil {
-			l.Warn("failed to generate join turn sheet code >%v<", err)
-			return coreerror.NewInternalError("failed to generate turn sheet code: %v", err)
-		}
+	// Generate preview data using the processor
+	var bgImagePtr *string
+	if backgroundImage != "" {
+		bgImagePtr = &backgroundImage
+	}
 
-		l.Info("generated turn sheet code for game >%s<", gameID)
-
-		// Create join game data using mapper function
-		joinData, err := turn_sheet.GetTurnSheetJoinGameData(gameRec, turnSheetCode)
-		if err != nil {
-			l.Warn("failed to create join game data >%v<", err)
-			return coreerror.NewInvalidDataError("failed to create join game data: %v", err)
-		}
-
-		// Get uploaded turn sheet background image and add it to the data
-		backgroundImage, err := mm.GetGameTurnSheetImageDataURL(gameID, turnSheetType)
-		if err != nil {
-			l.Warn("failed to get turn sheet background image >%v<", err)
-			// Continue without image - not a fatal error
-		} else if backgroundImage != "" {
-			joinData.BackgroundImage = &backgroundImage
-			prefixLen := 50
-			if len(backgroundImage) < prefixLen {
-				prefixLen = len(backgroundImage)
-			}
-			l.Info("loaded background image for turn sheet, length >%d< prefix >%s<", len(backgroundImage), backgroundImage[:prefixLen])
-		} else {
-			l.Info("no background image found for turn sheet")
-		}
-
-		// Debug: Verify BackgroundImage is set before marshaling
-		if joinData.BackgroundImage != nil {
-			l.Info("background image set in joinData before marshaling, length >%d<", len(*joinData.BackgroundImage))
-		} else {
-			l.Info("background image NOT set in joinData before marshaling")
-		}
-
-		// Marshal join data to JSON
-		sheetDataBytes, err = json.Marshal(joinData)
-		if err != nil {
-			l.Warn("failed to marshal join game sheet data >%v<", err)
-			return coreerror.NewInternalError("failed to marshal join game sheet data")
-		}
-
-	case adventure_game_record.AdventureGameTurnSheetTypeInventoryManagement:
-		// Generate a preview turn sheet code
-		previewTurnSheetCode, err := turnsheet.GeneratePreviewTurnSheetCode(gameID)
-		if err != nil {
-			l.Warn("failed to generate preview turn sheet code >%v<", err)
-			return coreerror.NewInternalError("failed to generate preview turn sheet code: %v", err)
-		}
-
-		// Create sample inventory management data for preview
-		inventoryData := turn_sheet.InventoryManagementData{
-			TurnSheetTemplateData: turn_sheet.TurnSheetTemplateData{
-				GameName: &gameRec.Name,
-				TurnNumber: func() *int {
-					n := 1
-					return &n
-				}(),
-				TurnSheetCode: &previewTurnSheetCode,
-			},
-			CharacterName:       "Preview Character",
-			CurrentLocationName: "Preview Location",
-			InventoryCapacity:   10,
-			InventoryCount:      3,
-			CurrentInventory: []turn_sheet.InventoryItem{
-				{
-					ItemInstanceID:  "preview-item-1",
-					ItemName:        "Sample Sword",
-					ItemDescription: "A sturdy iron sword",
-					IsEquipped:      true,
-					EquipmentSlot:   "weapon",
-					CanEquip:        true,
-				},
-				{
-					ItemInstanceID:  "preview-item-2",
-					ItemName:        "Leather Armor",
-					ItemDescription: "Basic leather protection",
-					IsEquipped:      false,
-					CanEquip:        true,
-				},
-				{
-					ItemInstanceID:  "preview-item-3",
-					ItemName:        "Health Potion",
-					ItemDescription: "Restores health when consumed",
-					IsEquipped:      false,
-					CanEquip:        false,
-				},
-			},
-			EquipmentSlots: turn_sheet.EquipmentSlots{
-				Weapon: &turn_sheet.EquippedItem{
-					ItemInstanceID: "preview-item-1",
-					ItemName:       "Sample Sword",
-					SlotName:       "Weapon",
-				},
-			},
-			LocationItems: []turn_sheet.LocationItem{
-				{
-					ItemInstanceID:  "location-item-1",
-					ItemName:        "Gold Coin",
-					ItemDescription: "A shiny gold coin",
-				},
-			},
-		}
-
-		// Get uploaded turn sheet background image and add it to the data
-		backgroundImage, err := mm.GetGameTurnSheetImageDataURL(gameID, turnSheetType)
-		if err != nil {
-			l.Warn("failed to get turn sheet background image >%v<", err)
-			// Continue without image - not a fatal error
-		} else if backgroundImage != "" {
-			inventoryData.BackgroundImage = &backgroundImage
-			prefixLen := 50
-			if len(backgroundImage) < prefixLen {
-				prefixLen = len(backgroundImage)
-			}
-			l.Info("loaded background image for inventory turn sheet, length >%d< prefix >%s<", len(backgroundImage), backgroundImage[:prefixLen])
-		} else {
-			l.Info("no background image found for inventory turn sheet")
-		}
-
-		// Marshal inventory data to JSON
-		sheetDataBytes, err = json.Marshal(inventoryData)
-		if err != nil {
-			l.Warn("failed to marshal inventory management sheet data >%v<", err)
-			return coreerror.NewInternalError("failed to marshal inventory management sheet data")
-		}
-
-	default:
-		l.Warn("turn sheet type >%s< is not supported for preview (requires character instance data)", turnSheetType)
-		return coreerror.NewInvalidDataError("turn sheet type %s is not supported for preview", turnSheetType)
+	sheetDataBytes, err := processor.GeneratePreviewData(ctx, l, gameRec, bgImagePtr)
+	if err != nil {
+		l.Warn("failed to generate turn sheet preview data >%v<", err)
+		return coreerror.NewInternalError("failed to generate turn sheet preview data: %v", err)
 	}
 
 	l.Info("marshaled turn sheet data size >%d< bytes", len(sheetDataBytes))
@@ -694,7 +575,7 @@ func previewGameTurnSheetHandler(w http.ResponseWriter, r *http.Request, pp http
 	l.Info("generating PDF for turn sheet preview")
 
 	// Generate PDF using the processor
-	pdfData, err := processor.GenerateTurnSheet(ctx, l, turn_sheet.DocumentFormatPDF, sheetDataBytes)
+	pdfData, err := processor.GenerateTurnSheet(ctx, l, turnsheet.DocumentFormatPDF, sheetDataBytes)
 	if err != nil {
 		l.Warn("failed to generate turn sheet PDF >%v<", err)
 		return coreerror.NewInternalError("failed to generate turn sheet PDF: %v", err)

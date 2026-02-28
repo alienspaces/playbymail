@@ -60,14 +60,14 @@ func (m *Domain) CreateAdventureGameCreatureRec(rec *adventure_game_record.Adven
 func (m *Domain) UpdateAdventureGameCreatureRec(rec *adventure_game_record.AdventureGameCreature) (*adventure_game_record.AdventureGameCreature, error) {
 	l := m.Logger("UpdateAdventureGameCreatureRec")
 
-	_, err := m.GetAdventureGameCreatureRec(rec.ID, coresql.ForUpdateNoWait)
+	currRec, err := m.GetAdventureGameCreatureRec(rec.ID, coresql.ForUpdateNoWait)
 	if err != nil {
 		return rec, err
 	}
 
 	l.Debug("updating adventure_game_creature record >%#v<", rec)
 
-	if err := m.validateAdventureGameCreatureRecForUpdate(rec); err != nil {
+	if err := m.validateAdventureGameCreatureRecForUpdate(currRec, rec); err != nil {
 		l.Warn("failed to validate adventure_game_creature record >%v<", err)
 		return rec, err
 	}

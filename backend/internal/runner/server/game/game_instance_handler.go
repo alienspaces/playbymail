@@ -20,6 +20,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/jobworker"
 	"gitlab.com/alienspaces/playbymail/internal/mapper"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
+	"gitlab.com/alienspaces/playbymail/internal/runner/server/handler_auth"
 	"gitlab.com/alienspaces/playbymail/internal/utils/logging"
 )
 
@@ -41,6 +42,7 @@ import (
 //   - POST (document)   /api/v1/games/{game_id}/instances/{instance_id}/pause
 //   - POST (document)   /api/v1/games/{game_id}/instances/{instance_id}/resume
 //   - POST (document)   /api/v1/games/{game_id}/instances/{instance_id}/cancel
+//   - POST (document)   /api/v1/games/{game_id}/instances/{instance_id}/reset
 const (
 	SearchManyGameInstances = "search-many-game-instances"
 	GetManyGameInstances    = "get-many-game-instances"
@@ -52,6 +54,7 @@ const (
 	PauseGameInstance       = "pause-game-instance"
 	ResumeGameInstance      = "resume-game-instance"
 	CancelGameInstance      = "cancel-game-instance"
+	ResetGameInstance       = "reset-game-instance"
 	GetJoinGameLink         = "get-join-game-link"
 	InviteTester            = "invite-tester"
 )
@@ -155,6 +158,9 @@ func gameInstanceHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig
 			AuthenTypes: []server.AuthenticationType{
 				server.AuthenticationTypeToken,
 			},
+			AuthzPermissions: []server.AuthorizedPermission{
+				handler_auth.PermissionGameManagement,
+			},
 			ValidateRequestSchema:  requestSchema,
 			ValidateResponseSchema: responseSchema,
 		},
@@ -171,6 +177,9 @@ func gameInstanceHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
 				server.AuthenticationTypeToken,
+			},
+			AuthzPermissions: []server.AuthorizedPermission{
+				handler_auth.PermissionGameManagement,
 			},
 			ValidateRequestSchema:  requestSchema,
 			ValidateResponseSchema: responseSchema,
@@ -189,6 +198,9 @@ func gameInstanceHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig
 			AuthenTypes: []server.AuthenticationType{
 				server.AuthenticationTypeToken,
 			},
+			AuthzPermissions: []server.AuthorizedPermission{
+				handler_auth.PermissionGameManagement,
+			},
 		},
 		DocumentationConfig: server.DocumentationConfig{
 			Document: true,
@@ -204,6 +216,9 @@ func gameInstanceHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
 				server.AuthenticationTypeToken,
+			},
+			AuthzPermissions: []server.AuthorizedPermission{
+				handler_auth.PermissionGameManagement,
 			},
 			ValidateResponseSchema: responseSchema,
 		},
@@ -221,6 +236,9 @@ func gameInstanceHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig
 			AuthenTypes: []server.AuthenticationType{
 				server.AuthenticationTypeToken,
 			},
+			AuthzPermissions: []server.AuthorizedPermission{
+				handler_auth.PermissionGameManagement,
+			},
 			ValidateResponseSchema: responseSchema,
 		},
 		DocumentationConfig: server.DocumentationConfig{
@@ -236,6 +254,9 @@ func gameInstanceHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
 				server.AuthenticationTypeToken,
+			},
+			AuthzPermissions: []server.AuthorizedPermission{
+				handler_auth.PermissionGameManagement,
 			},
 			ValidateResponseSchema: responseSchema,
 		},
@@ -253,11 +274,36 @@ func gameInstanceHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig
 			AuthenTypes: []server.AuthenticationType{
 				server.AuthenticationTypeToken,
 			},
+			AuthzPermissions: []server.AuthorizedPermission{
+				handler_auth.PermissionGameManagement,
+			},
 			ValidateResponseSchema: responseSchema,
 		},
 		DocumentationConfig: server.DocumentationConfig{
 			Document: true,
 			Title:    "Cancel game instance",
+		},
+	}
+
+	gameInstanceConfig[ResetGameInstance] = server.HandlerConfig{
+		Method:      http.MethodPost,
+		Path:        "/api/v1/games/:game_id/instances/:instance_id/reset",
+		HandlerFunc: resetOneGameInstanceHandler,
+		MiddlewareConfig: server.MiddlewareConfig{
+			AuthenTypes: []server.AuthenticationType{
+				server.AuthenticationTypeToken,
+			},
+			AuthzPermissions: []server.AuthorizedPermission{
+				handler_auth.PermissionGameManagement,
+			},
+			ValidateResponseSchema: responseSchema,
+		},
+		DocumentationConfig: server.DocumentationConfig{
+			Document: true,
+			Title:    "Reset game instance",
+			Description: "Reset a game instance to its initial state. Soft-deletes all instance-level data " +
+				"(turn sheets, characters, items, locations, etc.) and resets the instance to status=created " +
+				"with turn 0. Subscription links are preserved so players remain joined.",
 		},
 	}
 
@@ -276,6 +322,9 @@ func gameInstanceHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
 				server.AuthenticationTypeToken,
+			},
+			AuthzPermissions: []server.AuthorizedPermission{
+				handler_auth.PermissionGameManagement,
 			},
 			ValidateResponseSchema: joinGameLinkResponseSchema,
 		},
@@ -310,6 +359,9 @@ func gameInstanceHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
 				server.AuthenticationTypeToken,
+			},
+			AuthzPermissions: []server.AuthorizedPermission{
+				handler_auth.PermissionGameManagement,
 			},
 			ValidateRequestSchema:  inviteTesterRequestSchema,
 			ValidateResponseSchema: inviteTesterResponseSchema,
@@ -450,29 +502,28 @@ func createOneGameInstanceHandler(w http.ResponseWriter, r *http.Request, pp htt
 
 	// Get authenticated account ID
 	authenData := server.GetRequestAuthenData(l, r)
-	if authenData == nil || authenData.Account.ID == "" {
+	if authenData == nil || authenData.AccountUser.ID == "" {
 		l.Warn("authenticated account is required to create game instance")
 		return coreerror.NewUnauthorizedError()
 	}
 
 	mm := m.(*domain.Domain)
 
-	// Find the Manager subscription for this user and game
-	managerSubscription, err := mm.GetGameSubscriptionRecByAccountAndGame(
-		authenData.Account.ID,
+	// Verify account has manager subscription for this game (required for creating instances)
+	_, err := mm.GetGameSubscriptionRecByAccountAndGame(
+		authenData.AccountUser.AccountID,
 		gameID,
 		game_record.GameSubscriptionTypeManager,
 	)
 	if err != nil {
 		l.Warn("failed to find manager subscription for account >%s< and game >%s<: %v",
-			authenData.Account.ID, gameID, err)
+			authenData.AccountUser.AccountID, gameID, err)
 		return coreerror.NewUnauthorizedError()
 	}
 
-	// Create record with GameID and GameSubscriptionID
+	// Create record with GameID
 	rec := &game_record.GameInstance{
-		GameID:             gameID,
-		GameSubscriptionID: managerSubscription.ID,
+		GameID: gameID,
 	}
 
 	// Map request data to record
@@ -892,6 +943,46 @@ func inviteTesterHandler(w http.ResponseWriter, r *http.Request, pp httprouter.P
 	res, err := mapper.InviteTesterToResponse(l, email)
 	if err != nil {
 		l.Warn("failed mapping invite tester to response >%v<", err)
+		return err
+	}
+
+	if err = server.WriteResponse(l, w, http.StatusOK, res); err != nil {
+		l.Warn("failed writing response >%v<", err)
+		return err
+	}
+
+	return nil
+}
+
+func resetOneGameInstanceHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
+	l = logging.LoggerWithFunctionContext(l, packageName, "resetOneGameInstanceHandler")
+
+	l.Info("resetting game instance")
+
+	gameID := pp.ByName("game_id")
+	instanceID := pp.ByName("instance_id")
+
+	if gameID == "" || instanceID == "" {
+		l.Warn("game id and instance id are required")
+		return coreerror.NewNotFoundError("game instance", instanceID)
+	}
+
+	mm := m.(*domain.Domain)
+
+	instance, err := mm.ResetGameInstance(instanceID)
+	if err != nil {
+		l.Warn("failed to reset game instance >%v<", err)
+		return err
+	}
+
+	playerCount, err := mm.GetPlayerCountForGameInstance(instanceID)
+	if err != nil {
+		l.Warn("failed to get player count for game instance >%s< >%v<", instanceID, err)
+		playerCount = 0
+	}
+
+	res, err := mapper.GameInstanceRecordToResponse(l, instance, playerCount)
+	if err != nil {
 		return err
 	}
 

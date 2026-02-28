@@ -44,9 +44,12 @@ func Test_adventureGameCreaturePlacementHandler(t *testing.T) {
 	}{
 		{
 			TestCase: testutil.TestCase{
-				Name: "API key with open access \\ get many creature placements \\ returns expected placements",
+				Name: "authenticated user when get many creature placements then returns expected placements",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[adventure_game.SearchManyAdventureGameCreaturePlacements]
+				},
+				RequestHeaders: func(d harness.Data) map[string]string {
+					return testutil.AuthHeaderStandard(d)
 				},
 				RequestQueryParams: func(d harness.Data) map[string]any {
 					return map[string]any{
@@ -63,9 +66,12 @@ func Test_adventureGameCreaturePlacementHandler(t *testing.T) {
 		},
 		{
 			TestCase: testutil.TestCase{
-				Name: "API key with open access \\ create creature placement with valid properties \\ returns created placement",
+				Name: "authenticated designer when create creature placement with valid properties then returns created placement",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[adventure_game.CreateOneAdventureGameCreaturePlacement]
+				},
+				RequestHeaders: func(d harness.Data) map[string]string {
+					return testutil.AuthHeaderProDesigner(d)
 				},
 				RequestBody: func(d harness.Data) any {
 					return adventure_game_schema.AdventureGameCreaturePlacementRequest{

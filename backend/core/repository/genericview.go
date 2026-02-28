@@ -100,7 +100,7 @@ func (r *GenericView[Rec]) GetOne(id string, lock *coresql.Lock) (*Rec, error) {
 	return &rec, nil
 }
 
-func (r *GenericView[Rec]) SetRLS(identifiers map[string][]string) {
+func (r *GenericView[Rec]) SetRLSIdentifiers(identifiers map[string][]string) {
 	if r.isRLSDisabled {
 		return
 	}
@@ -119,6 +119,11 @@ func (r *GenericView[Rec]) SetRLS(identifiers map[string][]string) {
 	if len(filtered) > 0 {
 		r.rlsIdentifiers = filtered
 	}
+}
+
+// SetRLSConstraints sets the RLS constraints for this generic view repository
+func (r *GenericView[Rec]) SetRLSConstraints(constraints []repositor.RLSConstraint) {
+	r.Repository.SetRLSConstraints(constraints)
 }
 
 // CreateOne -

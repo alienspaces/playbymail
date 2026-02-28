@@ -6,15 +6,46 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 )
 
+type validateAdventureGameCreatureArgs struct {
+	nextRec *adventure_game_record.AdventureGameCreature
+	currRec *adventure_game_record.AdventureGameCreature
+}
+
+func (m *Domain) populateAdventureGameCreatureValidateArgs(currRec, nextRec *adventure_game_record.AdventureGameCreature) (*validateAdventureGameCreatureArgs, error) {
+	args := &validateAdventureGameCreatureArgs{
+		currRec: currRec,
+		nextRec: nextRec,
+	}
+	return args, nil
+}
+
 func (m *Domain) validateAdventureGameCreatureRecForCreate(rec *adventure_game_record.AdventureGameCreature) error {
-	return validateAdventureGameCreatureRec(rec, false)
+	args, err := m.populateAdventureGameCreatureValidateArgs(nil, rec)
+	if err != nil {
+		return err
+	}
+	return validateAdventureGameCreatureRecForCreate(args)
 }
 
-func (m *Domain) validateAdventureGameCreatureRecForUpdate(rec *adventure_game_record.AdventureGameCreature) error {
-	return validateAdventureGameCreatureRec(rec, true)
+func (m *Domain) validateAdventureGameCreatureRecForUpdate(currRec, nextRec *adventure_game_record.AdventureGameCreature) error {
+	args, err := m.populateAdventureGameCreatureValidateArgs(currRec, nextRec)
+	if err != nil {
+		return err
+	}
+	return validateAdventureGameCreatureRecForUpdate(args)
 }
 
-func validateAdventureGameCreatureRec(rec *adventure_game_record.AdventureGameCreature, requireID bool) error {
+func validateAdventureGameCreatureRecForCreate(args *validateAdventureGameCreatureArgs) error {
+	return validateAdventureGameCreatureRec(args, false)
+}
+
+func validateAdventureGameCreatureRecForUpdate(args *validateAdventureGameCreatureArgs) error {
+	return validateAdventureGameCreatureRec(args, true)
+}
+
+func validateAdventureGameCreatureRec(args *validateAdventureGameCreatureArgs, requireID bool) error {
+	rec := args.nextRec
+
 	if rec == nil {
 		return coreerror.NewInvalidDataError("record is nil")
 	}

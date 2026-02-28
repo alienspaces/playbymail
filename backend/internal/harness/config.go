@@ -11,12 +11,14 @@ import (
 )
 
 const (
-	GameOneRef = "game-one"
-	GameTwoRef = "game-two"
+	GameOneRef   = "game-one"
+	GameTwoRef   = "game-two"
+	GameDraftRef = "game-draft"
 
-	AccountOneRef   = "account-one"
-	AccountTwoRef   = "account-two"
-	AccountThreeRef = "account-three"
+	StandardAccountRef    = "account-standard"
+	ProPlayerAccountRef   = "account-pro-player"
+	ProDesignerAccountRef = "account-pro-designer"
+	ProManagerAccountRef  = "account-pro-manager"
 
 	GameLocationOneRef   = "game-location-one"
 	GameLocationTwoRef   = "game-location-two"
@@ -97,7 +99,6 @@ type DataConfig struct {
 
 type GameConfig struct {
 	Reference                        string // Reference to the game record
-	AccountRef                       string // Reference to the account that owns this game
 	Record                           *game_record.Game
 	GameInstanceConfigs              []GameInstanceConfig
 	AdventureGameLocationConfigs     []AdventureGameLocationConfig     // Locations associated with this game
@@ -113,9 +114,15 @@ type GameConfig struct {
 }
 
 type AccountConfig struct {
-	Reference               string // Reference to the account record
-	Record                  *account_record.Account
-	GameSubscriptionConfigs []GameSubscriptionConfig // Game subscriptions for this account
+	Reference                  string // Reference to the account record
+	Record                     *account_record.AccountUser
+	GameSubscriptionConfigs    []GameSubscriptionConfig    // Game subscriptions for this account
+	AccountSubscriptionConfigs []AccountSubscriptionConfig // Account subscriptions for this account
+}
+
+type AccountSubscriptionConfig struct {
+	SubscriptionType string // e.g., AccountSubscriptionTypeProfessionalPlayer
+	Record           *account_record.AccountSubscription
 }
 
 type GameInstanceConfig struct {
@@ -130,9 +137,11 @@ type GameInstanceConfig struct {
 }
 
 type GameSubscriptionConfig struct {
-	Reference        string // Reference to the game_subscription record
-	GameRef          string // Reference to the game (required)
-	SubscriptionType string // Type of subscription (Player, Manager, Designer)
+	Reference        string   // Reference to the game_subscription record
+	GameRef          string   // Reference to the game (required)
+	GameInstanceRefs []string // References to game_instances (optional, can link multiple instances)
+	SubscriptionType string   // Type of subscription (Player, Manager, Designer)
+	InstanceLimit    *int32   // Instance limit (nil = unlimited)
 	Record           *game_record.GameSubscription
 	// JoinGameScanData configures scan data for join game turn sheets
 	// If provided, the harness will create a join game turn sheet and process it
@@ -411,10 +420,55 @@ func DefaultDataConfig() DataConfig {
 	return DataConfig{
 		AccountConfigs: []AccountConfig{
 			{
-				// Designer account
-				Reference: AccountOneRef,
-				Record: &account_record.Account{
-					Email: UniqueEmail("account-one@example.com"),
+				// Standard account with basic subscriptions only
+				Reference:                  StandardAccountRef,
+				Record:                     &account_record.AccountUser{},
+				AccountSubscriptionConfigs: []AccountSubscriptionConfig{},
+				GameSubscriptionConfigs: []GameSubscriptionConfig{
+					{
+						Reference:        GameSubscriptionDesignerOneRef,
+						GameRef:          GameOneRef,
+						SubscriptionType: game_record.GameSubscriptionTypeDesigner,
+						Record:           &game_record.GameSubscription{},
+					},
+					{
+						Reference:        GameSubscriptionPlayerThreeRef, // Use a new ref or existing unused one
+						GameRef:          GameOneRef,
+						GameInstanceRefs: []string{GameInstanceOneRef},
+						SubscriptionType: game_record.GameSubscriptionTypePlayer,
+						Record:           &game_record.GameSubscription{},
+					},
+				},
+			},
+			{
+				// Pro player account with basic subscriptions + pro player subscription
+				Reference: ProPlayerAccountRef,
+				Record:    &account_record.AccountUser{},
+				AccountSubscriptionConfigs: []AccountSubscriptionConfig{
+					{
+						SubscriptionType: account_record.AccountSubscriptionTypeProfessionalPlayer,
+						Record:           &account_record.AccountSubscription{},
+					},
+				},
+				GameSubscriptionConfigs: []GameSubscriptionConfig{
+					{
+						Reference:        GameSubscriptionPlayerOneRef,
+						GameRef:          GameOneRef,
+						GameInstanceRefs: []string{GameInstanceOneRef},
+						SubscriptionType: game_record.GameSubscriptionTypePlayer,
+						Record:           &game_record.GameSubscription{},
+					},
+				},
+			},
+			{
+				// Pro designer account with basic subscriptions + pro designer subscription
+				Reference: ProDesignerAccountRef,
+				Record:    &account_record.AccountUser{},
+				AccountSubscriptionConfigs: []AccountSubscriptionConfig{
+					{
+						SubscriptionType: account_record.AccountSubscriptionTypeProfessionalGameDesigner,
+						Record:           &account_record.AccountSubscription{},
+					},
 				},
 				GameSubscriptionConfigs: []GameSubscriptionConfig{
 					{
@@ -426,31 +480,21 @@ func DefaultDataConfig() DataConfig {
 				},
 			},
 			{
-				// Manager account
-				Reference: AccountTwoRef,
-				Record: &account_record.Account{
-					Email: UniqueEmail("account-two@example.com"),
+				// Pro manager account with basic subscriptions + pro manager subscription
+				Reference: ProManagerAccountRef,
+				Record:    &account_record.AccountUser{},
+				AccountSubscriptionConfigs: []AccountSubscriptionConfig{
+					{
+						SubscriptionType: account_record.AccountSubscriptionTypeProfessionalManager,
+						Record:           &account_record.AccountSubscription{},
+					},
 				},
 				GameSubscriptionConfigs: []GameSubscriptionConfig{
 					{
 						Reference:        GameSubscriptionManagerOneRef,
 						GameRef:          GameOneRef,
+						GameInstanceRefs: []string{GameInstanceOneRef, GameInstanceCleanRef},
 						SubscriptionType: game_record.GameSubscriptionTypeManager,
-						Record:           &game_record.GameSubscription{},
-					},
-				},
-			},
-			{
-				// Player account
-				Reference: AccountThreeRef,
-				Record: &account_record.Account{
-					Email: UniqueEmail("account-three@example.com"),
-				},
-				GameSubscriptionConfigs: []GameSubscriptionConfig{
-					{
-						Reference:        GameSubscriptionPlayerOneRef,
-						GameRef:          GameOneRef,
-						SubscriptionType: game_record.GameSubscriptionTypePlayer,
 						Record:           &game_record.GameSubscription{},
 					},
 				},
@@ -459,8 +503,7 @@ func DefaultDataConfig() DataConfig {
 		GameConfigs: []GameConfig{
 			// Adventure game example
 			{
-				Reference:  GameOneRef,
-				AccountRef: AccountOneRef,
+				Reference: GameOneRef,
 				Record: &game_record.Game{
 					Name:              UniqueName("Default Game One"),
 					GameType:          game_record.GameTypeAdventure,
@@ -550,14 +593,14 @@ func DefaultDataConfig() DataConfig {
 				AdventureGameCharacterConfigs: []AdventureGameCharacterConfig{
 					{
 						Reference:  GameCharacterOneRef,
-						AccountRef: AccountOneRef,
+						AccountRef: StandardAccountRef,
 						Record: &adventure_game_record.AdventureGameCharacter{
 							Name: UniqueName("Default Character One"),
 						},
 					},
 					{
 						Reference:  GameCharacterTwoRef,
-						AccountRef: AccountTwoRef,
+						AccountRef: ProPlayerAccountRef,
 						Record: &adventure_game_record.AdventureGameCharacter{
 							Name: UniqueName("Default Character Two"),
 						},
@@ -620,6 +663,16 @@ func DefaultDataConfig() DataConfig {
 						Record:    &game_record.GameInstance{},
 						// No parameters, no instances - clean slate for testing
 					},
+				},
+			},
+			// Minimal draft game for testing update operations
+			{
+				Reference: GameDraftRef,
+				Record: &game_record.Game{
+					Name:              UniqueName("Default Draft Game"),
+					GameType:          game_record.GameTypeAdventure,
+					TurnDurationHours: 168,
+					Status:            game_record.GameStatusDraft,
 				},
 			},
 		},

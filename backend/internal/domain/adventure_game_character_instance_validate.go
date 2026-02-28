@@ -8,15 +8,46 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 )
 
+type validateAdventureGameCharacterInstanceArgs struct {
+	nextRec *adventure_game_record.AdventureGameCharacterInstance
+	currRec *adventure_game_record.AdventureGameCharacterInstance
+}
+
+func (m *Domain) populateAdventureGameCharacterInstanceValidateArgs(currRec, nextRec *adventure_game_record.AdventureGameCharacterInstance) (*validateAdventureGameCharacterInstanceArgs, error) {
+	args := &validateAdventureGameCharacterInstanceArgs{
+		currRec: currRec,
+		nextRec: nextRec,
+	}
+	return args, nil
+}
+
 func (m *Domain) validateAdventureGameCharacterInstanceRecForCreate(rec *adventure_game_record.AdventureGameCharacterInstance) error {
-	return validateAdventureGameCharacterInstanceRec(rec, false)
+	args, err := m.populateAdventureGameCharacterInstanceValidateArgs(nil, rec)
+	if err != nil {
+		return err
+	}
+	return validateAdventureGameCharacterInstanceRecForCreate(args)
 }
 
-func (m *Domain) validateAdventureGameCharacterInstanceRecForUpdate(rec *adventure_game_record.AdventureGameCharacterInstance) error {
-	return validateAdventureGameCharacterInstanceRec(rec, true)
+func (m *Domain) validateAdventureGameCharacterInstanceRecForUpdate(currRec, nextRec *adventure_game_record.AdventureGameCharacterInstance) error {
+	args, err := m.populateAdventureGameCharacterInstanceValidateArgs(currRec, nextRec)
+	if err != nil {
+		return err
+	}
+	return validateAdventureGameCharacterInstanceRecForUpdate(args)
 }
 
-func validateAdventureGameCharacterInstanceRec(rec *adventure_game_record.AdventureGameCharacterInstance, requireID bool) error {
+func validateAdventureGameCharacterInstanceRecForCreate(args *validateAdventureGameCharacterInstanceArgs) error {
+	return validateAdventureGameCharacterInstanceRec(args, false)
+}
+
+func validateAdventureGameCharacterInstanceRecForUpdate(args *validateAdventureGameCharacterInstanceArgs) error {
+	return validateAdventureGameCharacterInstanceRec(args, true)
+}
+
+func validateAdventureGameCharacterInstanceRec(args *validateAdventureGameCharacterInstanceArgs, requireID bool) error {
+	rec := args.nextRec
+
 	if rec == nil {
 		return coreerror.NewInvalidDataError("record is nil")
 	}
@@ -40,8 +71,8 @@ func validateAdventureGameCharacterInstanceRec(rec *adventure_game_record.Advent
 	}
 
 	if rec.AdventureGameLocationInstanceID != "" {
-	if err := domain.ValidateUUIDField(adventure_game_record.FieldAdventureGameCharacterInstanceAdventureGameLocationInstanceID, rec.AdventureGameLocationInstanceID); err != nil {
-		return err
+		if err := domain.ValidateUUIDField(adventure_game_record.FieldAdventureGameCharacterInstanceAdventureGameLocationInstanceID, rec.AdventureGameLocationInstanceID); err != nil {
+			return err
 		}
 	}
 

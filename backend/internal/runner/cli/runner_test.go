@@ -9,12 +9,12 @@ import (
 
 	"gitlab.com/alienspaces/playbymail/core/log"
 	"gitlab.com/alienspaces/playbymail/core/store"
-	"gitlab.com/alienspaces/playbymail/internal/turn_sheet"
+	"gitlab.com/alienspaces/playbymail/internal/turnsheet"
 	"gitlab.com/alienspaces/playbymail/internal/utils/config"
 	"gitlab.com/alienspaces/playbymail/internal/utils/deps"
 )
 
-func newDefaultDependencies(t *testing.T) (config.Config, *log.Log, *store.Store, *river.Client[pgx.Tx], turn_sheet.TurnSheetScanner) {
+func newDefaultDependencies(t *testing.T) (config.Config, *log.Log, *store.Store, *river.Client[pgx.Tx], turnsheet.TurnSheetScanner) {
 	cfg, err := config.Parse()
 	require.NoError(t, err, "Parse returns without error")
 
@@ -25,7 +25,7 @@ func newDefaultDependencies(t *testing.T) (config.Config, *log.Log, *store.Store
 	return cfg, l, s, j, scanner
 }
 
-func newTestRunner(t *testing.T, cfg config.Config, l *log.Log, s *store.Store, j *river.Client[pgx.Tx], scanner turn_sheet.TurnSheetScanner) *Runner {
+func newTestRunner(t *testing.T, cfg config.Config, l *log.Log, s *store.Store, j *river.Client[pgx.Tx], scanner turnsheet.TurnSheetScanner) *Runner {
 
 	r, err := NewRunner(cfg, l, j, scanner)
 	require.NoError(t, err, "NewRunner returns without error")

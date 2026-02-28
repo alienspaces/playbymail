@@ -162,47 +162,62 @@ const selectedGame = computed(() => gamesStore.games.find(g => g.id === gameId.v
 const showCreateModal = ref(false);
 const createModalError = ref('');
 const instanceForm = ref({
-  delivery_physical_post: true,
+  delivery_email: true,
+  delivery_physical_post: false,
   delivery_physical_local: false,
-  delivery_email: false,
   required_player_count: 1,
   is_closed_testing: false
 });
 
-const instanceFields = [
-  {
-    key: 'delivery_physical_post',
-    label: 'Physical Post Delivery',
-    type: 'checkbox',
-    checkboxLabel: 'Enable physical post delivery (traditional mail-based)'
-  },
-  {
-    key: 'delivery_physical_local',
-    label: 'Physical Local Delivery',
-    type: 'checkbox',
-    checkboxLabel: 'Enable physical local delivery (convention/classroom - game master prints locally, players fill at table, manual scanning/submission)'
-  },
-  {
-    key: 'delivery_email',
-    label: 'Email Delivery',
-    type: 'checkbox',
-    checkboxLabel: 'Enable email delivery (web-based turn sheet viewer)'
-  },
-  {
-    key: 'required_player_count',
-    label: 'Required Player Count',
-    type: 'number',
-    required: true,
-    min: 1,
-    placeholder: 'Minimum number of players required before game can start'
-  },
-  {
-    key: 'is_closed_testing',
-    label: 'Closed Testing',
-    type: 'checkbox',
-    checkboxLabel: 'Enable closed testing mode (requires join game key for players to join)'
+const isDraftGame = computed(() => selectedGame.value?.status === 'draft');
+
+const instanceFields = computed(() => {
+  const fields = [
+    {
+      key: 'delivery_email',
+      label: 'Email Delivery',
+      type: 'checkbox',
+      checkboxLabel: 'Enable email delivery (web-based turn sheet viewer)'
+    },
+    {
+      key: 'delivery_physical_post',
+      label: 'Physical Post Delivery',
+      type: 'checkbox',
+      checkboxLabel: 'Enable physical post delivery (traditional mail-based)'
+    },
+    {
+      key: 'delivery_physical_local',
+      label: 'Physical Local Delivery',
+      type: 'checkbox',
+      checkboxLabel: 'Enable physical local delivery (convention/classroom - game master prints locally, players fill at table, manual scanning/submission)'
+    },
+    {
+      key: 'required_player_count',
+      label: 'Required Player Count',
+      type: 'number',
+      required: true,
+      min: 1,
+      placeholder: 'Minimum number of players required before game can start'
+    },
+  ];
+
+  if (isDraftGame.value) {
+    fields.push({
+      key: 'closed_testing_notice',
+      type: 'info',
+      text: 'This game is unpublished. Instances are restricted to closed testing \u2014 players must be invited to join.'
+    });
+  } else {
+    fields.push({
+      key: 'is_closed_testing',
+      label: 'Closed Testing',
+      type: 'checkbox',
+      checkboxLabel: 'Enable closed testing mode (requires join game key for players to join)'
+    });
   }
-];
+
+  return fields;
+});
 
 const columns = [
   { key: 'id', label: 'Instance ID' },
@@ -289,13 +304,12 @@ const goBack = () => {
 };
 
 const createInstance = () => {
-  // Reset form to defaults
   instanceForm.value = {
-    delivery_physical_post: true,
+    delivery_email: true,
+    delivery_physical_post: false,
     delivery_physical_local: false,
-    delivery_email: false,
     required_player_count: 1,
-    is_closed_testing: false
+    is_closed_testing: isDraftGame.value ? true : false
   };
   createModalError.value = '';
   showCreateModal.value = true;

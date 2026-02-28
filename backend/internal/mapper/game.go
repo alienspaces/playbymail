@@ -47,6 +47,7 @@ func GameRecordToResponseData(l logger.Logger, rec *game_record.Game) (*game_sch
 		GameType:          rec.GameType,
 		TurnDurationHours: rec.TurnDurationHours,
 		Description:       rec.Description,
+		Status:            rec.Status,
 		CreatedAt:         rec.CreatedAt,
 		UpdatedAt:         nulltime.ToTimePtr(rec.UpdatedAt),
 	}, nil

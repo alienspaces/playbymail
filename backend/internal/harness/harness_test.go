@@ -32,10 +32,14 @@ func TestHarnessSetupTeardown_DefaultDataConfig(t *testing.T) {
 	}()
 
 	// Check that the default data config created the expected records with exact counts
-	// Accounts: 3 (AccountOneRef, AccountTwoRef, AccountThreeRef)
-	require.Len(t, h.Data.AccountRecs, 3, "Should have exactly 3 account records")
-	// Games: 1 (GameOneRef)
-	require.Len(t, h.Data.GameRecs, 1, "Should have exactly 1 game record")
+	// Accounts: 4 (one per account user, 1:1 mapping)
+	require.Len(t, h.Data.AccountRecs, 4, "Should have exactly 4 account records")
+	// AccountUsers: 4 (StandardAccountRef, ProPlayerAccountRef, ProDesignerAccountRef, ProManagerAccountRef)
+	require.Len(t, h.Data.AccountUserRecs, 4, "Should have exactly 4 account user records")
+	// AccountUserContacts: 4 (one per account user)
+	require.Len(t, h.Data.AccountUserContactRecs, 4, "Should have exactly 4 account user contact records")
+	// Games: 2 (GameOneRef, GameDraftRef)
+	require.Len(t, h.Data.GameRecs, 2, "Should have exactly 2 game records")
 	// Locations: 2 (GameLocationOneRef, GameLocationTwoRef)
 	require.Len(t, h.Data.AdventureGameLocationRecs, 2, "Should have exactly 2 adventure game location records")
 	// Location links: 1 (GameLocationLinkOneRef)
@@ -58,10 +62,10 @@ func TestHarnessSetupTeardown_DefaultDataConfig(t *testing.T) {
 	require.Len(t, h.Data.AdventureGameItemInstanceRecs, 1, "Should have exactly 1 adventure game item instance record")
 
 	// Check that references are set
-	for ref, id := range h.Data.Refs.AccountRefs {
-		rec, err := h.Data.GetAccountRecByID(id)
-		require.NoErrorf(t, err, "Account ref %s should resolve to a record", ref)
-		require.NotNil(t, rec, "Account record for ref %s should not be nil", ref)
+	for ref, id := range h.Data.Refs.AccountUserRefs {
+		rec, err := h.Data.GetAccountUserRecByID(id)
+		require.NoErrorf(t, err, "Account user ref %s should resolve to a record", ref)
+		require.NotNil(t, rec, "Account user record for ref %s should not be nil", ref)
 	}
 	for ref, id := range h.Data.Refs.GameRefs {
 		rec, err := h.Data.GetGameRecByID(id)

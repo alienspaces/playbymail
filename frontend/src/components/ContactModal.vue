@@ -95,7 +95,8 @@ import { createAccountContact, updateAccountContact } from '@/api/account';
 const props = defineProps({
   visible: Boolean,
   contact: Object,
-  accountId: String
+  accountId: String,
+  accountUserId: String
 });
 
 const emit = defineEmits(['close', 'saved']);
@@ -158,8 +159,8 @@ function resetForm() {
 }
 
 async function handleSubmit() {
-  if (!props.accountId) {
-    error.value = 'Account ID is required';
+  if (!props.accountId || !props.accountUserId) {
+    error.value = 'Account ID and Account User ID are required';
     return;
   }
 
@@ -177,11 +178,9 @@ async function handleSubmit() {
     };
 
     if (props.contact && props.contact.id) {
-      // Update existing contact
-      await updateAccountContact(props.accountId, props.contact.id, contactData);
+      await updateAccountContact(props.accountId, props.accountUserId, props.contact.id, contactData);
     } else {
-      // Create new contact
-      await createAccountContact(props.accountId, contactData);
+      await createAccountContact(props.accountId, props.accountUserId, contactData);
     }
 
     emit('saved');

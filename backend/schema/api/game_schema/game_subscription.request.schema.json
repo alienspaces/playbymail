@@ -8,7 +8,7 @@
             "format": "uuid",
             "type": "string"
         },
-        "account_contact_id": {
+        "account_user_contact_id": {
             "format": "uuid",
             "type": "string"
         },
@@ -18,11 +18,15 @@
         },
         "subscription_type": {
             "enum": [
-                "Player",
-                "Manager",
-                "Designer"
+                "player",
+                "manager",
+                "designer"
             ],
             "type": "string"
+        },
+        "instance_limit": {
+            "type": "integer",
+            "minimum": 1
         }
     },
     "required": [

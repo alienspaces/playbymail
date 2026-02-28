@@ -21,9 +21,9 @@
         },
         "subscription_type": {
             "enum": [
-                "Player",
-                "Manager",
-                "Designer"
+                "player",
+                "manager",
+                "designer"
             ],
             "type": "string"
         },
@@ -37,6 +37,16 @@
                 "active",
                 "revoked"
             ]
+        },
+        "instance_limit": {
+            "type": "integer",
+            "minimum": 1
+        },
+        "game_instance_ids": {
+            "type": "array",
+            "items": {
+                "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
+            }
         }
     },
     "required": [

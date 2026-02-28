@@ -44,6 +44,14 @@
             "minimum": 1,
             "type": "integer"
         },
+        "status": {
+            "description": "Game status: draft (mutable, owner-only) or published (immutable, visible to everyone).",
+            "type": "string",
+            "enum": [
+                "draft",
+                "published"
+            ]
+        },
         "updated_at": {
             "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/updated_at"
         }
@@ -54,6 +62,7 @@
         "description",
         "game_type",
         "turn_duration_hours",
+        "status",
         "created_at"
     ],
     "additionalProperties": false

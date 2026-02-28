@@ -170,14 +170,14 @@ func (g *PDFGenerator) loadTemplate(templatePath string) (*template.Template, er
 		"safeURL": func(s string) template.URL { return template.URL(s) },
 	})
 
-	// Parse base template first (located in turn_sheet/)
+	// Parse base template first (located in turnsheet/)
 	// Make path absolute to avoid issues with working directory
 	var baseTemplatePath string
 	if templateBase != "" && templateBase != "." {
-		baseTemplatePath = filepath.Join(templateBase, "turn_sheet", "base.template")
+		baseTemplatePath = filepath.Join(templateBase, "turnsheet", "base.template")
 	} else {
 		// We're running from backend/, so use relative path from there
-		baseTemplatePath = filepath.Join("templates", "turn_sheet", "base.template")
+		baseTemplatePath = filepath.Join("templates", "turnsheet", "base.template")
 	}
 
 	l.Info("parsing base template path=%s", baseTemplatePath)

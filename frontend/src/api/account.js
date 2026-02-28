@@ -1,27 +1,16 @@
 import { baseUrl, getAuthHeaders, apiFetch, handleApiError } from './baseUrl';
 
-export async function getMyAccount() {
-  const res = await apiFetch(`${baseUrl}/api/v1/my-account`, {
+export async function getMe() {
+  const res = await apiFetch(`${baseUrl}/api/v1/me`, {
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() }
   });
-  await handleApiError(res, 'Failed to fetch account');
+  await handleApiError(res, 'Failed to fetch account user');
   const data = await res.json();
   return data.data;
 }
 
-export async function updateMyAccount(accountData) {
-  const res = await apiFetch(`${baseUrl}/api/v1/my-account`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
-    body: JSON.stringify(accountData)
-  });
-  await handleApiError(res, 'Failed to update account');
-  const data = await res.json();
-  return data.data;
-}
-
-export async function deleteMyAccount() {
-  const res = await apiFetch(`${baseUrl}/api/v1/my-account`, {
+export async function deleteAccountUser(accountId, accountUserId) {
+  const res = await apiFetch(`${baseUrl}/api/v1/accounts/${accountId}/users/${accountUserId}`, {
     method: 'DELETE',
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() }
   });
@@ -29,8 +18,8 @@ export async function deleteMyAccount() {
   return true;
 }
 
-export async function getAccountContacts(accountId) {
-  const res = await apiFetch(`${baseUrl}/api/v1/accounts/${accountId}/contacts`, {
+export async function getAccountContacts(accountId, accountUserId) {
+  const res = await apiFetch(`${baseUrl}/api/v1/accounts/${accountId}/users/${accountUserId}/contacts`, {
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() }
   });
   await handleApiError(res, 'Failed to fetch account contacts');
@@ -38,8 +27,8 @@ export async function getAccountContacts(accountId) {
   return data.data || [];
 }
 
-export async function getAccountContact(accountId, contactId) {
-  const res = await apiFetch(`${baseUrl}/api/v1/accounts/${accountId}/contacts/${contactId}`, {
+export async function getAccountContact(accountId, accountUserId, contactId) {
+  const res = await apiFetch(`${baseUrl}/api/v1/accounts/${accountId}/users/${accountUserId}/contacts/${contactId}`, {
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() }
   });
   await handleApiError(res, 'Failed to fetch account contact');
@@ -47,8 +36,8 @@ export async function getAccountContact(accountId, contactId) {
   return data.data;
 }
 
-export async function createAccountContact(accountId, contactData) {
-  const res = await apiFetch(`${baseUrl}/api/v1/accounts/${accountId}/contacts`, {
+export async function createAccountContact(accountId, accountUserId, contactData) {
+  const res = await apiFetch(`${baseUrl}/api/v1/accounts/${accountId}/users/${accountUserId}/contacts`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
     body: JSON.stringify(contactData)
@@ -58,8 +47,8 @@ export async function createAccountContact(accountId, contactData) {
   return data.data;
 }
 
-export async function updateAccountContact(accountId, contactId, contactData) {
-  const res = await apiFetch(`${baseUrl}/api/v1/accounts/${accountId}/contacts/${contactId}`, {
+export async function updateAccountContact(accountId, accountUserId, contactId, contactData) {
+  const res = await apiFetch(`${baseUrl}/api/v1/accounts/${accountId}/users/${accountUserId}/contacts/${contactId}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
     body: JSON.stringify(contactData)
@@ -69,8 +58,8 @@ export async function updateAccountContact(accountId, contactId, contactData) {
   return data.data;
 }
 
-export async function deleteAccountContact(accountId, contactId) {
-  const res = await apiFetch(`${baseUrl}/api/v1/accounts/${accountId}/contacts/${contactId}`, {
+export async function deleteAccountContact(accountId, accountUserId, contactId) {
+  const res = await apiFetch(`${baseUrl}/api/v1/accounts/${accountId}/users/${accountUserId}/contacts/${contactId}`, {
     method: 'DELETE',
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() }
   });

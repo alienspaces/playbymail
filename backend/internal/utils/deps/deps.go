@@ -16,7 +16,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/harness"
 	"gitlab.com/alienspaces/playbymail/internal/jobclient"
 	"gitlab.com/alienspaces/playbymail/internal/jobqueue"
-	"gitlab.com/alienspaces/playbymail/internal/turn_sheet"
+	"gitlab.com/alienspaces/playbymail/internal/turnsheet"
 	"gitlab.com/alienspaces/playbymail/internal/utils/config"
 )
 
@@ -51,7 +51,7 @@ func NewHandlerTestHarness(t *testing.T) *harness.Testing {
 	return h
 }
 
-func NewDefaultDependencies(cfg config.Config) (*log.Log, *store.Store, *river.Client[pgx.Tx], turn_sheet.TurnSheetScanner, error) {
+func NewDefaultDependencies(cfg config.Config) (*log.Log, *store.Store, *river.Client[pgx.Tx], turnsheet.TurnSheetScanner, error) {
 
 	// Logger
 	l, err := log.NewLogger(cfg.Config)
@@ -90,7 +90,7 @@ func NewDefaultDependencies(cfg config.Config) (*log.Log, *store.Store, *river.C
 	}
 
 	// Turn sheet scanner
-	scnr, err := turn_sheet.NewScanner(cfg)
+	scnr, err := turnsheet.NewScanner(cfg)
 	if err != nil {
 		l.Warn("failed new turn sheet scanner >%v<", err)
 		return nil, nil, nil, nil, err

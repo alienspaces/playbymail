@@ -6,7 +6,7 @@
         <h2>{{ mode === 'create' ? `Create ${title}` : `Edit ${title}` }}</h2>
         <form @submit.prevent="handleSubmit" class="modal-form">
           <div v-for="field in fields" :key="field.key" class="form-group">
-            <label v-if="field.type !== 'checkbox'" :for="field.key">
+            <label v-if="field.type !== 'checkbox' && field.type !== 'info'" :for="field.key">
               {{ field.label }}<span v-if="field.required" class="required"> *</span>
             </label>
             <slot name="field" :field="field" :value="form[field.key]" :update="val => form[field.key] = val">
@@ -28,6 +28,10 @@
                 <label :for="field.key" class="checkbox-label">{{ field.checkboxLabel || field.label }}{{ field.required
                   ?
                   ' *' : '' }}</label>
+              </div>
+              <!-- Render informational notice -->
+              <div v-else-if="field.type === 'info'" class="info-notice">
+                <p>{{ field.text }}</p>
               </div>
               <!-- Render input for other types -->
               <input v-else v-model="form[field.key]" :id="field.key" :type="field.type || 'text'"
@@ -129,6 +133,20 @@ function handleSubmit() {
 
 .error p {
   margin: 0;
+}
+
+.info-notice {
+  background: var(--color-bg-light);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-sm) var(--space-md);
+}
+
+.info-notice p {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  line-height: 1.5;
 }
 
 .checkbox-group {

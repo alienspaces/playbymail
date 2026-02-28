@@ -8,15 +8,46 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 )
 
+type validateAdventureGameCreatureInstanceArgs struct {
+	nextRec *adventure_game_record.AdventureGameCreatureInstance
+	currRec *adventure_game_record.AdventureGameCreatureInstance
+}
+
+func (m *Domain) populateAdventureGameCreatureInstanceValidateArgs(currRec, nextRec *adventure_game_record.AdventureGameCreatureInstance) (*validateAdventureGameCreatureInstanceArgs, error) {
+	args := &validateAdventureGameCreatureInstanceArgs{
+		currRec: currRec,
+		nextRec: nextRec,
+	}
+	return args, nil
+}
+
 func (m *Domain) validateAdventureGameCreatureInstanceRecForCreate(rec *adventure_game_record.AdventureGameCreatureInstance) error {
-	return validateAdventureGameCreatureInstanceRec(rec, false)
+	args, err := m.populateAdventureGameCreatureInstanceValidateArgs(nil, rec)
+	if err != nil {
+		return err
+	}
+	return validateAdventureGameCreatureInstanceRecForCreate(args)
 }
 
-func (m *Domain) validateAdventureGameCreatureInstanceRecForUpdate(rec *adventure_game_record.AdventureGameCreatureInstance) error {
-	return validateAdventureGameCreatureInstanceRec(rec, true)
+func (m *Domain) validateAdventureGameCreatureInstanceRecForUpdate(currRec, nextRec *adventure_game_record.AdventureGameCreatureInstance) error {
+	args, err := m.populateAdventureGameCreatureInstanceValidateArgs(currRec, nextRec)
+	if err != nil {
+		return err
+	}
+	return validateAdventureGameCreatureInstanceRecForUpdate(args)
 }
 
-func validateAdventureGameCreatureInstanceRec(rec *adventure_game_record.AdventureGameCreatureInstance, requireID bool) error {
+func validateAdventureGameCreatureInstanceRecForCreate(args *validateAdventureGameCreatureInstanceArgs) error {
+	return validateAdventureGameCreatureInstanceRec(args, false)
+}
+
+func validateAdventureGameCreatureInstanceRecForUpdate(args *validateAdventureGameCreatureInstanceArgs) error {
+	return validateAdventureGameCreatureInstanceRec(args, true)
+}
+
+func validateAdventureGameCreatureInstanceRec(args *validateAdventureGameCreatureInstanceArgs, requireID bool) error {
+	rec := args.nextRec
+
 	if rec == nil {
 		return coreerror.NewInvalidDataError("record is nil")
 	}

@@ -11,7 +11,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/type/domainer"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
 	"gitlab.com/alienspaces/playbymail/internal/domain"
-	"gitlab.com/alienspaces/playbymail/internal/turn_sheet"
+	"gitlab.com/alienspaces/playbymail/internal/turnsheet"
 	"gitlab.com/alienspaces/playbymail/internal/utils/config"
 	"gitlab.com/alienspaces/playbymail/internal/utils/logging"
 )
@@ -20,14 +20,14 @@ import (
 type Runner struct {
 	corecli.Runner
 	Config  config.Config
-	Scanner turn_sheet.TurnSheetScanner
+	Scanner turnsheet.TurnSheetScanner
 }
 
 const (
 	applicationName = "cli"
 )
 
-func NewRunner(cfg config.Config, l logger.Logger, j *river.Client[pgx.Tx], scanner turn_sheet.TurnSheetScanner) (*Runner, error) {
+func NewRunner(cfg config.Config, l logger.Logger, j *river.Client[pgx.Tx], scanner turnsheet.TurnSheetScanner) (*Runner, error) {
 	l = l.WithApplicationContext(applicationName)
 
 	cr, err := corecli.NewRunnerWithConfig(l, j, cfg.Config)

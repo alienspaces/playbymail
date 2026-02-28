@@ -12,7 +12,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
-	"gitlab.com/alienspaces/playbymail/internal/turn_sheet"
+	"gitlab.com/alienspaces/playbymail/internal/turnsheet"
 )
 
 // AdventureGameLocationChoiceProcessor implements the TurnSheetProcessor interface
@@ -53,7 +53,7 @@ func (p *AdventureGameLocationChoiceProcessor) ProcessTurnSheetResponse(ctx cont
 	}
 
 	// Step 1: Parse the player's location choice from ScannedData
-	var scanData turn_sheet.LocationChoiceScanData
+	var scanData turnsheet.LocationChoiceScanData
 	if err := json.Unmarshal(turnSheet.ScannedData, &scanData); err != nil {
 		l.Warn("failed to unmarshal scanned data >%v<", err)
 		return fmt.Errorf("failed to parse scanned data: %w", err)
@@ -70,7 +70,7 @@ func (p *AdventureGameLocationChoiceProcessor) ProcessTurnSheetResponse(ctx cont
 	l.Info("player chose location >%s<", chosenLocationID)
 
 	// Step 2: Parse SheetData to get the original location options and validate
-	var sheetData turn_sheet.LocationChoiceData
+	var sheetData turnsheet.LocationChoiceData
 	if err := json.Unmarshal(turnSheet.SheetData, &sheetData); err != nil {
 		l.Warn("failed to unmarshal sheet data >%v<", err)
 		return fmt.Errorf("failed to parse sheet data: %w", err)
@@ -78,7 +78,7 @@ func (p *AdventureGameLocationChoiceProcessor) ProcessTurnSheetResponse(ctx cont
 
 	// Validate the choice is one of the available options
 	isValidChoice := false
-	var chosenLocationOption turn_sheet.LocationOption
+	var chosenLocationOption turnsheet.LocationOption
 	for _, option := range sheetData.LocationOptions {
 		if option.LocationID == chosenLocationID {
 			isValidChoice = true
@@ -155,14 +155,14 @@ func (p *AdventureGameLocationChoiceProcessor) CreateNextTurnSheet(ctx context.C
 	}
 
 	// Step 6: Get account for name
-	accountRec, err := p.Domain.GetAccountRec(characterRec.AccountID, nil)
+	accountRec, err := p.Domain.GetAccountRec(characterRec.AccountUserID, nil)
 	if err != nil {
 		l.Warn("failed to get account >%v<", err)
 		return nil, fmt.Errorf("failed to get account: %w", err)
 	}
 
 	// Step 7: Build location options from links (these are the pathways!)
-	locationOptions := make([]turn_sheet.LocationOption, 0, len(locationLinkRecs))
+	locationOptions := make([]turnsheet.LocationOption, 0, len(locationLinkRecs))
 	for _, locationLinkRec := range locationLinkRecs {
 		// Get the destination location's name
 		toLocationRec, err := p.Domain.GetAdventureGameLocationRec(locationLinkRec.ToAdventureGameLocationID, nil)
@@ -180,7 +180,7 @@ func (p *AdventureGameLocationChoiceProcessor) CreateNextTurnSheet(ctx context.C
 
 		// The link.Name is the pathway name (e.g., "The River of Blood")
 		// The link.Description is the pathway description (e.g., "A river of blood flows to the next location")
-		locationOptions = append(locationOptions, turn_sheet.LocationOption{
+		locationOptions = append(locationOptions, turnsheet.LocationOption{
 			LocationID:              toLocationInstanceRec.ID,
 			LocationLinkName:        locationLinkRec.Name,
 			LocationLinkDescription: locationLinkRec.Description,
@@ -190,15 +190,15 @@ func (p *AdventureGameLocationChoiceProcessor) CreateNextTurnSheet(ctx context.C
 	}
 
 	// Step 8: Create sheet data with REAL game data
-	sheetData := turn_sheet.LocationChoiceData{
-		TurnSheetTemplateData: turn_sheet.TurnSheetTemplateData{
+	sheetData := turnsheet.LocationChoiceData{
+		TurnSheetTemplateData: turnsheet.TurnSheetTemplateData{
 			GameName:              convert.Ptr(gameRec.Name),
 			GameType:              convert.Ptr("adventure"),
 			TurnNumber:            convert.Ptr(gameInstanceRec.CurrentTurn + 1),
 			AccountName:           convert.Ptr(accountRec.Email),
 			TurnSheetTitle:        convert.Ptr(locationRec.Name),
 			TurnSheetDescription:  convert.Ptr(locationRec.Description),
-			TurnSheetInstructions: convert.Ptr(turn_sheet.DefaultLocationChoiceInstructions()),
+			TurnSheetInstructions: convert.Ptr(turnsheet.DefaultLocationChoiceInstructions()),
 		},
 		LocationName:        locationRec.Name,
 		LocationDescription: locationRec.Description,
@@ -214,7 +214,8 @@ func (p *AdventureGameLocationChoiceProcessor) CreateNextTurnSheet(ctx context.C
 	// Step 9: Create turn sheet record
 	turnSheet := &game_record.GameTurnSheet{
 		GameID:           gameInstanceRec.GameID,
-		AccountID:        characterRec.AccountID,
+		AccountID:        accountRec.AccountID,
+		AccountUserID:    characterRec.AccountUserID,
 		TurnNumber:       gameInstanceRec.CurrentTurn + 1,
 		SheetType:        adventure_game_record.AdventureGameTurnSheetTypeLocationChoice,
 		SheetOrder:       1,

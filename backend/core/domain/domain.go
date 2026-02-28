@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"maps"
+	"strings"
 
 	"github.com/jackc/pgx/v5"
 
@@ -24,8 +25,9 @@ type Domain struct {
 	Err                    error
 
 	// composable functions
-	QueriesFunc func(tx pgx.Tx) ([]querier.Querier, error)
-	RLSFunc     func(identifiers map[string][]string)
+	QueriesFunc        func(tx pgx.Tx) ([]querier.Querier, error)
+	RLSFunc            func(identifiers map[string][]string)
+	RLSConstraintsFunc func() []repositor.RLSConstraint
 }
 
 type RepositoryConstructor func(logger.Logger, pgx.Tx) (repositor.Repositor, error)
@@ -52,8 +54,8 @@ func NewDomain(l logger.Logger, repositoryConstructors []RepositoryConstructor) 
 	// Repository constructors are used to create repositories for the domain
 	m.RepositoryConstructors = repositoryConstructors
 
-	// Default function for setting RLS constraints on repositories
-	m.RLSFunc = m.SetRLS
+	// Default function for setting RLS identifiers on repositories
+	m.RLSFunc = m.SetRLSIdentifiers
 
 	return m, nil
 }
@@ -72,7 +74,7 @@ func (m *Domain) Init(tx pgx.Tx) (err error) {
 	}
 
 	if m.RLSFunc == nil {
-		m.RLSFunc = m.SetRLS
+		m.RLSFunc = m.SetRLSIdentifiers
 	}
 
 	m.Tx = tx
@@ -125,31 +127,85 @@ func (m *Domain) NewRepositories(tx pgx.Tx) (map[string]repositor.Repositor, err
 	return repositories, nil
 }
 
-// SetRLS -
-func (m *Domain) SetRLS(identifiers map[string][]string) {
-	m.Log.Info("(core/domain) SetRLS called with identifiers: %+v", identifiers)
-
-	// We'll be resetting the "id" key when we use the map
-	ri := maps.Clone(identifiers)
+// SetRLSIdentifiers sets RLS identifiers on all repositories in the domain
+func (m *Domain) SetRLSIdentifiers(identifiers map[string][]string) {
+	m.Log.Info("(core/domain) SetRLSIdentifiers called with identifiers: %+v", identifiers)
 
 	for tableName := range m.Repositories {
-
 		// When the repository table name matches an RLS identifier key, we apply the
 		// RLS constraints to the "id" column to enforce any RLS constraints on itself!
 		// Can this be done inside repository core code on itself? Absolutely... but it
 		// would be making a naive assumption about conventions. This project's convention
 		// is to name foreign key columns according to the table name it foreign keys to.
 		// If that convention is not followed, then the following block would not work.
-		if _, ok := ri[tableName+"_id"]; ok {
-			ri["id"] = ri[tableName+"_id"]
-			m.Log.Debug("(core/domain) applying RLS to table >%s< with id constraint: %+v", tableName, ri)
-			m.Repositories[tableName].SetRLS(ri)
+		tableIDKey := tableName + "_id"
+		if _, ok := identifiers[tableIDKey]; ok {
+			// When the repository table name matches an RLS identifier key, we apply the
+			// RLS constraints to the "id" column to enforce any RLS constraints on itself.
+			// Clone only when needed to avoid unnecessary allocations
+			filteredIdentifiers := maps.Clone(identifiers)
+			filteredIdentifiers["id"] = identifiers[tableIDKey]
+			m.Log.Debug("(core/domain) applying RLS identifiers to table >%s< with id constraint mapped from >%s_id<: %+v", tableName, tableName, filteredIdentifiers)
+			m.Repositories[tableName].SetRLSIdentifiers(filteredIdentifiers)
 			continue
 		}
-		m.Repositories[tableName].SetRLS(identifiers)
+		m.Repositories[tableName].SetRLSIdentifiers(identifiers)
 	}
 
-	m.Log.Info("(core/domain) SetRLS completed for %d repositories", len(m.Repositories))
+	m.Log.Info("(core/domain) SetRLSIdentifiers completed for %d repositories", len(m.Repositories))
+}
+
+// SetRLSConstraints sets RLS constraints on all repositories in the domain
+func (m *Domain) SetRLSConstraints(constraints []repositor.RLSConstraint) {
+	m.Log.Info("(core/domain) SetRLSConstraints called with %d constraints", len(constraints))
+
+	if len(constraints) == 0 {
+		return
+	}
+
+	// Build a map of constraints per repository
+	// This allows us to add both the original constraints and mapped constraints
+	constraintsPerRepo := make(map[string][]repositor.RLSConstraint, len(m.Repositories))
+
+	// Pre-allocate slices with capacity for original constraints + potential mapped constraints
+	numRepos := len(m.Repositories)
+	for tableName := range m.Repositories {
+		constraintsPerRepo[tableName] = make([]repositor.RLSConstraint, 0, len(constraints)+1)
+		constraintsPerRepo[tableName] = append(constraintsPerRepo[tableName], constraints...)
+	}
+
+	// Optimize: Extract table name directly from constraint column instead of nested loop
+	// This changes complexity from O(m * n) to O(m) where m = constraints, n = repositories
+	for _, constraint := range constraints {
+		// Check if constraint column matches pattern {tableName}_id
+		// Extract table name by removing "_id" suffix
+		if strings.HasSuffix(constraint.Column, "_id") {
+			tableName := strings.TrimSuffix(constraint.Column, "_id")
+			if _, exists := m.Repositories[tableName]; exists {
+				// Create a mapped constraint for the primary key column.
+			// The SQL template is kept unchanged -- it already SELECTs the
+			// correct foreign key column (e.g. game_id) from the related
+			// table. Only the Column field changes so that withRLS applies
+			// the constraint against the table's own "id" column.
+			mappedConstraint := repositor.RLSConstraint{
+				Column:                 "id",
+				SQLTemplate:            constraint.SQLTemplate,
+				RequiredRLSIdentifiers: constraint.RequiredRLSIdentifiers,
+			}
+				// Add the mapped constraint to this table's constraints
+				constraintsPerRepo[tableName] = append(constraintsPerRepo[tableName], mappedConstraint)
+				m.Log.Debug("(core/domain) mapped RLS constraint >%s< to >id< column for table >%s<", constraint.Column, tableName)
+			}
+		}
+	}
+
+	// Apply constraints to each repository
+	for tableName, repoConstraints := range constraintsPerRepo {
+		m.Repositories[tableName].SetRLSConstraints(repoConstraints)
+		m.Log.Debug("(core/domain) applied %d RLS constraints to repository >%s<", len(repoConstraints), tableName)
+	}
+
+	m.Log.Info("(core/domain) SetRLSConstraints completed for %d repositories", numRepos)
 }
 
 // SetTxLockTimeout -

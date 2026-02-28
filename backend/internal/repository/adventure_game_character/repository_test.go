@@ -26,12 +26,13 @@ func TestCreateOne(t *testing.T) {
 			rec: func(d harness.Data, t *testing.T) *adventure_game_record.AdventureGameCharacter {
 				gameRec, err := d.GetGameRecByRef(harness.GameOneRef)
 				require.NoError(t, err)
-				accountRec, err := d.GetAccountRecByRef(harness.AccountThreeRef)
+				accountRec, err := d.GetAccountUserRecByRef(harness.ProDesignerAccountRef)
 				require.NoError(t, err)
 				return &adventure_game_record.AdventureGameCharacter{
-					GameID:    gameRec.ID,
-					AccountID: accountRec.ID,
-					Name:      harness.UniqueName(gofakeit.Name()),
+					GameID:        gameRec.ID,
+					AccountID:     accountRec.AccountID,
+					AccountUserID: accountRec.ID,
+					Name:          harness.UniqueName(gofakeit.Name()),
 				}
 			},
 			hasErr: false,
@@ -41,11 +42,12 @@ func TestCreateOne(t *testing.T) {
 			rec: func(d harness.Data, t *testing.T) *adventure_game_record.AdventureGameCharacter {
 				gameRec, err := d.GetGameRecByRef(harness.GameOneRef)
 				require.NoError(t, err)
-				accountRec, err := d.GetAccountRecByRef(harness.AccountThreeRef)
+				accountRec, err := d.GetAccountUserRecByRef(harness.ProDesignerAccountRef)
 				require.NoError(t, err)
 				return &adventure_game_record.AdventureGameCharacter{
-					GameID:    gameRec.ID,
-					AccountID: accountRec.ID,
+					GameID:        gameRec.ID,
+					AccountID:     accountRec.AccountID,
+					AccountUserID: accountRec.ID,
 				}
 			},
 			hasErr: true,

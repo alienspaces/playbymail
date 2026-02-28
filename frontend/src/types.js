@@ -112,4 +112,28 @@
  * @property {string} description
  * @property {string} value_type
  * @property {string} [default_value]
- */ 
+ */
+
+/**
+ * @typedef {Object} Account
+ * @property {string} id
+ * @property {string} account_id
+ * @property {string} email
+ * @property {string} status
+ * @property {string} created_at
+ * @property {string} [updated_at]
+ * @property {string} [deleted_at]
+ */
+
+/**
+ * @typedef {Object} AccountContact
+ * @property {string} id
+ * @property {string} account_id
+ * @property {string} name
+ * @property {string} email
+ * @property {string} phone
+ * @property {string} address
+ * @property {string} created_at
+ * @property {string} [updated_at]
+ * @property {string} [deleted_at]
+ */

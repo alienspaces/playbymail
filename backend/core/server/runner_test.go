@@ -36,7 +36,7 @@ func (rnr *TestRunner) Init(l logger.Logger, s storer.Storer) error {
 func (rnr *TestRunner) mockAuthenticateRequestFunc(l logger.Logger, m domainer.Domainer, r *http.Request, authType AuthenticationType) (AuthenData, error) {
 	return AuthenData{
 		Type: AuthenticatedTypeToken,
-		Account: AuthenticatedAccount{
+		AccountUser: AuthenticatedAccountUser{
 			ID:    "test-user-id",
 			Name:  "Test User",
 			Email: "test@example.com",

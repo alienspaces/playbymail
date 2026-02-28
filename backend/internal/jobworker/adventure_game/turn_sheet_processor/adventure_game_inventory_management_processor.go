@@ -12,7 +12,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
-	"gitlab.com/alienspaces/playbymail/internal/turn_sheet"
+	"gitlab.com/alienspaces/playbymail/internal/turnsheet"
 )
 
 // AdventureGameInventoryManagementProcessor processes inventory management turn sheet business logic for adventure games
@@ -50,7 +50,7 @@ func (p *AdventureGameInventoryManagementProcessor) ProcessTurnSheetResponse(ctx
 	}
 
 	// Step 1: Parse the player's inventory actions from ScannedData
-	var scanData turn_sheet.InventoryManagementScanData
+	var scanData turnsheet.InventoryManagementScanData
 	if err := json.Unmarshal(turnSheet.ScannedData, &scanData); err != nil {
 		l.Warn("failed to unmarshal scanned data >%v<", err)
 		return fmt.Errorf("failed to parse scanned data: %w", err)
@@ -132,7 +132,7 @@ func (p *AdventureGameInventoryManagementProcessor) CreateNextTurnSheet(ctx cont
 	}
 
 	// Step 4: Get account for name
-	accountRec, err := p.Domain.GetAccountRec(characterRec.AccountID, nil)
+	accountRec, err := p.Domain.GetAccountRec(characterRec.AccountUserID, nil)
 	if err != nil {
 		l.Warn("failed to get account >%v<", err)
 		return nil, fmt.Errorf("failed to get account: %w", err)
@@ -160,8 +160,8 @@ func (p *AdventureGameInventoryManagementProcessor) CreateNextTurnSheet(ctx cont
 	}
 
 	// Step 8: Build inventory items list with item definitions
-	inventoryItemList := make([]turn_sheet.InventoryItem, 0, len(inventoryItems))
-	equipmentSlots := turn_sheet.EquipmentSlots{}
+	inventoryItemList := make([]turnsheet.InventoryItem, 0, len(inventoryItems))
+	equipmentSlots := turnsheet.EquipmentSlots{}
 
 	for _, itemInstance := range inventoryItems {
 		// Get item definition
@@ -190,7 +190,7 @@ func (p *AdventureGameInventoryManagementProcessor) CreateNextTurnSheet(ctx cont
 			}
 		}
 
-		inventoryItem := turn_sheet.InventoryItem{
+		inventoryItem := turnsheet.InventoryItem{
 			ItemInstanceID:  itemInstance.ID,
 			ItemName:        itemDef.Name,
 			ItemDescription: itemDef.Description,
@@ -202,9 +202,9 @@ func (p *AdventureGameInventoryManagementProcessor) CreateNextTurnSheet(ctx cont
 	}
 
 	// Sort inventory items: equipped items first (weapon, armor, jewelry order), then unequipped
-	equippedItems := make([]turn_sheet.InventoryItem, 0)
-	unequippedItems := make([]turn_sheet.InventoryItem, 0)
-	
+	equippedItems := make([]turnsheet.InventoryItem, 0)
+	unequippedItems := make([]turnsheet.InventoryItem, 0)
+
 	// Define slot priority for sorting equipped items
 	slotPriority := map[string]int{
 		"weapon":   1,
@@ -212,7 +212,7 @@ func (p *AdventureGameInventoryManagementProcessor) CreateNextTurnSheet(ctx cont
 		"clothing": 3,
 		"jewelry":  4,
 	}
-	
+
 	for _, item := range inventoryItemList {
 		if item.IsEquipped {
 			equippedItems = append(equippedItems, item)
@@ -220,7 +220,7 @@ func (p *AdventureGameInventoryManagementProcessor) CreateNextTurnSheet(ctx cont
 			unequippedItems = append(unequippedItems, item)
 		}
 	}
-	
+
 	// Sort equipped items by slot priority
 	for i := 0; i < len(equippedItems)-1; i++ {
 		for j := i + 1; j < len(equippedItems); j++ {
@@ -237,12 +237,12 @@ func (p *AdventureGameInventoryManagementProcessor) CreateNextTurnSheet(ctx cont
 			}
 		}
 	}
-	
+
 	// Combine: equipped first, then unequipped
 	inventoryItemList = append(equippedItems, unequippedItems...)
 
 	// Step 9: Build location items list
-	locationItemList := make([]turn_sheet.LocationItem, 0, len(locationItems))
+	locationItemList := make([]turnsheet.LocationItem, 0, len(locationItems))
 	for _, itemInstance := range locationItems {
 		// Get item definition
 		itemDef, err := p.Domain.GetAdventureGameItemRec(itemInstance.AdventureGameItemID, nil)
@@ -251,32 +251,32 @@ func (p *AdventureGameInventoryManagementProcessor) CreateNextTurnSheet(ctx cont
 			continue
 		}
 
-		locationItem := turn_sheet.LocationItem{
-			ItemInstanceID: itemInstance.ID,
-			ItemName:       itemDef.Name,
+		locationItem := turnsheet.LocationItem{
+			ItemInstanceID:  itemInstance.ID,
+			ItemName:        itemDef.Name,
 			ItemDescription: itemDef.Description,
 		}
 		locationItemList = append(locationItemList, locationItem)
 	}
 
 	// Step 10: Create sheet data
-	sheetData := turn_sheet.InventoryManagementData{
-		TurnSheetTemplateData: turn_sheet.TurnSheetTemplateData{
+	sheetData := turnsheet.InventoryManagementData{
+		TurnSheetTemplateData: turnsheet.TurnSheetTemplateData{
 			GameName:              convert.Ptr(gameRec.Name),
 			GameType:              convert.Ptr("adventure"),
 			TurnNumber:            convert.Ptr(gameInstanceRec.CurrentTurn + 1),
 			AccountName:           convert.Ptr(accountRec.Email),
 			TurnSheetTitle:        convert.Ptr("Inventory Management"),
 			TurnSheetDescription:  convert.Ptr(fmt.Sprintf("Manage your inventory and equipment. Carrying %d/%d items.", len(inventoryItemList), characterInstanceRec.InventoryCapacity)),
-			TurnSheetInstructions: convert.Ptr(turn_sheet.DefaultInventoryManagementInstructions()),
+			TurnSheetInstructions: convert.Ptr(turnsheet.DefaultInventoryManagementInstructions()),
 		},
-		CharacterName:      characterRec.Name,
+		CharacterName:       characterRec.Name,
 		CurrentLocationName: locationRec.Name,
-		InventoryCapacity:  characterInstanceRec.InventoryCapacity,
+		InventoryCapacity:   characterInstanceRec.InventoryCapacity,
 		InventoryCount:      len(inventoryItemList),
-		CurrentInventory:   inventoryItemList,
-		EquipmentSlots:     equipmentSlots,
-		LocationItems:      locationItemList,
+		CurrentInventory:    inventoryItemList,
+		EquipmentSlots:      equipmentSlots,
+		LocationItems:       locationItemList,
 	}
 
 	sheetDataBytes, err := json.Marshal(sheetData)
@@ -288,7 +288,8 @@ func (p *AdventureGameInventoryManagementProcessor) CreateNextTurnSheet(ctx cont
 	// Step 11: Create turn sheet record
 	turnSheet := &game_record.GameTurnSheet{
 		GameID:           gameInstanceRec.GameID,
-		AccountID:        characterRec.AccountID,
+		AccountID:        accountRec.AccountID,
+		AccountUserID:    characterRec.AccountUserID,
 		TurnNumber:       gameInstanceRec.CurrentTurn + 1,
 		SheetType:        adventure_game_record.AdventureGameTurnSheetTypeInventoryManagement,
 		SheetOrder:       1,
@@ -323,4 +324,3 @@ func (p *AdventureGameInventoryManagementProcessor) CreateNextTurnSheet(ctx cont
 
 	return createdTurnSheetRec, nil
 }
-

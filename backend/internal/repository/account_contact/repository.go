@@ -10,16 +10,16 @@ import (
 )
 
 const (
-	TableName string = account_record.TableAccountContact
+	TableName string = account_record.TableAccountUserContact
 )
 
 // NewRepository -
 func NewRepository(l logger.Logger, tx pgx.Tx) (repositor.Repositor, error) {
-	return repository.NewGeneric[account_record.AccountContact](
+	return repository.NewGeneric[account_record.AccountUserContact](
 		repository.NewArgs{
 			Tx:        tx,
 			TableName: TableName,
-			Record:    account_record.AccountContact{},
+			Record:    account_record.AccountUserContact{},
 		},
 	)
 }

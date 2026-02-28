@@ -15,8 +15,8 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/jobworker/adventure_game"
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
-	"gitlab.com/alienspaces/playbymail/internal/turn_sheet"
-	"gitlab.com/alienspaces/playbymail/internal/utils/turnsheet"
+	"gitlab.com/alienspaces/playbymail/internal/turnsheet"
+	"gitlab.com/alienspaces/playbymail/internal/utils/turnsheetutil"
 )
 
 // GenerateTurnSheetsForGameInstance runs the adventure game job worker to create turn sheets
@@ -248,7 +248,7 @@ func (t *Testing) processJoinGameSubscriptionInSetup(ctx context.Context, subscr
 	}
 
 	// Get account and game records
-	accountRec, err := t.Data.GetAccountRecByID(subscriptionRec.AccountID)
+	accountRec, err := t.Data.GetAccountUserRecByID(subscriptionRec.AccountID)
 	if err != nil {
 		l.Warn("failed to get account >%v<", err)
 		return nil, fmt.Errorf("failed to get account: %w", err)
@@ -261,14 +261,14 @@ func (t *Testing) processJoinGameSubscriptionInSetup(ctx context.Context, subscr
 	}
 
 	// Get account contact for address information
-	accountContactRec, err := t.Data.GetAccountContactRecByAccountID(accountRec.ID)
+	accountUserContactRec, err := t.Data.GetAccountUserContactRecByAccountUserID(accountRec.ID)
 	if err != nil {
 		l.Warn("failed to get account contact >%v<", err)
 		return nil, fmt.Errorf("failed to get account contact: %w", err)
 	}
 
 	// Type assert to adventure game scan data
-	adventureScanData, ok := joinGameScanData.(*turn_sheet.AdventureGameJoinGameScanData)
+	adventureScanData, ok := joinGameScanData.(*turnsheet.AdventureGameJoinGameScanData)
 	if !ok {
 		l.Warn("invalid scan data type for join game subscription, expected *turn_sheet.AdventureGameJoinGameScanData")
 		return nil, fmt.Errorf("invalid scan data type for join game subscription")
@@ -289,8 +289,8 @@ func (t *Testing) processJoinGameSubscriptionInSetup(ctx context.Context, subscr
 	}
 
 	// Construct join game scan data
-	scanData := turn_sheet.AdventureGameJoinGameScanData{
-		JoinGameScanData: turn_sheet.JoinGameScanData{
+	scanData := turnsheet.AdventureGameJoinGameScanData{
+		JoinGameScanData: turnsheet.JoinGameScanData{
 			GameSubscriptionID: managerSubscriptionID,
 			Email:              adventureScanData.Email,
 			Name:               adventureScanData.Name,
@@ -307,23 +307,23 @@ func (t *Testing) processJoinGameSubscriptionInSetup(ctx context.Context, subscr
 	if scanData.Email == "" {
 		scanData.Email = accountRec.Email
 	}
-	if scanData.Name == "" && accountContactRec != nil {
-		scanData.Name = accountContactRec.Name
+	if scanData.Name == "" && accountUserContactRec != nil {
+		scanData.Name = accountUserContactRec.Name
 	}
-	if scanData.PostalAddressLine1 == "" && accountContactRec != nil {
-		scanData.PostalAddressLine1 = accountContactRec.PostalAddressLine1
+	if scanData.PostalAddressLine1 == "" && accountUserContactRec != nil {
+		scanData.PostalAddressLine1 = accountUserContactRec.PostalAddressLine1
 	}
-	if scanData.PostalAddressLine2 == "" && accountContactRec != nil {
-		scanData.PostalAddressLine2 = accountContactRec.PostalAddressLine2.String
+	if scanData.PostalAddressLine2 == "" && accountUserContactRec != nil {
+		scanData.PostalAddressLine2 = accountUserContactRec.PostalAddressLine2.String
 	}
-	if scanData.StateProvince == "" && accountContactRec != nil {
-		scanData.StateProvince = accountContactRec.StateProvince
+	if scanData.StateProvince == "" && accountUserContactRec != nil {
+		scanData.StateProvince = accountUserContactRec.StateProvince
 	}
-	if scanData.Country == "" && accountContactRec != nil {
-		scanData.Country = accountContactRec.Country
+	if scanData.Country == "" && accountUserContactRec != nil {
+		scanData.Country = accountUserContactRec.Country
 	}
-	if scanData.PostalCode == "" && accountContactRec != nil {
-		scanData.PostalCode = accountContactRec.PostalCode
+	if scanData.PostalCode == "" && accountUserContactRec != nil {
+		scanData.PostalCode = accountUserContactRec.PostalCode
 	}
 
 	// Validate scan data
@@ -335,14 +335,14 @@ func (t *Testing) processJoinGameSubscriptionInSetup(ctx context.Context, subscr
 	// Generate join game turn sheet code using the proper encoding format
 	// (base64-encoded JSON with checksum, same format as playing codes but
 	// with only game ID and manager subscription ID populated)
-	turnSheetCode, err := turnsheet.GenerateJoinTurnSheetCode(gameRec.ID, managerSubscriptionID)
+	turnSheetCode, err := turnsheetutil.GenerateJoinGameTurnSheetCode(managerSubscriptionID)
 	if err != nil {
 		l.Warn("failed to generate join turn sheet code >%v<", err)
 		return nil, fmt.Errorf("failed to generate join turn sheet code: %w", err)
 	}
 
 	// Get join game data
-	joinData, err := turn_sheet.GetTurnSheetJoinGameData(gameRec, turnSheetCode)
+	joinData, err := turnsheet.GetTurnSheetJoinGameData(gameRec, turnSheetCode)
 	if err != nil {
 		l.Warn("failed to get join game data >%v<", err)
 		return nil, fmt.Errorf("failed to get join game data: %w", err)
@@ -364,6 +364,7 @@ func (t *Testing) processJoinGameSubscriptionInSetup(ctx context.Context, subscr
 	turnSheetRec := &game_record.GameTurnSheet{
 		GameID:           gameRec.ID,
 		AccountID:        accountRec.ID,
+		AccountUserID:    subscriptionRec.AccountUserID.String,
 		TurnNumber:       0,
 		SheetType:        adventure_game_record.AdventureGameTurnSheetTypeJoinGame,
 		SheetOrder:       1,
@@ -470,9 +471,9 @@ func (t *Testing) applyScanDataToTurnSheet(_ context.Context, turnSheetID string
 	var scanDataBytes []byte
 	switch turnSheetRec.SheetType {
 	case adventure_game_record.AdventureGameTurnSheetTypeLocationChoice:
-		locationChoiceScanData, ok := scanDataConfig.(*turn_sheet.LocationChoiceScanData)
+		locationChoiceScanData, ok := scanDataConfig.(*turnsheet.LocationChoiceScanData)
 		if !ok {
-			l.Warn("invalid scan data type for location choice turn sheet, expected *turn_sheet.LocationChoiceScanData")
+			l.Warn("invalid scan data type for location choice turn sheet, expected *turnsheet.LocationChoiceScanData")
 			return fmt.Errorf("invalid scan data type for location choice turn sheet")
 		}
 		scanDataBytes, err = json.Marshal(locationChoiceScanData)

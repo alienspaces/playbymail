@@ -1,11 +1,3 @@
-// Standard Store Method Naming Conventions:
-// - fetch<ResourcePlural>(contextId?) - contextId when resources belong to parent
-// - create<ResourceSingular>(contextId?, data) - contextId when resources belong to parent
-// - update<ResourceSingular>(contextId?, id, data) - contextId when resources belong to parent  
-// - delete<ResourceSingular>(contextId?, id) - contextId when resources belong to parent
-// - For game-scoped resources: fetch*, create*, update*, delete* with gameId
-// - For instance-scoped resources: fetch*, create*, update*, delete* with gameInstanceId
-
 import { defineStore } from 'pinia';
 import { 
   listGameInstanceParameters,
@@ -13,7 +5,6 @@ import {
   createGameInstanceParameter as apiCreateGameInstanceParameter,
   updateGameInstanceParameter as apiUpdateGameInstanceParameter,
   deleteGameInstanceParameter as apiDeleteGameInstanceParameter,
-  bulkUpdateGameInstanceParameters as apiBulkUpdateGameInstanceParameters
 } from '../api/gameInstanceParameters';
 
 export const useGameInstanceParametersStore = defineStore('gameInstanceParameters', {
@@ -64,7 +55,6 @@ export const useGameInstanceParametersStore = defineStore('gameInstanceParameter
         const res = await getGameInstanceParameter(gameId, gameInstanceId, parameterId);
         const parameter = res.data;
         
-        // Update the parameter in our state if it exists
         const index = this.gameInstanceParameters.findIndex(p => p.id === parameter.id);
         if (index !== -1) {
           this.gameInstanceParameters[index] = parameter;
@@ -131,31 +121,5 @@ export const useGameInstanceParametersStore = defineStore('gameInstanceParameter
         this.loading = false;
       }
     },
-
-    async bulkUpdateGameInstanceParameters(gameId, gameInstanceId, parameters) {
-      this.loading = true;
-      this.error = null;
-      try {
-        const res = await apiBulkUpdateGameInstanceParameters(gameId, gameInstanceId, parameters);
-        const updatedParameters = res.data;
-        
-        // Update our state with the new parameters
-        updatedParameters.forEach(updated => {
-          const index = this.gameInstanceParameters.findIndex(p => p.id === updated.id);
-          if (index !== -1) {
-            this.gameInstanceParameters[index] = updated;
-          } else {
-            this.gameInstanceParameters.push(updated);
-          }
-        });
-        
-        return updatedParameters;
-      } catch (err) {
-        this.error = err.message;
-        throw err;
-      } finally {
-        this.loading = false;
-      }
-    }
   }
 });

@@ -73,14 +73,14 @@ func (m *Domain) CreateAdventureGameLocationLinkRec(rec *adventure_game_record.A
 func (m *Domain) UpdateAdventureGameLocationLinkRec(rec *adventure_game_record.AdventureGameLocationLink) (*adventure_game_record.AdventureGameLocationLink, error) {
 	l := m.Logger("UpdateAdventureGameLocationLinkRec")
 
-	_, err := m.GetAdventureGameLocationLinkRec(rec.ID, sql.ForUpdateNoWait)
+	currRec, err := m.GetAdventureGameLocationLinkRec(rec.ID, sql.ForUpdateNoWait)
 	if err != nil {
 		return rec, err
 	}
 
 	l.Debug("updating adventure_game_location_link record >%#v<", rec)
 
-	if err := m.validateAdventureGameLocationLinkRecForUpdate(rec); err != nil {
+	if err := m.validateAdventureGameLocationLinkRecForUpdate(currRec, rec); err != nil {
 		l.Warn("failed to validate adventure_game_location_link record >%v<", err)
 		return rec, err
 	}

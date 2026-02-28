@@ -2,8 +2,10 @@ package game_test
 
 import (
 	"bytes"
+	"fmt"
 	"image"
 	"image/png"
+	"io"
 	"net/http"
 	"testing"
 
@@ -60,6 +62,9 @@ func Test_uploadGameTurnSheetImageHandler(t *testing.T) {
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[game.UploadGameTurnSheetImage]
 				},
+				RequestHeaders: func(d harness.Data) map[string]string {
+					return testutil.AuthHeaderProDesigner(d)
+				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
 						":game_id": gameRec.ID,
@@ -92,6 +97,9 @@ func Test_uploadGameTurnSheetImageHandler(t *testing.T) {
 				Name: "upload turn sheet image with explicit turn_sheet_type returns created image",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[game.UploadGameTurnSheetImage]
+				},
+				RequestHeaders: func(d harness.Data) map[string]string {
+					return testutil.AuthHeaderProDesigner(d)
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
@@ -131,6 +139,9 @@ func Test_uploadGameTurnSheetImageHandler(t *testing.T) {
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[game.UploadGameTurnSheetImage]
 				},
+				RequestHeaders: func(d harness.Data) map[string]string {
+					return testutil.AuthHeaderProDesigner(d)
+				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
 						":game_id": "00000000-0000-0000-0000-000000000000",
@@ -150,6 +161,9 @@ func Test_uploadGameTurnSheetImageHandler(t *testing.T) {
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[game.UploadGameTurnSheetImage]
 				},
+				RequestHeaders: func(d harness.Data) map[string]string {
+					return testutil.AuthHeaderProDesigner(d)
+				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
 						":game_id": gameRec.ID,
@@ -167,7 +181,7 @@ func Test_uploadGameTurnSheetImageHandler(t *testing.T) {
 		t.Logf("Running test >%s<", testCase.Name)
 
 		t.Run(testCase.Name, func(t *testing.T) {
-			testFunc := func(method string, body interface{}) {
+			testFunc := func(method string, body any) {
 				if testCase.TestResponseCode() != http.StatusCreated {
 					return
 				}
@@ -372,7 +386,7 @@ func Test_getGameTurnSheetImageHandler(t *testing.T) {
 		t.Logf("Running test >%s<", testCase.Name)
 
 		t.Run(testCase.Name, func(t *testing.T) {
-			testFunc := func(method string, body interface{}) {
+			testFunc := func(method string, body any) {
 				require.NotNil(t, body, "Response body is not nil")
 
 				aResp := body.(game_schema.GameImageCollectionResponse)
@@ -432,9 +446,12 @@ func Test_deleteGameTurnSheetImageHandler(t *testing.T) {
 
 	testCases := []testutil.TestCase{
 		{
-			Name: "delete turn sheet image by ID returns no content",
+			Name: "authenticated designer when delete turn sheet image by ID then returns no content",
 			HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 				return rnr.GetHandlerConfig()[game.DeleteOneGameTurnSheetImage]
+			},
+			RequestHeaders: func(d harness.Data) map[string]string {
+				return testutil.AuthHeaderProDesigner(d)
 			},
 			RequestPathParams: func(d harness.Data) map[string]string {
 				// Use preconfigured join game image
@@ -446,9 +463,12 @@ func Test_deleteGameTurnSheetImageHandler(t *testing.T) {
 			ResponseCode: http.StatusNoContent,
 		},
 		{
-			Name: "delete turn sheet image for non-existent image ID returns not found",
+			Name: "authenticated designer when delete turn sheet image for non-existent image ID then returns not found",
 			HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 				return rnr.GetHandlerConfig()[game.DeleteOneGameTurnSheetImage]
+			},
+			RequestHeaders: func(d harness.Data) map[string]string {
+				return testutil.AuthHeaderProDesigner(d)
 			},
 			RequestPathParams: func(d harness.Data) map[string]string {
 				return map[string]string{
@@ -457,6 +477,128 @@ func Test_deleteGameTurnSheetImageHandler(t *testing.T) {
 				}
 			},
 			ResponseCode: http.StatusNotFound,
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Logf("Running test >%s<", testCase.Name)
+
+		t.Run(testCase.Name, func(t *testing.T) {
+			testutil.RunTestCase(t, th, &testCase, nil)
+		})
+	}
+}
+
+func Test_previewGameTurnSheetHandler(t *testing.T) {
+	t.Parallel()
+
+	th := testutil.NewTestHarness(t)
+	require.NotNil(t, th, "newTestHarness returns without error")
+
+	_, err := th.Setup()
+	require.NoError(t, err, "Test data setup returns without error")
+
+	defer func() {
+		err = th.Teardown()
+		require.NoError(t, err, "Test data teardown returns without error")
+	}()
+
+	gameRec, err := th.Data.GetGameRecByRef(harness.GameOneRef)
+	require.NoError(t, err, "GetGameRecByRef returns without error")
+
+	testCases := []testutil.TestCase{
+		{
+			Name: "authenticated designer when preview join game turn sheet then returns PDF",
+			HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
+				return rnr.GetHandlerConfig()[game.PreviewGameTurnSheet]
+			},
+			RequestHeaders: func(d harness.Data) map[string]string {
+				return testutil.AuthHeaderProDesigner(d)
+			},
+			RequestPathParams: func(d harness.Data) map[string]string {
+				return map[string]string{
+					":game_id": gameRec.ID,
+				}
+			},
+			RequestQueryParams: func(d harness.Data) map[string]any {
+				return map[string]any{
+					"turn_sheet_type": adventure_game_record.AdventureGameTurnSheetTypeJoinGame,
+				}
+			},
+			ResponseCode: http.StatusOK,
+			ResponseDecoder: func(body io.Reader) (interface{}, error) {
+				content, err := io.ReadAll(body)
+				if err != nil {
+					return nil, err
+				}
+				if !bytes.HasPrefix(content, []byte("%PDF-")) {
+					return nil, fmt.Errorf("response body does not start with %%PDF-")
+				}
+				return content, nil
+			},
+			ShouldNotTestResponseBody: true,
+		},
+		{
+			Name: "authenticated designer when preview inventory management turn sheet then returns PDF",
+			HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
+				return rnr.GetHandlerConfig()[game.PreviewGameTurnSheet]
+			},
+			RequestHeaders: func(d harness.Data) map[string]string {
+				return testutil.AuthHeaderProDesigner(d)
+			},
+			RequestPathParams: func(d harness.Data) map[string]string {
+				return map[string]string{
+					":game_id": gameRec.ID,
+				}
+			},
+			RequestQueryParams: func(d harness.Data) map[string]any {
+				return map[string]any{
+					"turn_sheet_type": adventure_game_record.AdventureGameTurnSheetTypeInventoryManagement,
+				}
+			},
+			ResponseCode: http.StatusOK,
+			ResponseDecoder: func(body io.Reader) (interface{}, error) {
+				content, err := io.ReadAll(body)
+				if err != nil {
+					return nil, err
+				}
+				if !bytes.HasPrefix(content, []byte("%PDF-")) {
+					return nil, fmt.Errorf("response body does not start with %%PDF-")
+				}
+				return content, nil
+			},
+			ShouldNotTestResponseBody: true,
+		},
+		{
+			Name: "authenticated designer when preview location choice turn sheet then returns PDF",
+			HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
+				return rnr.GetHandlerConfig()[game.PreviewGameTurnSheet]
+			},
+			RequestHeaders: func(d harness.Data) map[string]string {
+				return testutil.AuthHeaderProDesigner(d)
+			},
+			RequestPathParams: func(d harness.Data) map[string]string {
+				return map[string]string{
+					":game_id": gameRec.ID,
+				}
+			},
+			RequestQueryParams: func(d harness.Data) map[string]any {
+				return map[string]any{
+					"turn_sheet_type": adventure_game_record.AdventureGameTurnSheetTypeLocationChoice,
+				}
+			},
+			ResponseCode: http.StatusOK,
+			ResponseDecoder: func(body io.Reader) (interface{}, error) {
+				content, err := io.ReadAll(body)
+				if err != nil {
+					return nil, err
+				}
+				if !bytes.HasPrefix(content, []byte("%PDF-")) {
+					return nil, fmt.Errorf("response body does not start with %%PDF-")
+				}
+				return content, nil
+			},
+			ShouldNotTestResponseBody: true,
 		},
 	}
 

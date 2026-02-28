@@ -14,10 +14,12 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/queryparam"
 	"gitlab.com/alienspaces/playbymail/core/type/domainer"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
+	"gitlab.com/alienspaces/playbymail/core/type/repositor"
 )
 
 type RLS struct {
 	Identifiers map[string][]string
+	Constraints []repositor.RLSConstraint
 }
 
 func (rnr *Runner) RLSMiddleware(hc HandlerConfig, h Handle) (Handle, error) {
@@ -29,6 +31,15 @@ func (rnr *Runner) RLSMiddleware(hc HandlerConfig, h Handle) (Handle, error) {
 		if _, ok := handlerAuthenTypes[AuthenticationTypePublic]; ok {
 			l.Info("(rlsmiddleware) handler name >%s< is public, not applying RLS", hc.Name)
 			return h(w, r, pp, qp, l, m, jc)
+		}
+
+		// For optional token auth, if no auth data is present (unauthenticated request), skip RLS
+		if _, ok := handlerAuthenTypes[AuthenticationTypeOptionalToken]; ok {
+			AuthenData := GetRequestAuthenData(l, r)
+			if AuthenData == nil {
+				l.Info("(rlsmiddleware) handler name >%s< uses optional token auth with no auth data, not applying RLS", hc.Name)
+				return h(w, r, pp, qp, l, m, jc)
+			}
 		}
 
 		AuthenData := GetRequestAuthenData(l, r)
@@ -56,11 +67,28 @@ func (rnr *Runner) RLSMiddleware(hc HandlerConfig, h Handle) (Handle, error) {
 
 			l.Info("(rlsmiddleware) applying RLS identifiers to domain: %+v", rls.Identifiers)
 
-			// Apply RLS to the domain's repositories
-			if rlsSetter, ok := m.(interface{ SetRLS(map[string][]string) }); ok {
-				rlsSetter.SetRLS(rls.Identifiers)
-			} else {
-				l.Warn("(rlsmiddleware) domain does not implement SetRLS interface")
+			// Apply RLS identifiers to the domain's repositories
+			if len(rls.Identifiers) > 0 {
+				l.Info("(rlsmiddleware) applying %d RLS identifiers to domain", len(rls.Identifiers))
+				if rlsSetter, ok := m.(interface {
+					SetRLSIdentifiers(map[string][]string)
+				}); ok {
+					rlsSetter.SetRLSIdentifiers(rls.Identifiers)
+				} else {
+					l.Warn("(rlsmiddleware) domain does not implement SetRLSIdentifiers interface")
+				}
+			}
+
+			// Apply RLS constraints to the domain's repositories
+			if len(rls.Constraints) > 0 {
+				l.Info("(rlsmiddleware) applying %d RLS constraints to domain", len(rls.Constraints))
+				if rlsConstraintSetter, ok := m.(interface {
+					SetRLSConstraints([]repositor.RLSConstraint)
+				}); ok {
+					rlsConstraintSetter.SetRLSConstraints(rls.Constraints)
+				} else {
+					l.Warn("(rlsmiddleware) domain does not implement SetRLSConstraints interface")
+				}
 			}
 
 			r, err = SetRequestRLSData(l, r, rls)

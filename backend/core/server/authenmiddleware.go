@@ -29,6 +29,22 @@ func (rnr *Runner) AuthenMiddleware(hc HandlerConfig, h Handle) (Handle, error) 
 			return h(w, r, pp, qp, l, m, jc)
 		}
 
+		// For optional token auth, attempt authentication but proceed without auth data if it fails
+		if _, ok := handlerAuthenTypes[AuthenticationTypeOptionalToken]; ok {
+			auth, err := rnr.AuthenticateRequestFunc(l, m, r, AuthenticationTypeToken)
+			if err == nil && auth.IsAuthenticated() {
+				r, err = SetRequestAuthenData(l, r, auth)
+				if err != nil {
+					l.Error("(authenmiddleware) failed to set optional request auth data >%v<", err)
+					return err
+				}
+				l.Context("account-id", auth.AccountUser.ID)
+			} else {
+				l.Debug("(authenmiddleware) optional token auth not provided or failed, proceeding unauthenticated")
+			}
+			return h(w, r, pp, qp, l, m, jc)
+		}
+
 		var auth AuthenData
 		var err error
 		hasAuthnType := false
@@ -80,7 +96,7 @@ func (rnr *Runner) AuthenMiddleware(hc HandlerConfig, h Handle) (Handle, error) 
 			return err
 		}
 
-		l.Context("account-id", auth.Account.ID)
+		l.Context("account-id", auth.AccountUser.ID)
 
 		return h(w, r, pp, qp, l, m, jc)
 	}

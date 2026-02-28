@@ -28,14 +28,12 @@ func TestCreateOne(t *testing.T) {
 		{
 			name: "Without ID",
 			rec: func(d harness.Data, t *testing.T) *game_record.Game {
-				accountRec, err := d.GetAccountRecByRef(harness.AccountOneRef)
-				require.NoError(t, err, "GetAccountRecByRef returns without error")
 				return &game_record.Game{
-					AccountID:         accountRec.ID,
 					Name:              fmt.Sprintf("%s %s", gofakeit.Name(), gofakeit.Name()),
 					Description:       "Test game description",
 					GameType:          game_record.GameTypeAdventure,
 					TurnDurationHours: 168, // 1 week
+					Status:            game_record.GameStatusDraft,
 				}
 			},
 			err: false,
@@ -43,14 +41,12 @@ func TestCreateOne(t *testing.T) {
 		{
 			name: "With ID",
 			rec: func(d harness.Data, t *testing.T) *game_record.Game {
-				accountRec, err := d.GetAccountRecByRef(harness.AccountOneRef)
-				require.NoError(t, err, "GetAccountRecByRef returns without error")
 				rec := &game_record.Game{
-					AccountID:         accountRec.ID,
 					Name:              fmt.Sprintf("%s %s", gofakeit.Name(), gofakeit.Name()),
 					Description:       "Test game description",
 					GameType:          game_record.GameTypeAdventure,
 					TurnDurationHours: 336, // 2 weeks
+					Status:            game_record.GameStatusDraft,
 				}
 				id, _ := uuid.NewRandom()
 				rec.ID = id.String()

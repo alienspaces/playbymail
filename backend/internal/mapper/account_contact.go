@@ -12,7 +12,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/schema/api/account_schema"
 )
 
-func AccountContactRequestToRecord(l logger.Logger, r *http.Request, rec *account_record.AccountContact) (*account_record.AccountContact, error) {
+func AccountUserContactRequestToRecord(l logger.Logger, r *http.Request, rec *account_record.AccountUserContact) (*account_record.AccountUserContact, error) {
 	l.Debug("mapping account contact request to record")
 
 	var req account_schema.AccountContactRequest
@@ -43,11 +43,11 @@ func AccountContactRequestToRecord(l logger.Logger, r *http.Request, rec *accoun
 	return rec, nil
 }
 
-func AccountContactRecordToResponseData(l logger.Logger, rec *account_record.AccountContact) (*account_schema.AccountContactResponseData, error) {
+func AccountUserContactRecordToResponseData(l logger.Logger, rec *account_record.AccountUserContact) (*account_schema.AccountContactResponseData, error) {
 	l.Debug("mapping account contact record to response data")
 	return &account_schema.AccountContactResponseData{
 		ID:                 rec.ID,
-		AccountID:          rec.AccountID,
+		AccountUserID:      rec.AccountUserID,
 		Name:               rec.Name,
 		PostalAddressLine1: rec.PostalAddressLine1,
 		PostalAddressLine2: nullstring.ToString(rec.PostalAddressLine2),
@@ -59,9 +59,9 @@ func AccountContactRecordToResponseData(l logger.Logger, rec *account_record.Acc
 	}, nil
 }
 
-func AccountContactRecordToResponse(l logger.Logger, rec *account_record.AccountContact) (*account_schema.AccountContactResponse, error) {
+func AccountUserContactRecordToResponse(l logger.Logger, rec *account_record.AccountUserContact) (*account_schema.AccountContactResponse, error) {
 	l.Debug("mapping account contact record to response")
-	data, err := AccountContactRecordToResponseData(l, rec)
+	data, err := AccountUserContactRecordToResponseData(l, rec)
 	if err != nil {
 		return nil, err
 	}
@@ -70,11 +70,11 @@ func AccountContactRecordToResponse(l logger.Logger, rec *account_record.Account
 	}, nil
 }
 
-func AccountContactRecordsToCollectionResponse(l logger.Logger, recs []*account_record.AccountContact) (account_schema.AccountContactCollectionResponse, error) {
+func AccountUserContactRecordsToCollectionResponse(l logger.Logger, recs []*account_record.AccountUserContact) (account_schema.AccountContactCollectionResponse, error) {
 	l.Debug("mapping account contact records to collection response")
 	data := []*account_schema.AccountContactResponseData{}
 	for _, rec := range recs {
-		d, err := AccountContactRecordToResponseData(l, rec)
+		d, err := AccountUserContactRecordToResponseData(l, rec)
 		if err != nil {
 			return account_schema.AccountContactCollectionResponse{}, err
 		}

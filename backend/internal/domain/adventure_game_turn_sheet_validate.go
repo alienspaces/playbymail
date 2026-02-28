@@ -6,15 +6,46 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 )
 
+type validateAdventureGameTurnSheetArgs struct {
+	nextRec *adventure_game_record.AdventureGameTurnSheet
+	currRec *adventure_game_record.AdventureGameTurnSheet
+}
+
+func (m *Domain) populateAdventureGameTurnSheetValidateArgs(currRec, nextRec *adventure_game_record.AdventureGameTurnSheet) (*validateAdventureGameTurnSheetArgs, error) {
+	args := &validateAdventureGameTurnSheetArgs{
+		currRec: currRec,
+		nextRec: nextRec,
+	}
+	return args, nil
+}
+
 func (m *Domain) validateAdventureGameTurnSheetRecForCreate(rec *adventure_game_record.AdventureGameTurnSheet) error {
-	return validateAdventureGameTurnSheetRec(rec, false)
+	args, err := m.populateAdventureGameTurnSheetValidateArgs(nil, rec)
+	if err != nil {
+		return err
+	}
+	return validateAdventureGameTurnSheetRecForCreate(args)
 }
 
-func (m *Domain) validateAdventureGameTurnSheetRecForUpdate(rec *adventure_game_record.AdventureGameTurnSheet) error {
-	return validateAdventureGameTurnSheetRec(rec, true)
+func (m *Domain) validateAdventureGameTurnSheetRecForUpdate(currRec, nextRec *adventure_game_record.AdventureGameTurnSheet) error {
+	args, err := m.populateAdventureGameTurnSheetValidateArgs(currRec, nextRec)
+	if err != nil {
+		return err
+	}
+	return validateAdventureGameTurnSheetRecForUpdate(args)
 }
 
-func validateAdventureGameTurnSheetRec(rec *adventure_game_record.AdventureGameTurnSheet, requireID bool) error {
+func validateAdventureGameTurnSheetRecForCreate(args *validateAdventureGameTurnSheetArgs) error {
+	return validateAdventureGameTurnSheetRec(args, false)
+}
+
+func validateAdventureGameTurnSheetRecForUpdate(args *validateAdventureGameTurnSheetArgs) error {
+	return validateAdventureGameTurnSheetRec(args, true)
+}
+
+func validateAdventureGameTurnSheetRec(args *validateAdventureGameTurnSheetArgs, requireID bool) error {
+	rec := args.nextRec
+
 	if rec == nil {
 		return coreerror.NewInvalidDataError("record is nil")
 	}

@@ -24,9 +24,8 @@ import (
 
 // SendTurnSheetNotificationEmailWorkerArgs defines the job payload for sending turn sheet notification emails
 type SendTurnSheetNotificationEmailWorkerArgs struct {
-	GameSubscriptionID string
-	GameInstanceID     string
-	TurnNumber         int
+	GameSubscriptionInstanceID string
+	TurnNumber                 int
 }
 
 func (SendTurnSheetNotificationEmailWorkerArgs) Kind() string {
@@ -109,19 +108,26 @@ type SendTurnSheetNotificationEmailDoWorkResult struct {
 func (w *SendTurnSheetNotificationEmailWorker) DoWork(ctx context.Context, m *domain.Domain, c *river.Client[pgx.Tx], j *river.Job[SendTurnSheetNotificationEmailWorkerArgs]) (*SendTurnSheetNotificationEmailDoWorkResult, error) {
 	l := w.JobWorker.Log.WithFunctionContext("SendTurnSheetNotificationEmailWorker/DoWork")
 
-	l.Info("preparing turn sheet notification email for subscription ID >%s< turn >%d<", j.Args.GameSubscriptionID, j.Args.TurnNumber)
+	l.Info("preparing turn sheet notification email for instance ID >%s< turn >%d<", j.Args.GameSubscriptionInstanceID, j.Args.TurnNumber)
+
+	// Get the game subscription instance
+	instanceRec, err := m.GetGameSubscriptionInstanceRec(j.Args.GameSubscriptionInstanceID, nil)
+	if err != nil {
+		l.Warn("failed to get game subscription instance record >%v<", err)
+		return nil, err
+	}
 
 	// Get the game subscription
-	subscriptionRec, err := m.GetGameSubscriptionRec(j.Args.GameSubscriptionID, nil)
+	subscriptionRec, err := m.GetGameSubscriptionRec(instanceRec.GameSubscriptionID, nil)
 	if err != nil {
 		l.Warn("failed to get game subscription record >%v<", err)
 		return nil, err
 	}
 
 	// Get the game instance to check delivery method
-	gameInstanceRec, err := m.GetGameInstanceRec(j.Args.GameInstanceID, nil)
+	gameInstanceRec, err := m.GetGameInstanceRec(instanceRec.GameInstanceID, nil)
 	if err != nil {
-		l.Warn("failed to get game instance ID >%s< >%v<", j.Args.GameInstanceID, err)
+		l.Warn("failed to get game instance ID >%s< >%v<", instanceRec.GameInstanceID, err)
 		return nil, err
 	}
 
@@ -132,7 +138,7 @@ func (w *SendTurnSheetNotificationEmailWorker) DoWork(ctx context.Context, m *do
 	}
 
 	// Get the account to get the email address
-	accountRec, err := m.GetAccountRec(subscriptionRec.AccountID, nil)
+	accountRec, err := m.GetAccountRec(instanceRec.AccountID, nil)
 	if err != nil {
 		l.Warn("failed to get account record >%v<", err)
 		return nil, err
@@ -146,27 +152,27 @@ func (w *SendTurnSheetNotificationEmailWorker) DoWork(ctx context.Context, m *do
 	}
 
 	// Generate or get the turn sheet key
-	turnSheetToken, err := m.GenerateGameSubscriptionTurnSheetToken(j.Args.GameSubscriptionID)
+	turnSheetToken, err := m.GenerateGameSubscriptionInstanceTurnSheetToken(j.Args.GameSubscriptionInstanceID)
 	if err != nil {
-		l.Warn("failed to generate game susbcription turn sheet token >%v<", err)
+		l.Warn("failed to generate game subscription instance turn sheet token >%v<", err)
 		return nil, err
 	}
 
-	// Get the subscription again to get the expiration time
-	subscriptionRec, err = m.GetGameSubscriptionRec(j.Args.GameSubscriptionID, nil)
+	// Get the instance again to get the expiration time
+	instanceRec, err = m.GetGameSubscriptionInstanceRec(j.Args.GameSubscriptionInstanceID, nil)
 	if err != nil {
-		l.Warn("failed to get game subscription record after token generation >%v<", err)
+		l.Warn("failed to get game subscription instance record after token generation >%v<", err)
 		return nil, err
 	}
 
 	// Build turn sheet viewer login URL
-	turnSheetPath := fmt.Sprintf("/player/game-subscriptions/%s/game-instances/%s/login/%s", j.Args.GameSubscriptionID, j.Args.GameInstanceID, turnSheetToken)
+	turnSheetPath := fmt.Sprintf("/player/game-subscription-instances/%s/login/%s", j.Args.GameSubscriptionInstanceID, turnSheetToken)
 	turnSheetURL := fmt.Sprintf("%s%s", w.Config.AppHost, turnSheetPath)
 
 	// Format expiration date/time
 	var expirationDate, expirationTime string
-	if subscriptionRec.TurnSheetTokenExpiresAt.Valid {
-		expirationTimeVal := subscriptionRec.TurnSheetTokenExpiresAt.Time
+	if instanceRec.TurnSheetTokenExpiresAt.Valid {
+		expirationTimeVal := instanceRec.TurnSheetTokenExpiresAt.Time
 		expirationDate = expirationTimeVal.Format("January 2, 2006")
 		expirationTime = expirationTimeVal.Format("3:04 PM MST")
 	} else {

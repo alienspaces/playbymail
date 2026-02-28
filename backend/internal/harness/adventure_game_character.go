@@ -33,12 +33,13 @@ func (t *Testing) createAdventureGameCharacterRec(charConfig AdventureGameCharac
 	rec.GameID = gameRec.ID
 
 	// Get account record
-	accountRec, err := t.Data.GetAccountRecByRef(charConfig.AccountRef)
+	accountRec, err := t.Data.GetAccountUserRecByRef(charConfig.AccountRef)
 	if err != nil {
 		l.Warn("failed resolving account ref >%s<: %v", charConfig.AccountRef, err)
 		return nil, err
 	}
-	rec.AccountID = accountRec.ID
+	rec.AccountID = accountRec.AccountID
+	rec.AccountUserID = accountRec.ID
 
 	// Create record
 	l.Debug("creating game_character record >%#v<", rec)

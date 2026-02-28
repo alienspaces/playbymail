@@ -8,15 +8,46 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 )
 
+type validateGameInstanceParameterArgs struct {
+	nextRec *game_record.GameInstanceParameter
+	currRec *game_record.GameInstanceParameter
+}
+
+func (m *Domain) populateGameInstanceParameterValidateArgs(currRec, nextRec *game_record.GameInstanceParameter) (*validateGameInstanceParameterArgs, error) {
+	args := &validateGameInstanceParameterArgs{
+		currRec: currRec,
+		nextRec: nextRec,
+	}
+	return args, nil
+}
+
 func (m *Domain) validateGameInstanceParameterRecForCreate(rec *game_record.GameInstanceParameter) error {
-	return validateGameInstanceParameterRec(rec, false)
+	args, err := m.populateGameInstanceParameterValidateArgs(nil, rec)
+	if err != nil {
+		return err
+	}
+	return validateGameInstanceParameterRecForCreate(args)
 }
 
-func (m *Domain) validateGameInstanceParameterRecForUpdate(rec *game_record.GameInstanceParameter) error {
-	return validateGameInstanceParameterRec(rec, true)
+func (m *Domain) validateGameInstanceParameterRecForUpdate(currRec, nextRec *game_record.GameInstanceParameter) error {
+	args, err := m.populateGameInstanceParameterValidateArgs(currRec, nextRec)
+	if err != nil {
+		return err
+	}
+	return validateGameInstanceParameterRecForUpdate(args)
 }
 
-func validateGameInstanceParameterRec(rec *game_record.GameInstanceParameter, requireID bool) error {
+func validateGameInstanceParameterRecForCreate(args *validateGameInstanceParameterArgs) error {
+	return validateGameInstanceParameterRec(args, false)
+}
+
+func validateGameInstanceParameterRecForUpdate(args *validateGameInstanceParameterArgs) error {
+	return validateGameInstanceParameterRec(args, true)
+}
+
+func validateGameInstanceParameterRec(args *validateGameInstanceParameterArgs, requireID bool) error {
+	rec := args.nextRec
+
 	if rec == nil {
 		return coreerror.NewInvalidDataError("record is nil")
 	}
@@ -46,7 +77,11 @@ func validateGameInstanceParameterRec(rec *game_record.GameInstanceParameter, re
 // including business logic checks. This is kept for backward compatibility.
 func (m *Domain) ValidateGameInstanceParameter(rec *game_record.GameInstanceParameter) error {
 	// Basic field validation
-	if err := validateGameInstanceParameterRec(rec, false); err != nil {
+	args := &validateGameInstanceParameterArgs{
+		currRec: nil,
+		nextRec: rec,
+	}
+	if err := validateGameInstanceParameterRec(args, false); err != nil {
 		return err
 	}
 

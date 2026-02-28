@@ -96,6 +96,8 @@
             </router-link>
           </li>
         </ul>
+
+        <GameIssuesPanel />
       </div>
     </template>
 
@@ -115,6 +117,7 @@ import { storeToRefs } from 'pinia';
 import { useGamesStore } from '../stores/games';
 import SidebarLayout from './SidebarLayout.vue';
 import StudioEntryView from '../views/StudioEntryView.vue';
+import GameIssuesPanel from './GameIssuesPanel.vue';
 
 const gamesStore = useGamesStore();
 const { selectedGame } = storeToRefs(gamesStore);

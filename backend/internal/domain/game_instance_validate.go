@@ -5,59 +5,119 @@ import (
 
 	"gitlab.com/alienspaces/playbymail/core/domain"
 	coreerror "gitlab.com/alienspaces/playbymail/core/error"
-	coresql "gitlab.com/alienspaces/playbymail/core/sql"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 )
 
+type validateGameInstanceArgs struct {
+	currRec *game_record.GameInstance
+	nextRec *game_record.GameInstance
+	gameRec *game_record.Game
+}
+
+func (m *Domain) populateGameInstanceValidateArgs(currRec, nextRec *game_record.GameInstance) (*validateGameInstanceArgs, error) {
+	args := &validateGameInstanceArgs{
+		currRec: currRec,
+		nextRec: nextRec,
+	}
+
+	// Get game record
+	if nextRec.GameID != "" {
+		gameRec, err := m.GetGameRec(nextRec.GameID, nil)
+		if err != nil {
+			return nil, coreerror.NewInvalidDataError("game_id references invalid game")
+		}
+		args.gameRec = gameRec
+	}
+
+	return args, nil
+}
+
 func (m *Domain) validateGameInstanceRecForCreate(rec *game_record.GameInstance) error {
-	if err := validateGameInstanceRec(rec, false); err != nil {
+	args, err := m.populateGameInstanceValidateArgs(nil, rec)
+	if err != nil {
 		return err
 	}
 
-	// Validate that game_subscription_id references a Manager subscription
-	subscriptionRec, err := m.GetGameSubscriptionRec(rec.GameSubscriptionID, nil)
-	if err != nil {
-		return coreerror.NewInvalidDataError("game_subscription_id references invalid game subscription")
-	}
-
-	if subscriptionRec.SubscriptionType != game_record.GameSubscriptionTypeManager {
-		return coreerror.NewInvalidDataError("game_subscription_id must reference a Manager subscription")
-	}
-
-	// Enforce 10 instance limit per manager subscription
-	existingInstances, err := m.GetManyGameInstanceRecs(&coresql.Options{
-		Params: []coresql.Param{
-			{
-				Col: game_record.FieldGameInstanceGameSubscriptionID,
-				Val: rec.GameSubscriptionID,
-			},
-		},
-	})
-	if err != nil {
-		return coreerror.NewInvalidDataError("failed to check existing game instances")
-	}
-
-	// Count non-deleted instances
-	activeInstanceCount := 0
-	for _, instance := range existingInstances {
-		if !instance.DeletedAt.Valid {
-			activeInstanceCount++
+	// Draft games require closed testing — instances of unpublished games
+	// cannot be joined by the public and require a specific invitation.
+	if args.gameRec != nil && args.gameRec.Status == game_record.GameStatusDraft {
+		rec.IsClosedTesting = true
+		if !rec.DeliveryEmail {
+			rec.DeliveryEmail = true
 		}
 	}
 
-	const maxInstancesPerManager = 10
-	if activeInstanceCount >= maxInstancesPerManager {
-		return coreerror.NewInvalidDataError("manager subscription has reached the maximum of %d game instances", maxInstancesPerManager)
+	// Basic validation first
+	if err := validateGameInstanceRec(args, false); err != nil {
+		return err
+	}
+
+	// Validate create-specific rules
+	if err := validateGameInstanceRecForCreate(args); err != nil {
+		return err
+	}
+
+	// Validate game is ready for instance creation
+	issues, err := m.ValidateGameReadyForInstance(rec.GameID)
+	if err != nil {
+		return coreerror.NewInvalidDataError("failed to validate game ID >%s< >%v<", rec.GameID, err)
+	}
+
+	for _, issue := range issues {
+		if issue.Severity == ValidationSeverityError {
+			return InvalidField(issue.Field, rec.GameID, issue.Message)
+		}
 	}
 
 	return nil
 }
 
-func (m *Domain) validateGameInstanceRecForUpdate(rec *game_record.GameInstance) error {
-	return validateGameInstanceRec(rec, true)
+func (m *Domain) validateGameInstanceRecForUpdate(currRec *game_record.GameInstance, rec *game_record.GameInstance) error {
+	args, err := m.populateGameInstanceValidateArgs(currRec, rec)
+	if err != nil {
+		return err
+	}
+
+	// Basic validation first
+	if err := validateGameInstanceRec(args, true); err != nil {
+		return err
+	}
+
+	return validateGameInstanceRecForUpdate(args)
 }
 
-func validateGameInstanceRec(rec *game_record.GameInstance, requireID bool) error {
+func validateGameInstanceRecForCreate(args *validateGameInstanceArgs) error {
+	rec := args.nextRec
+
+	if rec.CurrentTurn > 0 {
+		return InvalidField(
+			game_record.FieldGameInstanceCurrentTurn,
+			fmt.Sprintf("%d", rec.CurrentTurn),
+			"current_turn must be zero for a new game instance",
+		)
+	}
+
+	return nil
+}
+
+func validateGameInstanceRecForUpdate(args *validateGameInstanceArgs) error {
+	currRec := args.currRec
+	rec := args.nextRec
+
+	if rec.CurrentTurn < currRec.CurrentTurn {
+		return InvalidField(
+			game_record.FieldGameInstanceCurrentTurn,
+			fmt.Sprintf("%d", rec.CurrentTurn),
+			"current_turn cannot be less than the current turn",
+		)
+	}
+
+	return nil
+}
+
+func validateGameInstanceRec(args *validateGameInstanceArgs, requireID bool) error {
+	rec := args.nextRec
+
 	if rec == nil {
 		return coreerror.NewInvalidDataError("record is nil")
 	}
@@ -70,14 +130,6 @@ func validateGameInstanceRec(rec *game_record.GameInstance, requireID bool) erro
 
 	if err := domain.ValidateUUIDField(game_record.FieldGameInstanceGameID, rec.GameID); err != nil {
 		return err
-	}
-
-	if err := domain.ValidateUUIDField(game_record.FieldGameInstanceGameSubscriptionID, rec.GameSubscriptionID); err != nil {
-		return err
-	}
-
-	if rec.Status == "" {
-		rec.Status = game_record.GameInstanceStatusCreated
 	}
 
 	if err := validateGameInstanceStatus(rec.Status); err != nil {

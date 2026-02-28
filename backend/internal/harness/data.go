@@ -10,14 +10,17 @@ import (
 
 // Data -
 type Data struct {
-	AccountRecs               []*account_record.Account
-	AccountContactRecs        []*account_record.AccountContact
-	GameRecs                  []*game_record.Game
-	GameImageRecs             []*game_record.GameImage
-	GameSubscriptionRecs      []*game_record.GameSubscription
-	GameInstanceRecs          []*game_record.GameInstance
-	GameInstanceParameterRecs []*game_record.GameInstanceParameter
-	GameTurnSheetRecs         []*game_record.GameTurnSheet
+	AccountRecs                  []*account_record.Account
+	AccountUserRecs              []*account_record.AccountUser
+	AccountUserContactRecs       []*account_record.AccountUserContact
+	AccountSubscriptionRecs      []*account_record.AccountSubscription
+	GameRecs                     []*game_record.Game
+	GameImageRecs                []*game_record.GameImage
+	GameSubscriptionRecs         []*game_record.GameSubscription
+	GameSubscriptionInstanceRecs []*game_record.GameSubscriptionInstance
+	GameInstanceRecs             []*game_record.GameInstance
+	GameInstanceParameterRecs    []*game_record.GameInstanceParameter
+	GameTurnSheetRecs            []*game_record.GameTurnSheet
 	// Adventure game specific resources
 	AdventureGameLocationRecs                []*adventure_game_record.AdventureGameLocation
 	AdventureGameLocationLinkRecs            []*adventure_game_record.AdventureGameLocationLink
@@ -30,6 +33,8 @@ type Data struct {
 	AdventureGameCreatureInstanceRecs        []*adventure_game_record.AdventureGameCreatureInstance
 	AdventureGameCharacterInstanceRecs       []*adventure_game_record.AdventureGameCharacterInstance
 	AdventureGameTurnSheetRecs               []*adventure_game_record.AdventureGameTurnSheet
+	// Session tokens by account ID
+	AccountSessionTokens map[string]string
 	// Data references
 	Refs DataRefs
 }
@@ -39,7 +44,8 @@ type Data struct {
 // When adding new reference maps make sure to also initialise the map
 // in the initialiseDataStores() function further below.
 type DataRefs struct {
-	AccountRefs               map[string]string // Map of account refs to account records
+	AccountUserRefs           map[string]string // Map of account user refs to account user records
+	AccountSubscriptionRefs   map[string]string // Map of account subscription refs to account subscription records
 	GameRefs                  map[string]string // Map of game refs to game records
 	GameImageRefs             map[string]string // Map of refs to game_image records
 	GameSubscriptionRefs      map[string]string // Map of refs to game_subscription records
@@ -64,8 +70,10 @@ type DataRefs struct {
 // as a source of teardown data.
 func initialiseDataStores() Data {
 	return Data{
+		AccountSessionTokens: map[string]string{},
 		Refs: DataRefs{
-			AccountRefs:               map[string]string{},
+			AccountUserRefs:           map[string]string{},
+			AccountSubscriptionRefs:   map[string]string{},
 			GameRefs:                  map[string]string{},
 			GameImageRefs:             map[string]string{},
 			GameSubscriptionRefs:      map[string]string{},
@@ -104,16 +112,6 @@ func (d *Data) AddAccountRec(rec *account_record.Account) {
 	d.AccountRecs = append(d.AccountRecs, rec)
 }
 
-func (d *Data) AddAccountContactRec(rec *account_record.AccountContact) {
-	for idx := range d.AccountContactRecs {
-		if d.AccountContactRecs[idx].ID == rec.ID {
-			d.AccountContactRecs[idx] = rec
-			return
-		}
-	}
-	d.AccountContactRecs = append(d.AccountContactRecs, rec)
-}
-
 func (d *Data) GetAccountRecByID(accountID string) (*account_record.Account, error) {
 	for _, rec := range d.AccountRecs {
 		if rec.ID == accountID {
@@ -123,21 +121,108 @@ func (d *Data) GetAccountRecByID(accountID string) (*account_record.Account, err
 	return nil, fmt.Errorf("failed getting account with ID >%s<", accountID)
 }
 
-func (d *Data) GetAccountRecByRef(ref string) (*account_record.Account, error) {
-	accountID, ok := d.Refs.AccountRefs[ref]
-	if !ok {
-		return nil, fmt.Errorf("failed getting account with ref >%s<", ref)
+// AccountUser
+func (d *Data) AddAccountUserRec(rec *account_record.AccountUser) {
+	for idx := range d.AccountUserRecs {
+		if d.AccountUserRecs[idx].ID == rec.ID {
+			d.AccountUserRecs[idx] = rec
+			return
+		}
 	}
-	return d.GetAccountRecByID(accountID)
+	d.AccountUserRecs = append(d.AccountUserRecs, rec)
 }
 
-func (d *Data) GetAccountContactRecByAccountID(accountID string) (*account_record.AccountContact, error) {
-	for _, rec := range d.AccountContactRecs {
-		if rec.AccountID == accountID {
+func (d *Data) GetAccountUserRecByID(accountUserID string) (*account_record.AccountUser, error) {
+	for _, rec := range d.AccountUserRecs {
+		if rec.ID == accountUserID {
 			return rec, nil
 		}
 	}
-	return nil, fmt.Errorf("failed getting account contact with account ID >%s<", accountID)
+	return nil, fmt.Errorf("failed getting account user with ID >%s<", accountUserID)
+}
+
+func (d *Data) GetAccountUserRecByRef(ref string) (*account_record.AccountUser, error) {
+	accountUserID, ok := d.Refs.AccountUserRefs[ref]
+	if !ok {
+		return nil, fmt.Errorf("failed getting account user with ref >%s<", ref)
+	}
+	return d.GetAccountUserRecByID(accountUserID)
+}
+
+func (d *Data) AddAccountUserContactRec(rec *account_record.AccountUserContact) {
+	for idx := range d.AccountUserContactRecs {
+		if d.AccountUserContactRecs[idx].ID == rec.ID {
+			d.AccountUserContactRecs[idx] = rec
+			return
+		}
+	}
+	d.AccountUserContactRecs = append(d.AccountUserContactRecs, rec)
+}
+
+
+// AddAccountSessionToken stores a session token for an account by account ID
+func (d *Data) AddAccountSessionToken(accountID, sessionToken string) {
+	if d.AccountSessionTokens == nil {
+		d.AccountSessionTokens = make(map[string]string)
+	}
+	d.AccountSessionTokens[accountID] = sessionToken
+}
+
+// GetAccountSessionToken returns the session token for an account by account ID
+func (d *Data) GetAccountSessionToken(accountID string) (string, error) {
+	if d.AccountSessionTokens == nil {
+		return "", fmt.Errorf("failed getting session token for account ID >%s< (session tokens map not initialized)", accountID)
+	}
+	token, ok := d.AccountSessionTokens[accountID]
+	if !ok {
+		return "", fmt.Errorf("failed getting session token for account ID >%s<", accountID)
+	}
+	return token, nil
+}
+
+// GetAccountSessionTokenByAccountRef returns the session token for an account user by reference
+func (d *Data) GetAccountSessionTokenByAccountRef(ref string) (string, error) {
+	accountUserID, ok := d.Refs.AccountUserRefs[ref]
+	if !ok {
+		return "", fmt.Errorf("failed getting account user with ref >%s<", ref)
+	}
+	return d.GetAccountSessionToken(accountUserID)
+}
+
+func (d *Data) GetAccountUserContactRecByAccountUserID(accountUserID string) (*account_record.AccountUserContact, error) {
+	for _, rec := range d.AccountUserContactRecs {
+		if rec.AccountUserID == accountUserID {
+			return rec, nil
+		}
+	}
+	return nil, fmt.Errorf("failed getting account contact with account user ID >%s<", accountUserID)
+}
+
+func (d *Data) AddAccountSubscriptionRec(rec *account_record.AccountSubscription) {
+	for idx := range d.AccountSubscriptionRecs {
+		if d.AccountSubscriptionRecs[idx].ID == rec.ID {
+			d.AccountSubscriptionRecs[idx] = rec
+			return
+		}
+	}
+	d.AccountSubscriptionRecs = append(d.AccountSubscriptionRecs, rec)
+}
+
+func (d *Data) GetAccountSubscriptionRecByID(id string) (*account_record.AccountSubscription, error) {
+	for _, rec := range d.AccountSubscriptionRecs {
+		if rec.ID == id {
+			return rec, nil
+		}
+	}
+	return nil, fmt.Errorf("failed getting account_subscription with ID >%s<", id)
+}
+
+func (d *Data) GetAccountSubscriptionRecByRef(ref string) (*account_record.AccountSubscription, error) {
+	subscriptionID, ok := d.Refs.AccountSubscriptionRefs[ref]
+	if !ok {
+		return nil, fmt.Errorf("failed getting account_subscription with ref >%s<", ref)
+	}
+	return d.GetAccountSubscriptionRecByID(subscriptionID)
 }
 
 // Game
@@ -221,6 +306,26 @@ func (d *Data) GetGameSubscriptionRecByRef(ref string) (*game_record.GameSubscri
 		return nil, fmt.Errorf("failed getting game_subscription with ref >%s<", ref)
 	}
 	return d.GetGameSubscriptionRecByID(subscriptionID)
+}
+
+// GameSubscriptionInstance
+func (d *Data) AddGameSubscriptionInstanceRec(rec *game_record.GameSubscriptionInstance) {
+	for idx := range d.GameSubscriptionInstanceRecs {
+		if d.GameSubscriptionInstanceRecs[idx].ID == rec.ID {
+			d.GameSubscriptionInstanceRecs[idx] = rec
+			return
+		}
+	}
+	d.GameSubscriptionInstanceRecs = append(d.GameSubscriptionInstanceRecs, rec)
+}
+
+func (d *Data) GetGameSubscriptionInstanceRecByID(id string) (*game_record.GameSubscriptionInstance, error) {
+	for _, rec := range d.GameSubscriptionInstanceRecs {
+		if rec.ID == id {
+			return rec, nil
+		}
+	}
+	return nil, fmt.Errorf("failed getting game_subscription_instance with ID >%s<", id)
 }
 
 // GameInstance

@@ -9,26 +9,26 @@ import (
 )
 
 const (
-	TableAccountContact string = "account_contact"
+	TableAccountUserContact string = "account_user_contact"
 )
 
 const (
-	FieldAccountContactID                 string = "id"
-	FieldAccountContactAccountID          string = "account_id"
-	FieldAccountContactName               string = "name"
-	FieldAccountContactPostalAddressLine1 string = "postal_address_line1"
-	FieldAccountContactPostalAddressLine2 string = "postal_address_line2"
-	FieldAccountContactStateProvince      string = "state_province"
-	FieldAccountContactCountry            string = "country"
-	FieldAccountContactPostalCode         string = "postal_code"
-	FieldAccountContactCreatedAt          string = "created_at"
-	FieldAccountContactUpdatedAt          string = "updated_at"
-	FieldAccountContactDeletedAt          string = "deleted_at"
+	FieldAccountUserContactID                 string = "id"
+	FieldAccountUserContactAccountUserID      string = "account_user_id"
+	FieldAccountUserContactName               string = "name"
+	FieldAccountUserContactPostalAddressLine1 string = "postal_address_line1"
+	FieldAccountUserContactPostalAddressLine2 string = "postal_address_line2"
+	FieldAccountUserContactStateProvince      string = "state_province"
+	FieldAccountUserContactCountry            string = "country"
+	FieldAccountUserContactPostalCode         string = "postal_code"
+	FieldAccountUserContactCreatedAt          string = "created_at"
+	FieldAccountUserContactUpdatedAt          string = "updated_at"
+	FieldAccountUserContactDeletedAt          string = "deleted_at"
 )
 
-type AccountContact struct {
+type AccountUserContact struct {
 	record.Record
-	AccountID          string         `db:"account_id"`
+	AccountUserID      string         `db:"account_user_id"`
 	Name               string         `db:"name"`
 	PostalAddressLine1 string         `db:"postal_address_line1"`
 	PostalAddressLine2 sql.NullString `db:"postal_address_line2"`
@@ -37,14 +37,14 @@ type AccountContact struct {
 	PostalCode         string         `db:"postal_code"`
 }
 
-func (r *AccountContact) ToNamedArgs() pgx.NamedArgs {
+func (r *AccountUserContact) ToNamedArgs() pgx.NamedArgs {
 	args := r.Record.ToNamedArgs()
-	args[FieldAccountContactAccountID] = r.AccountID
-	args[FieldAccountContactName] = r.Name
-	args[FieldAccountContactPostalAddressLine1] = r.PostalAddressLine1
-	args[FieldAccountContactPostalAddressLine2] = r.PostalAddressLine2
-	args[FieldAccountContactStateProvince] = r.StateProvince
-	args[FieldAccountContactCountry] = r.Country
-	args[FieldAccountContactPostalCode] = r.PostalCode
+	args[FieldAccountUserContactAccountUserID] = r.AccountUserID
+	args[FieldAccountUserContactName] = r.Name
+	args[FieldAccountUserContactPostalAddressLine1] = r.PostalAddressLine1
+	args[FieldAccountUserContactPostalAddressLine2] = r.PostalAddressLine2
+	args[FieldAccountUserContactStateProvince] = r.StateProvince
+	args[FieldAccountUserContactCountry] = r.Country
+	args[FieldAccountUserContactPostalCode] = r.PostalCode
 	return args
 }

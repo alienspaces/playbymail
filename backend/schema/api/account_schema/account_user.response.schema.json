@@ -1,0 +1,21 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "http://playbymail.games/schema/account_schema/account_user.response.schema.json",
+    "title": "AccountUserResponse",
+    "type": "object",
+    "properties": {
+        "data": {
+            "$ref": "http://playbymail.games/schema/account_schema/account_user.schema.json"
+        },
+        "error": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/error"
+        },
+        "pagination": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/pagination"
+        }
+    },
+    "required": [
+        "data"
+    ],
+    "additionalProperties": false
+}

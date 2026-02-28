@@ -66,15 +66,11 @@ func (m *Domain) CreateGameInstanceRec(rec *game_record.GameInstance) (*game_rec
 	if rec.Status == "" {
 		rec.Status = game_record.GameInstanceStatusCreated
 	}
+
 	if rec.CurrentTurn == 0 {
 		rec.CurrentTurn = 0
 	}
-	// no per-instance turn deadline config here; configs are handled separately
 
-	// Set default delivery methods if not set (default to physical_post for backward compatibility)
-	// Note: Since these are booleans, we can't detect if they were explicitly set to false
-	// So we only set defaults if all are false (meaning they weren't set)
-	// IMPORTANT: Apply defaults BEFORE validation so validation can check the defaults
 	if !rec.DeliveryPhysicalPost && !rec.DeliveryPhysicalLocal && !rec.DeliveryEmail {
 		rec.DeliveryPhysicalPost = true
 	}
@@ -84,89 +80,39 @@ func (m *Domain) CreateGameInstanceRec(rec *game_record.GameInstance) (*game_rec
 		return rec, err
 	}
 
-	// Validate adventure game has starting location
-	if err := m.validateAdventureGameInstanceCreation(rec.GameID); err != nil {
-		l.Warn("failed adventure game instance validation >%v<", err)
-		return rec, err
-	}
-
-	r := m.GameInstanceRepository()
-
-	// Set default required_player_count if not set (0 means no check, >= 1 means check is enforced)
-	// Only set default if it's truly uninitialized (we can't distinguish 0 from uninitialized in Go)
-	// So we rely on the harness/API layer to set appropriate defaults
-	// For production, API should set required_player_count >= 1
-	// For tests, harness sets required_player_count = 0
-
 	// Generate join_game_key if closed testing is enabled
-	if rec.IsClosedTesting && (!rec.ClosedTestingJoinGameKey.Valid || rec.ClosedTestingJoinGameKey.String == "") {
-		ClosedTestingJoinGameKey, err := generateUUID()
+	if rec.IsClosedTesting && !nullstring.IsValid(rec.ClosedTestingJoinGameKey) {
+		closedTestingJoinGameKey, err := generateUUID()
 		if err != nil {
 			l.Warn("failed to generate join game key >%v<", err)
 			return rec, err
 		}
-		rec.ClosedTestingJoinGameKey = nullstring.FromString(ClosedTestingJoinGameKey)
+		rec.ClosedTestingJoinGameKey = nullstring.FromString(closedTestingJoinGameKey)
 	}
 
-	var err error
-	rec, err = r.CreateOne(rec)
+	r := m.GameInstanceRepository()
+
+	createdRec, err := r.CreateOne(rec)
 	if err != nil {
-		return rec, databaseError(err)
+		l.Warn("failed to create game_instance record >%v<", err)
+		return rec, err
 	}
 
-	return rec, nil
-}
-
-// validateAdventureGameInstanceCreation ensures adventure games have at least one starting location
-func (m *Domain) validateAdventureGameInstanceCreation(gameID string) error {
-	l := m.Logger("validateAdventureGameInstanceCreation")
-
-	// Get the game to check if it's an adventure game
-	gameRec, err := m.GetGameRec(gameID, nil)
-	if err != nil {
-		l.Warn("failed to get game record for game ID >%s< >%v<", gameID, err)
-		return err
-	}
-
-	// Only validate for adventure games
-	if gameRec.GameType != game_record.GameTypeAdventure {
-		l.Info("game ID >%s< is not an adventure game, skipping starting location validation", gameID)
-		return nil
-	}
-
-	// Check for starting locations
-	startingLocationRecs, err := m.GetManyAdventureGameLocationRecs(&coresql.Options{
-		Params: []coresql.Param{
-			{Col: adventure_game_record.FieldAdventureGameLocationGameID, Val: gameID},
-			{Col: adventure_game_record.FieldAdventureGameLocationIsStartingLocation, Val: true},
-		},
-		Limit: 1,
-	})
-	if err != nil {
-		l.Warn("failed to get starting locations for game ID >%s< >%v<", gameID, err)
-		return err
-	}
-
-	if len(startingLocationRecs) == 0 {
-		l.Warn("no starting locations found for game ID >%s<", gameID)
-		return InvalidField(adventure_game_record.FieldAdventureGameLocationGameID, gameID, "adventure game must have at least one starting location before creating an instance")
-	}
-
-	return nil
+	return createdRec, nil
 }
 
 // UpdateGameInstanceRec -
 func (m *Domain) UpdateGameInstanceRec(rec *game_record.GameInstance) (*game_record.GameInstance, error) {
 	l := m.Logger("UpdateGameInstanceRec")
 
-	_, err := m.GetGameInstanceRec(rec.ID, coresql.ForUpdateNoWait)
+	currRec, err := m.GetGameInstanceRec(rec.ID, coresql.ForUpdateNoWait)
 	if err != nil {
 		return rec, err
 	}
 
 	l.Debug("updating game_instance record >%#v<", rec)
 
-	if err := m.validateGameInstanceRecForUpdate(rec); err != nil {
+	if err := m.validateGameInstanceRecForUpdate(currRec, rec); err != nil {
 		l.Warn("failed to validate game_instance record >%v<", err)
 		return rec, err
 	}
@@ -513,6 +459,177 @@ func (m *Domain) GetGameInstanceByClosedTestingJoinGameKey(ClosedTestingJoinGame
 			return nil, fmt.Errorf("join game key has expired")
 		}
 	}
+
+	return instance, nil
+}
+
+// ResetGameInstance resets a game instance to its initial state. All instance-level
+// data (turn sheets, character/creature/item/location instances, parameters) is
+// soft-deleted. The game_instance record is reset to status=created with turn 0.
+// Subscription links (game_subscription_instance) are preserved so players remain
+// joined to the instance.
+func (m *Domain) ResetGameInstance(instanceID string) (*game_record.GameInstance, error) {
+	l := m.Logger("ResetGameInstance")
+
+	instance, err := m.GetGameInstanceRec(instanceID, coresql.ForUpdateNoWait)
+	if err != nil {
+		return nil, err
+	}
+
+	if instance.Status == game_record.GameInstanceStatusCompleted {
+		return nil, fmt.Errorf("cannot reset a completed game instance")
+	}
+
+	// 1. Delete adventure_game_turn_sheet records (linked via character instance)
+	charInstances, err := m.GetManyAdventureGameCharacterInstanceRecs(&coresql.Options{
+		Params: []coresql.Param{
+			{Col: adventure_game_record.FieldAdventureGameCharacterInstanceGameInstanceID, Val: instanceID},
+		},
+	})
+	if err != nil {
+		l.Warn("failed to get character instances for reset >%v<", err)
+		return nil, databaseError(err)
+	}
+
+	for _, charInst := range charInstances {
+		turnSheets, err := m.GetManyAdventureGameTurnSheetRecs(&coresql.Options{
+			Params: []coresql.Param{
+				{Col: adventure_game_record.FieldAdventureGameTurnSheetAdventureGameCharacterInstanceID, Val: charInst.ID},
+			},
+		})
+		if err != nil {
+			l.Warn("failed to get adventure turn sheets for character instance >%s< >%v<", charInst.ID, err)
+			return nil, databaseError(err)
+		}
+		for _, ts := range turnSheets {
+			if err := m.AdventureGameTurnSheetRepository().DeleteOne(ts.ID); err != nil {
+				l.Warn("failed to delete adventure turn sheet >%s< >%v<", ts.ID, err)
+				return nil, databaseError(err)
+			}
+		}
+	}
+
+	// 2. Delete game_turn_sheet records
+	gameTurnSheetRepo := m.GameTurnSheetRepository()
+	gameTurnSheets, err := gameTurnSheetRepo.GetMany(&coresql.Options{
+		Params: []coresql.Param{
+			{Col: game_record.FieldGameTurnSheetGameInstanceID, Val: instanceID},
+		},
+	})
+	if err != nil {
+		l.Warn("failed to get game turn sheets for reset >%v<", err)
+		return nil, databaseError(err)
+	}
+	for _, ts := range gameTurnSheets {
+		if err := gameTurnSheetRepo.DeleteOne(ts.ID); err != nil {
+			l.Warn("failed to delete game turn sheet >%s< >%v<", ts.ID, err)
+			return nil, databaseError(err)
+		}
+	}
+
+	// 3. Delete adventure_game_item_instance records
+	itemInstances, err := m.GetManyAdventureGameItemInstanceRecs(&coresql.Options{
+		Params: []coresql.Param{
+			{Col: adventure_game_record.FieldAdventureGameItemInstanceGameInstanceID, Val: instanceID},
+		},
+	})
+	if err != nil {
+		l.Warn("failed to get item instances for reset >%v<", err)
+		return nil, databaseError(err)
+	}
+	for _, item := range itemInstances {
+		if err := m.AdventureGameItemInstanceRepository().DeleteOne(item.ID); err != nil {
+			l.Warn("failed to delete item instance >%s< >%v<", item.ID, err)
+			return nil, databaseError(err)
+		}
+	}
+
+	// 4. Delete adventure_game_creature_instance records
+	creatureInstances, err := m.GetManyAdventureGameCreatureInstanceRecs(&coresql.Options{
+		Params: []coresql.Param{
+			{Col: adventure_game_record.FieldAdventureGameCreatureInstanceGameInstanceID, Val: instanceID},
+		},
+	})
+	if err != nil {
+		l.Warn("failed to get creature instances for reset >%v<", err)
+		return nil, databaseError(err)
+	}
+	for _, creature := range creatureInstances {
+		if err := m.AdventureGameCreatureInstanceRepository().DeleteOne(creature.ID); err != nil {
+			l.Warn("failed to delete creature instance >%s< >%v<", creature.ID, err)
+			return nil, databaseError(err)
+		}
+	}
+
+	// 5. Delete adventure_game_character_instance records
+	for _, charInst := range charInstances {
+		if err := m.AdventureGameCharacterInstanceRepository().DeleteOne(charInst.ID); err != nil {
+			l.Warn("failed to delete character instance >%s< >%v<", charInst.ID, err)
+			return nil, databaseError(err)
+		}
+	}
+
+	// 6. Delete adventure_game_location_instance records
+	locationInstances, err := m.GetManyAdventureGameLocationInstanceRecs(&coresql.Options{
+		Params: []coresql.Param{
+			{Col: adventure_game_record.FieldAdventureGameLocationInstanceGameInstanceID, Val: instanceID},
+		},
+	})
+	if err != nil {
+		l.Warn("failed to get location instances for reset >%v<", err)
+		return nil, databaseError(err)
+	}
+	for _, loc := range locationInstances {
+		if err := m.AdventureGameLocationInstanceRepository().DeleteOne(loc.ID); err != nil {
+			l.Warn("failed to delete location instance >%s< >%v<", loc.ID, err)
+			return nil, databaseError(err)
+		}
+	}
+
+	// 7. Delete game_instance_parameter records
+	params, err := m.GetManyGameInstanceParameterRecs(&coresql.Options{
+		Params: []coresql.Param{
+			{Col: game_record.FieldGameInstanceParameterGameInstanceID, Val: instanceID},
+		},
+	})
+	if err != nil {
+		l.Warn("failed to get instance parameters for reset >%v<", err)
+		return nil, databaseError(err)
+	}
+	for _, p := range params {
+		if err := m.GameInstanceParameterRepository().DeleteOne(p.ID); err != nil {
+			l.Warn("failed to delete instance parameter >%s< >%v<", p.ID, err)
+			return nil, databaseError(err)
+		}
+	}
+
+	// 8. Reset the game instance record — uses repository directly because
+	// the standard update validation prevents current_turn from decreasing.
+	instance.Status = game_record.GameInstanceStatusCreated
+	instance.CurrentTurn = 0
+	instance.StartedAt = nulltime.FromTime(time.Time{})
+	instance.CompletedAt = nulltime.FromTime(time.Time{})
+	instance.LastTurnProcessedAt = nulltime.FromTime(time.Time{})
+	instance.NextTurnDueAt = nulltime.FromTime(time.Time{})
+
+	if instance.IsClosedTesting {
+		key, keyErr := generateUUID()
+		if keyErr != nil {
+			l.Warn("failed to generate new join game key >%v<", keyErr)
+			return nil, keyErr
+		}
+		instance.ClosedTestingJoinGameKey = nullstring.FromString(key)
+		instance.ClosedTestingJoinGameKeyExpiresAt = nulltime.FromTime(time.Now().Add(3 * 24 * time.Hour))
+	}
+
+	r := m.GameInstanceRepository()
+	instance, err = r.UpdateOne(instance)
+	if err != nil {
+		l.Warn("failed to reset game instance record >%v<", err)
+		return nil, databaseError(err)
+	}
+
+	l.Info("reset game instance >%s< to initial state", instanceID)
 
 	return instance, nil
 }

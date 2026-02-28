@@ -41,7 +41,7 @@
 
     <!-- Create/Edit Contact Modal -->
     <ContactModal v-if="showCreateModal || showEditModal" :visible="showCreateModal || showEditModal"
-      :contact="editingContact" :account-id="accountId" @close="closeModal" @saved="handleContactSaved" />
+      :contact="editingContact" :account-id="accountId" :account-user-id="accountUserId" @close="closeModal" @saved="handleContactSaved" />
 
     <!-- Confirm Delete Dialog -->
     <ConfirmationModal :visible="showDeleteModal" title="Delete Contact"
@@ -51,13 +51,14 @@
 </template>
 
 <script>
-import { getMyAccount, getAccountContacts, deleteAccountContact } from '@/api/account'
+import { getMe, getAccountContacts, deleteAccountContact } from '@/api/account'
 import ContactModal from '@/components/ContactModal.vue'
 import PageHeader from '@/components/PageHeader.vue'
 import DataCard from '@/components/DataCard.vue'
 import DataItem from '@/components/DataItem.vue'
 import TableActions from '@/components/TableActions.vue'
 import ConfirmationModal from '@/components/ConfirmationModal.vue'
+import AppButton from '@/components/Button.vue'
 
 export default {
   name: 'AccountContactsView',
@@ -67,11 +68,13 @@ export default {
     DataCard,
     DataItem,
     TableActions,
-    ConfirmationModal
+    ConfirmationModal,
+    AppButton
   },
   data() {
     return {
       accountId: null,
+      accountUserId: null,
       accountContacts: [],
       loading: true,
       error: null,
@@ -100,14 +103,13 @@ export default {
         this.loading = true
         this.error = null
 
-        // Get account first
-        const account = await getMyAccount()
-        this.accountId = account.id
+        const me = await getMe()
+        this.accountId = me.account_id
+        this.accountUserId = me.id
 
-        // Load contacts
-        if (this.accountId) {
+        if (this.accountId && this.accountUserId) {
           try {
-            this.accountContacts = await getAccountContacts(this.accountId)
+            this.accountContacts = await getAccountContacts(this.accountId, this.accountUserId)
           } catch (err) {
             // Contacts might not exist yet, that's okay
             console.log('No account contacts found:', err)
@@ -137,7 +139,7 @@ export default {
       if (!this.contactToDelete) return
 
       try {
-        await deleteAccountContact(this.accountId, this.contactToDelete.id)
+        await deleteAccountContact(this.accountId, this.accountUserId, this.contactToDelete.id)
         this.closeDeleteModal()
         await this.loadAccountAndContacts()
       } catch (err) {

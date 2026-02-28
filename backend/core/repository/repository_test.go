@@ -18,13 +18,14 @@ import (
 	coresql "gitlab.com/alienspaces/playbymail/core/sql"
 	"gitlab.com/alienspaces/playbymail/core/store"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
+	"gitlab.com/alienspaces/playbymail/core/type/repositor"
 	"gitlab.com/alienspaces/playbymail/core/type/storer"
 )
 
-type testNestedMultiTag struct {
-	A          string   `db:"db_A" json:"json_A"`
-	B          []string `db:"db_B" json:"json_B"`
-	testNested `db:"nested" json:"NESTED"`
+type testRecord struct {
+	A                string   `db:"db_A" json:"json_A"`
+	B                []string `db:"db_B" json:"json_B"`
+	testNestedRecord `db:"nested" json:"NESTED"`
 	//lint:ignore U1000 intended to be unused?
 	testEmptyNested        `db:"empty_nested" json:"EMPTY_NESTED"`
 	testSingleNestedDB     `db:"single_nested_db" json:"SINGLE_NESTED_DB"`
@@ -41,7 +42,7 @@ type testNestedMultiTag struct {
 	record.Record
 }
 
-type testNested struct {
+type testNestedRecord struct {
 	C string `json:"json_C"`
 	//lint:ignore U1000 intended to be unused?
 	d  []string `db:"db_d"`
@@ -107,7 +108,7 @@ func Test_GetOneSQL(t *testing.T) {
 	r, err := New(NewArgs{
 		Tx:        tx,
 		TableName: "test",
-		Record:    testNestedMultiTag{},
+		Record:    testRecord{},
 	})
 
 	require.NoError(t, err, "Repository Init returns without error")
@@ -130,11 +131,11 @@ func Test_GetOneSQL(t *testing.T) {
 				"db_A": {"1", "2"},
 				"db_B": {"a", "b"},
 			},
-			want: set.FromSlice([]string{fmt.Sprintf("SELECT db_A, db_B, db_d, db_E, db_E3, db_E5, db_E6, db_f, db_time, id, created_at, updated_at, deleted_at FROM %s WHERE deleted_at IS NULL", r.tableName)}),
+			want: set.FromSlice([]string{strings.TrimSpace(fmt.Sprintf("SELECT db_A, db_B, db_d, db_E, db_E3, db_E5, db_E6, db_f, db_time, id, created_at, updated_at, deleted_at FROM %s WHERE deleted_at IS NULL", r.tableName))}),
 		},
 		{
 			name: "RLS enabled, no identifiers",
-			want: set.FromSlice([]string{fmt.Sprintf("SELECT db_A, db_B, db_d, db_E, db_E3, db_E5, db_E6, db_f, db_time, id, created_at, updated_at, deleted_at FROM %s WHERE deleted_at IS NULL", r.tableName)}),
+			want: set.FromSlice([]string{strings.TrimSpace(fmt.Sprintf("SELECT db_A, db_B, db_d, db_E, db_E3, db_E5, db_E6, db_f, db_time, id, created_at, updated_at, deleted_at FROM %s WHERE deleted_at IS NULL", r.tableName))}),
 		},
 		{
 			name: "RLS enabled, has identifiers",
@@ -157,7 +158,7 @@ func Test_GetOneSQL(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			r.isRLSDisabled = tt.IsRLSDisabled
-			r.SetRLS(tt.identifiers)
+			r.SetRLSIdentifiers(tt.identifiers)
 			require.Contains(t, tt.want, strings.TrimSpace(r.GetOneSQL()))
 		})
 	}
@@ -180,7 +181,7 @@ func Test_GetManySQL(t *testing.T) {
 	r, err := New(NewArgs{
 		Tx:        tx,
 		TableName: "test",
-		Record:    testNestedMultiTag{},
+		Record:    testRecord{},
 	})
 
 	require.NoError(t, err, "Repository New returns without error")
@@ -203,11 +204,11 @@ func Test_GetManySQL(t *testing.T) {
 				"db_A": {"1", "2"},
 				"db_B": {"a", "b"},
 			},
-			want: set.FromSlice([]string{fmt.Sprintf("SELECT db_A, db_B, db_d, db_E, db_E3, db_E5, db_E6, db_f, db_time, id, created_at, updated_at, deleted_at FROM %s WHERE deleted_at IS NULL", r.tableName)}),
+			want: set.FromSlice([]string{strings.TrimSpace(fmt.Sprintf("SELECT db_A, db_B, db_d, db_E, db_E3, db_E5, db_E6, db_f, db_time, id, created_at, updated_at, deleted_at FROM %s WHERE deleted_at IS NULL", r.tableName))}),
 		},
 		{
 			name: "RLS enabled, no identifiers",
-			want: set.FromSlice([]string{fmt.Sprintf("SELECT db_A, db_B, db_d, db_E, db_E3, db_E5, db_E6, db_f, db_time, id, created_at, updated_at, deleted_at FROM %s WHERE deleted_at IS NULL", r.tableName)}),
+			want: set.FromSlice([]string{strings.TrimSpace(fmt.Sprintf("SELECT db_A, db_B, db_d, db_E, db_E3, db_E5, db_E6, db_f, db_time, id, created_at, updated_at, deleted_at FROM %s WHERE deleted_at IS NULL", r.tableName))}),
 		},
 		{
 			name: "RLS enabled, has identifiers",
@@ -230,7 +231,7 @@ func Test_GetManySQL(t *testing.T) {
 	for _, tt := range sqlTests {
 		t.Run(tt.name, func(t *testing.T) {
 			r.isRLSDisabled = tt.IsRLSDisabled
-			r.SetRLS(tt.identifiers)
+			r.SetRLSIdentifiers(tt.identifiers)
 			require.Contains(t, tt.want, strings.TrimSpace(r.GetManySQL()))
 		})
 	}
@@ -368,7 +369,7 @@ func Test_CreateOneSQL(t *testing.T) {
 	r, err := New(NewArgs{
 		Tx:        tx,
 		TableName: "test",
-		Record:    testNestedMultiTag{},
+		Record:    testRecord{},
 	})
 
 	require.NoError(t, err, "Repository New returns without error")
@@ -424,12 +425,21 @@ func Test_UpdateOneSQL(t *testing.T) {
 	r, err := New(NewArgs{
 		Tx:        tx,
 		TableName: "test",
-		Record:    testNestedMultiTag{},
+		Record:    testRecord{},
 	})
 
 	require.NoError(t, err, "Repository New returns without error")
 
-	require.Equal(t, fmt.Sprintf(`
+	tests := []struct {
+		name          string
+		identifiers   map[string][]string
+		IsRLSDisabled bool
+		want          set.Set[string]
+	}{
+		{
+			name:          "RLS disabled, no identifiers",
+			IsRLSDisabled: true,
+			want: set.FromSlice([]string{strings.TrimSpace(fmt.Sprintf(`
 UPDATE %s SET
 db_A = @db_A,
 db_B = @db_B,
@@ -440,12 +450,112 @@ db_E5 = @db_E5,
 db_E6 = @db_E6,
 db_f = @db_f,
 db_time = @db_time,
-id = @id,
 updated_at = @updated_at
 WHERE id = @id
 AND   deleted_at IS NULL
 RETURNING db_A, db_B, db_d, db_E, db_E3, db_E5, db_E6, db_f, db_time, id, created_at, updated_at, deleted_at
-`, r.tableName), r.UpdateOneSQL())
+`, r.tableName))}),
+		},
+		{
+			name:          "RLS disabled, has identifiers",
+			IsRLSDisabled: true,
+			identifiers: map[string][]string{
+				"db_A": {"1", "2"},
+				"db_B": {"a", "b"},
+			},
+			want: set.FromSlice([]string{strings.TrimSpace(fmt.Sprintf(`
+UPDATE %s SET
+db_A = @db_A,
+db_B = @db_B,
+db_d = @db_d,
+db_E = @db_E,
+db_E3 = @db_E3,
+db_E5 = @db_E5,
+db_E6 = @db_E6,
+db_f = @db_f,
+db_time = @db_time,
+updated_at = @updated_at
+WHERE id = @id
+AND   deleted_at IS NULL
+RETURNING db_A, db_B, db_d, db_E, db_E3, db_E5, db_E6, db_f, db_time, id, created_at, updated_at, deleted_at
+`, r.tableName))}),
+		},
+		{
+			name: "RLS enabled, no identifiers",
+			want: set.FromSlice([]string{strings.TrimSpace(fmt.Sprintf(`
+UPDATE %s SET
+db_A = @db_A,
+db_B = @db_B,
+db_d = @db_d,
+db_E = @db_E,
+db_E3 = @db_E3,
+db_E5 = @db_E5,
+db_E6 = @db_E6,
+db_f = @db_f,
+db_time = @db_time,
+updated_at = @updated_at
+WHERE id = @id
+AND   deleted_at IS NULL
+RETURNING db_A, db_B, db_d, db_E, db_E3, db_E5, db_E6, db_f, db_time, id, created_at, updated_at, deleted_at
+`, r.tableName))}),
+		},
+		{
+			name: "RLS enabled, has identifiers",
+			identifiers: map[string][]string{
+				"db_A": {"1", "2"},
+				"db_B": {"a", "b"},
+			},
+			// appending of the RLS constraints to the SQL query is not ordered because of map iteration
+			want: set.FromSlice([]string{
+				strings.TrimSpace(fmt.Sprintf(`
+UPDATE %s SET
+db_A = @db_A,
+db_B = @db_B,
+db_d = @db_d,
+db_E = @db_E,
+db_E3 = @db_E3,
+db_E5 = @db_E5,
+db_E6 = @db_E6,
+db_f = @db_f,
+db_time = @db_time,
+updated_at = @updated_at
+WHERE id = @id
+AND   deleted_at IS NULL
+AND db_A IN ('1','2')
+AND db_B IN ('a','b')
+RETURNING db_A, db_B, db_d, db_E, db_E3, db_E5, db_E6, db_f, db_time, id, created_at, updated_at, deleted_at
+`, r.tableName)),
+				strings.TrimSpace(fmt.Sprintf(`
+UPDATE %s SET
+db_A = @db_A,
+db_B = @db_B,
+db_d = @db_d,
+db_E = @db_E,
+db_E3 = @db_E3,
+db_E5 = @db_E5,
+db_E6 = @db_E6,
+db_f = @db_f,
+db_time = @db_time,
+updated_at = @updated_at
+WHERE id = @id
+AND   deleted_at IS NULL
+AND db_B IN ('a','b')
+AND db_A IN ('1','2')
+RETURNING db_A, db_B, db_d, db_E, db_E3, db_E5, db_E6, db_f, db_time, id, created_at, updated_at, deleted_at
+`, r.tableName)),
+			}),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r.isRLSDisabled = tt.IsRLSDisabled
+			r.SetRLSIdentifiers(tt.identifiers)
+			sql := r.UpdateOneSQL()
+			t.Logf("SQL: %s", sql)
+			require.Contains(t, tt.want, strings.TrimSpace(sql))
+		})
+	}
 }
 
 func Test_DeleteOneSQL(t *testing.T) {
@@ -465,12 +575,446 @@ func Test_DeleteOneSQL(t *testing.T) {
 	r, err := New(NewArgs{
 		Tx:        tx,
 		TableName: "test",
-		Record:    testNestedMultiTag{},
+		Record:    testRecord{},
 	})
 
 	require.NoError(t, err, "Repository New returns without error")
 
-	require.Equal(t, fmt.Sprintf(`
-UPDATE %s SET deleted_at = @deleted_at WHERE id = @id AND deleted_at IS NULL RETURNING db_A, db_B, db_d, db_E, db_E3, db_E5, db_E6, db_f, db_time, id, created_at, updated_at, deleted_at
-`, r.tableName), r.DeleteOneSQL())
+	tests := []struct {
+		name          string
+		identifiers   map[string][]string
+		IsRLSDisabled bool
+		want          set.Set[string]
+	}{
+		{
+			name:          "RLS disabled, no identifiers",
+			IsRLSDisabled: true,
+			want: set.FromSlice([]string{strings.TrimSpace(fmt.Sprintf(`
+UPDATE %s SET deleted_at = @deleted_at WHERE id = @id AND deleted_at IS NULL
+RETURNING db_A, db_B, db_d, db_E, db_E3, db_E5, db_E6, db_f, db_time, id, created_at, updated_at, deleted_at
+`, r.tableName))}),
+		},
+		{
+			name:          "RLS disabled, has identifiers",
+			IsRLSDisabled: true,
+			identifiers: map[string][]string{
+				"db_A": {"1", "2"},
+				"db_B": {"a", "b"},
+			},
+			want: set.FromSlice([]string{strings.TrimSpace(fmt.Sprintf(`
+UPDATE %s SET deleted_at = @deleted_at WHERE id = @id AND deleted_at IS NULL
+RETURNING db_A, db_B, db_d, db_E, db_E3, db_E5, db_E6, db_f, db_time, id, created_at, updated_at, deleted_at
+`, r.tableName))}),
+		},
+		{
+			name: "RLS enabled, no identifiers",
+			want: set.FromSlice([]string{strings.TrimSpace(fmt.Sprintf(`
+UPDATE %s SET deleted_at = @deleted_at WHERE id = @id AND deleted_at IS NULL
+RETURNING db_A, db_B, db_d, db_E, db_E3, db_E5, db_E6, db_f, db_time, id, created_at, updated_at, deleted_at
+`, r.tableName))}),
+		},
+		{
+			name: "RLS enabled, has identifiers",
+			identifiers: map[string][]string{
+				"db_A": {"1", "2"},
+				"db_B": {"a", "b"},
+			},
+			// appending of the RLS constraints to the SQL query is not ordered because of map iteration
+			want: set.FromSlice([]string{
+				strings.TrimSpace(fmt.Sprintf(`
+UPDATE %s SET deleted_at = @deleted_at WHERE id = @id AND deleted_at IS NULL
+AND db_A IN ('1','2')
+AND db_B IN ('a','b')
+RETURNING db_A, db_B, db_d, db_E, db_E3, db_E5, db_E6, db_f, db_time, id, created_at, updated_at, deleted_at
+`, r.tableName)),
+				strings.TrimSpace(fmt.Sprintf(`
+UPDATE %s SET deleted_at = @deleted_at WHERE id = @id AND deleted_at IS NULL
+AND db_B IN ('a','b')
+AND db_A IN ('1','2')
+RETURNING db_A, db_B, db_d, db_E, db_E3, db_E5, db_E6, db_f, db_time, id, created_at, updated_at, deleted_at
+`, r.tableName)),
+			}),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r.isRLSDisabled = tt.IsRLSDisabled
+			r.SetRLSIdentifiers(tt.identifiers)
+			require.Contains(t, tt.want, strings.TrimSpace(r.DeleteOneSQL()))
+		})
+	}
+}
+
+func Test_SetRLSConstraints_GetOneSQL(t *testing.T) {
+	_, s, err := newDependencies()
+	require.NoError(t, err, "NewDependencies returns without error")
+	defer func() {
+		err = s.ClosePool()
+		require.NoError(t, err, "ClosePool returns without error")
+	}()
+
+	tx, err := s.BeginTx()
+	require.NoError(t, err, "BeginTx returns without error")
+	defer func() {
+		tx.Rollback(context.Background())
+	}()
+
+	r, err := New(NewArgs{
+		Tx:        tx,
+		TableName: "test",
+		Record:    testRecord{},
+	})
+
+	require.NoError(t, err, "Repository New returns without error")
+
+	tests := []struct {
+		name          string
+		constraints   []repositor.RLSConstraint
+		identifiers   map[string][]string
+		IsRLSDisabled bool
+		want          set.Set[string]
+	}{
+		{
+			name:          "RLS disabled, constraints ignored",
+			IsRLSDisabled: true,
+			constraints: []repositor.RLSConstraint{
+				{
+					Column:                 "db_A",
+					SQLTemplate:            "IN (SELECT id FROM other_table WHERE account_id = :account_id)",
+					RequiredRLSIdentifiers: []string{"account_id"},
+				},
+			},
+			identifiers: map[string][]string{
+				"account_id": {"123"},
+			},
+			want: set.FromSlice([]string{strings.TrimSpace(fmt.Sprintf("SELECT db_A, db_B, db_d, db_E, db_E3, db_E5, db_E6, db_f, db_time, id, created_at, updated_at, deleted_at FROM %s WHERE deleted_at IS NULL", r.tableName))}),
+		},
+		{
+			name: "constraint with matching column, all params available",
+			constraints: []repositor.RLSConstraint{
+				{
+					Column:                 "db_A",
+					SQLTemplate:            "IN (SELECT id FROM other_table WHERE account_id = :account_id)",
+					RequiredRLSIdentifiers: []string{"account_id"},
+				},
+			},
+			identifiers: map[string][]string{
+				"account_id": {"123"},
+			},
+			want: set.FromSlice([]string{strings.TrimSpace(fmt.Sprintf("SELECT db_A, db_B, db_d, db_E, db_E3, db_E5, db_E6, db_f, db_time, id, created_at, updated_at, deleted_at FROM %s WHERE deleted_at IS NULL\nAND db_A IN (SELECT id FROM other_table WHERE account_id = '123')", r.tableName))}),
+		},
+		{
+			name: "constraint with non-matching column, skipped",
+			constraints: []repositor.RLSConstraint{
+				{
+					Column:                 "non_existent_column",
+					SQLTemplate:            "IN (SELECT id FROM other_table WHERE account_id = :account_id)",
+					RequiredRLSIdentifiers: []string{"account_id"},
+				},
+			},
+			identifiers: map[string][]string{
+				"account_id": {"123"},
+			},
+			want: set.FromSlice([]string{strings.TrimSpace(fmt.Sprintf("SELECT db_A, db_B, db_d, db_E, db_E3, db_E5, db_E6, db_f, db_time, id, created_at, updated_at, deleted_at FROM %s WHERE deleted_at IS NULL", r.tableName))}),
+		},
+		{
+			name: "constraint with missing required params, fail-safe applied",
+			constraints: []repositor.RLSConstraint{
+				{
+					Column:                 "db_A",
+					SQLTemplate:            "IN (SELECT id FROM other_table WHERE account_id = :account_id)",
+					RequiredRLSIdentifiers: []string{"account_id"},
+				},
+			},
+			identifiers: map[string][]string{
+				"other_id": {"456"},
+			},
+			want: set.FromSlice([]string{strings.TrimSpace(fmt.Sprintf("SELECT db_A, db_B, db_d, db_E, db_E3, db_E5, db_E6, db_f, db_time, id, created_at, updated_at, deleted_at FROM %s WHERE deleted_at IS NULL\nAND 1=0", r.tableName))}),
+		},
+		{
+			name: "constraint with missing required params, no identifiers, skipped",
+			constraints: []repositor.RLSConstraint{
+				{
+					Column:                 "db_A",
+					SQLTemplate:            "IN (SELECT id FROM other_table WHERE account_id = :account_id)",
+					RequiredRLSIdentifiers: []string{"account_id"},
+				},
+			},
+			identifiers: map[string][]string{},
+			want:        set.FromSlice([]string{strings.TrimSpace(fmt.Sprintf("SELECT db_A, db_B, db_d, db_E, db_E3, db_E5, db_E6, db_f, db_time, id, created_at, updated_at, deleted_at FROM %s WHERE deleted_at IS NULL", r.tableName))}),
+		},
+		{
+			name: "multiple constraints, all applied",
+			constraints: []repositor.RLSConstraint{
+				{
+					Column:                 "db_A",
+					SQLTemplate:            "IN (SELECT id FROM table_a WHERE account_id = :account_id)",
+					RequiredRLSIdentifiers: []string{"account_id"},
+				},
+				{
+					Column:                 "db_B",
+					SQLTemplate:            "IN (SELECT id FROM table_b WHERE game_id = :game_id)",
+					RequiredRLSIdentifiers: []string{"game_id"},
+				},
+			},
+			identifiers: map[string][]string{
+				"account_id": {"123"},
+				"game_id":    {"456"},
+			},
+			// Order may vary due to slice iteration
+			want: set.FromSlice([]string{
+				strings.TrimSpace(fmt.Sprintf("SELECT db_A, db_B, db_d, db_E, db_E3, db_E5, db_E6, db_f, db_time, id, created_at, updated_at, deleted_at FROM %s WHERE deleted_at IS NULL\nAND db_A IN (SELECT id FROM table_a WHERE account_id = '123')\nAND db_B IN (SELECT id FROM table_b WHERE game_id = '456')", r.tableName)),
+				strings.TrimSpace(fmt.Sprintf("SELECT db_A, db_B, db_d, db_E, db_E3, db_E5, db_E6, db_f, db_time, id, created_at, updated_at, deleted_at FROM %s WHERE deleted_at IS NULL\nAND db_B IN (SELECT id FROM table_b WHERE game_id = '456')\nAND db_A IN (SELECT id FROM table_a WHERE account_id = '123')", r.tableName)),
+			}),
+		},
+		{
+			name: "constraint with multiple required params",
+			constraints: []repositor.RLSConstraint{
+				{
+					Column:                 "db_A",
+					SQLTemplate:            "IN (SELECT id FROM other_table WHERE account_id = :account_id AND game_id = :game_id)",
+					RequiredRLSIdentifiers: []string{"account_id", "game_id"},
+				},
+			},
+			identifiers: map[string][]string{
+				"account_id": {"123"},
+				"game_id":    {"456"},
+			},
+			want: set.FromSlice([]string{strings.TrimSpace(fmt.Sprintf("SELECT db_A, db_B, db_d, db_E, db_E3, db_E5, db_E6, db_f, db_time, id, created_at, updated_at, deleted_at FROM %s WHERE deleted_at IS NULL\nAND db_A IN (SELECT id FROM other_table WHERE account_id = '123' AND game_id = '456')", r.tableName))}),
+		},
+		{
+			name: "constraint with multiple required params, one missing, fail-safe",
+			constraints: []repositor.RLSConstraint{
+				{
+					Column:                 "db_A",
+					SQLTemplate:            "IN (SELECT id FROM other_table WHERE account_id = :account_id AND game_id = :game_id)",
+					RequiredRLSIdentifiers: []string{"account_id", "game_id"},
+				},
+			},
+			identifiers: map[string][]string{
+				"account_id": {"123"},
+			},
+			want: set.FromSlice([]string{strings.TrimSpace(fmt.Sprintf("SELECT db_A, db_B, db_d, db_E, db_E3, db_E5, db_E6, db_f, db_time, id, created_at, updated_at, deleted_at FROM %s WHERE deleted_at IS NULL\nAND 1=0", r.tableName))}),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Reset repository state for each test
+			r.isRLSDisabled = tt.IsRLSDisabled
+			// Clear constraints - SetRLSConstraints will set them if they match
+			r.rlsConstraints = nil
+			r.rlsIdentifiers = map[string][]string{}
+			r.hadRLSIdentifiers = false
+
+			// Set constraints and identifiers (order no longer matters)
+			if len(tt.constraints) > 0 {
+				r.SetRLSConstraints(tt.constraints)
+			} else {
+				r.rlsConstraints = []repositor.RLSConstraint{}
+			}
+			r.SetRLSIdentifiers(tt.identifiers)
+
+			t.Logf("Test: %s", tt.name)
+			t.Logf("Constraints set: %d", len(tt.constraints))
+			t.Logf("Constraints stored: %d", len(r.rlsConstraints))
+			t.Logf("Identifiers input: %v", tt.identifiers)
+			t.Logf("Identifiers stored: %v", r.rlsIdentifiers)
+			t.Logf("Repository attributes: %v", r.Attributes())
+
+			actualSQL := strings.TrimSpace(r.GetOneSQL())
+			t.Logf("Actual SQL: %q", actualSQL)
+			t.Logf("Expected set: %v", tt.want)
+			require.Contains(t, tt.want, actualSQL)
+		})
+	}
+}
+
+func Test_SetRLSConstraints_UpdateOneSQL(t *testing.T) {
+	_, s, err := newDependencies()
+	require.NoError(t, err, "NewDependencies returns without error")
+	defer func() {
+		err = s.ClosePool()
+		require.NoError(t, err, "ClosePool returns without error")
+	}()
+
+	tx, err := s.BeginTx()
+	require.NoError(t, err, "BeginTx returns without error")
+	defer func() {
+		tx.Rollback(context.Background())
+	}()
+
+	r, err := New(NewArgs{
+		Tx:        tx,
+		TableName: "test",
+		Record:    testRecord{},
+	})
+
+	require.NoError(t, err, "Repository New returns without error")
+
+	tests := []struct {
+		name        string
+		constraints []repositor.RLSConstraint
+		identifiers map[string][]string
+		want        set.Set[string]
+	}{
+		{
+			name: "constraint applied before RETURNING",
+			constraints: []repositor.RLSConstraint{
+				{
+					Column:                 "db_A",
+					SQLTemplate:            "IN (SELECT id FROM other_table WHERE account_id = :account_id)",
+					RequiredRLSIdentifiers: []string{"account_id"},
+				},
+			},
+			identifiers: map[string][]string{
+				"account_id": {"123"},
+			},
+			want: set.FromSlice([]string{strings.TrimSpace(fmt.Sprintf(`
+UPDATE %s SET
+db_A = @db_A,
+db_B = @db_B,
+db_d = @db_d,
+db_E = @db_E,
+db_E3 = @db_E3,
+db_E5 = @db_E5,
+db_E6 = @db_E6,
+db_f = @db_f,
+db_time = @db_time,
+updated_at = @updated_at
+WHERE id = @id
+AND   deleted_at IS NULL
+AND db_A IN (SELECT id FROM other_table WHERE account_id = '123')
+RETURNING db_A, db_B, db_d, db_E, db_E3, db_E5, db_E6, db_f, db_time, id, created_at, updated_at, deleted_at
+`, r.tableName))}),
+		},
+		{
+			name: "multiple constraints before RETURNING",
+			constraints: []repositor.RLSConstraint{
+				{
+					Column:                 "db_A",
+					SQLTemplate:            "IN (SELECT id FROM table_a WHERE account_id = :account_id)",
+					RequiredRLSIdentifiers: []string{"account_id"},
+				},
+				{
+					Column:                 "db_B",
+					SQLTemplate:            "IN (SELECT id FROM table_b WHERE game_id = :game_id)",
+					RequiredRLSIdentifiers: []string{"game_id"},
+				},
+			},
+			identifiers: map[string][]string{
+				"account_id": {"123"},
+				"game_id":    {"456"},
+			},
+			// Order may vary due to slice iteration
+			want: set.FromSlice([]string{
+				strings.TrimSpace(fmt.Sprintf(`
+UPDATE %s SET
+db_A = @db_A,
+db_B = @db_B,
+db_d = @db_d,
+db_E = @db_E,
+db_E3 = @db_E3,
+db_E5 = @db_E5,
+db_E6 = @db_E6,
+db_f = @db_f,
+db_time = @db_time,
+updated_at = @updated_at
+WHERE id = @id
+AND   deleted_at IS NULL
+AND db_A IN (SELECT id FROM table_a WHERE account_id = '123')
+AND db_B IN (SELECT id FROM table_b WHERE game_id = '456')
+RETURNING db_A, db_B, db_d, db_E, db_E3, db_E5, db_E6, db_f, db_time, id, created_at, updated_at, deleted_at
+`, r.tableName)),
+				strings.TrimSpace(fmt.Sprintf(`
+UPDATE %s SET
+db_A = @db_A,
+db_B = @db_B,
+db_d = @db_d,
+db_E = @db_E,
+db_E3 = @db_E3,
+db_E5 = @db_E5,
+db_E6 = @db_E6,
+db_f = @db_f,
+db_time = @db_time,
+updated_at = @updated_at
+WHERE id = @id
+AND   deleted_at IS NULL
+AND db_B IN (SELECT id FROM table_b WHERE game_id = '456')
+AND db_A IN (SELECT id FROM table_a WHERE account_id = '123')
+RETURNING db_A, db_B, db_d, db_E, db_E3, db_E5, db_E6, db_f, db_time, id, created_at, updated_at, deleted_at
+`, r.tableName)),
+			}),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r.SetRLSConstraints(tt.constraints)
+			r.SetRLSIdentifiers(tt.identifiers)
+			sql := r.UpdateOneSQL()
+			t.Logf("SQL: %s", sql)
+			require.Contains(t, tt.want, strings.TrimSpace(sql))
+		})
+	}
+}
+
+func Test_SetRLSConstraints_DeleteOneSQL(t *testing.T) {
+	_, s, err := newDependencies()
+	require.NoError(t, err, "NewDependencies returns without error")
+	defer func() {
+		err = s.ClosePool()
+		require.NoError(t, err, "ClosePool returns without error")
+	}()
+
+	tx, err := s.BeginTx()
+	require.NoError(t, err, "BeginTx returns without error")
+	defer func() {
+		tx.Rollback(context.Background())
+	}()
+
+	r, err := New(NewArgs{
+		Tx:        tx,
+		TableName: "test",
+		Record:    testRecord{},
+	})
+
+	require.NoError(t, err, "Repository New returns without error")
+
+	tests := []struct {
+		name        string
+		constraints []repositor.RLSConstraint
+		identifiers map[string][]string
+		want        set.Set[string]
+	}{
+		{
+			name: "constraint applied before RETURNING",
+			constraints: []repositor.RLSConstraint{
+				{
+					Column:                 "id",
+					SQLTemplate:            "IN (SELECT id FROM other_table WHERE account_id = :account_id)",
+					RequiredRLSIdentifiers: []string{"account_id"},
+				},
+			},
+			identifiers: map[string][]string{
+				"account_id": {"123"},
+			},
+			want: set.FromSlice([]string{strings.TrimSpace(fmt.Sprintf(`
+UPDATE %s SET deleted_at = @deleted_at WHERE id = @id AND deleted_at IS NULL
+AND id IN (SELECT id FROM other_table WHERE account_id = '123')
+RETURNING db_A, db_B, db_d, db_E, db_E3, db_E5, db_E6, db_f, db_time, id, created_at, updated_at, deleted_at
+`, r.tableName))}),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r.SetRLSConstraints(tt.constraints)
+			r.SetRLSIdentifiers(tt.identifiers)
+			sql := r.DeleteOneSQL()
+			t.Logf("SQL: %s", sql)
+			require.Contains(t, tt.want, strings.TrimSpace(sql))
+		})
+	}
 }

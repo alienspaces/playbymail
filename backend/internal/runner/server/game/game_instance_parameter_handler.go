@@ -16,6 +16,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/mapper"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
+	"gitlab.com/alienspaces/playbymail/internal/runner/server/handler_auth"
 	"gitlab.com/alienspaces/playbymail/internal/utils/logging"
 )
 
@@ -117,6 +118,9 @@ func gameInstanceParameterHandlerConfig(l logger.Logger) (map[string]server.Hand
 			AuthenTypes: []server.AuthenticationType{
 				server.AuthenticationTypeToken,
 			},
+			AuthzPermissions: []server.AuthorizedPermission{
+				handler_auth.PermissionGameManagement,
+			},
 			ValidateRequestSchema:  requestSchema,
 			ValidateResponseSchema: responseSchema,
 		},
@@ -134,6 +138,9 @@ func gameInstanceParameterHandlerConfig(l logger.Logger) (map[string]server.Hand
 			AuthenTypes: []server.AuthenticationType{
 				server.AuthenticationTypeToken,
 			},
+			AuthzPermissions: []server.AuthorizedPermission{
+				handler_auth.PermissionGameManagement,
+			},
 			ValidateRequestSchema:  requestSchema,
 			ValidateResponseSchema: responseSchema,
 		},
@@ -150,6 +157,9 @@ func gameInstanceParameterHandlerConfig(l logger.Logger) (map[string]server.Hand
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
 				server.AuthenticationTypeToken,
+			},
+			AuthzPermissions: []server.AuthorizedPermission{
+				handler_auth.PermissionGameManagement,
 			},
 		},
 		DocumentationConfig: server.DocumentationConfig{

@@ -6,6 +6,8 @@ import (
 
 const (
 	AppEnvDevelop    = "develop"
+	AppEnvTesting    = "testing"
+	AppEnvStaging    = "staging"
 	AppEnvProduction = "production"
 )
 

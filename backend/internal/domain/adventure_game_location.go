@@ -89,7 +89,7 @@ func (m *Domain) UpdateAdventureGameLocationRec(rec *adventure_game_record.Adven
 
 	l.Debug("updating adventure_game_location record >%#v<", rec)
 
-	if err := m.validateAdventureGameLocationRecForUpdate(rec); err != nil {
+	if err := m.validateAdventureGameLocationRecForUpdate(currRec, rec); err != nil {
 		l.Warn("failed to validate adventure_game_location record >%v<", err)
 		return rec, err
 	}

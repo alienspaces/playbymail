@@ -90,6 +90,15 @@ export async function cancelGameInstance(gameId, instanceId) {
   return await res.json();
 }
 
+export async function resetGameInstance(gameId, instanceId) {
+  const res = await apiFetch(`${baseUrl}/api/v1/games/${gameId}/instances/${instanceId}/reset`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+  });
+  await handleApiError(res, 'Failed to reset game instance');
+  return await res.json();
+}
+
 // Closed testing features
 export async function getJoinGameLink(gameId, instanceId) {
   const res = await apiFetch(`${baseUrl}/api/v1/games/${gameId}/instances/${instanceId}/join-link`, {

@@ -60,14 +60,14 @@ func (m *Domain) CreateAdventureGameItemInstanceRec(rec *adventure_game_record.A
 func (m *Domain) UpdateAdventureGameItemInstanceRec(rec *adventure_game_record.AdventureGameItemInstance) (*adventure_game_record.AdventureGameItemInstance, error) {
 	l := m.Logger("UpdateAdventureGameItemInstanceRec")
 
-	_, err := m.GetAdventureGameItemInstanceRec(rec.ID, coresql.ForUpdateNoWait)
+	currRec, err := m.GetAdventureGameItemInstanceRec(rec.ID, coresql.ForUpdateNoWait)
 	if err != nil {
 		return rec, err
 	}
 
 	l.Debug("updating adventure_game_item_instance record >%#v<", rec)
 
-	if err := m.validateAdventureGameItemInstanceRecForUpdate(rec); err != nil {
+	if err := m.validateAdventureGameItemInstanceRecForUpdate(currRec, rec); err != nil {
 		l.Warn("failed to validate adventure_game_item_instance record >%v<", err)
 		return rec, err
 	}

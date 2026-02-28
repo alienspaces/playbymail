@@ -60,12 +60,12 @@
 
     <!-- Create/Edit Contact Modal -->
     <ContactModal v-if="showCreateModal || showEditModal" :visible="showCreateModal || showEditModal"
-      :contact="editingContact" :account-id="accountId" @close="closeModal" @saved="handleContactSaved" />
+      :contact="editingContact" :account-id="accountId" :account-user-id="accountUserId" @close="closeModal" @saved="handleContactSaved" />
   </div>
 </template>
 
 <script>
-import { getMyAccount, getAccountContacts, deleteAccountContact } from '@/api/account'
+import { getMe, getAccountContacts, deleteAccountContact } from '@/api/account'
 import ContactModal from '@/components/ContactModal.vue'
 import DataCard from '@/components/DataCard.vue'
 
@@ -78,6 +78,7 @@ export default {
   data() {
     return {
       accountId: null,
+      accountUserId: null,
       accountContacts: [],
       loading: true,
       error: null,
@@ -95,14 +96,13 @@ export default {
         this.loading = true
         this.error = null
 
-        // Get account first
-        const account = await getMyAccount()
-        this.accountId = account.id
+        const me = await getMe()
+        this.accountId = me.account_id
+        this.accountUserId = me.id
 
-        // Load contacts
-        if (this.accountId) {
+        if (this.accountId && this.accountUserId) {
           try {
-            this.accountContacts = await getAccountContacts(this.accountId)
+            this.accountContacts = await getAccountContacts(this.accountId, this.accountUserId)
           } catch (err) {
             // Contacts might not exist yet, that's okay
             console.log('No account contacts found:', err)
@@ -126,7 +126,7 @@ export default {
       }
 
       try {
-        await deleteAccountContact(this.accountId, contact.id)
+        await deleteAccountContact(this.accountId, this.accountUserId, contact.id)
         await this.loadAccountAndContacts()
       } catch (err) {
         this.error = err.message || 'Failed to delete contact'

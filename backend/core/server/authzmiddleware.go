@@ -27,6 +27,15 @@ func (rnr *Runner) AuthzMiddleware(hc HandlerConfig, h Handle) (Handle, error) {
 			return h(w, r, pp, qp, l, m, jc)
 		}
 
+		// For optional token auth, if no auth data is present (unauthenticated request), skip permission checks
+		if _, ok := authenTypes[AuthenticationTypeOptionalToken]; ok {
+			AuthenData := GetRequestAuthenData(l, r)
+			if AuthenData == nil {
+				l.Debug("(authzmiddleware) handler name >%s< uses optional token auth with no auth data, not checking permissions", hc.Name)
+				return h(w, r, pp, qp, l, m, jc)
+			}
+		}
+
 		AuthenData := GetRequestAuthenData(l, r)
 		if AuthenData == nil {
 			err := coreerror.NewInternalError("failed to read request authen data")

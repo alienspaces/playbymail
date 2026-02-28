@@ -81,14 +81,14 @@ func (m *Domain) CreateGameInstanceParameterRec(rec *game_record.GameInstancePar
 func (m *Domain) UpdateGameInstanceParameterRec(rec *game_record.GameInstanceParameter) (*game_record.GameInstanceParameter, error) {
 	l := m.Logger("UpdateGameInstanceParameterRec")
 
-	_, err := m.GetGameInstanceParameterRec(rec.ID, coresql.ForUpdateNoWait)
+	currRec, err := m.GetGameInstanceParameterRec(rec.ID, coresql.ForUpdateNoWait)
 	if err != nil {
 		return rec, err
 	}
 
 	l.Debug("updating game_instance_parameter record >%#v<", rec)
 
-	if err := m.validateGameInstanceParameterRecForUpdate(rec); err != nil {
+	if err := m.validateGameInstanceParameterRecForUpdate(currRec, rec); err != nil {
 		l.Warn("failed to validate game_instance_parameter record >%v<", err)
 		return rec, err
 	}

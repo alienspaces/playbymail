@@ -7,6 +7,9 @@
         "account_id": {
             "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
         },
+        "account_user_id": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
+        },
         "name": {
             "maxLength": 128,
             "minLength": 1,

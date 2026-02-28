@@ -23,10 +23,10 @@ func AdventureGameCharacterRequestToRecord(l logger.Logger, r *http.Request, rec
 
 	switch server.HttpMethod(r.Method) {
 	case server.HttpMethodPost:
-		rec.AccountID = req.AccountID
+		rec.AccountUserID = req.AccountUserID
 		rec.Name = req.Name
 	case server.HttpMethodPut, server.HttpMethodPatch:
-		rec.AccountID = req.AccountID
+		rec.AccountUserID = req.AccountUserID
 		rec.Name = req.Name
 	default:
 		return nil, fmt.Errorf("unsupported HTTP method")
@@ -41,7 +41,7 @@ func AdventureGameCharacterRecordToResponseData(l logger.Logger, rec *adventure_
 	return &adventure_game_schema.AdventureGameCharacterResponseData{
 		ID:        rec.ID,
 		GameID:    rec.GameID,
-		AccountID: rec.AccountID,
+		AccountID: rec.AccountUserID,
 		Name:      rec.Name,
 		CreatedAt: rec.CreatedAt,
 		UpdatedAt: nulltime.ToTimePtr(rec.UpdatedAt),

@@ -124,12 +124,22 @@ type HandlerConfig struct {
 type AuthenData struct {
 	Type        AuthenticatedType      `json:"type"`
 	RLSType     RLSType                `json:"-"`
-	Account     AuthenticatedAccount   `json:"account"`
+	AccountUser AuthenticatedAccountUser `json:"account_user"`
 	Permissions []AuthorizedPermission `json:"permissions"`
 }
 
 func (a AuthenData) IsAuthenticated() bool {
 	return a.Type != ""
+}
+
+// HasPermission checks if the AuthenData contains a specific permission
+func (a AuthenData) HasPermission(permission AuthorizedPermission) bool {
+	for _, p := range a.Permissions {
+		if p == permission {
+			return true
+		}
+	}
+	return false
 }
 
 type RLSType string
@@ -147,20 +157,22 @@ const (
 	AuthenticatedTypeToken AuthenticatedType = "Token" // Session Token
 )
 
-type AuthenticatedAccount struct {
-	ID    string `json:"id"`
-	Name  string `json:"name"`
-	Email string `json:"email"`
+type AuthenticatedAccountUser struct {
+	ID        string `json:"id"`
+	AccountID string `json:"account_id"`
+	Name      string `json:"name"`
+	Email     string `json:"email"`
 }
 
 type AuthenticationType string
 type AuthorizedPermission string
 
 const (
-	AuthenticationTypePublic AuthenticationType = "Public"
-	AuthenticationTypeJWT    AuthenticationType = "JWT"   // JSON Web Token
-	AuthenticationTypeKey    AuthenticationType = "Key"   // API Key
-	AuthenticationTypeToken  AuthenticationType = "Token" // Session Token
+	AuthenticationTypePublic        AuthenticationType = "Public"
+	AuthenticationTypeJWT           AuthenticationType = "JWT"           // JSON Web Token
+	AuthenticationTypeKey           AuthenticationType = "Key"           // API Key
+	AuthenticationTypeToken         AuthenticationType = "Token"         // Session Token
+	AuthenticationTypeOptionalToken AuthenticationType = "OptionalToken" // Optional session token - handler receives auth data if valid token present, nil otherwise
 )
 
 // MiddlewareConfig - configuration for global default middleware

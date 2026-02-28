@@ -43,9 +43,12 @@ func Test_getManyGameInstanceParametersHandler(t *testing.T) {
 	}{
 		{
 			TestCase: testutil.TestCase{
-				Name: "API key with open access \\ get many game instance parameters \\ returns expected parameters",
+				Name: "authenticated manager when get many game instance parameters then returns expected parameters",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[game.GetManyGameInstanceParameters]
+				},
+				RequestHeaders: func(d harness.Data) map[string]string {
+					return testutil.AuthHeaderProManager(d)
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
@@ -69,9 +72,12 @@ func Test_getManyGameInstanceParametersHandler(t *testing.T) {
 		},
 		{
 			TestCase: testutil.TestCase{
-				Name: "API key with open access \\ get many game instance parameters with pagination \\ returns expected parameters",
+				Name: "authenticated manager when get many game instance parameters with pagination then returns expected parameters",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[game.GetManyGameInstanceParameters]
+				},
+				RequestHeaders: func(d harness.Data) map[string]string {
+					return testutil.AuthHeaderProManager(d)
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
@@ -105,7 +111,7 @@ func Test_getManyGameInstanceParametersHandler(t *testing.T) {
 		t.Logf("Running test >%s<\n", testCase.Name)
 
 		t.Run(testCase.Name, func(t *testing.T) {
-			testFunc := func(method string, body interface{}) {
+			testFunc := func(method string, body any) {
 				require.NotNil(t, body, "Response body is not nil")
 
 				aResp := body.(game_schema.GameInstanceParameterCollectionResponse).Data
@@ -157,9 +163,12 @@ func Test_getOneGameInstanceParameterHandler(t *testing.T) {
 	}{
 		{
 			TestCase: testutil.TestCase{
-				Name: "API key with open access \\ get one game instance parameter with valid parameter ID \\ returns expected parameter",
+				Name: "authenticated manager when get one game instance parameter with valid parameter ID then returns expected parameter",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[game.GetOneGameInstanceParameter]
+				},
+				RequestHeaders: func(d harness.Data) map[string]string {
+					return testutil.AuthHeaderProManager(d)
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
@@ -186,7 +195,7 @@ func Test_getOneGameInstanceParameterHandler(t *testing.T) {
 		t.Logf("Running test >%s<\n", testCase.Name)
 
 		t.Run(testCase.Name, func(t *testing.T) {
-			testFunc := func(method string, body interface{}) {
+			testFunc := func(method string, body any) {
 				require.NotNil(t, body, "Response body is not nil")
 
 				aResp := body.(game_schema.GameInstanceParameterResponse).Data
@@ -233,9 +242,12 @@ func Test_createUpdateDeleteGameInstanceParameterHandler(t *testing.T) {
 	}{
 		{
 			TestCase: testutil.TestCase{
-				Name: "API key with open access \\ create game instance parameter with character_lives value 5 \\ returns created parameter",
+				Name: "authenticated manager when create game instance parameter with character_lives value 5 then returns created parameter",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[game.CreateOneGameInstanceParameter]
+				},
+				RequestHeaders: func(d harness.Data) map[string]string {
+					return testutil.AuthHeaderProManager(d)
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
@@ -263,9 +275,12 @@ func Test_createUpdateDeleteGameInstanceParameterHandler(t *testing.T) {
 		},
 		{
 			TestCase: testutil.TestCase{
-				Name: "API key with open access \\ create game instance parameter with character_lives value 3 \\ returns created parameter",
+				Name: "authenticated manager when create game instance parameter with character_lives value 3 then returns created parameter",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[game.CreateOneGameInstanceParameter]
+				},
+				RequestHeaders: func(d harness.Data) map[string]string {
+					return testutil.AuthHeaderProManager(d)
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
@@ -293,9 +308,12 @@ func Test_createUpdateDeleteGameInstanceParameterHandler(t *testing.T) {
 		},
 		{
 			TestCase: testutil.TestCase{
-				Name: "API key with open access \\ create game instance parameter with character_lives value 5 \\ returns created parameter",
+				Name: "authenticated manager when create game instance parameter with character_lives value 5 then returns created parameter",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[game.CreateOneGameInstanceParameter]
+				},
+				RequestHeaders: func(d harness.Data) map[string]string {
+					return testutil.AuthHeaderProManager(d)
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
@@ -327,7 +345,7 @@ func Test_createUpdateDeleteGameInstanceParameterHandler(t *testing.T) {
 		t.Logf("Running test >%s<\n", testCase.Name)
 
 		t.Run(testCase.Name, func(t *testing.T) {
-			testFunc := func(method string, body interface{}) {
+			testFunc := func(method string, body any) {
 				require.NotNil(t, body, "Response body is not nil")
 
 				aResp := body.(game_schema.GameInstanceParameterResponse).Data
@@ -378,9 +396,12 @@ func Test_updateGameInstanceParameterHandler(t *testing.T) {
 	}{
 		{
 			TestCase: testutil.TestCase{
-				Name: "API key with open access \\ update game instance parameter with valid properties \\ returns updated parameter",
+				Name: "authenticated manager when update game instance parameter with valid properties then returns updated parameter",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[game.UpdateOneGameInstanceParameter]
+				},
+				RequestHeaders: func(d harness.Data) map[string]string {
+					return testutil.AuthHeaderProManager(d)
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
@@ -413,7 +434,7 @@ func Test_updateGameInstanceParameterHandler(t *testing.T) {
 		t.Logf("Running test >%s<\n", testCase.Name)
 
 		t.Run(testCase.Name, func(t *testing.T) {
-			testFunc := func(method string, body interface{}) {
+			testFunc := func(method string, body any) {
 				require.NotNil(t, body, "Response body is not nil")
 
 				aResp := body.(game_schema.GameInstanceParameterResponse).Data
@@ -463,9 +484,12 @@ func Test_deleteGameInstanceParameterHandler(t *testing.T) {
 	}{
 		{
 			TestCase: testutil.TestCase{
-				Name: "API key with open access \\ delete game instance parameter with valid parameter ID \\ returns no content",
+				Name: "authenticated manager when delete game instance parameter with valid parameter ID then returns no content",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[game.DeleteOneGameInstanceParameter]
+				},
+				RequestHeaders: func(d harness.Data) map[string]string {
+					return testutil.AuthHeaderProManager(d)
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
@@ -514,9 +538,12 @@ func Test_gameInstanceParameterHandlerValidation(t *testing.T) {
 	}{
 		{
 			TestCase: testutil.TestCase{
-				Name: "API key with open access \\ create game instance parameter with missing parameter_key \\ returns validation error",
+				Name: "authenticated manager when create game instance parameter with missing parameter_key then returns validation error",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[game.CreateOneGameInstanceParameter]
+				},
+				RequestHeaders: func(d harness.Data) map[string]string {
+					return testutil.AuthHeaderProManager(d)
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
@@ -541,9 +568,12 @@ func Test_gameInstanceParameterHandlerValidation(t *testing.T) {
 		},
 		{
 			TestCase: testutil.TestCase{
-				Name: "API key with open access \\ create game instance parameter with empty parameter_key \\ returns validation error",
+				Name: "authenticated manager when create game instance parameter with empty parameter_key then returns validation error",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[game.CreateOneGameInstanceParameter]
+				},
+				RequestHeaders: func(d harness.Data) map[string]string {
+					return testutil.AuthHeaderProManager(d)
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
@@ -568,9 +598,12 @@ func Test_gameInstanceParameterHandlerValidation(t *testing.T) {
 		},
 		{
 			TestCase: testutil.TestCase{
-				Name: "API key with open access \\ create game instance parameter with missing parameter_value \\ returns validation error",
+				Name: "authenticated manager when create game instance parameter with missing parameter_value then returns validation error",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[game.CreateOneGameInstanceParameter]
+				},
+				RequestHeaders: func(d harness.Data) map[string]string {
+					return testutil.AuthHeaderProManager(d)
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{

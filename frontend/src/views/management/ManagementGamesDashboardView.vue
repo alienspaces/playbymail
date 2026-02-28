@@ -49,23 +49,69 @@
     <p v-if="!gamesStore.loading && !gamesStore.error && games.length === 0" class="empty-message">
       You don't have access to any games yet. Contact an administrator to get access to games.
     </p>
+
+    <!-- Available Games for Subscription Section -->
+    <div class="available-games-section">
+      <h3>Available Games for Subscription</h3>
+      <p class="section-description">Published games available for manager subscription.</p>
+
+      <div v-if="availableGamesLoading" class="loading-state">
+        <p>Loading available games...</p>
+      </div>
+
+      <div v-else-if="availableGamesError" class="error-state">
+        <p>{{ availableGamesError }}</p>
+        <button @click="loadAvailableGames">Retry</button>
+      </div>
+
+      <div v-else-if="availableGames.length > 0" class="available-games-grid">
+        <DataCard v-for="game in availableGames" :key="game.id" :title="game.name" class="game-card">
+          <div class="game-info">
+            <DataItem label="Type" :value="game.game_type" />
+            <DataItem label="Status" :value="game.status" />
+            <DataItem label="Turn Duration" :value="formatTurnDuration(game.turn_duration_hours)" />
+            <DataItem label="Description" :value="game.description" />
+          </div>
+
+          <template #primary>
+            <AppButton @click="subscribeToGame(game)" variant="primary" size="small" :disabled="subscribing">
+              {{ subscribing ? 'Subscribing...' : 'Subscribe as Manager' }}
+            </AppButton>
+          </template>
+        </DataCard>
+      </div>
+
+      <div v-else class="empty-state">
+        <p>No published games available for subscription.</p>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { computed, onMounted } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useGamesStore } from '../../stores/games';
 import { useGameInstancesStore } from '../../stores/gameInstances';
+import { listGames } from '../../api/games';
+import { createGameSubscription, getMyGameSubscriptions } from '../../api/gameSubscriptions';
 import PageHeader from '../../components/PageHeader.vue';
 import ResourceTable from '../../components/ResourceTable.vue';
 import TableActions from '../../components/TableActions.vue';
+import DataCard from '../../components/DataCard.vue';
+import DataItem from '../../components/DataItem.vue';
+import AppButton from '../../components/Button.vue';
 
 const router = useRouter();
 const gamesStore = useGamesStore();
 const gameInstancesStore = useGameInstancesStore();
 
 const games = computed(() => gamesStore.games);
+const availableGames = ref([]);
+const myGameSubscriptions = ref([]);
+const availableGamesLoading = ref(false);
+const availableGamesError = ref(null);
+const subscribing = ref(false);
 
 const columns = [
   { key: 'name', label: 'Name' },
@@ -76,6 +122,7 @@ const columns = [
 
 onMounted(async () => {
   await loadGames();
+  await loadAvailableGames();
 });
 
 const loadGames = async () => {
@@ -86,6 +133,58 @@ const loadGames = async () => {
   } catch (error) {
     console.error('Failed to load games:', error);
   }
+};
+
+const loadAvailableGames = async () => {
+  try {
+    availableGamesLoading.value = true;
+    availableGamesError.value = null;
+
+    // Get published games
+    const publishedGamesResponse = await listGames({ status: 'published' });
+    const publishedGames = publishedGamesResponse.data || [];
+
+    // Get my game subscriptions to filter out games I'm already subscribed to
+    const subscriptionsResponse = await getMyGameSubscriptions();
+    myGameSubscriptions.value = subscriptionsResponse.data || [];
+    const subscribedGameIds = new Set(myGameSubscriptions.value
+      .filter(sub => sub.subscription_type === 'Manager')
+      .map(sub => sub.game_id));
+
+    // Filter to only show games I don't have manager subscription for
+    availableGames.value = publishedGames.filter(game => !subscribedGameIds.has(game.id));
+  } catch (error) {
+    availableGamesError.value = error.message || 'Failed to load available games';
+    console.error('Failed to load available games:', error);
+  } finally {
+    availableGamesLoading.value = false;
+  }
+};
+
+const subscribeToGame = async (game) => {
+  try {
+    subscribing.value = true;
+    await createGameSubscription(game.id, 'Manager');
+    await loadAvailableGames();
+  } catch (error) {
+    availableGamesError.value = error.message || 'Failed to subscribe to game';
+    console.error('Failed to subscribe to game:', error);
+  } finally {
+    subscribing.value = false;
+  }
+};
+
+const formatTurnDuration = (hours) => {
+  if (!hours) return 'Not set';
+  if (hours % (24 * 7) === 0) {
+    const weeks = hours / (24 * 7);
+    return `${weeks} week${weeks === 1 ? '' : 's'}`;
+  }
+  if (hours % 24 === 0) {
+    const days = hours / 24;
+    return `${days} day${days === 1 ? '' : 's'}`;
+  }
+  return `${hours} hour${hours === 1 ? '' : 's'}`;
 };
 
 const getGameInstanceCount = (gameId) => {
@@ -147,5 +246,43 @@ const getGameActions = (game) => {
 .empty-message {
   color: var(--color-text-muted);
   font-style: italic;
+}
+
+.available-games-section {
+  margin-top: var(--space-xl);
+  padding-top: var(--space-xl);
+  border-top: 1px solid var(--color-border);
+}
+
+.available-games-section h3 {
+  margin: 0 0 var(--space-sm) 0;
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.section-description {
+  margin: 0 0 var(--space-md) 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.available-games-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(600px, 1fr));
+  gap: var(--space-lg);
+  margin-top: var(--space-md);
+}
+
+.game-card {
+  min-height: 200px;
+}
+
+.game-info {
+  margin-bottom: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
 }
 </style>

@@ -20,14 +20,16 @@ import (
 
 // Repository -
 type Repository struct {
-	tx             pgx.Tx
-	tableName      string
-	attributes     []string
-	setAttributes  []string
-	attributeIndex set.Set[string]
-	arrayFields    set.Set[string]
-	isRLSDisabled  bool
-	rlsIdentifiers map[string][]string
+	tx                pgx.Tx
+	tableName         string
+	attributes        []string
+	setAttributes     []string
+	attributeIndex    set.Set[string]
+	arrayFields       set.Set[string]
+	isRLSDisabled     bool
+	rlsIdentifiers    map[string][]string
+	rlsConstraints    []repositor.RLSConstraint
+	hadRLSIdentifiers bool // Track if identifiers were ever set (to distinguish test harness from API mode)
 }
 
 var _ repositor.Repositor = &Repository{}
@@ -51,16 +53,18 @@ func New(args NewArgs) (Repository, error) {
 	}
 
 	r := Repository{
-		tx:            args.Tx,
-		tableName:     args.TableName,
-		attributes:    tag.GetFieldTagValues(args.Record, "db"),
-		arrayFields:   tag.GetArrayFieldTagValues(args.Record, "db"),
-		isRLSDisabled: args.IsRLSDisabled,
+		tx:             args.Tx,
+		tableName:      args.TableName,
+		attributes:     tag.GetFieldTagValues(args.Record, "db"),
+		arrayFields:    tag.GetArrayFieldTagValues(args.Record, "db"),
+		isRLSDisabled:  args.IsRLSDisabled,
+		rlsIdentifiers: make(map[string][]string),
+		rlsConstraints: []repositor.RLSConstraint{},
 	}
 
 	setAttributes := []string{}
 	for _, attr := range r.attributes {
-		if attr == "created_at" || attr == "deleted_at" {
+		if attr == "id" || attr == "created_at" || attr == "deleted_at" {
 			continue
 		}
 		setAttributes = append(setAttributes, attr)
@@ -156,16 +160,21 @@ func (r *Repository) RemoveOne(id any) error {
 // GetRows returns the rows result from the provided SQL and options
 func (r *Repository) GetRows(sql string, opts *coresql.Options) (rows pgx.Rows, err error) {
 
+	// fmt.Printf("**** GetRows Pre-Resolve Params >%v< Attrs >%v<\n", opts.Params, r.attributeIndex)
 	opts, err = r.resolveOptions(opts)
 	if err != nil {
 		return nil, fmt.Errorf("failed to resolve opts: sql >%s< opts >%#v< >%v<", sql, opts, err)
 	}
+	// fmt.Printf("**** GetRows Post-Resolve Params >%v<\n", opts.Params)
 
 	sql, args, err := coresql.From(sql, opts)
 	if err != nil {
 		return nil, err
 	}
 
+	// fmt.Printf("**** GetRows SQL >%q< Args >%v<\n", sql, args)
+
+	// start := time.Now()
 	rows, err = r.tx.Query(context.Background(), sql, args)
 	if err != nil {
 		return nil, err
@@ -192,26 +201,6 @@ SELECT %s FROM %s WHERE deleted_at IS NULL
 `,
 		strings.Join(r.Attributes(), ", "),
 		r.TableName()))
-}
-
-func (r *Repository) withRLS(sql string) string {
-
-	for attr, ids := range r.rlsIdentifiers {
-		var strBuilder strings.Builder
-		for i, id := range ids {
-			strBuilder.WriteString("'")
-			strBuilder.WriteString(id)
-
-			if i != len(ids)-1 {
-				strBuilder.WriteString("',")
-			} else {
-				strBuilder.WriteString("'")
-			}
-		}
-		sql += fmt.Sprintf("AND %s IN (%s)\n", attr, strBuilder.String())
-	}
-
-	return sql
 }
 
 // CreateOneSQL generates an insert SQL statements
@@ -246,16 +235,16 @@ func insertValuePlaceholders(attributes []string) string {
 // UpdateOneSQL generates an update SQL statement
 func (r *Repository) UpdateOneSQL() string {
 
-	return fmt.Sprintf(`
+	sql := r.withRLS(fmt.Sprintf(`
 UPDATE %s SET
 %s
 WHERE id = @id
 AND   deleted_at IS NULL
-RETURNING %s
 `,
 		r.TableName(),
-		setAttributeAndValuePlaceholders(r.SetAttributes()),
-		strings.Join(r.Attributes(), ", "))
+		setAttributeAndValuePlaceholders(r.SetAttributes())))
+
+	return sql + fmt.Sprintf("RETURNING %s\n", strings.Join(r.Attributes(), ", "))
 }
 
 func setAttributeAndValuePlaceholders(attributes []string) string {
@@ -276,9 +265,10 @@ func setAttributeAndValuePlaceholders(attributes []string) string {
 
 // DeleteOneSQL generates a logical delete SQL statement
 func (r *Repository) DeleteOneSQL() string {
-	return fmt.Sprintf(`
-UPDATE %s SET deleted_at = @deleted_at WHERE id = @id AND deleted_at IS NULL RETURNING %s
-`, r.TableName(), strings.Join(r.Attributes(), ", "))
+	sql := r.withRLS(fmt.Sprintf(`
+UPDATE %s SET deleted_at = @deleted_at WHERE id = @id AND deleted_at IS NULL
+`, r.TableName()))
+	return sql + fmt.Sprintf("RETURNING %s\n", strings.Join(r.Attributes(), ", "))
 }
 
 // RemoveOneSQL generates a physical delete SQL statement
@@ -288,25 +278,113 @@ DELETE FROM %s WHERE id = @id
 `, r.TableName())
 }
 
-func (r *Repository) SetRLS(identifiers map[string][]string) {
+func (r *Repository) SetRLSIdentifiers(identifiers map[string][]string) {
 	if r.isRLSDisabled {
 		return
 	}
 
-	filtered := map[string][]string{}
+	// Store all provided identifiers - filtering for direct use happens in withRLS
+	// This allows SetRLSIdentifiers to be called before SetRLSConstraints
+	if len(identifiers) > 0 {
+		r.rlsIdentifiers = identifiers
+		r.hadRLSIdentifiers = true
+	}
+}
 
-	// SELECT queries should only filter on rows with identifiers for resources matching
-	// the attributes of the record. For example; a record with only `program_id`, but
-	// not `client_id`, should not be filtered on `client_id`.
-	for _, attr := range r.Attributes() {
-		if ids, ok := identifiers[attr]; ok {
-			filtered[attr] = ids
+// SetRLSConstraints sets the RLS constraints that will be automatically applied
+// when the repository record has matching column names.
+func (r *Repository) SetRLSConstraints(constraints []repositor.RLSConstraint) {
+	if r.isRLSDisabled {
+		return
+	}
+
+	filtered := []repositor.RLSConstraint{}
+
+	// Only include constraints for columns that exist in this repository's record
+	attributeSet := set.FromSlice(r.Attributes())
+
+	for _, constraint := range constraints {
+		if attributeSet.Has(constraint.Column) {
+			filtered = append(filtered, constraint)
 		}
 	}
 
-	if len(filtered) > 0 {
-		r.rlsIdentifiers = filtered
+	r.rlsConstraints = filtered
+}
+
+func (r *Repository) withRLS(sql string) string {
+
+	// Early return if RLS is disabled or no RLS data is set
+	if r.isRLSDisabled || (len(r.rlsIdentifiers) == 0 && len(r.rlsConstraints) == 0) {
+		return sql
 	}
+
+	// Apply RLS identifier filters (direct column filters)
+	// Only apply filters for identifiers that correspond to actual columns in the record
+	attributeSet := set.FromSlice(r.Attributes())
+	for attr, ids := range r.rlsIdentifiers {
+		// Skip identifiers that don't correspond to record columns
+		// (they may be kept for constraint substitution but shouldn't be used as direct filters)
+		if !attributeSet.Has(attr) {
+			continue
+		}
+		var strBuilder strings.Builder
+		for i, id := range ids {
+			strBuilder.WriteString("'")
+			strBuilder.WriteString(id)
+
+			if i != len(ids)-1 {
+				strBuilder.WriteString("',")
+			} else {
+				strBuilder.WriteString("'")
+			}
+		}
+		sql += fmt.Sprintf("AND %s IN (%s)\n", attr, strBuilder.String())
+	}
+
+	// Apply RLS constraint filters (derived column filters via SQL subqueries)
+	for _, constraint := range r.rlsConstraints {
+		// Substitute RLS constraint placeholders with RLS identifier values
+		// Skip constraint if any required RLS identifier is missing or empty
+		constraintSQL := constraint.SQLTemplate
+		allRequiredIdentifiersSubstituted := true
+		for _, requiredRLSIdentifier := range constraint.RequiredRLSIdentifiers {
+			if paramValues, ok := r.rlsIdentifiers[requiredRLSIdentifier]; ok && len(paramValues) > 0 {
+				// Substitute the first value from RLS identifiers
+				placeholder := fmt.Sprintf(":%s", requiredRLSIdentifier)
+				constraintSQL = strings.ReplaceAll(constraintSQL, placeholder, fmt.Sprintf("'%s'", paramValues[0]))
+			} else {
+				allRequiredIdentifiersSubstituted = false
+				break
+			}
+		}
+
+		if !allRequiredIdentifiersSubstituted {
+			// Skip constraint if required RLS identifiers not available
+			// Only apply fail-safe if we had identifiers provided (API mode)
+			// This ensures we don't return data when we can't guarantee constraint safety
+			// but allows test harness mode (no identifiers) to work without fail-safe
+			if len(constraint.RequiredRLSIdentifiers) > 0 && r.hadRLSIdentifiers {
+				// Fail-safe: required RLS identifiers not available
+				// We can't guarantee they'll be available, so return no data
+				sql += "AND 1=0\n"
+			}
+			continue
+		}
+
+		// Only apply constraint if all required RLS identifiers were successfully substituted
+		if allRequiredIdentifiersSubstituted {
+			// Verify no placeholders remain (safety check)
+			if strings.Contains(constraintSQL, ":") {
+				// Still has placeholders - skip to avoid SQL errors
+				continue
+			}
+			// Append constraint SQL to WHERE clause
+			sql += fmt.Sprintf("AND %s %s\n", constraint.Column, constraintSQL)
+		}
+	}
+
+	return sql
 }
 
 func (r *Repository) resolveOptions(opts *coresql.Options) (*coresql.Options, error) {

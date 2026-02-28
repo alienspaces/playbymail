@@ -8,15 +8,46 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 )
 
+type validateAdventureGameItemPlacementArgs struct {
+	nextRec *adventure_game_record.AdventureGameItemPlacement
+	currRec *adventure_game_record.AdventureGameItemPlacement
+}
+
+func (m *Domain) populateAdventureGameItemPlacementValidateArgs(currRec, nextRec *adventure_game_record.AdventureGameItemPlacement) (*validateAdventureGameItemPlacementArgs, error) {
+	args := &validateAdventureGameItemPlacementArgs{
+		currRec: currRec,
+		nextRec: nextRec,
+	}
+	return args, nil
+}
+
 func (m *Domain) validateAdventureGameItemPlacementRecForCreate(rec *adventure_game_record.AdventureGameItemPlacement) error {
-	return validateAdventureGameItemPlacementRec(rec, false)
+	args, err := m.populateAdventureGameItemPlacementValidateArgs(nil, rec)
+	if err != nil {
+		return err
+	}
+	return validateAdventureGameItemPlacementRecForCreate(args)
 }
 
-func (m *Domain) validateAdventureGameItemPlacementRecForUpdate(rec *adventure_game_record.AdventureGameItemPlacement) error {
-	return validateAdventureGameItemPlacementRec(rec, true)
+func (m *Domain) validateAdventureGameItemPlacementRecForUpdate(currRec, nextRec *adventure_game_record.AdventureGameItemPlacement) error {
+	args, err := m.populateAdventureGameItemPlacementValidateArgs(currRec, nextRec)
+	if err != nil {
+		return err
+	}
+	return validateAdventureGameItemPlacementRecForUpdate(args)
 }
 
-func validateAdventureGameItemPlacementRec(rec *adventure_game_record.AdventureGameItemPlacement, requireID bool) error {
+func validateAdventureGameItemPlacementRecForCreate(args *validateAdventureGameItemPlacementArgs) error {
+	return validateAdventureGameItemPlacementRec(args, false)
+}
+
+func validateAdventureGameItemPlacementRecForUpdate(args *validateAdventureGameItemPlacementArgs) error {
+	return validateAdventureGameItemPlacementRec(args, true)
+}
+
+func validateAdventureGameItemPlacementRec(args *validateAdventureGameItemPlacementArgs, requireID bool) error {
+	rec := args.nextRec
+
 	if rec == nil {
 		return coreerror.NewInvalidDataError("record is nil")
 	}

@@ -40,9 +40,12 @@ func Test_gameCreatureHandler(t *testing.T) {
 	}{
 		{
 			TestCase: testutil.TestCase{
-				Name: "API key with open access \\ get many game creatures \\ returns expected creatures",
+				Name: "authenticated user when get many game creatures then returns expected creatures",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[adventure_game.GetManyAdventureGameCreatures]
+				},
+				RequestHeaders: func(d harness.Data) map[string]string {
+					return testutil.AuthHeaderStandard(d)
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
@@ -61,9 +64,12 @@ func Test_gameCreatureHandler(t *testing.T) {
 		},
 		{
 			TestCase: testutil.TestCase{
-				Name: "API key with open access \\ create game creature with valid properties \\ returns created creature",
+				Name: "authenticated designer when create game creature with valid properties then returns created creature",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[adventure_game.CreateOneAdventureGameCreature]
+				},
+				RequestHeaders: func(d harness.Data) map[string]string {
+					return testutil.AuthHeaderProDesigner(d)
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
@@ -82,9 +88,12 @@ func Test_gameCreatureHandler(t *testing.T) {
 		},
 		{
 			TestCase: testutil.TestCase{
-				Name: "API key with open access \\ get one game creature with valid ID \\ returns expected creature",
+				Name: "authenticated user when get one game creature with valid ID then returns expected creature",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[adventure_game.GetOneAdventureGameCreature]
+				},
+				RequestHeaders: func(d harness.Data) map[string]string {
+					return testutil.AuthHeaderStandard(d)
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
@@ -98,9 +107,12 @@ func Test_gameCreatureHandler(t *testing.T) {
 		},
 		{
 			TestCase: testutil.TestCase{
-				Name: "API key with open access \\ delete game creature with valid ID \\ returns no content",
+				Name: "authenticated designer when delete game creature with valid ID then returns no content",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[adventure_game.DeleteOneAdventureGameCreature]
+				},
+				RequestHeaders: func(d harness.Data) map[string]string {
+					return testutil.AuthHeaderProDesigner(d)
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{

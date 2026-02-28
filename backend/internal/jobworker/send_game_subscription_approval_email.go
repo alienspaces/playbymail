@@ -139,13 +139,13 @@ func (w *SendGameSubscriptionApprovalEmailWorker) DoWork(ctx context.Context, m 
 
 	// Get account contact name if available
 	accountName := ""
-	contactRecs, err := m.GetManyAccountContactRecs(&coresql.Options{
+	contactRecs, err := m.GetManyAccountUserContactRecs(&coresql.Options{
 		Params: []coresql.Param{
-			{Col: account_record.FieldAccountContactAccountID, Val: accountRec.ID},
+			{Col: account_record.FieldAccountUserContactAccountUserID, Val: accountRec.ID},
 		},
 		Limit: 1,
 		OrderBy: []coresql.OrderBy{
-			{Col: account_record.FieldAccountContactCreatedAt, Direction: coresql.OrderDirectionASC},
+			{Col: account_record.FieldAccountUserContactCreatedAt, Direction: coresql.OrderDirectionASC},
 		},
 	})
 	if err == nil && len(contactRecs) > 0 {

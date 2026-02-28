@@ -40,7 +40,7 @@ const routes = [
     component: VerifyView,
   },
   {
-    path: '/player/game-subscriptions/:game_subscription_id/game-instances/:game_instance_id/login/:turn_sheet_token',
+    path: '/player/game-subscription-instances/:game_subscription_instance_id/login/:turn_sheet_token',
     name: 'PlayerTurnSheetLogin',
     component: () => import('../views/PlayerTurnSheetLoginView.vue'),
   },
@@ -55,6 +55,7 @@ const routes = [
     children: [
       { path: '', name: 'AccountProfile', component: () => import('../views/account/AccountProfileView.vue') },
       { path: 'contacts', name: 'AccountContacts', component: () => import('../views/account/AccountContactsView.vue') },
+      { path: 'subscriptions', name: 'AccountSubscriptions', component: () => import('../views/account/AccountSubscriptionsView.vue') },
     ],
   },
   {

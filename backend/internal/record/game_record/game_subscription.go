@@ -14,22 +14,21 @@ const (
 )
 
 const (
-	FieldGameSubscriptionID                      = "id"
-	FieldGameSubscriptionGameID                  = "game_id"
-	FieldGameSubscriptionAccountID               = "account_id"
-	FieldGameSubscriptionAccountContactID        = "account_contact_id"
-	FieldGameSubscriptionSubscriptionType        = "subscription_type"
-	FieldGameSubscriptionCreatedAt               = "created_at"
-	FieldGameSubscriptionStatus                  = "status"
-	FieldGameSubscriptionGameInstanceID          = "game_instance_id"
-	FieldGameSubscriptionTurnSheetToken          = "turn_sheet_token"
-	FieldGameSubscriptionTurnSheetTokenExpiresAt = "turn_sheet_token_expires_at"
+	FieldGameSubscriptionID                   = "id"
+	FieldGameSubscriptionGameID               = "game_id"
+	FieldGameSubscriptionAccountID            = "account_id"
+	FieldGameSubscriptionAccountUserID        = "account_user_id"
+	FieldGameSubscriptionAccountUserContactID = "account_contact_id"
+	FieldGameSubscriptionSubscriptionType     = "subscription_type"
+	FieldGameSubscriptionCreatedAt            = "created_at"
+	FieldGameSubscriptionStatus               = "status"
+	FieldGameSubscriptionInstanceLimit        = "instance_limit"
 )
 
 const (
-	GameSubscriptionTypePlayer   = "Player"
-	GameSubscriptionTypeManager  = "Manager"
-	GameSubscriptionTypeDesigner = "Designer"
+	GameSubscriptionTypePlayer   = "player"
+	GameSubscriptionTypeManager  = "manager"
+	GameSubscriptionTypeDesigner = "designer"
 )
 
 const (
@@ -41,25 +40,23 @@ const (
 // GameSubscription represents a subscription to a game (Player, Manager, Designer)
 type GameSubscription struct {
 	record.Record
-	GameID                  string         `db:"game_id"`
-	AccountID               string         `db:"account_id"`
-	AccountContactID        sql.NullString `db:"account_contact_id"`
-	SubscriptionType        string         `db:"subscription_type"`
-	Status                  string         `db:"status"`
-	GameInstanceID          sql.NullString `db:"game_instance_id"`
-	TurnSheetToken          sql.NullString `db:"turn_sheet_token"`
-	TurnSheetTokenExpiresAt sql.NullTime   `db:"turn_sheet_token_expires_at"`
+	GameID               string         `db:"game_id"`
+	AccountID            string         `db:"account_id"`
+	AccountUserID        sql.NullString `db:"account_user_id"`
+	AccountUserContactID sql.NullString `db:"account_contact_id"`
+	SubscriptionType     string         `db:"subscription_type"`
+	Status               string         `db:"status"`
+	InstanceLimit        sql.NullInt32  `db:"instance_limit"`
 }
 
 func (r *GameSubscription) ToNamedArgs() pgx.NamedArgs {
 	args := r.Record.ToNamedArgs()
 	args[FieldGameSubscriptionGameID] = r.GameID
 	args[FieldGameSubscriptionAccountID] = r.AccountID
-	args[FieldGameSubscriptionAccountContactID] = r.AccountContactID
+	args[FieldGameSubscriptionAccountUserID] = r.AccountUserID
+	args[FieldGameSubscriptionAccountUserContactID] = r.AccountUserContactID
 	args[FieldGameSubscriptionSubscriptionType] = r.SubscriptionType
 	args[FieldGameSubscriptionStatus] = r.Status
-	args[FieldGameSubscriptionGameInstanceID] = r.GameInstanceID
-	args[FieldGameSubscriptionTurnSheetToken] = r.TurnSheetToken
-	args[FieldGameSubscriptionTurnSheetTokenExpiresAt] = r.TurnSheetTokenExpiresAt
+	args[FieldGameSubscriptionInstanceLimit] = r.InstanceLimit
 	return args
 }

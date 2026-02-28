@@ -19,16 +19,19 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/jobworker"
 	"gitlab.com/alienspaces/playbymail/internal/mapper"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
+	"gitlab.com/alienspaces/playbymail/internal/runner/server/handler_auth"
 	"gitlab.com/alienspaces/playbymail/internal/utils/logging"
 )
 
 const (
-	GetManyGameSubscriptions  = "get-many-game-subscriptions"
-	GetOneGameSubscription    = "get-one-game-subscription"
-	CreateOneGameSubscription = "create-one-game-subscription"
-	UpdateOneGameSubscription = "update-one-game-subscription"
-	DeleteOneGameSubscription = "delete-one-game-subscription"
-	ApproveGameSubscription   = "approve-game-subscription"
+	GetManyGameSubscriptions           = "get-many-game-subscriptions"
+	GetOneGameSubscription             = "get-one-game-subscription"
+	CreateOneGameSubscription          = "create-one-game-subscription"
+	UpdateOneGameSubscription          = "update-one-game-subscription"
+	DeleteOneGameSubscription          = "delete-one-game-subscription"
+	ApproveGameSubscription            = "approve-game-subscription"
+	LinkGameInstanceToSubscription     = "link-game-instance-to-subscription"
+	UnlinkGameInstanceFromSubscription = "unlink-game-instance-from-subscription"
 )
 
 func gameSubscriptionHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error) {
@@ -77,7 +80,12 @@ func gameSubscriptionHandlerConfig(l logger.Logger) (map[string]server.HandlerCo
 		Path:        "/api/v1/game-subscriptions",
 		HandlerFunc: getManyGameSubscriptionsHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
-			AuthenTypes:            []server.AuthenticationType{server.AuthenticationTypeToken},
+			AuthenTypes: []server.AuthenticationType{server.AuthenticationTypeToken},
+			AuthzPermissions: []server.AuthorizedPermission{
+				handler_auth.PermissionGameManagement,
+				handler_auth.PermissionGamePlaying,
+				handler_auth.PermissionGameDesign,
+			},
 			ValidateResponseSchema: collectionResponseSchema,
 		},
 	}
@@ -86,7 +94,12 @@ func gameSubscriptionHandlerConfig(l logger.Logger) (map[string]server.HandlerCo
 		Path:        "/api/v1/game-subscriptions/:game_subscription_id",
 		HandlerFunc: getGameSubscriptionHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
-			AuthenTypes:            []server.AuthenticationType{server.AuthenticationTypeToken},
+			AuthenTypes: []server.AuthenticationType{server.AuthenticationTypeToken},
+			AuthzPermissions: []server.AuthorizedPermission{
+				handler_auth.PermissionGameManagement,
+				handler_auth.PermissionGamePlaying,
+				handler_auth.PermissionGameDesign,
+			},
 			ValidateResponseSchema: responseSchema,
 		},
 	}
@@ -95,7 +108,12 @@ func gameSubscriptionHandlerConfig(l logger.Logger) (map[string]server.HandlerCo
 		Path:        "/api/v1/game-subscriptions",
 		HandlerFunc: createGameSubscriptionHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
-			AuthenTypes:            []server.AuthenticationType{server.AuthenticationTypeToken},
+			AuthenTypes: []server.AuthenticationType{server.AuthenticationTypeToken},
+			AuthzPermissions: []server.AuthorizedPermission{
+				handler_auth.PermissionGameManagement,
+				handler_auth.PermissionGamePlaying,
+				handler_auth.PermissionGameDesign,
+			},
 			ValidateRequestSchema:  requestSchema,
 			ValidateResponseSchema: responseSchema,
 		},
@@ -105,7 +123,12 @@ func gameSubscriptionHandlerConfig(l logger.Logger) (map[string]server.HandlerCo
 		Path:        "/api/v1/game-subscriptions/:game_subscription_id",
 		HandlerFunc: updateGameSubscriptionHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
-			AuthenTypes:            []server.AuthenticationType{server.AuthenticationTypeToken},
+			AuthenTypes: []server.AuthenticationType{server.AuthenticationTypeToken},
+			AuthzPermissions: []server.AuthorizedPermission{
+				handler_auth.PermissionGameManagement,
+				handler_auth.PermissionGamePlaying,
+				handler_auth.PermissionGameDesign,
+			},
 			ValidateRequestSchema:  requestSchema,
 			ValidateResponseSchema: responseSchema,
 		},
@@ -116,8 +139,15 @@ func gameSubscriptionHandlerConfig(l logger.Logger) (map[string]server.HandlerCo
 		HandlerFunc: deleteGameSubscriptionHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{server.AuthenticationTypeToken},
+			AuthzPermissions: []server.AuthorizedPermission{
+				handler_auth.PermissionGameManagement,
+				handler_auth.PermissionGamePlaying,
+				handler_auth.PermissionGameDesign,
+			},
 		},
 	}
+
+	// Public route for approving a game subscription that originated from an invitation email
 	config[ApproveGameSubscription] = server.HandlerConfig{
 		Method:      http.MethodPost,
 		Path:        "/api/v1/game-subscriptions/:game_subscription_id/approve",
@@ -135,6 +165,68 @@ func gameSubscriptionHandlerConfig(l logger.Logger) (map[string]server.HandlerCo
 		},
 	}
 
+	instanceRequestSchema := jsonschema.SchemaWithReferences{
+		Main: jsonschema.Schema{
+			Location: "api/game_schema",
+			Name:     "game_subscription_instance.request.schema.json",
+		},
+		References: referenceSchemas,
+	}
+
+	instanceResponseSchema := jsonschema.SchemaWithReferences{
+		Main: jsonschema.Schema{
+			Location: "api/game_schema",
+			Name:     "game_subscription_instance.response.schema.json",
+		},
+		References: append(referenceSchemas, []jsonschema.Schema{
+			{
+				Location: "api/game_schema",
+				Name:     "game_subscription_instance.schema.json",
+			},
+		}...),
+	}
+
+	// Link instance to subscription
+	config[LinkGameInstanceToSubscription] = server.HandlerConfig{
+		Method:      http.MethodPost,
+		Path:        "/api/v1/game-subscriptions/:game_subscription_id/instances",
+		HandlerFunc: linkGameInstanceToSubscriptionHandler,
+		MiddlewareConfig: server.MiddlewareConfig{
+			AuthenTypes: []server.AuthenticationType{server.AuthenticationTypeToken},
+			AuthzPermissions: []server.AuthorizedPermission{
+				handler_auth.PermissionGameManagement,
+				handler_auth.PermissionGameDesign,
+			},
+			ValidateRequestSchema:  instanceRequestSchema,
+			ValidateResponseSchema: instanceResponseSchema,
+		},
+		DocumentationConfig: server.DocumentationConfig{
+			Document: true,
+			Title:    "Link game instance to subscription",
+			Description: "Link a game instance to a game subscription. " +
+				"Validates instance limit and that instance belongs to same game.",
+		},
+	}
+
+	// Unlink instance from subscription
+	config[UnlinkGameInstanceFromSubscription] = server.HandlerConfig{
+		Method:      http.MethodDelete,
+		Path:        "/api/v1/game-subscriptions/:game_subscription_id/instances/:game_instance_id",
+		HandlerFunc: unlinkGameInstanceFromSubscriptionHandler,
+		MiddlewareConfig: server.MiddlewareConfig{
+			AuthenTypes: []server.AuthenticationType{server.AuthenticationTypeToken},
+			AuthzPermissions: []server.AuthorizedPermission{
+				handler_auth.PermissionGameManagement,
+				handler_auth.PermissionGameDesign,
+			},
+		},
+		DocumentationConfig: server.DocumentationConfig{
+			Document:    true,
+			Title:       "Unlink game instance from subscription",
+			Description: "Remove the link between a game instance and a game subscription.",
+		},
+	}
+
 	return config, nil
 }
 
@@ -145,13 +237,14 @@ func getManyGameSubscriptionsHandler(w http.ResponseWriter, r *http.Request, pp 
 
 	opts := queryparam.ToSQLOptionsWithDefaults(qp)
 
-	recs, err := mm.GetManyGameSubscriptionRecs(opts)
+	// Use view repository to get subscriptions with aggregated instance IDs
+	recs, err := mm.GetManyGameSubscriptionViewRecs(opts)
 	if err != nil {
-		l.Warn("failed to get many game subscription records >%v<", err)
+		l.Warn("failed to get many game subscription view records >%v<", err)
 		return err
 	}
 
-	res, err := mapper.GameSubscriptionRecordsToCollectionResponse(l, recs)
+	res, err := mapper.GameSubscriptionViewRecordsToCollectionResponse(l, recs)
 	if err != nil {
 		l.Warn("failed to map game subscription records to collection response >%v<", err)
 		return err
@@ -166,14 +259,19 @@ func getGameSubscriptionHandler(w http.ResponseWriter, r *http.Request, pp httpr
 	mm := m.(*domain.Domain)
 
 	recID := pp.ByName("game_subscription_id")
+	if recID == "" {
+		l.Warn("game subscription ID is required")
+		return coreerror.NewNotFoundError(game_record.TableGameSubscription, recID)
+	}
 
-	rec, err := mm.GetGameSubscriptionRec(recID, coresql.ForUpdateNoWait)
+	// Use view repository to get subscription with aggregated instance IDs
+	rec, err := mm.GetGameSubscriptionViewRec(recID, nil)
 	if err != nil {
-		l.Warn("failed to get game subscription record >%v<", err)
+		l.Warn("failed to get game subscription view record >%v<", err)
 		return err
 	}
 
-	res, err := mapper.GameSubscriptionRecordToResponse(l, rec)
+	res, err := mapper.GameSubscriptionViewRecordToResponse(l, rec)
 	if err != nil {
 		l.Warn("failed to map game subscription record to response >%v<", err)
 		return err
@@ -187,11 +285,24 @@ func createGameSubscriptionHandler(w http.ResponseWriter, r *http.Request, pp ht
 
 	mm := m.(*domain.Domain)
 
+	// Get authenticated account
+	authenData := server.GetRequestAuthenData(l, r)
+	if authenData == nil || authenData.AccountUser.ID == "" {
+		l.Warn("authenticated account is required")
+		return coreerror.NewUnauthorizedError()
+	}
+
 	rec, err := mapper.GameSubscriptionRequestToRecord(l, r, &game_record.GameSubscription{})
 	if err != nil {
 		l.Warn("failed to map game subscription request to record >%v<", err)
 		return err
 	}
+
+	// Set accountID from authenticated account (self-subscription) using the tenant account.id
+	rec.AccountID = authenData.AccountUser.AccountID
+
+	// Set status to active (self-subscription, no approval required)
+	rec.Status = game_record.GameSubscriptionStatusActive
 
 	rec, err = mm.CreateGameSubscriptionRec(rec)
 	if err != nil {
@@ -199,7 +310,8 @@ func createGameSubscriptionHandler(w http.ResponseWriter, r *http.Request, pp ht
 		return err
 	}
 
-	res, err := mapper.GameSubscriptionRecordToResponse(l, rec)
+	// New subscription has no instances yet
+	res, err := mapper.GameSubscriptionRecordToResponse(l, rec, []string{})
 	if err != nil {
 		l.Warn("failed to map game subscription record to response >%v<", err)
 		return err
@@ -233,7 +345,17 @@ func updateGameSubscriptionHandler(w http.ResponseWriter, r *http.Request, pp ht
 		return err
 	}
 
-	res, err := mapper.GameSubscriptionRecordToResponse(l, rec)
+	instanceRecs, err := mm.GetGameSubscriptionInstanceRecsBySubscription(recID)
+	if err != nil {
+		l.Warn("failed to get game subscription instance records >%v<", err)
+		return err
+	}
+	instanceIDs := make([]string, len(instanceRecs))
+	for i, instanceRec := range instanceRecs {
+		instanceIDs[i] = instanceRec.GameInstanceID
+	}
+
+	res, err := mapper.GameSubscriptionRecordToResponse(l, rec, instanceIDs)
 	if err != nil {
 		l.Warn("failed to map game subscription record to response >%v<", err)
 		return err
@@ -296,7 +418,17 @@ func approveGameSubscriptionHandler(w http.ResponseWriter, r *http.Request, pp h
 		return err
 	}
 
-	res, err := mapper.GameSubscriptionRecordToResponse(l, rec)
+	instanceRecs, err := mm.GetGameSubscriptionInstanceRecsBySubscription(subscriptionID)
+	if err != nil {
+		l.Warn("failed to get game subscription instance records >%v<", err)
+		return err
+	}
+	instanceIDs := make([]string, len(instanceRecs))
+	for i, instanceRec := range instanceRecs {
+		instanceIDs[i] = instanceRec.GameInstanceID
+	}
+
+	res, err := mapper.GameSubscriptionRecordToResponse(l, rec, instanceIDs)
 	if err != nil {
 		l.Warn("failed to map game subscription record to response >%v<", err)
 		return err
@@ -305,4 +437,84 @@ func approveGameSubscriptionHandler(w http.ResponseWriter, r *http.Request, pp h
 	l.Info("approved game subscription ID >%s< for email >%s<", subscriptionID, email)
 
 	return server.WriteResponse(l, w, http.StatusOK, res)
+}
+
+func linkGameInstanceToSubscriptionHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
+	l = logging.LoggerWithFunctionContext(l, packageName, "linkGameInstanceToSubscriptionHandler")
+
+	mm := m.(*domain.Domain)
+
+	subscriptionID := pp.ByName("game_subscription_id")
+	if subscriptionID == "" {
+		l.Warn("game subscription ID is required")
+		return coreerror.NewNotFoundError(game_record.TableGameSubscription, subscriptionID)
+	}
+
+	rec, err := mapper.GameSubscriptionInstanceRequestToRecord(l, r, &game_record.GameSubscriptionInstance{})
+	if err != nil {
+		l.Warn("failed to map game subscription instance request to record >%v<", err)
+		return err
+	}
+
+	// Override subscription ID from path
+	rec.GameSubscriptionID = subscriptionID
+
+	// Create the subscription-instance link (account_id will be derived from subscription in validation)
+	linkedRec, err := mm.CreateGameSubscriptionInstanceRec(rec)
+	if err != nil {
+		l.Warn("failed to create game subscription instance link >%v<", err)
+		return err
+	}
+
+	res, err := mapper.GameSubscriptionInstanceRecordToResponse(l, linkedRec)
+	if err != nil {
+		l.Warn("failed to map game subscription instance record to response >%v<", err)
+		return err
+	}
+
+	return server.WriteResponse(l, w, http.StatusCreated, res)
+}
+
+func unlinkGameInstanceFromSubscriptionHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
+	l = logging.LoggerWithFunctionContext(l, packageName, "unlinkGameInstanceFromSubscriptionHandler")
+
+	mm := m.(*domain.Domain)
+
+	subscriptionID := pp.ByName("game_subscription_id")
+	if subscriptionID == "" {
+		l.Warn("game subscription ID is required")
+		return coreerror.NewNotFoundError(game_record.TableGameSubscription, subscriptionID)
+	}
+
+	instanceID := pp.ByName("game_instance_id")
+	if instanceID == "" {
+		l.Warn("game instance ID is required")
+		return coreerror.NewNotFoundError(game_record.TableGameInstance, instanceID)
+	}
+
+	// Find the subscription-instance link
+	recs, err := mm.GetManyGameSubscriptionInstanceRecs(&coresql.Options{
+		Params: []coresql.Param{
+			{Col: game_record.FieldGameSubscriptionInstanceGameSubscriptionID, Val: subscriptionID},
+			{Col: game_record.FieldGameSubscriptionInstanceGameInstanceID, Val: instanceID},
+		},
+		Limit: 1,
+	})
+	if err != nil {
+		l.Warn("failed to find game subscription instance link >%v<", err)
+		return err
+	}
+
+	if len(recs) == 0 {
+		return coreerror.NewNotFoundError(game_record.TableGameSubscriptionInstance,
+			"subscription_id="+subscriptionID+", instance_id="+instanceID)
+	}
+
+	// Delete the link
+	if err := mm.DeleteGameSubscriptionInstanceRec(recs[0].ID); err != nil {
+		l.Warn("failed to delete game subscription instance link >%v<", err)
+		return err
+	}
+
+	return server.WriteResponse(l, w, http.StatusNoContent, nil)
 }

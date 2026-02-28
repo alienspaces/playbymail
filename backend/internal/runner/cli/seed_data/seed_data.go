@@ -32,8 +32,8 @@ func SeedDataConfig() harness.DataConfig {
 func AccountConfig() []harness.AccountConfig {
 	return []harness.AccountConfig{
 		{
-			Reference: harness.AccountOneRef,
-			Record: &account_record.Account{
+			Reference: harness.StandardAccountRef,
+			Record: &account_record.AccountUser{
 				Email: "test-account-one@example.com",
 			},
 			// Game subscriptions for account one
@@ -59,8 +59,8 @@ func AccountConfig() []harness.AccountConfig {
 			},
 		},
 		{
-			Reference: harness.AccountTwoRef,
-			Record: &account_record.Account{
+			Reference: harness.ProPlayerAccountRef,
+			Record: &account_record.AccountUser{
 				Email: "test-account-two@example.com",
 			},
 			// Game subscriptions for account two
@@ -86,8 +86,8 @@ func AccountConfig() []harness.AccountConfig {
 			},
 		},
 		{
-			Reference: harness.AccountThreeRef,
-			Record: &account_record.Account{
+			Reference: harness.ProDesignerAccountRef,
+			Record: &account_record.AccountUser{
 				Email: "test-account-three@example.com",
 			},
 		},
@@ -98,8 +98,7 @@ func AccountConfig() []harness.AccountConfig {
 func GameConfig() []harness.GameConfig {
 	return []harness.GameConfig{
 		{
-			Reference:  harness.GameOneRef,
-			AccountRef: harness.AccountOneRef,
+			Reference: harness.GameOneRef,
 			Record: &game_record.Game{
 				Name:              "The Enchanted Forest Adventure",
 				Description:       "Welcome to The Enchanted Forest Adventure! Step into a world of magic and mystery where ancient forests hold secrets waiting to be discovered. Journey through mystical groves, crystal caverns, and floating islands as you encounter magical creatures, solve puzzles, and uncover the mysteries of this enchanted realm. Your choices matter - every decision shapes your adventure. Whether you're a brave warrior, a cunning mage, or a stealthy scout, this world offers endless possibilities. Join us!",
@@ -207,21 +206,21 @@ func GameConfig() []harness.GameConfig {
 			AdventureGameCharacterConfigs: []harness.AdventureGameCharacterConfig{
 				{
 					Reference:  harness.GameCharacterOneRef,
-					AccountRef: harness.AccountOneRef,
+					AccountRef: harness.StandardAccountRef,
 					Record: &adventure_game_record.AdventureGameCharacter{
 						Name: "Aria the Mage",
 					},
 				},
 				{
 					Reference:  harness.GameCharacterTwoRef,
-					AccountRef: harness.AccountTwoRef,
+					AccountRef: harness.ProPlayerAccountRef,
 					Record: &adventure_game_record.AdventureGameCharacter{
 						Name: "Thorne the Warrior",
 					},
 				},
 				{
 					Reference:  harness.GameCharacterThreeRef,
-					AccountRef: harness.AccountThreeRef,
+					AccountRef: harness.ProDesignerAccountRef,
 					Record: &adventure_game_record.AdventureGameCharacter{
 						Name: "Luna the Scout",
 					},
@@ -473,8 +472,7 @@ func GameConfig() []harness.GameConfig {
 			},
 		},
 		{
-			Reference:  harness.GameTwoRef,
-			AccountRef: harness.AccountTwoRef,
+			Reference: harness.GameTwoRef,
 			Record: &game_record.Game{
 				Name:              "The Desert Kingdom",
 				Description:       "Welcome to The Desert Kingdom! Embark on an epic journey across vast sand dunes, ancient ruins, and hidden oases in this sprawling desert adventure. Navigate treacherous terrain, encounter nomadic tribes, and uncover the lost secrets of a forgotten civilization. In this harsh but beautiful landscape, survival requires wit, courage, and careful planning. Every turn brings new challenges - seek out legendary treasures, forge alliances, or carve your own path through the shifting sands. Join us!",

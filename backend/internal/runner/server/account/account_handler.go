@@ -27,13 +27,10 @@ import (
 const (
 	GetManyAccounts     = "get-many-accounts"
 	GetOneAccount       = "get-one-account"
-	GetMyAccount        = "get-my-account"
 	CreateOneAccount    = "create-one-account"
 	CreateAccountWithID = "create-account-with-id"
 	UpdateOneAccount    = "update-one-account"
-	UpdateMyAccount     = "update-my-account"
 	DeleteOneAccount    = "delete-one-account"
-	DeleteMyAccount     = "delete-my-account"
 )
 
 const (
@@ -184,55 +181,6 @@ func accountHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, err
 		},
 	}
 
-	// Register "my account" routes
-	accountConfig[GetMyAccount] = server.HandlerConfig{
-		Method:      http.MethodGet,
-		Path:        "/api/v1/my-account",
-		HandlerFunc: getMyAccountHandler,
-		MiddlewareConfig: server.MiddlewareConfig{
-			AuthenTypes: []server.AuthenticationType{
-				server.AuthenticationTypeToken,
-			},
-			ValidateResponseSchema: responseSchema,
-		},
-		DocumentationConfig: server.DocumentationConfig{
-			Document: true,
-			Title:    "Get my account",
-		},
-	}
-
-	accountConfig[UpdateMyAccount] = server.HandlerConfig{
-		Method:      http.MethodPut,
-		Path:        "/api/v1/my-account",
-		HandlerFunc: updateMyAccountHandler,
-		MiddlewareConfig: server.MiddlewareConfig{
-			AuthenTypes: []server.AuthenticationType{
-				server.AuthenticationTypeToken,
-			},
-			ValidateRequestSchema:  requestSchema,
-			ValidateResponseSchema: responseSchema,
-		},
-		DocumentationConfig: server.DocumentationConfig{
-			Document: true,
-			Title:    "Update my account",
-		},
-	}
-
-	accountConfig[DeleteMyAccount] = server.HandlerConfig{
-		Method:      http.MethodDelete,
-		Path:        "/api/v1/my-account",
-		HandlerFunc: deleteMyAccountHandler,
-		MiddlewareConfig: server.MiddlewareConfig{
-			AuthenTypes: []server.AuthenticationType{
-				server.AuthenticationTypeToken,
-			},
-		},
-		DocumentationConfig: server.DocumentationConfig{
-			Document: true,
-			Title:    "Delete my account",
-		},
-	}
-
 	// Register auth routes
 	accountConfig[RequestAuth] = server.HandlerConfig{
 		Method:      http.MethodPost,
@@ -321,7 +269,16 @@ func getManyAccountsHandler(w http.ResponseWriter, r *http.Request, pp httproute
 
 	opts := queryparam.ToSQLOptionsWithDefaults(qp)
 
-	recs, err := mm.GetManyAccountRecs(opts)
+	// Filter by authenticated account ID if present
+	authData := server.GetRequestAuthenData(l, r)
+	if authData != nil {
+		opts.Params = append(opts.Params, coresql.Param{
+			Col: "id",
+			Val: authData.AccountUser.AccountID,
+		})
+	}
+
+	recs, err := mm.GetManyAccountParentRecs(opts)
 	if err != nil {
 		l.Warn("failed getting account records >%v<", err)
 		return err
@@ -350,11 +307,11 @@ func getAccountHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Par
 		l.Warn("account ID is empty")
 		return coreerror.RequiredPathParameter("account_id")
 	}
-	l.Info("querying account record with id >%s<", accountID)
+	l.Info("querying account record with account_id >%s<", accountID)
 
 	mm := m.(*domain.Domain)
 
-	rec, err := mm.GetAccountRec(accountID, nil)
+	rec, err := mm.GetAccountParentRec(accountID, nil)
 	if err != nil {
 		l.Warn("failed getting account record >%v<", err)
 		return err
@@ -383,25 +340,39 @@ func createAccountHandler(w http.ResponseWriter, r *http.Request, pp httprouter.
 
 	mm := m.(*domain.Domain)
 
-	rec, err := mapper.AccountRequestToRecord(l, r, &account_record.Account{})
+	accountRec, err := mapper.AccountRequestToRecord(l, r, &account_record.Account{})
 	if err != nil {
 		l.Warn("failed mapping account request to record >%v<", err)
 		return err
 	}
 
-	createdRec, err := mm.CreateAccountRec(rec)
+	userRec := &account_record.AccountUser{
+		Email: accountRec.Name,
+	}
+
+	createdAccountRec, _, _, err := mm.CreateAccount(userRec)
 	if err != nil {
 		l.Warn("failed creating account record >%v<", err)
 		return err
 	}
 
-	res, err := mapper.AccountRecordToResponse(l, createdRec)
+	// The domain sets the account name from the email; override with the requested name
+	if accountRec.Name != "" {
+		createdAccountRec.Name = accountRec.Name
+		createdAccountRec, err = mm.UpdateAccountParentRec(createdAccountRec)
+		if err != nil {
+			l.Warn("failed updating account name >%v<", err)
+			return err
+		}
+	}
+
+	res, err := mapper.AccountRecordToResponse(l, createdAccountRec)
 	if err != nil {
 		l.Warn("failed mapping account record to response >%v<", err)
 		return err
 	}
 
-	l.Info("responding with created account record id >%s<", createdRec.ID)
+	l.Info("responding with created account record id >%s<", createdAccountRec.ID)
 
 	if err = server.WriteResponse(l, w, http.StatusCreated, res); err != nil {
 		l.Warn("failed writing response >%v<", err)
@@ -423,7 +394,8 @@ func updateAccountHandler(w http.ResponseWriter, r *http.Request, pp httprouter.
 		l.Warn("account ID is empty")
 		return coreerror.RequiredPathParameter("account_id")
 	}
-	rec, err := mm.GetAccountRec(accountID, coresql.ForUpdateNoWait)
+
+	rec, err := mm.GetAccountParentRec(accountID, coresql.ForUpdateNoWait)
 	if err != nil {
 		l.Warn("failed getting account record >%v<", err)
 		return err
@@ -435,7 +407,7 @@ func updateAccountHandler(w http.ResponseWriter, r *http.Request, pp httprouter.
 		return err
 	}
 
-	updatedRec, err := mm.UpdateAccountRec(rec)
+	updatedRec, err := mm.UpdateAccountParentRec(rec)
 	if err != nil {
 		l.Warn("failed updating account record >%v<", err)
 		return err
@@ -461,11 +433,11 @@ func deleteAccountHandler(w http.ResponseWriter, r *http.Request, pp httprouter.
 	l = logging.LoggerWithFunctionContext(l, packageName, "deleteAccountHandler")
 
 	accountID := pp.ByName("account_id")
-	l.Info("deleting account record with id >%s<", accountID)
+	l.Info("deleting account record with account_id >%s<", accountID)
 
 	mm := m.(*domain.Domain)
 
-	if err := mm.DeleteAccountRec(accountID); err != nil {
+	if err := mm.RemoveAccountRec(accountID); err != nil {
 		l.Warn("failed deleting account record >%v<", err)
 		return err
 	}
@@ -559,133 +531,16 @@ func refreshSessionHandler(w http.ResponseWriter, r *http.Request, pp httprouter
 	return server.WriteResponse(l, w, http.StatusOK, mapper.MapRefreshSessionResponse("ok", mm.SessionTokenExpirySeconds()))
 }
 
-func getMyAccountHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
-	l = logging.LoggerWithFunctionContext(l, packageName, "getMyAccountHandler")
-
-	l.Info("querying authenticated user account")
-
-	mm := m.(*domain.Domain)
-
-	// Get the authenticated account from the request context
-	authData := server.GetRequestAuthenData(l, r)
-	if authData == nil {
-		l.Warn("failed getting authenticated account data")
-		return server.WriteResponse(l, w, http.StatusUnauthorized, nil)
-	}
-
-	rec, err := mm.GetAccountRec(authData.Account.ID, nil)
-	if err != nil {
-		l.Warn("failed getting account record >%v<", err)
-		return err
-	}
-
-	res, err := mapper.AccountRecordToResponse(l, rec)
-	if err != nil {
-		l.Warn("failed mapping account record to response >%v<", err)
-		return err
-	}
-
-	l.Info("responding with authenticated account record id >%s<", rec.ID)
-
-	if err = server.WriteResponse(l, w, http.StatusOK, res); err != nil {
-		l.Warn("failed writing response >%v<", err)
-		return err
-	}
-
-	return nil
-}
-
-func updateMyAccountHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
-	l = logging.LoggerWithFunctionContext(l, packageName, "updateMyAccountHandler")
-
-	l.Info("updating authenticated user account")
-
-	mm := m.(*domain.Domain)
-
-	// Get the authenticated account from the request context
-	authData := server.GetRequestAuthenData(l, r)
-	if authData == nil {
-		l.Warn("failed getting authenticated account data")
-		return server.WriteResponse(l, w, http.StatusUnauthorized, nil)
-	}
-
-	rec, err := mm.GetAccountRec(authData.Account.ID, coresql.ForUpdateNoWait)
-	if err != nil {
-		l.Warn("failed getting account record >%v<", err)
-		return err
-	}
-
-	// Map the request to record, but preserve the email (it cannot be changed)
-	originalEmail := rec.Email
-	rec, err = mapper.AccountRequestToRecord(l, r, rec)
-	if err != nil {
-		l.Warn("failed mapping account request to record >%v<", err)
-		return err
-	}
-	// Ensure email cannot be changed
-	rec.Email = originalEmail
-
-	updatedRec, err := mm.UpdateAccountRec(rec)
-	if err != nil {
-		l.Warn("failed updating account record >%v<", err)
-		return err
-	}
-
-	res, err := mapper.AccountRecordToResponse(l, updatedRec)
-	if err != nil {
-		l.Warn("failed mapping account record to response >%v<", err)
-		return err
-	}
-
-	l.Info("responding with updated authenticated account record id >%s<", updatedRec.ID)
-
-	if err = server.WriteResponse(l, w, http.StatusOK, res); err != nil {
-		l.Warn("failed writing response >%v<", err)
-		return err
-	}
-
-	return nil
-}
-
-func deleteMyAccountHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
-	l = logging.LoggerWithFunctionContext(l, packageName, "deleteMyAccountHandler")
-
-	l.Info("deleting authenticated user account")
-
-	mm := m.(*domain.Domain)
-
-	// Get the authenticated account from the request context
-	authData := server.GetRequestAuthenData(l, r)
-	if authData == nil {
-		l.Warn("failed getting authenticated account data")
-		return server.WriteResponse(l, w, http.StatusUnauthorized, nil)
-	}
-
-	if err := mm.DeleteAccountRec(authData.Account.ID); err != nil {
-		l.Warn("failed deleting account record >%v<", err)
-		return err
-	}
-
-	l.Info("deleted authenticated account record id >%s<", authData.Account.ID)
-
-	if err := server.WriteResponse(l, w, http.StatusNoContent, nil); err != nil {
-		l.Warn("failed writing response >%v<", err)
-		return err
-	}
-
-	return nil
-}
-
 // SendAccountVerificationEmail generates, stores, and emails a verification token for the given email address.
 func sendAccountVerificationEmail(m *domain.Domain, jc *river.Client[pgx.Tx], emailAddr string) error {
 	l := m.Logger("SendAccountVerificationEmail")
 
 	// Look up account by email
-	repo := m.AccountRepository()
+	repo := m.AccountUserRepository()
 
 	recs, err := repo.GetMany(&coresql.Options{
 		Params: []coresql.Param{
-			{Col: account_record.FieldAccountEmail, Val: emailAddr},
+			{Col: account_record.FieldAccountUserEmail, Val: emailAddr},
 		},
 		Limit: 1,
 	})
@@ -694,13 +549,13 @@ func sendAccountVerificationEmail(m *domain.Domain, jc *river.Client[pgx.Tx], em
 		return err
 	}
 
-	var rec *account_record.Account
+	var rec *account_record.AccountUser
 	if len(recs) == 0 {
 		l.Info("no account found for email >%s<, creating account", emailAddr)
-		rec = &account_record.Account{
+		rec = &account_record.AccountUser{
 			Email: emailAddr,
 		}
-		rec, err = m.CreateAccountRec(rec)
+		_, rec, _, err = m.CreateAccount(rec)
 		if err != nil {
 			l.Warn("failed to create account >%v<", err)
 			return err

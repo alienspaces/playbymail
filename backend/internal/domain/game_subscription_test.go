@@ -2,13 +2,11 @@ package domain_test
 
 import (
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/require"
 
 	coreerror "gitlab.com/alienspaces/playbymail/core/error"
-	"gitlab.com/alienspaces/playbymail/core/nullstring"
-	"gitlab.com/alienspaces/playbymail/core/nulltime"
+	"gitlab.com/alienspaces/playbymail/core/nullint32"
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/harness"
 	"gitlab.com/alienspaces/playbymail/internal/record/account_record"
@@ -24,26 +22,61 @@ func TestApproveGameSubscription(t *testing.T) {
 	dataConfig := harness.DataConfig{
 		GameConfigs: []harness.GameConfig{
 			{
-				Reference:  harness.GameOneRef,
-				AccountRef: "pending-account",
+				Reference: harness.GameOneRef,
 				Record: &game_record.Game{
 					Name:              harness.UniqueName("Test Game"),
 					GameType:          game_record.GameTypeAdventure,
 					TurnDurationHours: 168,
 				},
+				AdventureGameLocationConfigs: []harness.AdventureGameLocationConfig{
+					{
+						Reference: "starting-location",
+						Record: &adventure_game_record.AdventureGameLocation{
+							Name:               harness.UniqueName("Starting Location"),
+							Description:        "A starting location for testing",
+							IsStartingLocation: true,
+						},
+					},
+				},
+				GameInstanceConfigs: []harness.GameInstanceConfig{
+					{
+						Reference: "test-instance-1",
+					},
+					{
+						Reference: "test-instance-2",
+					},
+				},
 			},
 		},
 		AccountConfigs: []harness.AccountConfig{
 			{
+				Reference: "designer-account",
+				Record: &account_record.AccountUser{
+					Email:  harness.UniqueEmail("designer@example.com"),
+					Status: account_record.AccountUserStatusActive,
+				},
+				GameSubscriptionConfigs: []harness.GameSubscriptionConfig{
+					{
+						Reference:        "designer-subscription",
+						GameRef:          harness.GameOneRef,
+						SubscriptionType: game_record.GameSubscriptionTypeDesigner,
+						Record: &game_record.GameSubscription{
+							Status: game_record.GameSubscriptionStatusActive,
+						},
+					},
+				},
+			},
+			{
 				Reference: "pending-account",
-				Record: &account_record.Account{
+				Record: &account_record.AccountUser{
 					Email:  harness.UniqueEmail("pending@example.com"),
-					Status: account_record.AccountStatusPendingApproval,
+					Status: account_record.AccountUserStatusPendingApproval,
 				},
 				GameSubscriptionConfigs: []harness.GameSubscriptionConfig{
 					{
 						Reference:        "pending-subscription",
 						GameRef:          harness.GameOneRef,
+						GameInstanceRefs: []string{"test-instance-1"},
 						SubscriptionType: game_record.GameSubscriptionTypePlayer,
 						Record: &game_record.GameSubscription{
 							Status: game_record.GameSubscriptionStatusPendingApproval,
@@ -53,14 +86,15 @@ func TestApproveGameSubscription(t *testing.T) {
 			},
 			{
 				Reference: "pending-account-two",
-				Record: &account_record.Account{
+				Record: &account_record.AccountUser{
 					Email:  harness.UniqueEmail("pending-two@example.com"),
-					Status: account_record.AccountStatusPendingApproval,
+					Status: account_record.AccountUserStatusPendingApproval,
 				},
 				GameSubscriptionConfigs: []harness.GameSubscriptionConfig{
 					{
 						Reference:        "active-subscription",
 						GameRef:          harness.GameOneRef,
+						GameInstanceRefs: []string{"test-instance-2"},
 						SubscriptionType: game_record.GameSubscriptionTypePlayer,
 						Record: &game_record.GameSubscription{
 							Status: game_record.GameSubscriptionStatusActive,
@@ -70,9 +104,9 @@ func TestApproveGameSubscription(t *testing.T) {
 			},
 			{
 				Reference: "other-account",
-				Record: &account_record.Account{
+				Record: &account_record.AccountUser{
 					Email:  harness.UniqueEmail("other@example.com"),
-					Status: account_record.AccountStatusActive,
+					Status: account_record.AccountUserStatusActive,
 				},
 			},
 		},
@@ -104,11 +138,11 @@ func TestApproveGameSubscription(t *testing.T) {
 	activeSubscriptionID, ok := th.Data.Refs.GameSubscriptionRefs["active-subscription"]
 	require.True(t, ok, "active-subscription reference exists")
 
-	pendingAccount, err := th.Data.GetAccountRecByRef("pending-account")
-	require.NoError(t, err, "GetAccountRecByRef returns without error")
+	pendingAccount, err := th.Data.GetAccountUserRecByRef("pending-account")
+	require.NoError(t, err, "GetAccountUserRecByRef returns without error")
 
-	pendingAccountTwo, err := th.Data.GetAccountRecByRef("pending-account-two")
-	require.NoError(t, err, "GetAccountRecByRef returns without error")
+	pendingAccountTwo, err := th.Data.GetAccountUserRecByRef("pending-account-two")
+	require.NoError(t, err, "GetAccountUserRecByRef returns without error")
 
 	testCases := []struct {
 		name           string
@@ -127,7 +161,7 @@ func TestApproveGameSubscription(t *testing.T) {
 			expectStatus:   game_record.GameSubscriptionStatusActive,
 			validate: func(t *testing.T, rec *game_record.GameSubscription) {
 				require.Equal(t, game_record.GameSubscriptionStatusActive, rec.Status, "Status is active")
-				require.Equal(t, pendingAccount.ID, rec.AccountID, "Account ID matches")
+				require.Equal(t, pendingAccount.AccountID, rec.AccountID, "Account ID matches")
 			},
 		},
 		{
@@ -193,326 +227,14 @@ func TestApproveGameSubscription(t *testing.T) {
 	}
 }
 
-func TestGenerateGameSubscriptionTurnSheetToken(t *testing.T) {
+// Note: Tests for turn sheet token generation/verification have been moved to game_subscription_instance_test.go
+// since tokens are now stored on game_subscription_instance rather than game_subscription
+
+func TestGameSubscriptionInstanceLinking(t *testing.T) {
 	dataConfig := harness.DataConfig{
 		GameConfigs: []harness.GameConfig{
 			{
-				Reference:  harness.GameOneRef,
-				AccountRef: "test-account",
-				Record: &game_record.Game{
-					Name:              harness.UniqueName("Test Game"),
-					GameType:          game_record.GameTypeAdventure,
-					TurnDurationHours: 168,
-				},
-			},
-		},
-		AccountConfigs: []harness.AccountConfig{
-			{
-				Reference: "test-account",
-				Record: &account_record.Account{
-					Email:  harness.UniqueEmail("test@example.com"),
-					Status: account_record.AccountStatusActive,
-				},
-				GameSubscriptionConfigs: []harness.GameSubscriptionConfig{
-					{
-						Reference:        "active-subscription",
-						GameRef:          harness.GameOneRef,
-						SubscriptionType: game_record.GameSubscriptionTypePlayer,
-						Record: &game_record.GameSubscription{
-							Status: game_record.GameSubscriptionStatusActive,
-						},
-					},
-				},
-			},
-		},
-	}
-
-	cfg, err := config.Parse()
-	require.NoError(t, err, "Parse returns without error")
-
-	l, s, j, scanner, err := deps.NewDefaultDependencies(cfg)
-	require.NoError(t, err, "NewDefaultDependencies returns without error")
-
-	th, err := harness.NewTesting(cfg, l, s, j, scanner, dataConfig)
-	require.NoError(t, err, "NewTesting returns without error")
-
-	th.ShouldCommitData = false
-
-	_, err = th.Setup()
-	require.NoError(t, err, "Setup returns without error")
-	defer func() {
-		err = th.Teardown()
-		require.NoError(t, err, "Teardown returns without error")
-	}()
-
-	subscriptionID, ok := th.Data.Refs.GameSubscriptionRefs["active-subscription"]
-	require.True(t, ok, "active-subscription reference exists")
-
-	testCases := []struct {
-		name           string
-		subscriptionID string
-		expectError    bool
-		errorCode      coreerror.Code
-		validate       func(t *testing.T, token string, rec *game_record.GameSubscription)
-	}{
-		{
-			name:           "successfully generates turn sheet token",
-			subscriptionID: subscriptionID,
-			expectError:    false,
-			validate: func(t *testing.T, token string, rec *game_record.GameSubscription) {
-				require.NotEmpty(t, token, "Token should not be empty")
-				require.True(t, nulltime.IsValid(rec.TurnSheetTokenExpiresAt), "Expiration should be set")
-				expirationTime := nulltime.ToTime(rec.TurnSheetTokenExpiresAt)
-				expectedExpiration := time.Now().Add(3 * 24 * time.Hour)
-				// Allow 1 minute tolerance for test execution time
-				require.WithinDuration(t, expectedExpiration, expirationTime, 1*time.Minute, "Expiration should be approximately 3 days from now")
-			},
-		},
-		{
-			name:           "returns error when subscription does not exist",
-			subscriptionID: "00000000-0000-0000-0000-000000000000",
-			expectError:    true,
-			errorCode:      coreerror.ErrorCodeNotFound,
-		},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			m := th.Domain.(*domain.Domain)
-
-			token, err := m.GenerateGameSubscriptionTurnSheetToken(tc.subscriptionID)
-
-			if tc.expectError {
-				require.Error(t, err, "Should return error")
-				if tc.errorCode != "" {
-					var coreErr coreerror.Error
-					require.ErrorAs(t, err, &coreErr, "Error should be a coreerror.Error")
-					require.Equal(t, tc.errorCode, coreErr.ErrorCode, "Error code matches expected")
-				}
-				require.Empty(t, token, "Token should be empty on error")
-			} else {
-				require.NoError(t, err, "Should not return error")
-				require.NotEmpty(t, token, "Token should not be empty")
-
-				// Verify the token was saved
-				rec, err := m.GetGameSubscriptionRec(tc.subscriptionID, nil)
-				require.NoError(t, err, "Should be able to retrieve subscription")
-				if tc.validate != nil {
-					tc.validate(t, token, rec)
-				}
-			}
-		})
-	}
-}
-
-func TestVerifyGameSubscriptionTurnSheetKey(t *testing.T) {
-	dataConfig := harness.DataConfig{
-		GameConfigs: []harness.GameConfig{
-			{
-				Reference:  harness.GameOneRef,
-				AccountRef: "test-account",
-				Record: &game_record.Game{
-					Name:              harness.UniqueName("Test Game"),
-					GameType:          game_record.GameTypeAdventure,
-					TurnDurationHours: 168,
-				},
-			},
-		},
-		AccountConfigs: []harness.AccountConfig{
-			{
-				Reference: "test-account",
-				Record: &account_record.Account{
-					Email:  harness.UniqueEmail("test@example.com"),
-					Status: account_record.AccountStatusActive,
-				},
-				GameSubscriptionConfigs: []harness.GameSubscriptionConfig{
-					{
-						Reference:        "active-subscription",
-						GameRef:          harness.GameOneRef,
-						SubscriptionType: game_record.GameSubscriptionTypePlayer,
-						Record: &game_record.GameSubscription{
-							Status: game_record.GameSubscriptionStatusActive,
-						},
-					},
-				},
-			},
-		},
-	}
-
-	cfg, err := config.Parse()
-	require.NoError(t, err, "Parse returns without error")
-
-	l, s, j, scanner, err := deps.NewDefaultDependencies(cfg)
-	require.NoError(t, err, "NewDefaultDependencies returns without error")
-
-	th, err := harness.NewTesting(cfg, l, s, j, scanner, dataConfig)
-	require.NoError(t, err, "NewTesting returns without error")
-
-	th.ShouldCommitData = false
-
-	_, err = th.Setup()
-	require.NoError(t, err, "Setup returns without error")
-	defer func() {
-		err = th.Teardown()
-		require.NoError(t, err, "Teardown returns without error")
-	}()
-
-	subscriptionID, ok := th.Data.Refs.GameSubscriptionRefs["active-subscription"]
-	require.True(t, ok, "active-subscription reference exists")
-
-	m := th.Domain.(*domain.Domain)
-
-	// Generate a valid token
-	validToken, err := m.GenerateGameSubscriptionTurnSheetToken(subscriptionID)
-	require.NoError(t, err, "GenerateGameSubscriptionTurnSheetToken returns without error")
-
-	testCases := []struct {
-		name           string
-		subscriptionID string
-		turnSheetToken string
-		expectError    bool
-		validate       func(t *testing.T, rec *game_record.GameSubscription)
-	}{
-		{
-			name:           "successfully validates valid turn sheet token",
-			subscriptionID: subscriptionID,
-			turnSheetToken: validToken,
-			expectError:    false,
-			validate: func(t *testing.T, rec *game_record.GameSubscription) {
-				require.Equal(t, subscriptionID, rec.ID, "Subscription ID matches")
-			},
-		},
-		{
-			name:           "returns error when subscription ID is empty",
-			subscriptionID: "",
-			turnSheetToken: validToken,
-			expectError:    true,
-		},
-		{
-			name:           "returns error when turn sheet token is empty",
-			subscriptionID: subscriptionID,
-			turnSheetToken: "",
-			expectError:    true,
-		},
-		{
-			name:           "returns error when turn sheet token does not match",
-			subscriptionID: subscriptionID,
-			turnSheetToken: "00000000-0000-0000-0000-000000000000",
-			expectError:    true,
-		},
-		{
-			name:           "returns error when subscription does not exist",
-			subscriptionID: "00000000-0000-0000-0000-000000000000",
-			turnSheetToken: validToken,
-			expectError:    true,
-		},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			rec, err := m.VerifyGameSubscriptionTurnSheetKey(tc.subscriptionID, tc.turnSheetToken)
-
-			if tc.expectError {
-				require.Error(t, err, "Should return error")
-				require.Nil(t, rec, "Record should be nil on error")
-			} else {
-				require.NoError(t, err, "Should not return error")
-				require.NotNil(t, rec, "Record should not be nil")
-				if tc.validate != nil {
-					tc.validate(t, rec)
-				}
-			}
-		})
-	}
-}
-
-func TestGenerateGameSubscriptionTurnSheetTokenInvalidatesOldToken(t *testing.T) {
-	dataConfig := harness.DataConfig{
-		GameConfigs: []harness.GameConfig{
-			{
-				Reference:  harness.GameOneRef,
-				AccountRef: "test-account",
-				Record: &game_record.Game{
-					Name:              harness.UniqueName("Test Game"),
-					GameType:          game_record.GameTypeAdventure,
-					TurnDurationHours: 168,
-				},
-			},
-		},
-		AccountConfigs: []harness.AccountConfig{
-			{
-				Reference: "test-account",
-				Record: &account_record.Account{
-					Email:  harness.UniqueEmail("test@example.com"),
-					Status: account_record.AccountStatusActive,
-				},
-				GameSubscriptionConfigs: []harness.GameSubscriptionConfig{
-					{
-						Reference:        "active-subscription",
-						GameRef:          harness.GameOneRef,
-						SubscriptionType: game_record.GameSubscriptionTypePlayer,
-						Record: &game_record.GameSubscription{
-							Status: game_record.GameSubscriptionStatusActive,
-						},
-					},
-				},
-			},
-		},
-	}
-
-	cfg, err := config.Parse()
-	require.NoError(t, err, "Parse returns without error")
-
-	l, s, j, scanner, err := deps.NewDefaultDependencies(cfg)
-	require.NoError(t, err, "NewDefaultDependencies returns without error")
-
-	th, err := harness.NewTesting(cfg, l, s, j, scanner, dataConfig)
-	require.NoError(t, err, "NewTesting returns without error")
-
-	th.ShouldCommitData = false
-
-	_, err = th.Setup()
-	require.NoError(t, err, "Setup returns without error")
-	defer func() {
-		err = th.Teardown()
-		require.NoError(t, err, "Teardown returns without error")
-	}()
-
-	subscriptionID, ok := th.Data.Refs.GameSubscriptionRefs["active-subscription"]
-	require.True(t, ok, "active-subscription reference exists")
-
-	m := th.Domain.(*domain.Domain)
-
-	// Generate initial token
-	initialToken, err := m.GenerateGameSubscriptionTurnSheetToken(subscriptionID)
-	require.NoError(t, err, "GenerateGameSubscriptionTurnSheetToken returns without error")
-	require.NotEmpty(t, initialToken, "Initial token should not be empty")
-
-	// Wait a moment to ensure different timestamp
-	time.Sleep(100 * time.Millisecond)
-
-	// Generate a new token (this invalidates the old one)
-	newToken, err := m.GenerateGameSubscriptionTurnSheetToken(subscriptionID)
-	require.NoError(t, err, "GenerateGameSubscriptionTurnSheetToken returns without error")
-	require.NotEmpty(t, newToken, "New token should not be empty")
-	require.NotEqual(t, initialToken, newToken, "New token should be different from initial token")
-
-	// Verify old token is invalidated (should not validate)
-	_, err = m.VerifyGameSubscriptionTurnSheetKey(subscriptionID, initialToken)
-	require.Error(t, err, "Old token should not validate")
-
-	// Verify new token works
-	rec, err := m.VerifyGameSubscriptionTurnSheetKey(subscriptionID, newToken)
-	require.NoError(t, err, "New token should validate")
-	require.Equal(t, subscriptionID, rec.ID, "Subscription ID matches")
-}
-
-func TestGameSubscriptionGameInstanceIDValidation(t *testing.T) {
-	dataConfig := harness.DataConfig{
-		GameConfigs: []harness.GameConfig{
-			{
-				Reference:  harness.GameOneRef,
-				AccountRef: "manager-account",
+				Reference: harness.GameOneRef,
 				Record: &game_record.Game{
 					Name:              harness.UniqueName("Test Game"),
 					GameType:          game_record.GameTypeAdventure,
@@ -538,28 +260,30 @@ func TestGameSubscriptionGameInstanceIDValidation(t *testing.T) {
 		AccountConfigs: []harness.AccountConfig{
 			{
 				Reference: "manager-account",
-				Record: &account_record.Account{
+				Record: &account_record.AccountUser{
 					Email:  harness.UniqueEmail("manager@example.com"),
-					Status: account_record.AccountStatusActive,
+					Status: account_record.AccountUserStatusActive,
 				},
 				GameSubscriptionConfigs: []harness.GameSubscriptionConfig{
 					{
 						Reference:        "manager-subscription",
 						GameRef:          harness.GameOneRef,
+						GameInstanceRefs: []string{"game-instance-1"},
 						SubscriptionType: game_record.GameSubscriptionTypeManager,
 					},
 				},
 			},
 			{
 				Reference: "player-account",
-				Record: &account_record.Account{
+				Record: &account_record.AccountUser{
 					Email:  harness.UniqueEmail("player@example.com"),
-					Status: account_record.AccountStatusActive,
+					Status: account_record.AccountUserStatusActive,
 				},
 				GameSubscriptionConfigs: []harness.GameSubscriptionConfig{
 					{
 						Reference:        "player-subscription",
 						GameRef:          harness.GameOneRef,
+						GameInstanceRefs: []string{"game-instance-1"},
 						SubscriptionType: game_record.GameSubscriptionTypePlayer,
 					},
 				},
@@ -588,91 +312,79 @@ func TestGameSubscriptionGameInstanceIDValidation(t *testing.T) {
 	gameInstanceID, ok := th.Data.Refs.GameInstanceRefs["game-instance-1"]
 	require.True(t, ok, "game-instance-1 reference exists")
 
-	playerSubscriptionID, ok := th.Data.Refs.GameSubscriptionRefs["player-subscription"]
-	require.True(t, ok, "player-subscription reference exists")
-
 	managerSubscriptionID, ok := th.Data.Refs.GameSubscriptionRefs["manager-subscription"]
 	require.True(t, ok, "manager-subscription reference exists")
 
 	m := th.Domain.(*domain.Domain)
 
-	testCases := []struct {
-		name          string
-		subscription  *game_record.GameSubscription
-		expectError   bool
-		errorContains string
-	}{
-		{
-			name: "Player subscription can have game_instance_id",
-			subscription: &game_record.GameSubscription{
-				GameID:           th.Data.GameRecs[0].ID,
-				AccountID:        th.Data.AccountRecs[1].ID, // player account
-				SubscriptionType: game_record.GameSubscriptionTypePlayer,
-				GameInstanceID:   nullstring.FromString(gameInstanceID),
-				Status:           game_record.GameSubscriptionStatusActive,
-			},
-			expectError: false,
-		},
-		{
-			name: "Manager subscription cannot have game_instance_id",
-			subscription: &game_record.GameSubscription{
-				GameID:           th.Data.GameRecs[0].ID,
-				AccountID:        th.Data.AccountRecs[0].ID, // manager account
-				SubscriptionType: game_record.GameSubscriptionTypeManager,
-				GameInstanceID:   nullstring.FromString(gameInstanceID),
-				Status:           game_record.GameSubscriptionStatusActive,
-			},
-			expectError:   true,
-			errorContains: "game_instance_id is only valid for Player subscriptions",
-		},
-		{
-			name: "Player subscription with invalid game_instance_id returns error",
-			subscription: &game_record.GameSubscription{
-				GameID:           th.Data.GameRecs[0].ID,
-				AccountID:        th.Data.AccountRecs[1].ID, // player account
-				SubscriptionType: game_record.GameSubscriptionTypePlayer,
-				GameInstanceID:   nullstring.FromString("00000000-0000-0000-0000-000000000000"),
-				Status:           game_record.GameSubscriptionStatusActive,
-			},
-			expectError:   true,
-			errorContains: "game_instance_id references invalid game instance",
-		},
-	}
+	// Test that subscriptions can be created without instances
+	t.Run("create subscription without instance", func(t *testing.T) {
+		subscription := &game_record.GameSubscription{
+			GameID:           th.Data.GameRecs[0].ID,
+			AccountID:        th.Data.AccountRecs[0].ID,
+			SubscriptionType: game_record.GameSubscriptionTypeManager,
+			Status:           game_record.GameSubscriptionStatusActive,
+		}
+		_, err := m.CreateGameSubscriptionRec(subscription)
+		require.NoError(t, err, "Should create subscription without instance")
+	})
 
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			// Get current subscription if updating
-			var curr *game_record.GameSubscription
-			if tc.subscription.SubscriptionType == game_record.GameSubscriptionTypePlayer {
-				curr, _ = m.GetGameSubscriptionRec(playerSubscriptionID, nil)
-			} else {
-				curr, _ = m.GetGameSubscriptionRec(managerSubscriptionID, nil)
-			}
+	// Test instance linking
+	t.Run("link instance to subscription", func(t *testing.T) {
+		managerSub, err := m.GetGameSubscriptionRec(managerSubscriptionID, nil)
+		require.NoError(t, err)
 
-			if curr != nil {
-				// Update existing subscription
-				tc.subscription.ID = curr.ID
-				_, err := m.UpdateGameSubscriptionRec(tc.subscription)
-				if tc.expectError {
-					require.Error(t, err, "Should return error")
-					if tc.errorContains != "" {
-						require.Contains(t, err.Error(), tc.errorContains, "Error should contain expected message")
-					}
-				} else {
-					require.NoError(t, err, "Should not return error")
-				}
-			} else {
-				// Create new subscription
-				_, err := m.CreateGameSubscriptionRec(tc.subscription)
-				if tc.expectError {
-					require.Error(t, err, "Should return error")
-					if tc.errorContains != "" {
-						require.Contains(t, err.Error(), tc.errorContains, "Error should contain expected message")
-					}
-				} else {
-					require.NoError(t, err, "Should not return error")
-				}
-			}
-		})
-	}
+		// Create subscription-instance link (account_id will be derived from subscription in validation)
+		instanceLinkRec := &game_record.GameSubscriptionInstance{
+			GameSubscriptionID: managerSub.ID,
+			GameInstanceID:     gameInstanceID,
+		}
+		_, err = m.CreateGameSubscriptionInstanceRec(instanceLinkRec)
+		require.NoError(t, err, "Should link instance to subscription")
+
+		// Verify link exists
+		instanceLinks, err := m.GetGameSubscriptionInstanceRecsBySubscription(managerSub.ID)
+		require.NoError(t, err)
+		require.Len(t, instanceLinks, 1, "Should have one instance link")
+		require.Equal(t, gameInstanceID, instanceLinks[0].GameInstanceID)
+	})
+
+	// Test instance limit validation
+	t.Run("instance limit validation", func(t *testing.T) {
+		// Create subscription with limit of 1
+		limit := int32(1)
+		subscription := &game_record.GameSubscription{
+			GameID:           th.Data.GameRecs[0].ID,
+			AccountID:        th.Data.AccountRecs[0].ID,
+			SubscriptionType: game_record.GameSubscriptionTypeManager,
+			Status:           game_record.GameSubscriptionStatusActive,
+			InstanceLimit:    nullint32.FromInt32(limit),
+		}
+		subscription, err := m.CreateGameSubscriptionRec(subscription)
+		require.NoError(t, err)
+
+		// Link first instance (should succeed)
+		instanceLinkRec1 := &game_record.GameSubscriptionInstance{
+			GameSubscriptionID: subscription.ID,
+			GameInstanceID:     gameInstanceID,
+		}
+		_, err = m.CreateGameSubscriptionInstanceRec(instanceLinkRec1)
+		require.NoError(t, err)
+
+		// Try to link second instance (should fail due to limit)
+		// Create another instance first
+		gameInstance2 := &game_record.GameInstance{
+			GameID: th.Data.GameRecs[0].ID,
+		}
+		gameInstance2, err = m.CreateGameInstanceRec(gameInstance2)
+		require.NoError(t, err)
+
+		instanceLinkRec2 := &game_record.GameSubscriptionInstance{
+			GameSubscriptionID: subscription.ID,
+			GameInstanceID:     gameInstance2.ID,
+		}
+		_, err = m.CreateGameSubscriptionInstanceRec(instanceLinkRec2)
+		require.Error(t, err, "Should fail when limit is reached")
+		require.Contains(t, err.Error(), "instance limit reached")
+	})
 }

@@ -16,6 +16,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/mapper"
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
+	"gitlab.com/alienspaces/playbymail/internal/runner/server/handler_auth"
 	"gitlab.com/alienspaces/playbymail/internal/utils/logging"
 )
 
@@ -84,7 +85,7 @@ func adventureGameItemHandlerConfig(l logger.Logger) (map[string]server.HandlerC
 		}...),
 	}
 
-	// New Adventure Game Item API paths
+	// Get all adventure game items for all adventure games
 	gameItemConfig[searchManyAdventureGameItems] = server.HandlerConfig{
 		Method:      http.MethodGet,
 		Path:        "/api/v1/adventure-game-items",
@@ -102,6 +103,7 @@ func adventureGameItemHandlerConfig(l logger.Logger) (map[string]server.HandlerC
 		},
 	}
 
+	// Get all adventure game items for a specific adventure game
 	gameItemConfig[getManyAdventureGameItems] = server.HandlerConfig{
 		Method:      http.MethodGet,
 		Path:        "/api/v1/adventure-games/:game_id/items",
@@ -119,6 +121,7 @@ func adventureGameItemHandlerConfig(l logger.Logger) (map[string]server.HandlerC
 		},
 	}
 
+	// Get a specific adventure game item
 	gameItemConfig[getOneAdventureGameItem] = server.HandlerConfig{
 		Method:      http.MethodGet,
 		Path:        "/api/v1/adventure-games/:game_id/items/:item_id",
@@ -135,6 +138,7 @@ func adventureGameItemHandlerConfig(l logger.Logger) (map[string]server.HandlerC
 		},
 	}
 
+	// Create a new adventure game item
 	gameItemConfig[createOneAdventureGameItem] = server.HandlerConfig{
 		Method:      http.MethodPost,
 		Path:        "/api/v1/adventure-games/:game_id/items",
@@ -142,6 +146,9 @@ func adventureGameItemHandlerConfig(l logger.Logger) (map[string]server.HandlerC
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
 				server.AuthenticationTypeToken,
+			},
+			AuthzPermissions: []server.AuthorizedPermission{
+				handler_auth.PermissionGameDesign,
 			},
 			ValidateRequestSchema:  requestSchema,
 			ValidateResponseSchema: responseSchema,
@@ -152,6 +159,7 @@ func adventureGameItemHandlerConfig(l logger.Logger) (map[string]server.HandlerC
 		},
 	}
 
+	// Update an existing adventure game item
 	gameItemConfig[updateOneAdventureGameItem] = server.HandlerConfig{
 		Method:      http.MethodPut,
 		Path:        "/api/v1/adventure-games/:game_id/items/:item_id",
@@ -159,6 +167,9 @@ func adventureGameItemHandlerConfig(l logger.Logger) (map[string]server.HandlerC
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
 				server.AuthenticationTypeToken,
+			},
+			AuthzPermissions: []server.AuthorizedPermission{
+				handler_auth.PermissionGameDesign,
 			},
 			ValidateRequestSchema:  requestSchema,
 			ValidateResponseSchema: responseSchema,
@@ -169,6 +180,7 @@ func adventureGameItemHandlerConfig(l logger.Logger) (map[string]server.HandlerC
 		},
 	}
 
+	// Delete an existing adventure game item
 	gameItemConfig[deleteOneAdventureGameItem] = server.HandlerConfig{
 		Method:      http.MethodDelete,
 		Path:        "/api/v1/adventure-games/:game_id/items/:item_id",
@@ -176,6 +188,9 @@ func adventureGameItemHandlerConfig(l logger.Logger) (map[string]server.HandlerC
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
 				server.AuthenticationTypeToken,
+			},
+			AuthzPermissions: []server.AuthorizedPermission{
+				handler_auth.PermissionGameDesign,
 			},
 		},
 		DocumentationConfig: server.DocumentationConfig{

@@ -51,7 +51,7 @@
 </template>
 
 <script>
-import { getMyAccount, deleteMyAccount } from '@/api/account'
+import { getMe, deleteAccountUser } from '@/api/account'
 import { useAuthStore } from '@/stores/auth'
 import { useRouter } from 'vue-router'
 import ConfirmationModal from '@/components/ConfirmationModal.vue'
@@ -87,7 +87,7 @@ export default {
       try {
         this.loading = true
         this.error = null
-        this.account = await getMyAccount()
+        this.account = await getMe()
       } catch (err) {
         this.error = err.message || 'Failed to load account information'
         console.error('Error loading account:', err)
@@ -113,7 +113,7 @@ export default {
       try {
         this.deleting = true
         this.error = null
-        await deleteMyAccount()
+        await deleteAccountUser(this.account.account_id, this.account.id)
 
         // Clear auth store and redirect to home
         const authStore = useAuthStore()

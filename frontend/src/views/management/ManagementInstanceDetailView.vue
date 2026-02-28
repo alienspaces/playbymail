@@ -122,6 +122,10 @@
               :disabled="controlLoading">
               Resume Game
             </Button>
+            <Button v-if="['created', 'started', 'paused'].includes(instance.status)" @click="resetInstance"
+              variant="warning" :disabled="controlLoading">
+              Reset Instance
+            </Button>
             <Button v-if="['created', 'started', 'paused'].includes(instance.status)" @click="cancelInstance"
               variant="danger" :disabled="controlLoading">
               Cancel Game
@@ -447,6 +451,13 @@ const pauseInstance = async () => {
 
 const resumeInstance = async () => {
   await performAction('resumeGameInstance', 'Failed to resume instance');
+};
+
+const resetInstance = async () => {
+  if (!confirm('Are you sure you want to reset this game instance? All instance data (turns, characters, items, etc.) will be deleted. Players will remain subscribed.')) {
+    return;
+  }
+  await performAction('resetGameInstance', 'Failed to reset instance');
 };
 
 const cancelInstance = async () => {

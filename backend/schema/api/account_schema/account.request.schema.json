@@ -4,8 +4,7 @@
     "title": "AccountRequest",
     "type": "object",
     "properties": {
-        "email": {
-            "format": "email",
+        "name": {
             "type": "string"
         }
     },

@@ -1,7 +1,6 @@
 package domain
 
 import (
-	"encoding/base64"
 	"fmt"
 
 	"gitlab.com/alienspaces/playbymail/core/domain"
@@ -13,7 +12,7 @@ type validateGameImageArgs struct {
 	currRec *game_record.GameImage
 }
 
-func (m *Domain) populateGameImageValidateArgs(nextRec, currRec *game_record.GameImage) (*validateGameImageArgs, error) {
+func (m *Domain) populateGameImageValidateArgs(currRec, nextRec *game_record.GameImage) (*validateGameImageArgs, error) {
 	args := &validateGameImageArgs{
 		currRec: currRec,
 		nextRec: nextRec,
@@ -22,15 +21,15 @@ func (m *Domain) populateGameImageValidateArgs(nextRec, currRec *game_record.Gam
 }
 
 func (m *Domain) validateGameImageRecForCreate(rec *game_record.GameImage) error {
-	args, err := m.populateGameImageValidateArgs(rec, nil)
+	args, err := m.populateGameImageValidateArgs(nil, rec)
 	if err != nil {
 		return err
 	}
 	return validateGameImageRecForCreate(args)
 }
 
-func (m *Domain) validateGameImageRecForUpdate(nextRec, currRec *game_record.GameImage) error {
-	args, err := m.populateGameImageValidateArgs(nextRec, currRec)
+func (m *Domain) validateGameImageRecForUpdate(currRec, nextRec *game_record.GameImage) error {
+	args, err := m.populateGameImageValidateArgs(currRec, nextRec)
 	if err != nil {
 		return err
 	}
@@ -38,7 +37,7 @@ func (m *Domain) validateGameImageRecForUpdate(nextRec, currRec *game_record.Gam
 }
 
 func (m *Domain) validateGameImageRecForDelete(rec *game_record.GameImage) error {
-	args, err := m.populateGameImageValidateArgs(rec, nil)
+	args, err := m.populateGameImageValidateArgs(nil, rec)
 	if err != nil {
 		return err
 	}
@@ -130,15 +129,6 @@ func validateGameImageRecForDelete(args *validateGameImageArgs) error {
 	}
 
 	return nil
-}
-
-// imageToBase64DataURL converts image data to a base64-encoded data URL
-func imageToBase64DataURL(imageData []byte, mimeType string) string {
-	if len(imageData) == 0 {
-		return ""
-	}
-	encoded := base64.StdEncoding.EncodeToString(imageData)
-	return fmt.Sprintf("data:%s;base64,%s", mimeType, encoded)
 }
 
 // ValidateImageDimensions checks if image dimensions are within acceptable bounds

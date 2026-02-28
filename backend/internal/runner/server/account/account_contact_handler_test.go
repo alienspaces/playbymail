@@ -14,7 +14,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/schema/api/account_schema"
 )
 
-func Test_getAccountContactHandler(t *testing.T) {
+func Test_getAccountUserContactHandler(t *testing.T) {
 	t.Parallel()
 
 	th := testutil.NewTestHarness(t)
@@ -37,23 +37,27 @@ func Test_getAccountContactHandler(t *testing.T) {
 	testCaseResponseDecoder := testutil.TestCaseResponseDecoderGeneric[account_schema.AccountContactResponse]
 
 	// Setup: get an account for reference
-	accountRec, err := th.Data.GetAccountRecByRef(harness.AccountOneRef)
-	require.NoError(t, err, "GetAccountRecByRef returns without error")
+	accountRec, err := th.Data.GetAccountUserRecByRef(harness.StandardAccountRef)
+	require.NoError(t, err, "GetAccountUserRecByRef returns without error")
 
 	// Get account contact (created by harness for all accounts)
-	accountContactRec, err := th.Data.GetAccountContactRecByAccountID(accountRec.ID)
-	require.NoError(t, err, "GetAccountContactRecByAccountID returns without error")
+	accountUserContactRec, err := th.Data.GetAccountUserContactRecByAccountUserID(accountRec.ID)
+	require.NoError(t, err, "GetAccountUserContactRecByAccountUserID returns without error")
 
 	testCases := []testCase{
 		{
 			TestCase: testutil.TestCase{
-				Name: "API key with open access \\ get many account contacts \\ returns expected account contacts",
+				Name: "authenticated user when get many account contacts then returns expected account contacts",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
-					return rnr.GetHandlerConfig()[account.GetManyAccountContacts]
+					return rnr.GetHandlerConfig()["get-many-account-user-contacts-by-user"]
+				},
+				RequestHeaders: func(d harness.Data) map[string]string {
+					return testutil.AuthHeaderStandard(d)
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
-						":account_id": accountRec.ID,
+						":account_id":      accountRec.AccountID,
+						":account_user_id": accountRec.ID,
 					}
 				},
 				RequestQueryParams: func(d harness.Data) map[string]any {
@@ -70,14 +74,18 @@ func Test_getAccountContactHandler(t *testing.T) {
 		},
 		{
 			TestCase: testutil.TestCase{
-				Name: "API key with open access \\ get one account contact with valid account contact ID \\ returns expected account contact",
+				Name: "authenticated user when get one account contact with valid account contact ID then returns expected account contact",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
-					return rnr.GetHandlerConfig()[account.GetOneAccountContact]
+					return rnr.GetHandlerConfig()[account.GetOneAccountUserContact]
+				},
+				RequestHeaders: func(d harness.Data) map[string]string {
+					return testutil.AuthHeaderStandard(d)
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					params := map[string]string{
-						":account_id":         accountRec.ID,
-						":account_contact_id": accountContactRec.ID,
+						":account_id":              accountRec.AccountID,
+						":account_user_id":         accountRec.ID,
+						":account_user_contact_id": accountUserContactRec.ID,
 					}
 					return params
 				},
@@ -92,7 +100,7 @@ func Test_getAccountContactHandler(t *testing.T) {
 		t.Logf("Running test >%s<\n", testCase.Name)
 
 		t.Run(testCase.Name, func(t *testing.T) {
-			testFunc := func(method string, body interface{}) {
+			testFunc := func(method string, body any) {
 				if testCase.TestResponseCode() != http.StatusOK {
 					return
 				}
@@ -118,7 +126,7 @@ func Test_getAccountContactHandler(t *testing.T) {
 
 				for _, d := range responses {
 					require.NotEmpty(t, d.ID, "Account contact ID is not empty")
-					require.NotEmpty(t, d.AccountID, "Account contact AccountID is not empty")
+					require.NotEmpty(t, d.AccountUserID, "Account contact AccountUserID is not empty")
 					require.NotEmpty(t, d.Name, "Account contact Name is not empty")
 					require.NotEmpty(t, d.PostalAddressLine1, "Account contact PostalAddressLine1 is not empty")
 					require.NotEmpty(t, d.StateProvince, "Account contact StateProvince is not empty")
@@ -132,7 +140,7 @@ func Test_getAccountContactHandler(t *testing.T) {
 	}
 }
 
-func Test_createUpdateDeleteAccountContactHandler(t *testing.T) {
+func Test_createUpdateDeleteAccountUserContactHandler(t *testing.T) {
 	t.Parallel()
 
 	th := testutil.NewTestHarness(t)
@@ -153,23 +161,29 @@ func Test_createUpdateDeleteAccountContactHandler(t *testing.T) {
 	testCaseResponseDecoder := testutil.TestCaseResponseDecoderGeneric[account_schema.AccountContactResponse]
 
 	// Setup: get an account for reference
-	accountRec, err := th.Data.GetAccountRecByRef(harness.AccountOneRef)
-	require.NoError(t, err, "GetAccountRecByRef returns without error")
+	accountRec, err := th.Data.GetAccountUserRecByRef(harness.StandardAccountRef)
+	require.NoError(t, err, "GetAccountUserRecByRef returns without error")
 
 	// Get account contact (created by harness for all accounts)
-	accountContactRec, err := th.Data.GetAccountContactRecByAccountID(accountRec.ID)
-	require.NoError(t, err, "GetAccountContactRecByAccountID returns without error")
+	accountUserContactRec, err := th.Data.GetAccountUserContactRecByAccountUserID(accountRec.ID)
+	require.NoError(t, err, "GetAccountUserContactRecByAccountUserID returns without error")
 
 	testCases := []testCase{
 		{
 			TestCase: testutil.TestCase{
-				Name: "API key with open access \\ create account contact with valid properties \\ returns created account contact",
+				Name: "authenticated user when create account contact with valid properties then returns created account contact",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
-					return rnr.GetHandlerConfig()[account.CreateOneAccountContact]
+					cfg := rnr.GetHandlerConfig()[account.CreateOneAccountUserContact]
+					t.Logf("DEBUG CONFIG PATH: %s", cfg.Path)
+					return cfg
+				},
+				RequestHeaders: func(d harness.Data) map[string]string {
+					return testutil.AuthHeaderStandard(d)
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
-						":account_id": accountRec.ID,
+						":account_id":      accountRec.AccountID,
+						":account_user_id": accountRec.ID,
 					}
 				},
 				RequestBody: func(d harness.Data) any {
@@ -188,7 +202,7 @@ func Test_createUpdateDeleteAccountContactHandler(t *testing.T) {
 			expectResponse: func(d harness.Data, req account_schema.AccountContactRequest) account_schema.AccountContactResponse {
 				return account_schema.AccountContactResponse{
 					Data: &account_schema.AccountContactResponseData{
-						AccountID:          accountRec.ID,
+						AccountUserID:      accountRec.ID,
 						Name:               req.Name,
 						PostalAddressLine1: req.PostalAddressLine1,
 						PostalAddressLine2: req.PostalAddressLine2,
@@ -201,14 +215,18 @@ func Test_createUpdateDeleteAccountContactHandler(t *testing.T) {
 		},
 		{
 			TestCase: testutil.TestCase{
-				Name: "API key with open access \\ update account contact with valid properties \\ returns updated account contact",
+				Name: "authenticated user when update account contact with valid properties then returns updated account contact",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
-					return rnr.GetHandlerConfig()[account.UpdateOneAccountContact]
+					return rnr.GetHandlerConfig()[account.UpdateOneAccountUserContact]
+				},
+				RequestHeaders: func(d harness.Data) map[string]string {
+					return testutil.AuthHeaderStandard(d)
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					params := map[string]string{
-						":account_id":         accountRec.ID,
-						":account_contact_id": accountContactRec.ID,
+						":account_id":              accountRec.AccountID,
+						":account_user_id":         accountRec.ID,
+						":account_user_contact_id": accountUserContactRec.ID,
 					}
 					return params
 				},
@@ -228,7 +246,7 @@ func Test_createUpdateDeleteAccountContactHandler(t *testing.T) {
 			expectResponse: func(d harness.Data, req account_schema.AccountContactRequest) account_schema.AccountContactResponse {
 				return account_schema.AccountContactResponse{
 					Data: &account_schema.AccountContactResponseData{
-						AccountID:          accountRec.ID,
+						AccountUserID:      accountRec.ID,
 						Name:               req.Name,
 						PostalAddressLine1: req.PostalAddressLine1,
 						PostalAddressLine2: req.PostalAddressLine2,
@@ -241,14 +259,18 @@ func Test_createUpdateDeleteAccountContactHandler(t *testing.T) {
 		},
 		{
 			TestCase: testutil.TestCase{
-				Name: "API key with open access \\ delete account contact with valid account contact ID \\ returns no content",
+				Name: "authenticated user when delete account contact with valid account contact ID then returns no content",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
-					return rnr.GetHandlerConfig()[account.DeleteOneAccountContact]
+					return rnr.GetHandlerConfig()[account.DeleteOneAccountUserContact]
+				},
+				RequestHeaders: func(d harness.Data) map[string]string {
+					return testutil.AuthHeaderStandard(d)
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					params := map[string]string{
-						":account_id":         accountRec.ID,
-						":account_contact_id": accountContactRec.ID,
+						":account_id":              accountRec.AccountID,
+						":account_user_id":         accountRec.ID,
+						":account_user_contact_id": accountUserContactRec.ID,
 					}
 					return params
 				},
@@ -262,7 +284,7 @@ func Test_createUpdateDeleteAccountContactHandler(t *testing.T) {
 		t.Logf("Running test >%s<", testCase.Name)
 
 		t.Run(testCase.Name, func(t *testing.T) {
-			testFunc := func(method string, body interface{}) {
+			testFunc := func(method string, body any) {
 				if testCase.TestResponseCode() == http.StatusNoContent {
 					// No content expected
 					return
@@ -276,7 +298,7 @@ func Test_createUpdateDeleteAccountContactHandler(t *testing.T) {
 				require.NotNil(t, acResp, "AccountContactResponseData is not nil")
 				t.Logf("AccountContactResponseData: %#v", acResp)
 				require.NotEmpty(t, acResp.ID, "Account contact ID is not empty")
-				require.NotEmpty(t, acResp.AccountID, "Account contact AccountID is not empty")
+				require.NotEmpty(t, acResp.AccountUserID, "Account contact AccountUserID is not empty")
 				require.NotEmpty(t, acResp.Name, "Account contact Name is not empty")
 				require.NotEmpty(t, acResp.PostalAddressLine1, "Account contact PostalAddressLine1 is not empty")
 				require.NotEmpty(t, acResp.StateProvince, "Account contact StateProvince is not empty")
@@ -288,7 +310,7 @@ func Test_createUpdateDeleteAccountContactHandler(t *testing.T) {
 						th.Data,
 						testCase.TestRequestBody(th.Data).(account_schema.AccountContactRequest),
 					).Data
-					require.Equal(t, xResp.AccountID, acResp.AccountID, "Account contact AccountID matches expected")
+					require.Equal(t, xResp.AccountUserID, acResp.AccountUserID, "Account contact AccountUserID matches expected")
 					require.Equal(t, xResp.Name, acResp.Name, "Account contact Name equals expected")
 					require.Equal(t, xResp.PostalAddressLine1, acResp.PostalAddressLine1, "Account contact PostalAddressLine1 equals expected")
 					require.Equal(t, xResp.PostalAddressLine2, acResp.PostalAddressLine2, "Account contact PostalAddressLine2 equals expected")

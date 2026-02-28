@@ -24,18 +24,17 @@ import (
 	coreerror "gitlab.com/alienspaces/playbymail/core/error"
 	"gitlab.com/alienspaces/playbymail/core/jsonschema"
 	"gitlab.com/alienspaces/playbymail/core/server"
-	"gitlab.com/alienspaces/playbymail/core/type/domainer"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
 	"gitlab.com/alienspaces/playbymail/core/type/storer"
 	"gitlab.com/alienspaces/playbymail/internal/harness"
 	runner "gitlab.com/alienspaces/playbymail/internal/runner/server"
 	"gitlab.com/alienspaces/playbymail/internal/runner/server/game"
-	"gitlab.com/alienspaces/playbymail/internal/turn_sheet"
+	"gitlab.com/alienspaces/playbymail/internal/turnsheet"
 	"gitlab.com/alienspaces/playbymail/internal/utils/config"
 	"gitlab.com/alienspaces/playbymail/internal/utils/deps"
 )
 
-func NewDefaultDependencies(t *testing.T) (config.Config, logger.Logger, storer.Storer, *river.Client[pgx.Tx], turn_sheet.TurnSheetScanner) {
+func NewDefaultDependencies(t *testing.T) (config.Config, logger.Logger, storer.Storer, *river.Client[pgx.Tx], turnsheet.TurnSheetScanner) {
 	cfg, err := config.Parse()
 	require.NoError(t, err, "Parse returns without error")
 
@@ -65,45 +64,16 @@ func NewTestHarnessWithConfig(t *testing.T, dataConfig harness.DataConfig) *harn
 	return h
 }
 
-func NewTestRunner(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], scanner turn_sheet.TurnSheetScanner) (*runner.Runner, error) {
-	return NewTestRunnerWithAccountID(cfg, l, s, j, scanner, "", "")
+func NewTestRunner(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], scanner turnsheet.TurnSheetScanner) (*runner.Runner, error) {
+	return runner.NewRunner(cfg, l, s, j, scanner)
 }
 
-// AuthenticatedTestRunner creates a runner with a specific account ID for authentication
-func NewTestRunnerWithAccountID(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], scanner turn_sheet.TurnSheetScanner, accountID, email string) (*runner.Runner, error) {
-
-	rnr, err := runner.NewRunner(cfg, l, s, j, scanner)
-	if err != nil {
-		return nil, err
-	}
-
-	// Default values if not provided
-	if accountID == "" {
-		accountID = "00000000-0000-0000-0000-000000000001"
-	}
-	if email == "" {
-		email = "test@example.com"
-	}
-
-	// By default all requests are authenticated as token type with the specified account
-	rnr.AuthenticateRequestFunc = func(l logger.Logger, m domainer.Domainer, r *http.Request, authType server.AuthenticationType) (server.AuthenData, error) {
-		return server.AuthenData{
-			Type: server.AuthenticatedTypeToken,
-			Account: server.AuthenticatedAccount{
-				ID:    accountID,
-				Email: email,
-			},
-		}, nil
-	}
-
-	// By default all requests are not restricted by any RLS identifiers
-	rnr.RLSFunc = func(l logger.Logger, m domainer.Domainer, authedReq server.AuthenData) (server.RLS, error) {
-		return server.RLS{
-			Identifiers: map[string][]string{},
-		}, nil
-	}
-
-	return rnr, nil
+// NewTestRunnerWithAccountID creates a runner that uses real authentication with session tokens
+// Tests should use RequestHeaders with auth helper functions (AuthHeaderProManager, etc.) to provide tokens
+// The accountID and email parameters are ignored - kept for backwards compatibility
+func NewTestRunnerWithAccountID(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], scanner turnsheet.TurnSheetScanner, accountID, email string) (*runner.Runner, error) {
+	// Just use the standard test runner - tests should provide tokens via RequestHeaders
+	return NewTestRunner(cfg, l, s, j, scanner)
 }
 
 // MockTurnSheetScanner is a mock implementation of TurnSheetScanner for testing
@@ -127,7 +97,7 @@ func (m *MockTurnSheetScanner) GetTurnSheetScanData(ctx context.Context, l logge
 }
 
 // NewTestRunnerWithTurnSheetScanner creates a test runner with a custom turn sheet scanner
-func NewTestRunnerWithTurnSheetScanner(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], scanner turn_sheet.TurnSheetScanner) (TestRunnerer, error) {
+func NewTestRunnerWithTurnSheetScanner(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], scanner turnsheet.TurnSheetScanner) (TestRunnerer, error) {
 	rnr, err := NewTestRunner(cfg, l, s, j, scanner)
 	if err != nil {
 		return nil, err
@@ -162,7 +132,7 @@ type TestRunnerer interface {
 // (restored after accidental deletion)
 type TestCaser interface {
 	TestName() string
-	TestNewRunner(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], scanner turn_sheet.TurnSheetScanner, d harness.Data) (TestRunnerer, error)
+	TestNewRunner(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], scanner turnsheet.TurnSheetScanner, d harness.Data) (TestRunnerer, error)
 	TestHandlerConfig(rnr TestRunnerer) server.HandlerConfig
 	TestRequestHeaders(data harness.Data) map[string]string
 	TestRequestPathParams(data harness.Data) map[string]string
@@ -181,7 +151,7 @@ type TestCaser interface {
 type TestCase struct {
 	Skip                      bool
 	Name                      string
-	NewRunner                 func(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], scanner turn_sheet.TurnSheetScanner, d harness.Data) (TestRunnerer, error)
+	NewRunner                 func(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], scanner turnsheet.TurnSheetScanner, d harness.Data) (TestRunnerer, error)
 	HandlerConfig             func(rnr TestRunnerer) server.HandlerConfig
 	RequestHeaders            func(d harness.Data) map[string]string
 	RequestPathParams         func(d harness.Data) map[string]string
@@ -201,7 +171,7 @@ type TestCase struct {
 // Update TestCase to implement TestCaser with TestRunnerer
 func (t *TestCase) TestName() string { return t.Name }
 
-func (t *TestCase) TestNewRunner(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], scanner turn_sheet.TurnSheetScanner, d harness.Data) (TestRunnerer, error) {
+func (t *TestCase) TestNewRunner(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], scanner turnsheet.TurnSheetScanner, d harness.Data) (TestRunnerer, error) {
 	if t.NewRunner != nil {
 		return t.NewRunner(cfg, l, s, j, scanner, d)
 	}

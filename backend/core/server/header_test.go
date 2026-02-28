@@ -16,7 +16,7 @@ func TestRequestContentType(t *testing.T) {
 		want1             map[string]string
 	}{
 		{
-			name: "with encoding \\ wanting separate encodings",
+			name: "with encoding then wanting separate encodings",
 			r: &http.Request{
 				Header: map[string][]string{
 					"Content-Type": {"application/json; charset=utf-8"},
@@ -27,7 +27,7 @@ func TestRequestContentType(t *testing.T) {
 			want1:             map[string]string{"charset": "utf-8"},
 		},
 		{
-			name: "with encoding \\ not watning separate encodings",
+			name: "with encoding then not watning separate encodings",
 			r: &http.Request{
 				Header: map[string][]string{
 					"Content-Type": {"application/json; charset=utf-8"},
@@ -38,7 +38,7 @@ func TestRequestContentType(t *testing.T) {
 			want1:             nil,
 		},
 		{
-			name: "without encoding \\ wanting separate encodings",
+			name: "without encoding then wanting separate encodings",
 			r: &http.Request{
 				Header: map[string][]string{
 					"Content-Type": {"application/json"},
@@ -49,7 +49,7 @@ func TestRequestContentType(t *testing.T) {
 			want1:             nil,
 		},
 		{
-			name: "without encoding \\ not watning separate encodings",
+			name: "without encoding then not watning separate encodings",
 			r: &http.Request{
 				Header: map[string][]string{
 					"Content-Type": {"application/json"},

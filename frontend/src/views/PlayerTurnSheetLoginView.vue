@@ -50,11 +50,10 @@ export default {
   },
   methods: {
     async onSubmit() {
-      const gameSubscriptionID = this.$route.params.game_subscription_id;
-      const gameInstanceID = this.$route.params.game_instance_id;
+      const gameSubscriptionInstanceID = this.$route.params.game_subscription_instance_id;
       const token = this.$route.params.turn_sheet_token;
 
-      if (!gameSubscriptionID || !gameInstanceID || !token) {
+      if (!gameSubscriptionInstanceID || !token) {
         this.message = 'Invalid link. Missing required parameters.';
         return;
       }
@@ -63,8 +62,7 @@ export default {
       this.message = '';
       try {
         const sessionToken = await verifyGameSubscriptionToken(
-          gameSubscriptionID,
-          gameInstanceID,
+          gameSubscriptionInstanceID,
           this.email,
           token
         );

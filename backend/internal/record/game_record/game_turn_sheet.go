@@ -19,6 +19,7 @@ const (
 	FieldGameTurnSheetGameID           string = "game_id"
 	FieldGameTurnSheetGameInstanceID   string = "game_instance_id"
 	FieldGameTurnSheetAccountID        string = "account_id"
+	FieldGameTurnSheetAccountUserID    string = "account_user_id"
 	FieldGameTurnSheetTurnNumber       string = "turn_number"
 	FieldGameTurnSheetSheetType        string = "sheet_type"
 	FieldGameTurnSheetSheetOrder       string = "sheet_order"
@@ -50,6 +51,7 @@ type GameTurnSheet struct {
 	GameID           string          `db:"game_id"`
 	GameInstanceID   sql.NullString  `db:"game_instance_id"`
 	AccountID        string          `db:"account_id"`
+	AccountUserID    string          `db:"account_user_id"`
 	TurnNumber       int             `db:"turn_number"`
 	SheetType        string          `db:"sheet_type"`
 	SheetOrder       int             `db:"sheet_order"`
@@ -68,6 +70,7 @@ func (r *GameTurnSheet) ToNamedArgs() pgx.NamedArgs {
 	args[FieldGameTurnSheetGameID] = r.GameID
 	args[FieldGameTurnSheetGameInstanceID] = r.GameInstanceID
 	args[FieldGameTurnSheetAccountID] = r.AccountID
+	args[FieldGameTurnSheetAccountUserID] = r.AccountUserID
 	args[FieldGameTurnSheetTurnNumber] = r.TurnNumber
 	args[FieldGameTurnSheetSheetType] = r.SheetType
 	args[FieldGameTurnSheetSheetOrder] = r.SheetOrder

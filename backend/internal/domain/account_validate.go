@@ -5,7 +5,46 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/record/account_record"
 )
 
-func (m *Domain) validateAccountRecForCreate(rec *account_record.Account) error {
+type validateAccountArgs struct {
+	nextRec *account_record.AccountUser
+	currRec *account_record.AccountUser
+}
+
+func (m *Domain) populateAccountValidateArgs(currRec, nextRec *account_record.AccountUser) (*validateAccountArgs, error) {
+	args := &validateAccountArgs{
+		currRec: currRec,
+		nextRec: nextRec,
+	}
+	return args, nil
+}
+
+func (m *Domain) validateAccountRecForCreate(rec *account_record.AccountUser) error {
+	args, err := m.populateAccountValidateArgs(nil, rec)
+	if err != nil {
+		return err
+	}
+	return validateAccountRecForCreate(args)
+}
+
+func (m *Domain) validateAccountRecForUpdate(currRec, nextRec *account_record.AccountUser) error {
+	args, err := m.populateAccountValidateArgs(currRec, nextRec)
+	if err != nil {
+		return err
+	}
+	return validateAccountRecForUpdate(args)
+}
+
+func (m *Domain) validateAccountRecForDelete(rec *account_record.AccountUser) error {
+	args, err := m.populateAccountValidateArgs(nil, rec)
+	if err != nil {
+		return err
+	}
+	return validateAccountRecForDelete(args)
+}
+
+func validateAccountRecForCreate(args *validateAccountArgs) error {
+	rec := args.nextRec
+
 	if rec == nil {
 		return coreerror.NewInvalidDataError("record is nil")
 	}
@@ -15,7 +54,7 @@ func (m *Domain) validateAccountRecForCreate(rec *account_record.Account) error 
 	}
 
 	if rec.Status == "" {
-		rec.Status = account_record.AccountStatusActive
+		rec.Status = account_record.AccountUserStatusActive
 	}
 
 	if err := validateAccountStatus(rec.Status); err != nil {
@@ -25,7 +64,10 @@ func (m *Domain) validateAccountRecForCreate(rec *account_record.Account) error 
 	return nil
 }
 
-func (m *Domain) validateAccountRecForUpdate(nextRec, currRec *account_record.Account) error {
+func validateAccountRecForUpdate(args *validateAccountArgs) error {
+	nextRec := args.nextRec
+	currRec := args.currRec
+
 	if nextRec == nil {
 		return coreerror.NewInvalidDataError("record is nil")
 	}
@@ -45,7 +87,9 @@ func (m *Domain) validateAccountRecForUpdate(nextRec, currRec *account_record.Ac
 	return nil
 }
 
-func (m *Domain) validateAccountRecForDelete(rec *account_record.Account) error {
+func validateAccountRecForDelete(args *validateAccountArgs) error {
+	rec := args.nextRec
+
 	if rec == nil {
 		return coreerror.NewInvalidDataError("record is nil")
 	}
@@ -55,9 +99,9 @@ func (m *Domain) validateAccountRecForDelete(rec *account_record.Account) error 
 
 func validateAccountStatus(status string) error {
 	switch status {
-	case account_record.AccountStatusPendingApproval,
-		account_record.AccountStatusActive,
-		account_record.AccountStatusDisabled:
+	case account_record.AccountUserStatusPendingApproval,
+		account_record.AccountUserStatusActive,
+		account_record.AccountUserStatusDisabled:
 		return nil
 	default:
 		return coreerror.NewInvalidDataError("invalid account status >%s<", status)

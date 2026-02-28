@@ -60,14 +60,17 @@ func (m *Domain) CreateGameTurnSheetRec(rec *game_record.GameTurnSheet) (*game_r
 func (m *Domain) UpdateGameTurnSheetRec(rec *game_record.GameTurnSheet) (*game_record.GameTurnSheet, error) {
 	l := m.Logger("UpdateGameTurnSheetRec")
 
-	_, err := m.GetGameTurnSheetRec(rec.ID, coresql.ForUpdateNoWait)
+	l.Debug("updating game_turn_sheet record >%#v<", rec)
+	// fmt.Printf("**** Entering UpdateGameTurnSheetRec ID >%s<\n", rec.ID)
+
+	currRec, err := m.GetGameTurnSheetRec(rec.ID, coresql.ForUpdateNoWait)
 	if err != nil {
 		return rec, err
 	}
 
 	l.Debug("updating game_turn_sheet record >%#v<", rec)
 
-	if err := m.validateGameTurnSheetRecForUpdate(rec); err != nil {
+	if err := m.validateGameTurnSheetRecForUpdate(currRec, rec); err != nil {
 		l.Warn("failed to validate game_turn_sheet record >%v<", err)
 		return rec, err
 	}

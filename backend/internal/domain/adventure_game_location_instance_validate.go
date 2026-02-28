@@ -6,15 +6,46 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 )
 
+type validateAdventureGameLocationInstanceArgs struct {
+	nextRec *adventure_game_record.AdventureGameLocationInstance
+	currRec *adventure_game_record.AdventureGameLocationInstance
+}
+
+func (m *Domain) populateAdventureGameLocationInstanceValidateArgs(currRec, nextRec *adventure_game_record.AdventureGameLocationInstance) (*validateAdventureGameLocationInstanceArgs, error) {
+	args := &validateAdventureGameLocationInstanceArgs{
+		currRec: currRec,
+		nextRec: nextRec,
+	}
+	return args, nil
+}
+
 func (m *Domain) validateAdventureGameLocationInstanceRecForCreate(rec *adventure_game_record.AdventureGameLocationInstance) error {
-	return validateAdventureGameLocationInstanceRec(rec, false)
+	args, err := m.populateAdventureGameLocationInstanceValidateArgs(nil, rec)
+	if err != nil {
+		return err
+	}
+	return validateAdventureGameLocationInstanceRecForCreate(args)
 }
 
-func (m *Domain) validateAdventureGameLocationInstanceRecForUpdate(rec *adventure_game_record.AdventureGameLocationInstance) error {
-	return validateAdventureGameLocationInstanceRec(rec, true)
+func (m *Domain) validateAdventureGameLocationInstanceRecForUpdate(currRec, nextRec *adventure_game_record.AdventureGameLocationInstance) error {
+	args, err := m.populateAdventureGameLocationInstanceValidateArgs(currRec, nextRec)
+	if err != nil {
+		return err
+	}
+	return validateAdventureGameLocationInstanceRecForUpdate(args)
 }
 
-func validateAdventureGameLocationInstanceRec(rec *adventure_game_record.AdventureGameLocationInstance, requireID bool) error {
+func validateAdventureGameLocationInstanceRecForCreate(args *validateAdventureGameLocationInstanceArgs) error {
+	return validateAdventureGameLocationInstanceRec(args, false)
+}
+
+func validateAdventureGameLocationInstanceRecForUpdate(args *validateAdventureGameLocationInstanceArgs) error {
+	return validateAdventureGameLocationInstanceRec(args, true)
+}
+
+func validateAdventureGameLocationInstanceRec(args *validateAdventureGameLocationInstanceArgs, requireID bool) error {
+	rec := args.nextRec
+
 	if rec == nil {
 		return coreerror.NewInvalidDataError("record is nil")
 	}

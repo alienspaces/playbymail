@@ -12,19 +12,19 @@ func TestEqual(t *testing.T) {
 
 	strTests := []testCase[string]{
 		{
-			name: "string slices \\ equal ordered \\ true",
+			name: "string slices when equal ordered then true",
 			a:    []string{"a", "b"},
 			b:    []string{"a", "b"},
 			want: true,
 		},
 		{
-			name: "string slices \\ equal unordered \\ false",
+			name: "string slices when equal unordered then false",
 			a:    []string{"b", "a"},
 			b:    []string{"a", "b"},
 			want: false,
 		},
 		{
-			name: "string slices \\ unequal ordered \\ false",
+			name: "string slices when unequal ordered then false",
 			a:    []string{"a", "b"},
 			b:    []string{"a", "b", "c"},
 			want: false,
@@ -41,19 +41,19 @@ func TestEqual(t *testing.T) {
 
 	intTests := []testCase[int]{
 		{
-			name: "int slices \\ equal ordered \\ true",
+			name: "int slices when equal ordered then true",
 			a:    []int{1, 2},
 			b:    []int{1, 2},
 			want: true,
 		},
 		{
-			name: "int slices \\ equal unordered \\ false",
+			name: "int slices when equal unordered then false",
 			a:    []int{2, 1},
 			b:    []int{1, 2},
 			want: false,
 		},
 		{
-			name: "int slices \\ unequal ordered \\ false",
+			name: "int slices when unequal ordered then false",
 			a:    []int{1, 2},
 			b:    []int{1, 2, 3},
 			want: false,

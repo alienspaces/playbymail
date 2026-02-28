@@ -1,0 +1,49 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "http://playbymail.games/schema/account_subscription_schema/account_subscription.schema.json",
+    "title": "AccountSubscription",
+    "type": "object",
+    "properties": {
+        "account_id": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
+        },
+        "auto_renew": {
+            "type": "boolean"
+        },
+        "created_at": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/created_at"
+        },
+        "deleted_at": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/updated_at"
+        },
+        "id": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
+        },
+        "status": {
+            "type": "string",
+            "enum": [
+                "active",
+                "expired"
+            ]
+        },
+        "subscription_type": {
+            "enum": [
+                "basic_game_designer",
+                "professional_game_designer"
+            ],
+            "type": "string"
+        },
+        "updated_at": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/updated_at"
+        }
+    },
+    "required": [
+        "id",
+        "account_id",
+        "subscription_type",
+        "status",
+        "auto_renew",
+        "created_at"
+    ],
+    "additionalProperties": false
+}

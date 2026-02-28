@@ -10,6 +10,8 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 	"gitlab.com/alienspaces/playbymail/internal/repository/account"
 	"gitlab.com/alienspaces/playbymail/internal/repository/account_contact"
+	"gitlab.com/alienspaces/playbymail/internal/repository/account_subscription"
+	"gitlab.com/alienspaces/playbymail/internal/repository/account_user"
 	"gitlab.com/alienspaces/playbymail/internal/repository/adventure_game_character"
 	"gitlab.com/alienspaces/playbymail/internal/repository/adventure_game_character_instance"
 	"gitlab.com/alienspaces/playbymail/internal/repository/adventure_game_creature"
@@ -28,6 +30,8 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/repository/game_instance"
 	"gitlab.com/alienspaces/playbymail/internal/repository/game_instance_parameter"
 	"gitlab.com/alienspaces/playbymail/internal/repository/game_subscription"
+	"gitlab.com/alienspaces/playbymail/internal/repository/game_subscription_instance"
+	"gitlab.com/alienspaces/playbymail/internal/repository/game_subscription_view"
 	"gitlab.com/alienspaces/playbymail/internal/repository/game_turn_sheet"
 	"gitlab.com/alienspaces/playbymail/internal/utils/config"
 )
@@ -52,12 +56,16 @@ func NewDomain(l logger.Logger, cfg config.Config) (*Domain, error) {
 	repositoryConstructors := []domain.RepositoryConstructor{
 		// Core repositories
 		account.NewRepository,
+		account_user.NewRepository,
 		account_contact.NewRepository,
+		account_subscription.NewRepository,
 		game.NewRepository,
 		game_image.NewRepository,
 		game_instance.NewRepository,
 		game_instance_parameter.NewRepository,
 		game_subscription.NewRepository,
+		game_subscription_instance.NewRepository,
+		game_subscription_view.NewRepository,
 		game_turn_sheet.NewRepository,
 
 		// Adventure game repositories
@@ -91,14 +99,24 @@ func NewDomain(l logger.Logger, cfg config.Config) (*Domain, error) {
 	return m, nil
 }
 
+// AccountUserRepository -
+func (m *Domain) AccountUserRepository() *repository.Generic[account_record.AccountUser, *account_record.AccountUser] {
+	return m.Repositories[account_user.TableName].(*repository.Generic[account_record.AccountUser, *account_record.AccountUser])
+}
+
 // AccountRepository -
 func (m *Domain) AccountRepository() *repository.Generic[account_record.Account, *account_record.Account] {
 	return m.Repositories[account.TableName].(*repository.Generic[account_record.Account, *account_record.Account])
 }
 
-// AccountContactRepository -
-func (m *Domain) AccountContactRepository() *repository.Generic[account_record.AccountContact, *account_record.AccountContact] {
-	return m.Repositories[account_contact.TableName].(*repository.Generic[account_record.AccountContact, *account_record.AccountContact])
+// AccountUserContactRepository -
+func (m *Domain) AccountUserContactRepository() *repository.Generic[account_record.AccountUserContact, *account_record.AccountUserContact] {
+	return m.Repositories[account_contact.TableName].(*repository.Generic[account_record.AccountUserContact, *account_record.AccountUserContact])
+}
+
+// AccountSubscriptionRepository -
+func (m *Domain) AccountSubscriptionRepository() *repository.Generic[account_record.AccountSubscription, *account_record.AccountSubscription] {
+	return m.Repositories[account_subscription.TableName].(*repository.Generic[account_record.AccountSubscription, *account_record.AccountSubscription])
 }
 
 // GameRepository -
@@ -174,6 +192,16 @@ func (m *Domain) AdventureGameCharacterInstanceRepository() *repository.Generic[
 // GameSubscriptionRepository -
 func (m *Domain) GameSubscriptionRepository() *repository.Generic[game_record.GameSubscription, *game_record.GameSubscription] {
 	return m.Repositories[game_subscription.TableName].(*repository.Generic[game_record.GameSubscription, *game_record.GameSubscription])
+}
+
+// GameSubscriptionInstanceRepository -
+func (m *Domain) GameSubscriptionInstanceRepository() *repository.Generic[game_record.GameSubscriptionInstance, *game_record.GameSubscriptionInstance] {
+	return m.Repositories[game_subscription_instance.TableName].(*repository.Generic[game_record.GameSubscriptionInstance, *game_record.GameSubscriptionInstance])
+}
+
+// GameSubscriptionViewRepository -
+func (m *Domain) GameSubscriptionViewRepository() *repository.GenericView[game_record.GameSubscriptionView] {
+	return m.Repositories[game_subscription_view.TableName].(*repository.GenericView[game_record.GameSubscriptionView])
 }
 
 // GameInstanceParameterRepository -

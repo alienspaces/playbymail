@@ -16,7 +16,8 @@ import {
   startGameInstance as apiStartGameInstance,
   pauseGameInstance as apiPauseGameInstance,
   resumeGameInstance as apiResumeGameInstance,
-  cancelGameInstance as apiCancelGameInstance
+  cancelGameInstance as apiCancelGameInstance,
+  resetGameInstance as apiResetGameInstance
 } from '../api/gameInstances';
 
 export const useGameInstancesStore = defineStore('gameInstances', {
@@ -188,6 +189,26 @@ export const useGameInstancesStore = defineStore('gameInstances', {
       this.error = null;
       try {
         const res = await apiCancelGameInstance(gameId, instanceId);
+        if (res.data) {
+          const idx = this.gameInstances.findIndex(i => i.id === instanceId);
+          if (idx !== -1) this.gameInstances[idx] = res.data;
+          if (this.selectedGameInstance?.id === instanceId) {
+            this.selectedGameInstance = res.data;
+          }
+        }
+        return res.data;
+      } catch (err) {
+        this.error = err.message;
+        throw err;
+      } finally {
+        this.loading = false;
+      }
+    },
+    async resetGameInstance(gameId, instanceId) {
+      this.loading = true;
+      this.error = null;
+      try {
+        const res = await apiResetGameInstance(gameId, instanceId);
         if (res.data) {
           const idx = this.gameInstances.findIndex(i => i.id === instanceId);
           if (idx !== -1) this.gameInstances[idx] = res.data;

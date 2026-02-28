@@ -2,7 +2,9 @@ package domain
 
 import (
 	"database/sql"
+	"encoding/base64"
 	"errors"
+	"fmt"
 
 	"github.com/jackc/pgx/v5"
 
@@ -133,7 +135,7 @@ func (m *Domain) UpdateGameImageRec(rec *game_record.GameImage) (*game_record.Ga
 
 	l.Debug("updating game image record >%#v<", rec)
 
-	if err := m.validateGameImageRecForUpdate(rec, curr); err != nil {
+	if err := m.validateGameImageRecForUpdate(curr, rec); err != nil {
 		l.Warn("failed to validate game image record >%v<", err)
 		return rec, err
 	}
@@ -345,4 +347,13 @@ func (m *Domain) GetAdventureGameInventoryTurnSheetImageDataURL(gameID string) (
 
 	// Fall back to game-level background image
 	return m.GetGameTurnSheetImageDataURL(gameID, turnSheetType)
+}
+
+// imageToBase64DataURL converts image data to a base64-encoded data URL
+func imageToBase64DataURL(imageData []byte, mimeType string) string {
+	if len(imageData) == 0 {
+		return ""
+	}
+	encoded := base64.StdEncoding.EncodeToString(imageData)
+	return fmt.Sprintf("data:%s;base64,%s", mimeType, encoded)
 }

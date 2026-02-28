@@ -27,10 +27,11 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/record/account_record"
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
-	"gitlab.com/alienspaces/playbymail/internal/turn_sheet"
+	"gitlab.com/alienspaces/playbymail/internal/runner/server/handler_auth"
+	"gitlab.com/alienspaces/playbymail/internal/turnsheet"
 	"gitlab.com/alienspaces/playbymail/internal/utils/config"
 	"gitlab.com/alienspaces/playbymail/internal/utils/logging"
-	"gitlab.com/alienspaces/playbymail/internal/utils/turnsheet"
+	"gitlab.com/alienspaces/playbymail/internal/utils/turnsheetutil"
 )
 
 const (
@@ -43,13 +44,13 @@ const (
 // TurnSheetUploadResponse represents the response from uploading and processing a turn sheet
 type TurnSheetUploadResponse struct {
 	TurnSheetID      string         `json:"turn_sheet_id"`
-	TurnSheetCodeCI  string         `json:"turn_sheet_code"`
+	TurnSheetCode    string         `json:"turn_sheet_code"`
 	SheetType        string         `json:"sheet_type"`
 	ScannedData      map[string]any `json:"scanned_data"`
 	ProcessingStatus string         `json:"processing_status"`
 }
 
-func gameTurnSheetHandlerConfig(l logger.Logger, scanner turn_sheet.TurnSheetScanner) (map[string]server.HandlerConfig, error) {
+func gameTurnSheetHandlerConfig(l logger.Logger, scanner turnsheet.TurnSheetScanner) (map[string]server.HandlerConfig, error) {
 	l = logging.LoggerWithFunctionContext(l, packageName, "gameTurnSheetHandlerConfig")
 
 	l.Debug("Adding game turn sheet handler configuration")
@@ -57,6 +58,7 @@ func gameTurnSheetHandlerConfig(l logger.Logger, scanner turn_sheet.TurnSheetSca
 	gameTurnSheetConfig := make(map[string]server.HandlerConfig)
 
 	// Upload turn sheet endpoint - Handles both existing player and join-game submissions
+	// Handles both existing player and join-game submissions
 	gameTurnSheetConfig[UploadTurnSheet] = server.HandlerConfig{
 		Method:      http.MethodPost,
 		Path:        "/api/v1/turn-sheets",
@@ -65,6 +67,7 @@ func gameTurnSheetHandlerConfig(l logger.Logger, scanner turn_sheet.TurnSheetSca
 			AuthenTypes: []server.AuthenticationType{
 				server.AuthenticationTypeToken,
 			},
+			// Permissions checked in handler (Player or Manager based on turn sheet type)
 		},
 		DocumentationConfig: server.DocumentationConfig{
 			Document: true,
@@ -75,14 +78,19 @@ func gameTurnSheetHandlerConfig(l logger.Logger, scanner turn_sheet.TurnSheetSca
 		},
 	}
 
-	// Download join game turn sheets endpoint - Generates a single PDF for printing multiple copies
+	// Download join game turn sheets endpoint
+	// Supports optional token auth: managers can access without game_subscription_id query param,
+	// while unauthenticated requests require game_subscription_id to be provided.
 	gameTurnSheetConfig[DownloadJoinGameTurnSheets] = server.HandlerConfig{
 		Method:      http.MethodGet,
 		Path:        "/api/v1/games/:game_id/turn-sheets",
 		HandlerFunc: downloadJoinGameTurnSheetsHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
-				server.AuthenticationTypeToken,
+				server.AuthenticationTypeOptionalToken,
+			},
+			AuthzPermissions: []server.AuthorizedPermission{
+				handler_auth.PermissionGameDesign,
 			},
 		},
 		DocumentationConfig: server.DocumentationConfig{
@@ -98,7 +106,7 @@ func gameTurnSheetHandlerConfig(l logger.Logger, scanner turn_sheet.TurnSheetSca
 }
 
 // uploadTurnSheetHandler handles the single-pass turn sheet upload and processing
-func uploadTurnSheetHandler(scanner turn_sheet.TurnSheetScanner) server.Handle {
+func uploadTurnSheetHandler(scanner turnsheet.TurnSheetScanner) server.Handle {
 	return func(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 		l = logging.LoggerWithFunctionContext(l, packageName, "uploadTurnSheetHandler")
 
@@ -118,13 +126,15 @@ func uploadTurnSheetHandler(scanner turn_sheet.TurnSheetScanner) server.Handle {
 			return coreerror.NewInvalidDataError("empty image data provided")
 		}
 
+		// Get the turn sheet code from the uploaded image
 		turnSheetCode, err := scanner.GetTurnSheetCodeFromImage(ctx, l, imageData)
 		if err != nil {
 			l.Warn("failed to extract turn sheet code >%v<", err)
 			return coreerror.NewInvalidDataError("failed to extract turn sheet code from image")
 		}
 
-		identifier, err := turnsheet.ParseTurnSheetCode(turnSheetCode)
+		// Get the type of turn sheet that was uploaded
+		turnSheetCodeType, err := turnsheetutil.ParseTurnSheetCodeTypeFromCode(turnSheetCode)
 		if err != nil {
 			l.Warn("failed to parse turn sheet code >%v<", err)
 			return coreerror.NewInvalidDataError("invalid turn sheet code format")
@@ -135,15 +145,29 @@ func uploadTurnSheetHandler(scanner turn_sheet.TurnSheetScanner) server.Handle {
 			status int
 		)
 
-		switch identifier.CodeType {
-		case turnsheet.TurnSheetCodeTypeJoiningGame:
-			resp, status, err = handleJoinTurnSheetUpload(ctx, l, scanner, mm, jc, turnSheetCode, identifier, imageData)
-		case turnsheet.TurnSheetCodeTypePlayingGame, "":
-			resp, status, err = handleStandardTurnSheetUpload(ctx, l, scanner, mm, turnSheetCode, identifier, imageData)
+		switch turnSheetCodeType {
+		case turnsheetutil.TurnSheetCodeTypeJoiningGame:
+			var joinSheetData *turnsheetutil.JoinGameTurnSheetCodeData
+			joinSheetData, err = turnsheetutil.ParseJoinGameTurnSheetCodeData(turnSheetCode)
+			if err != nil {
+				l.Warn("failed to parse join game turn sheet code >%v<", err)
+				return coreerror.NewInvalidDataError("invalid join game turn sheet code format")
+			}
+			resp, status, err = handleJoinGameTurnSheetUpload(ctx, l, scanner, mm, jc, turnSheetCode, joinSheetData, imageData)
+		case turnsheetutil.TurnSheetCodeTypePlayingGame:
+			var playSheetData *turnsheetutil.PlayGameTurnSheetCodeData
+			playSheetData, err = turnsheetutil.ParsePlayGameTurnSheetCodeData(turnSheetCode)
+			if err != nil {
+				l.Warn("failed to parse play game turn sheet code >%v<", err)
+				return coreerror.NewInvalidDataError("invalid play game turn sheet code format")
+			}
+			resp, status, err = handlePlayGameTurnSheetUpload(ctx, l, scanner, mm, turnSheetCode, playSheetData, imageData)
 		default:
-			err = coreerror.NewInvalidDataError("unsupported turn sheet code type: %s", identifier.CodeType)
+			err = coreerror.NewInvalidDataError("unsupported turn sheet code type: %s", turnSheetCodeType)
 		}
+
 		if err != nil {
+			l.Warn("failed to process turn sheet upload >%v<", err)
 			return err
 		}
 
@@ -158,95 +182,91 @@ func uploadTurnSheetHandler(scanner turn_sheet.TurnSheetScanner) server.Handle {
 	}
 }
 
-// handleJoinTurnSheetUpload processes an uploaded join game turn sheet.
-//
-// It fetches the game record to validate the game type, constructs default turn sheet metadata,
-// and invokes the sheet scanner to extract player registration data from the submission image.
-// Using the extracted registration information, it attempts to associate the joining player with
-// an account, creates a new pending account if necessary, and upserts a game subscription record.
-// Finally, it creates a new turn sheet record for the join game turn sheet and returns the upload
-// status and processed data for further handling.
-func handleJoinTurnSheetUpload(ctx context.Context, l logger.Logger, scanner turn_sheet.TurnSheetScanner, m *domain.Domain, jc *river.Client[pgx.Tx], turnSheetCode string, identifier *turnsheet.TurnSheetIdentifier, imageData []byte) (*TurnSheetUploadResponse, int, error) {
-	l = l.WithFunctionContext("handleJoinTurnSheetUpload")
+// handleJoinGameTurnSheetUpload processes an uploaded join game turn sheet.
+func handleJoinGameTurnSheetUpload(ctx context.Context, l logger.Logger, scanner turnsheet.TurnSheetScanner, m *domain.Domain, jc *river.Client[pgx.Tx], turnSheetCode string, turnSheetCodeData *turnsheetutil.JoinGameTurnSheetCodeData, imageData []byte) (*TurnSheetUploadResponse, int, error) {
+	l = l.WithFunctionContext("handleJoinGameTurnSheetUpload")
 
-	l.Info("processing join game turn sheet upload for game >%s< turn sheet code >%s<", identifier.GameID, turnSheetCode)
+	l.Info("processing join game turn sheet upload to join game subscription ID >%s< turn sheet code >%s<", turnSheetCodeData.GameSubscriptionID, turnSheetCode)
 
-	gameRec, err := m.GetGameRec(identifier.GameID, nil)
+	// Get the game managers game subscription record - bypasses RLS because the turn
+	// sheet code itself is the authorization token for this operation.
+	gameSubscriptionRec, err := m.GetGameSubscriptionRecByIDForJoinProcess(turnSheetCodeData.GameSubscriptionID)
 	if err != nil {
-		l.Warn("failed to get game record >%s< for join game turn sheet upload >%v<", identifier.GameID, err)
-		return nil, 0, coreerror.NewNotFoundError("game", identifier.GameID)
+		l.Warn("failed to get game subscription record >%s< for join game turn sheet upload >%v<", turnSheetCodeData.GameSubscriptionID, err)
+		return nil, 0, coreerror.NewNotFoundError("game subscription", turnSheetCodeData.GameSubscriptionID)
 	}
 
-	if gameRec.GameType != game_record.GameTypeAdventure {
-		l.Warn("join turn sheet only supported for adventure games, got >%s< for game >%s<", gameRec.GameType, identifier.GameID)
-		return nil, 0, coreerror.NewInvalidDataError("join turn sheet is not supported for game type %s", gameRec.GameType)
+	l.Info("creating join game turn sheet data for game >%s<", gameSubscriptionRec.GameID)
+
+	gameRec, err := m.GetGameRecByIDForJoinProcess(gameSubscriptionRec.GameID)
+	if err != nil {
+		l.Warn("failed to get game record >%s< for join game turn sheet upload >%v<", gameSubscriptionRec.GameID, err)
+		return nil, 0, coreerror.NewNotFoundError("game", gameSubscriptionRec.GameID)
 	}
 
-	l.Info("creating join game turn sheet data for game >%s<", identifier.GameID)
-
-	// Get join game data for the game
-	joinData, err := turn_sheet.GetTurnSheetJoinGameData(gameRec, turnSheetCode)
+	// To identify and parse the completed join game turn sheet data from the uploaded image we
+	// need to construct the join game data from the game record and turn sheet code
+	joinGameData, err := turnsheet.GetTurnSheetJoinGameData(gameRec, turnSheetCode)
 	if err != nil {
 		l.Warn("failed to create join game data >%v<", err)
 		return nil, 0, coreerror.NewInvalidDataError("failed to create join game data: %v", err)
 	}
 
-	sheetDataBytes, err := json.Marshal(joinData)
+	joinGameDataBytes, err := json.Marshal(joinGameData)
 	if err != nil {
 		l.Warn("failed to marshal join game sheet data >%v<", err)
 		return nil, 0, coreerror.NewInternalError("failed to marshal join game sheet data")
 	}
 
-	scannedData, err := scanner.GetTurnSheetScanData(ctx, l, adventure_game_record.AdventureGameTurnSheetTypeJoinGame, sheetDataBytes, imageData)
+	joinGameScanDataBytes, err := scanner.GetTurnSheetScanData(ctx, l, adventure_game_record.AdventureGameTurnSheetTypeJoinGame, joinGameDataBytes, imageData)
 	if err != nil {
-		l.Warn("failed to scan join game turn sheet >%v< for game >%s< turn sheet code >%s<", err, identifier.GameID, turnSheetCode)
+		l.Warn("failed to scan join game turn sheet for game >%s< turn sheet code >%s< >%v<", gameRec.ID, turnSheetCode, err)
 		return nil, 0, coreerror.NewInvalidDataError("failed to process join game turn sheet: %v", err)
 	}
 
-	var scanData turn_sheet.JoinGameScanData
-	if err := json.Unmarshal(scannedData, &scanData); err != nil {
-		l.Warn("failed to unmarshal join game scan data >%v< for game >%s< turn sheet code >%s<", err, identifier.GameID, turnSheetCode)
+	var joinGameScanData turnsheet.JoinGameScanData
+	if err := json.Unmarshal(joinGameScanDataBytes, &joinGameScanData); err != nil {
+		l.Warn("failed to unmarshal join game scan data for game >%s< turn sheet code >%s< >%v<", gameRec.ID, turnSheetCode, err)
 		return nil, 0, coreerror.NewInvalidDataError("invalid join game turn sheet data")
 	}
 
-	accountRec, err := m.GetAccountRecByEmail(scanData.Email)
+	accountRec, err := m.GetAccountRecByEmail(joinGameScanData.Email)
 	if err != nil {
-		l.Warn("failed to get account by email >%s< >%v<", scanData.Email, err)
+		l.Warn("failed to get account by email >%s< >%v<", joinGameScanData.Email, err)
 		return nil, 0, err
 	}
 
 	if accountRec == nil {
-		l.Info("creating new pending account for email >%s<", scanData.Email)
-		accountRec = &account_record.Account{
-			Email:  scanData.Email,
-			Status: account_record.AccountStatusPendingApproval,
+		l.Info("creating new pending account for email >%s<", joinGameScanData.Email)
+		pendingRec := &account_record.AccountUser{
+			Email:  joinGameScanData.Email,
+			Status: account_record.AccountUserStatusPendingApproval,
 		}
-
-		accountRec, err = m.CreateAccountRec(accountRec)
+		_, accountRec, _, err = m.CreateAccount(pendingRec)
 		if err != nil {
-			l.Warn("failed to create account >%v<", err)
+			l.Warn("failed to create pending account >%v<", err)
 			return nil, 0, err
 		}
 	}
 
 	// Create or get account contact
-	accountContactRec := &account_record.AccountContact{
-		AccountID:          accountRec.ID,
-		Name:               scanData.Name,
-		PostalAddressLine1: scanData.PostalAddressLine1,
-		PostalAddressLine2: nullstring.FromString(scanData.PostalAddressLine2),
-		StateProvince:      scanData.StateProvince,
-		Country:            scanData.Country,
-		PostalCode:         scanData.PostalCode,
+	accountUserContactRec := &account_record.AccountUserContact{
+		AccountUserID:      accountRec.ID,
+		Name:               joinGameScanData.Name,
+		PostalAddressLine1: joinGameScanData.PostalAddressLine1,
+		PostalAddressLine2: nullstring.FromString(joinGameScanData.PostalAddressLine2),
+		StateProvince:      joinGameScanData.StateProvince,
+		Country:            joinGameScanData.Country,
+		PostalCode:         joinGameScanData.PostalCode,
 	}
 
-	accountContactRec, err = m.CreateAccountContactRec(accountContactRec)
+	accountUserContactRec, err = m.CreateAccountUserContactRec(accountUserContactRec)
 	if err != nil {
 		l.Warn("failed to create account contact >%v<", err)
 		return nil, 0, err
 	}
 
-	subscriptionRec, err := m.UpsertPendingGameSubscription(gameRec.ID, accountRec.ID, accountContactRec.ID, game_record.GameSubscriptionTypePlayer)
+	subscriptionRec, err := m.UpsertPendingGameSubscriptionForJoinProcess(gameRec.ID, accountRec.AccountID, accountRec.ID, accountUserContactRec.ID, game_record.GameSubscriptionTypePlayer)
 	if err != nil {
 		l.Warn("failed to upsert game subscription >%v<", err)
 		return nil, 0, err
@@ -254,12 +274,13 @@ func handleJoinTurnSheetUpload(ctx context.Context, l logger.Logger, scanner tur
 
 	turnSheetRec := &game_record.GameTurnSheet{
 		GameID:           gameRec.ID,
-		AccountID:        accountRec.ID,
+		AccountID:        accountRec.AccountID,
+		AccountUserID:    accountRec.ID,
 		TurnNumber:       0,
 		SheetType:        adventure_game_record.AdventureGameTurnSheetTypeJoinGame,
 		SheetOrder:       1,
-		SheetData:        json.RawMessage(sheetDataBytes),
-		ScannedData:      json.RawMessage(scannedData),
+		SheetData:        json.RawMessage(joinGameDataBytes),
+		ScannedData:      json.RawMessage(joinGameScanDataBytes),
 		ProcessingStatus: game_record.TurnSheetProcessingStatusPending,
 	}
 	turnSheetRec.ScannedAt = sql.NullTime{Time: time.Now(), Valid: true}
@@ -277,14 +298,14 @@ func handleJoinTurnSheetUpload(ctx context.Context, l logger.Logger, scanner tur
 	}
 
 	var scannedDataMap map[string]any
-	if err := json.Unmarshal(scannedData, &scannedDataMap); err != nil {
+	if err := json.Unmarshal(joinGameScanDataBytes, &scannedDataMap); err != nil {
 		l.Warn("failed to unmarshal join game scanned data >%v<", err)
 		scannedDataMap = make(map[string]any)
 	}
 
 	response := &TurnSheetUploadResponse{
 		TurnSheetID:      createdTurnSheetRec.ID,
-		TurnSheetCodeCI:  turnSheetCode,
+		TurnSheetCode:    turnSheetCode,
 		SheetType:        createdTurnSheetRec.SheetType,
 		ScannedData:      scannedDataMap,
 		ProcessingStatus: createdTurnSheetRec.ProcessingStatus,
@@ -293,19 +314,16 @@ func handleJoinTurnSheetUpload(ctx context.Context, l logger.Logger, scanner tur
 	return response, http.StatusAccepted, nil
 }
 
-func handleStandardTurnSheetUpload(ctx context.Context, l logger.Logger, scanner turn_sheet.TurnSheetScanner, m *domain.Domain, turnSheetCode string, identifier *turnsheet.TurnSheetIdentifier, imageData []byte) (*TurnSheetUploadResponse, int, error) {
-	l = l.WithFunctionContext("handleStandardTurnSheetUpload")
+func handlePlayGameTurnSheetUpload(ctx context.Context, l logger.Logger, scanner turnsheet.TurnSheetScanner, m *domain.Domain, turnSheetCode string, turnSheetCodeData *turnsheetutil.PlayGameTurnSheetCodeData, imageData []byte) (*TurnSheetUploadResponse, int, error) {
+	l = l.WithFunctionContext("handlePlayGameTurnSheetUpload")
 
-	turnSheetRec, err := m.GetGameTurnSheetRec(identifier.GameTurnSheetID, coresql.ForUpdateNoWait)
+	l.Info("processing turn sheet code >%s< with image data length >%d<", turnSheetCode, len(imageData))
+
+	// Get the turn sheet record
+	turnSheetRec, err := m.GetGameTurnSheetRec(turnSheetCodeData.GameTurnSheetID, coresql.ForUpdateNoWait)
 	if err != nil {
 		l.Warn("failed to get turn sheet record >%v<", err)
-		return nil, 0, coreerror.NewNotFoundError("turn sheet", identifier.GameTurnSheetID)
-	}
-
-	if !nullstring.IsValid(turnSheetRec.GameInstanceID) || identifier.GameInstanceID == "" ||
-		nullstring.ToString(turnSheetRec.GameInstanceID) != identifier.GameInstanceID {
-		l.Warn("turn sheet does not belong to expected game instance >%s<", identifier.GameInstanceID)
-		return nil, 0, coreerror.NewInvalidDataError("turn sheet does not belong to expected game instance")
+		return nil, 0, coreerror.NewNotFoundError("turn sheet", turnSheetCodeData.GameTurnSheetID)
 	}
 
 	scannedData, err := scanner.GetTurnSheetScanData(ctx, l, turnSheetRec.SheetType, turnSheetRec.SheetData, imageData)
@@ -330,8 +348,8 @@ func handleStandardTurnSheetUpload(ctx context.Context, l logger.Logger, scanner
 	}
 
 	response := &TurnSheetUploadResponse{
-		TurnSheetID:      identifier.GameTurnSheetID,
-		TurnSheetCodeCI:  turnSheetCode,
+		TurnSheetID:      turnSheetCodeData.GameTurnSheetID,
+		TurnSheetCode:    turnSheetCode,
 		SheetType:        turnSheetRec.SheetType,
 		ScannedData:      scannedDataMap,
 		ProcessingStatus: turnSheetRec.ProcessingStatus,
@@ -360,18 +378,6 @@ func handleStandardTurnSheetUpload(ctx context.Context, l logger.Logger, scanner
 func downloadJoinGameTurnSheetsHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = logging.LoggerWithFunctionContext(l, packageName, "downloadJoinGameTurnSheetsHandler")
 
-	// Get account ID from authenticated request data
-	authenData := server.GetRequestAuthenData(l, r)
-	if authenData == nil {
-		l.Warn("failed to get authenticated request data")
-		return coreerror.NewInternalError("failed to get authenticated request data")
-	}
-	accountID := authenData.Account.ID
-	if accountID == "" {
-		l.Warn("account ID is empty in authenticated request data")
-		return coreerror.NewInternalError("account ID is empty")
-	}
-
 	l.Info("downloading join game turn sheet with path params >%#v<", pp)
 
 	ctx := r.Context()
@@ -383,17 +389,61 @@ func downloadJoinGameTurnSheetsHandler(w http.ResponseWriter, r *http.Request, p
 		return coreerror.RequiredPathParameter("game_id")
 	}
 
-	// Get game record
-	gameRec, err := mm.GetGameRec(gameID, nil)
+	// Get game record - bypass RLS since this is a public endpoint
+	gameRec, err := mm.GetGameRecByIDForJoinProcess(gameID)
 	if err != nil {
 		l.Warn("failed to get game record >%s< >%v<", gameID, err)
 		return coreerror.NewNotFoundError("game", gameID)
 	}
 
-	// Validate game type supports join sheets
-	if gameRec.GameType != game_record.GameTypeAdventure {
-		l.Warn("join turn sheet only supported for adventure games, got >%s< for game >%s<", gameRec.GameType, gameID)
-		return coreerror.NewInvalidDataError("join turn sheet is not supported for game type %s", gameRec.GameType)
+	// Resolve the manager game subscription ID.
+	// If provided as a query param, use it directly.
+	// Otherwise look up the authenticated user's manager subscription for the game.
+	var gameSubscriptionID string
+	if gameSubParams, exists := qp.Params["game_subscription_id"]; exists && len(gameSubParams) > 0 {
+		gameSubscriptionID, _ = gameSubParams[0].Val.(string)
+	}
+
+	if gameSubscriptionID == "" {
+		// Try to find manager subscription via authenticated user
+		authenData := server.GetRequestAuthenData(l, r)
+		if authenData == nil {
+			l.Warn("no game_subscription_id provided and no authenticated request data available")
+			return coreerror.NewInvalidDataError("game_subscription_id query parameter is required")
+		}
+
+		accountID := authenData.AccountUser.AccountID
+		subscriptions, err := mm.GetManyGameSubscriptionRecs(&coresql.Options{
+			Params: []coresql.Param{
+				{Col: game_record.FieldGameSubscriptionGameID, Val: gameID},
+				{Col: game_record.FieldGameSubscriptionAccountID, Val: accountID},
+				{Col: game_record.FieldGameSubscriptionSubscriptionType, Val: game_record.GameSubscriptionTypeManager},
+			},
+			Limit: 1,
+		})
+		if err != nil || len(subscriptions) == 0 {
+			l.Warn("no manager subscription found for account >%s< and game >%s<", accountID, gameID)
+			return coreerror.NewInvalidDataError("game_subscription_id query parameter is required")
+		}
+
+		gameSubscriptionID = subscriptions[0].ID
+	}
+
+	// Get the manager game subscription record - bypass RLS since this is a public endpoint
+	gameSubscriptionRec, err := mm.GetGameSubscriptionRecByIDForJoinProcess(gameSubscriptionID)
+	if err != nil {
+		l.Warn("failed to get game subscription record >%s< >%v<", gameSubscriptionID, err)
+		return coreerror.NewNotFoundError("game subscription", gameSubscriptionID)
+	}
+
+	if gameSubscriptionRec.SubscriptionType != game_record.GameSubscriptionTypeManager {
+		l.Warn("game subscription >%s< is not a manager subscription", gameSubscriptionID)
+		return coreerror.NewInvalidDataError("game subscription must be a manager subscription")
+	}
+
+	if gameSubscriptionRec.GameID != gameID {
+		l.Warn("game subscription >%s< does not belong to game >%s<", gameSubscriptionID, gameID)
+		return coreerror.NewInvalidDataError("game subscription does not belong to this game")
 	}
 
 	// Parse config for processor
@@ -403,63 +453,14 @@ func downloadJoinGameTurnSheetsHandler(w http.ResponseWriter, r *http.Request, p
 		return coreerror.NewInternalError("failed to parse config: %v", err)
 	}
 
-	var managerSubscriptionID string
-
-	// Check if game_subscription_id query parameter is provided (for public players)
-	if qp != nil {
-		gameSubscriptionIDParams, exists := qp.Params["game_subscription_id"]
-		if exists && len(gameSubscriptionIDParams) > 0 {
-			managerSubscriptionID = gameSubscriptionIDParams[0].Val.(string)
-			// Validate that the subscription exists and is a manager subscription for this game
-			subscriptionRec, err := mm.GetGameSubscriptionRec(managerSubscriptionID, nil)
-			if err != nil {
-				l.Warn("failed to get game subscription >%s< >%v<", managerSubscriptionID, err)
-				return coreerror.NewNotFoundError("game subscription", managerSubscriptionID)
-			}
-			if subscriptionRec.GameID != gameID {
-				l.Warn("game subscription >%s< does not belong to game >%s<", managerSubscriptionID, gameID)
-				return coreerror.NewInvalidDataError("game subscription does not belong to the specified game")
-			}
-			if subscriptionRec.SubscriptionType != game_record.GameSubscriptionTypeManager {
-				l.Warn("game subscription >%s< is not a manager subscription", managerSubscriptionID)
-				return coreerror.NewInvalidDataError("game subscription must be a manager subscription")
-			}
-			l.Info("using provided manager subscription ID >%s<", managerSubscriptionID)
-		}
-	}
-
-	// If no query parameter provided, get manager subscription for authenticated user
-	if managerSubscriptionID == "" {
-		// Get manager subscription for authenticated user (assumes they are the game manager)
-		managerSubs, err := mm.GetManyGameSubscriptionRecs(&coresql.Options{
-			Params: []coresql.Param{
-				{Col: game_record.FieldGameSubscriptionAccountID, Val: accountID},
-				{Col: game_record.FieldGameSubscriptionGameID, Val: gameID},
-				{Col: game_record.FieldGameSubscriptionSubscriptionType, Val: game_record.GameSubscriptionTypeManager},
-			},
-			Limit: 1,
-		})
-		if err != nil {
-			l.Warn("failed to get manager subscription >%v<", err)
-			return coreerror.NewInternalError("failed to get manager subscription: %v", err)
-		}
-		if len(managerSubs) == 0 {
-			l.Warn("no manager subscription found for game >%s< and account >%s<", gameID, accountID)
-			return coreerror.NewInvalidDataError("no manager subscription found for game")
-		}
-		managerSubscriptionID = managerSubs[0].ID
-		l.Info("using manager subscription for authenticated user >%s<", managerSubscriptionID)
-	}
-
-	// Generate join turn sheet code for this game
-	turnSheetCode, err := turnsheet.GenerateJoinTurnSheetCode(gameID, managerSubscriptionID)
+	turnSheetCode, err := turnsheetutil.GenerateJoinGameTurnSheetCode(gameSubscriptionID)
 	if err != nil {
 		l.Warn("failed to generate join turn sheet code >%v<", err)
 		return coreerror.NewInternalError("failed to generate turn sheet code: %v", err)
 	}
 
 	// Create join game data using mapper function
-	joinData, err := turn_sheet.GetTurnSheetJoinGameData(gameRec, turnSheetCode)
+	joinData, err := turnsheet.GetTurnSheetJoinGameData(gameRec, turnSheetCode)
 	if err != nil {
 		l.Warn("failed to create join game data >%v<", err)
 		return coreerror.NewInvalidDataError("failed to create join game data: %v", err)
@@ -467,7 +468,7 @@ func downloadJoinGameTurnSheetsHandler(w http.ResponseWriter, r *http.Request, p
 
 	// Get uploaded turn sheet background image and add it to the data
 	turnSheetType := adventure_game_record.AdventureGameTurnSheetTypeJoinGame
-	backgroundImage, err := mm.GetGameTurnSheetImageDataURL(gameID, turnSheetType)
+	backgroundImage, err := mm.GetGameTurnSheetImageDataURL(gameRec.ID, turnSheetType)
 	if err != nil {
 		l.Warn("failed to get turn sheet background image >%v<", err)
 		// Continue without image - not a fatal error
@@ -486,14 +487,14 @@ func downloadJoinGameTurnSheetsHandler(w http.ResponseWriter, r *http.Request, p
 	}
 
 	// Create join game processor for PDF generation
-	processor, err := turn_sheet.NewJoinGameProcessor(l, cfg)
+	processor, err := turnsheet.NewJoinGameProcessor(l, cfg)
 	if err != nil {
 		l.Warn("failed to create join game processor >%v<", err)
 		return coreerror.NewInternalError("failed to create join game processor: %v", err)
 	}
 
 	// Generate PDF
-	pdfData, err := processor.GenerateTurnSheet(ctx, l, turn_sheet.DocumentFormatPDF, sheetDataBytes)
+	pdfData, err := processor.GenerateTurnSheet(ctx, l, turnsheet.DocumentFormatPDF, sheetDataBytes)
 	if err != nil {
 		l.Warn("failed to generate join game turn sheet PDF >%v<", err)
 		return coreerror.NewInternalError("failed to generate turn sheet PDF: %v", err)
@@ -504,7 +505,7 @@ func downloadJoinGameTurnSheetsHandler(w http.ResponseWriter, r *http.Request, p
 	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filename))
 
 	// Return PDF response
-	l.Info("responding with join game turn sheet PDF for game >%s< size >%d<", gameID, len(pdfData))
+	l.Info("responding with join game turn sheet PDF for game >%s< size >%d<", gameRec.ID, len(pdfData))
 	if err := server.WritePDFResponse(l, w, http.StatusOK, pdfData); err != nil {
 		l.Warn("failed writing PDF response >%v<", err)
 		return err

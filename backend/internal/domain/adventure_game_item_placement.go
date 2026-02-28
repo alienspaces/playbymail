@@ -60,14 +60,14 @@ func (m *Domain) CreateAdventureGameItemPlacementRec(rec *adventure_game_record.
 func (m *Domain) UpdateAdventureGameItemPlacementRec(rec *adventure_game_record.AdventureGameItemPlacement) (*adventure_game_record.AdventureGameItemPlacement, error) {
 	l := m.Logger("UpdateAdventureGameItemPlacementRec")
 
-	_, err := m.GetAdventureGameItemPlacementRec(rec.ID, coresql.ForUpdateNoWait)
+	currRec, err := m.GetAdventureGameItemPlacementRec(rec.ID, coresql.ForUpdateNoWait)
 	if err != nil {
 		return rec, err
 	}
 
 	l.Debug("updating adventure_game_item_placement record >%#v<", rec)
 
-	if err := m.validateAdventureGameItemPlacementRecForUpdate(rec); err != nil {
+	if err := m.validateAdventureGameItemPlacementRecForUpdate(currRec, rec); err != nil {
 		l.Warn("failed to validate adventure_game_item_placement record >%v<", err)
 		return rec, err
 	}

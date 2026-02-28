@@ -247,11 +247,31 @@ func (w *GameTurnProcessingWorker) queueTurnSheetNotificationEmails(ctx context.
 			continue
 		}
 
+		// Get the game subscription instance link for this subscription and instance
+		instanceLinks, err := m.GetGameSubscriptionInstanceRecsByInstance(gameInstanceRec.ID)
+		if err != nil {
+			l.Warn("failed to get instance links for instance >%s< >%v<", gameInstanceRec.ID, err)
+			continue
+		}
+
+		// Find the link for this subscription
+		var instanceLink *game_record.GameSubscriptionInstance
+		for _, link := range instanceLinks {
+			if link.GameSubscriptionID == subscriptionRec.ID {
+				instanceLink = link
+				break
+			}
+		}
+
+		if instanceLink == nil {
+			l.Warn("no instance link found for subscription >%s< and instance >%s<", subscriptionRec.ID, gameInstanceRec.ID)
+			continue
+		}
+
 		// Queue email notification job
 		args := SendTurnSheetNotificationEmailWorkerArgs{
-			GameSubscriptionID: subscriptionRec.ID,
-			GameInstanceID:     gameInstanceRec.ID,
-			TurnNumber:         gameInstanceRec.CurrentTurn,
+			GameSubscriptionInstanceID: instanceLink.ID,
+			TurnNumber:                 gameInstanceRec.CurrentTurn,
 		}
 
 		_, err = c.Insert(ctx, args, nil)

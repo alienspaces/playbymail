@@ -13,6 +13,7 @@ type GameResponseData struct {
 	Description       string     `json:"description"`
 	GameType          string     `json:"game_type"`
 	TurnDurationHours int        `json:"turn_duration_hours"`
+	Status            string     `json:"status"`
 	CreatedAt         time.Time  `json:"created_at"`
 	UpdatedAt         *time.Time `json:"updated_at,omitempty"`
 }

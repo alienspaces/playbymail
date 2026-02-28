@@ -31,8 +31,9 @@ type AdventureGameCharacterCollectionResponse struct {
 
 type AdventureGameCharacterRequest struct {
 	common_schema.Request
-	AccountID string `json:"account_id"`
-	Name      string `json:"name"`
+	AccountID     string `json:"account_id"`
+	AccountUserID string `json:"account_user_id"`
+	Name          string `json:"name"`
 }
 
 type AdventureGameCharacterQueryParams struct {

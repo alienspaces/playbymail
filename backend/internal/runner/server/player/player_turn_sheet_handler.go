@@ -22,7 +22,8 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/jobworker"
 	"gitlab.com/alienspaces/playbymail/internal/mapper"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
-	"gitlab.com/alienspaces/playbymail/internal/turn_sheet"
+	"gitlab.com/alienspaces/playbymail/internal/runner/server/handler_auth"
+	"gitlab.com/alienspaces/playbymail/internal/turnsheet"
 	"gitlab.com/alienspaces/playbymail/internal/utils/logging"
 	"gitlab.com/alienspaces/playbymail/schema/api/player_schema"
 )
@@ -47,10 +48,10 @@ func playerTurnSheetHandlerConfig(l logger.Logger) (map[string]server.HandlerCon
 
 	playerTurnSheetConfig := make(map[string]server.HandlerConfig)
 
-	// GET "/api/v1/player/game-subscriptions/:game_subscription_id/game-instances/:game_instance_id/verify-token" - verify a game subscription token and return a session token
+	// POST "/api/v1/player/game-subscription-instances/:game_subscription_instance_id/verify-token" - verify a game subscription instance token and return a session token
 	playerTurnSheetConfig[VerifyGameSubscriptionToken] = server.HandlerConfig{
 		Method:      http.MethodPost,
-		Path:        "/api/v1/player/game-subscriptions/:game_subscription_id/game-instances/:game_instance_id/verify-token",
+		Path:        "/api/v1/player/game-subscription-instances/:game_subscription_instance_id/verify-token",
 		HandlerFunc: verifyGameSubscriptionTokenHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
@@ -79,10 +80,10 @@ func playerTurnSheetHandlerConfig(l logger.Logger) (map[string]server.HandlerCon
 		},
 	}
 
-	// POST /api/v1/player/game-subscriptions/:game_subscription_id/game-instances/:game_instance_id/request-token - request a new game subscription token if expired
+	// POST /api/v1/player/game-subscription-instances/:game_subscription_instance_id/request-token - request a new game subscription instance token if expired
 	playerTurnSheetConfig[RequestGameSubscriptionTurnSheetToken] = server.HandlerConfig{
 		Method:      http.MethodPost,
-		Path:        "/api/v1/player/game-subscriptions/:game_subscription_id/game-instances/:game_instance_id/request-token",
+		Path:        "/api/v1/player/game-subscription-instances/:game_subscription_instance_id/request-token",
 		HandlerFunc: requestGameSubscriptionTokenHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
@@ -112,6 +113,9 @@ func playerTurnSheetHandlerConfig(l logger.Logger) (map[string]server.HandlerCon
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
 				server.AuthenticationTypeToken,
+			},
+			AuthzPermissions: []server.AuthorizedPermission{
+				handler_auth.PermissionGamePlaying,
 			},
 			ValidateResponseSchema: jsonschema.SchemaWithReferences{
 				Main: jsonschema.Schema{
@@ -143,6 +147,9 @@ func playerTurnSheetHandlerConfig(l logger.Logger) (map[string]server.HandlerCon
 			AuthenTypes: []server.AuthenticationType{
 				server.AuthenticationTypeToken,
 			},
+			AuthzPermissions: []server.AuthorizedPermission{
+				handler_auth.PermissionGamePlaying,
+			},
 			ValidateResponseSchema: jsonschema.SchemaWithReferences{
 				Main: jsonschema.Schema{
 					Location: "api/player_schema",
@@ -172,6 +179,9 @@ func playerTurnSheetHandlerConfig(l logger.Logger) (map[string]server.HandlerCon
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
 				server.AuthenticationTypeToken,
+			},
+			AuthzPermissions: []server.AuthorizedPermission{
+				handler_auth.PermissionGamePlaying,
 			},
 			ValidateRequestSchema: jsonschema.SchemaWithReferences{
 				Main: jsonschema.Schema{
@@ -210,6 +220,9 @@ func playerTurnSheetHandlerConfig(l logger.Logger) (map[string]server.HandlerCon
 			AuthenTypes: []server.AuthenticationType{
 				server.AuthenticationTypeToken,
 			},
+			AuthzPermissions: []server.AuthorizedPermission{
+				handler_auth.PermissionGamePlaying,
+			},
 			ValidateResponseSchema: jsonschema.SchemaWithReferences{
 				Main: jsonschema.Schema{
 					Location: "api/player_schema",
@@ -229,20 +242,14 @@ func playerTurnSheetHandlerConfig(l logger.Logger) (map[string]server.HandlerCon
 	return playerTurnSheetConfig, nil
 }
 
-// verifyGameSubscriptionTokenHandler verifies a game subscription token and returns a session token
+// verifyGameSubscriptionTokenHandler verifies a game subscription instance token and returns a session token
 func verifyGameSubscriptionTokenHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = logging.LoggerWithFunctionContext(l, packageName, "verifyGameSubscriptionTokenHandler")
 
-	gameSubscriptionID := pp.ByName("game_subscription_id")
-	if gameSubscriptionID == "" {
-		l.Warn("game subscription id is empty")
-		return coreerror.RequiredPathParameter("game_subscription_id")
-	}
-
-	gameInstanceID := pp.ByName("game_instance_id")
-	if gameInstanceID == "" {
-		l.Warn("game instance id is empty")
-		return coreerror.RequiredPathParameter("game_instance_id")
+	gameSubscriptionInstanceID := pp.ByName("game_subscription_instance_id")
+	if gameSubscriptionInstanceID == "" {
+		l.Warn("game subscription instance id is empty")
+		return coreerror.RequiredPathParameter("game_subscription_instance_id")
 	}
 
 	// Read request body
@@ -255,14 +262,14 @@ func verifyGameSubscriptionTokenHandler(w http.ResponseWriter, r *http.Request, 
 	mm := m.(*domain.Domain)
 
 	// Verify the turn sheet token
-	gameSubscriptionRec, err := mm.VerifyGameSubscriptionTurnSheetKey(gameSubscriptionID, req.TurnSheetToken)
+	instanceRec, err := mm.VerifyGameSubscriptionInstanceTurnSheetKey(gameSubscriptionInstanceID, req.TurnSheetToken)
 	if err != nil {
 		l.Warn("failed to verify turn sheet token >%s< >%v<", req.TurnSheetToken, err)
 		return coreerror.NewNotFoundError("turn_sheet_token", "This link is no longer valid")
 	}
 
-	// Get the account for the subscription
-	accountRec, err := mm.GetAccountRec(gameSubscriptionRec.AccountID, coresql.ForUpdateNoWait)
+	// Get the account for the instance
+	accountRec, err := mm.GetAccountRec(instanceRec.AccountID, coresql.ForUpdateNoWait)
 	if err != nil {
 		l.Warn("failed to get account >%v<", err)
 		return err
@@ -281,7 +288,7 @@ func verifyGameSubscriptionTokenHandler(w http.ResponseWriter, r *http.Request, 
 		return err
 	}
 
-	l.Info("verified game subscription token for email >%s<, session token >%s<", req.Email, sessionToken)
+	l.Info("verified game subscription instance token for email >%s<, session token >%s<", req.Email, sessionToken)
 
 	return server.WriteResponse(l, w, http.StatusOK, mapper.MapVerifyGameSubscriptionTokenResponse(sessionToken))
 }
@@ -290,16 +297,10 @@ func verifyGameSubscriptionTokenHandler(w http.ResponseWriter, r *http.Request, 
 func requestGameSubscriptionTokenHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = logging.LoggerWithFunctionContext(l, packageName, "requestGameSubscriptionTokenHandler")
 
-	gameSubscriptionID := pp.ByName("game_subscription_id")
-	if gameSubscriptionID == "" {
-		l.Warn("game subscription id is empty")
-		return coreerror.RequiredPathParameter("game_subscription_id")
-	}
-
-	gameInstanceID := pp.ByName("game_instance_id")
-	if gameInstanceID == "" {
-		l.Warn("game instance id is empty")
-		return coreerror.RequiredPathParameter("game_instance_id")
+	gameSubscriptionInstanceID := pp.ByName("game_subscription_instance_id")
+	if gameSubscriptionInstanceID == "" {
+		l.Warn("game subscription instance id is empty")
+		return coreerror.RequiredPathParameter("game_subscription_instance_id")
 	}
 
 	// Read request body
@@ -311,17 +312,17 @@ func requestGameSubscriptionTokenHandler(w http.ResponseWriter, r *http.Request,
 
 	mm := m.(*domain.Domain)
 
-	// Get the game subscription record
-	gameSubscriptionRec, err := mm.GetGameSubscriptionRec(gameSubscriptionID, nil)
+	// Get the game subscription instance record
+	instanceRec, err := mm.GetGameSubscriptionInstanceRec(gameSubscriptionInstanceID, nil)
 	if err != nil {
-		l.Warn("failed to get game subscription >%s< >%v<", gameSubscriptionID, err)
+		l.Warn("failed to get game subscription instance >%s< >%v<", gameSubscriptionInstanceID, err)
 		return err
 	}
 
-	// Get the account record for the game subscription
-	accountRec, err := mm.GetAccountRec(gameSubscriptionRec.AccountID, nil)
+	// Get the account record for the instance
+	accountRec, err := mm.GetAccountRec(instanceRec.AccountID, nil)
 	if err != nil {
-		l.Warn("failed to get account >%s< >%v<", gameSubscriptionRec.AccountID, err)
+		l.Warn("failed to get account >%s< >%v<", instanceRec.AccountID, err)
 		return err
 	}
 
@@ -331,27 +332,26 @@ func requestGameSubscriptionTokenHandler(w http.ResponseWriter, r *http.Request,
 		return coreerror.NewInvalidDataError("email does not match the account for this subscription")
 	}
 
-	// Get the game instance record
-	gameInstanceRec, err := mm.GetGameInstanceRec(gameInstanceID, nil)
+	// Get the game instance to get current turn number
+	gameInstanceRec, err := mm.GetGameInstanceRec(instanceRec.GameInstanceID, nil)
 	if err != nil {
-		l.Warn("failed to get game instance >%s< >%v<", gameInstanceID, err)
+		l.Warn("failed to get game instance >%s< >%v<", instanceRec.GameInstanceID, err)
 		return err
 	}
 
 	// Register SendTurnSheetNotificationEmailWorkerArgs job to send a notification email to the account
 	args := jobworker.SendTurnSheetNotificationEmailWorkerArgs{
-		GameSubscriptionID: gameSubscriptionID,
-		GameInstanceID:     gameInstanceID,
-		TurnNumber:         gameInstanceRec.CurrentTurn,
+		GameSubscriptionInstanceID: gameSubscriptionInstanceID,
+		TurnNumber:                 gameInstanceRec.CurrentTurn,
 	}
 
 	_, err = jc.Insert(r.Context(), args, nil)
 	if err != nil {
-		l.Warn("failed to queue turn sheet notification email job for subscription >%s< >%v<", gameSubscriptionID, err)
+		l.Warn("failed to queue turn sheet notification email job for instance >%s< >%v<", gameSubscriptionInstanceID, err)
 		return err
 	}
 
-	l.Info("queued turn sheet notification email job for subscription >%s<", gameSubscriptionID)
+	l.Info("queued turn sheet notification email job for instance >%s<", gameSubscriptionInstanceID)
 
 	return server.WriteResponse(l, w, http.StatusOK, nil)
 }
@@ -383,8 +383,8 @@ func getGameSubscriptionTurnSheetListHandler(w http.ResponseWriter, r *http.Requ
 	}
 
 	// Verify the subscription belongs to the authenticated account
-	if gameSubscriptionRec.AccountID != authData.Account.ID {
-		l.Warn("game subscription >%s< does not belong to authenticated account >%s<", gameSubscriptionID, authData.Account.ID)
+	if gameSubscriptionRec.AccountID != authData.AccountUser.ID {
+		l.Warn("game subscription >%s< does not belong to authenticated account >%s<", gameSubscriptionID, authData.AccountUser.ID)
 		return coreerror.NewNotFoundError("game_subscription", "Game subscription not found")
 	}
 
@@ -456,8 +456,8 @@ func getGameSubscriptionTurnSheetHandler(w http.ResponseWriter, r *http.Request,
 	}
 
 	// Verify the subscription belongs to the authenticated account
-	if gameSubscriptionRec.AccountID != authData.Account.ID {
-		l.Warn("game subscription >%s< does not belong to authenticated account >%s<", gameSubscriptionID, authData.Account.ID)
+	if gameSubscriptionRec.AccountID != authData.AccountUser.ID {
+		l.Warn("game subscription >%s< does not belong to authenticated account >%s<", gameSubscriptionID, authData.AccountUser.ID)
 		return coreerror.NewNotFoundError("game_subscription", "Game subscription not found")
 	}
 
@@ -484,7 +484,7 @@ func getGameSubscriptionTurnSheetHandler(w http.ResponseWriter, r *http.Request,
 		cfg := mm.Config()
 
 		// Return HTML format
-		processor, err := turn_sheet.GetDocumentProcessor(l, cfg, turnSheetRec.SheetType)
+		processor, err := turnsheet.GetDocumentProcessor(l, cfg, turnSheetRec.SheetType)
 		if err != nil {
 			l.Warn("failed to get document processor for sheet type >%s< >%v<", turnSheetRec.SheetType, err)
 			return err
@@ -492,7 +492,7 @@ func getGameSubscriptionTurnSheetHandler(w http.ResponseWriter, r *http.Request,
 
 		// Generate HTML from the turn sheet data
 		ctx := r.Context()
-		htmlBytes, err := processor.GenerateTurnSheet(ctx, l, turn_sheet.DocumentFormatHTML, turnSheetRec.SheetData)
+		htmlBytes, err := processor.GenerateTurnSheet(ctx, l, turnsheet.DocumentFormatHTML, turnSheetRec.SheetData)
 		if err != nil {
 			l.Warn("failed to generate HTML for turn sheet >%s< >%v<", gameTurnSheetID, err)
 			return err
@@ -550,8 +550,8 @@ func updateGameSubscriptionTurnSheetHandler(w http.ResponseWriter, r *http.Reque
 	}
 
 	// Verify the subscription belongs to the authenticated account
-	if gameSubscriptionRec.AccountID != authData.Account.ID {
-		l.Warn("game subscription >%s< does not belong to authenticated account >%s<", gameSubscriptionID, authData.Account.ID)
+	if gameSubscriptionRec.AccountID != authData.AccountUser.ID {
+		l.Warn("game subscription >%s< does not belong to authenticated account >%s<", gameSubscriptionID, authData.AccountUser.ID)
 		return coreerror.NewNotFoundError("game_subscription", "Game subscription not found")
 	}
 
@@ -631,8 +631,8 @@ func submitGameSubscriptionTurnSheetsHandler(w http.ResponseWriter, r *http.Requ
 	}
 
 	// Verify the subscription belongs to the authenticated account
-	if gameSubscriptionRec.AccountID != authData.Account.ID {
-		l.Warn("game subscription >%s< does not belong to authenticated account >%s<", gameSubscriptionID, authData.Account.ID)
+	if gameSubscriptionRec.AccountID != authData.AccountUser.ID {
+		l.Warn("game subscription >%s< does not belong to authenticated account >%s<", gameSubscriptionID, authData.AccountUser.ID)
 		return coreerror.NewNotFoundError("game_subscription", "Game subscription not found")
 	}
 

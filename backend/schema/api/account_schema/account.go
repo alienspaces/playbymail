@@ -9,7 +9,7 @@ import (
 // AccountResponseData -
 type AccountResponseData struct {
 	ID        string     `json:"id"`
-	Email     string     `json:"email"`
+	Name      string     `json:"name"`
 	Status    string     `json:"status"`
 	CreatedAt time.Time  `json:"created_at"`
 	UpdatedAt *time.Time `json:"updated_at,omitempty"`
@@ -29,7 +29,7 @@ type AccountCollectionResponse struct {
 
 type AccountRequest struct {
 	common_schema.Request
-	Email *string `json:"email,omitempty"`
+	Name *string `json:"name,omitempty"`
 }
 
 type AccountQueryParams struct {
@@ -67,7 +67,7 @@ type RefreshSessionResponse struct {
 // AccountContactResponseData -
 type AccountContactResponseData struct {
 	ID                 string     `json:"id"`
-	AccountID          string     `json:"account_id"`
+	AccountUserID      string     `json:"account_user_id"`
 	Name               string     `json:"name"`
 	PostalAddressLine1 string     `json:"postal_address_line1"`
 	PostalAddressLine2 string     `json:"postal_address_line2,omitempty"`
@@ -103,4 +103,37 @@ type AccountContactRequest struct {
 type AccountContactQueryParams struct {
 	common_schema.QueryParamsPagination
 	AccountContactResponseData
+}
+
+// AccountUserResponseData -
+type AccountUserResponseData struct {
+	ID        string     `json:"id"`
+	AccountID string     `json:"account_id"`
+	Email     string     `json:"email"`
+	Status    string     `json:"status"`
+	CreatedAt time.Time  `json:"created_at"`
+	UpdatedAt *time.Time `json:"updated_at,omitempty"`
+}
+
+type AccountUserResponse struct {
+	Data       *AccountUserResponseData          `json:"data"`
+	Error      *common_schema.ResponseError      `json:"error,omitempty"`
+	Pagination *common_schema.ResponsePagination `json:"pagination,omitempty"`
+}
+
+type AccountUserCollectionResponse struct {
+	Data       []*AccountUserResponseData        `json:"data"`
+	Error      *common_schema.ResponseError      `json:"error,omitempty"`
+	Pagination *common_schema.ResponsePagination `json:"pagination,omitempty"`
+}
+
+type AccountUserRequest struct {
+	common_schema.Request
+	Email  *string `json:"email,omitempty"`
+	Status *string `json:"status,omitempty"`
+}
+
+type AccountUserQueryParams struct {
+	common_schema.QueryParamsPagination
+	AccountUserResponseData
 }

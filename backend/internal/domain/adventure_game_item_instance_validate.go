@@ -9,15 +9,46 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 )
 
+type validateAdventureGameItemInstanceArgs struct {
+	nextRec *adventure_game_record.AdventureGameItemInstance
+	currRec *adventure_game_record.AdventureGameItemInstance
+}
+
+func (m *Domain) populateAdventureGameItemInstanceValidateArgs(currRec, nextRec *adventure_game_record.AdventureGameItemInstance) (*validateAdventureGameItemInstanceArgs, error) {
+	args := &validateAdventureGameItemInstanceArgs{
+		currRec: currRec,
+		nextRec: nextRec,
+	}
+	return args, nil
+}
+
 func (m *Domain) validateAdventureGameItemInstanceRecForCreate(rec *adventure_game_record.AdventureGameItemInstance) error {
-	return validateAdventureGameItemInstanceRec(rec, false)
+	args, err := m.populateAdventureGameItemInstanceValidateArgs(nil, rec)
+	if err != nil {
+		return err
+	}
+	return validateAdventureGameItemInstanceRecForCreate(args)
 }
 
-func (m *Domain) validateAdventureGameItemInstanceRecForUpdate(rec *adventure_game_record.AdventureGameItemInstance) error {
-	return validateAdventureGameItemInstanceRec(rec, true)
+func (m *Domain) validateAdventureGameItemInstanceRecForUpdate(currRec, nextRec *adventure_game_record.AdventureGameItemInstance) error {
+	args, err := m.populateAdventureGameItemInstanceValidateArgs(currRec, nextRec)
+	if err != nil {
+		return err
+	}
+	return validateAdventureGameItemInstanceRecForUpdate(args)
 }
 
-func validateAdventureGameItemInstanceRec(rec *adventure_game_record.AdventureGameItemInstance, requireID bool) error {
+func validateAdventureGameItemInstanceRecForCreate(args *validateAdventureGameItemInstanceArgs) error {
+	return validateAdventureGameItemInstanceRec(args, false)
+}
+
+func validateAdventureGameItemInstanceRecForUpdate(args *validateAdventureGameItemInstanceArgs) error {
+	return validateAdventureGameItemInstanceRec(args, true)
+}
+
+func validateAdventureGameItemInstanceRec(args *validateAdventureGameItemInstanceArgs, requireID bool) error {
+	rec := args.nextRec
+
 	if rec == nil {
 		return coreerror.NewInvalidDataError("record is nil")
 	}

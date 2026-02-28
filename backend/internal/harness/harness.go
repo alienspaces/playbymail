@@ -1,6 +1,8 @@
 package harness
 
 import (
+	"context"
+
 	"github.com/jackc/pgx/v5"
 	"github.com/riverqueue/river"
 
@@ -10,22 +12,23 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/type/storer"
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
-	"gitlab.com/alienspaces/playbymail/internal/turn_sheet"
+	"gitlab.com/alienspaces/playbymail/internal/turnsheet"
 	"gitlab.com/alienspaces/playbymail/internal/utils/config"
 )
 
 // Testing -
 type Testing struct {
 	*harness.Testing
-	Config       config.Config
-	Scanner      turn_sheet.TurnSheetScanner
+	Config config.Config
+	// Scanner is the implementation of the turn sheet scanner interface
+	Scanner      turnsheet.TurnSheetScanner
 	DataConfig   DataConfig
 	Data         Data
 	teardownData Data
 }
 
 // NewTesting -
-func NewTesting(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], scanner turn_sheet.TurnSheetScanner, dcfg DataConfig) (t *Testing, err error) {
+func NewTesting(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], scanner turnsheet.TurnSheetScanner, dcfg DataConfig) (t *Testing, err error) {
 
 	h, err := harness.NewTesting(l, s, j)
 	if err != nil {
@@ -79,9 +82,9 @@ func (t *Testing) CreateData() error {
 
 	l.Debug("creating test data")
 
-	// First pass: Create all accounts
+	// First pass: Create all account users
 	for _, accountConfig := range t.DataConfig.AccountConfigs {
-		accountRec, err := t.createAccountRec(accountConfig)
+		accountRec, err := t.createAccountUserRec(accountConfig)
 		if err != nil {
 			l.Warn("failed creating account record >%v<", err)
 			return err
@@ -89,7 +92,7 @@ func (t *Testing) CreateData() error {
 		l.Debug("created account record ID >%s< Email >%s<", accountRec.ID, accountRec.Email)
 
 		// Create account contact for the account (required for player subscriptions)
-		_, err = t.createAccountContactRec(accountRec.ID)
+		_, err = t.createAccountUserContactRec(accountRec.ID)
 		if err != nil {
 			l.Warn("failed creating account contact record >%v<", err)
 			return err
@@ -120,27 +123,29 @@ func (t *Testing) CreateData() error {
 		l.Debug("created adventure game records for game >%s<", gameRec.ID)
 	}
 
-	// Third pass: Create all game subscriptions (accounts subscribe to games)
-	// This must happen before game instances since instances require subscriptions
+	// Third pass: Create designer game subscriptions first (they don't require game instances)
+	// These are needed to create game instances which require a subscription
 	for _, accountConfig := range t.DataConfig.AccountConfigs {
-		accountRec, err := t.Data.GetAccountRecByRef(accountConfig.Reference)
+		accountRec, err := t.Data.GetAccountUserRecByRef(accountConfig.Reference)
 		if err != nil {
-			l.Warn("failed getting account record for reference >%s<: %v", accountConfig.Reference, err)
+			l.Warn("failed getting account user record for reference >%s<: %v", accountConfig.Reference, err)
 			return err
 		}
 
-		// Create game subscription records for this account
+		// Create designer subscriptions first (they don't need game instances)
 		for _, subscriptionConfig := range accountConfig.GameSubscriptionConfigs {
-			_, err = t.createGameSubscriptionRec(subscriptionConfig, accountRec)
-			if err != nil {
-				l.Warn("failed creating game_subscription record >%v<", err)
-				return err
+			if subscriptionConfig.SubscriptionType == game_record.GameSubscriptionTypeDesigner {
+				_, err = t.createGameSubscriptionRec(subscriptionConfig, accountRec)
+				if err != nil {
+					l.Warn("failed creating designer game_subscription record >%v<", err)
+					return err
+				}
+				l.Debug("created designer game_subscription record for account >%s<", accountRec.ID)
 			}
-			l.Debug("created game_subscription record for account >%s<", accountRec.ID)
 		}
 	}
 
-	// Fourth pass: Create all game instances (now that subscriptions exist)
+	// Fourth pass: Create all game instances (now that designer subscriptions exist)
 	for _, gameConfig := range t.DataConfig.GameConfigs {
 		gameRec, err := t.Data.GetGameRecByRef(gameConfig.Reference)
 		if err != nil {
@@ -180,7 +185,63 @@ func (t *Testing) CreateData() error {
 		}
 	}
 
+	// Fifth pass: Create manager and player subscriptions (now that game instances exist)
+	// These subscriptions require game instances to be created first
+	for _, accountConfig := range t.DataConfig.AccountConfigs {
+		accountRec, err := t.Data.GetAccountUserRecByRef(accountConfig.Reference)
+		if err != nil {
+			l.Warn("failed getting account user record for reference >%s<: %v", accountConfig.Reference, err)
+			return err
+		}
+
+		// Create manager and player subscriptions (they require game instances)
+		for _, subscriptionConfig := range accountConfig.GameSubscriptionConfigs {
+			if subscriptionConfig.SubscriptionType == game_record.GameSubscriptionTypeManager ||
+				subscriptionConfig.SubscriptionType == game_record.GameSubscriptionTypePlayer {
+				_, err = t.createGameSubscriptionRec(subscriptionConfig, accountRec)
+				if err != nil {
+					l.Warn("failed creating manager/player game_subscription record >%v<", err)
+					return err
+				}
+				l.Debug("created %s game_subscription record for account >%s<", subscriptionConfig.SubscriptionType, accountRec.ID)
+			}
+		}
+	}
+
+	// TODO: Remove me
+	for _, rec := range t.Data.AccountUserRecs {
+		l.Info("created account user record ID >%s<", rec.ID)
+	}
+
 	l.Debug("created test data")
+
+	// Force commit to ensure data is visible to handlers running in separate transactions
+	if t.ShouldCommitData {
+		l.Info("forcing commit of harness data")
+		if err := t.CommitTx(); err != nil {
+			l.Warn("failed force commit >%v<", err)
+			return err
+		}
+
+		// Re-open transaction to satisfy callers expecting an open transaction (like Setup wrapper)
+		tx, err := t.InitTx()
+		if err != nil {
+			l.Warn("failed to re-init tx >%v<", err)
+			return err
+		}
+		l.Info("re-opened transaction for test harness")
+
+		// Verify game visibility
+		for _, gameID := range t.Data.Refs.GameRefs {
+			var count int
+			err := tx.QueryRow(context.Background(), "SELECT count(*) FROM game WHERE id = $1", gameID).Scan(&count)
+			if err != nil {
+				l.Warn("failed to query game count >%v<", err)
+			} else {
+				l.Info("VERIFICATION: Game ID >%s< Count >%d< (Should be 1)", gameID, count)
+			}
+		}
+	}
 
 	return nil
 }
@@ -232,17 +293,33 @@ func (t *Testing) RemoveData() error {
 		}
 	}
 
-	// Remove game instance records
-	l.Debug("removing >%d< game instance records", len(t.teardownData.GameInstanceRecs))
-	for _, instanceRec := range t.teardownData.GameInstanceRecs {
-		l.Debug("[teardown] game instance ID: >%s<", instanceRec.ID)
-		if instanceRec.ID == "" {
-			l.Warn("[teardown] skipping game instance with empty ID")
+	// Remove game subscription records BEFORE game instances
+	// (game_subscription_instance links subscriptions to instances)
+	// Remove game subscription instance records (before subscriptions)
+	l.Debug("removing >%d< game subscription instance records", len(t.teardownData.GameSubscriptionInstanceRecs))
+	for _, instanceLinkRec := range t.teardownData.GameSubscriptionInstanceRecs {
+		l.Debug("[teardown] game subscription instance ID: >%s<", instanceLinkRec.ID)
+		if instanceLinkRec.ID == "" {
+			l.Warn("[teardown] skipping game subscription instance with empty ID")
 			continue
 		}
-		err := t.Domain.(*domain.Domain).RemoveGameInstanceRec(instanceRec.ID)
+		err := t.Domain.(*domain.Domain).RemoveGameSubscriptionInstanceRec(instanceLinkRec.ID)
 		if err != nil {
-			l.Warn("failed removing game instance record >%v<", err)
+			l.Warn("failed removing game subscription instance record >%v<", err)
+			// Don't return error - continue with other records
+		}
+	}
+
+	l.Debug("removing >%d< game subscription records", len(t.teardownData.GameSubscriptionRecs))
+	for _, subscriptionRec := range t.teardownData.GameSubscriptionRecs {
+		l.Debug("[teardown] game subscription ID: >%s<", subscriptionRec.ID)
+		if subscriptionRec.ID == "" {
+			l.Warn("[teardown] skipping game subscription with empty ID")
+			continue
+		}
+		err := t.Domain.(*domain.Domain).RemoveGameSubscriptionRec(subscriptionRec.ID)
+		if err != nil {
+			l.Warn("failed removing game subscription record >%v<", err)
 			return err
 		}
 	}
@@ -258,17 +335,17 @@ func (t *Testing) RemoveData() error {
 	}
 	l.Debug("removed adventure game records")
 
-	// Remove game subscription records
-	l.Debug("removing >%d< game subscription records", len(t.teardownData.GameSubscriptionRecs))
-	for _, subscriptionRec := range t.teardownData.GameSubscriptionRecs {
-		l.Debug("[teardown] game subscription ID: >%s<", subscriptionRec.ID)
-		if subscriptionRec.ID == "" {
-			l.Warn("[teardown] skipping game subscription with empty ID")
+	// Remove game instance records
+	l.Debug("removing >%d< game instance records", len(t.teardownData.GameInstanceRecs))
+	for _, instanceRec := range t.teardownData.GameInstanceRecs {
+		l.Debug("[teardown] game instance ID: >%s<", instanceRec.ID)
+		if instanceRec.ID == "" {
+			l.Warn("[teardown] skipping game instance with empty ID")
 			continue
 		}
-		err := t.Domain.(*domain.Domain).RemoveGameSubscriptionRec(subscriptionRec.ID)
+		err := t.Domain.(*domain.Domain).RemoveGameInstanceRec(instanceRec.ID)
 		if err != nil {
-			l.Warn("failed removing game subscription record >%v<", err)
+			l.Warn("failed removing game instance record >%v<", err)
 			return err
 		}
 	}
@@ -304,7 +381,53 @@ func (t *Testing) RemoveData() error {
 		}
 	}
 
-	// Remove accounts
+	// Remove account subscriptions before accounts
+	l.Debug("removing >%d< account subscription records", len(t.teardownData.AccountSubscriptionRecs))
+	for _, rec := range t.teardownData.AccountSubscriptionRecs {
+		l.Debug("[teardown] account subscription ID: >%s<", rec.ID)
+		if rec.ID == "" {
+			l.Warn("[teardown] skipping account subscription with empty ID")
+			continue
+		}
+		err := t.Domain.(*domain.Domain).RemoveAccountSubscriptionRec(rec.ID)
+		if err != nil {
+			l.Warn("failed removing account subscription record >%v<", err)
+			return err
+		}
+	}
+
+	// Remove account user contacts before account users
+	l.Debug("removing >%d< account user contact records", len(t.teardownData.AccountUserContactRecs))
+	for _, rec := range t.teardownData.AccountUserContactRecs {
+		l.Debug("[teardown] account user contact ID: >%s<", rec.ID)
+		if rec.ID == "" {
+			l.Warn("[teardown] skipping account user contact with empty ID")
+			continue
+		}
+		err := t.Domain.(*domain.Domain).RemoveAccountUserContactRec(rec.ID)
+		if err != nil {
+			l.Warn("failed removing account user contact record >%v<", err)
+			return err
+		}
+	}
+
+	// Remove account users
+	l.Debug("removing >%d< account user records", len(t.teardownData.AccountUserRecs))
+
+	for _, rec := range t.teardownData.AccountUserRecs {
+		l.Debug("[teardown] account user ID: >%s<", rec.ID)
+		if rec.ID == "" {
+			l.Warn("[teardown] skipping account user with empty ID")
+			continue
+		}
+		err := t.Domain.(*domain.Domain).RemoveAccountUserRec(rec.ID)
+		if err != nil {
+			l.Warn("failed removing account user record >%v<", err)
+			return err
+		}
+	}
+
+	// Remove account records last — account_user rows reference them via account_id FK
 	l.Debug("removing >%d< account records", len(t.teardownData.AccountRecs))
 
 	for _, rec := range t.teardownData.AccountRecs {

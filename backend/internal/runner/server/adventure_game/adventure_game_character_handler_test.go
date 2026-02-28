@@ -30,8 +30,8 @@ func Test_adventureGameCharacterHandler(t *testing.T) {
 	gameRec, err := th.Data.GetGameRecByRef(harness.GameOneRef)
 	require.NoError(t, err, "GetGameRecByRef returns without error")
 
-	accountRec, err := th.Data.GetAccountRecByRef(harness.AccountThreeRef)
-	require.NoError(t, err, "GetAccountRecByRef(AccountThreeRef) returns without error")
+	accountRec, err := th.Data.GetAccountUserRecByRef(harness.ProDesignerAccountRef)
+	require.NoError(t, err, "GetAccountUserRecByRef(ProDesignerAccountRef) returns without error")
 
 	charRec, err := th.Data.GetAdventureGameCharacterRecByRef(harness.GameCharacterOneRef)
 	require.NoError(t, err, "GetGameCharacterRecByRef returns without error")
@@ -44,9 +44,12 @@ func Test_adventureGameCharacterHandler(t *testing.T) {
 	}{
 		{
 			TestCase: testutil.TestCase{
-				Name: "API key with open access \\ get many adventure game characters \\ returns expected characters",
+				Name: "authenticated user when get many adventure game characters then returns expected characters",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[adventure_game.GetManyAdventureGameCharacters]
+				},
+				RequestHeaders: func(d harness.Data) map[string]string {
+					return testutil.AuthHeaderStandard(d)
 				},
 				RequestQueryParams: func(d harness.Data) map[string]any {
 					return map[string]any{
@@ -63,14 +66,18 @@ func Test_adventureGameCharacterHandler(t *testing.T) {
 		},
 		{
 			TestCase: testutil.TestCase{
-				Name: "API key with open access \\ create adventure game character with valid properties \\ returns created character",
+				Name: "authenticated designer when create adventure game character with valid properties then returns created character",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[adventure_game.CreateOneAdventureGameCharacter]
 				},
+				RequestHeaders: func(d harness.Data) map[string]string {
+					return testutil.AuthHeaderProDesigner(d)
+				},
 				RequestBody: func(d harness.Data) any {
 					return adventure_game_schema.AdventureGameCharacterRequest{
-						AccountID: accountRec.ID, // Use AccountTwoRef for uniqueness
-						Name:      "Test Character",
+						AccountID:     accountRec.AccountID,
+						AccountUserID: accountRec.ID,
+						Name:          harness.UniqueName("Test Character"),
 					}
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
@@ -82,9 +89,12 @@ func Test_adventureGameCharacterHandler(t *testing.T) {
 		},
 		{
 			TestCase: testutil.TestCase{
-				Name: "API key with open access \\ get one game character with valid ID \\ returns expected character",
+				Name: "authenticated user when get one game character with valid ID then returns expected character",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[adventure_game.GetOneAdventureGameCharacter]
+				},
+				RequestHeaders: func(d harness.Data) map[string]string {
+					return testutil.AuthHeaderStandard(d)
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
@@ -98,9 +108,12 @@ func Test_adventureGameCharacterHandler(t *testing.T) {
 		},
 		{
 			TestCase: testutil.TestCase{
-				Name: "API key with open access \\ delete adventure game character with valid ID \\ returns no content",
+				Name: "authenticated designer when delete adventure game character with valid ID then returns no content",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[adventure_game.DeleteOneAdventureGameCharacter]
+				},
+				RequestHeaders: func(d harness.Data) map[string]string {
+					return testutil.AuthHeaderStandard(d)
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{

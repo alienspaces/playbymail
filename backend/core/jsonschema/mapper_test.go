@@ -30,7 +30,7 @@ func Test_CreateJSONTypeMap(t *testing.T) {
 		expected map[string]JSONType
 	}{
 		{
-			name:  "struct \\ ok",
+			name:  "struct then ok",
 			input: TestStruct{},
 			expected: map[string]JSONType{
 				"name":       {ElemType: "string"},
@@ -42,7 +42,7 @@ func Test_CreateJSONTypeMap(t *testing.T) {
 			},
 		},
 		{
-			name:  "pointer to struct \\ ok",
+			name:  "pointer to struct then ok",
 			input: &TestStruct{},
 			expected: map[string]JSONType{
 				"name":       {ElemType: "string"},
@@ -54,7 +54,7 @@ func Test_CreateJSONTypeMap(t *testing.T) {
 			},
 		},
 		{
-			name:  "nested struct \\ ok",
+			name:  "nested struct then ok",
 			input: NestedStruct{},
 			expected: map[string]JSONType{
 				"name":       {ElemType: "string"},
@@ -68,7 +68,7 @@ func Test_CreateJSONTypeMap(t *testing.T) {
 			},
 		},
 		{
-			name:  "pointer to nested struct \\ ok",
+			name:  "pointer to nested struct then ok",
 			input: &NestedStruct{},
 			expected: map[string]JSONType{
 				"name":       {ElemType: "string"},

@@ -61,7 +61,9 @@ func (r *Generic[Rec, RecPtr]) GetMany(opts *coresql.Options) ([]*Rec, error) {
 
 	recs := r.NewRecordSlice()
 
-	rows, err := r.GetRows(r.GetManySQL(), opts)
+	sql := r.GetManySQL()
+
+	rows, err := r.GetRows(sql, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -95,6 +97,8 @@ func (r *Generic[Rec, RecPtr]) GetOne(id string, lock *coresql.Lock) (*Rec, erro
 		Lock: lock,
 	}
 
+	// sql := r.GetOneSQL()
+	// fmt.Printf("**** GetOne Table >%s< SQL >%s<\n", r.TableName(), sql)
 	rows, err := r.GetRows(r.GetOneSQL(), opts)
 	if err != nil {
 		return nil, err
@@ -127,6 +131,8 @@ func (r *Generic[Rec, RecPtr]) CreateOne(rec *Rec) (*Rec, error) {
 	RecPtr(rec).ResolveID()
 	RecPtr(rec).SetCreatedAt(record.NewRecordTimestamp())
 
+	// sql := r.CreateOneSQL()
+	// fmt.Printf("**** CreateOne Table >%s< SQL >%s< Args >%#v<\n", r.TableName(), r.CreateOneSQL(), RecPtr(rec).ToNamedArgs())
 	rows, err := r.tx.Query(context.Background(), r.CreateOneSQL(), RecPtr(rec).ToNamedArgs())
 	if err != nil {
 		return nil, err
@@ -155,6 +161,8 @@ func (r *Generic[Rec, RecPtr]) UpdateOne(rec *Rec) (*Rec, error) {
 	origUpdatedAt := RecPtr(rec).GetUpdatedAt()
 	RecPtr(rec).SetUpdatedAt(record.NewRecordNullTimestamp())
 
+	// sql := r.UpdateOneSQL()
+	// fmt.Printf("**** UpdateOne Table >%s< SQL >%s< Args >%#v<\n", r.TableName(), sql, RecPtr(rec).ToNamedArgs())
 	rows, err := r.tx.Query(context.Background(), r.UpdateOneSQL(), RecPtr(rec).ToNamedArgs())
 	if err != nil {
 		RecPtr(rec).SetUpdatedAt(origUpdatedAt)
@@ -178,23 +186,11 @@ func (r *Generic[Rec, RecPtr]) UpdateOne(rec *Rec) (*Rec, error) {
 	return &modRec, nil
 }
 
-func (r *Generic[Rec, RecPtr]) SetRLS(identifiers map[string][]string) {
-	if r.isRLSDisabled {
-		return
-	}
+func (r *Generic[Rec, RecPtr]) SetRLSIdentifiers(identifiers map[string][]string) {
+	r.Repository.SetRLSIdentifiers(identifiers)
+}
 
-	filtered := map[string][]string{}
-
-	// SELECT queries should only filter on rows with identifiers for resources matching
-	// the attributes of the record. For example; a record with only `program_id`, but
-	// not `client_id`, should not be filtered on `client_id`.
-	for _, attr := range r.Attributes() {
-		if ids, ok := identifiers[attr]; ok {
-			filtered[attr] = ids
-		}
-	}
-
-	if len(filtered) > 0 {
-		r.rlsIdentifiers = filtered
-	}
+// SetRLSConstraints sets the RLS constraints for this generic repository
+func (r *Generic[Rec, RecPtr]) SetRLSConstraints(constraints []repositor.RLSConstraint) {
+	r.Repository.SetRLSConstraints(constraints)
 }

@@ -51,27 +51,11 @@ func (m *Domain) SessionTokenExpirySeconds() int {
 	return int(sessionTokenExpiryDuration.Seconds())
 }
 
-// GetManyAccountRecs -
-func (m *Domain) GetManyAccountRecs(opts *coresql.Options) ([]*account_record.Account, error) {
-	l := m.Logger("GetManyAccountRecs")
+// GetAccountParentRec returns the account (parent/tenant) record by ID.
+func (m *Domain) GetAccountParentRec(recID string, lock *coresql.Lock) (*account_record.Account, error) {
+	l := m.Logger("GetAccountParentRec")
 
-	l.Debug("getting many client records opts >%#v<", opts)
-
-	r := m.AccountRepository()
-
-	recs, err := r.GetMany(opts)
-	if err != nil {
-		return nil, databaseError(err)
-	}
-
-	return recs, nil
-}
-
-// GetAccountRec -
-func (m *Domain) GetAccountRec(recID string, lock *coresql.Lock) (*account_record.Account, error) {
-	l := m.Logger("GetAccountRec")
-
-	l.Debug("getting client record ID >%s<", recID)
+	l.Debug("getting account parent record ID >%s<", recID)
 
 	if err := domain.ValidateUUIDField("id", recID); err != nil {
 		return nil, err
@@ -89,21 +73,219 @@ func (m *Domain) GetAccountRec(recID string, lock *coresql.Lock) (*account_recor
 	return rec, nil
 }
 
-// CreateAccountRec -
-func (m *Domain) CreateAccountRec(rec *account_record.Account) (*account_record.Account, error) {
+// GetManyAccountParentRecs returns account (parent/tenant) records.
+func (m *Domain) GetManyAccountParentRecs(opts *coresql.Options) ([]*account_record.Account, error) {
+	l := m.Logger("GetManyAccountParentRecs")
+
+	l.Info("getting many account parent records opts >%#v<", opts)
+
+	r := m.AccountRepository()
+
+	recs, err := r.GetMany(opts)
+	if err != nil {
+		return nil, databaseError(err)
+	}
+
+	return recs, nil
+}
+
+// UpdateAccountParentRec updates an account (parent/tenant) record.
+func (m *Domain) UpdateAccountParentRec(rec *account_record.Account) (*account_record.Account, error) {
+	l := m.Logger("UpdateAccountParentRec")
+
+	l.Debug("updating account parent record ID >%s<", rec.ID)
+
+	curr, err := m.GetAccountParentRec(rec.ID, coresql.ForUpdateNoWait)
+	if err != nil {
+		return rec, err
+	}
+
+	rec.CreatedAt = curr.CreatedAt
+
+	r := m.AccountRepository()
+
+	rec, err = r.UpdateOne(rec)
+	if err != nil {
+		return rec, databaseError(err)
+	}
+
+	return rec, nil
+}
+
+// GetManyAccountRecs -
+func (m *Domain) GetManyAccountRecs(opts *coresql.Options) ([]*account_record.AccountUser, error) {
+	l := m.Logger("GetManyAccountRecs")
+
+	l.Info("getting many account records opts >%#v<", opts)
+
+	r := m.AccountUserRepository()
+
+	recs, err := r.GetMany(opts)
+	if err != nil {
+		return nil, databaseError(err)
+	}
+
+	return recs, nil
+}
+
+// GetAccountRec -
+func (m *Domain) GetAccountRec(recID string, lock *coresql.Lock) (*account_record.AccountUser, error) {
+	l := m.Logger("GetAccountRec")
+
+	l.Debug("getting client record ID >%s<", recID)
+
+	if err := domain.ValidateUUIDField("id", recID); err != nil {
+		return nil, err
+	}
+
+	r := m.AccountUserRepository()
+
+	rec, err := r.GetOne(recID, lock)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, coreerror.NewNotFoundError(account_record.TableAccountUser, recID)
+	} else if err != nil {
+		return nil, databaseError(err)
+	}
+
+	return rec, nil
+}
+
+// GetAccountUserRecByAccountID returns the account_user record for the given parent account ID.
+// Since each account has exactly one account_user (1:1 mapping), this returns the unique user.
+func (m *Domain) GetAccountUserRecByAccountID(accountID string, lock *coresql.Lock) (*account_record.AccountUser, error) {
+	l := m.Logger("GetAccountUserRecByAccountID")
+
+	l.Debug("getting account user record by account ID >%s<", accountID)
+
+	if err := domain.ValidateUUIDField("account_id", accountID); err != nil {
+		return nil, err
+	}
+
+	r := m.AccountUserRepository()
+
+	opts := &coresql.Options{
+		Params: []coresql.Param{
+			{Col: account_record.FieldAccountUserAccountID, Val: accountID},
+		},
+		Lock:  lock,
+		Limit: 1,
+	}
+
+	recs, err := r.GetMany(opts)
+	if err != nil {
+		return nil, databaseError(err)
+	}
+
+	if len(recs) == 0 {
+		return nil, coreerror.NewNotFoundError(account_record.TableAccountUser, accountID)
+	}
+
+	return recs[0], nil
+}
+
+// CreateAccount creates a new account with an account user and basic subscriptions
+func (m *Domain) CreateAccount(rec *account_record.AccountUser) (*account_record.Account, *account_record.AccountUser, []*account_record.AccountSubscription, error) {
+	l := m.Logger("CreateAccount")
+
+	l.Info("CreateAccount called for account email >%s<", rec.Email)
+
+	// Create the account record first (1:1 mapping with account_user)
+	accountRec := &account_record.Account{
+		Name:   rec.Email,
+		Status: account_record.AccountUserStatusActive,
+	}
+
+	accountRepo := m.AccountRepository()
+	accountRec, err := accountRepo.CreateOne(accountRec)
+	if err != nil {
+		return nil, rec, nil, err
+	}
+
+	l.Info("created account >%s< for user >%s<", accountRec.ID, rec.Email)
+
+	// Link user to account
+	rec.AccountID = accountRec.ID
+
+	// Create the account user record
+	createdRec, err := m.CreateAccountRec(rec)
+	if err != nil {
+		return accountRec, rec, nil, err
+	}
+
+	var subscriptions []*account_record.AccountSubscription
+
+	// Create basic game designer subscription
+	l.Info("creating basic game designer subscription for account >%s<", accountRec.ID)
+	designerSub := &account_record.AccountSubscription{
+		AccountID:          nullstring.FromString(accountRec.ID),
+		SubscriptionType:   account_record.AccountSubscriptionTypeBasicGameDesigner,
+		SubscriptionPeriod: account_record.AccountSubscriptionPeriodEternal,
+		Status:             account_record.AccountSubscriptionStatusActive,
+		AutoRenew:          true,
+	}
+	designerSub, err = m.CreateAccountSubscriptionRec(designerSub)
+	if err != nil {
+		l.Warn("failed to auto-create basic game designer subscription >%v<", err)
+	} else {
+		l.Info("created basic game designer subscription ID >%s< Type >%s< Status >%s< for account >%s<",
+			designerSub.ID, designerSub.SubscriptionType, designerSub.Status, createdRec.ID)
+		subscriptions = append(subscriptions, designerSub)
+	}
+
+	// Create basic manager subscription
+	l.Info("creating basic manager subscription for account >%s<", accountRec.ID)
+	managerSub := &account_record.AccountSubscription{
+		AccountID:          nullstring.FromString(accountRec.ID),
+		SubscriptionType:   account_record.AccountSubscriptionTypeBasicManager,
+		SubscriptionPeriod: account_record.AccountSubscriptionPeriodEternal,
+		Status:             account_record.AccountSubscriptionStatusActive,
+		AutoRenew:          true,
+	}
+	managerSub, err = m.CreateAccountSubscriptionRec(managerSub)
+	if err != nil {
+		l.Warn("failed to auto-create basic manager subscription >%v<", err)
+	} else {
+		l.Info("created basic manager subscription ID >%s< Type >%s< Status >%s< for account >%s<",
+			managerSub.ID, managerSub.SubscriptionType, managerSub.Status, accountRec.ID)
+		subscriptions = append(subscriptions, managerSub)
+	}
+
+	// Create basic player subscription
+	l.Info("creating basic player subscription for account >%s<", accountRec.ID)
+	playerSub := &account_record.AccountSubscription{
+		AccountUserID:      nullstring.FromString(rec.ID),
+		SubscriptionType:   account_record.AccountSubscriptionTypeBasicPlayer,
+		SubscriptionPeriod: account_record.AccountSubscriptionPeriodEternal,
+		Status:             account_record.AccountSubscriptionStatusActive,
+		AutoRenew:          true,
+	}
+	playerSub, err = m.CreateAccountSubscriptionRec(playerSub)
+	if err != nil {
+		l.Warn("failed to auto-create basic player subscription >%v<", err)
+	} else {
+		l.Info("created basic player subscription ID >%s< Type >%s< Status >%s< for account >%s<",
+			playerSub.ID, playerSub.SubscriptionType, playerSub.Status, accountRec.ID)
+		subscriptions = append(subscriptions, playerSub)
+	}
+
+	l.Info("created account >%s< with >%d< subscriptions", createdRec.ID, len(subscriptions))
+	return accountRec, createdRec, subscriptions, nil
+}
+
+// CreateAccountRec creates an account record without subscriptions
+func (m *Domain) CreateAccountRec(rec *account_record.AccountUser) (*account_record.AccountUser, error) {
 	l := m.Logger("CreateAccountRec")
 
 	l.Debug("creating client record >%#v<", rec)
 
-	r := m.AccountRepository()
+	r := m.AccountUserRepository()
 
 	if err := m.validateAccountRecForCreate(rec); err != nil {
 		l.Warn("failed to validate client record >%v<", err)
 		return rec, err
 	}
 
-	var err error
-	rec, err = r.CreateOne(rec)
+	rec, err := r.CreateOne(rec)
 	if err != nil {
 		return rec, databaseError(err)
 	}
@@ -112,7 +294,7 @@ func (m *Domain) CreateAccountRec(rec *account_record.Account) (*account_record.
 }
 
 // UpdateAccountRec -
-func (m *Domain) UpdateAccountRec(rec *account_record.Account) (*account_record.Account, error) {
+func (m *Domain) UpdateAccountRec(rec *account_record.AccountUser) (*account_record.AccountUser, error) {
 	l := m.Logger("UpdateAccountRec")
 
 	curr, err := m.GetAccountRec(rec.ID, coresql.ForUpdateNoWait)
@@ -122,12 +304,12 @@ func (m *Domain) UpdateAccountRec(rec *account_record.Account) (*account_record.
 
 	l.Debug("updating client record >%#v<", rec)
 
-	if err := m.validateAccountRecForUpdate(rec, curr); err != nil {
+	if err := m.validateAccountRecForUpdate(curr, rec); err != nil {
 		l.Warn("failed to validate client record >%v<", err)
 		return rec, err
 	}
 
-	r := m.AccountRepository()
+	r := m.AccountUserRepository()
 
 	updatedRec, err := r.UpdateOne(rec)
 	if err != nil {
@@ -148,7 +330,7 @@ func (m *Domain) DeleteAccountRec(recID string) error {
 		return err
 	}
 
-	r := m.AccountRepository()
+	r := m.AccountUserRepository()
 
 	if err := m.validateAccountRecForDelete(rec); err != nil {
 		l.Warn("failed domain validation >%v<", err)
@@ -162,18 +344,18 @@ func (m *Domain) DeleteAccountRec(recID string) error {
 	return nil
 }
 
-// RemoveAccountRec -
-func (m *Domain) RemoveAccountRec(recID string) error {
-	l := m.Logger("RemoveAccountRec")
+// RemoveAccountUserRec hard-deletes an account_user record by ID.
+func (m *Domain) RemoveAccountUserRec(recID string) error {
+	l := m.Logger("RemoveAccountUserRec")
 
-	l.Debug("removing client record ID >%s<", recID)
+	l.Debug("removing account user record ID >%s<", recID)
 
 	rec, err := m.GetAccountRec(recID, coresql.ForUpdateNoWait)
 	if err != nil {
 		return err
 	}
 
-	r := m.AccountRepository()
+	r := m.AccountUserRepository()
 
 	if err := m.validateAccountRecForDelete(rec); err != nil {
 		l.Warn("failed domain validation >%v<", err)
@@ -187,7 +369,22 @@ func (m *Domain) RemoveAccountRec(recID string) error {
 	return nil
 }
 
-func (m *Domain) GenerateAccountVerificationToken(rec *account_record.Account) (string, error) {
+// RemoveAccountRec hard-deletes an account_record.Account row by ID.
+func (m *Domain) RemoveAccountRec(recID string) error {
+	l := m.Logger("RemoveAccountRec")
+
+	l.Debug("removing account record ID >%s<", recID)
+
+	r := m.AccountRepository()
+
+	if err := r.RemoveOne(recID); err != nil {
+		return databaseError(err)
+	}
+
+	return nil
+}
+
+func (m *Domain) GenerateAccountVerificationToken(rec *account_record.AccountUser) (string, error) {
 	l := m.Logger("GenerateAccountVerificationToken")
 
 	l.Debug("generating verification token for account ID >%s<", rec.ID)
@@ -219,9 +416,9 @@ func (m *Domain) VerifyAccountVerificationToken(token string, testBypassEnabled 
 
 	l.Info("verifying verification token >%s<", token)
 
-	repo := m.AccountRepository()
+	repo := m.AccountUserRepository()
 
-	var rec *account_record.Account
+	var rec *account_record.AccountUser
 
 	// Test bypass mode: allow using email address as the verification code
 	// This is enabled when the caller has verified the test bypass header/token
@@ -232,7 +429,7 @@ func (m *Domain) VerifyAccountVerificationToken(token string, testBypassEnabled 
 
 			recs, err := repo.GetMany(&coresql.Options{
 				Params: []coresql.Param{
-					{Col: account_record.FieldAccountEmail, Val: token},
+					{Col: account_record.FieldAccountUserEmail, Val: token},
 				},
 				Limit: 1,
 			})
@@ -255,7 +452,7 @@ func (m *Domain) VerifyAccountVerificationToken(token string, testBypassEnabled 
 
 		recs, err := repo.GetMany(&coresql.Options{
 			Params: []coresql.Param{
-				{Col: account_record.FieldAccountVerificationToken, Val: hash},
+				{Col: account_record.FieldAccountUserVerificationToken, Val: hash},
 			},
 			Limit: 1,
 		})
@@ -285,7 +482,7 @@ func (m *Domain) VerifyAccountVerificationToken(token string, testBypassEnabled 
 }
 
 // GenerateAccountSessionToken generates a session token for an account record.
-func (m *Domain) GenerateAccountSessionToken(rec *account_record.Account) (string, error) {
+func (m *Domain) GenerateAccountSessionToken(rec *account_record.AccountUser) (string, error) {
 	l := m.Logger("GenerateAccountSessionToken")
 
 	l.Debug("generating session token for account ID >%s<", rec.ID)
@@ -327,7 +524,7 @@ func (m *Domain) GetTestBypassHeaderName() string {
 	return m.config.TestBypassHeaderName
 }
 
-func (m *Domain) VerifyAccountSessionToken(token string) (*account_record.Account, error) {
+func (m *Domain) VerifyAccountSessionToken(token string) (*account_record.AccountUser, error) {
 	l := m.Logger("VerifyAccountSessionToken")
 
 	l.Info("verifying account session token >%s<", token)
@@ -336,11 +533,11 @@ func (m *Domain) VerifyAccountSessionToken(token string) (*account_record.Accoun
 	hash := hmacSHA256(m.config.TokenHMACKey, token)
 
 	// Look up account by session token
-	repo := m.AccountRepository()
+	repo := m.AccountUserRepository()
 
 	recs, err := repo.GetMany(&coresql.Options{
 		Params: []coresql.Param{
-			{Col: account_record.FieldAccountSessionToken, Val: hash},
+			{Col: account_record.FieldAccountUserSessionToken, Val: hash},
 		},
 		Limit: 1,
 	})
@@ -385,7 +582,7 @@ func (m *Domain) VerifyAccountSessionToken(token string) (*account_record.Accoun
 	return rec, nil
 }
 
-func (m *Domain) GetAccountRecByEmail(email string) (*account_record.Account, error) {
+func (m *Domain) GetAccountRecByEmail(email string) (*account_record.AccountUser, error) {
 	l := m.Logger("GetAccountRecByEmail")
 
 	l.Debug("getting account record by email >%s<", email)
@@ -394,11 +591,11 @@ func (m *Domain) GetAccountRecByEmail(email string) (*account_record.Account, er
 		return nil, coreerror.NewInvalidDataError("email is required")
 	}
 
-	repo := m.AccountRepository()
+	repo := m.AccountUserRepository()
 
 	recs, err := repo.GetMany(&coresql.Options{
 		Params: []coresql.Param{
-			{Col: account_record.FieldAccountEmail, Val: email},
+			{Col: account_record.FieldAccountUserEmail, Val: email},
 		},
 		Limit: 1,
 	})

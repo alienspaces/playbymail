@@ -17,6 +17,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/mapper"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
+	"gitlab.com/alienspaces/playbymail/internal/runner/server/handler_auth"
 	"gitlab.com/alienspaces/playbymail/internal/utils/logging"
 )
 
@@ -27,6 +28,7 @@ const (
 	CreateGameWithID = "create-game-with-id"
 	UpdateOneGame    = "update-one-game"
 	DeleteOneGame    = "delete-one-game"
+	PublishGame      = "publish-game"
 )
 
 func gameHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error) {
@@ -113,6 +115,9 @@ func gameHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error)
 			AuthenTypes: []server.AuthenticationType{
 				server.AuthenticationTypeToken,
 			},
+			AuthzPermissions: []server.AuthorizedPermission{
+				handler_auth.PermissionGameDesign,
+			},
 			ValidateRequestSchema:  requestSchema,
 			ValidateResponseSchema: responseSchema,
 		},
@@ -147,6 +152,9 @@ func gameHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error)
 			AuthenTypes: []server.AuthenticationType{
 				server.AuthenticationTypeToken,
 			},
+			AuthzPermissions: []server.AuthorizedPermission{
+				handler_auth.PermissionGameDesign,
+			},
 			ValidateRequestSchema:  requestSchema,
 			ValidateResponseSchema: responseSchema,
 		},
@@ -164,10 +172,33 @@ func gameHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error)
 			AuthenTypes: []server.AuthenticationType{
 				server.AuthenticationTypeToken,
 			},
+			AuthzPermissions: []server.AuthorizedPermission{
+				handler_auth.PermissionGameDesign,
+			},
 		},
 		DocumentationConfig: server.DocumentationConfig{
 			Document: true,
 			Title:    "Delete game",
+		},
+	}
+
+	gameConfig[PublishGame] = server.HandlerConfig{
+		Method:      http.MethodPost,
+		Path:        "/api/v1/games/:game_id/publish",
+		HandlerFunc: publishGameHandler,
+		MiddlewareConfig: server.MiddlewareConfig{
+			AuthenTypes: []server.AuthenticationType{
+				server.AuthenticationTypeToken,
+			},
+			AuthzPermissions: []server.AuthorizedPermission{
+				handler_auth.PermissionGameDesign,
+			},
+			ValidateResponseSchema: responseSchema,
+		},
+		DocumentationConfig: server.DocumentationConfig{
+			Document:    true,
+			Title:       "Publish game",
+			Description: "Publish a draft game, making it immutable and visible to everyone. Once published, games cannot be modified.",
 		},
 	}
 
@@ -195,7 +226,7 @@ func getManyGamesHandler(w http.ResponseWriter, r *http.Request, pp httprouter.P
 
 		// Get authenticated account
 		authenData := server.GetRequestAuthenData(l, r)
-		if authenData == nil || authenData.Account.ID == "" {
+		if authenData == nil || authenData.AccountUser.ID == "" {
 			l.Warn("authenticated account is required for subscription_type filter")
 			return coreerror.NewUnauthorizedError()
 		}
@@ -203,7 +234,7 @@ func getManyGamesHandler(w http.ResponseWriter, r *http.Request, pp httprouter.P
 		// Get the user's subscriptions of the specified type
 		subscriptions, err := mm.GameSubscriptionRepository().GetMany(&coresql.Options{
 			Params: []coresql.Param{
-				{Col: game_record.FieldGameSubscriptionAccountID, Val: authenData.Account.ID},
+				{Col: game_record.FieldGameSubscriptionAccountID, Val: authenData.AccountUser.AccountID},
 				{Col: game_record.FieldGameSubscriptionSubscriptionType, Val: subscriptionTypeFilter},
 			},
 		})
@@ -236,6 +267,18 @@ func getManyGamesHandler(w http.ResponseWriter, r *http.Request, pp httprouter.P
 	}
 
 	opts := queryparam.ToSQLOptionsWithDefaults(qp)
+
+	// Add status filter if provided (RLS will handle visibility automatically)
+	if statusValues, ok := qp.Params["status"]; ok && len(statusValues) > 0 {
+		statusFilter := statusValues[0].Val.(string)
+		if statusFilter == game_record.GameStatusDraft || statusFilter == game_record.GameStatusPublished {
+			opts.Params = append(opts.Params, coresql.Param{
+				Col: game_record.FieldGameStatus,
+				Val: statusFilter,
+			})
+			l.Info("filtering games by status >%s<", statusFilter)
+		}
+	}
 
 	// Add game_id filter if we have subscription type filtering
 	if len(gameIDsFilter) > 0 {
@@ -309,7 +352,7 @@ func createGameHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Par
 
 	// Get authenticated account ID
 	authenData := server.GetRequestAuthenData(l, r)
-	if authenData == nil || authenData.Account.ID == "" {
+	if authenData == nil || authenData.AccountUser.ID == "" {
 		l.Warn("authenticated account is required to create game")
 		return coreerror.NewUnauthorizedError()
 	}
@@ -321,12 +364,23 @@ func createGameHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Par
 		return err
 	}
 
-	// Set account_id from authenticated account
-	rec.AccountID = authenData.Account.ID
-
 	rec, err = mm.CreateGameRec(rec)
 	if err != nil {
 		l.Warn("failed creating game record >%v<", err)
+		return err
+	}
+
+	// Auto-create designer subscription so the creator can access their game
+	_, err = mm.CreateDesignerSubscriptionForNewGame(rec, authenData.AccountUser.AccountID)
+	if err != nil {
+		l.Warn("failed creating designer subscription for game >%s< >%v<", rec.ID, err)
+		return err
+	}
+
+	// Auto-create manager subscription so the designer can create instances
+	_, err = mm.CreateManagerSubscriptionForNewGame(rec, authenData.AccountUser.AccountID)
+	if err != nil {
+		l.Warn("failed creating manager subscription for game >%s< >%v<", rec.ID, err)
 		return err
 	}
 
@@ -413,6 +467,52 @@ func deleteGameHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Par
 
 	err = server.WriteResponse(l, w, http.StatusNoContent, nil)
 	if err != nil {
+		l.Warn("failed writing response >%v<", err)
+		return err
+	}
+
+	return nil
+}
+
+func publishGameHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
+	l = logging.LoggerWithFunctionContext(l, packageName, "publishGameHandler")
+
+	l.Info("publishing game with path params >%#v<", pp)
+
+	mm := m.(*domain.Domain)
+
+	gameID := pp.ByName("game_id")
+	if gameID == "" {
+		l.Warn("game ID is empty")
+		return coreerror.RequiredPathParameter("game_id")
+	}
+
+	// Get the current game record
+	currRec, err := mm.GetGameRec(gameID, coresql.ForUpdateNoWait)
+	if err != nil {
+		l.Warn("failed to get game record >%v<", err)
+		return err
+	}
+
+	// Update status to published
+	currRec.Status = game_record.GameStatusPublished
+
+	// Update the game (validation will check status transition)
+	rec, err := mm.UpdateGameRec(currRec)
+	if err != nil {
+		l.Warn("failed publishing game >%v<", err)
+		return err
+	}
+
+	res, err := mapper.GameRecordToResponse(l, rec)
+	if err != nil {
+		l.Warn("failed mapping game record to response >%v<", err)
+		return err
+	}
+
+	l.Info("responding with published game record id >%s<", rec.ID)
+
+	if err = server.WriteResponse(l, w, http.StatusOK, res); err != nil {
 		l.Warn("failed writing response >%v<", err)
 		return err
 	}

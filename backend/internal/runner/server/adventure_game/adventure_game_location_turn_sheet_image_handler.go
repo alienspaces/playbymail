@@ -19,6 +19,7 @@ import (
 	coreerror "gitlab.com/alienspaces/playbymail/core/error"
 	"gitlab.com/alienspaces/playbymail/core/nullstring"
 	"gitlab.com/alienspaces/playbymail/core/queryparam"
+	"gitlab.com/alienspaces/playbymail/core/record"
 	"gitlab.com/alienspaces/playbymail/core/server"
 	coresql "gitlab.com/alienspaces/playbymail/core/sql"
 	"gitlab.com/alienspaces/playbymail/core/type/domainer"
@@ -27,10 +28,10 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/mapper"
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
-	"gitlab.com/alienspaces/playbymail/internal/turn_sheet"
+	"gitlab.com/alienspaces/playbymail/internal/turnsheet"
 	"gitlab.com/alienspaces/playbymail/internal/utils/config"
 	"gitlab.com/alienspaces/playbymail/internal/utils/logging"
-	"gitlab.com/alienspaces/playbymail/internal/utils/turnsheet"
+	"gitlab.com/alienspaces/playbymail/internal/utils/turnsheetutil"
 )
 
 const (
@@ -468,11 +469,8 @@ func previewLocationChoiceTurnSheetHandler(w http.ResponseWriter, r *http.Reques
 	}
 
 	// Generate a realistic preview turn sheet code
-	// Use placeholder UUIDs for game instance, account, and turn sheet since this is a preview
-	previewGameInstanceID := "00000000-0000-0000-0000-000000000000"
-	previewAccountID := "00000000-0000-0000-0000-000000000000"
-	previewTurnSheetID := "00000000-0000-0000-0000-000000000000"
-	previewCode, err := turnsheet.GenerateTurnSheetCode(gameID, previewGameInstanceID, previewAccountID, previewTurnSheetID)
+	// Use GeneratePreviewTurnSheetCode which uses placeholder values
+	previewCode, err := turnsheetutil.GeneratePlayGameTurnSheetCode(record.NewRecordID())
 	if err != nil {
 		l.Warn("failed to generate preview turn sheet code >%v<", err)
 		return coreerror.NewInternalError("failed to generate turn sheet code: %v", err)
@@ -481,11 +479,11 @@ func previewLocationChoiceTurnSheetHandler(w http.ResponseWriter, r *http.Reques
 	// Create location choice data
 	gameName := gameRec.Name
 	gameType := gameRec.GameType
-	instructions := turn_sheet.DefaultLocationChoiceInstructions()
+	instructions := turnsheet.DefaultLocationChoiceInstructions()
 	previewTurnNumber := 1 // Placeholder turn number for preview
 
-	locationChoiceData := &turn_sheet.LocationChoiceData{
-		TurnSheetTemplateData: turn_sheet.TurnSheetTemplateData{
+	locationChoiceData := &turnsheet.LocationChoiceData{
+		TurnSheetTemplateData: turnsheet.TurnSheetTemplateData{
 			GameName:              &gameName,
 			GameType:              &gameType,
 			TurnSheetTitle:        &locationRec.Name,
@@ -524,7 +522,7 @@ func previewLocationChoiceTurnSheetHandler(w http.ResponseWriter, r *http.Reques
 	l.Info("creating PDF processor for turn sheet preview")
 
 	// Create location choice processor for PDF generation
-	processor, err := turn_sheet.NewLocationChoiceProcessor(l, cfg)
+	processor, err := turnsheet.NewLocationChoiceProcessor(l, cfg)
 	if err != nil {
 		l.Warn("failed to create location choice processor >%v<", err)
 		return coreerror.NewInternalError("failed to create location choice processor: %v", err)
@@ -533,7 +531,7 @@ func previewLocationChoiceTurnSheetHandler(w http.ResponseWriter, r *http.Reques
 	l.Info("generating PDF for turn sheet preview")
 
 	// Generate PDF
-	pdfData, err := processor.GenerateTurnSheet(ctx, l, turn_sheet.DocumentFormatPDF, sheetDataBytes)
+	pdfData, err := processor.GenerateTurnSheet(ctx, l, turnsheet.DocumentFormatPDF, sheetDataBytes)
 	if err != nil {
 		l.Warn("failed to generate location choice turn sheet PDF >%v<", err)
 		return coreerror.NewInternalError("failed to generate turn sheet PDF: %v", err)
@@ -554,7 +552,7 @@ func previewLocationChoiceTurnSheetHandler(w http.ResponseWriter, r *http.Reques
 }
 
 // getLocationOptionsForPreview retrieves location links as location options for the preview
-func getLocationOptionsForPreview(_ context.Context, mm *domain.Domain, gameID, locationID string) ([]turn_sheet.LocationOption, error) {
+func getLocationOptionsForPreview(_ context.Context, mm *domain.Domain, gameID, locationID string) ([]turnsheet.LocationOption, error) {
 	// Get location links from this location
 	opts := &coresql.Options{
 		Params: []coresql.Param{
@@ -569,7 +567,7 @@ func getLocationOptionsForPreview(_ context.Context, mm *domain.Domain, gameID, 
 	}
 
 	// Convert links to location options
-	var options []turn_sheet.LocationOption
+	var options []turnsheet.LocationOption
 	for _, link := range linkRecs {
 		// Get the destination location to get its name
 		destLocation, err := mm.GetAdventureGameLocationRec(link.ToAdventureGameLocationID, nil)
@@ -577,7 +575,7 @@ func getLocationOptionsForPreview(_ context.Context, mm *domain.Domain, gameID, 
 			continue // Skip if we can't get the destination
 		}
 
-		options = append(options, turn_sheet.LocationOption{
+		options = append(options, turnsheet.LocationOption{
 			LocationID:              link.ToAdventureGameLocationID,
 			LocationLinkName:        destLocation.Name,
 			LocationLinkDescription: destLocation.Description,

@@ -1,0 +1,33 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "http://playbymail.games/schema/account_subscription_schema/account_subscription.request.schema.json",
+    "title": "AccountSubscriptionRequest",
+    "type": "object",
+    "properties": {
+        "account_id": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
+        },
+        "auto_renew": {
+            "type": "boolean"
+        },
+        "status": {
+            "type": "string",
+            "enum": [
+                "active",
+                "expired"
+            ]
+        },
+        "subscription_type": {
+            "enum": [
+                "basic_game_designer",
+                "professional_game_designer"
+            ],
+            "type": "string"
+        }
+    },
+    "required": [
+        "account_id",
+        "subscription_type"
+    ],
+    "additionalProperties": false
+}

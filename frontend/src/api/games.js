@@ -1,11 +1,16 @@
 import { baseUrl, getAuthHeaders, apiFetch, handleApiError } from './baseUrl';
 
 export async function listGames(options = {}) {
-  const { subscriptionType } = options;
-  let url = `${baseUrl}/api/v1/games`;
+  const { subscriptionType, status } = options;
+  const params = new URLSearchParams();
   if (subscriptionType) {
-    url += `?subscription_type=${encodeURIComponent(subscriptionType)}`;
+    params.append('subscription_type', subscriptionType);
   }
+  if (status) {
+    params.append('status', status);
+  }
+  const queryString = params.toString();
+  const url = `${baseUrl}/api/v1/games${queryString ? `?${queryString}` : ''}`;
   const res = await apiFetch(url, {
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
   });
@@ -40,4 +45,22 @@ export async function deleteGame(id) {
   });
   await handleApiError(res, 'Failed to delete game');
   return await res.json();
-} 
+}
+
+export async function publishGame(id) {
+  const res = await apiFetch(`${baseUrl}/api/v1/games/${id}/publish`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+  });
+  await handleApiError(res, 'Failed to publish game');
+  return await res.json();
+}
+
+export async function validateGame(id) {
+  const res = await apiFetch(`${baseUrl}/api/v1/games/${id}/validate`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+  });
+  await handleApiError(res, 'Failed to validate game');
+  return await res.json();
+}

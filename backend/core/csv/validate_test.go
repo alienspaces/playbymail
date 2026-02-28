@@ -20,14 +20,14 @@ func TestValidateHeader(t *testing.T) {
 		err  *ErrHeader
 	}{
 		{
-			name: "valid \\ all headers present \\ ok",
+			name: "valid when all headers present then ok",
 			args: args{
 				data:            func() []byte { return []byte(`str,integer,float`) },
 				requiredHeaders: requiredHeaders,
 			},
 		},
 		{
-			name: "valid \\ all headers present with newlines \\ ok",
+			name: "valid when all headers present with newlines then ok",
 			args: args{
 				data: func() []byte {
 					return []byte(`
@@ -40,14 +40,14 @@ str,integer,float`)
 			},
 		},
 		{
-			name: "valid \\ all required headers, including extraneous headers \\ ok",
+			name: "valid when all required headers, including extraneous headers then ok",
 			args: args{
 				data:            func() []byte { return []byte(`str,integer,float,additional`) },
 				requiredHeaders: requiredHeaders,
 			},
 		},
 		{
-			name: "invalid \\ no headers \\ err",
+			name: "invalid when no headers then err",
 			args: args{
 				data:            func() []byte { return []byte{} },
 				requiredHeaders: requiredHeaders,
@@ -55,7 +55,7 @@ str,integer,float`)
 			err: &ErrHeader{Err: ErrMissingHeaders},
 		},
 		{
-			name: "invalid \\ data as headers \\ err",
+			name: "invalid when data as headers then err",
 			args: args{
 				data:            func() []byte { return []byte(`this,1,2.0,is missing all headers`) },
 				requiredHeaders: requiredHeaders,
@@ -63,7 +63,7 @@ str,integer,float`)
 			err: &ErrHeader{Err: ErrMissingHeaders},
 		},
 		{
-			name: "invalid \\ duplicate headers \\ err",
+			name: "invalid when duplicate headers then err",
 			args: args{
 				data:            func() []byte { return []byte(`str,integer,float,str`) },
 				requiredHeaders: requiredHeaders,
@@ -74,7 +74,7 @@ str,integer,float`)
 			},
 		},
 		{
-			name: "invalid \\ missing required headers \\ err",
+			name: "invalid when missing required headers then err",
 			args: args{
 				data:            func() []byte { return []byte(`str,integer`) },
 				requiredHeaders: requiredHeaders,

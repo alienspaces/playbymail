@@ -90,7 +90,7 @@
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
-import { getMyAccount, getAccountContacts, deleteMyAccount } from '@/api/account';
+import { getMe, getAccountContacts, deleteAccountUser } from '@/api/account';
 import Button from '@/components/Button.vue';
 import DataCard from '@/components/DataCard.vue';
 import DataItem from '@/components/DataItem.vue';
@@ -115,12 +115,11 @@ const loadAccount = async () => {
   try {
     loading.value = true;
     error.value = null;
-    account.value = await getMyAccount();
+    account.value = await getMe();
     
-    // Load account contacts if we have an account
-    if (account.value && account.value.id) {
+    if (account.value && account.value.account_id && account.value.id) {
       try {
-        accountContacts.value = await getAccountContacts(account.value.id);
+        accountContacts.value = await getAccountContacts(account.value.account_id, account.value.id);
       } catch (err) {
         // Contacts might not exist yet, that's okay
         console.log('No account contacts found:', err);
@@ -149,7 +148,7 @@ const confirmDeleteAccount = async () => {
   try {
     deleting.value = true;
     error.value = null;
-    await deleteMyAccount();
+    await deleteAccountUser(account.value.account_id, account.value.id);
     
     // Clear auth store and redirect to home
     authStore.logout();

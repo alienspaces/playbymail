@@ -8,6 +8,7 @@
           <tr>
             <th>Name</th>
             <th>Type</th>
+            <th>Status</th>
             <th>Turn Duration</th>
             <th>Created</th>
             <th>Actions</th>
@@ -17,6 +18,7 @@
           <tr v-for="game in games" :key="game.id">
             <td><a href="#" class="edit-link" @click.prevent="openEdit(game)">{{ game.name }}</a></td>
             <td>{{ game.game_type }}</td>
+            <td>{{ game.status || 'draft' }}</td>
             <td>{{ formatTurnDuration(game.turn_duration_hours) }}</td>
             <td>{{ formatDate(game.created_at) }}</td>
             <td>
@@ -36,11 +38,20 @@
     <ConfirmationModal :visible="showDeleteConfirm" title="Delete Game"
       :message="`Are you sure you want to delete '${deleteTarget?.name}'?`" :error="deleteError" @confirm="deleteGame"
       @cancel="closeDelete" />
+
+    <!-- Confirm publish dialog -->
+    <ConfirmationModal :visible="showPublishConfirm" title="Publish Game"
+      :message="`Are you sure you want to publish '${publishTarget?.name}'? Once published, the game cannot be modified.`"
+      warning="Published games are immutable. To make changes, you'll need to create a new version."
+      :error="publishError" @confirm="publishGame" @cancel="closePublish" />
   </div>
 </template>
 
 <script>
 import { useGamesStore } from '../stores/games';
+import { publishGame as apiPublishGame } from '../api/games';
+import { getMyAccountSubscriptions } from '../api/accountSubscriptions';
+import { listGames } from '../api/games';
 import PageHeader from '../components/PageHeader.vue';
 import TableActions from '../components/TableActions.vue';
 import ResourceModalForm from '../components/ResourceModalForm.vue';
@@ -69,6 +80,11 @@ export default {
       showDeleteConfirm: false,
       deleteTarget: null,
       deleteError: '',
+      showPublishConfirm: false,
+      publishTarget: null,
+      publishError: '',
+      accountSubscriptions: [],
+      gameCount: 0,
       gameFields: [
         { key: 'name', label: 'Name', required: true, maxlength: 1024 },
         { key: 'game_type', label: 'Type', required: true, type: 'select', options: [{ value: 'adventure', label: 'Adventure' }] },
@@ -88,10 +104,11 @@ export default {
       return this.gamesStore.error;
     }
   },
-  created() {
+  async created() {
     this.gamesStore = useGamesStore();
     // Filter to only show games where the user has Designer subscription
-    this.gamesStore.fetchGames({ subscriptionType: 'Designer' });
+    await this.gamesStore.fetchGames({ subscriptionType: 'Designer' });
+    await this.loadSubscriptionInfo();
   },
   methods: {
     formatDate(dateStr) {
@@ -111,13 +128,64 @@ export default {
       }
       return `${hours} hour${hours === 1 ? '' : 's'}`
     },
-    openCreate() {
+    async openCreate() {
+      // Check subscription limits before allowing creation
+      await this.loadSubscriptionInfo();
+      const canCreate = this.checkCanCreateGame();
+      if (!canCreate.canCreate) {
+        this.modalError = canCreate.error;
+        return;
+      }
+
       this.modalMode = 'create'
       this.modalForm = { id: '', name: '', game_type: 'adventure', turn_duration_hours: 168, description: '' }
       this.modalError = ''
       this.showModal = true
     },
+    async loadSubscriptionInfo() {
+      try {
+        const accountSubsResponse = await getMyAccountSubscriptions();
+        this.accountSubscriptions = accountSubsResponse.data || [];
+        const gamesResponse = await listGames();
+        this.gameCount = (gamesResponse.data || []).length;
+      } catch (err) {
+        console.error('Failed to load subscription info:', err);
+      }
+    },
+    checkCanCreateGame() {
+      const basicSub = this.accountSubscriptions.find(sub =>
+        sub.subscription_type === 'basic_game_designer' && sub.status === 'active'
+      );
+      const professionalSub = this.accountSubscriptions.find(sub =>
+        sub.subscription_type === 'professional_game_designer' && sub.status === 'active'
+      );
+
+      if (professionalSub) {
+        return { canCreate: true };
+      }
+
+      if (basicSub) {
+        if (this.gameCount >= 10) {
+          return {
+            canCreate: false,
+            error: `You have reached the limit of 10 games for Basic Game Designer subscription. You currently have ${this.gameCount} games. Upgrade to Professional Game Designer to create unlimited games.`
+          };
+        }
+        return { canCreate: true };
+      }
+
+      return {
+        canCreate: false,
+        error: 'You need an active game designer subscription to create games.'
+      };
+    },
     openEdit(game) {
+      // Prevent editing published games
+      if (game.status === 'published') {
+        this.modalError = 'Published games cannot be modified. Create a new version to make changes.';
+        return;
+      }
+
       this.modalMode = 'edit'
       this.modalForm = {
         id: game.id,
@@ -181,25 +249,68 @@ export default {
       this.$router.push(`/studio/${game.id}/turn-sheet-backgrounds`)
     },
     getActions(game) {
-      return [
+      const actions = [
         {
           key: 'manage',
           label: 'Manage',
           primary: true,
           handler: () => this.selectGame(game)
-        },
-        {
+        }
+      ];
+
+      // Only allow edit/delete for draft games
+      if (game.status !== 'published') {
+        actions.push({
           key: 'edit',
           label: 'Edit',
           handler: () => this.openEdit(game)
-        },
-        {
+        });
+        actions.push({
           key: 'delete',
           label: 'Delete',
           danger: true,
           handler: () => this.confirmDelete(game)
+        });
+      }
+
+      // Add publish button for draft games
+      if (game.status === 'draft' || !game.status) {
+        actions.push({
+          key: 'publish',
+          label: 'Publish',
+          handler: () => this.confirmPublish(game)
+        });
+      }
+
+      return actions;
+    },
+    confirmPublish(game) {
+      this.publishTarget = game
+      this.publishError = ''
+      this.showPublishConfirm = true
+    },
+    closePublish() {
+      this.showPublishConfirm = false
+      this.publishTarget = null
+      this.publishError = ''
+    },
+    async publishGame() {
+      if (!this.publishTarget) return
+      this.publishError = ''
+      try {
+        const res = await apiPublishGame(this.publishTarget.id)
+        if (res.data) {
+          // Update game in store
+          const idx = this.games.findIndex(g => g.id === this.publishTarget.id)
+          if (idx !== -1) {
+            this.games[idx] = res.data
+          }
         }
-      ];
+        this.closePublish()
+      } catch (err) {
+        this.publishError = err.message || 'Failed to publish game'
+        console.error('Error publishing game:', err)
+      }
     }
   }
 }

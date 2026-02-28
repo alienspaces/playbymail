@@ -7,6 +7,7 @@ import (
 
 	"gitlab.com/alienspaces/playbymail/core/domain"
 	coreerror "gitlab.com/alienspaces/playbymail/core/error"
+	"gitlab.com/alienspaces/playbymail/core/repository"
 	coresql "gitlab.com/alienspaces/playbymail/core/sql"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 )
@@ -49,6 +50,34 @@ func (m *Domain) GetGameRec(recID string, lock *coresql.Lock) (*game_record.Game
 	return rec, nil
 }
 
+// GetGameRecByIDForJoinProcess retrieves a game record by ID without RLS filtering.
+// This is intended for use when processing a join game turn sheet, where the turn sheet
+// code itself serves as authorization and the caller needs access to the game record
+// regardless of their own subscription status.
+func (m *Domain) GetGameRecByIDForJoinProcess(recID string) (*game_record.Game, error) {
+	l := m.Logger("GetGameRecByIDForJoinProcess")
+	l.Debug("getting game record by ID for join process (no RLS) >%s<", recID)
+	if err := domain.ValidateUUIDField("id", recID); err != nil {
+		return nil, err
+	}
+	r, err := repository.NewGeneric[game_record.Game](repository.NewArgs{
+		Tx:            m.Tx,
+		TableName:     game_record.TableGame,
+		Record:        game_record.Game{},
+		IsRLSDisabled: true,
+	})
+	if err != nil {
+		return nil, err
+	}
+	rec, err := r.GetOne(recID, nil)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, coreerror.NewNotFoundError(game_record.TableGame, recID)
+	} else if err != nil {
+		return nil, databaseError(err)
+	}
+	return rec, nil
+}
+
 // CreateGameRec -
 func (m *Domain) CreateGameRec(rec *game_record.Game) (*game_record.Game, error) {
 	l := m.Logger("CreateGameRec")
@@ -62,13 +91,13 @@ func (m *Domain) CreateGameRec(rec *game_record.Game) (*game_record.Game, error)
 		return rec, err
 	}
 
-	var err error
-	rec, err = r.CreateOne(rec)
+	createdRec, err := r.CreateOne(rec)
 	if err != nil {
+		l.Warn("failed to create client record >%v<", err)
 		return rec, databaseError(err)
 	}
 
-	return rec, nil
+	return createdRec, nil
 }
 
 // UpdateGameRec -
@@ -80,10 +109,10 @@ func (m *Domain) UpdateGameRec(rec *game_record.Game) (*game_record.Game, error)
 		return rec, err
 	}
 
-	l.Debug("updating client record >%#v<", rec)
+	l.Debug("updating game record ID >%s< >%#v<", rec.ID, rec)
 
-	if err := m.validateGameRecForUpdate(rec, curr); err != nil {
-		l.Warn("failed to validate client record >%v<", err)
+	if err := m.validateGameRecForUpdate(curr, rec); err != nil {
+		l.Warn("failed to validate game record >%v<", err)
 		return rec, err
 	}
 
@@ -101,7 +130,7 @@ func (m *Domain) UpdateGameRec(rec *game_record.Game) (*game_record.Game, error)
 func (m *Domain) DeleteGameRec(recID string) error {
 	l := m.Logger("DeleteGameRec")
 
-	l.Debug("deleting client record ID >%s<", recID)
+	l.Debug("deleting game record ID >%s<", recID)
 
 	rec, err := m.GetGameRec(recID, coresql.ForUpdateNoWait)
 	if err != nil {
@@ -111,7 +140,7 @@ func (m *Domain) DeleteGameRec(recID string) error {
 	r := m.GameRepository()
 
 	if err := m.validateGameRecForDelete(rec); err != nil {
-		l.Warn("failed domain validation >%v<", err)
+		l.Warn("failed to validate game record >%v<", err)
 		return err
 	}
 
@@ -126,7 +155,7 @@ func (m *Domain) DeleteGameRec(recID string) error {
 func (m *Domain) RemoveGameRec(recID string) error {
 	l := m.Logger("RemoveGameRec")
 
-	l.Debug("removing client record ID >%s<", recID)
+	l.Debug("removing game record ID >%s<", recID)
 
 	rec, err := m.GetGameRec(recID, coresql.ForUpdateNoWait)
 	if err != nil {
@@ -136,7 +165,7 @@ func (m *Domain) RemoveGameRec(recID string) error {
 	r := m.GameRepository()
 
 	if err := m.validateGameRecForDelete(rec); err != nil {
-		l.Warn("failed domain validation >%v<", err)
+		l.Warn("failed to validate game record >%v<", err)
 		return err
 	}
 
@@ -145,4 +174,23 @@ func (m *Domain) RemoveGameRec(recID string) error {
 	}
 
 	return nil
+}
+
+// CreateGame -
+// Note: Games no longer have account_id. Designer subscriptions must be created separately
+// via the game_subscription handler after game creation.
+func (m *Domain) CreateGame(rec *game_record.Game) (*game_record.Game, *game_record.GameSubscription, error) {
+	l := m.Logger("CreateGame")
+
+	l.Debug("creating game >%#v<", rec)
+
+	createdRec, err := m.CreateGameRec(rec)
+	if err != nil {
+		l.Warn("failed to create game record >%v<", err)
+		return nil, nil, err
+	}
+
+	// Games no longer have owners - designer subscriptions are created separately
+	// Return nil for subscription to indicate it should be created via handler
+	return createdRec, nil, nil
 }

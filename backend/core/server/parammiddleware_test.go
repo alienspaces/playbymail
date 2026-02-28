@@ -77,13 +77,13 @@ func Test_validateQueryParameters(t *testing.T) {
 	}
 	tests := []testcase{
 		{
-			name: "nil query params \\ ok",
+			name: "nil query params then ok",
 			args: args{
 				q: nil,
 			},
 		},
 		{
-			name: "id query param \\ ok",
+			name: "id query param then ok",
 			args: args{
 				q: url.Values{
 					"id": []string{"a87feca8-d6f0-4794-98c7-037b30219520"},
@@ -91,7 +91,7 @@ func Test_validateQueryParameters(t *testing.T) {
 			},
 		},
 		{
-			name: "string query param \\ ok",
+			name: "string query param then ok",
 			args: args{
 				q: url.Values{
 					"str": []string{"asdf"},
@@ -99,7 +99,7 @@ func Test_validateQueryParameters(t *testing.T) {
 			},
 		},
 		{
-			name: "number query param \\ ok",
+			name: "number query param then ok",
 			args: args{
 				q: url.Values{
 					"num": []string{"123"},
@@ -107,7 +107,7 @@ func Test_validateQueryParameters(t *testing.T) {
 			},
 		},
 		{
-			name: "bool query param \\ ok",
+			name: "bool query param then ok",
 			args: args{
 				q: url.Values{
 					"bool": []string{"true"},
@@ -115,7 +115,7 @@ func Test_validateQueryParameters(t *testing.T) {
 			},
 		},
 		{
-			name: "string array query param \\ ok",
+			name: "string array query param then ok",
 			args: args{
 				q: url.Values{
 					"str_arr": []string{"1", "2"},
@@ -123,7 +123,7 @@ func Test_validateQueryParameters(t *testing.T) {
 			},
 		},
 		{
-			name: "number array query param \\ ok",
+			name: "number array query param then ok",
 			args: args{
 				q: url.Values{
 					"num_arr": []string{"1", "2"},
@@ -131,7 +131,7 @@ func Test_validateQueryParameters(t *testing.T) {
 			},
 		},
 		{
-			name: "bool array query param \\ ok",
+			name: "bool array query param then ok",
 			args: args{
 				q: url.Values{
 					"bool_arr": []string{"true", "false"},
@@ -139,7 +139,7 @@ func Test_validateQueryParameters(t *testing.T) {
 			},
 		},
 		{
-			name: "string, number, boolean query params \\ ok",
+			name: "string, number, boolean query params then ok",
 			args: args{
 				q: url.Values{
 					"id":   []string{"a87feca8-d6f0-4794-98c7-037b30219520"},
@@ -150,7 +150,7 @@ func Test_validateQueryParameters(t *testing.T) {
 			},
 		},
 		{
-			name: "empty string query param value \\ err",
+			name: "empty string query param value then err",
 			args: args{
 				q: url.Values{
 					"str": []string{""},
@@ -159,7 +159,7 @@ func Test_validateQueryParameters(t *testing.T) {
 			errCode: coreerror.GetRegistryError(coreerror.ErrorCodeSchemaValidation).ErrorCode,
 		},
 		{
-			name: "number query param value below min \\ err",
+			name: "number query param value below min then err",
 			args: args{
 				q: url.Values{
 					"num": []string{"0"},
@@ -168,7 +168,7 @@ func Test_validateQueryParameters(t *testing.T) {
 			errCode: coreerror.GetRegistryError(coreerror.ErrorCodeSchemaValidation).ErrorCode,
 		},
 		{
-			name: "string query param with array value \\ string query param is not array type \\ ok",
+			name: "string query param with array value when string query param is not array type then ok",
 			args: args{
 				q: url.Values{
 					"str[]": []string{"1", "2"},
@@ -176,7 +176,7 @@ func Test_validateQueryParameters(t *testing.T) {
 			},
 		},
 		{
-			name: "number query param with array value \\ number query param is not array type \\ ok",
+			name: "number query param with array value when number query param is not array type then ok",
 			args: args{
 				q: url.Values{
 					"num[]": []string{"1", "2"},
@@ -184,7 +184,7 @@ func Test_validateQueryParameters(t *testing.T) {
 			},
 		},
 		{
-			name: "boolean query param with array value \\ boolean query param is not array type \\ ok",
+			name: "boolean query param with array value when boolean query param is not array type then ok",
 			args: args{
 				q: url.Values{
 					"bool[]": []string{"true", "false"},
@@ -192,7 +192,7 @@ func Test_validateQueryParameters(t *testing.T) {
 			},
 		},
 		{
-			name: "additional property \\ ok",
+			name: "additional property then ok",
 			args: args{
 				q: url.Values{
 					"asdf": []string{"0"},
@@ -200,7 +200,7 @@ func Test_validateQueryParameters(t *testing.T) {
 			},
 		},
 		{
-			name: "multiple errors - empty string query param value, and num query param with array values and some below min \\ err",
+			name: "multiple errors - empty string query param value, and num query param with array values and some below min then err",
 			args: args{
 				q: url.Values{
 					"str":     []string{""},
@@ -284,18 +284,18 @@ func Test_paramsToJSON(t *testing.T) {
 		want string
 	}{
 		{
-			name: "nil query params \\ empty",
+			name: "nil query params then empty",
 			want: "",
 		},
 		{
-			name: "no query params \\ empty",
+			name: "no query params then empty",
 			args: args{
 				q: url.Values{},
 			},
 			want: "",
 		},
 		{
-			name: "string query param with no value \\ ok",
+			name: "string query param with no value then ok",
 			args: args{
 				q: url.Values{
 					"str": []string{},
@@ -304,7 +304,7 @@ func Test_paramsToJSON(t *testing.T) {
 			want: `{"str":""}`,
 		},
 		{
-			name: "string query param with one string value \\ ok",
+			name: "string query param with one string value then ok",
 			args: args{
 				q: url.Values{
 					"str": []string{"a"},
@@ -313,7 +313,7 @@ func Test_paramsToJSON(t *testing.T) {
 			want: `{"str":"a"}`,
 		},
 		{
-			name: "string query param with operator and one string value \\ ok",
+			name: "string query param with operator and one string value then ok",
 			args: args{
 				q: url.Values{
 					"str:ilk": []string{"a"},
@@ -322,7 +322,7 @@ func Test_paramsToJSON(t *testing.T) {
 			want: `{"str":"a"}`,
 		},
 		{
-			name: "boolean query param with no value \\ ok",
+			name: "boolean query param with no value then ok",
 			args: args{
 				q: url.Values{
 					"bool": []string{},
@@ -331,7 +331,7 @@ func Test_paramsToJSON(t *testing.T) {
 			want: `{"bool":""}`,
 		},
 		{
-			name: "boolean query param with one bool value \\ ok",
+			name: "boolean query param with one bool value then ok",
 			args: args{
 				q: url.Values{
 					"bool": []string{"false"},
@@ -340,7 +340,7 @@ func Test_paramsToJSON(t *testing.T) {
 			want: `{"bool":false}`,
 		},
 		{
-			name: "boolean query param with operator and one bool value \\ ok",
+			name: "boolean query param with operator and one bool value then ok",
 			args: args{
 				q: url.Values{
 					"bool:ne": []string{"true"},
@@ -349,7 +349,7 @@ func Test_paramsToJSON(t *testing.T) {
 			want: `{"bool":true}`,
 		},
 		{
-			name: "number query param with one number value \\ ok",
+			name: "number query param with one number value then ok",
 			args: args{
 				q: url.Values{
 					"num": []string{"123"},
@@ -358,7 +358,7 @@ func Test_paramsToJSON(t *testing.T) {
 			want: `{"num":123}`,
 		},
 		{
-			name: "number query param with operator and one number value \\ ok",
+			name: "number query param with operator and one number value then ok",
 			args: args{
 				q: url.Values{
 					"num:lte": []string{"123"},
@@ -367,7 +367,7 @@ func Test_paramsToJSON(t *testing.T) {
 			want: `{"num":123}`,
 		},
 		{
-			name: "string query param with array empty value \\ ok",
+			name: "string query param with array empty value then ok",
 			args: args{
 				q: url.Values{
 					"str[]": []string{},
@@ -376,7 +376,7 @@ func Test_paramsToJSON(t *testing.T) {
 			want: `{"str[]":[]}`,
 		},
 		{
-			name: "string query param with array with one string value \\ ok",
+			name: "string query param with array with one string value then ok",
 			args: args{
 				q: url.Values{
 					"str[]": []string{"a"},
@@ -385,7 +385,7 @@ func Test_paramsToJSON(t *testing.T) {
 			want: `{"str[]":["a"]}`,
 		},
 		{
-			name: "string query param with array with multiple string values \\ ok",
+			name: "string query param with array with multiple string values then ok",
 			args: args{
 				q: url.Values{
 					"str[]": []string{"a", "az"},
@@ -394,7 +394,7 @@ func Test_paramsToJSON(t *testing.T) {
 			want: `{"str[]":["a","az"]}`,
 		},
 		{
-			name: "string query param with array with bool, string, number values \\ ok",
+			name: "string query param with array with bool, string, number values then ok",
 			args: args{
 				q: url.Values{
 					"str[]": []string{"a", "123", "true"},
@@ -403,7 +403,7 @@ func Test_paramsToJSON(t *testing.T) {
 			want: `{"str[]":["a","123","true"]}`,
 		},
 		{
-			name: "boolean query param with array with empty value \\ ok",
+			name: "boolean query param with array with empty value then ok",
 			args: args{
 				q: url.Values{
 					"bool[]": []string{},
@@ -412,7 +412,7 @@ func Test_paramsToJSON(t *testing.T) {
 			want: `{"bool[]":[]}`,
 		},
 		{
-			name: "boolean query param with array with one boolean value \\ ok",
+			name: "boolean query param with array with one boolean value then ok",
 			args: args{
 				q: url.Values{
 					"bool[]": []string{"true"},
@@ -421,7 +421,7 @@ func Test_paramsToJSON(t *testing.T) {
 			want: `{"bool[]":[true]}`,
 		},
 		{
-			name: "boolean query param with array with multiple boolean values \\ ok",
+			name: "boolean query param with array with multiple boolean values then ok",
 			args: args{
 				q: url.Values{
 					"bool[]": []string{"true", "false"},
@@ -430,7 +430,7 @@ func Test_paramsToJSON(t *testing.T) {
 			want: `{"bool[]":[true,false]}`,
 		},
 		{
-			name: "number query param with array with empty value \\ ok",
+			name: "number query param with array with empty value then ok",
 			args: args{
 				q: url.Values{
 					"num[]": []string{},
@@ -439,7 +439,7 @@ func Test_paramsToJSON(t *testing.T) {
 			want: `{"num[]":[]}`,
 		},
 		{
-			name: "number query param with array with one number value \\ ok",
+			name: "number query param with array with one number value then ok",
 			args: args{
 				q: url.Values{
 					"num[]": []string{"1"},
@@ -448,7 +448,7 @@ func Test_paramsToJSON(t *testing.T) {
 			want: `{"num[]":[1]}`,
 		},
 		{
-			name: "number query param with array with multiple number values \\ ok",
+			name: "number query param with array with multiple number values then ok",
 			args: args{
 				q: url.Values{
 					"num[]": []string{"1", "2"},
@@ -457,7 +457,7 @@ func Test_paramsToJSON(t *testing.T) {
 			want: `{"num[]":[1,2]}`,
 		},
 		{
-			name: "string array query param with empty value \\ ok",
+			name: "string array query param with empty value then ok",
 			args: args{
 				q: url.Values{
 					"str_arr": []string{},
@@ -466,7 +466,7 @@ func Test_paramsToJSON(t *testing.T) {
 			want: `{"str_arr":[]}`,
 		},
 		{
-			name: "string array query param with one string value \\ ok",
+			name: "string array query param with one string value then ok",
 			args: args{
 				q: url.Values{
 					"str_arr": []string{"a"},
@@ -475,7 +475,7 @@ func Test_paramsToJSON(t *testing.T) {
 			want: `{"str_arr":["a"]}`,
 		},
 		{
-			name: "string array query param with multiple string values \\ ok",
+			name: "string array query param with multiple string values then ok",
 			args: args{
 				q: url.Values{
 					"str_arr": []string{"a", "az"},
@@ -484,7 +484,7 @@ func Test_paramsToJSON(t *testing.T) {
 			want: `{"str_arr":["a","az"]}`,
 		},
 		{
-			name: "string array query param with bool, string, number values \\ ok",
+			name: "string array query param with bool, string, number values then ok",
 			args: args{
 				q: url.Values{
 					"str_arr": []string{"a", "123", "true"},
@@ -493,7 +493,7 @@ func Test_paramsToJSON(t *testing.T) {
 			want: `{"str_arr":["a","123","true"]}`,
 		},
 		{
-			name: "boolean array query param with empty value \\ ok",
+			name: "boolean array query param with empty value then ok",
 			args: args{
 				q: url.Values{
 					"bool_arr": []string{},
@@ -502,7 +502,7 @@ func Test_paramsToJSON(t *testing.T) {
 			want: `{"bool_arr":[]}`,
 		},
 		{
-			name: "boolean array query param with one boolean value \\ ok",
+			name: "boolean array query param with one boolean value then ok",
 			args: args{
 				q: url.Values{
 					"bool_arr": []string{"true"},
@@ -511,7 +511,7 @@ func Test_paramsToJSON(t *testing.T) {
 			want: `{"bool_arr":[true]}`,
 		},
 		{
-			name: "boolean array query param with multiple boolean values \\ ok",
+			name: "boolean array query param with multiple boolean values then ok",
 			args: args{
 				q: url.Values{
 					"bool_arr": []string{"true", "false"},
@@ -520,7 +520,7 @@ func Test_paramsToJSON(t *testing.T) {
 			want: `{"bool_arr":[true,false]}`,
 		},
 		{
-			name: "number array query param with empty value \\ ok",
+			name: "number array query param with empty value then ok",
 			args: args{
 				q: url.Values{
 					"num_arr": []string{},
@@ -529,7 +529,7 @@ func Test_paramsToJSON(t *testing.T) {
 			want: `{"num_arr":[]}`,
 		},
 		{
-			name: "number array query param with one number value \\ ok",
+			name: "number array query param with one number value then ok",
 			args: args{
 				q: url.Values{
 					"num_arr": []string{"1"},
@@ -538,7 +538,7 @@ func Test_paramsToJSON(t *testing.T) {
 			want: `{"num_arr":[1]}`,
 		},
 		{
-			name: "number array query param with multiple number values \\ ok",
+			name: "number array query param with multiple number values then ok",
 			args: args{
 				q: url.Values{
 					"num_arr": []string{"1", "2"},
@@ -547,7 +547,7 @@ func Test_paramsToJSON(t *testing.T) {
 			want: `{"num_arr":[1,2]}`,
 		},
 		{
-			name: "unknown query param \\ string query param values",
+			name: "unknown query param then string query param values",
 			args: args{
 				q: url.Values{
 					"unknown": []string{"abc"},
@@ -556,7 +556,7 @@ func Test_paramsToJSON(t *testing.T) {
 			want: `{"unknown":"abc"}`,
 		},
 		{
-			name: "unknown array query param with string, number, boolean values \\ first param value populated",
+			name: "unknown array query param with string, number, boolean values then first param value populated",
 			args: args{
 				q: url.Values{
 					"unknown[]": []string{"abc", "123", "false"},
