@@ -161,7 +161,7 @@ test-e2e:
     - curl -v http://localhost:8080/healthz || echo "Health check failed"
     - echo "Testing frontend endpoint..."
     - curl -v http://localhost:3000 || echo "Frontend check failed"
-    - npx wait-on http://localhost:8080/healthz http://localhost:3000 --timeout 60000
+    - npx wait-on http-get://localhost:8080/healthz http-get://localhost:3000 --timeout 60000 --verbose
     - ./tools/test-e2e
   artifacts:
     when: on_failure
