@@ -15,7 +15,17 @@ import (
 )
 
 func TestCreateAccountUserRec_Validation(t *testing.T) {
-	dataConfig := harness.DataConfig{}
+	dataConfig := harness.DataConfig{
+		AccountConfigs: []harness.AccountConfig{
+			{
+				Reference: "existing-account",
+				Record: &account_record.AccountUser{
+					Email:  harness.UniqueEmail("existing@example.com"),
+					Status: account_record.AccountUserStatusActive,
+				},
+			},
+		},
+	}
 
 	cfg, err := config.Parse()
 	require.NoError(t, err)
@@ -35,87 +45,81 @@ func TestCreateAccountUserRec_Validation(t *testing.T) {
 		require.NoError(t, err)
 	}()
 
-	testCases := []struct {
-		name        string
-		rec         *account_record.AccountUser
-		expectError bool
-		errorCode   coreerror.Code
-	}{
-		{
-			name: "succeeds with valid email and active status",
-			rec: &account_record.AccountUser{
-				AccountID: record.NewRecordID(),
-				Email:     harness.UniqueEmail("valid@example.com"),
-				Status:    account_record.AccountUserStatusActive,
-			},
-			expectError: false,
-		},
-		{
-			name: "succeeds with valid email and defaults to active status",
-			rec: &account_record.AccountUser{
-				AccountID: record.NewRecordID(),
-				Email:     harness.UniqueEmail("default-status@example.com"),
-			},
-			expectError: false,
-		},
-		{
-			name: "succeeds with pending_approval status",
-			rec: &account_record.AccountUser{
-				AccountID: record.NewRecordID(),
-				Email:     harness.UniqueEmail("pending@example.com"),
-				Status:    account_record.AccountUserStatusPendingApproval,
-			},
-			expectError: false,
-		},
-		{
-			name:        "fails when record is nil",
-			rec:         nil,
-			expectError: true,
-			errorCode:   coreerror.ErrorCodeInvalidData,
-		},
-		{
-			name: "fails when email is empty",
-			rec: &account_record.AccountUser{
-				AccountID: record.NewRecordID(),
-				Email:     "",
-				Status:    account_record.AccountUserStatusActive,
-			},
-			expectError: true,
-			errorCode:   coreerror.ErrorCodeInvalidData,
-		},
-		{
-			name: "fails with invalid status",
-			rec: &account_record.AccountUser{
-				AccountID: record.NewRecordID(),
-				Email:     harness.UniqueEmail("badstatus@example.com"),
-				Status:    "nonexistent_status",
-			},
-			expectError: true,
-			errorCode:   coreerror.ErrorCodeInvalidData,
-		},
-	}
+	existingAccount, err := th.Data.GetAccountUserRecByRef("existing-account")
+	require.NoError(t, err)
 
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			m := th.Domain.(*domain.Domain)
+	m := th.Domain.(*domain.Domain)
 
-			rec, err := m.CreateAccountUserRec(tc.rec)
+	t.Run("succeeds with valid email and active status", func(t *testing.T) {
+		rec := &account_record.AccountUser{
+			AccountID: existingAccount.AccountID,
+			Email:     harness.UniqueEmail("valid@example.com"),
+			Status:    account_record.AccountUserStatusActive,
+		}
+		result, err := m.CreateAccountUserRec(rec)
+		require.NoError(t, err)
+		require.NotNil(t, result)
+		require.NotEmpty(t, result.ID)
+	})
 
-			if tc.expectError {
-				require.Error(t, err)
-				if tc.errorCode != "" {
-					var coreErr coreerror.Error
-					require.ErrorAs(t, err, &coreErr)
-					require.Equal(t, tc.errorCode, coreErr.ErrorCode)
-				}
-				require.Nil(t, rec)
-			} else {
-				require.NoError(t, err)
-				require.NotNil(t, rec)
-				require.NotEmpty(t, rec.ID)
-			}
-		})
-	}
+	t.Run("succeeds with pending_approval status", func(t *testing.T) {
+		rec := &account_record.AccountUser{
+			AccountID: existingAccount.AccountID,
+			Email:     harness.UniqueEmail("pending@example.com"),
+			Status:    account_record.AccountUserStatusPendingApproval,
+		}
+		result, err := m.CreateAccountUserRec(rec)
+		require.NoError(t, err)
+		require.NotNil(t, result)
+	})
+
+	t.Run("fails when record is nil", func(t *testing.T) {
+		result, err := m.CreateAccountUserRec(nil)
+		require.Error(t, err)
+		var coreErr coreerror.Error
+		require.ErrorAs(t, err, &coreErr)
+		require.Equal(t, coreerror.ErrorCodeInvalidData, coreErr.ErrorCode)
+		require.Nil(t, result)
+	})
+
+	t.Run("fails when email is empty", func(t *testing.T) {
+		rec := &account_record.AccountUser{
+			AccountID: existingAccount.AccountID,
+			Email:     "",
+			Status:    account_record.AccountUserStatusActive,
+		}
+		result, err := m.CreateAccountUserRec(rec)
+		require.Error(t, err)
+		var coreErr coreerror.Error
+		require.ErrorAs(t, err, &coreErr)
+		require.Equal(t, coreerror.ErrorCodeInvalidData, coreErr.ErrorCode)
+		require.Nil(t, result)
+	})
+
+	t.Run("fails with invalid account_id", func(t *testing.T) {
+		rec := &account_record.AccountUser{
+			AccountID: "not-a-uuid",
+			Email:     harness.UniqueEmail("bad-account@example.com"),
+			Status:    account_record.AccountUserStatusActive,
+		}
+		result, err := m.CreateAccountUserRec(rec)
+		require.Error(t, err)
+		require.Nil(t, result)
+	})
+
+	t.Run("fails with invalid status", func(t *testing.T) {
+		rec := &account_record.AccountUser{
+			AccountID: record.NewRecordID(),
+			Email:     harness.UniqueEmail("badstatus@example.com"),
+			Status:    "nonexistent_status",
+		}
+		result, err := m.CreateAccountUserRec(rec)
+		require.Error(t, err)
+		var coreErr coreerror.Error
+		require.ErrorAs(t, err, &coreErr)
+		require.Equal(t, coreerror.ErrorCodeInvalidData, coreErr.ErrorCode)
+		require.Nil(t, result)
+	})
 }
 
 func TestUpdateAccountUserRec_Validation(t *testing.T) {
