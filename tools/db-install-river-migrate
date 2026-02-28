@@ -2,4 +2,4 @@
 
 # https://riverqueue.com/docs/migrations
 # The package path changed in newer versions of River
-go install github.com/riverqueue/river/cmd/river@latest
+go install github.com/riverqueue/river/cmd/river@v0.23.1
