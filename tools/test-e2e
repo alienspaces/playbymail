@@ -1,0 +1,102 @@
+#!/usr/bin/env sh
+
+# E2E test runner (Playwright). Run from project root: ./tools/test-e2e
+# CI runs this same script after starting backend and frontend.
+#
+# Prerequisites (local):
+# - Backend running: ./tools/start-backend
+# - TEST_BYPASS_HEADER_NAME and TEST_BYPASS_HEADER_VALUE set (e.g. .env.develop)
+
+set -e
+
+script_dir="$(dirname "$0")"
+cd "$script_dir/.."
+
+. "$script_dir/environment" || exit $?
+
+if [ -z "$TEST_BYPASS_HEADER_NAME" ]; then
+    echo "❌ Error: TEST_BYPASS_HEADER_NAME environment variable is not set."
+    exit 1
+fi
+
+if [ -z "$TEST_BYPASS_HEADER_VALUE" ]; then
+    echo "❌ Error: TEST_BYPASS_HEADER_VALUE environment variable is not set."
+    exit 1
+fi
+
+echo "🔍 Checking Playwright setup..."
+
+if ! command -v node >/dev/null 2>&1; then
+    echo "❌ Error: Node.js not found. Please install Node.js first."
+    exit 1
+fi
+
+if ! command -v npm >/dev/null 2>&1; then
+    echo "❌ Error: npm not found. Please install npm first."
+    exit 1
+fi
+
+if [ ! -f "package.json" ]; then
+    echo "❌ Error: package.json not found. Please run this from the project root."
+    exit 1
+fi
+
+if ! npm list @playwright/test >/dev/null 2>&1; then
+    echo "❌ Error: Playwright not installed. Running 'npm install'..."
+    npm install
+fi
+
+if [ ! -d "node_modules/.cache/playwright" ]; then
+    echo "📦 Installing Playwright browsers..."
+    npx playwright install
+fi
+
+if [ ! -f "playwright.config.js" ]; then
+    echo "❌ Error: playwright.config.js not found."
+    exit 1
+fi
+
+if [ ! -d "playwright" ]; then
+    echo "❌ Error: playwright directory not found."
+    exit 1
+fi
+
+echo "✅ Playwright setup verified"
+
+if [ -z "$CI" ]; then
+    echo "🔍 Checking backend..."
+    if ! curl -s http://localhost:8080/healthz >/dev/null 2>&1; then
+        echo "❌ Backend not running on localhost:8080"
+        echo "   Start it: ./tools/start-backend"
+        exit 1
+    fi
+    echo "✅ Backend running"
+fi
+
+case "${1:-}" in
+    --help|-h)
+        echo "Usage: ./tools/test-e2e [PLAYWRIGHT_ARGS]"
+        echo ""
+        echo "Runs Playwright E2E tests. With no args, runs --project chromium (same as CI)."
+        echo ""
+        echo "Examples:"
+        echo "  ./tools/test-e2e                    # Same as CI"
+        echo "  ./tools/test-e2e --ui               # Interactive UI"
+        echo "  ./tools/test-e2e --headed            # Visible browser"
+        echo "  ./tools/test-e2e --grep 'auth'       # Match test name"
+        echo "  ./tools/test-e2e playwright/core/    # Run one directory"
+        exit 0
+        ;;
+esac
+
+# Default: same as CI (chromium only). Pass args for local use (--ui, --grep, etc.).
+if [ $# -eq 0 ]; then
+    set -- --project chromium
+fi
+
+echo ""
+echo "🚀 Running E2E tests..."
+echo "Command: npx playwright test $*"
+echo ""
+
+exec npx playwright test "$@"

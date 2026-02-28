@@ -1,0 +1,26 @@
+#!/usr/bin/env sh
+
+# Run golangci-lint on the backend. Use this script locally and in CI so both
+# use the same invocation.
+#
+# Usage:
+#   ./tools/golang-lint              # Lint all packages under backend/
+#   ./tools/golang-lint ./core/...   # Lint specific path (passed to golangci-lint)
+#
+# Requires golangci-lint to be installed (e.g. go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest).
+# Config: backend/.golangci.yml
+
+set -e
+
+cd "$(dirname "$0")/../backend" || exit 1
+
+if ! command -v golangci-lint >/dev/null 2>&1; then
+	echo "=> (golang-lint) golangci-lint not found. Install with:"
+	echo "   go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest"
+	exit 1
+fi
+
+if [ $# -eq 0 ]; then
+	set -- ./...
+fi
+exec golangci-lint run "$@"
