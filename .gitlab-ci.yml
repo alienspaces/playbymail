@@ -150,10 +150,10 @@ test-e2e:
     - cd frontend && npm ci && cd ..
   script:
     - export PATH="/usr/local/go/bin:${HOME}/go/bin:$PATH"
-    - cd backend && ./playbymail-server &
-    - cd frontend && npm run dev &
+    - (cd backend && ./playbymail-server) &
+    - (cd frontend && npm run dev) &
     - npx wait-on http://localhost:8080/healthz http://localhost:3000 --timeout 60000
-    - cd "${CI_PROJECT_DIR}" && ./tools/test-e2e
+    - ./tools/test-e2e
   artifacts:
     when: on_failure
     paths:
