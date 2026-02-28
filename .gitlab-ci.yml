@@ -150,15 +150,17 @@ test-e2e:
     - cd frontend && npm ci && cd ..
   script:
     - export PATH="/usr/local/go/bin:${HOME}/go/bin:$PATH"
-    - cd backend && ./playbymail-server &
+    - pwd
+    - ls -la
+    - (cd backend && pwd && exec ./playbymail-server) &
     - BACKEND_PID=$!
-    - cd ..
-    - cd frontend && npm run dev &
+    - (cd frontend && pwd && exec npm run dev) &
     - FRONTEND_PID=$!
-    - cd ..
     - sleep 5
     - echo "Testing backend health endpoint..."
     - curl -v http://localhost:8080/healthz || echo "Health check failed"
+    - echo "Testing frontend endpoint..."
+    - curl -v http://localhost:3000 || echo "Frontend check failed"
     - npx wait-on http://localhost:8080/healthz http://localhost:3000 --timeout 60000
     - ./tools/test-e2e
   artifacts:
