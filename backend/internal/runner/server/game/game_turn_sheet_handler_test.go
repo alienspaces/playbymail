@@ -362,9 +362,7 @@ func Test_downloadJoinGameTurnSheetsHandler(t *testing.T) {
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[game.DownloadJoinGameTurnSheets]
 				},
-				RequestHeaders: func(d harness.Data) map[string]string {
-					return testutil.AuthHeaderProManager(d)
-				},
+				RequestHeaders: testutil.AuthHeaderProManager,
 				RequestPathParams: func(d harness.Data) map[string]string {
 					gameID, ok := d.Refs.GameRefs[harness.GameOneRef]
 					require.True(t, ok, "game ref exists")

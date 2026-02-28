@@ -56,9 +56,7 @@ func Test_adventureGameLocationLinkHandler(t *testing.T) {
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[adventure_game.SearchManyAdventureGameLocationLinks]
 				},
-				RequestHeaders: func(d harness.Data) map[string]string {
-					return testutil.AuthHeaderStandard(d)
-				},
+				RequestHeaders: testutil.AuthHeaderStandard,
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
 						":game_id": gameRec.ID,
@@ -80,9 +78,7 @@ func Test_adventureGameLocationLinkHandler(t *testing.T) {
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[adventure_game.GetOneAdventureGameLocationLink]
 				},
-				RequestHeaders: func(d harness.Data) map[string]string {
-					return testutil.AuthHeaderStandard(d)
-				},
+				RequestHeaders: testutil.AuthHeaderStandard,
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
 						":game_id":          gameRec.ID,
@@ -99,9 +95,7 @@ func Test_adventureGameLocationLinkHandler(t *testing.T) {
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[adventure_game.CreateOneAdventureGameLocationLink]
 				},
-				RequestHeaders: func(d harness.Data) map[string]string {
-					return testutil.AuthHeaderProDesigner(d)
-				},
+				RequestHeaders: testutil.AuthHeaderProDesigner,
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
 						":game_id": gameRec.ID,
@@ -125,9 +119,7 @@ func Test_adventureGameLocationLinkHandler(t *testing.T) {
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[adventure_game.UpdateOneAdventureGameLocationLink]
 				},
-				RequestHeaders: func(d harness.Data) map[string]string {
-					return testutil.AuthHeaderProDesigner(d)
-				},
+				RequestHeaders: testutil.AuthHeaderProDesigner,
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
 						":game_id":          gameRec.ID,
@@ -152,9 +144,7 @@ func Test_adventureGameLocationLinkHandler(t *testing.T) {
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[adventure_game.DeleteOneAdventureGameLocationLink]
 				},
-				RequestHeaders: func(d harness.Data) map[string]string {
-					return testutil.AuthHeaderProDesigner(d)
-				},
+				RequestHeaders: testutil.AuthHeaderProDesigner,
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
 						":game_id":          gameRec.ID,

@@ -96,12 +96,8 @@ func TestLocationChoiceProcessor_GenerateTurnSheet(t *testing.T) {
 					require.Contains(t, err.Error(), tt.expectErrorMessage, "Error message should contain expected text")
 				}
 				require.Nil(t, pdfData, "PDF data should be nil on error")
-			} else {
-				// Note: This test may fail if PDF generation requires specific dependencies
-				// In that case, we'd mock the generator or skip PDF generation tests
-				if err != nil {
-					t.Logf("PDF generation failed (may be expected in test environment): %v", err)
-				}
+			} else if err != nil {
+				t.Logf("PDF generation failed (may be expected in test environment): %v", err)
 			}
 		})
 	}

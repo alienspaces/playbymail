@@ -43,9 +43,7 @@ func Test_getAccountHandler(t *testing.T) {
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[account.GetManyAccounts]
 				},
-				RequestHeaders: func(d harness.Data) map[string]string {
-					return testutil.AuthHeaderStandard(d)
-				},
+				RequestHeaders: testutil.AuthHeaderStandard,
 				RequestQueryParams: func(d harness.Data) map[string]any {
 					return map[string]any{
 						"page_size":   10,
@@ -64,9 +62,7 @@ func Test_getAccountHandler(t *testing.T) {
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[account.GetOneAccount]
 				},
-				RequestHeaders: func(d harness.Data) map[string]string {
-					return testutil.AuthHeaderStandard(d)
-				},
+				RequestHeaders: testutil.AuthHeaderStandard,
 				RequestPathParams: func(d harness.Data) map[string]string {
 					accountRec, err := d.GetAccountUserRecByRef(harness.StandardAccountRef)
 					require.NoError(t, err, "GetAccountUserRecByRef returns without error")
@@ -172,9 +168,7 @@ func Test_createUpdateAccountHandler(t *testing.T) {
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[account.UpdateOneAccount]
 				},
-				RequestHeaders: func(d harness.Data) map[string]string {
-					return testutil.AuthHeaderStandard(d)
-				},
+				RequestHeaders: testutil.AuthHeaderStandard,
 				RequestPathParams: func(d harness.Data) map[string]string {
 					accountRec, err := d.GetAccountUserRecByRef(harness.StandardAccountRef)
 					require.NoError(t, err, "GetAccountUserRecByRef returns without error")
@@ -257,9 +251,7 @@ func Test_getMeHandler(t *testing.T) {
 			HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 				return rnr.GetHandlerConfig()[account.GetMe]
 			},
-			RequestHeaders: func(d harness.Data) map[string]string {
-				return testutil.AuthHeaderStandard(d)
-			},
+			RequestHeaders: testutil.AuthHeaderStandard,
 			ResponseDecoder: testCaseResponseDecoder,
 			ResponseCode:    http.StatusOK,
 		},

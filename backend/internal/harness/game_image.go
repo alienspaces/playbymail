@@ -43,7 +43,9 @@ func CreateTestImage(width, height int) []byte {
 	}
 
 	var buf bytes.Buffer
-	png.Encode(&buf, img)
+	if err := png.Encode(&buf, img); err != nil {
+		return nil
+	}
 	return buf.Bytes()
 }
 
@@ -71,8 +73,8 @@ func LoadTestImageFromPath(imagePath string) ([]byte, string, int, int) {
 		// TEMPLATES_PATH is typically .../backend/templates
 		backendDir := filepath.Dir(templatesPath)
 		imagePaths = append(imagePaths,
-			filepath.Join(backendDir, "internal/runner/cli/seed_images"),
-			filepath.Join(backendDir, "internal/turn_sheet/testdata"),
+			filepath.Join(backendDir, "internal/runner/cli/seed_images"), //nolint:gocritic // intentional relative path
+			filepath.Join(backendDir, "internal/turn_sheet/testdata"),    //nolint:gocritic // intentional relative path
 		)
 	}
 
@@ -272,8 +274,8 @@ func (t *Testing) loadImageFromPath(imagePath string) ([]byte, string, int, int,
 	if templatesPath := os.Getenv("TEMPLATES_PATH"); templatesPath != "" {
 		backendDir := filepath.Dir(templatesPath)
 		imagePaths = append(imagePaths,
-			filepath.Join(backendDir, "internal/runner/cli/seed_images"),
-			filepath.Join(backendDir, "internal/turn_sheet/testdata"),
+			filepath.Join(backendDir, "internal/runner/cli/seed_images"), //nolint:gocritic // intentional relative path
+			filepath.Join(backendDir, "internal/turn_sheet/testdata"),    //nolint:gocritic // intentional relative path
 		)
 	}
 
@@ -331,8 +333,9 @@ func (t *Testing) loadImageFromPath(imagePath string) ([]byte, string, int, int,
 	return imageData, mimeType, width, height, nil
 }
 
-// createGameImageRecFromPath creates a game image record from a file path
-// DEPRECATED: Use createGameImageRecFromConfig instead
+// Deprecated: Use createGameImageRecFromConfig instead
+//
+// createGameImageRecFromPath creates a game image record from a file path.
 // recordID: if empty, this is a game-level image (defaults to join_game), otherwise it's a location-level image (location_choice)
 func (t *Testing) createGameImageRecFromPath(gameID string, recordID string, imagePath string) (*game_record.GameImage, error) {
 	l := t.Logger("createGameImageRecFromPath")

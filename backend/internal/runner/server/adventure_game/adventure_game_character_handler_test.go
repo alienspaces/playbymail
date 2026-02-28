@@ -48,9 +48,7 @@ func Test_adventureGameCharacterHandler(t *testing.T) {
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[adventure_game.GetManyAdventureGameCharacters]
 				},
-				RequestHeaders: func(d harness.Data) map[string]string {
-					return testutil.AuthHeaderStandard(d)
-				},
+				RequestHeaders: testutil.AuthHeaderStandard,
 				RequestQueryParams: func(d harness.Data) map[string]any {
 					return map[string]any{
 						"page_size":   10,
@@ -70,9 +68,7 @@ func Test_adventureGameCharacterHandler(t *testing.T) {
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[adventure_game.CreateOneAdventureGameCharacter]
 				},
-				RequestHeaders: func(d harness.Data) map[string]string {
-					return testutil.AuthHeaderProDesigner(d)
-				},
+			RequestHeaders: testutil.AuthHeaderProDesigner,
 				RequestBody: func(d harness.Data) any {
 					return adventure_game_schema.AdventureGameCharacterRequest{
 						AccountID:     accountRec.AccountID,
@@ -93,9 +89,7 @@ func Test_adventureGameCharacterHandler(t *testing.T) {
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[adventure_game.GetOneAdventureGameCharacter]
 				},
-				RequestHeaders: func(d harness.Data) map[string]string {
-					return testutil.AuthHeaderStandard(d)
-				},
+				RequestHeaders: testutil.AuthHeaderStandard,
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
 						":game_id":      gameRec.ID,
@@ -112,9 +106,7 @@ func Test_adventureGameCharacterHandler(t *testing.T) {
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[adventure_game.DeleteOneAdventureGameCharacter]
 				},
-				RequestHeaders: func(d harness.Data) map[string]string {
-					return testutil.AuthHeaderStandard(d)
-				},
+				RequestHeaders: testutil.AuthHeaderStandard,
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
 						":game_id":      gameRec.ID,

@@ -259,12 +259,11 @@ func (a *openAIVisionAgent) ExtractStructuredData(ctx context.Context, req Struc
 	l.Debug("filled image encoded filled_size=%d filled_mime=%s data_uri_length=%d",
 		len(req.FilledImage.Data), req.FilledImage.MIME, len(dataURI))
 
-	contents = append(contents, openAIInputContent{
-		Type:     "input_image",
-		ImageURL: dataURI,
-	})
-
 	contents = append(contents,
+		openAIInputContent{
+			Type:     "input_image",
+			ImageURL: dataURI,
+		},
 		openAIInputContent{
 			Type: "input_text",
 			Text: fmt.Sprintf("Return a strict JSON object matching this structure: %s", string(skeleton)),

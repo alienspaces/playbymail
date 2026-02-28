@@ -50,26 +50,26 @@ func (m *Message) Bytes() ([]byte, error) {
 	buf := bytes.NewBuffer(nil)
 	withAttachments := len(m.Attachments) > 0
 
-	buf.WriteString(fmt.Sprintf("From:%s\r\n", m.From))
+	fmt.Fprintf(buf, "From:%s\r\n", m.From)
 
-	buf.WriteString(fmt.Sprintf("To:%s\r\n", strings.Join(m.To, ",")))
+	fmt.Fprintf(buf, "To:%s\r\n", strings.Join(m.To, ","))
 
-	buf.WriteString(fmt.Sprintf("Subject:%s\r\n", m.Subject))
+	fmt.Fprintf(buf, "Subject:%s\r\n", m.Subject)
 
 	if len(m.CC) > 0 {
-		buf.WriteString(fmt.Sprintf("Cc:%s\r\n", strings.Join(m.CC, ",")))
+		fmt.Fprintf(buf, "Cc:%s\r\n", strings.Join(m.CC, ","))
 	}
 
 	if len(m.BCC) > 0 {
-		buf.WriteString(fmt.Sprintf("Bcc:%s\r\n", strings.Join(m.BCC, ",")))
+		fmt.Fprintf(buf, "Bcc:%s\r\n", strings.Join(m.BCC, ","))
 	}
 
 	buf.WriteString("MIME-Version: 1.0\r\n")
 	writer := multipart.NewWriter(buf)
 	boundary := writer.Boundary()
 	if withAttachments {
-		buf.WriteString(fmt.Sprintf("Content-Type: multipart/mixed; boundary=%s\r\n\r\n", boundary))
-		buf.WriteString(fmt.Sprintf("--%s\r\n", boundary))
+		fmt.Fprintf(buf, "Content-Type: multipart/mixed; boundary=%s\r\n\r\n", boundary)
+		fmt.Fprintf(buf, "--%s\r\n", boundary)
 	}
 
 	// TODO CX-103: Support different content types for message body
@@ -81,17 +81,17 @@ func (m *Message) Bytes() ([]byte, error) {
 
 	if withAttachments {
 		for _, attachment := range m.Attachments {
-			buf.WriteString(fmt.Sprintf("\r\n--%s\r\n", boundary))
-			buf.WriteString(fmt.Sprintf("Content-Type:%s\r\n", attachment.ContentType))
+			fmt.Fprintf(buf, "\r\n--%s\r\n", boundary)
+			fmt.Fprintf(buf, "Content-Type:%s\r\n", attachment.ContentType)
 			buf.WriteString("Content-Transfer-Encoding: base64\r\n")
-			buf.WriteString(fmt.Sprintf("Content-Disposition: attachment; filename=%s\r\n", attachment.Name))
+			fmt.Fprintf(buf, "Content-Disposition: attachment; filename=%s\r\n", attachment.Name)
 			buf.WriteString("\r\n")
 
 			b := make([]byte, base64.StdEncoding.EncodedLen(len(attachment.Content)))
 			base64.StdEncoding.Encode(b, attachment.Content)
 			buf.Write(b)
 
-			buf.WriteString(fmt.Sprintf("\r\n--%s", boundary))
+			fmt.Fprintf(buf, "\r\n--%s", boundary)
 		}
 
 		buf.WriteString("--")

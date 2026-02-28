@@ -74,7 +74,7 @@ func (t *Testing) ProcessTurn(ctx context.Context, gameInstanceRef string) error
 	// Actually, we don't need to insert a job - we can call DoWork directly
 	// But DoWork expects a *river.Job which we can't easily create
 	// So we'll insert a job to get a proper job struct, then use it
-	insertResult, err := t.JobClient.Insert(ctx, jobArgs, &river.InsertOpts{
+	_, err = t.JobClient.Insert(ctx, jobArgs, &river.InsertOpts{
 		Queue: jobqueue.QueueGame,
 	})
 	if err != nil {
@@ -112,12 +112,6 @@ func (t *Testing) ProcessTurn(ctx context.Context, gameInstanceRef string) error
 	job := &river.Job[jobworker.GameTurnProcessingWorkerArgs]{
 		Args: jobArgs,
 	}
-	// Set the ID from the insert result if available
-	if insertResult != nil && insertResult.Job != nil {
-		// We can't directly access the ID from JobRow
-		// So we'll just use Args for DoWork
-	}
-
 	// Call DoWork directly with the manually created domain
 	_, err = worker.DoWork(ctx, mForDoWork, t.JobClient, job)
 	if err != nil {

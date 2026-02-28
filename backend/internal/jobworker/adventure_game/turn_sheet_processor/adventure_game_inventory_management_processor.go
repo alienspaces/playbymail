@@ -239,7 +239,9 @@ func (p *AdventureGameInventoryManagementProcessor) CreateNextTurnSheet(ctx cont
 	}
 
 	// Combine: equipped first, then unequipped
-	inventoryItemList = append(equippedItems, unequippedItems...)
+	inventoryItemList = make([]turnsheet.InventoryItem, 0, len(equippedItems)+len(unequippedItems))
+	inventoryItemList = append(inventoryItemList, equippedItems...)
+	inventoryItemList = append(inventoryItemList, unequippedItems...)
 
 	// Step 9: Build location items list
 	locationItemList := make([]turnsheet.LocationItem, 0, len(locationItems))

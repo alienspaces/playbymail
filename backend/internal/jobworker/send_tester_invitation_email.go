@@ -75,7 +75,7 @@ func NewSendTesterInvitationEmailWorker(l logger.Logger, cfg config.Config, s st
 }
 
 func (w *SendTesterInvitationEmailWorker) Work(ctx context.Context, j *river.Job[SendTesterInvitationEmailWorkerArgs]) error {
-	l := w.JobWorker.Log.WithFunctionContext("SendTesterInvitationEmailWorker/Work")
+	l := w.Log.WithFunctionContext("SendTesterInvitationEmailWorker/Work")
 
 	l.Info("running job ID >%s< Args >%#v<", strconv.FormatInt(j.ID, 10), j.Args)
 
@@ -106,7 +106,7 @@ type SendTesterInvitationEmailDoWorkResult struct {
 }
 
 func (w *SendTesterInvitationEmailWorker) DoWork(ctx context.Context, m *domain.Domain, c *river.Client[pgx.Tx], j *river.Job[SendTesterInvitationEmailWorkerArgs]) (*SendTesterInvitationEmailDoWorkResult, error) {
-	l := w.JobWorker.Log.WithFunctionContext("SendTesterInvitationEmailWorker/DoWork")
+	l := w.Log.WithFunctionContext("SendTesterInvitationEmailWorker/DoWork")
 
 	l.Info("preparing tester invitation email for game instance ID >%s< email >%s<", j.Args.GameInstanceID, j.Args.Email)
 

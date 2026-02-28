@@ -314,9 +314,11 @@ Note: "Backpack" checkbox on location items uses name "pick_up", "Backpack" on e
 func buildInventoryManagementContext(data *InventoryManagementData) []string {
 	var ctx []string
 	if data != nil {
-		ctx = append(ctx, fmt.Sprintf("Character: %s", data.CharacterName))
-		ctx = append(ctx, fmt.Sprintf("Location: %s", data.CurrentLocationName))
-		ctx = append(ctx, fmt.Sprintf("Inventory: %d/%d items", data.InventoryCount, data.InventoryCapacity))
+		ctx = append(ctx,
+			fmt.Sprintf("Character: %s", data.CharacterName),
+			fmt.Sprintf("Location: %s", data.CurrentLocationName),
+			fmt.Sprintf("Inventory: %d/%d items", data.InventoryCount, data.InventoryCapacity),
+		)
 
 		if len(data.CurrentInventory) > 0 {
 			ctx = append(ctx, "Current Inventory:")

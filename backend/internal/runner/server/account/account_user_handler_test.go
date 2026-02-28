@@ -47,9 +47,7 @@ func Test_getAccountUserHandler(t *testing.T) {
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[account.GetManyAccountUsers]
 				},
-				RequestHeaders: func(d harness.Data) map[string]string {
-					return testutil.AuthHeaderStandard(d)
-				},
+				RequestHeaders: testutil.AuthHeaderStandard,
 				RequestQueryParams: func(d harness.Data) map[string]any {
 					return map[string]any{
 						"page_size":   10,
@@ -68,9 +66,7 @@ func Test_getAccountUserHandler(t *testing.T) {
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()["get-many-account-users-by-account"]
 				},
-				RequestHeaders: func(d harness.Data) map[string]string {
-					return testutil.AuthHeaderStandard(d)
-				},
+				RequestHeaders: testutil.AuthHeaderStandard,
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
 						":account_id": accountUserRec.AccountID,
@@ -94,9 +90,7 @@ func Test_getAccountUserHandler(t *testing.T) {
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[account.GetOneAccountUser]
 				},
-				RequestHeaders: func(d harness.Data) map[string]string {
-					return testutil.AuthHeaderStandard(d)
-				},
+				RequestHeaders: testutil.AuthHeaderStandard,
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
 						":account_id":      accountUserRec.AccountID,
@@ -182,9 +176,7 @@ func Test_createUpdateDeleteAccountUserHandler(t *testing.T) {
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[account.CreateOneAccountUser]
 				},
-				RequestHeaders: func(d harness.Data) map[string]string {
-					return testutil.AuthHeaderStandard(d)
-				},
+				RequestHeaders: testutil.AuthHeaderStandard,
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
 						":account_id": accountUserRec.AccountID,
@@ -217,9 +209,7 @@ func Test_createUpdateDeleteAccountUserHandler(t *testing.T) {
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[account.UpdateOneAccountUser]
 				},
-				RequestHeaders: func(d harness.Data) map[string]string {
-					return testutil.AuthHeaderStandard(d)
-				},
+				RequestHeaders: testutil.AuthHeaderStandard,
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
 						":account_id":      accountUserRec.AccountID,
@@ -251,9 +241,7 @@ func Test_createUpdateDeleteAccountUserHandler(t *testing.T) {
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[account.DeleteOneAccountUser]
 				},
-				RequestHeaders: func(d harness.Data) map[string]string {
-					return testutil.AuthHeaderStandard(d)
-				},
+				RequestHeaders: testutil.AuthHeaderStandard,
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
 						":account_id":      accountUserRec.AccountID,

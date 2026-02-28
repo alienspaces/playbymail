@@ -36,9 +36,7 @@ func Test_gameSubscriptionHandler(t *testing.T) {
 			HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 				return rnr.GetHandlerConfig()[game.GetManyGameSubscriptions]
 			},
-			RequestHeaders: func(d harness.Data) map[string]string {
-				return testutil.AuthHeaderProManager(d)
-			},
+			RequestHeaders: testutil.AuthHeaderProManager,
 			ResponseDecoder: collectionDecoder,
 			ResponseCode:    http.StatusOK,
 		},
@@ -47,9 +45,7 @@ func Test_gameSubscriptionHandler(t *testing.T) {
 			HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 				return rnr.GetHandlerConfig()[game.CreateOneGameSubscription]
 			},
-			RequestHeaders: func(d harness.Data) map[string]string {
-				return testutil.AuthHeaderProManager(d)
-			},
+			RequestHeaders: testutil.AuthHeaderProManager,
 			RequestBody: func(d harness.Data) any {
 				gameRec, _ := d.GetGameRecByRef(harness.GameOneRef)
 				accountRec, _ := d.GetAccountUserRecByRef(harness.ProManagerAccountRef)
@@ -69,9 +65,7 @@ func Test_gameSubscriptionHandler(t *testing.T) {
 			HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 				return rnr.GetHandlerConfig()[game.GetOneGameSubscription]
 			},
-			RequestHeaders: func(d harness.Data) map[string]string {
-				return testutil.AuthHeaderProManager(d)
-			},
+			RequestHeaders: testutil.AuthHeaderProManager,
 			RequestPathParams: func(d harness.Data) map[string]string {
 				subID, ok := d.Refs.GameSubscriptionRefs[harness.GameSubscriptionManagerOneRef]
 				require.True(t, ok, "manager subscription ref exists")
@@ -85,9 +79,7 @@ func Test_gameSubscriptionHandler(t *testing.T) {
 			HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 				return rnr.GetHandlerConfig()[game.UpdateOneGameSubscription]
 			},
-			RequestHeaders: func(d harness.Data) map[string]string {
-				return testutil.AuthHeaderProManager(d)
-			},
+			RequestHeaders: testutil.AuthHeaderProManager,
 			RequestPathParams: func(d harness.Data) map[string]string {
 				subID, ok := d.Refs.GameSubscriptionRefs[harness.GameSubscriptionManagerOneRef]
 				require.True(t, ok, "manager subscription ref exists")
@@ -109,9 +101,7 @@ func Test_gameSubscriptionHandler(t *testing.T) {
 			HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 				return rnr.GetHandlerConfig()[game.DeleteOneGameSubscription]
 			},
-			RequestHeaders: func(d harness.Data) map[string]string {
-				return testutil.AuthHeaderProManager(d)
-			},
+			RequestHeaders: testutil.AuthHeaderProManager,
 			RequestPathParams: func(d harness.Data) map[string]string {
 				subID, ok := d.Refs.GameSubscriptionRefs[harness.GameSubscriptionManagerOneRef]
 				require.True(t, ok, "manager subscription ref exists")

@@ -436,7 +436,7 @@ func (c *HTTPClient) buildURL(requestURL string, params map[string]string) (stri
 		if !found {
 			param = strings.Replace(param, ":", "", 1)
 			if paramString != "" {
-				paramString = paramString + "&"
+				paramString += "&"
 			}
 			paramString = paramString + param + "=" + url.QueryEscape(value)
 		}

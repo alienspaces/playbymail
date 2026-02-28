@@ -61,7 +61,6 @@ func (m *Domain) UpdateGameTurnSheetRec(rec *game_record.GameTurnSheet) (*game_r
 	l := m.Logger("UpdateGameTurnSheetRec")
 
 	l.Debug("updating game_turn_sheet record >%#v<", rec)
-	// fmt.Printf("**** Entering UpdateGameTurnSheetRec ID >%s<\n", rec.ID)
 
 	currRec, err := m.GetGameTurnSheetRec(rec.ID, coresql.ForUpdateNoWait)
 	if err != nil {
@@ -196,7 +195,7 @@ func (m *Domain) MarkGameTurnSheetAsScanned(turnSheetID string, scannedBy string
 }
 
 // MarkGameTurnSheetAsCompleted marks a turn sheet as completed with result data
-func (m *Domain) MarkGameTurnSheetAsCompleted(turnSheetID string, ScannedData []byte) error {
+func (m *Domain) MarkGameTurnSheetAsCompleted(turnSheetID string, scannedData []byte) error {
 	l := m.Logger("MarkGameTurnSheetAsCompleted")
 
 	l.Debug("marking game_turn_sheet record ID >%s< as completed", turnSheetID)
@@ -209,7 +208,7 @@ func (m *Domain) MarkGameTurnSheetAsCompleted(turnSheetID string, ScannedData []
 	now := time.Now()
 	rec.IsCompleted = true
 	rec.CompletedAt = sql.NullTime{Time: now, Valid: true}
-	rec.ScannedData = ScannedData
+	rec.ScannedData = scannedData
 	rec.ProcessingStatus = "completed"
 
 	_, err = m.UpdateGameTurnSheetRec(rec)

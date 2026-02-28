@@ -44,7 +44,7 @@ func NewGameTurnQueueingWorker(l logger.Logger, cfg config.Config, s storer.Stor
 }
 
 func (w *GameTurnQueueingWorker) Work(ctx context.Context, j *river.Job[GameTurnQueueingWorkerArgs]) error {
-	l := w.JobWorker.Log.WithFunctionContext("GameTurnQueueingWorker/Work")
+	l := w.Log.WithFunctionContext("GameTurnQueueingWorker/Work")
 
 	l.Info("running job ID >%s<", strconv.FormatInt(j.ID, 10))
 
@@ -72,7 +72,7 @@ type GameTurnQueueingDoWorkResult struct {
 }
 
 func (w *GameTurnQueueingWorker) DoWork(ctx context.Context, m *domain.Domain, c *river.Client[pgx.Tx], j *river.Job[GameTurnQueueingWorkerArgs]) (*GameTurnQueueingDoWorkResult, error) {
-	l := w.JobWorker.Log.WithFunctionContext("GameTurnQueueingWorker/DoWork")
+	l := w.Log.WithFunctionContext("GameTurnQueueingWorker/DoWork")
 
 	l.Info("checking for games that need turn processing")
 
@@ -127,7 +127,7 @@ func (w *GameTurnQueueingWorker) DoWork(ctx context.Context, m *domain.Domain, c
 //
 // Used by the queue worker to create individual turn processing jobs.
 func (w *GameTurnQueueingWorker) getGameInstanceRecsNeedingTurnProcessing(m *domain.Domain) ([]*game_record.GameInstance, error) {
-	l := w.JobWorker.Log.WithFunctionContext("GameTurnQueueingWorker/getGameInstanceRecsNeedingTurnProcessing")
+	l := w.Log.WithFunctionContext("GameTurnQueueingWorker/getGameInstanceRecsNeedingTurnProcessing")
 
 	l.Info("getting game instances needing turn processing")
 

@@ -48,9 +48,7 @@ func Test_adventureGameItemPlacementHandler(t *testing.T) {
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[adventure_game.SearchManyAdventureGameItemPlacements]
 				},
-				RequestHeaders: func(d harness.Data) map[string]string {
-					return testutil.AuthHeaderStandard(d)
-				},
+				RequestHeaders: testutil.AuthHeaderStandard,
 				RequestQueryParams: func(d harness.Data) map[string]any {
 					return map[string]any{
 						"page_size":   10,
@@ -67,9 +65,7 @@ func Test_adventureGameItemPlacementHandler(t *testing.T) {
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[adventure_game.CreateOneAdventureGameItemPlacement]
 				},
-				RequestHeaders: func(d harness.Data) map[string]string {
-					return testutil.AuthHeaderProDesigner(d)
-				},
+			RequestHeaders: testutil.AuthHeaderProDesigner,
 				RequestBody: func(d harness.Data) any {
 					return adventure_game_schema.AdventureGameItemPlacementRequest{
 						AdventureGameItemID:     itemRec.ID,

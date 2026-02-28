@@ -106,10 +106,12 @@ type GameConfig struct {
 	AdventureGameItemConfigs         []AdventureGameItemConfig
 	AdventureGameCreatureConfigs     []AdventureGameCreatureConfig
 	AdventureGameCharacterConfigs    []AdventureGameCharacterConfig
-	GameImageConfigs                 []GameImageConfig // Game image configurations
-	// Background image file path for game-level turn sheet backgrounds
-	// If set, creates a game_image record with type turn_sheet_background
-	// DEPRECATED: Use GameImageConfigs instead
+	GameImageConfigs []GameImageConfig // Game image configurations
+
+	// Deprecated: Use GameImageConfigs instead
+	//
+	// Background image file path for game-level turn sheet backgrounds.
+	// If set, creates a game_image record with type turn_sheet_background.
 	BackgroundImagePath string // Path to image file relative to testdata directory
 }
 

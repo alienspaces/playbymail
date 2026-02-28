@@ -59,7 +59,7 @@ func NewGameSubscriptionProcessingWorker(l logger.Logger, cfg config.Config, s s
 }
 
 func (w *GameSubscriptionProcessingWorker) Work(ctx context.Context, j *river.Job[GameSubscriptionProcessingWorkerArgs]) error {
-	l := w.JobWorker.Log.WithFunctionContext("GameSubscriptionProcessingWorker/Work")
+	l := w.Log.WithFunctionContext("GameSubscriptionProcessingWorker/Work")
 
 	l.Info("running job ID >%s< Args >%#v<", strconv.FormatInt(j.ID, 10), j.Args)
 
@@ -86,7 +86,7 @@ type GameSubscriptionProcessingDoWorkResult struct {
 }
 
 func (w *GameSubscriptionProcessingWorker) DoWork(ctx context.Context, m *domain.Domain, c *river.Client[pgx.Tx], j *river.Job[GameSubscriptionProcessingWorkerArgs]) (*GameSubscriptionProcessingDoWorkResult, error) {
-	l := w.JobWorker.Log.WithFunctionContext("GameSubscriptionProcessingWorker/DoWork")
+	l := w.Log.WithFunctionContext("GameSubscriptionProcessingWorker/DoWork")
 
 	l.Info("processing join game turn sheet for subscription ID >%s<", j.Args.GameSubscriptionID)
 

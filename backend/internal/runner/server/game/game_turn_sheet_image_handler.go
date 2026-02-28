@@ -583,7 +583,7 @@ func previewGameTurnSheetHandler(w http.ResponseWriter, r *http.Request, pp http
 
 	// Set Content-Disposition to inline for preview (not download)
 	filename := fmt.Sprintf("preview-turn-sheet-%s-%s.pdf", turnSheetType, gameRec.Name)
-	w.Header().Set("Content-Disposition", fmt.Sprintf("inline; filename=\"%s\"", filename))
+	w.Header().Set("Content-Disposition", fmt.Sprintf("inline; filename=\"%s\"", filename)) //nolint:gocritic // HTTP Content-Disposition requires specific quote format
 
 	// Return PDF response
 	l.Info("responding with turn sheet preview PDF for game >%s< type >%s< size >%d< bytes", gameID, turnSheetType, len(pdfData))

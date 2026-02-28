@@ -33,8 +33,7 @@ func (m *Domain) ValidateGameReadyForInstance(gameID string) ([]GameValidationIs
 
 	var issues []GameValidationIssue
 
-	switch gameRec.GameType {
-	case game_record.GameTypeAdventure:
+	if gameRec.GameType == game_record.GameTypeAdventure {
 		issues, err = m.validateAdventureGameReadyForInstance(gameID)
 		if err != nil {
 			l.Warn("failed validating adventure game >%s< >%v<", gameID, err)

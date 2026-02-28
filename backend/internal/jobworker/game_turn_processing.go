@@ -72,7 +72,7 @@ func NewGameTurnProcessingWorker(l logger.Logger, cfg config.Config, s storer.St
 }
 
 func (w *GameTurnProcessingWorker) Work(ctx context.Context, j *river.Job[GameTurnProcessingWorkerArgs]) error {
-	l := w.JobWorker.Log.WithFunctionContext("GameTurnProcessingWorker/Work")
+	l := w.Log.WithFunctionContext("GameTurnProcessingWorker/Work")
 
 	l.Info("running job ID >%s< Args >%#v<", strconv.FormatInt(j.ID, 10), j.Args)
 
@@ -100,7 +100,7 @@ type GameTurnProcessingDoWorkResult struct {
 }
 
 func (w *GameTurnProcessingWorker) DoWork(ctx context.Context, m *domain.Domain, c *river.Client[pgx.Tx], j *river.Job[GameTurnProcessingWorkerArgs]) (*GameTurnProcessingDoWorkResult, error) {
-	l := w.JobWorker.Log.WithFunctionContext("GameTurnProcessingWorker/DoWork")
+	l := w.Log.WithFunctionContext("GameTurnProcessingWorker/DoWork")
 
 	l.Info("processing game turn for instance >%s< turn >%d<", j.Args.GameInstanceID, j.Args.TurnNumber)
 
@@ -212,7 +212,7 @@ func (w *GameTurnProcessingWorker) initializeProcessors(l logger.Logger, d *doma
 
 // queueTurnSheetNotificationEmails queues email notification jobs for all players who have turn sheets
 func (w *GameTurnProcessingWorker) queueTurnSheetNotificationEmails(ctx context.Context, c *river.Client[pgx.Tx], m *domain.Domain, gameInstanceRec *game_record.GameInstance, turnSheets []*game_record.GameTurnSheet) error {
-	l := w.JobWorker.Log.WithFunctionContext("GameTurnProcessingWorker/queueTurnSheetNotificationEmails")
+	l := w.Log.WithFunctionContext("GameTurnProcessingWorker/queueTurnSheetNotificationEmails")
 
 	l.Info("queueing turn sheet notification emails for game instance >%s< turn >%d<", gameInstanceRec.ID, gameInstanceRec.CurrentTurn)
 

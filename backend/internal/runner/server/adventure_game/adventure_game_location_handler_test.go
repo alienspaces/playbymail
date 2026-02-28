@@ -49,9 +49,7 @@ func Test_getGameLocationHandler(t *testing.T) {
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[adventure_game.GetManyAdventureGameLocations]
 				},
-				RequestHeaders: func(d harness.Data) map[string]string {
-					return testutil.AuthHeaderStandard(d)
-				},
+				RequestHeaders: testutil.AuthHeaderStandard,
 				RequestQueryParams: func(d harness.Data) map[string]any {
 					return map[string]any{
 						"page_size":   10,
@@ -75,9 +73,7 @@ func Test_getGameLocationHandler(t *testing.T) {
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[adventure_game.GetOneAdventureGameLocation]
 				},
-				RequestHeaders: func(d harness.Data) map[string]string {
-					return testutil.AuthHeaderStandard(d)
-				},
+				RequestHeaders: testutil.AuthHeaderStandard,
 				RequestPathParams: func(d harness.Data) map[string]string {
 					params := map[string]string{
 						":game_id":     gameRec.ID,
@@ -164,9 +160,7 @@ func Test_createUpdateDeleteGameLocationHandler(t *testing.T) {
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[adventure_game.CreateOneAdventureGameLocation]
 				},
-				RequestHeaders: func(d harness.Data) map[string]string {
-					return testutil.AuthHeaderProDesigner(d)
-				},
+				RequestHeaders: testutil.AuthHeaderProDesigner,
 				RequestBody: func(d harness.Data) any {
 					return adventure_game_schema.AdventureGameLocationRequest{
 						Name:        "Test Location",
@@ -197,9 +191,7 @@ func Test_createUpdateDeleteGameLocationHandler(t *testing.T) {
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[adventure_game.UpdateOneAdventureGameLocation]
 				},
-				RequestHeaders: func(d harness.Data) map[string]string {
-					return testutil.AuthHeaderProDesigner(d)
-				},
+				RequestHeaders: testutil.AuthHeaderProDesigner,
 				RequestPathParams: func(d harness.Data) map[string]string {
 					params := map[string]string{
 						":game_id":     gameRec.ID,
@@ -232,9 +224,7 @@ func Test_createUpdateDeleteGameLocationHandler(t *testing.T) {
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[adventure_game.DeleteOneAdventureGameLocation]
 				},
-				RequestHeaders: func(d harness.Data) map[string]string {
-					return testutil.AuthHeaderProDesigner(d)
-				},
+				RequestHeaders: testutil.AuthHeaderProDesigner,
 				RequestPathParams: func(d harness.Data) map[string]string {
 					params := map[string]string{
 						":game_id":     gameRec.ID,

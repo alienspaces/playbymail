@@ -54,10 +54,6 @@ func newTestRunner(cfg config.Config, l logger.Logger, s storer.Storer, j *river
 		Runner: *cRnr,
 	}
 
-	// tr.DomainFunc = func(l logger.Logger) (domainer.Domainer, error) {
-	// 	return domain.NewDomain(l)
-	// }
-
 	tr.AuthenticateRequestFunc = tr.mockAuthenticateRequestFunc
 
 	return &tr, nil

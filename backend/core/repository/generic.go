@@ -97,8 +97,6 @@ func (r *Generic[Rec, RecPtr]) GetOne(id string, lock *coresql.Lock) (*Rec, erro
 		Lock: lock,
 	}
 
-	// sql := r.GetOneSQL()
-	// fmt.Printf("**** GetOne Table >%s< SQL >%s<\n", r.TableName(), sql)
 	rows, err := r.GetRows(r.GetOneSQL(), opts)
 	if err != nil {
 		return nil, err
@@ -131,8 +129,6 @@ func (r *Generic[Rec, RecPtr]) CreateOne(rec *Rec) (*Rec, error) {
 	RecPtr(rec).ResolveID()
 	RecPtr(rec).SetCreatedAt(record.NewRecordTimestamp())
 
-	// sql := r.CreateOneSQL()
-	// fmt.Printf("**** CreateOne Table >%s< SQL >%s< Args >%#v<\n", r.TableName(), r.CreateOneSQL(), RecPtr(rec).ToNamedArgs())
 	rows, err := r.tx.Query(context.Background(), r.CreateOneSQL(), RecPtr(rec).ToNamedArgs())
 	if err != nil {
 		return nil, err
@@ -161,8 +157,6 @@ func (r *Generic[Rec, RecPtr]) UpdateOne(rec *Rec) (*Rec, error) {
 	origUpdatedAt := RecPtr(rec).GetUpdatedAt()
 	RecPtr(rec).SetUpdatedAt(record.NewRecordNullTimestamp())
 
-	// sql := r.UpdateOneSQL()
-	// fmt.Printf("**** UpdateOne Table >%s< SQL >%s< Args >%#v<\n", r.TableName(), sql, RecPtr(rec).ToNamedArgs())
 	rows, err := r.tx.Query(context.Background(), r.UpdateOneSQL(), RecPtr(rec).ToNamedArgs())
 	if err != nil {
 		RecPtr(rec).SetUpdatedAt(origUpdatedAt)

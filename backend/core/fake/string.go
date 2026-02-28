@@ -17,11 +17,11 @@ func UniqueProjectAbbreviationStr() string {
 }
 
 func UniqueSpherePayerCodeStr() string {
-	return strings.Replace(record.NewRecordID(), "-", "", -1)
+	return strings.ReplaceAll(record.NewRecordID(), "-", "")
 }
 
 func UniqueSphereProcessorCodeStr() string {
-	return strings.Replace(record.NewRecordID(), "-", "", -1)
+	return strings.ReplaceAll(record.NewRecordID(), "-", "")
 }
 
 func UniqueDomainNameStr() string {

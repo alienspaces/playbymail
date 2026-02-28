@@ -42,7 +42,7 @@ func Decode(claims jwt.Claims, tokenString string, publicKey crypto.PublicKey) e
 func GetJWT(authorizationHeader string) (string, error) {
 	split := strings.Split(authorizationHeader, " ")
 	if len(split) != 2 || split[0] != "Bearer" || split[1] == "" {
-		return "", fmt.Errorf("Authorization header is invalid >%s<", authorizationHeader)
+		return "", fmt.Errorf("authorization header is invalid >%s<", authorizationHeader)
 	}
 
 	return split[1], nil

@@ -127,7 +127,7 @@ func (q *Query) Query(opts *coresql.Options) (pgx.Rows, error) {
 
 func (q *Query) resolveOpts(opts *coresql.Options) (*coresql.Options, error) {
 	if opts == nil {
-		return opts, nil
+		return nil, nil
 	}
 
 	for i, p := range opts.Params {

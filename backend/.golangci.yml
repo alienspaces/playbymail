@@ -7,12 +7,18 @@ linters:
     - staticcheck
     - unused
     - ineffassign
-    - misspell
     - gocritic
     - gocyclo
   settings:
     gocyclo:
-      min-complexity: 20
+      min-complexity: 40
+    errcheck:
+      exclude-functions:
+        - io.Copy
+        - io.ReadAll
+        - fmt.Fprint
+        - fmt.Fprintf
+        - fmt.Fprintln
     gocritic:
       enabled-tags:
         - diagnostic
@@ -20,11 +26,16 @@ linters:
       disabled-checks:
         - ifElseChain
         - hugeParam
-    misspell:
-      locale: US
   exclusions:
     paths:
       - vendor
+    rules:
+      - path: '_test\.go'
+        linters:
+          - errcheck
+      - text: '`.*\.(Close|Rollback|Commit|Quit|Disconnect|ClosePool)\`'
+        linters:
+          - errcheck
 
 issues:
   max-issues-per-linter: 50

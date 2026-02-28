@@ -81,7 +81,7 @@ func NewSendAccountVerificationEmailWorker(l logger.Logger, cfg config.Config, s
 }
 
 func (w *SendAccountVerificationEmailWorker) Work(ctx context.Context, j *river.Job[SendAccountVerificationEmailWorkerArgs]) error {
-	l := w.JobWorker.Log.WithFunctionContext("SendAccountVerificationEmailWorker/Work")
+	l := w.Log.WithFunctionContext("SendAccountVerificationEmailWorker/Work")
 
 	l.Info("running job ID >%s< args >%#v<", strconv.FormatInt(j.ID, 10), j.Args)
 
@@ -112,7 +112,7 @@ type SendAccountVerificationEmailDoWorkResult struct {
 }
 
 func (w *SendAccountVerificationEmailWorker) DoWork(ctx context.Context, m *domain.Domain, c *river.Client[pgx.Tx], j *river.Job[SendAccountVerificationEmailWorkerArgs]) (*SendAccountVerificationEmailDoWorkResult, error) {
-	l := w.JobWorker.Log.WithFunctionContext("SendAccountVerificationEmailWorker/DoWork")
+	l := w.Log.WithFunctionContext("SendAccountVerificationEmailWorker/DoWork")
 
 	l.Info("send account verification email worker report work record ID >%s<", j.Args.AccountID)
 

@@ -62,9 +62,7 @@ func Test_uploadGameTurnSheetImageHandler(t *testing.T) {
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[game.UploadGameTurnSheetImage]
 				},
-				RequestHeaders: func(d harness.Data) map[string]string {
-					return testutil.AuthHeaderProDesigner(d)
-				},
+				RequestHeaders: testutil.AuthHeaderProDesigner,
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
 						":game_id": gameRec.ID,
@@ -98,9 +96,7 @@ func Test_uploadGameTurnSheetImageHandler(t *testing.T) {
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[game.UploadGameTurnSheetImage]
 				},
-				RequestHeaders: func(d harness.Data) map[string]string {
-					return testutil.AuthHeaderProDesigner(d)
-				},
+				RequestHeaders: testutil.AuthHeaderProDesigner,
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
 						":game_id": gameRec.ID,
@@ -139,9 +135,7 @@ func Test_uploadGameTurnSheetImageHandler(t *testing.T) {
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[game.UploadGameTurnSheetImage]
 				},
-				RequestHeaders: func(d harness.Data) map[string]string {
-					return testutil.AuthHeaderProDesigner(d)
-				},
+				RequestHeaders: testutil.AuthHeaderProDesigner,
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
 						":game_id": "00000000-0000-0000-0000-000000000000",
@@ -161,9 +155,7 @@ func Test_uploadGameTurnSheetImageHandler(t *testing.T) {
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[game.UploadGameTurnSheetImage]
 				},
-				RequestHeaders: func(d harness.Data) map[string]string {
-					return testutil.AuthHeaderProDesigner(d)
-				},
+				RequestHeaders: testutil.AuthHeaderProDesigner,
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
 						":game_id": gameRec.ID,
@@ -450,9 +442,7 @@ func Test_deleteGameTurnSheetImageHandler(t *testing.T) {
 			HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 				return rnr.GetHandlerConfig()[game.DeleteOneGameTurnSheetImage]
 			},
-			RequestHeaders: func(d harness.Data) map[string]string {
-				return testutil.AuthHeaderProDesigner(d)
-			},
+			RequestHeaders: testutil.AuthHeaderProDesigner,
 			RequestPathParams: func(d harness.Data) map[string]string {
 				// Use preconfigured join game image
 				return map[string]string{
@@ -467,9 +457,7 @@ func Test_deleteGameTurnSheetImageHandler(t *testing.T) {
 			HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 				return rnr.GetHandlerConfig()[game.DeleteOneGameTurnSheetImage]
 			},
-			RequestHeaders: func(d harness.Data) map[string]string {
-				return testutil.AuthHeaderProDesigner(d)
-			},
+			RequestHeaders: testutil.AuthHeaderProDesigner,
 			RequestPathParams: func(d harness.Data) map[string]string {
 				return map[string]string{
 					":game_id":       gameRec.ID,
@@ -512,9 +500,7 @@ func Test_previewGameTurnSheetHandler(t *testing.T) {
 			HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 				return rnr.GetHandlerConfig()[game.PreviewGameTurnSheet]
 			},
-			RequestHeaders: func(d harness.Data) map[string]string {
-				return testutil.AuthHeaderProDesigner(d)
-			},
+			RequestHeaders: testutil.AuthHeaderProDesigner,
 			RequestPathParams: func(d harness.Data) map[string]string {
 				return map[string]string{
 					":game_id": gameRec.ID,
@@ -543,9 +529,7 @@ func Test_previewGameTurnSheetHandler(t *testing.T) {
 			HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 				return rnr.GetHandlerConfig()[game.PreviewGameTurnSheet]
 			},
-			RequestHeaders: func(d harness.Data) map[string]string {
-				return testutil.AuthHeaderProDesigner(d)
-			},
+			RequestHeaders: testutil.AuthHeaderProDesigner,
 			RequestPathParams: func(d harness.Data) map[string]string {
 				return map[string]string{
 					":game_id": gameRec.ID,
@@ -574,9 +558,7 @@ func Test_previewGameTurnSheetHandler(t *testing.T) {
 			HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 				return rnr.GetHandlerConfig()[game.PreviewGameTurnSheet]
 			},
-			RequestHeaders: func(d harness.Data) map[string]string {
-				return testutil.AuthHeaderProDesigner(d)
-			},
+			RequestHeaders: testutil.AuthHeaderProDesigner,
 			RequestPathParams: func(d harness.Data) map[string]string {
 				return map[string]string{
 					":game_id": gameRec.ID,

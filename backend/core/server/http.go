@@ -148,7 +148,9 @@ func (rnr *Runner) registerRoutes(r *httprouter.Router) (*httprouter.Router, err
 
 // defaultHandler is the default HandlerFunc
 func (rnr *Runner) defaultHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
-	WriteResponse(l, w, http.StatusOK, "ok")
+	if err := WriteResponse(l, w, http.StatusOK, "ok"); err != nil {
+		l.Warn("(core) failed writing response >%v<", err)
+	}
 	return nil
 }
 
@@ -214,9 +216,9 @@ func (rnr *Runner) defaultRouter(r *httprouter.Router) (*httprouter.Router, erro
 		return nil, err
 	}
 
-	for _, hc := range rnr.HandlerConfig {
+	for key := range rnr.HandlerConfig {
 
-		hc, err := rnr.ResolveHandlerConfig(hc)
+		hc, err := rnr.ResolveHandlerConfig(rnr.HandlerConfig[key])
 		if err != nil {
 			l.Warn("(core) failed resolving handler config >%v<", err)
 			return nil, err

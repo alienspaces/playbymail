@@ -8,7 +8,6 @@ lint-backend:
   image: golangci/golangci-lint:v2.1.6-alpine
   stage: test
   interruptible: true
-  allow_failure: true
   script:
     - cd backend
     - golangci-lint run ./...

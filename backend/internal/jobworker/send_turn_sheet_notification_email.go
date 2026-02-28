@@ -75,7 +75,7 @@ func NewSendTurnSheetNotificationEmailWorker(l logger.Logger, cfg config.Config,
 }
 
 func (w *SendTurnSheetNotificationEmailWorker) Work(ctx context.Context, j *river.Job[SendTurnSheetNotificationEmailWorkerArgs]) error {
-	l := w.JobWorker.Log.WithFunctionContext("SendTurnSheetNotificationEmailWorker/Work")
+	l := w.Log.WithFunctionContext("SendTurnSheetNotificationEmailWorker/Work")
 
 	l.Info("running job ID >%s< Args >%#v<", strconv.FormatInt(j.ID, 10), j.Args)
 
@@ -106,7 +106,7 @@ type SendTurnSheetNotificationEmailDoWorkResult struct {
 }
 
 func (w *SendTurnSheetNotificationEmailWorker) DoWork(ctx context.Context, m *domain.Domain, c *river.Client[pgx.Tx], j *river.Job[SendTurnSheetNotificationEmailWorkerArgs]) (*SendTurnSheetNotificationEmailDoWorkResult, error) {
-	l := w.JobWorker.Log.WithFunctionContext("SendTurnSheetNotificationEmailWorker/DoWork")
+	l := w.Log.WithFunctionContext("SendTurnSheetNotificationEmailWorker/DoWork")
 
 	l.Info("preparing turn sheet notification email for instance ID >%s< turn >%d<", j.Args.GameSubscriptionInstanceID, j.Args.TurnNumber)
 

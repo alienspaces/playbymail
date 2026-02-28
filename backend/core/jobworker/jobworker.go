@@ -42,7 +42,7 @@ func CompleteJob[TArgs river.JobArgs](ctx context.Context, tx pgx.Tx, job *river
 	if err != nil {
 		return err
 	}
-	if err = tx.Commit(ctx); err != nil {
+	if err := tx.Commit(ctx); err != nil {
 		return err
 	}
 	return nil

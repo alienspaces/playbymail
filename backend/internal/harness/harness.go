@@ -101,10 +101,11 @@ func (t *Testing) CreateData() error {
 	}
 
 	// Second pass: Create all games (without instances yet)
-	for _, gameConfig := range t.DataConfig.GameConfigs {
+	for i := range t.DataConfig.GameConfigs {
+		gameConfig := &t.DataConfig.GameConfigs[i]
 
 		// Create game record
-		gameRec, err := t.createGameRec(gameConfig)
+		gameRec, err := t.createGameRec(*gameConfig)
 		if err != nil {
 			l.Warn("failed creating game record >%v<", err)
 			return err
@@ -115,7 +116,7 @@ func (t *Testing) CreateData() error {
 		// Adventure game specific records for this game
 		// ------------------------------------------------------------
 
-		err = t.createAdventureGameRecords(gameConfig, gameRec)
+		err = t.createAdventureGameRecords(*gameConfig, gameRec)
 		if err != nil {
 			l.Warn("failed creating adventure game records >%v<", err)
 			return err
@@ -146,7 +147,8 @@ func (t *Testing) CreateData() error {
 	}
 
 	// Fourth pass: Create all game instances (now that designer subscriptions exist)
-	for _, gameConfig := range t.DataConfig.GameConfigs {
+	for i := range t.DataConfig.GameConfigs {
+		gameConfig := &t.DataConfig.GameConfigs[i]
 		gameRec, err := t.Data.GetGameRecByRef(gameConfig.Reference)
 		if err != nil {
 			l.Warn("failed getting game record for reference >%s<: %v", gameConfig.Reference, err)
@@ -154,8 +156,9 @@ func (t *Testing) CreateData() error {
 		}
 
 		// Create game instance records for this game
-		for _, gameInstanceConfig := range gameConfig.GameInstanceConfigs {
-			gameInstanceRec, err := t.createGameInstanceRec(gameInstanceConfig, gameRec)
+		for j := range gameConfig.GameInstanceConfigs {
+			gameInstanceConfig := &gameConfig.GameInstanceConfigs[j]
+			gameInstanceRec, err := t.createGameInstanceRec(*gameInstanceConfig, gameRec)
 			if err != nil {
 				l.Warn("failed creating game_instance record >%v<", err)
 				return err
@@ -176,7 +179,7 @@ func (t *Testing) CreateData() error {
 			// Adventure game specific instance records
 			// ------------------------------------------------------------
 
-			err = t.createAdventureGameInstanceRecords(gameConfig, gameInstanceConfig, gameInstanceRec)
+			err = t.createAdventureGameInstanceRecords(*gameConfig, *gameInstanceConfig, gameInstanceRec)
 			if err != nil {
 				l.Warn("failed creating adventure game instance records >%v<", err)
 				return err

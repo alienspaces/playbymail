@@ -55,9 +55,7 @@ func Test_getAdventureGameLocationInstancesHandler(t *testing.T) {
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[adventure_game.GetManyAdventureGameLocationInstances]
 				},
-				RequestHeaders: func(d harness.Data) map[string]string {
-					return testutil.AuthHeaderProManager(d)
-				},
+			RequestHeaders: testutil.AuthHeaderProManager,
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
 						":game_instance_id": gameInstanceRec.ID,
@@ -81,9 +79,7 @@ func Test_getAdventureGameLocationInstancesHandler(t *testing.T) {
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[adventure_game.GetOneAdventureGameLocationInstance]
 				},
-				RequestHeaders: func(d harness.Data) map[string]string {
-					return testutil.AuthHeaderProManager(d)
-				},
+			RequestHeaders: testutil.AuthHeaderProManager,
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
 						":game_instance_id":     gameInstanceRec.ID,

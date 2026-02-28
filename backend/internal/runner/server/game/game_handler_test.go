@@ -53,9 +53,7 @@ func Test_getGameHandler(t *testing.T) {
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[game.GetManyGames]
 				},
-				RequestHeaders: func(d harness.Data) map[string]string {
-					return testutil.AuthHeaderStandard(d)
-				},
+				RequestHeaders: testutil.AuthHeaderStandard,
 				RequestQueryParams: func(d harness.Data) map[string]any {
 					return map[string]any{
 						"id":          gameRec.ID,
@@ -75,9 +73,7 @@ func Test_getGameHandler(t *testing.T) {
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[game.GetOneGame]
 				},
-				RequestHeaders: func(d harness.Data) map[string]string {
-					return testutil.AuthHeaderStandard(d)
-				},
+				RequestHeaders: testutil.AuthHeaderStandard,
 				RequestPathParams: func(d harness.Data) map[string]string {
 					gameRec, err := d.GetGameRecByRef(harness.GameOneRef)
 					require.NoError(t, err, "GetGameRecByRef returns without error")
@@ -164,9 +160,7 @@ func Test_createUpdateDeleteGameHandler(t *testing.T) {
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[game.CreateOneGame]
 				},
-				RequestHeaders: func(d harness.Data) map[string]string {
-					return testutil.AuthHeaderProDesigner(d)
-				},
+				RequestHeaders: testutil.AuthHeaderProDesigner,
 				RequestBody: func(d harness.Data) any {
 					return game_schema.GameRequest{
 						Name:              "Test Game",
@@ -195,9 +189,7 @@ func Test_createUpdateDeleteGameHandler(t *testing.T) {
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[game.UpdateOneGame]
 				},
-				RequestHeaders: func(d harness.Data) map[string]string {
-					return testutil.AuthHeaderProDesigner(d)
-				},
+				RequestHeaders: testutil.AuthHeaderProDesigner,
 				RequestPathParams: func(d harness.Data) map[string]string {
 					gameRec, err := d.GetGameRecByRef(harness.GameOneRef)
 					require.NoError(t, err, "GetGameRecByRef returns without error")
@@ -236,9 +228,7 @@ func Test_createUpdateDeleteGameHandler(t *testing.T) {
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[game.DeleteOneGame]
 				},
-				RequestHeaders: func(d harness.Data) map[string]string {
-					return testutil.AuthHeaderProDesigner(d)
-				},
+				RequestHeaders: testutil.AuthHeaderProDesigner,
 				RequestPathParams: func(d harness.Data) map[string]string {
 					gameRec, err := d.GetGameRecByRef(harness.GameOneRef)
 					require.NoError(t, err, "GetGameRecByRef returns without error")

@@ -50,8 +50,7 @@ func NewBaseProcessor(l logger.Logger, cfg config.Config) (*BaseProcessor, error
 		return nil, fmt.Errorf("failed to create PDF generator: %w", err)
 	}
 
-	templatePath := "./backend/templates"
-	templatePath = cfg.TemplatesPath
+	templatePath := cfg.TemplatesPath
 
 	return &BaseProcessor{
 		Scanner:      scannerInstance,

@@ -119,9 +119,3 @@ func resizeImage(src image.Image, width, height int) image.Image {
 	return dst
 }
 
-func max(a, b int) int {
-	if a > b {
-		return a
-	}
-	return b
-}

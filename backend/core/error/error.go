@@ -119,9 +119,9 @@ func ProcessParamError(err error) error {
 	errStr.WriteString("Invalid parameter(s): ")
 	for i, sve := range e.SchemaValidationErrors {
 		if sve.GetField() == "$" {
-			errStr.WriteString(fmt.Sprintf("(%d) %s; ", i+1, sve.Message))
+			fmt.Fprintf(&errStr, "(%d) %s; ", i+1, sve.Message)
 		} else {
-			errStr.WriteString(fmt.Sprintf("(%d) %s: %s; ", i+1, sve.GetField(), sve.Message))
+			fmt.Fprintf(&errStr, "(%d) %s: %s; ", i+1, sve.GetField(), sve.Message)
 		}
 	}
 

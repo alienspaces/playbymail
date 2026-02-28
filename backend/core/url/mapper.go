@@ -7,7 +7,7 @@ import (
 
 var reInitialNonWord = regexp.MustCompile(`^\W+`)
 var reTrailingNonWord = regexp.MustCompile(`\W+$`)
-var reQuotes = regexp.MustCompile(`[\'\"\\']`)
+var reQuotes = regexp.MustCompile(`["']`)
 var reNonWord = regexp.MustCompile(`\W+`)
 
 func Slugify(s string) string {

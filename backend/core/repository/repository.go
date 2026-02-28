@@ -160,21 +160,16 @@ func (r *Repository) RemoveOne(id any) error {
 // GetRows returns the rows result from the provided SQL and options
 func (r *Repository) GetRows(sql string, opts *coresql.Options) (rows pgx.Rows, err error) {
 
-	// fmt.Printf("**** GetRows Pre-Resolve Params >%v< Attrs >%v<\n", opts.Params, r.attributeIndex)
 	opts, err = r.resolveOptions(opts)
 	if err != nil {
 		return nil, fmt.Errorf("failed to resolve opts: sql >%s< opts >%#v< >%v<", sql, opts, err)
 	}
-	// fmt.Printf("**** GetRows Post-Resolve Params >%v<\n", opts.Params)
 
 	sql, args, err := coresql.From(sql, opts)
 	if err != nil {
 		return nil, err
 	}
 
-	// fmt.Printf("**** GetRows SQL >%q< Args >%v<\n", sql, args)
-
-	// start := time.Now()
 	rows, err = r.tx.Query(context.Background(), sql, args)
 	if err != nil {
 		return nil, err
@@ -223,7 +218,7 @@ func insertValuePlaceholders(attributes []string) string {
 	var strBuilder strings.Builder
 
 	for i, attr := range attributes {
-		strBuilder.WriteString(fmt.Sprintf("@%s", attr))
+		fmt.Fprintf(&strBuilder, "@%s", attr)
 		if i != len(attributes)-1 {
 			strBuilder.WriteString(",\n")
 		}
@@ -253,7 +248,7 @@ func setAttributeAndValuePlaceholders(attributes []string) string {
 	for i, attr := range attributes {
 		strBuilder.WriteString(attr)
 		strBuilder.WriteString(" = ")
-		strBuilder.WriteString(fmt.Sprintf("@%s", attr))
+		fmt.Fprintf(&strBuilder, "@%s", attr)
 
 		if i != len(attributes)-1 {
 			strBuilder.WriteString(",\n")
@@ -406,7 +401,7 @@ func (r *Repository) withRLS(sql string) string {
 
 func (r *Repository) resolveOptions(opts *coresql.Options) (*coresql.Options, error) {
 	if opts == nil {
-		return opts, nil
+		return nil, nil
 	}
 
 	params := []coresql.Param{}

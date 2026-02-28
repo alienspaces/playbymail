@@ -423,27 +423,27 @@ func (m *Domain) GenerateClosedTestingJoinGameKey(gameInstanceID string) (string
 }
 
 // GetGameInstanceByClosedTestingJoinGameKey looks up a game instance by join game key
-func (m *Domain) GetGameInstanceByClosedTestingJoinGameKey(ClosedTestingJoinGameKey string) (*game_record.GameInstance, error) {
+func (m *Domain) GetGameInstanceByClosedTestingJoinGameKey(closedTestingJoinGameKey string) (*game_record.GameInstance, error) {
 	l := m.Logger("GetGameInstanceByClosedTestingJoinGameKey")
 
-	if ClosedTestingJoinGameKey == "" {
+	if closedTestingJoinGameKey == "" {
 		return nil, coreerror.NewInvalidDataError("join_game_key is required")
 	}
 
 	// Get game instance by join_game_key
 	instances, err := m.GetManyGameInstanceRecs(&coresql.Options{
 		Params: []coresql.Param{
-			{Col: game_record.FieldGameInstanceClosedTestingJoinGameKey, Val: ClosedTestingJoinGameKey},
+			{Col: game_record.FieldGameInstanceClosedTestingJoinGameKey, Val: closedTestingJoinGameKey},
 		},
 		Limit: 1,
 	})
 	if err != nil {
-		l.Warn("failed to get game instance by join game key >%s< >%v<", ClosedTestingJoinGameKey, err)
+		l.Warn("failed to get game instance by join game key >%s< >%v<", closedTestingJoinGameKey, err)
 		return nil, err
 	}
 
 	if len(instances) == 0 {
-		return nil, coreerror.NewNotFoundError(game_record.TableGameInstance, ClosedTestingJoinGameKey)
+		return nil, coreerror.NewNotFoundError(game_record.TableGameInstance, closedTestingJoinGameKey)
 	}
 
 	instance := instances[0]

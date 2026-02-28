@@ -539,7 +539,7 @@ func previewLocationChoiceTurnSheetHandler(w http.ResponseWriter, r *http.Reques
 
 	// Set Content-Disposition to inline for preview (not download)
 	filename := fmt.Sprintf("preview-location-choice-%s.pdf", locationRec.Name)
-	w.Header().Set("Content-Disposition", fmt.Sprintf("inline; filename=\"%s\"", filename))
+	w.Header().Set("Content-Disposition", fmt.Sprintf("inline; filename=\"%s\"", filename)) //nolint:gocritic // HTTP Content-Disposition requires specific quote format
 
 	// Return PDF response
 	l.Info("responding with location choice turn sheet preview PDF for location >%s< size >%d< bytes", locationID, len(pdfData))

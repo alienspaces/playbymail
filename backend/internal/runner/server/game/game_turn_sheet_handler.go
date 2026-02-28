@@ -502,7 +502,7 @@ func downloadJoinGameTurnSheetsHandler(w http.ResponseWriter, r *http.Request, p
 
 	// Set filename in Content-Disposition header
 	filename := fmt.Sprintf("join-game-turn-sheet-%s.pdf", gameRec.Name)
-	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filename))
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filename)) //nolint:gocritic // HTTP Content-Disposition requires specific quote format
 
 	// Return PDF response
 	l.Info("responding with join game turn sheet PDF for game >%s< size >%d<", gameRec.ID, len(pdfData))

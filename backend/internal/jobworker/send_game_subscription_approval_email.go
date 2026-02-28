@@ -79,7 +79,7 @@ func NewSendGameSubscriptionApprovalEmailWorker(l logger.Logger, cfg config.Conf
 }
 
 func (w *SendGameSubscriptionApprovalEmailWorker) Work(ctx context.Context, j *river.Job[SendGameSubscriptionApprovalEmailWorkerArgs]) error {
-	l := w.JobWorker.Log.WithFunctionContext("SendGameSubscriptionApprovalEmailWorker/Work")
+	l := w.Log.WithFunctionContext("SendGameSubscriptionApprovalEmailWorker/Work")
 
 	l.Info("running job ID >%s< Args >%#v<", strconv.FormatInt(j.ID, 10), j.Args)
 
@@ -110,7 +110,7 @@ type SendGameSubscriptionApprovalEmailDoWorkResult struct {
 }
 
 func (w *SendGameSubscriptionApprovalEmailWorker) DoWork(ctx context.Context, m *domain.Domain, c *river.Client[pgx.Tx], j *river.Job[SendGameSubscriptionApprovalEmailWorkerArgs]) (*SendGameSubscriptionApprovalEmailDoWorkResult, error) {
-	l := w.JobWorker.Log.WithFunctionContext("SendGameSubscriptionApprovalEmailWorker/DoWork")
+	l := w.Log.WithFunctionContext("SendGameSubscriptionApprovalEmailWorker/DoWork")
 
 	l.Info("preparing approval email for game subscription ID >%s<", j.Args.GameSubscriptionID)
 

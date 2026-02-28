@@ -359,6 +359,10 @@ func (m *Domain) GetGameSubscriptionInstanceRecFromCodeData(turnSheetCodeData *t
 			},
 		},
 	})
+	if err != nil {
+		l.Warn("failed to get game subscription instance records >%v<", err)
+		return nil, err
+	}
 
 	if len(recs) == 0 {
 		return nil, coreerror.NewInvalidDataError("game subscription instance not found for account ID >%s< and game instance ID >%s<", turnSheetRec.AccountID, nullstring.ToString(turnSheetRec.GameInstanceID))

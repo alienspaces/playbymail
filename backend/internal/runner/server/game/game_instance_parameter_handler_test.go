@@ -47,9 +47,7 @@ func Test_getManyGameInstanceParametersHandler(t *testing.T) {
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[game.GetManyGameInstanceParameters]
 				},
-				RequestHeaders: func(d harness.Data) map[string]string {
-					return testutil.AuthHeaderProManager(d)
-				},
+				RequestHeaders: testutil.AuthHeaderProManager,
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
 						":game_id":     gameRec.ID,
@@ -76,9 +74,7 @@ func Test_getManyGameInstanceParametersHandler(t *testing.T) {
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[game.GetManyGameInstanceParameters]
 				},
-				RequestHeaders: func(d harness.Data) map[string]string {
-					return testutil.AuthHeaderProManager(d)
-				},
+				RequestHeaders: testutil.AuthHeaderProManager,
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
 						":game_id":     gameRec.ID,
@@ -167,9 +163,7 @@ func Test_getOneGameInstanceParameterHandler(t *testing.T) {
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[game.GetOneGameInstanceParameter]
 				},
-				RequestHeaders: func(d harness.Data) map[string]string {
-					return testutil.AuthHeaderProManager(d)
-				},
+				RequestHeaders: testutil.AuthHeaderProManager,
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
 						":game_id":      gameRec.ID,
@@ -246,9 +240,7 @@ func Test_createUpdateDeleteGameInstanceParameterHandler(t *testing.T) {
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[game.CreateOneGameInstanceParameter]
 				},
-				RequestHeaders: func(d harness.Data) map[string]string {
-					return testutil.AuthHeaderProManager(d)
-				},
+				RequestHeaders: testutil.AuthHeaderProManager,
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
 						":game_id":     gameRec.ID,
@@ -279,9 +271,7 @@ func Test_createUpdateDeleteGameInstanceParameterHandler(t *testing.T) {
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[game.CreateOneGameInstanceParameter]
 				},
-				RequestHeaders: func(d harness.Data) map[string]string {
-					return testutil.AuthHeaderProManager(d)
-				},
+				RequestHeaders: testutil.AuthHeaderProManager,
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
 						":game_id":     gameRec.ID,
@@ -312,9 +302,7 @@ func Test_createUpdateDeleteGameInstanceParameterHandler(t *testing.T) {
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[game.CreateOneGameInstanceParameter]
 				},
-				RequestHeaders: func(d harness.Data) map[string]string {
-					return testutil.AuthHeaderProManager(d)
-				},
+				RequestHeaders: testutil.AuthHeaderProManager,
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
 						":game_id":     gameRec.ID,
@@ -400,9 +388,7 @@ func Test_updateGameInstanceParameterHandler(t *testing.T) {
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[game.UpdateOneGameInstanceParameter]
 				},
-				RequestHeaders: func(d harness.Data) map[string]string {
-					return testutil.AuthHeaderProManager(d)
-				},
+				RequestHeaders: testutil.AuthHeaderProManager,
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
 						":game_id":      gameRec.ID,
@@ -488,9 +474,7 @@ func Test_deleteGameInstanceParameterHandler(t *testing.T) {
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[game.DeleteOneGameInstanceParameter]
 				},
-				RequestHeaders: func(d harness.Data) map[string]string {
-					return testutil.AuthHeaderProManager(d)
-				},
+				RequestHeaders: testutil.AuthHeaderProManager,
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
 						":game_id":      gameRec.ID,
@@ -542,9 +526,7 @@ func Test_gameInstanceParameterHandlerValidation(t *testing.T) {
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[game.CreateOneGameInstanceParameter]
 				},
-				RequestHeaders: func(d harness.Data) map[string]string {
-					return testutil.AuthHeaderProManager(d)
-				},
+				RequestHeaders: testutil.AuthHeaderProManager,
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
 						":game_id":     gameRec.ID,
@@ -572,9 +554,7 @@ func Test_gameInstanceParameterHandlerValidation(t *testing.T) {
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[game.CreateOneGameInstanceParameter]
 				},
-				RequestHeaders: func(d harness.Data) map[string]string {
-					return testutil.AuthHeaderProManager(d)
-				},
+				RequestHeaders: testutil.AuthHeaderProManager,
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
 						":game_id":     gameRec.ID,
@@ -602,9 +582,7 @@ func Test_gameInstanceParameterHandlerValidation(t *testing.T) {
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[game.CreateOneGameInstanceParameter]
 				},
-				RequestHeaders: func(d harness.Data) map[string]string {
-					return testutil.AuthHeaderProManager(d)
-				},
+				RequestHeaders: testutil.AuthHeaderProManager,
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
 						":game_id":     gameRec.ID,

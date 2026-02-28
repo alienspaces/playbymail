@@ -256,8 +256,8 @@ func From(initialSQL string, opts *Options) (string, pgx.NamedArgs, error) {
 		sql += fmt.Sprintf("OFFSET %d\n", opts.Offset)
 	}
 
-	if opts.Lock != nil && opts.Lock.Strength != "" {
-		sql += fmt.Sprintf("FOR %s %s\n", opts.Lock.Strength, opts.Lock.Option)
+	if opts.Lock != nil && opts.Strength != "" {
+		sql += fmt.Sprintf("FOR %s %s\n", opts.Strength, opts.Option)
 	}
 
 	return sql, queryArgs, nil

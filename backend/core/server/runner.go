@@ -489,8 +489,8 @@ func (rnr *Runner) resolveHandlerSchemaLocation(hc HandlerConfig) (HandlerConfig
 			rnr.Log.Warn(err.Error())
 			return hc, err
 		}
-		for i, header := range hc.DocumentationConfig.RequestHeaders {
-			hc.DocumentationConfig.RequestHeaders[i].Schema = jsonschema.ResolveSchemaLocation(schemaPath, header.Schema)
+		for i := range hc.DocumentationConfig.RequestHeaders {
+			hc.DocumentationConfig.RequestHeaders[i].Schema = jsonschema.ResolveSchemaLocation(schemaPath, hc.DocumentationConfig.RequestHeaders[i].Schema)
 		}
 	}
 
@@ -498,9 +498,9 @@ func (rnr *Runner) resolveHandlerSchemaLocation(hc HandlerConfig) (HandlerConfig
 }
 
 func validateAuthenticationTypes(handlerConfig map[string]HandlerConfig) error {
-	for _, cfg := range handlerConfig {
-		if len(cfg.MiddlewareConfig.AuthenTypes) == 0 {
-			return fmt.Errorf("handler method >%s< path >%s< with undefined authentication type", cfg.Method, cfg.Path)
+	for key := range handlerConfig {
+		if len(handlerConfig[key].MiddlewareConfig.AuthenTypes) == 0 {
+			return fmt.Errorf("handler method >%s< path >%s< with undefined authentication type", handlerConfig[key].Method, handlerConfig[key].Path)
 		}
 	}
 	return nil
