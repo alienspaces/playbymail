@@ -150,8 +150,12 @@ test-e2e:
     - cd frontend && npm ci && cd ..
   script:
     - export PATH="/usr/local/go/bin:${HOME}/go/bin:$PATH"
-    - (cd backend && ./playbymail-server) &
-    - (cd frontend && npm run dev) &
+    - cd backend && ./playbymail-server &
+    - BACKEND_PID=$!
+    - cd ..
+    - cd frontend && npm run dev &
+    - FRONTEND_PID=$!
+    - cd ..
     - npx wait-on http://localhost:8080/healthz http://localhost:3000 --timeout 60000
     - ./tools/test-e2e
   artifacts:
