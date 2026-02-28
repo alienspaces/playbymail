@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	coreerror "gitlab.com/alienspaces/playbymail/core/error"
+	"gitlab.com/alienspaces/playbymail/core/record"
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/harness"
 	"gitlab.com/alienspaces/playbymail/internal/record/account_record"
@@ -43,23 +44,26 @@ func TestCreateAccountUserRec_Validation(t *testing.T) {
 		{
 			name: "succeeds with valid email and active status",
 			rec: &account_record.AccountUser{
-				Email:  harness.UniqueEmail("valid@example.com"),
-				Status: account_record.AccountUserStatusActive,
+				AccountID: record.NewRecordID(),
+				Email:     harness.UniqueEmail("valid@example.com"),
+				Status:    account_record.AccountUserStatusActive,
 			},
 			expectError: false,
 		},
 		{
 			name: "succeeds with valid email and defaults to active status",
 			rec: &account_record.AccountUser{
-				Email: harness.UniqueEmail("default-status@example.com"),
+				AccountID: record.NewRecordID(),
+				Email:     harness.UniqueEmail("default-status@example.com"),
 			},
 			expectError: false,
 		},
 		{
 			name: "succeeds with pending_approval status",
 			rec: &account_record.AccountUser{
-				Email:  harness.UniqueEmail("pending@example.com"),
-				Status: account_record.AccountUserStatusPendingApproval,
+				AccountID: record.NewRecordID(),
+				Email:     harness.UniqueEmail("pending@example.com"),
+				Status:    account_record.AccountUserStatusPendingApproval,
 			},
 			expectError: false,
 		},
@@ -72,8 +76,9 @@ func TestCreateAccountUserRec_Validation(t *testing.T) {
 		{
 			name: "fails when email is empty",
 			rec: &account_record.AccountUser{
-				Email:  "",
-				Status: account_record.AccountUserStatusActive,
+				AccountID: record.NewRecordID(),
+				Email:     "",
+				Status:    account_record.AccountUserStatusActive,
 			},
 			expectError: true,
 			errorCode:   coreerror.ErrorCodeInvalidData,
@@ -81,8 +86,9 @@ func TestCreateAccountUserRec_Validation(t *testing.T) {
 		{
 			name: "fails with invalid status",
 			rec: &account_record.AccountUser{
-				Email:  harness.UniqueEmail("badstatus@example.com"),
-				Status: "nonexistent_status",
+				AccountID: record.NewRecordID(),
+				Email:     harness.UniqueEmail("badstatus@example.com"),
+				Status:    "nonexistent_status",
 			},
 			expectError: true,
 			errorCode:   coreerror.ErrorCodeInvalidData,
