@@ -156,6 +156,9 @@ test-e2e:
     - cd frontend && npm run dev &
     - FRONTEND_PID=$!
     - cd ..
+    - sleep 5
+    - echo "Testing backend health endpoint..."
+    - curl -v http://localhost:8080/healthz || echo "Health check failed"
     - npx wait-on http://localhost:8080/healthz http://localhost:3000 --timeout 60000
     - ./tools/test-e2e
   artifacts:
