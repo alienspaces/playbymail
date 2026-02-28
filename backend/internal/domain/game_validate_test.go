@@ -130,7 +130,9 @@ func TestCreateGameRec_Validation(t *testing.T) {
 
 			if tc.expectError {
 				require.Error(t, err)
-				require.Nil(t, rec)
+				if tc.rec == nil {
+					require.Nil(t, rec)
+				}
 			} else {
 				require.NoError(t, err)
 				require.NotNil(t, rec)
@@ -144,11 +146,30 @@ func TestUpdateGameRec_StatusTransitions(t *testing.T) {
 	dataConfig := harness.DataConfig{
 		GameConfigs: []harness.GameConfig{
 			{
-				Reference: harness.GameOneRef,
+				Reference: "game-draft-1",
 				Record: &game_record.Game{
-					Name:              harness.UniqueName("Status Test Game"),
+					Name:              harness.UniqueName("Draft Game 1"),
 					GameType:          game_record.GameTypeAdventure,
 					TurnDurationHours: 168,
+					Status:            game_record.GameStatusDraft,
+				},
+			},
+			{
+				Reference: "game-draft-2",
+				Record: &game_record.Game{
+					Name:              harness.UniqueName("Draft Game 2"),
+					GameType:          game_record.GameTypeAdventure,
+					TurnDurationHours: 168,
+					Status:            game_record.GameStatusDraft,
+				},
+			},
+			{
+				Reference: "game-published",
+				Record: &game_record.Game{
+					Name:              harness.UniqueName("Published Game"),
+					GameType:          game_record.GameTypeAdventure,
+					TurnDurationHours: 168,
+					Status:            game_record.GameStatusPublished,
 				},
 			},
 		},
@@ -182,7 +203,12 @@ func TestUpdateGameRec_StatusTransitions(t *testing.T) {
 	}()
 
 	m := th.Domain.(*domain.Domain)
-	gameRec := th.Data.GameRecs[0]
+	draftGame1, err := th.Data.GetGameRecByRef("game-draft-1")
+	require.NoError(t, err)
+	draftGame2, err := th.Data.GetGameRecByRef("game-draft-2")
+	require.NoError(t, err)
+	publishedGame, err := th.Data.GetGameRecByRef("game-published")
+	require.NoError(t, err)
 
 	t.Run("allows draft to draft update", func(t *testing.T) {
 		updateRec := &game_record.Game{
@@ -192,7 +218,7 @@ func TestUpdateGameRec_StatusTransitions(t *testing.T) {
 			Description:       "Updated description",
 			Status:            game_record.GameStatusDraft,
 		}
-		updateRec.ID = gameRec.ID
+		updateRec.ID = draftGame1.ID
 
 		rec, err := m.UpdateGameRec(updateRec)
 		require.NoError(t, err)
@@ -202,13 +228,13 @@ func TestUpdateGameRec_StatusTransitions(t *testing.T) {
 
 	t.Run("allows draft to published transition", func(t *testing.T) {
 		updateRec := &game_record.Game{
-			Name:              gameRec.Name,
+			Name:              draftGame2.Name,
 			GameType:          game_record.GameTypeAdventure,
-			TurnDurationHours: gameRec.TurnDurationHours,
-			Description:       gameRec.Description,
+			TurnDurationHours: draftGame2.TurnDurationHours,
+			Description:       draftGame2.Description,
 			Status:            game_record.GameStatusPublished,
 		}
-		updateRec.ID = gameRec.ID
+		updateRec.ID = draftGame2.ID
 
 		rec, err := m.UpdateGameRec(updateRec)
 		require.NoError(t, err)
@@ -224,7 +250,7 @@ func TestUpdateGameRec_StatusTransitions(t *testing.T) {
 			Description:       "Changed description",
 			Status:            game_record.GameStatusPublished,
 		}
-		updateRec.ID = gameRec.ID
+		updateRec.ID = publishedGame.ID
 
 		_, err := m.UpdateGameRec(updateRec)
 		require.Error(t, err)

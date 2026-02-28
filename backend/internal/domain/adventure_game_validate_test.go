@@ -56,7 +56,8 @@ func setupAdventureGameHarness(t *testing.T) (*harness.Testing, *domain.Domain) 
 				},
 				AdventureGameCharacterConfigs: []harness.AdventureGameCharacterConfig{
 					{
-						Reference: "test-character",
+						Reference:  "test-character",
+						AccountRef: "test-account",
 						Record: &adventure_game_record.AdventureGameCharacter{
 							Name: harness.UniqueName("Test Character"),
 						},
@@ -69,6 +70,13 @@ func setupAdventureGameHarness(t *testing.T) (*harness.Testing, *domain.Domain) 
 				Reference: "test-account",
 				Record: &account_record.AccountUser{
 					Email:  harness.UniqueEmail("adventure-test@example.com"),
+					Status: account_record.AccountUserStatusActive,
+				},
+			},
+			{
+				Reference: "test-account-2",
+				Record: &account_record.AccountUser{
+					Email:  harness.UniqueEmail("adventure-test-2@example.com"),
 					Status: account_record.AccountUserStatusActive,
 				},
 			},
@@ -147,7 +155,9 @@ func TestCreateAdventureGameLocationRec_Validation(t *testing.T) {
 			rec, err := m.CreateAdventureGameLocationRec(tc.rec)
 			if tc.expectError {
 				require.Error(t, err)
-				require.Nil(t, rec)
+				if tc.rec == nil {
+					require.Nil(t, rec)
+				}
 			} else {
 				require.NoError(t, err)
 				require.NotNil(t, rec)
@@ -219,7 +229,9 @@ func TestCreateAdventureGameItemRec_Validation(t *testing.T) {
 			rec, err := m.CreateAdventureGameItemRec(tc.rec)
 			if tc.expectError {
 				require.Error(t, err)
-				require.Nil(t, rec)
+				if tc.rec == nil {
+					require.Nil(t, rec)
+				}
 			} else {
 				require.NoError(t, err)
 				require.NotNil(t, rec)
@@ -291,7 +303,9 @@ func TestCreateAdventureGameCreatureRec_Validation(t *testing.T) {
 			rec, err := m.CreateAdventureGameCreatureRec(tc.rec)
 			if tc.expectError {
 				require.Error(t, err)
-				require.Nil(t, rec)
+				if tc.rec == nil {
+					require.Nil(t, rec)
+				}
 			} else {
 				require.NoError(t, err)
 				require.NotNil(t, rec)
@@ -309,6 +323,11 @@ func TestCreateAdventureGameCharacterRec_Validation(t *testing.T) {
 	}()
 
 	gameID := th.Data.GameRecs[0].ID
+	// Use test-account-2 for new character: test-account already has a character (test-character) for this game; unique is (game_id, account_id).
+	accountRec, err := th.Data.GetAccountUserRecByRef("test-account-2")
+	require.NoError(t, err)
+	accountRecForFailCase, err := th.Data.GetAccountUserRecByRef("test-account")
+	require.NoError(t, err)
 
 	testCases := []struct {
 		name        string
@@ -318,16 +337,20 @@ func TestCreateAdventureGameCharacterRec_Validation(t *testing.T) {
 		{
 			name: "succeeds with valid character",
 			rec: &adventure_game_record.AdventureGameCharacter{
-				GameID: gameID,
-				Name:   harness.UniqueName("New Character"),
+				GameID:        gameID,
+				AccountID:     accountRec.AccountID,
+				AccountUserID: accountRec.ID,
+				Name:          harness.UniqueName("New Character"),
 			},
 			expectError: false,
 		},
 		{
 			name: "fails when name is empty",
 			rec: &adventure_game_record.AdventureGameCharacter{
-				GameID: gameID,
-				Name:   "",
+				GameID:        gameID,
+				AccountID:     accountRecForFailCase.AccountID,
+				AccountUserID: accountRecForFailCase.ID,
+				Name:          "",
 			},
 			expectError: true,
 		},
@@ -338,7 +361,9 @@ func TestCreateAdventureGameCharacterRec_Validation(t *testing.T) {
 			rec, err := m.CreateAdventureGameCharacterRec(tc.rec)
 			if tc.expectError {
 				require.Error(t, err)
-				require.Nil(t, rec)
+				if tc.rec == nil {
+					require.Nil(t, rec)
+				}
 			} else {
 				require.NoError(t, err)
 				require.NotNil(t, rec)

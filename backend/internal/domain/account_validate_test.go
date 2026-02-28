@@ -93,7 +93,8 @@ func TestCreateAccountUserRec_Validation(t *testing.T) {
 		var coreErr coreerror.Error
 		require.ErrorAs(t, err, &coreErr)
 		require.Equal(t, coreerror.ErrorCodeInvalidData, coreErr.ErrorCode)
-		require.Nil(t, result)
+		require.NotNil(t, result)
+		require.Empty(t, result.ID)
 	})
 
 	t.Run("fails with invalid account_id", func(t *testing.T) {
@@ -104,7 +105,8 @@ func TestCreateAccountUserRec_Validation(t *testing.T) {
 		}
 		result, err := m.CreateAccountUserRec(rec)
 		require.Error(t, err)
-		require.Nil(t, result)
+		require.NotNil(t, result)
+		require.Empty(t, result.ID)
 	})
 
 	t.Run("fails with invalid status", func(t *testing.T) {
@@ -118,7 +120,8 @@ func TestCreateAccountUserRec_Validation(t *testing.T) {
 		var coreErr coreerror.Error
 		require.ErrorAs(t, err, &coreErr)
 		require.Equal(t, coreerror.ErrorCodeInvalidData, coreErr.ErrorCode)
-		require.Nil(t, result)
+		require.NotNil(t, result)
+		require.Empty(t, result.ID)
 	})
 }
 
