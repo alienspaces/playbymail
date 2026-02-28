@@ -1,14 +1,12 @@
 package handler_rls
 
 import (
-	"fmt"
 	"net/http"
 
 	"gitlab.com/alienspaces/playbymail/core/server"
 	"gitlab.com/alienspaces/playbymail/core/type/domainer"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
 	"gitlab.com/alienspaces/playbymail/core/type/repositor"
-	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 )
 
 const (
@@ -19,60 +17,67 @@ const (
 // gameRLSConstraints defines constraints that will be automatically applied
 // when repositories have matching column names. Constraints use SQL subqueries
 // to filter based on game_subscription relationships.
-var gameRLSConstraints = []repositor.RLSConstraint{
-	{
-		Column: game_record.FieldGameSubscriptionInstanceGameInstanceID,
-		SQLTemplate: fmt.Sprintf(
-			"IN (SELECT %s FROM %s gsi INNER JOIN %s gs ON gsi.%s = gs.%s WHERE gsi.%s = :account_id AND gs.%s = '%s' AND gs.%s = '%s')",
-			game_record.FieldGameSubscriptionInstanceGameInstanceID,
-			game_record.TableGameSubscriptionInstance,
-			game_record.TableGameSubscription,
-			game_record.FieldGameSubscriptionInstanceGameSubscriptionID,
-			game_record.FieldGameSubscriptionID,
-			game_record.FieldGameSubscriptionInstanceAccountID,
-			game_record.FieldGameSubscriptionSubscriptionType,
-			game_record.GameSubscriptionTypeManager,
-			game_record.FieldGameSubscriptionStatus,
-			game_record.GameSubscriptionStatusActive,
-		),
-		RequiredRLSIdentifiers: []string{"account_id"},
-	},
-	{
-		Column: game_record.FieldGameSubscriptionGameID,
-		SQLTemplate: fmt.Sprintf("IN (SELECT %s FROM %s WHERE %s = :account_id AND %s IN ('%s', '%s') AND %s = '%s')",
-			game_record.FieldGameSubscriptionGameID,
-			game_record.TableGameSubscription,
-			game_record.FieldGameSubscriptionAccountID,
-			game_record.FieldGameSubscriptionSubscriptionType,
-			game_record.GameSubscriptionTypeDesigner,
-			game_record.GameSubscriptionTypeManager,
-			game_record.FieldGameSubscriptionStatus,
-			game_record.GameSubscriptionStatusActive,
-		),
-		RequiredRLSIdentifiers: []string{"account_id"},
-	},
-	// Allow access via account_user_id or account_id for tables with an account_id column.
-	// Also allow access if the record ID corresponds to a game the user has a subscription to.
-	// We allow IS NULL to support tables (like account_subscription) where this column might be null
-	// but another column (account_user_id) provides access control.
-	{
-		Column: "account_id",
-		SQLTemplate: fmt.Sprintf("IS NULL OR account_id IN (:account_user_id, :account_id) OR id IN (SELECT %s FROM %s WHERE ((%s = :account_id AND %s IN ('%s', '%s')) OR (%s = :account_user_id AND %s = '%s')) AND %s = '%s')",
-			game_record.FieldGameSubscriptionGameID,
-			game_record.TableGameSubscription,
-			game_record.FieldGameSubscriptionAccountID,
-			game_record.FieldGameSubscriptionSubscriptionType,
-			game_record.GameSubscriptionTypeDesigner,
-			game_record.GameSubscriptionTypeManager,
-			"account_user_id", // FieldGameSubscriptionAccountUserID
-			game_record.FieldGameSubscriptionSubscriptionType,
-			game_record.GameSubscriptionTypePlayer,
-			game_record.FieldGameSubscriptionStatus,
-			game_record.GameSubscriptionStatusActive,
-		),
-		RequiredRLSIdentifiers: []string{"account_user_id", "account_id"},
-		SkipSelfMapping:        true,
-	},
+// var gameRLSConstraints = []repositor.RLSConstraint{
+// 	{
+// 		Column: game_record.FieldGameSubscriptionInstanceGameInstanceID,
+// 		SQLTemplate: fmt.Sprintf(
+// 			"IN (SELECT %s FROM %s gsi INNER JOIN %s gs ON gsi.%s = gs.%s WHERE gsi.%s = :account_id AND gs.%s = '%s' AND gs.%s = '%s')",
+// 			game_record.FieldGameSubscriptionInstanceGameInstanceID,
+// 			game_record.TableGameSubscriptionInstance,
+// 			game_record.TableGameSubscription,
+// 			game_record.FieldGameSubscriptionInstanceGameSubscriptionID,
+// 			game_record.FieldGameSubscriptionID,
+// 			game_record.FieldGameSubscriptionInstanceAccountID,
+// 			game_record.FieldGameSubscriptionSubscriptionType,
+// 			game_record.GameSubscriptionTypeManager,
+// 			game_record.FieldGameSubscriptionStatus,
+// 			game_record.GameSubscriptionStatusActive,
+// 		),
+// 		RequiredRLSIdentifiers: []string{"account_id"},
+// 	},
+// 	{
+// 		Column: game_record.FieldGameSubscriptionGameID,
+// 		SQLTemplate: fmt.Sprintf("IN (SELECT %s FROM %s WHERE %s = :account_id AND %s IN ('%s', '%s') AND %s = '%s')",
+// 			game_record.FieldGameSubscriptionGameID,
+// 			game_record.TableGameSubscription,
+// 			game_record.FieldGameSubscriptionAccountID,
+// 			game_record.FieldGameSubscriptionSubscriptionType,
+// 			game_record.GameSubscriptionTypeDesigner,
+// 			game_record.GameSubscriptionTypeManager,
+// 			game_record.FieldGameSubscriptionStatus,
+// 			game_record.GameSubscriptionStatusActive,
+// 		),
+// 		RequiredRLSIdentifiers: []string{"account_id"},
+// 	},
+// 	// Allow access via account_user_id or account_id for tables with an account_id column.
+// 	// Also allow access if the record ID corresponds to a game the user has a subscription to.
+// 	// We allow IS NULL to support tables (like account_subscription) where this column might be null
+// 	// but another column (account_user_id) provides access control.
+// 	{
+// 		Column: "account_id",
+// 		SQLTemplate: fmt.Sprintf("IS NULL OR account_id IN (:account_user_id, :account_id) OR id IN (SELECT %s FROM %s WHERE ((%s = :account_id AND %s IN ('%s', '%s')) OR (%s = :account_user_id AND %s = '%s')) AND %s = '%s')",
+// 			game_record.FieldGameSubscriptionGameID,
+// 			game_record.TableGameSubscription,
+// 			game_record.FieldGameSubscriptionAccountID,
+// 			game_record.FieldGameSubscriptionSubscriptionType,
+// 			game_record.GameSubscriptionTypeDesigner,
+// 			game_record.GameSubscriptionTypeManager,
+// 			"account_user_id", // FieldGameSubscriptionAccountUserID
+// 			game_record.FieldGameSubscriptionSubscriptionType,
+// 			game_record.GameSubscriptionTypePlayer,
+// 			game_record.FieldGameSubscriptionStatus,
+// 			game_record.GameSubscriptionStatusActive,
+// 		),
+// 		RequiredRLSIdentifiers: []string{"account_user_id", "account_id"},
+// 		SkipSelfMapping:        true,
+// 	},
+// }
+
+// accountUserIDConstraint handles nullable account_user_id columns. Without this,
+// the raw identifier IN filter excludes rows where account_user_id IS NULL (e.g.
+// manager/designer game subscriptions). The withRLS layer detects the IS NULL prefix
+// and skips the identifier filter for this column, letting the constraint handle it.
+var accountUserIDConstraint = []repositor.RLSConstraint{
 	{
 		Column:                 "account_user_id",
 		SQLTemplate:            "IS NULL OR account_user_id = :account_user_id",
@@ -99,7 +104,7 @@ func HandlerRLSFunc(l logger.Logger, m domainer.Domainer, authedReq server.Authe
 
 	return server.RLS{
 		Identifiers: identifiers,
-		Constraints: nil,
+		Constraints: accountUserIDConstraint,
 	}, nil
 }
 
