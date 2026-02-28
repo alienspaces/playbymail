@@ -13,6 +13,7 @@ type RLSConstraint struct {
 	Column                 string   // Column name that triggers this constraint (e.g., "game_instance_id", "game_id")
 	SQLTemplate            string   // SQL fragment using named args (e.g., "IN (SELECT game_instance_id FROM game_subscription WHERE account_id = :account_id AND status = 'active')")
 	RequiredRLSIdentifiers []string // Required RLS identifiers (e.g., ["account_id"]) that must be present in RLS identifiers for the constraint to be applied
+	SkipSelfMapping        bool     // When true, prevents domain from mapping this constraint to the table's own "id" column (use when SQLTemplate references Column as a literal column name)
 }
 
 // Repositor -

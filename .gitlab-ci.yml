@@ -138,7 +138,7 @@ deploy-backend:
     - git commit -m "Add frontend build artifacts" || echo "No changes to commit"
     # Build migrate and river binaries in the deploy branch only
     - go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@v4.17.1
-    - go install github.com/riverqueue/river/cmd/river@latest
+    - go install github.com/riverqueue/river/cmd/river@v0.23.1
     - mkdir -p bin
     - cp /go/bin/migrate bin/
     - cp /go/bin/river bin/

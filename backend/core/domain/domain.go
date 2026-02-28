@@ -177,22 +177,19 @@ func (m *Domain) SetRLSConstraints(constraints []repositor.RLSConstraint) {
 	// Optimize: Extract table name directly from constraint column instead of nested loop
 	// This changes complexity from O(m * n) to O(m) where m = constraints, n = repositories
 	for _, constraint := range constraints {
+		if constraint.SkipSelfMapping {
+			continue
+		}
 		// Check if constraint column matches pattern {tableName}_id
 		// Extract table name by removing "_id" suffix
 		if strings.HasSuffix(constraint.Column, "_id") {
 			tableName := strings.TrimSuffix(constraint.Column, "_id")
 			if _, exists := m.Repositories[tableName]; exists {
-				// Create a mapped constraint for the primary key column.
-			// The SQL template is kept unchanged -- it already SELECTs the
-			// correct foreign key column (e.g. game_id) from the related
-			// table. Only the Column field changes so that withRLS applies
-			// the constraint against the table's own "id" column.
-			mappedConstraint := repositor.RLSConstraint{
-				Column:                 "id",
-				SQLTemplate:            constraint.SQLTemplate,
-				RequiredRLSIdentifiers: constraint.RequiredRLSIdentifiers,
-			}
-				// Add the mapped constraint to this table's constraints
+				mappedConstraint := repositor.RLSConstraint{
+					Column:                 "id",
+					SQLTemplate:            constraint.SQLTemplate,
+					RequiredRLSIdentifiers: constraint.RequiredRLSIdentifiers,
+				}
 				constraintsPerRepo[tableName] = append(constraintsPerRepo[tableName], mappedConstraint)
 				m.Log.Debug("(core/domain) mapped RLS constraint >%s< to >id< column for table >%s<", constraint.Column, tableName)
 			}

@@ -71,11 +71,13 @@ var gameRLSConstraints = []repositor.RLSConstraint{
 			game_record.GameSubscriptionStatusActive,
 		),
 		RequiredRLSIdentifiers: []string{"account_user_id", "account_id"},
+		SkipSelfMapping:        true,
 	},
 	{
 		Column:                 "account_user_id",
 		SQLTemplate:            "IS NULL OR account_user_id = :account_user_id",
 		RequiredRLSIdentifiers: []string{"account_user_id"},
+		SkipSelfMapping:        true,
 	},
 }
 
