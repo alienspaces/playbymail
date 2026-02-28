@@ -140,13 +140,15 @@ test-e2e:
     - apt-get update -qq && apt-get install -yqq postgresql-client
     - wget -q https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz
     - tar -C /usr/local -xzf go${GO_VERSION}.linux-amd64.tar.gz
-    - export PATH=$PATH:/usr/local/go/bin
+    - export PATH="/usr/local/go/bin:${HOME}/go/bin:$PATH"
+    - export GOPATH="${HOME}/go"
     - cd backend && go build -o playbymail-server ./cmd/server && cd ..
     - ./tools/db-migrate-up
     - ./tools/db-load-seed-reference-data
     - ./tools/db-load-seed-enhanced-data
     - cd frontend && npm ci && cd ..
   script:
+    - export PATH="/usr/local/go/bin:${HOME}/go/bin:$PATH"
     - cd backend && ./playbymail-server &
     - cd frontend && npm run dev &
     - npx wait-on http://localhost:8080/api/v1/health http://localhost:3000 --timeout 60000
