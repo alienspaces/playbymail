@@ -181,12 +181,18 @@ func getManyAccountUserContactsHandler(w http.ResponseWriter, r *http.Request, p
 	opts := queryparam.ToSQLOptionsWithDefaults(qp)
 
 	accountUserID := pp.ByName("account_user_id")
-	if accountUserID != "" {
-		opts.Params = append(opts.Params, coresql.Param{
-			Col: account_record.FieldAccountUserContactAccountUserID,
-			Val: accountUserID,
-		})
+	if accountUserID == "" {
+		authData := server.GetRequestAuthenData(l, r)
+		if authData == nil || authData.AccountUser.ID == "" {
+			l.Warn("failed getting authenticated account data")
+			return server.WriteResponse(l, w, http.StatusUnauthorized, nil)
+		}
+		accountUserID = authData.AccountUser.ID
 	}
+	opts.Params = append(opts.Params, coresql.Param{
+		Col: account_record.FieldAccountUserContactAccountUserID,
+		Val: accountUserID,
+	})
 
 	// Override default ordering to use created_at descending
 	opts.OrderBy = []coresql.OrderBy{

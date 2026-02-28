@@ -383,17 +383,21 @@ func getGameSubscriptionTurnSheetListHandler(w http.ResponseWriter, r *http.Requ
 	}
 
 	// Verify the subscription belongs to the authenticated account
-	if gameSubscriptionRec.AccountID != authData.AccountUser.ID {
-		l.Warn("game subscription >%s< does not belong to authenticated account >%s<", gameSubscriptionID, authData.AccountUser.ID)
+	if gameSubscriptionRec.AccountID != authData.AccountUser.AccountID {
+		l.Warn("game subscription >%s< does not belong to authenticated account >%s<", gameSubscriptionID, authData.AccountUser.AccountID)
 		return coreerror.NewNotFoundError("game_subscription", "Game subscription not found")
 	}
 
-	// Get all turn sheets for this account and game
+	// Get turn sheets for this authenticated user, account, and game
 	turnSheetRecs, err := mm.GameTurnSheetRepository().GetMany(&coresql.Options{
 		Params: []coresql.Param{
 			{
 				Col: game_record.FieldGameTurnSheetAccountID,
 				Val: gameSubscriptionRec.AccountID,
+			},
+			{
+				Col: game_record.FieldGameTurnSheetAccountUserID,
+				Val: authData.AccountUser.ID,
 			},
 			{
 				Col: game_record.FieldGameTurnSheetGameID,
@@ -456,8 +460,8 @@ func getGameSubscriptionTurnSheetHandler(w http.ResponseWriter, r *http.Request,
 	}
 
 	// Verify the subscription belongs to the authenticated account
-	if gameSubscriptionRec.AccountID != authData.AccountUser.ID {
-		l.Warn("game subscription >%s< does not belong to authenticated account >%s<", gameSubscriptionID, authData.AccountUser.ID)
+	if gameSubscriptionRec.AccountID != authData.AccountUser.AccountID {
+		l.Warn("game subscription >%s< does not belong to authenticated account >%s<", gameSubscriptionID, authData.AccountUser.AccountID)
 		return coreerror.NewNotFoundError("game_subscription", "Game subscription not found")
 	}
 
@@ -468,9 +472,13 @@ func getGameSubscriptionTurnSheetHandler(w http.ResponseWriter, r *http.Request,
 		return err
 	}
 
-	// Verify the turn sheet belongs to this subscription
+	// Verify the turn sheet belongs to this subscription and to the authenticated user
 	if turnSheetRec.AccountID != gameSubscriptionRec.AccountID || turnSheetRec.GameID != gameSubscriptionRec.GameID {
 		l.Warn("turn sheet >%s< does not belong to subscription >%s<", gameTurnSheetID, gameSubscriptionRec.ID)
+		return coreerror.NewNotFoundError("turn_sheet", "Turn sheet not found")
+	}
+	if turnSheetRec.AccountUserID != authData.AccountUser.ID {
+		l.Warn("turn sheet >%s< does not belong to authenticated user >%s<", gameTurnSheetID, authData.AccountUser.ID)
 		return coreerror.NewNotFoundError("turn_sheet", "Turn sheet not found")
 	}
 
@@ -550,8 +558,8 @@ func updateGameSubscriptionTurnSheetHandler(w http.ResponseWriter, r *http.Reque
 	}
 
 	// Verify the subscription belongs to the authenticated account
-	if gameSubscriptionRec.AccountID != authData.AccountUser.ID {
-		l.Warn("game subscription >%s< does not belong to authenticated account >%s<", gameSubscriptionID, authData.AccountUser.ID)
+	if gameSubscriptionRec.AccountID != authData.AccountUser.AccountID {
+		l.Warn("game subscription >%s< does not belong to authenticated account >%s<", gameSubscriptionID, authData.AccountUser.AccountID)
 		return coreerror.NewNotFoundError("game_subscription", "Game subscription not found")
 	}
 
@@ -562,9 +570,13 @@ func updateGameSubscriptionTurnSheetHandler(w http.ResponseWriter, r *http.Reque
 		return err
 	}
 
-	// Verify the turn sheet belongs to this subscription
+	// Verify the turn sheet belongs to this subscription and to the authenticated user
 	if turnSheetRec.AccountID != gameSubscriptionRec.AccountID || turnSheetRec.GameID != gameSubscriptionRec.GameID {
 		l.Warn("turn sheet >%s< does not belong to subscription >%s<", gameTurnSheetID, gameSubscriptionRec.ID)
+		return coreerror.NewNotFoundError("turn_sheet", "Turn sheet not found")
+	}
+	if turnSheetRec.AccountUserID != authData.AccountUser.ID {
+		l.Warn("turn sheet >%s< does not belong to authenticated user >%s<", gameTurnSheetID, authData.AccountUser.ID)
 		return coreerror.NewNotFoundError("turn_sheet", "Turn sheet not found")
 	}
 
@@ -631,17 +643,21 @@ func submitGameSubscriptionTurnSheetsHandler(w http.ResponseWriter, r *http.Requ
 	}
 
 	// Verify the subscription belongs to the authenticated account
-	if gameSubscriptionRec.AccountID != authData.AccountUser.ID {
-		l.Warn("game subscription >%s< does not belong to authenticated account >%s<", gameSubscriptionID, authData.AccountUser.ID)
+	if gameSubscriptionRec.AccountID != authData.AccountUser.AccountID {
+		l.Warn("game subscription >%s< does not belong to authenticated account >%s<", gameSubscriptionID, authData.AccountUser.AccountID)
 		return coreerror.NewNotFoundError("game_subscription", "Game subscription not found")
 	}
 
-	// Get all turn sheets for this subscription
+	// Get turn sheets for this authenticated user's subscription
 	turnSheetRecs, err := mm.GameTurnSheetRepository().GetMany(&coresql.Options{
 		Params: []coresql.Param{
 			{
 				Col: game_record.FieldGameTurnSheetAccountID,
 				Val: gameSubscriptionRec.AccountID,
+			},
+			{
+				Col: game_record.FieldGameTurnSheetAccountUserID,
+				Val: authData.AccountUser.ID,
 			},
 			{
 				Col: game_record.FieldGameTurnSheetGameID,

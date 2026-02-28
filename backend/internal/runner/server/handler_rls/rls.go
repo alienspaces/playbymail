@@ -6,12 +6,10 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/server"
 	"gitlab.com/alienspaces/playbymail/core/type/domainer"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
-	"gitlab.com/alienspaces/playbymail/core/type/repositor"
 )
 
 const (
-	rlsIdentifierAccountID     = "account_id"
-	rlsIdentifierAccountUserID = "account_user_id"
+	rlsIdentifierAccountID = "account_id"
 )
 
 // gameRLSConstraints defines constraints that will be automatically applied
@@ -73,38 +71,21 @@ const (
 // 	},
 // }
 
-// accountUserIDConstraint handles nullable account_user_id columns. Without this,
-// the raw identifier IN filter excludes rows where account_user_id IS NULL (e.g.
-// manager/designer game subscriptions). The withRLS layer detects the IS NULL prefix
-// and skips the identifier filter for this column, letting the constraint handle it.
-var accountUserIDConstraint = []repositor.RLSConstraint{
-	{
-		Column:                 "account_user_id",
-		SQLTemplate:            "IS NULL OR account_user_id = :account_user_id",
-		RequiredRLSIdentifiers: []string{"account_user_id"},
-		SkipSelfMapping:        true,
-	},
-}
-
 // HandlerRLSFunc determines what game resources the authenticated user has access to.
-// It sets RLS identifiers (account_id) and RLS constraints (game_id, game_instance_id)
-// that are automatically applied by the repository layer based on column presence.
+// It sets RLS identifiers (account_id only) that are automatically applied by the
+// repository layer based on column presence. User-level access control (account_user_id)
+// is enforced explicitly in API handlers rather than via RLS.
 func HandlerRLSFunc(l logger.Logger, m domainer.Domainer, authedReq server.AuthenData) (server.RLS, error) {
 
 	l.Info("(playbymail) rlsFunc called for account: ID=%s Email=%s",
 		authedReq.AccountUser.ID, authedReq.AccountUser.Email)
 
-	// Create RLS identifiers map
-	// account_id is always set from authenticated account (direct relationship)
-	// game_id and game_instance_id filtering is handled via RLS constraints
 	identifiers := map[string][]string{
-		rlsIdentifierAccountID:     {authedReq.AccountUser.AccountID},
-		rlsIdentifierAccountUserID: {authedReq.AccountUser.ID},
+		rlsIdentifierAccountID: {authedReq.AccountUser.AccountID},
 	}
 
 	return server.RLS{
 		Identifiers: identifiers,
-		Constraints: accountUserIDConstraint,
 	}, nil
 }
 
