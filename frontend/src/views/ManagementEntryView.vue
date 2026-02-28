@@ -19,7 +19,7 @@
     </ul>
     <p><em>Sign in to access game management tools.</em></p>
     <div class="entry-cta">
-      <router-link :to="{ path: '/login', query: { redirect: '/admin' } }" class="cta-button">Sign In to Game
+      <router-link :to="{ path: '/login', query: { redirect: '/admin' } }" class="cta-button" data-testid="management-sign-in">Sign In to Game
         Management</router-link>
     </div>
   </div>

@@ -4,13 +4,13 @@
     <form @submit.prevent="onSubmit" class="verify-form">
       <div class="form-group">
         <label for="code">Verification code</label>
-        <input v-model="code" id="code" type="text" required autofocus autocomplete="off" />
+        <input v-model="code" id="code" type="text" required autofocus autocomplete="off" data-testid="verify-code-input" />
       </div>
       <div class="form-actions">
-        <button type="submit" :disabled="loading">Verify</button>
+        <button type="submit" :disabled="loading" data-testid="verify-submit">Verify</button>
       </div>
     </form>
-    <p v-if="message" class="message">{{ message }}</p>
+    <p v-if="message" class="message" data-testid="verify-error">{{ message }}</p>
   </div>
 </template>
 

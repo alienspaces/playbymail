@@ -10,7 +10,12 @@ orig_dir=$(pwd)
 cd backend || exit 1
 
 echo "=> Test backend core - Running tests"
-TESTING=true go test -v -failfast ./core/... || exit $?
+TESTING=true go test -v -failfast -coverprofile=coverage-core.out ./core/... || exit $?
+
+if [ -f coverage-core.out ]; then
+  echo "=> Test backend core - Coverage summary"
+  go tool cover -func=coverage-core.out | tail -1
+fi
 
 # Return to original directory
 cd "$orig_dir" || exit 1

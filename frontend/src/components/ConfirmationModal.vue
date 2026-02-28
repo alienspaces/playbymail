@@ -14,8 +14,8 @@
         </div>
 
         <div class="modal-actions">
-          <button type="button" @click="$emit('cancel')">{{ cancelText }}</button>
-          <button type="button" @click="$emit('confirm')" :disabled="isConfirmDisabled || loading" class="danger-btn">
+          <button type="button" @click="$emit('cancel')" data-testid="confirm-cancel">{{ cancelText }}</button>
+          <button type="button" @click="$emit('confirm')" :disabled="isConfirmDisabled || loading" class="danger-btn" data-testid="confirm-submit">
             {{ loading ? loadingText : confirmText }}
           </button>
         </div>

@@ -7,13 +7,13 @@
     <form @submit.prevent="onSubmit" class="login-form">
       <div class="form-group">
         <label for="email">Email address</label>
-        <input v-model="email" id="email" type="email" required autofocus autocomplete="off" />
+        <input v-model="email" id="email" type="email" required autofocus autocomplete="off" data-testid="email-input" />
       </div>
       <div class="form-actions">
-        <button type="submit" :disabled="loading">Send Code</button>
+        <button type="submit" :disabled="loading" data-testid="login-submit">Send Code</button>
       </div>
     </form>
-    <p v-if="message" class="error">{{ message }}</p>
+    <p v-if="message" class="error" data-testid="login-error">{{ message }}</p>
   </div>
 </template>
 

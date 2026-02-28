@@ -1,5 +1,5 @@
 <template>
-  <div class="resource-table-section">
+  <div class="resource-table-section" data-testid="resource-table">
     <table v-if="rows && rows.length">
       <thead>
         <tr>
@@ -8,7 +8,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="row in rows" :key="row.id">
+        <tr v-for="row in rows" :key="row.id" :data-testid="`table-row-${row.id}`">
           <td v-for="col in columns" :key="col.key">
             <slot :name="`cell-${col.key}`" :row="row" :column="col">
               {{ row[col.key] }}
@@ -20,9 +20,9 @@
         </tr>
       </tbody>
     </table>
-    <div v-else-if="loading">Loading...</div>
-    <div v-else-if="error" class="error">{{ error }}</div>
-    <div v-else>No records found.</div>
+    <div v-else-if="loading" data-testid="table-loading">Loading...</div>
+    <div v-else-if="error" class="error" data-testid="table-error">{{ error }}</div>
+    <div v-else data-testid="table-empty">No records found.</div>
   </div>
 </template>
 

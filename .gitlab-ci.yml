@@ -1,7 +1,19 @@
 stages:
   - test
   - build
+  - e2e
   - deploy
+
+lint-backend:
+  image: golangci/golangci-lint:v2.1.6-alpine
+  stage: test
+  interruptible: true
+  script:
+    - cd backend
+    - golangci-lint run ./...
+  rules:
+    - changes:
+        - backend/**/*
 
 test-backend:
   variables:
@@ -45,6 +57,12 @@ test-backend:
     - export GOOGLE_CHROME_SHIM=/usr/bin/chromium-browser
   script:
     - ./tools/test-backend-ci
+  artifacts:
+    when: always
+    paths:
+      - backend/coverage-core.out
+      - backend/coverage-internal.out
+    expire_in: 30 days
   cache:
     key:
       files:
@@ -86,6 +104,62 @@ build-frontend:
   artifacts:
     paths:
       - frontend/dist
+
+test-e2e:
+  variables:
+    POSTGRES_DB: playbymail
+    POSTGRES_USER: user
+    POSTGRES_PASSWORD: pass
+    DATABASE_URL: "postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@postgres:5432/$POSTGRES_DB?sslmode=disable"
+    DATABASE_VERSION: 17.5
+    DATABASE_MAX_OPEN_CONNECTIONS: "180"
+    DATABASE_MAX_IDLE_CONNECTIONS: "45"
+    DATABASE_MAX_IDLE_TIME_MINS: "15"
+    APP_ENV: develop
+    APP_HOST: "http://localhost:3000"
+    PORT: 8080
+    LOG_LEVEL: info
+    GO_VERSION: 1.24.5
+    EMAILER_FAKED: "true"
+    JOBCLIENT_MAX_WORKERS: "10"
+    TOKEN_HMAC_KEY: "changeme-super-secret-key"
+    TEMPLATES_PATH: "${CI_PROJECT_DIR}/backend/templates"
+    SCHEMA_PATH: "${CI_PROJECT_DIR}/backend/schema"
+    TEST_BYPASS_HEADER_NAME: "X-Test-Bypass"
+    TEST_BYPASS_HEADER_VALUE: "test-bypass-secret"
+    TEST_BASE_URL: "http://localhost:3000"
+  image: mcr.microsoft.com/playwright:v1.52.0-noble
+  stage: e2e
+  interruptible: true
+  services:
+    - name: postgres:17.5-alpine
+      alias: postgres
+  dependencies:
+    - build-frontend
+  before_script:
+    - apt-get update -qq && apt-get install -yqq postgresql-client
+    - wget -q https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz
+    - tar -C /usr/local -xzf go${GO_VERSION}.linux-amd64.tar.gz
+    - export PATH=$PATH:/usr/local/go/bin
+    - cd backend && go build -o playbymail-server ./cmd/server && cd ..
+    - ./tools/db-migrate-up
+    - ./tools/db-load-seed-reference-data
+    - ./tools/db-load-seed-enhanced-data
+    - cd frontend && npm ci && cd ..
+  script:
+    - cd backend && ./playbymail-server &
+    - cd frontend && npm run dev &
+    - npx wait-on http://localhost:8080/api/v1/health http://localhost:3000 --timeout 60000
+    - npx playwright test --project chromium
+  artifacts:
+    when: on_failure
+    paths:
+      - test-results/
+      - playwright/screenshots/
+    expire_in: 7 days
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
 
 # Heroku Deployment Branch Workflow
 #

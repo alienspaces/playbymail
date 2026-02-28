@@ -33,22 +33,22 @@ function closeMobileMenu() {
           <router-link to="/" class="logo">
             <img :src="titleImage" alt="Play By Mail" class="logo-image" />
           </router-link>
-          <router-link to="/studio" class="navbar-link" exact-active-class="active" @click="closeMobileMenu">Game
+          <router-link to="/studio" class="navbar-link" exact-active-class="active" @click="closeMobileMenu" data-testid="nav-studio">Game
             Designer Studio</router-link>
-          <router-link to="/admin" class="navbar-link" exact-active-class="active" @click="closeMobileMenu">Game
+          <router-link to="/admin" class="navbar-link" exact-active-class="active" @click="closeMobileMenu" data-testid="nav-management">Game
             Management</router-link>
           <router-link to="/faq" class="navbar-link" exact-active-class="active"
-            @click="closeMobileMenu">F.A.Q.</router-link>
+            @click="closeMobileMenu" data-testid="nav-faq">F.A.Q.</router-link>
         </div>
         <div class="nav-actions">
           <template v-if="sessionToken">
             <router-link to="/account" class="navbar-link" exact-active-class="active"
-              @click="closeMobileMenu">Account</router-link>
-            <button @click="logout">Logout</button>
+              @click="closeMobileMenu" data-testid="nav-account">Account</router-link>
+            <button @click="logout" data-testid="sign-out-link">Logout</button>
           </template>
           <template v-else>
             <router-link to="/login" class="navbar-link" exact-active-class="active"
-              @click="closeMobileMenu">Login</router-link>
+              @click="closeMobileMenu" data-testid="nav-login">Login</router-link>
           </template>
         </div>
         <router-link to="/" class="mobile-logo">

@@ -40,11 +40,11 @@
             </slot>
           </div>
           <div class="modal-actions">
-            <button type="submit">{{ mode === 'create' ? 'Create' : 'Save' }}</button>
-            <button type="button" @click="$emit('cancel')">Cancel</button>
+            <button type="submit" data-testid="modal-submit">{{ mode === 'create' ? 'Create' : 'Save' }}</button>
+            <button type="button" @click="$emit('cancel')" data-testid="modal-cancel">Cancel</button>
           </div>
         </form>
-        <div v-if="error" class="error">
+        <div v-if="error" class="error" data-testid="modal-error">
           <p>{{ error }}</p>
         </div>
       </div>

@@ -4,7 +4,7 @@
       <HandDrawnIcon v-if="showIcon" :type="iconType" :color="iconColor" class="title-icon" />
       {{ title }}
     </component>
-    <Button v-if="actionText" @click="$emit('action')" variant="primary" size="small" :disabled="actionDisabled">
+    <Button v-if="actionText" @click="$emit('action')" variant="primary" size="small" :disabled="actionDisabled" data-testid="page-header-action">
       {{ actionText }}
     </Button>
     <p v-if="subtitle" class="page-subtitle">

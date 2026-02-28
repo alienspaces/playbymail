@@ -69,7 +69,7 @@
         </div>
         <h2>Game Designer Studio</h2>
         <p>Create, edit, and manage play-by-mail games. Design locations, items, creatures, and game mechanics.</p>
-        <router-link to="/studio" class="section-link">Go to Studio</router-link>
+        <router-link to="/studio" class="section-link" data-testid="home-studio-link">Go to Studio</router-link>
       </div>
 
       <div class="section">
@@ -79,7 +79,7 @@
         <h2>Game Management</h2>
         <p>Subscribe to or purchase games, configure runtime parameters, review game states, process player turns, and
           provide player help.</p>
-        <router-link to="/admin" class="section-link">Go to Game Management</router-link>
+        <router-link to="/admin" class="section-link" data-testid="home-management-link">Go to Game Management</router-link>
       </div>
     </div>
   </div>
