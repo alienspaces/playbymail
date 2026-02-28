@@ -369,17 +369,95 @@ func (m *Domain) RemoveAccountUserRec(recID string) error {
 	return nil
 }
 
-// RemoveAccountRec hard-deletes an account_record.Account row by ID.
+// RemoveAccountRec hard-deletes an account and all dependent records in FK order.
 func (m *Domain) RemoveAccountRec(recID string) error {
 	l := m.Logger("RemoveAccountRec")
 
-	l.Debug("removing account record ID >%s<", recID)
+	l.Debug("removing account record ID >%s< and all dependents", recID)
 
-	r := m.AccountRepository()
+	accountFilter := &coresql.Options{Params: []coresql.Param{{Col: "account_id", Val: recID}}}
 
-	if err := r.RemoveOne(recID); err != nil {
+	// 1. game_subscription_instance (references account_id, game_subscription_id)
+	gsiRecs, err := m.GameSubscriptionInstanceRepository().GetMany(accountFilter)
+	if err != nil {
 		return databaseError(err)
 	}
+	for _, rec := range gsiRecs {
+		if err := m.GameSubscriptionInstanceRepository().RemoveOne(rec.ID); err != nil {
+			return databaseError(err)
+		}
+	}
+
+	// 2. game_subscription (references account_id)
+	gsRecs, err := m.GameSubscriptionRepository().GetMany(accountFilter)
+	if err != nil {
+		return databaseError(err)
+	}
+	for _, rec := range gsRecs {
+		if err := m.GameSubscriptionRepository().RemoveOne(rec.ID); err != nil {
+			return databaseError(err)
+		}
+	}
+
+	// 3. Fetch account_user records (needed for player subscription and contact cleanup)
+	auRecs, err := m.AccountUserRepository().GetMany(accountFilter)
+	if err != nil {
+		return databaseError(err)
+	}
+
+	// 4. account_subscription (by account_id for designer/manager subs, by account_user_id for player subs)
+	asRecs, err := m.AccountSubscriptionRepository().GetMany(accountFilter)
+	if err != nil {
+		return databaseError(err)
+	}
+	for _, rec := range asRecs {
+		if err := m.AccountSubscriptionRepository().RemoveOne(rec.ID); err != nil {
+			return databaseError(err)
+		}
+	}
+	asCount := len(asRecs)
+	for _, auRec := range auRecs {
+		userSubFilter := &coresql.Options{Params: []coresql.Param{{Col: account_record.FieldAccountSubscriptionAccountUserID, Val: auRec.ID}}}
+		userSubs, err := m.AccountSubscriptionRepository().GetMany(userSubFilter)
+		if err != nil {
+			return databaseError(err)
+		}
+		for _, rec := range userSubs {
+			if err := m.AccountSubscriptionRepository().RemoveOne(rec.ID); err != nil {
+				return databaseError(err)
+			}
+		}
+		asCount += len(userSubs)
+	}
+
+	// 5. account_user_contact (by account_user_id)
+	for _, auRec := range auRecs {
+		contactFilter := &coresql.Options{Params: []coresql.Param{{Col: account_record.FieldAccountUserContactAccountUserID, Val: auRec.ID}}}
+		contactRecs, err := m.AccountUserContactRepository().GetMany(contactFilter)
+		if err != nil {
+			return databaseError(err)
+		}
+		for _, rec := range contactRecs {
+			if err := m.AccountUserContactRepository().RemoveOne(rec.ID); err != nil {
+				return databaseError(err)
+			}
+		}
+	}
+
+	// 6. account_user
+	for _, rec := range auRecs {
+		if err := m.AccountUserRepository().RemoveOne(rec.ID); err != nil {
+			return databaseError(err)
+		}
+	}
+
+	// 7. account
+	if err := m.AccountRepository().RemoveOne(recID); err != nil {
+		return databaseError(err)
+	}
+
+	l.Info("removed account >%s< and all dependents (%d users, %d subscriptions, %d game subscriptions, %d game subscription instances)",
+		recID, len(auRecs), asCount, len(gsRecs), len(gsiRecs))
 
 	return nil
 }

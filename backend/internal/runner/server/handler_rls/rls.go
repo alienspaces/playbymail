@@ -99,7 +99,7 @@ func HandlerRLSFunc(l logger.Logger, m domainer.Domainer, authedReq server.Authe
 
 	return server.RLS{
 		Identifiers: identifiers,
-		Constraints: gameRLSConstraints,
+		Constraints: nil,
 	}, nil
 }
 

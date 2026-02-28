@@ -319,6 +319,18 @@ func (r *Repository) withRLS(sql string) string {
 		return sql
 	}
 
+	// Build set of columns where a constraint handles NULL semantics (template
+	// starts with "IS NULL"). For these columns we skip the direct identifier
+	// IN filter because it would exclude NULL rows that the constraint correctly
+	// allows. Constraints without NULL handling (e.g. subquery-only constraints
+	// like game_instance_id) are complementary and the identifier still applies.
+	nullHandlingConstraintColumns := set.New[string]()
+	for _, c := range r.rlsConstraints {
+		if strings.HasPrefix(c.SQLTemplate, "IS NULL") {
+			nullHandlingConstraintColumns.Add(c.Column)
+		}
+	}
+
 	// Apply RLS identifier filters (direct column filters)
 	// Only apply filters for identifiers that correspond to actual columns in the record
 	attributeSet := set.FromSlice(r.Attributes())
@@ -326,6 +338,11 @@ func (r *Repository) withRLS(sql string) string {
 		// Skip identifiers that don't correspond to record columns
 		// (they may be kept for constraint substitution but shouldn't be used as direct filters)
 		if !attributeSet.Has(attr) {
+			continue
+		}
+		// Skip columns whose constraint handles NULL semantics (IS NULL OR ...).
+		// A blunt IN filter would exclude NULL rows that the constraint allows.
+		if nullHandlingConstraintColumns.Has(attr) {
 			continue
 		}
 		var strBuilder strings.Builder
@@ -380,7 +397,7 @@ func (r *Repository) withRLS(sql string) string {
 				continue
 			}
 			// Append constraint SQL to WHERE clause
-			sql += fmt.Sprintf("AND %s %s\n", constraint.Column, constraintSQL)
+			sql += fmt.Sprintf("AND (%s %s)\n", constraint.Column, constraintSQL)
 		}
 	}
 

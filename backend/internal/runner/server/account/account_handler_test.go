@@ -122,7 +122,7 @@ func Test_getAccountHandler(t *testing.T) {
 	}
 }
 
-func Test_createUpdateDeleteAccountHandler(t *testing.T) {
+func Test_createUpdateAccountHandler(t *testing.T) {
 	t.Parallel()
 
 	th := testutil.NewTestHarness(t)
@@ -199,27 +199,6 @@ func Test_createUpdateDeleteAccountHandler(t *testing.T) {
 					},
 				}
 			},
-		},
-		{
-			TestCase: testutil.TestCase{
-				Name: "authenticated user when delete account with valid account ID then returns no content",
-				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
-					return rnr.GetHandlerConfig()[account.DeleteOneAccount]
-				},
-				RequestHeaders: func(d harness.Data) map[string]string {
-					return testutil.AuthHeaderStandard(d)
-				},
-				RequestPathParams: func(d harness.Data) map[string]string {
-					accountRec, err := d.GetAccountUserRecByRef(harness.StandardAccountRef)
-					require.NoError(t, err, "GetAccountUserRecByRef returns without error")
-					params := map[string]string{
-						":account_id": accountRec.AccountID,
-					}
-					return params
-				},
-				ResponseCode: http.StatusNoContent,
-			},
-			expectResponse: nil,
 		},
 	}
 

@@ -30,7 +30,6 @@ const (
 	CreateOneAccount    = "create-one-account"
 	CreateAccountWithID = "create-account-with-id"
 	UpdateOneAccount    = "update-one-account"
-	DeleteOneAccount    = "delete-one-account"
 )
 
 const (
@@ -163,21 +162,6 @@ func accountHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, err
 		DocumentationConfig: server.DocumentationConfig{
 			Document: true,
 			Title:    "Update account",
-		},
-	}
-
-	accountConfig[DeleteOneAccount] = server.HandlerConfig{
-		Method:      http.MethodDelete,
-		Path:        "/api/v1/accounts/:account_id",
-		HandlerFunc: deleteAccountHandler,
-		MiddlewareConfig: server.MiddlewareConfig{
-			AuthenTypes: []server.AuthenticationType{
-				server.AuthenticationTypeToken,
-			},
-		},
-		DocumentationConfig: server.DocumentationConfig{
-			Document: true,
-			Title:    "Delete account",
 		},
 	}
 
@@ -422,29 +406,6 @@ func updateAccountHandler(w http.ResponseWriter, r *http.Request, pp httprouter.
 	l.Info("responding with updated account record id >%s<", updatedRec.ID)
 
 	if err = server.WriteResponse(l, w, http.StatusOK, res); err != nil {
-		l.Warn("failed writing response >%v<", err)
-		return err
-	}
-
-	return nil
-}
-
-func deleteAccountHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
-	l = logging.LoggerWithFunctionContext(l, packageName, "deleteAccountHandler")
-
-	accountID := pp.ByName("account_id")
-	l.Info("deleting account record with account_id >%s<", accountID)
-
-	mm := m.(*domain.Domain)
-
-	if err := mm.RemoveAccountRec(accountID); err != nil {
-		l.Warn("failed deleting account record >%v<", err)
-		return err
-	}
-
-	l.Info("deleted account record id >%s<", accountID)
-
-	if err := server.WriteResponse(l, w, http.StatusNoContent, nil); err != nil {
 		l.Warn("failed writing response >%v<", err)
 		return err
 	}

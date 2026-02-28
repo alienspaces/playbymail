@@ -702,7 +702,7 @@ func Test_SetRLSConstraints_GetOneSQL(t *testing.T) {
 			identifiers: map[string][]string{
 				"account_id": {"123"},
 			},
-			want: set.FromSlice([]string{strings.TrimSpace(fmt.Sprintf("SELECT db_A, db_B, db_d, db_E, db_E3, db_E5, db_E6, db_f, db_time, id, created_at, updated_at, deleted_at FROM %s WHERE deleted_at IS NULL\nAND db_A IN (SELECT id FROM other_table WHERE account_id = '123')", r.tableName))}),
+			want: set.FromSlice([]string{strings.TrimSpace(fmt.Sprintf("SELECT db_A, db_B, db_d, db_E, db_E3, db_E5, db_E6, db_f, db_time, id, created_at, updated_at, deleted_at FROM %s WHERE deleted_at IS NULL\nAND (db_A IN (SELECT id FROM other_table WHERE account_id = '123'))", r.tableName))}),
 		},
 		{
 			name: "constraint with non-matching column, skipped",
@@ -764,8 +764,8 @@ func Test_SetRLSConstraints_GetOneSQL(t *testing.T) {
 			},
 			// Order may vary due to slice iteration
 			want: set.FromSlice([]string{
-				strings.TrimSpace(fmt.Sprintf("SELECT db_A, db_B, db_d, db_E, db_E3, db_E5, db_E6, db_f, db_time, id, created_at, updated_at, deleted_at FROM %s WHERE deleted_at IS NULL\nAND db_A IN (SELECT id FROM table_a WHERE account_id = '123')\nAND db_B IN (SELECT id FROM table_b WHERE game_id = '456')", r.tableName)),
-				strings.TrimSpace(fmt.Sprintf("SELECT db_A, db_B, db_d, db_E, db_E3, db_E5, db_E6, db_f, db_time, id, created_at, updated_at, deleted_at FROM %s WHERE deleted_at IS NULL\nAND db_B IN (SELECT id FROM table_b WHERE game_id = '456')\nAND db_A IN (SELECT id FROM table_a WHERE account_id = '123')", r.tableName)),
+				strings.TrimSpace(fmt.Sprintf("SELECT db_A, db_B, db_d, db_E, db_E3, db_E5, db_E6, db_f, db_time, id, created_at, updated_at, deleted_at FROM %s WHERE deleted_at IS NULL\nAND (db_A IN (SELECT id FROM table_a WHERE account_id = '123'))\nAND (db_B IN (SELECT id FROM table_b WHERE game_id = '456'))", r.tableName)),
+				strings.TrimSpace(fmt.Sprintf("SELECT db_A, db_B, db_d, db_E, db_E3, db_E5, db_E6, db_f, db_time, id, created_at, updated_at, deleted_at FROM %s WHERE deleted_at IS NULL\nAND (db_B IN (SELECT id FROM table_b WHERE game_id = '456'))\nAND (db_A IN (SELECT id FROM table_a WHERE account_id = '123'))", r.tableName)),
 			}),
 		},
 		{
@@ -781,7 +781,7 @@ func Test_SetRLSConstraints_GetOneSQL(t *testing.T) {
 				"account_id": {"123"},
 				"game_id":    {"456"},
 			},
-			want: set.FromSlice([]string{strings.TrimSpace(fmt.Sprintf("SELECT db_A, db_B, db_d, db_E, db_E3, db_E5, db_E6, db_f, db_time, id, created_at, updated_at, deleted_at FROM %s WHERE deleted_at IS NULL\nAND db_A IN (SELECT id FROM other_table WHERE account_id = '123' AND game_id = '456')", r.tableName))}),
+			want: set.FromSlice([]string{strings.TrimSpace(fmt.Sprintf("SELECT db_A, db_B, db_d, db_E, db_E3, db_E5, db_E6, db_f, db_time, id, created_at, updated_at, deleted_at FROM %s WHERE deleted_at IS NULL\nAND (db_A IN (SELECT id FROM other_table WHERE account_id = '123' AND game_id = '456'))", r.tableName))}),
 		},
 		{
 			name: "constraint with multiple required params, one missing, fail-safe",
@@ -796,6 +796,36 @@ func Test_SetRLSConstraints_GetOneSQL(t *testing.T) {
 				"account_id": {"123"},
 			},
 			want: set.FromSlice([]string{strings.TrimSpace(fmt.Sprintf("SELECT db_A, db_B, db_d, db_E, db_E3, db_E5, db_E6, db_f, db_time, id, created_at, updated_at, deleted_at FROM %s WHERE deleted_at IS NULL\nAND 1=0", r.tableName))}),
+		},
+		{
+			name: "NULL-handling constraint skips identifier IN filter for same column",
+			constraints: []repositor.RLSConstraint{
+				{
+					Column:                 "db_A",
+					SQLTemplate:            "IS NULL OR db_A IN (SELECT id FROM other_table WHERE account_id = :account_id)",
+					RequiredRLSIdentifiers: []string{"account_id"},
+				},
+			},
+			identifiers: map[string][]string{
+				"account_id": {"123"},
+				"db_A":       {"val1"},
+			},
+			want: set.FromSlice([]string{strings.TrimSpace(fmt.Sprintf("SELECT db_A, db_B, db_d, db_E, db_E3, db_E5, db_E6, db_f, db_time, id, created_at, updated_at, deleted_at FROM %s WHERE deleted_at IS NULL\nAND (db_A IS NULL OR db_A IN (SELECT id FROM other_table WHERE account_id = '123'))", r.tableName))}),
+		},
+		{
+			name: "non-NULL constraint does not skip identifier IN filter for same column",
+			constraints: []repositor.RLSConstraint{
+				{
+					Column:                 "db_A",
+					SQLTemplate:            "IN (SELECT id FROM other_table WHERE account_id = :account_id)",
+					RequiredRLSIdentifiers: []string{"account_id"},
+				},
+			},
+			identifiers: map[string][]string{
+				"account_id": {"123"},
+				"db_A":       {"val1"},
+			},
+			want: set.FromSlice([]string{strings.TrimSpace(fmt.Sprintf("SELECT db_A, db_B, db_d, db_E, db_E3, db_E5, db_E6, db_f, db_time, id, created_at, updated_at, deleted_at FROM %s WHERE deleted_at IS NULL\nAND db_A IN ('val1')\nAND (db_A IN (SELECT id FROM other_table WHERE account_id = '123'))", r.tableName))}),
 		},
 	}
 
@@ -885,7 +915,7 @@ db_time = @db_time,
 updated_at = @updated_at
 WHERE id = @id
 AND   deleted_at IS NULL
-AND db_A IN (SELECT id FROM other_table WHERE account_id = '123')
+AND (db_A IN (SELECT id FROM other_table WHERE account_id = '123'))
 RETURNING db_A, db_B, db_d, db_E, db_E3, db_E5, db_E6, db_f, db_time, id, created_at, updated_at, deleted_at
 `, r.tableName))}),
 		},
@@ -923,8 +953,8 @@ db_time = @db_time,
 updated_at = @updated_at
 WHERE id = @id
 AND   deleted_at IS NULL
-AND db_A IN (SELECT id FROM table_a WHERE account_id = '123')
-AND db_B IN (SELECT id FROM table_b WHERE game_id = '456')
+AND (db_A IN (SELECT id FROM table_a WHERE account_id = '123'))
+AND (db_B IN (SELECT id FROM table_b WHERE game_id = '456'))
 RETURNING db_A, db_B, db_d, db_E, db_E3, db_E5, db_E6, db_f, db_time, id, created_at, updated_at, deleted_at
 `, r.tableName)),
 				strings.TrimSpace(fmt.Sprintf(`
@@ -941,8 +971,8 @@ db_time = @db_time,
 updated_at = @updated_at
 WHERE id = @id
 AND   deleted_at IS NULL
-AND db_B IN (SELECT id FROM table_b WHERE game_id = '456')
-AND db_A IN (SELECT id FROM table_a WHERE account_id = '123')
+AND (db_B IN (SELECT id FROM table_b WHERE game_id = '456'))
+AND (db_A IN (SELECT id FROM table_a WHERE account_id = '123'))
 RETURNING db_A, db_B, db_d, db_E, db_E3, db_E5, db_E6, db_f, db_time, id, created_at, updated_at, deleted_at
 `, r.tableName)),
 			}),
@@ -1002,7 +1032,7 @@ func Test_SetRLSConstraints_DeleteOneSQL(t *testing.T) {
 			},
 			want: set.FromSlice([]string{strings.TrimSpace(fmt.Sprintf(`
 UPDATE %s SET deleted_at = @deleted_at WHERE id = @id AND deleted_at IS NULL
-AND id IN (SELECT id FROM other_table WHERE account_id = '123')
+AND (id IN (SELECT id FROM other_table WHERE account_id = '123'))
 RETURNING db_A, db_B, db_d, db_E, db_E3, db_E5, db_E6, db_f, db_time, id, created_at, updated_at, deleted_at
 `, r.tableName))}),
 		},
