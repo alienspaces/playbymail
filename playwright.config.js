@@ -40,7 +40,7 @@ export default defineConfig({
     {
       command: 'cd backend && ./playbymail-server',
       url: 'http://localhost:8080',
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer: true,
       timeout: 120 * 1000,
       stdout: 'pipe',
       stderr: 'pipe',
@@ -48,7 +48,7 @@ export default defineConfig({
     {
       command: 'cd frontend && npm run dev',
       url: 'http://localhost:3000',
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer: true,
       timeout: 120 * 1000,
     }
   ],

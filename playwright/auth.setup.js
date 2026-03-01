@@ -13,7 +13,7 @@ setup('setup test environment', async ({ context }) => {
   await page.goto('/')
 
   // Wait for the page to load
-  await page.waitForLoadState('networkidle')
+  await page.waitForLoadState('domcontentloaded')
 
   // Verify the app loads correctly
   const pageContent = page.locator('body')
