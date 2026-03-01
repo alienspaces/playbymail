@@ -79,3 +79,18 @@ type InviteTesterResponse struct {
 	Data  *InviteTesterResponseData    `json:"data"`
 	Error *common_schema.ResponseError `json:"error,omitempty"`
 }
+
+type InvitePlayerRequest struct {
+	common_schema.Request
+	Email string `json:"email"`
+}
+
+type InvitePlayerResponseData struct {
+	Message string `json:"message"`
+	Email   string `json:"email"`
+}
+
+type InvitePlayerResponse struct {
+	Data  *InvitePlayerResponseData    `json:"data"`
+	Error *common_schema.ResponseError `json:"error,omitempty"`
+}

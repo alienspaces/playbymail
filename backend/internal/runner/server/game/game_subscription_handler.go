@@ -32,6 +32,7 @@ const (
 	ApproveGameSubscription            = "approve-game-subscription"
 	LinkGameInstanceToSubscription     = "link-game-instance-to-subscription"
 	UnlinkGameInstanceFromSubscription = "unlink-game-instance-from-subscription"
+	InvitePlayer                       = "invite-player"
 )
 
 func gameSubscriptionHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error) {
@@ -224,6 +225,41 @@ func gameSubscriptionHandlerConfig(l logger.Logger) (map[string]server.HandlerCo
 			Document:    true,
 			Title:       "Unlink game instance from subscription",
 			Description: "Remove the link between a game instance and a game subscription.",
+		},
+	}
+
+	invitePlayerRequestSchema := jsonschema.SchemaWithReferences{
+		Main: jsonschema.Schema{
+			Location: "api/game_schema",
+			Name:     "invite_player.request.schema.json",
+		},
+		References: referenceSchemas,
+	}
+
+	invitePlayerResponseSchema := jsonschema.SchemaWithReferences{
+		Main: jsonschema.Schema{
+			Location: "api/game_schema",
+			Name:     "invite_player.response.schema.json",
+		},
+		References: referenceSchemas,
+	}
+
+	config[InvitePlayer] = server.HandlerConfig{
+		Method:      http.MethodPost,
+		Path:        "/api/v1/games/:game_id/invite-player",
+		HandlerFunc: invitePlayerHandler,
+		MiddlewareConfig: server.MiddlewareConfig{
+			AuthenTypes: []server.AuthenticationType{server.AuthenticationTypeToken},
+			AuthzPermissions: []server.AuthorizedPermission{
+				handler_auth.PermissionGameManagement,
+			},
+			ValidateRequestSchema:  invitePlayerRequestSchema,
+			ValidateResponseSchema: invitePlayerResponseSchema,
+		},
+		DocumentationConfig: server.DocumentationConfig{
+			Document:    true,
+			Title:       "Invite player",
+			Description: "Invite a player to join a game managed by the authenticated manager. An email is sent with a join link for any available game instance.",
 		},
 	}
 
@@ -473,6 +509,76 @@ func linkGameInstanceToSubscriptionHandler(w http.ResponseWriter, r *http.Reques
 	}
 
 	return server.WriteResponse(l, w, http.StatusCreated, res)
+}
+
+func invitePlayerHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
+	l = logging.LoggerWithFunctionContext(l, packageName, "invitePlayerHandler")
+
+	gameID := pp.ByName("game_id")
+	if gameID == "" {
+		return coreerror.RequiredPathParameter("game_id")
+	}
+
+	email, err := mapper.InvitePlayerRequestToEmail(l, r)
+	if err != nil {
+		l.Warn("failed to read invite player request >%v<", err)
+		return coreerror.NewInvalidDataError("invalid request: %s", err.Error())
+	}
+
+	mm := m.(*domain.Domain)
+
+	// Resolve the authenticated manager's account so we can find their subscription for this game.
+	authenData := server.GetRequestAuthenData(l, r)
+	if authenData == nil || authenData.AccountUser.AccountID == "" {
+		l.Warn("authenticated account is required for invite player")
+		return coreerror.NewUnauthorizedError()
+	}
+
+	// Find the manager subscription for this game owned by the authenticated account.
+	managerSubs, err := mm.GetManyGameSubscriptionRecs(&coresql.Options{
+		Params: []coresql.Param{
+			{Col: game_record.FieldGameSubscriptionGameID, Val: gameID},
+			{Col: game_record.FieldGameSubscriptionAccountID, Val: authenData.AccountUser.AccountID},
+			{Col: game_record.FieldGameSubscriptionSubscriptionType, Val: game_record.GameSubscriptionTypeManager},
+			{Col: game_record.FieldGameSubscriptionStatus, Val: game_record.GameSubscriptionStatusActive},
+		},
+		Limit: 1,
+	})
+	if err != nil {
+		l.Warn("failed to find manager subscription for game >%s< >%v<", gameID, err)
+		return err
+	}
+	if len(managerSubs) == 0 {
+		l.Warn("no active manager subscription found for game >%s< account >%s<", gameID, authenData.AccountUser.AccountID)
+		return coreerror.NewNotFoundError(game_record.TableGameSubscription, gameID)
+	}
+
+	managerSubscriptionID := managerSubs[0].ID
+
+	// Queue invitation email — the job will find an available instance under this manager's subscription.
+	l.Info("queuing player invitation email for >%s< via manager subscription >%s<", email, managerSubscriptionID)
+
+	_, err = jc.InsertTx(r.Context(), mm.Tx, &jobworker.SendPlayerInvitationEmailWorkerArgs{
+		GameSubscriptionID: managerSubscriptionID,
+		Email:              email,
+	}, nil)
+	if err != nil {
+		l.Warn("failed to enqueue player invitation email job >%v<", err)
+		return coreerror.NewInternalError("failed to queue player invitation email: %v", err)
+	}
+
+	res, err := mapper.InvitePlayerToResponse(l, email)
+	if err != nil {
+		l.Warn("failed mapping invite player to response >%v<", err)
+		return err
+	}
+
+	if err = server.WriteResponse(l, w, http.StatusOK, res); err != nil {
+		l.Warn("failed writing response >%v<", err)
+		return err
+	}
+
+	return nil
 }
 
 func unlinkGameInstanceFromSubscriptionHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {

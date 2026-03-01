@@ -146,6 +146,18 @@ func getWorkers(l logger.Logger, cfg config.Config, s storer.Storer, e emailer.E
 		return nil, fmt.Errorf("failed to add NewSendTesterInvitationEmailWorker worker: %w", err)
 	}
 
+	// Add player invitation email worker
+	// Sends invitation emails to prospective players; invitation is scoped to the game
+	// and the join link uses the first available game instance.
+	sendPlayerInvitationEmailWorker, err := jobworker.NewSendPlayerInvitationEmailWorker(l, cfg, s, e)
+	if err != nil {
+		return nil, fmt.Errorf("failed NewSendPlayerInvitationEmailWorker worker: %w", err)
+	}
+
+	if err := river.AddWorkerSafely(w, sendPlayerInvitationEmailWorker); err != nil {
+		return nil, fmt.Errorf("failed to add NewSendPlayerInvitationEmailWorker worker: %w", err)
+	}
+
 	// Add turn sheet notification email worker
 	// Sends notification emails to players when new turn sheets are ready with secure links.
 	sendTurnSheetNotificationEmailWorker, err := jobworker.NewSendTurnSheetNotificationEmailWorker(l, cfg, s, e)

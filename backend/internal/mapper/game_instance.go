@@ -164,3 +164,29 @@ func InviteTesterToResponse(l logger.Logger, email string) (*game_schema.InviteT
 		},
 	}, nil
 }
+
+func InvitePlayerRequestToEmail(l logger.Logger, r *http.Request) (string, error) {
+	l.Debug("mapping invite player request to email")
+
+	var req game_schema.InvitePlayerRequest
+	_, err := server.ReadRequest(l, r, &req)
+	if err != nil {
+		return "", err
+	}
+
+	if req.Email == "" {
+		return "", fmt.Errorf("email is required")
+	}
+
+	return req.Email, nil
+}
+
+func InvitePlayerToResponse(l logger.Logger, email string) (*game_schema.InvitePlayerResponse, error) {
+	l.Debug("mapping invite player to response")
+	return &game_schema.InvitePlayerResponse{
+		Data: &game_schema.InvitePlayerResponseData{
+			Message: "player invitation queued",
+			Email:   email,
+		},
+	}, nil
+}

@@ -4,14 +4,116 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/jackc/pgx/v5"
+	"github.com/riverqueue/river"
 	"github.com/stretchr/testify/require"
 	"gitlab.com/alienspaces/playbymail/core/server"
+	"gitlab.com/alienspaces/playbymail/core/type/logger"
+	"gitlab.com/alienspaces/playbymail/core/type/storer"
 	"gitlab.com/alienspaces/playbymail/internal/harness"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 	"gitlab.com/alienspaces/playbymail/internal/runner/server/game"
+	"gitlab.com/alienspaces/playbymail/internal/turnsheet"
+	"gitlab.com/alienspaces/playbymail/internal/utils/config"
 	"gitlab.com/alienspaces/playbymail/internal/utils/testutil"
 	"gitlab.com/alienspaces/playbymail/schema/api/game_schema"
 )
+
+func Test_invitePlayerHandler(t *testing.T) {
+	t.Parallel()
+
+	th := testutil.NewTestHarness(t)
+	require.NotNil(t, th, "NewTestHarness returns without error")
+
+	_, err := th.Setup()
+	require.NoError(t, err, "Test data setup returns without error")
+	defer func() {
+		err = th.Teardown()
+		require.NoError(t, err, "Test data teardown returns without error")
+	}()
+
+	gameRec, err := th.Data.GetGameRecByRef(harness.GameOneRef)
+	require.NoError(t, err, "GetGameRecByRef returns without error")
+
+	testCases := []struct {
+		testutil.TestCase
+		expectResponse func(d harness.Data) game_schema.InvitePlayerResponse
+	}{
+		{
+			TestCase: testutil.TestCase{
+				Name: "authenticated manager invites player to their game queues invitation",
+				NewRunner: func(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], scanner turnsheet.TurnSheetScanner, d harness.Data) (testutil.TestRunnerer, error) {
+					return testutil.NewTestRunner(cfg, l, s, j, scanner)
+				},
+				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
+					return rnr.GetHandlerConfig()[game.InvitePlayer]
+				},
+				RequestHeaders: testutil.AuthHeaderProManager,
+				RequestPathParams: func(d harness.Data) map[string]string {
+					return map[string]string{
+						":game_id": gameRec.ID,
+					}
+				},
+				RequestBody: func(d harness.Data) interface{} {
+					return game_schema.InvitePlayerRequest{
+						Email: "player@example.com",
+					}
+				},
+				ResponseDecoder: testutil.TestCaseResponseDecoderGeneric[game_schema.InvitePlayerResponse],
+				ResponseCode:    http.StatusOK,
+			},
+			expectResponse: func(d harness.Data) game_schema.InvitePlayerResponse {
+				return game_schema.InvitePlayerResponse{
+					Data: &game_schema.InvitePlayerResponseData{
+						Message: "player invitation queued",
+						Email:   "player@example.com",
+					},
+				}
+			},
+		},
+		{
+			TestCase: testutil.TestCase{
+				Name: "unauthenticated request returns unauthorized",
+				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
+					return rnr.GetHandlerConfig()[game.InvitePlayer]
+				},
+				RequestPathParams: func(d harness.Data) map[string]string {
+					return map[string]string{
+						":game_id": gameRec.ID,
+					}
+				},
+				RequestBody: func(d harness.Data) interface{} {
+					return game_schema.InvitePlayerRequest{
+						Email: "player@example.com",
+					}
+				},
+				ResponseCode: http.StatusUnauthorized,
+			},
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Logf("Running test >%s<\n", testCase.Name)
+
+		t.Run(testCase.Name, func(t *testing.T) {
+			testFunc := func(method string, body any) {
+				if testCase.TestResponseCode() != http.StatusOK {
+					return
+				}
+				require.NotNil(t, body, "Response body is not nil")
+
+				aResp := body.(game_schema.InvitePlayerResponse).Data
+				xResp := testCase.expectResponse(th.Data).Data
+
+				require.NotEmpty(t, aResp, "Response body is not empty")
+				require.Equal(t, xResp.Message, aResp.Message, "Message equals expected")
+				require.Equal(t, xResp.Email, aResp.Email, "Email equals expected")
+			}
+
+			testutil.RunTestCase(t, th, &testCase.TestCase, testFunc)
+		})
+	}
+}
 
 func Test_gameSubscriptionHandler(t *testing.T) {
 	t.Parallel()
