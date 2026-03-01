@@ -65,6 +65,15 @@
     <div class="sections">
       <div class="section">
         <div class="section-icon">
+          <HandDrawnIcon type="person" color="blue" />
+        </div>
+        <h2>Play a Game</h2>
+        <p>Browse available play-by-mail games with open enrollment. Join a game and receive your turn sheets by email or post.</p>
+        <router-link to="/games" class="section-link" data-testid="home-catalog-link">Browse Games</router-link>
+      </div>
+
+      <div class="section">
+        <div class="section-icon">
           <HandDrawnIcon type="pencil" color="blue" />
         </div>
         <h2>Game Designer Studio</h2>
@@ -218,7 +227,7 @@ import HandDrawnIcon from '../components/HandDrawnIcon.vue';
 .sections {
   margin: var(--space-lg) 0;
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr;
   gap: var(--space-xl);
 }
 
@@ -291,7 +300,7 @@ import HandDrawnIcon from '../components/HandDrawnIcon.vue';
   height: 28px;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
   .sections {
     grid-template-columns: 1fr;
     gap: var(--space-lg);

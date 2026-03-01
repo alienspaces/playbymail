@@ -45,6 +45,11 @@ const routes = [
     component: FaqView,
   },
   {
+    path: '/games',
+    name: 'GameCatalog',
+    component: () => import('../views/GameCatalogView.vue'),
+  },
+  {
     path: '/account',
     component: () => import('../components/AccountLayout.vue'),
     children: [
