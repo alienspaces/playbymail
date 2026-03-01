@@ -71,8 +71,11 @@ export default {
         const authStore = useAuthStore();
         authStore.setSessionToken(sessionToken);
 
-        // Redirect to turn sheet viewer (or home for now)
-        this.$router.push({ path: '/' });
+        // Redirect to turn sheet list for this game subscription instance.
+        this.$router.push({
+          name: 'PlayerTurnSheets',
+          params: { game_subscription_instance_id: gameSubscriptionInstanceID },
+        });
       } catch (error) {
         this.message = error.message || 'Verification failed. Please check your email and try again.';
       } finally {
