@@ -109,4 +109,9 @@ echo "🚀 Running E2E tests..."
 echo "Command: npx playwright test $*"
 echo ""
 
-exec npx playwright test "$@"
+# Use stdbuf to disable output buffering in CI
+if [ -n "$CI" ]; then
+    exec stdbuf -oL -eL npx playwright test "$@"
+else
+    exec npx playwright test "$@"
+fi
