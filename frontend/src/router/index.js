@@ -40,11 +40,6 @@ const routes = [
     component: VerifyView,
   },
   {
-    path: '/player/game-subscription-instances/:game_subscription_instance_id/login/:turn_sheet_token',
-    name: 'PlayerTurnSheetLogin',
-    component: () => import('../views/PlayerTurnSheetLoginView.vue'),
-  },
-  {
     path: '/faq',
     name: 'Faq',
     component: FaqView,
