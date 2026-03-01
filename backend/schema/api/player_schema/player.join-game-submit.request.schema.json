@@ -1,0 +1,48 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "http://playbymail.games/schema/player_schema/player.join-game-submit.request.schema.json",
+    "title": "JoinGameSubmitRequest",
+    "type": "object",
+    "properties": {
+        "email": {
+            "type": "string",
+            "format": "email",
+            "minLength": 3,
+            "maxLength": 255
+        },
+        "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+        },
+        "postal_address_line1": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+        },
+        "postal_address_line2": {
+            "type": "string",
+            "maxLength": 255
+        },
+        "state_province": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+        },
+        "country": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+        },
+        "postal_code": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 20
+        },
+        "delivery_email": { "type": "boolean" },
+        "delivery_physical_post": { "type": "boolean" },
+        "delivery_physical_local": { "type": "boolean" }
+    },
+    "required": ["email", "name", "postal_address_line1", "state_province", "country", "postal_code"],
+    "additionalProperties": false
+}

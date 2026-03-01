@@ -1,0 +1,21 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "http://playbymail.games/schema/player_schema/player.join-game-verify-email.response.schema.json",
+    "title": "JoinGameVerifyEmailResponse",
+    "type": "object",
+    "properties": {
+        "data": {
+            "type": "object",
+            "properties": {
+                "has_account": { "type": "boolean" }
+            },
+            "required": ["has_account"],
+            "additionalProperties": false
+        },
+        "error": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/error"
+        }
+    },
+    "required": ["data"],
+    "additionalProperties": false
+}

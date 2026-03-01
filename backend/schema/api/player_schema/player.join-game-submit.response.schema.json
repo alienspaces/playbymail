@@ -1,0 +1,23 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "http://playbymail.games/schema/player_schema/player.join-game-submit.response.schema.json",
+    "title": "JoinGameSubmitResponse",
+    "type": "object",
+    "properties": {
+        "data": {
+            "type": "object",
+            "properties": {
+                "game_subscription_id": { "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id" },
+                "game_instance_id": { "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id" },
+                "game_id": { "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id" }
+            },
+            "required": ["game_subscription_id", "game_instance_id", "game_id"],
+            "additionalProperties": false
+        },
+        "error": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/error"
+        }
+    },
+    "required": ["data"],
+    "additionalProperties": false
+}

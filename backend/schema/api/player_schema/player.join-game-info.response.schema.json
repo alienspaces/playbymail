@@ -1,0 +1,38 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "http://playbymail.games/schema/player_schema/player.join-game-info.response.schema.json",
+    "title": "JoinGameInfoResponse",
+    "type": "object",
+    "properties": {
+        "data": {
+            "type": "object",
+            "properties": {
+                "game_id": { "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id" },
+                "game_name": { "type": "string" },
+                "game_description": { "type": "string" },
+                "game_type": { "type": "string" },
+                "turn_duration_hours": { "type": "integer", "minimum": 1 },
+                "instance": {
+                    "type": "object",
+                    "properties": {
+                        "id": { "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id" },
+                        "required_player_count": { "type": "integer", "minimum": 0 },
+                        "player_count": { "type": "integer", "minimum": 0 },
+                        "delivery_physical_post": { "type": "boolean" },
+                        "delivery_physical_local": { "type": "boolean" },
+                        "delivery_email": { "type": "boolean" }
+                    },
+                    "required": ["id", "required_player_count", "player_count", "delivery_physical_post", "delivery_physical_local", "delivery_email"],
+                    "additionalProperties": false
+                }
+            },
+            "required": ["game_id", "game_name", "game_description", "game_type", "turn_duration_hours", "instance"],
+            "additionalProperties": false
+        },
+        "error": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/error"
+        }
+    },
+    "required": ["data"],
+    "additionalProperties": false
+}

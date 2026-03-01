@@ -1,0 +1,16 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "http://playbymail.games/schema/player_schema/player.join-game-verify-email.request.schema.json",
+    "title": "JoinGameVerifyEmailRequest",
+    "type": "object",
+    "properties": {
+        "email": {
+            "type": "string",
+            "format": "email",
+            "minLength": 3,
+            "maxLength": 255
+        }
+    },
+    "required": ["email"],
+    "additionalProperties": false
+}
