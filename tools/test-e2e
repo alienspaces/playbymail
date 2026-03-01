@@ -47,6 +47,10 @@ if ! npm list @playwright/test >/dev/null 2>&1; then
 fi
 
 # Check for browsers in both CI location (/ms-playwright) and local location (~/.cache/ms-playwright)
+echo "🔍 Checking browser locations:"
+echo "  - /ms-playwright/chromium-1200: $([ -d "/ms-playwright/chromium-1200" ] && echo "EXISTS" || echo "NOT FOUND")"
+echo "  - $HOME/.cache/ms-playwright/chromium-1200: $([ -d "$HOME/.cache/ms-playwright/chromium-1200" ] && echo "EXISTS" || echo "NOT FOUND")"
+
 if [ -d "/ms-playwright/chromium-1200" ] || [ -d "$HOME/.cache/ms-playwright/chromium-1200" ]; then
     echo "✅ Playwright browsers already installed"
 elif [ -n "$CI" ]; then

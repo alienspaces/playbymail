@@ -129,9 +129,11 @@ test-e2e:
     TEST_BYPASS_HEADER_NAME: "X-Test-Bypass"
     TEST_BYPASS_HEADER_VALUE: "test-bypass-secret"
     TEST_BASE_URL: "http://localhost:3000"
+    DEBUG: "pw:api"
   image: mcr.microsoft.com/playwright:v1.52.0-noble
   stage: e2e
   interruptible: true
+  timeout: 15m
   services:
     - name: postgres:17.5-alpine
       alias: postgres
