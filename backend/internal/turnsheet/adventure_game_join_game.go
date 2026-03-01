@@ -15,11 +15,35 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/utils/turnsheetutil"
 )
 
+// DeliveryMethods holds which delivery methods are enabled for a game instance.
+type DeliveryMethods struct {
+	Email         bool `json:"delivery_email"`
+	PhysicalLocal bool `json:"delivery_physical_local"`
+	PhysicalPost  bool `json:"delivery_physical_post"`
+}
+
 // JoinGameData represents the data structure for joining an adventure game
 type JoinGameData struct {
 	TurnSheetTemplateData
 
-	GameDescription string `json:"game_description,omitempty"`
+	GameDescription          string          `json:"game_description,omitempty"`
+	AvailableDeliveryMethods DeliveryMethods `json:"available_delivery_methods"`
+}
+
+// HasDeliveryChoice returns true when more than one delivery method is available,
+// indicating that the player should be asked to choose their preferred method.
+func (d *JoinGameData) HasDeliveryChoice() bool {
+	count := 0
+	if d.AvailableDeliveryMethods.Email {
+		count++
+	}
+	if d.AvailableDeliveryMethods.PhysicalLocal {
+		count++
+	}
+	if d.AvailableDeliveryMethods.PhysicalPost {
+		count++
+	}
+	return count > 1
 }
 
 const defaultJoinGameInstructions = "Fill out your account information and character name, then return this form to join the game."
@@ -238,6 +262,7 @@ func joinGameExpectedSchema() map[string]any {
 		"state_province":       "",
 		"country":              "",
 		"postal_code":          "",
+		"delivery_method":      "",
 		"character_name":       "",
 	}
 }
@@ -248,7 +273,9 @@ func buildJoinGameInstructions() string {
 - Image 1 is the blank reference form.
 - Image 2 is the completed form containing handwriting.
 Extract the player's answers and return them as JSON with the keys:
-email, name, postal_address_line1, postal_address_line2, state_province, country, postal_code, character_name.
+email, name, postal_address_line1, postal_address_line2, state_province, country, postal_code, delivery_method, character_name.
+
+For delivery_method: if the form shows a delivery method selection, extract the chosen option as one of "email", "local", or "post". Leave empty if no delivery selection is present on the form.
 
 IMPORTANT: For email addresses, pay special attention to the domain portion.
 Common email domains include: gmail.com, yahoo.com, hotmail.com, outlook.com, etc.
@@ -291,6 +318,7 @@ func normalizeAdventureGameJoinGameScanData(data *AdventureGameJoinGameScanData)
 	data.StateProvince = strings.TrimSpace(data.StateProvince)
 	data.Country = strings.TrimSpace(data.Country)
 	data.PostalCode = strings.TrimSpace(data.PostalCode)
+	data.DeliveryMethod = strings.ToLower(strings.TrimSpace(data.DeliveryMethod))
 	// Normalize adventure game specific fields
 	data.CharacterName = strings.TrimSpace(data.CharacterName)
 }

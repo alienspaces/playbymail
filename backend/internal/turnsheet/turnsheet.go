@@ -265,6 +265,7 @@ type JoinGameScanData struct {
 	StateProvince      string `json:"state_province"`
 	Country            string `json:"country"`
 	PostalCode         string `json:"postal_code"`
+	DeliveryMethod     string `json:"delivery_method,omitempty"` // "email", "local", or "post"; empty when only one method available
 }
 
 // Validate ensures required fields are present in the scanned data

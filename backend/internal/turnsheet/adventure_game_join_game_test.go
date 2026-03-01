@@ -251,6 +251,100 @@ func TestJoinGameProcessor_ScanTurnSheet(t *testing.T) {
 	}
 }
 
+func TestJoinGameData_HasDeliveryChoice(t *testing.T) {
+	tests := []struct {
+		name     string
+		methods  turnsheet.DeliveryMethods
+		expected bool
+	}{
+		{
+			name:     "no delivery methods — no choice",
+			methods:  turnsheet.DeliveryMethods{},
+			expected: false,
+		},
+		{
+			name:     "email only — no choice",
+			methods:  turnsheet.DeliveryMethods{Email: true},
+			expected: false,
+		},
+		{
+			name:     "email and post — choice required",
+			methods:  turnsheet.DeliveryMethods{Email: true, PhysicalPost: true},
+			expected: true,
+		},
+		{
+			name:     "all three methods — choice required",
+			methods:  turnsheet.DeliveryMethods{Email: true, PhysicalLocal: true, PhysicalPost: true},
+			expected: true,
+		},
+		{
+			name:     "local only — no choice",
+			methods:  turnsheet.DeliveryMethods{PhysicalLocal: true},
+			expected: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			data := &turnsheet.JoinGameData{
+				AvailableDeliveryMethods: tt.methods,
+			}
+			require.Equal(t, tt.expected, data.HasDeliveryChoice())
+		})
+	}
+}
+
+func TestJoinGameProcessor_GenerateTurnSheet_WithDeliveryMethods(t *testing.T) {
+	cfg, l, _, _, _ := testutil.NewDefaultDependencies(t)
+	cfg.TemplatesPath = "../../templates"
+
+	processor, err := turnsheet.NewJoinGameProcessor(l, cfg)
+	require.NoError(t, err)
+
+	tests := []struct {
+		name              string
+		deliveryMethods   turnsheet.DeliveryMethods
+		expectRadioButton bool
+	}{
+		{
+			name:              "single delivery method — no radio buttons",
+			deliveryMethods:   turnsheet.DeliveryMethods{Email: true},
+			expectRadioButton: false,
+		},
+		{
+			name:              "multiple delivery methods — radio buttons shown",
+			deliveryMethods:   turnsheet.DeliveryMethods{Email: true, PhysicalPost: true},
+			expectRadioButton: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			data, err := json.Marshal(&turnsheet.JoinGameData{
+				TurnSheetTemplateData: turnsheet.TurnSheetTemplateData{
+					GameName:      convert.Ptr("Test Game"),
+					GameType:      convert.Ptr("adventure"),
+					TurnNumber:    convert.Ptr(0),
+					TurnSheetCode: convert.Ptr(generateTestJoinTurnSheetCode(t)),
+				},
+				GameDescription:          "A test game",
+				AvailableDeliveryMethods: tt.deliveryMethods,
+			})
+			require.NoError(t, err)
+
+			ctx := context.Background()
+			html, err := processor.GenerateTurnSheet(ctx, l, turnsheet.DocumentFormatHTML, data)
+			require.NoError(t, err)
+			require.NotEmpty(t, html)
+
+			htmlStr := string(html)
+			hasRadio := strings.Contains(htmlStr, `name="delivery_method"`)
+			require.Equal(t, tt.expectRadioButton, hasRadio,
+				"expected radio button presence to be %v", tt.expectRadioButton)
+		})
+	}
+}
+
 func TestGenerateJoinGameFormatsForPrinting(t *testing.T) {
 
 	cfg, l, _, _, _ := testutil.NewDefaultDependencies(t)

@@ -2,6 +2,7 @@ package player
 
 import (
 	"database/sql"
+	"encoding/json"
 	"net/http"
 
 	"github.com/jackc/pgx/v5"
@@ -11,6 +12,7 @@ import (
 	coreerror "gitlab.com/alienspaces/playbymail/core/error"
 	"gitlab.com/alienspaces/playbymail/core/jsonschema"
 	"gitlab.com/alienspaces/playbymail/core/queryparam"
+	"gitlab.com/alienspaces/playbymail/core/record"
 	"gitlab.com/alienspaces/playbymail/core/server"
 	"gitlab.com/alienspaces/playbymail/core/type/domainer"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
@@ -20,6 +22,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 	"gitlab.com/alienspaces/playbymail/internal/turnsheet"
 	"gitlab.com/alienspaces/playbymail/internal/utils/logging"
+	"gitlab.com/alienspaces/playbymail/internal/utils/turnsheetutil"
 	"gitlab.com/alienspaces/playbymail/schema/api/player_schema"
 )
 
@@ -276,9 +279,32 @@ func getJoinGameSheetHandler(w http.ResponseWriter, r *http.Request, pp httprout
 		return err
 	}
 
-	sheetData, err := processor.GeneratePreviewData(r.Context(), l, gameRec, nil)
+	// Generate a turn sheet code for the join form.
+	turnSheetCode, err := turnsheetutil.GenerateJoinGameTurnSheetCode(record.NewRecordID())
 	if err != nil {
-		l.Warn("failed to generate join game preview data >%v<", err)
+		l.Warn("failed to generate join game turn sheet code >%v<", err)
+		return err
+	}
+
+	// Build join game data enriched with the instance's available delivery methods.
+	sheetData, err := json.Marshal(&turnsheet.JoinGameData{
+		TurnSheetTemplateData: turnsheet.TurnSheetTemplateData{
+			GameName:              &gameRec.Name,
+			GameType:              &gameRec.GameType,
+			TurnSheetTitle:        ptrStr("Join Game"),
+			TurnSheetDescription:  &gameRec.Description,
+			TurnSheetInstructions: ptrStr(turnsheet.DefaultJoinGameInstructions()),
+			TurnSheetCode:         &turnSheetCode,
+		},
+		GameDescription: gameRec.Description,
+		AvailableDeliveryMethods: turnsheet.DeliveryMethods{
+			Email:         instanceRec.DeliveryEmail,
+			PhysicalLocal: instanceRec.DeliveryPhysicalLocal,
+			PhysicalPost:  instanceRec.DeliveryPhysicalPost,
+		},
+	})
+	if err != nil {
+		l.Warn("failed to marshal join game sheet data >%v<", err)
 		return err
 	}
 
@@ -293,6 +319,9 @@ func getJoinGameSheetHandler(w http.ResponseWriter, r *http.Request, pp httprout
 	_, err = w.Write(htmlBytes)
 	return err
 }
+
+// ptrStr returns a pointer to the given string.
+func ptrStr(s string) *string { return &s }
 
 // saveJoinGameSheetHandler saves partial join game sheet data for multi-step form completion.
 func saveJoinGameSheetHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {

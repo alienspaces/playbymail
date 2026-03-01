@@ -53,10 +53,53 @@
     border-bottom: 1px solid #d1d5db;
 }
 
+.main-content .delivery-options {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-top: 4px;
+}
+
+.main-content .delivery-option {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.95em;
+}
+
 </style>
 {{end}}
 
 {{define "content"}}
+{{- if .HasDeliveryChoice -}}
+<div class="delivery-section">
+    <h3 class="content-section-title">How would you like to play?</h3>
+    <div class="form-group">
+        <div class="delivery-options">
+            {{- if .AvailableDeliveryMethods.Email -}}
+            <label class="delivery-option">
+                <input type="radio" name="delivery_method" value="email" required>
+                By Email
+            </label>
+            {{- end -}}
+            {{- if .AvailableDeliveryMethods.PhysicalLocal -}}
+            <label class="delivery-option">
+                <input type="radio" name="delivery_method" value="local" required>
+                Local pickup
+            </label>
+            {{- end -}}
+            {{- if .AvailableDeliveryMethods.PhysicalPost -}}
+            <label class="delivery-option">
+                <input type="radio" name="delivery_method" value="post" required>
+                By Post
+            </label>
+            {{- end -}}
+        </div>
+    </div>
+</div>
+<div class="section-divider"></div>
+{{- end -}}
+
 <div class="account-info-section">
     <h3 class="content-section-title">Your PlayByMail Account</h3>
     <div class="account-details">
