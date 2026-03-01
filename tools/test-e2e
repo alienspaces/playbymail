@@ -46,18 +46,14 @@ if ! npm list @playwright/test >/dev/null 2>&1; then
     npm install
 fi
 
-# Check for browsers in both CI location (/ms-playwright) and local location (~/.cache/ms-playwright)
-echo "🔍 Checking browser locations:"
-echo "  - /ms-playwright/chromium-1200: $([ -d "/ms-playwright/chromium-1200" ] && echo "EXISTS" || echo "NOT FOUND")"
-echo "  - $HOME/.cache/ms-playwright/chromium-1200: $([ -d "$HOME/.cache/ms-playwright/chromium-1200" ] && echo "EXISTS" || echo "NOT FOUND")"
-
-if [ -d "/ms-playwright/chromium-1200" ] || [ -d "$HOME/.cache/ms-playwright/chromium-1200" ]; then
+# In CI the matching Playwright Docker image already has browsers pre-installed.
+# Locally, check if chromium is available and install if needed.
+if [ -n "$CI" ]; then
+    echo "✅ Using browsers from Playwright Docker image"
+elif ls /ms-playwright/chromium-* >/dev/null 2>&1 || ls "$HOME/.cache/ms-playwright/chromium-"* >/dev/null 2>&1; then
     echo "✅ Playwright browsers already installed"
-elif [ -n "$CI" ]; then
-    echo "📦 Installing Playwright browsers (CI)..."
-    npx playwright install chromium
 else
-    echo "📦 Installing Playwright browsers (local)..."
+    echo "📦 Installing Playwright browsers..."
     npx playwright install chromium --with-deps
 fi
 
