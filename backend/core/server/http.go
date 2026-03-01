@@ -319,33 +319,81 @@ func (rnr *Runner) registerDefaultStaticRoutes(r *httprouter.Router) (*httproute
 			fileServer.ServeHTTP(w, r)
 		})
 
+		// Helper function to serve HTML files directly (avoiding FileServer redirects)
+		serveHTML := func(w http.ResponseWriter, htmlPath string) error {
+			content, err := os.ReadFile(rnr.Config.AppHome + htmlPath)
+			if err != nil {
+				return err
+			}
+			w.Header().Set("Content-Type", "text/html; charset=utf-8")
+			w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+			w.Header().Set("Pragma", "no-cache")
+			w.Header().Set("Expires", "0")
+			w.WriteHeader(http.StatusOK)
+			_, err = w.Write(content)
+			return err
+		}
+
 		// Create a custom NotFound handler that implements SPA fallback
 		r.NotFound = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			// First, try to serve the requested file
 			filePath := r.URL.Path
 
-			// Check if the file exists
+			// Check if the requested path is a file that exists
 			fullPath := rnr.Config.AppHome + filePath
-			if _, err := os.Stat(fullPath); err == nil {
-				// File exists, serve it with cache headers
+			fileInfo, err := os.Stat(fullPath)
+			
+			// If file exists and is not a directory, serve it
+			if err == nil && !fileInfo.IsDir() {
+				// For HTML files, serve directly to avoid FileServer redirects
+				if strings.HasSuffix(filePath, ".html") {
+					if err := serveHTML(w, filePath); err != nil {
+						http.NotFound(w, r)
+					}
+					return
+				}
+				// For other files, use the cached file server
 				cachedFileServer.ServeHTTP(w, r)
 				return
 			}
 
-			// File doesn't exist, check if it's a directory
-			if _, err := os.Stat(fullPath + "/index.html"); err == nil {
-				// Directory with index.html exists, serve it
-				r.URL.Path = filePath + "/index.html"
-				cachedFileServer.ServeHTTP(w, r)
-				return
+			// If it's a directory with index.html, serve that HTML directly
+			if err == nil && fileInfo.IsDir() {
+				indexPath := fullPath
+				if !strings.HasSuffix(indexPath, "/") {
+					indexPath += "/"
+				}
+				indexPath += "index.html"
+				if _, err := os.Stat(indexPath); err == nil {
+					// Serve the index.html directly
+					htmlPath := filePath
+					if !strings.HasSuffix(htmlPath, "/") {
+						htmlPath += "/"
+					}
+					htmlPath += "index.html"
+					if err := serveHTML(w, htmlPath); err != nil {
+						http.NotFound(w, r)
+					}
+					return
+				}
 			}
 
-			// Neither file nor directory with index.html exists
-			// Serve index.html for SPA routing (except for API routes)
+			// File/directory doesn't exist - SPA fallback (except for API routes)
 			if !strings.HasPrefix(filePath, "/api/") && !strings.HasPrefix(filePath, "/v1/") && !strings.HasPrefix(filePath, "/healthz") && !strings.HasPrefix(filePath, "/liveness") {
+				// Player app routes go to player/index.html
+				if strings.HasPrefix(filePath, "/player/") {
+					l.Debug("(core) serving player/index.html for player app route >%s<", filePath)
+					if err := serveHTML(w, "/player/index.html"); err != nil {
+						l.Warn("(core) failed to serve player/index.html: %v", err)
+						http.NotFound(w, r)
+					}
+					return
+				}
+				// All other routes go to main app index.html
 				l.Debug("(core) serving index.html for SPA route >%s<", filePath)
-				r.URL.Path = "/index.html"
-				cachedFileServer.ServeHTTP(w, r)
+				if err := serveHTML(w, "/index.html"); err != nil {
+					l.Warn("(core) failed to serve index.html: %v", err)
+					http.NotFound(w, r)
+				}
 				return
 			}
 

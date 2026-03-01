@@ -7,23 +7,25 @@
     <ul class="faq-list">
       <li>
         <strong>What is Play by Mail?</strong>
-        <p>Play by Mail is a way to play games through physical mail. Players send in their moves by mail, and receive
-          results by mail—no online play.</p>
+        <p>Play by Mail is a style of turn-based gaming where players submit their moves and receive results by email
+          or physical mail, rather than playing in real time online.</p>
       </li>
       <li>
         <strong>What does playbymail.games provide?</strong>
-        <p>We provide a comprehensive platform for creating, managing, and playing play-by-mail games. The platform
-          includes automated turn processing, game design tools, and player management systems.</p>
+        <p>We provide a comprehensive platform for creating, managing, and playing turn-based games via email or
+          physical mail. The platform includes automated turn processing, game design tools, and player management
+          systems.</p>
       </li>
       <li>
-        <strong>Can I play games online here?</strong>
-        <p>No. This platform is for designing and running games that are played entirely by mail. Players join games
-          here but play offline via physical mail.</p>
+        <strong>Is this a real-time online game?</strong>
+        <p>No. This is not a real-time game platform. Games are turn-based and driven by the game's turn schedule—players
+          submit moves and receive results by email or physical mail each turn, not in real time.</p>
       </li>
       <li>
         <strong>How does turn processing work?</strong>
-        <p>The platform automatically processes player turns submitted by mail. Game managers review the results, attend
-          to player queries, and handle any issues flagged by the system for human oversight.</p>
+        <p>Players submit their turn sheets online via email link or by returning printed forms through the mail. The
+          platform automatically processes submissions, and game managers review results, attend to player queries, and
+          handle any issues flagged for human oversight.</p>
       </li>
       <li>
         <strong>How do I get started as a Game Designer?</strong>
@@ -38,7 +40,7 @@
       <li>
         <strong>How do I get started as a Player?</strong>
         <p>Sign up, browse available games, join the ones you're interested in, and start receiving game materials by
-          mail.</p>
+          email or physical mail.</p>
       </li>
     </ul>
   </div>

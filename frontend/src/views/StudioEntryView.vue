@@ -21,7 +21,7 @@
       <ul>
         <li>Outline branching stories, strategic scenarios, and player roles</li>
         <li>Define locations, maps, units, encounters, and events</li>
-        <li>Import custom artwork for maps, tokens, handouts, and other physical mailers</li>
+        <li>Import custom artwork for maps, tokens, handouts, and other game materials</li>
         <li>Link regions and scenes with travel rules, conditions, and objectives</li>
         <li>Playtest turn flows before publishing your game to players</li>
       </ul>

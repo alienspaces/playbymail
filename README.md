@@ -20,4 +20,4 @@ AI is integrated where appropriate, always subject to human review for narrative
 
 Yet to be determined.
 
-**Important**: PlayByMail is a **play-by-mail platform** (email and physical mail), not a real-time web game. The web interface is for game designers, managers, and administrators to create and manage turn-based games that are played via email or physical mail.
+**Important**: PlayByMail is a **turn-based game platform**—games are played via email or physical mail, not in real time. Email is the primary play method: players receive turn sheets by email and submit moves online. Physical mail is also fully supported. The web interface is for game designers, managers, and administrators to create and manage these games.

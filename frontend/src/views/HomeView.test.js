@@ -36,7 +36,7 @@ describe('HomeView', () => {
     const wrapper = mountWithStubs()
     const description = wrapper.find('p')
     expect(description.text()).toContain('PlayByMail')
-    expect(description.text()).toContain('play-by-mail games')
+    expect(description.text()).toContain('turn-based games')
   })
 
   it('renders the who section with three user types', () => {

@@ -3,8 +3,8 @@
     <div class="hero-section">
       <h1>Welcome to PlayByMail</h1>
       <p>
-        <strong>PlayByMail</strong> is a platform for designing, managing, and running play-by-mail games—games played
-        entirely through physical mail, not online.
+        <strong>PlayByMail</strong> is a platform for designing, managing, and running turn-based games played via
+        email or physical mail—not real-time online play.
       </p>
     </div>
 
