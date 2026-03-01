@@ -46,11 +46,15 @@ if ! npm list @playwright/test >/dev/null 2>&1; then
     npm install
 fi
 
-if [ ! -d "$HOME/.cache/ms-playwright/chromium-1200" ]; then
-    echo "📦 Installing Playwright browsers..."
-    npx playwright install chromium --with-deps
-else
+# Check for browsers in both CI location (/ms-playwright) and local location (~/.cache/ms-playwright)
+if [ -d "/ms-playwright/chromium-1200" ] || [ -d "$HOME/.cache/ms-playwright/chromium-1200" ]; then
     echo "✅ Playwright browsers already installed"
+elif [ -n "$CI" ]; then
+    echo "📦 Installing Playwright browsers (CI)..."
+    npx playwright install chromium
+else
+    echo "📦 Installing Playwright browsers (local)..."
+    npx playwright install chromium --with-deps
 fi
 
 if [ ! -f "playwright.config.js" ]; then
