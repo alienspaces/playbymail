@@ -1,6 +1,8 @@
 import { test, expect } from '@playwright/test'
 
 test.describe('Player App Routing', () => {
+  test.skip(!!process.env.CI, 'Requires production build served by backend')
+
   test('serves player app at /player/ routes via backend', async ({ page }) => {
     // Use backend URL to test production build routing
     await page.goto('http://localhost:8080/player/game-subscription-instances/test-id/login/test-token')

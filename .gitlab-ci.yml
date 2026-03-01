@@ -129,6 +129,8 @@ test-e2e:
     TEST_BYPASS_HEADER_NAME: "X-Test-Bypass"
     TEST_BYPASS_HEADER_VALUE: "test-bypass-secret"
     TEST_BASE_URL: "http://localhost:3000"
+    CORS_ALLOWED_ORIGINS: "http://localhost:8080,http://localhost:3000"
+    CORS_ALLOWED_HEADERS: "Content-Type,Authorization,X-Test-Bypass"
   image: mcr.microsoft.com/playwright:v1.57.0-noble
   stage: e2e
   interruptible: true
