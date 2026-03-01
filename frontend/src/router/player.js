@@ -7,6 +7,11 @@ const routes = [
     name: 'PlayerTurnSheetLogin',
     component: () => import('../views/PlayerTurnSheetLoginView.vue'),
   },
+  {
+    path: '/player/join-game/:game_instance_id',
+    name: 'PlayerJoinGame',
+    component: () => import('../views/PlayerJoinGameView.vue'),
+  },
 ]
 
 const router = createRouter({
