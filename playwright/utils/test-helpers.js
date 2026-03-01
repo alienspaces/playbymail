@@ -28,9 +28,9 @@ export async function waitForElement(page, selector, timeout = 5000) {
 }
 
 export async function waitForPageReady(page) {
-  // Wait for network to be idle and page to be fully loaded
-  await page.waitForLoadState('networkidle')
+  // Wait for page to be fully loaded (avoid networkidle as it hangs with polling/websockets)
   await page.waitForLoadState('domcontentloaded')
+  await page.waitForLoadState('load')
 }
 
 export async function safeFill(page, selector, value) {

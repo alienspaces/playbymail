@@ -14,7 +14,6 @@ const TEST_EMAIL = 'playwright-auth-test@example.com'
 test.describe('Authentication Flow', () => {
   test.beforeEach(async ({ page }) => {
     await page.context().clearCookies()
-    await page.evaluate(() => localStorage.clear())
   })
 
   test.describe('Login Page', () => {
