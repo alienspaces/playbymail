@@ -9,7 +9,9 @@ import {
   isAuthenticated,
 } from '../utils/test-helpers.js'
 
-const TEST_EMAIL = 'playwright-auth-test@example.com'
+function testEmail(testInfo) {
+  return `playwright-auth-w${testInfo.workerIndex}@example.com`
+}
 
 test.describe('Authentication Flow', () => {
   test.beforeEach(async ({ page }) => {
@@ -30,29 +32,32 @@ test.describe('Authentication Flow', () => {
       await expect(page).toHaveURL('/login')
     })
 
-    test('submits email and redirects to verification page', async ({ page }) => {
+    test('submits email and redirects to verification page', async ({ page }, testInfo) => {
+      const email = testEmail(testInfo)
       await page.context().setExtraHTTPHeaders({
         [TEST_BYPASS_HEADER_NAME]: TEST_BYPASS_HEADER_VALUE,
       })
       await navigateTo(page, '/login')
-      await fillFormField(page, '[data-testid="email-input"]', TEST_EMAIL)
+      await fillFormField(page, '[data-testid="email-input"]', email)
       await safeClick(page, '[data-testid="login-submit"]')
       await expect(page).toHaveURL(/\/verify/)
     })
   })
 
   test.describe('Verification Page', () => {
-    test('displays verification form', async ({ page }) => {
-      await navigateTo(page, `/verify?email=${encodeURIComponent(TEST_EMAIL)}`)
+    test('displays verification form', async ({ page }, testInfo) => {
+      const email = testEmail(testInfo)
+      await navigateTo(page, `/verify?email=${encodeURIComponent(email)}`)
       await expect(page.locator('[data-testid="verify-code-input"]')).toBeVisible()
       await expect(page.locator('[data-testid="verify-submit"]')).toBeVisible()
     })
 
-    test('shows error for invalid verification code', async ({ page }) => {
+    test('shows error for invalid verification code', async ({ page }, testInfo) => {
+      const email = testEmail(testInfo)
       await page.context().setExtraHTTPHeaders({
         [TEST_BYPASS_HEADER_NAME]: TEST_BYPASS_HEADER_VALUE,
       })
-      await navigateTo(page, `/verify?email=${encodeURIComponent(TEST_EMAIL)}`)
+      await navigateTo(page, `/verify?email=${encodeURIComponent(email)}`)
       await fillFormField(page, '[data-testid="verify-code-input"]', 'WRONGCODE')
       await safeClick(page, '[data-testid="verify-submit"]')
       await page.waitForTimeout(2000)
@@ -66,19 +71,20 @@ test.describe('Authentication Flow', () => {
   })
 
   test.describe('Full Authentication Cycle', () => {
-    test('login -> verify with bypass -> authenticated session', async ({ page }) => {
+    test('login -> verify with bypass -> authenticated session', async ({ page }, testInfo) => {
+      const email = testEmail(testInfo)
       await page.context().setExtraHTTPHeaders({
         [TEST_BYPASS_HEADER_NAME]: TEST_BYPASS_HEADER_VALUE,
       })
 
       // Step 1: Navigate to login
       await navigateTo(page, '/login')
-      await fillFormField(page, '[data-testid="email-input"]', TEST_EMAIL)
+      await fillFormField(page, '[data-testid="email-input"]', email)
       await safeClick(page, '[data-testid="login-submit"]')
 
       // Step 2: Verify with email as code (bypass mode)
       await expect(page).toHaveURL(/\/verify/)
-      await fillFormField(page, '[data-testid="verify-code-input"]', TEST_EMAIL)
+      await fillFormField(page, '[data-testid="verify-code-input"]', email)
       await safeClick(page, '[data-testid="verify-submit"]')
 
       // Step 3: Should redirect to home and be authenticated
@@ -89,17 +95,18 @@ test.describe('Authentication Flow', () => {
       expect(authenticated).toBe(true)
     })
 
-    test('authenticated state persists across page reload', async ({ page }) => {
+    test('authenticated state persists across page reload', async ({ page }, testInfo) => {
+      const email = testEmail(testInfo)
       await page.context().setExtraHTTPHeaders({
         [TEST_BYPASS_HEADER_NAME]: TEST_BYPASS_HEADER_VALUE,
       })
 
       // Authenticate
       await navigateTo(page, '/login')
-      await fillFormField(page, '[data-testid="email-input"]', TEST_EMAIL)
+      await fillFormField(page, '[data-testid="email-input"]', email)
       await safeClick(page, '[data-testid="login-submit"]')
       await expect(page).toHaveURL(/\/verify/)
-      await fillFormField(page, '[data-testid="verify-code-input"]', TEST_EMAIL)
+      await fillFormField(page, '[data-testid="verify-code-input"]', email)
       await safeClick(page, '[data-testid="verify-submit"]')
       await page.waitForURL('/', { timeout: 10000 })
 
@@ -111,17 +118,18 @@ test.describe('Authentication Flow', () => {
       expect(authenticated).toBe(true)
     })
 
-    test('sign out clears authenticated state', async ({ page }) => {
+    test('sign out clears authenticated state', async ({ page }, testInfo) => {
+      const email = testEmail(testInfo)
       await page.context().setExtraHTTPHeaders({
         [TEST_BYPASS_HEADER_NAME]: TEST_BYPASS_HEADER_VALUE,
       })
 
       // Authenticate
       await navigateTo(page, '/login')
-      await fillFormField(page, '[data-testid="email-input"]', TEST_EMAIL)
+      await fillFormField(page, '[data-testid="email-input"]', email)
       await safeClick(page, '[data-testid="login-submit"]')
       await expect(page).toHaveURL(/\/verify/)
-      await fillFormField(page, '[data-testid="verify-code-input"]', TEST_EMAIL)
+      await fillFormField(page, '[data-testid="verify-code-input"]', email)
       await safeClick(page, '[data-testid="verify-submit"]')
       await page.waitForURL('/', { timeout: 10000 })
       await waitForPageReady(page)
@@ -141,7 +149,7 @@ test.describe('Authentication Flow', () => {
     test('handles network errors on login gracefully', async ({ page }) => {
       await navigateTo(page, '/login')
       await page.route('**/api/v1/request-auth', (route) => route.abort('failed'))
-      await fillFormField(page, '[data-testid="email-input"]', TEST_EMAIL)
+      await fillFormField(page, '[data-testid="email-input"]', 'error-test@example.com')
       await safeClick(page, '[data-testid="login-submit"]')
       await page.waitForTimeout(2000)
       await expect(page.locator('[data-testid="login-error"]')).toBeVisible()
@@ -156,7 +164,7 @@ test.describe('Authentication Flow', () => {
           body: JSON.stringify({ error: 'Internal Server Error' }),
         })
       )
-      await fillFormField(page, '[data-testid="email-input"]', TEST_EMAIL)
+      await fillFormField(page, '[data-testid="email-input"]', 'error-test@example.com')
       await safeClick(page, '[data-testid="login-submit"]')
       await page.waitForTimeout(2000)
       await expect(page.locator('[data-testid="login-error"]')).toBeVisible()

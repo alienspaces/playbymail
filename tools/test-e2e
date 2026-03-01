@@ -81,6 +81,9 @@ if [ -z "$CI" ]; then
         exit 1
     fi
     echo "✅ Backend running"
+    echo ""
+    echo "💡 Tip: To reduce backend log spam during tests, set LOG_LEVEL=error in .env.develop"
+    echo "   before starting the backend. Current setting: ${LOG_LEVEL:-not set}"
 fi
 
 case "${1:-}" in

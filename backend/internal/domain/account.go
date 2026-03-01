@@ -293,11 +293,14 @@ func (m *Domain) CreateAccountRec(rec *account_record.AccountUser) (*account_rec
 	return rec, nil
 }
 
-// UpdateAccountRec -
+// UpdateAccountRec uses FOR UPDATE (wait) rather than NOWAIT because brief
+// contention is expected between River job workers and API requests operating
+// on the same account row (e.g. verification token generation vs session
+// token generation).
 func (m *Domain) UpdateAccountRec(rec *account_record.AccountUser) (*account_record.AccountUser, error) {
 	l := m.Logger("UpdateAccountRec")
 
-	curr, err := m.GetAccountRec(rec.ID, coresql.ForUpdateNoWait)
+	curr, err := m.GetAccountRec(rec.ID, coresql.ForUpdate)
 	if err != nil {
 		return rec, err
 	}
@@ -539,12 +542,14 @@ func (m *Domain) VerifyAccountVerificationToken(token string, testBypassEnabled 
 			return "", err
 		}
 
-		if len(recs) == 0 {
-			l.Info("no account found for verification token >%s<", token)
-			return "", nil
+		if len(recs) > 0 {
+			rec = recs[0]
 		}
+	}
 
-		rec = recs[0]
+	if rec == nil {
+		l.Info("no account found for verification token >%s<", token)
+		return "", coreerror.NewInvalidDataError("Invalid verification code.")
 	}
 
 	l.Info("account found for verification token >%s<", token)

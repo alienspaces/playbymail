@@ -50,12 +50,8 @@ export async function isAuthenticated(page) {
   const body = page.locator('body')
   const content = await body.textContent()
 
-  // Look for signs of authentication
   const authenticatedIndicators = [
-    'Games & Instances',
-    'Manage Instances',
-    'Account Settings',
-    'Sign Out'
+    'Logout',
   ]
 
   return authenticatedIndicators.some(indicator =>

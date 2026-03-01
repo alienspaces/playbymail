@@ -104,14 +104,15 @@ test.describe('Core Navigation', () => {
       await takeScreenshot(page, 'admin-unauthenticated')
     })
 
-    test('should load account page with error for unauthenticated users', async ({ page }) => {
+    test('should redirect unauthenticated users from account page to login', async ({ page }) => {
       await navigateTo(page, '/account')
 
       // App uses static title for all pages
       await checkPageTitle(page, 'Play by Mail')
-      await checkPageURL(page, '/account')
 
-      // Should show error or unauthenticated content
+      // Unauthenticated users are redirected to login when /account triggers a 401 API response
+      await checkPageURL(page, /\/login/)
+
       await checkElementVisible(page, 'body')
 
       await takeScreenshot(page, 'account-unauthenticated')
