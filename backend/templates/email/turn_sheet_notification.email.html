@@ -34,12 +34,5 @@
 </div>
 {{end}}
 
-{{define "footer"}}
-<div style="margin-bottom: 8px;">
-    For help or questions, contact us at <a href="mailto:{{.SupportEmail}}"
-        style="color: #006ECD; text-decoration: none;">{{.SupportEmail}}</a>.
-</div>
-<div>
-    &copy; {{.Year}} PlayByMail. All rights reserved.
-</div>
-{{end}}
+{{/* No footer override — uses the base template default footer, which includes a
+     conditional account link when AccountURL is set in the template data. */}}

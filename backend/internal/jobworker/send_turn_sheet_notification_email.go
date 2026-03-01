@@ -192,6 +192,9 @@ func (w *SendTurnSheetNotificationEmailWorker) DoWork(ctx context.Context, m *do
 	}
 
 	var body bytes.Buffer
+	// Players with an account get a link to manage their account in the email footer.
+	accountURL := fmt.Sprintf("%s/account", w.Config.AppHost)
+
 	tmplData := struct {
 		GameName       string
 		TurnNumber     int
@@ -199,6 +202,7 @@ func (w *SendTurnSheetNotificationEmailWorker) DoWork(ctx context.Context, m *do
 		ExpirationDate string
 		ExpirationTime string
 		SupportEmail   string
+		AccountURL     string
 		Year           int
 	}{
 		GameName:       gameRec.Name,
@@ -207,6 +211,7 @@ func (w *SendTurnSheetNotificationEmailWorker) DoWork(ctx context.Context, m *do
 		ExpirationDate: expirationDate,
 		ExpirationTime: expirationTime,
 		SupportEmail:   w.Config.SupportEmailAddress,
+		AccountURL:     accountURL,
 		Year:           time.Now().Year(),
 	}
 

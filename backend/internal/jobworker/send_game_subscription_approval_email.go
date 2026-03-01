@@ -162,17 +162,22 @@ func (w *SendGameSubscriptionApprovalEmailWorker) DoWork(ctx context.Context, m 
 	}
 
 	var body bytes.Buffer
+	// This email is sent to a player who already has (or is in the process of creating) an account.
+	accountURL := fmt.Sprintf("%s/account", w.Config.AppHost)
+
 	tmplData := struct {
 		AccountName  string
 		GameName     string
 		ApprovalURL  string
 		SupportEmail string
+		AccountURL   string
 		Year         int
 	}{
 		AccountName:  accountName,
 		GameName:     gameRec.Name,
 		ApprovalURL:  approvalURL,
 		SupportEmail: w.Config.SupportEmailAddress,
+		AccountURL:   accountURL,
 		Year:         time.Now().Year(),
 	}
 

@@ -22,6 +22,11 @@
                                 <div style="margin-bottom: 8px;">
                                     For help or questions, contact us at <a href="mailto:{{.SupportEmail}}" style="color: #006ECD; text-decoration: none;">{{.SupportEmail}}</a>.
                                 </div>
+                                {{- if .AccountURL}}
+                                <div style="margin-bottom: 8px;">
+                                    <a href="{{.AccountURL}}" style="color: #006ECD; text-decoration: none;">Manage your account</a>
+                                </div>
+                                {{- end}}
                                 <div>
                                     &copy; {{.Year}} PlayByMail. All rights reserved.
                                 </div>
