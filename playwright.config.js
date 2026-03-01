@@ -39,7 +39,7 @@ export default defineConfig({
   webServer: [
     {
       command: 'cd backend && ./playbymail-server',
-      url: 'http://localhost:8080',
+      url: 'http://localhost:8080/healthz',
       reuseExistingServer: true,
       timeout: 120 * 1000,
       stdout: 'pipe',
