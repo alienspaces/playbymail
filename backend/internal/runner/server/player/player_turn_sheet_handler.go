@@ -41,6 +41,14 @@ const (
 	SubmitGameSubscriptionTurnSheets = "submit-game-subscription-turn-sheets"
 )
 
+// New gsi_id-based endpoint names (additive — existing endpoints stay unchanged).
+const (
+	GetGSITurnSheetList = "get-gsi-turn-sheet-list"
+	GetGSITurnSheet     = "get-gsi-turn-sheet"
+	SaveGSITurnSheet    = "save-gsi-turn-sheet"
+	SubmitGSITurnSheets = "submit-gsi-turn-sheets"
+)
+
 func playerTurnSheetHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error) {
 	l = logging.LoggerWithFunctionContext(l, packageName, "playerTurnSheetHandlerConfig")
 
@@ -239,7 +247,379 @@ func playerTurnSheetHandlerConfig(l logger.Logger) (map[string]server.HandlerCon
 		},
 	}
 
+	// --- gsi_id-based endpoints (additive; existing subscription+instance endpoints unchanged) ---
+
+	// GET /api/v1/player/game-subscription-instances/:gsi_id/turn-sheets
+	playerTurnSheetConfig[GetGSITurnSheetList] = server.HandlerConfig{
+		Method:      http.MethodGet,
+		Path:        "/api/v1/player/game-subscription-instances/:game_subscription_instance_id/turn-sheets",
+		HandlerFunc: getGSITurnSheetListHandler,
+		MiddlewareConfig: server.MiddlewareConfig{
+			AuthenTypes: []server.AuthenticationType{server.AuthenticationTypeToken},
+			AuthzPermissions: []server.AuthorizedPermission{
+				handler_auth.PermissionGamePlaying,
+			},
+			ValidateResponseSchema: jsonschema.SchemaWithReferences{
+				Main: jsonschema.Schema{
+					Location: "api/player_schema",
+					Name:     "player.get-game-subscription-turn-sheet-list.response.schema.json",
+				},
+				References: append(referenceSchemas, []jsonschema.Schema{
+					{Location: "api/player_schema", Name: "game_turn_sheet.schema.json"},
+				}...),
+			},
+		},
+		DocumentationConfig: server.DocumentationConfig{
+			Document:    true,
+			Title:       "List turn sheets by game subscription instance",
+			Description: "Returns available turn sheets for a game_subscription_instance. Auth: session token.",
+		},
+	}
+
+	// GET /api/v1/player/game-subscription-instances/:gsi_id/turn-sheets/:game_turn_sheet_id
+	playerTurnSheetConfig[GetGSITurnSheet] = server.HandlerConfig{
+		Method:      http.MethodGet,
+		Path:        "/api/v1/player/game-subscription-instances/:game_subscription_instance_id/turn-sheets/:game_turn_sheet_id",
+		HandlerFunc: getGSITurnSheetHandler,
+		MiddlewareConfig: server.MiddlewareConfig{
+			AuthenTypes: []server.AuthenticationType{server.AuthenticationTypeToken},
+			AuthzPermissions: []server.AuthorizedPermission{
+				handler_auth.PermissionGamePlaying,
+			},
+			ValidateResponseSchema: jsonschema.SchemaWithReferences{
+				Main: jsonschema.Schema{
+					Location: "api/player_schema",
+					Name:     "player.get-game-subscription-turn-sheet.response.schema.json",
+				},
+				References: append(referenceSchemas, []jsonschema.Schema{
+					{Location: "api/player_schema", Name: "game_turn_sheet.schema.json"},
+				}...),
+			},
+		},
+		DocumentationConfig: server.DocumentationConfig{
+			Document:    true,
+			Title:       "Get turn sheet by game subscription instance",
+			Description: "Get specific turn sheet data via game_subscription_instance_id. Auth: session token.",
+		},
+	}
+
+	// PUT /api/v1/player/game-subscription-instances/:gsi_id/turn-sheets/:game_turn_sheet_id
+	playerTurnSheetConfig[SaveGSITurnSheet] = server.HandlerConfig{
+		Method:      http.MethodPut,
+		Path:        "/api/v1/player/game-subscription-instances/:game_subscription_instance_id/turn-sheets/:game_turn_sheet_id",
+		HandlerFunc: saveGSITurnSheetHandler,
+		MiddlewareConfig: server.MiddlewareConfig{
+			AuthenTypes: []server.AuthenticationType{server.AuthenticationTypeToken},
+			AuthzPermissions: []server.AuthorizedPermission{
+				handler_auth.PermissionGamePlaying,
+			},
+			ValidateRequestSchema: jsonschema.SchemaWithReferences{
+				Main: jsonschema.Schema{
+					Location: "api/player_schema",
+					Name:     "player.update-game-subscription-turn-sheet.request.schema.json",
+				},
+				References: referenceSchemas,
+			},
+			ValidateResponseSchema: jsonschema.SchemaWithReferences{
+				Main: jsonschema.Schema{
+					Location: "api/player_schema",
+					Name:     "player.update-game-subscription-turn-sheet.response.schema.json",
+				},
+				References: append(referenceSchemas, []jsonschema.Schema{
+					{Location: "api/player_schema", Name: "game_turn_sheet.schema.json"},
+				}...),
+			},
+		},
+		DocumentationConfig: server.DocumentationConfig{
+			Document:    true,
+			Title:       "Save turn sheet by game subscription instance",
+			Description: "Save (auto-save) turn sheet data via game_subscription_instance_id. Auth: session token.",
+		},
+	}
+
+	// POST /api/v1/player/game-subscription-instances/:gsi_id/turn-sheets/submit
+	playerTurnSheetConfig[SubmitGSITurnSheets] = server.HandlerConfig{
+		Method:      http.MethodPost,
+		Path:        "/api/v1/player/game-subscription-instances/:game_subscription_instance_id/turn-sheets/submit",
+		HandlerFunc: submitGSITurnSheetsHandler,
+		MiddlewareConfig: server.MiddlewareConfig{
+			AuthenTypes: []server.AuthenticationType{server.AuthenticationTypeToken},
+			AuthzPermissions: []server.AuthorizedPermission{
+				handler_auth.PermissionGamePlaying,
+			},
+			ValidateResponseSchema: jsonschema.SchemaWithReferences{
+				Main: jsonschema.Schema{
+					Location: "api/player_schema",
+					Name:     "player.submit-game-subscription-turn-sheets.response.schema.json",
+				},
+				References: referenceSchemas,
+			},
+		},
+		DocumentationConfig: server.DocumentationConfig{
+			Document:    true,
+			Title:       "Submit turn sheets by game subscription instance",
+			Description: "Submit all turn sheets via game_subscription_instance_id. Auth: session token.",
+		},
+	}
+
 	return playerTurnSheetConfig, nil
+}
+
+// resolveGSI resolves a game_subscription_instance record and verifies ownership for the
+// authenticated account. Returns the gsi record or an error.
+func resolveGSI(l logger.Logger, r *http.Request, pp httprouter.Params, mm *domain.Domain) (*game_record.GameSubscriptionInstance, error) {
+	gsiID := pp.ByName("game_subscription_instance_id")
+	if gsiID == "" {
+		return nil, coreerror.RequiredPathParameter("game_subscription_instance_id")
+	}
+
+	authData := server.GetRequestAuthenData(l, r)
+	if authData == nil {
+		return nil, coreerror.NewUnauthorizedError()
+	}
+
+	gsiRec, err := mm.GetGameSubscriptionInstanceRec(gsiID, nil)
+	if err != nil {
+		l.Warn("failed to get game subscription instance >%s< >%v<", gsiID, err)
+		return nil, err
+	}
+
+	// Verify ownership — the authenticated account must own this gsi.
+	if gsiRec.AccountID != authData.AccountUser.AccountID {
+		l.Warn("game subscription instance >%s< does not belong to authenticated account >%s<", gsiID, authData.AccountUser.AccountID)
+		return nil, coreerror.NewNotFoundError(game_record.TableGameSubscriptionInstance, gsiID)
+	}
+
+	return gsiRec, nil
+}
+
+// getGSITurnSheetListHandler returns the turn sheet list for a game_subscription_instance.
+func getGSITurnSheetListHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
+	l = logging.LoggerWithFunctionContext(l, packageName, "getGSITurnSheetListHandler")
+
+	mm := m.(*domain.Domain)
+
+	gsiRec, err := resolveGSI(l, r, pp, mm)
+	if err != nil {
+		return err
+	}
+
+	authData := server.GetRequestAuthenData(l, r)
+
+	// Resolve the game subscription to get game_id.
+	subRec, err := mm.GetGameSubscriptionRec(gsiRec.GameSubscriptionID, nil)
+	if err != nil {
+		l.Warn("failed to get game subscription >%s< >%v<", gsiRec.GameSubscriptionID, err)
+		return err
+	}
+
+	turnSheetRecs, err := mm.GameTurnSheetRepository().GetMany(&coresql.Options{
+		Params: []coresql.Param{
+			{Col: game_record.FieldGameTurnSheetAccountID, Val: gsiRec.AccountID},
+			{Col: game_record.FieldGameTurnSheetAccountUserID, Val: authData.AccountUser.ID},
+			{Col: game_record.FieldGameTurnSheetGameID, Val: subRec.GameID},
+		},
+		OrderBy: []coresql.OrderBy{
+			{Col: game_record.FieldGameTurnSheetTurnNumber, Direction: coresql.OrderDirectionASC},
+			{Col: game_record.FieldGameTurnSheetSheetOrder, Direction: coresql.OrderDirectionASC},
+		},
+	})
+	if err != nil {
+		l.Warn("failed to get turn sheets >%v<", err)
+		return err
+	}
+
+	l.Info("returning turn sheet list for gsi >%s<", gsiRec.ID)
+
+	return server.WriteResponse(l, w, http.StatusOK, map[string]interface{}{
+		"subscription_id": subRec.ID,
+		"game_id":         subRec.GameID,
+		"account_id":      gsiRec.AccountID,
+		"turn_sheets":     turnSheetRecs,
+	})
+}
+
+// getGSITurnSheetHandler returns a specific turn sheet for a game_subscription_instance.
+func getGSITurnSheetHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
+	l = logging.LoggerWithFunctionContext(l, packageName, "getGSITurnSheetHandler")
+
+	gameTurnSheetID := pp.ByName("game_turn_sheet_id")
+	if gameTurnSheetID == "" {
+		return coreerror.RequiredPathParameter("game_turn_sheet_id")
+	}
+
+	mm := m.(*domain.Domain)
+
+	gsiRec, err := resolveGSI(l, r, pp, mm)
+	if err != nil {
+		return err
+	}
+
+	authData := server.GetRequestAuthenData(l, r)
+
+	subRec, err := mm.GetGameSubscriptionRec(gsiRec.GameSubscriptionID, nil)
+	if err != nil {
+		l.Warn("failed to get game subscription >%s< >%v<", gsiRec.GameSubscriptionID, err)
+		return err
+	}
+
+	turnSheetRec, err := mm.GetGameTurnSheetRec(gameTurnSheetID, nil)
+	if err != nil {
+		l.Warn("failed to get turn sheet >%s< >%v<", gameTurnSheetID, err)
+		return err
+	}
+
+	if turnSheetRec.AccountID != gsiRec.AccountID || turnSheetRec.GameID != subRec.GameID {
+		l.Warn("turn sheet >%s< does not belong to gsi >%s<", gameTurnSheetID, gsiRec.ID)
+		return coreerror.NewNotFoundError("turn_sheet", "Turn sheet not found")
+	}
+	if turnSheetRec.AccountUserID != authData.AccountUser.ID {
+		l.Warn("turn sheet >%s< does not belong to authenticated user >%s<", gameTurnSheetID, authData.AccountUser.ID)
+		return coreerror.NewNotFoundError("turn_sheet", "Turn sheet not found")
+	}
+
+	acceptHeader := r.Header.Get("Accept")
+	if strings.Contains(acceptHeader, "text/html") {
+		cfg := mm.Config()
+		processor, err := turnsheet.GetDocumentProcessor(l, cfg, turnSheetRec.SheetType)
+		if err != nil {
+			return err
+		}
+		htmlBytes, err := processor.GenerateTurnSheet(r.Context(), l, turnsheet.DocumentFormatHTML, turnSheetRec.SheetData)
+		if err != nil {
+			return err
+		}
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		w.WriteHeader(http.StatusOK)
+		_, err = w.Write(htmlBytes)
+		return err
+	}
+
+	return server.WriteResponse(l, w, http.StatusOK, turnSheetRec)
+}
+
+// saveGSITurnSheetHandler auto-saves turn sheet form data for a game_subscription_instance.
+func saveGSITurnSheetHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
+	l = logging.LoggerWithFunctionContext(l, packageName, "saveGSITurnSheetHandler")
+
+	gameTurnSheetID := pp.ByName("game_turn_sheet_id")
+	if gameTurnSheetID == "" {
+		return coreerror.RequiredPathParameter("game_turn_sheet_id")
+	}
+
+	mm := m.(*domain.Domain)
+
+	gsiRec, err := resolveGSI(l, r, pp, mm)
+	if err != nil {
+		return err
+	}
+
+	authData := server.GetRequestAuthenData(l, r)
+
+	subRec, err := mm.GetGameSubscriptionRec(gsiRec.GameSubscriptionID, nil)
+	if err != nil {
+		l.Warn("failed to get game subscription >%s< >%v<", gsiRec.GameSubscriptionID, err)
+		return err
+	}
+
+	turnSheetRec, err := mm.GetGameTurnSheetRec(gameTurnSheetID, coresql.ForUpdateNoWait)
+	if err != nil {
+		l.Warn("failed to get turn sheet >%s< >%v<", gameTurnSheetID, err)
+		return err
+	}
+
+	if turnSheetRec.AccountID != gsiRec.AccountID || turnSheetRec.GameID != subRec.GameID {
+		l.Warn("turn sheet >%s< does not belong to gsi >%s<", gameTurnSheetID, gsiRec.ID)
+		return coreerror.NewNotFoundError("turn_sheet", "Turn sheet not found")
+	}
+	if turnSheetRec.AccountUserID != authData.AccountUser.ID {
+		l.Warn("turn sheet >%s< does not belong to authenticated user >%s<", gameTurnSheetID, authData.AccountUser.ID)
+		return coreerror.NewNotFoundError("turn_sheet", "Turn sheet not found")
+	}
+
+	if turnSheetRec.IsCompleted {
+		return coreerror.NewInvalidDataError("turn sheet is already completed and cannot be modified")
+	}
+
+	var req struct {
+		ScannedData map[string]interface{} `json:"scanned_data"`
+	}
+	if _, err := server.ReadRequest(l, r, &req); err != nil {
+		l.Warn("failed reading request >%v<", err)
+		return err
+	}
+
+	scannedDataBytes, err := json.Marshal(req.ScannedData)
+	if err != nil {
+		l.Warn("failed to marshal scanned data >%v<", err)
+		return coreerror.NewInvalidDataError("invalid scanned_data format")
+	}
+
+	turnSheetRec.ScannedData = scannedDataBytes
+
+	updatedRec, err := mm.UpdateGameTurnSheetRec(turnSheetRec)
+	if err != nil {
+		l.Warn("failed to update turn sheet >%v<", err)
+		return err
+	}
+
+	l.Info("saved turn sheet >%s< via gsi >%s<", gameTurnSheetID, gsiRec.ID)
+
+	return server.WriteResponse(l, w, http.StatusOK, updatedRec)
+}
+
+// submitGSITurnSheetsHandler submits all turn sheets for a game_subscription_instance.
+func submitGSITurnSheetsHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
+	l = logging.LoggerWithFunctionContext(l, packageName, "submitGSITurnSheetsHandler")
+
+	mm := m.(*domain.Domain)
+
+	gsiRec, err := resolveGSI(l, r, pp, mm)
+	if err != nil {
+		return err
+	}
+
+	authData := server.GetRequestAuthenData(l, r)
+
+	subRec, err := mm.GetGameSubscriptionRec(gsiRec.GameSubscriptionID, nil)
+	if err != nil {
+		l.Warn("failed to get game subscription >%s< >%v<", gsiRec.GameSubscriptionID, err)
+		return err
+	}
+
+	turnSheetRecs, err := mm.GameTurnSheetRepository().GetMany(&coresql.Options{
+		Params: []coresql.Param{
+			{Col: game_record.FieldGameTurnSheetAccountID, Val: gsiRec.AccountID},
+			{Col: game_record.FieldGameTurnSheetAccountUserID, Val: authData.AccountUser.ID},
+			{Col: game_record.FieldGameTurnSheetGameID, Val: subRec.GameID},
+		},
+	})
+	if err != nil {
+		l.Warn("failed to get game subscription turn sheet records >%v<", err)
+		return err
+	}
+
+	now := time.Now()
+	completedCount := 0
+	for _, ts := range turnSheetRecs {
+		if ts.IsCompleted {
+			continue
+		}
+		ts.IsCompleted = true
+		ts.CompletedAt = sql.NullTime{Time: now, Valid: true}
+		if _, err := mm.UpdateGameTurnSheetRec(ts); err != nil {
+			l.Warn("failed to update turn sheet >%s< >%v<", ts.ID, err)
+			continue
+		}
+		completedCount++
+	}
+
+	l.Info("submitted >%d< turn sheets via gsi >%s<", completedCount, gsiRec.ID)
+
+	return server.WriteResponse(l, w, http.StatusOK, map[string]interface{}{
+		"submitted_count": completedCount,
+		"total_count":     len(turnSheetRecs),
+	})
 }
 
 // verifyGameSubscriptionTokenHandler verifies a game subscription instance token and returns a session token

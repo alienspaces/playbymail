@@ -151,8 +151,10 @@ func AuthenticateRequestTokenFunc(cfg config.Config, l logger.Logger, m domainer
 		accountName = contactRecs[0].Name
 	}
 
-	// Get active account subscriptions
-	l.Info("getting account subscriptions for account ID >%s<", accountRec.ID)
+	// Get active account subscriptions. Designer/manager subscriptions are keyed by account_id;
+	// player subscriptions are keyed by account_user_id. Query both to build the full set.
+	l.Info("getting account subscriptions for account ID >%s< account user ID >%s<", accountRec.AccountID, accountRec.ID)
+
 	accountSubscriptions, err := mm.GetManyAccountSubscriptionRecs(&coresql.Options{
 		Params: []coresql.Param{
 			{Col: account_record.FieldAccountSubscriptionAccountID, Val: accountRec.AccountID},
@@ -160,9 +162,22 @@ func AuthenticateRequestTokenFunc(cfg config.Config, l logger.Logger, m domainer
 		},
 	})
 	if err != nil {
-		l.Warn("failed to get account subscriptions >%v<", err)
+		l.Warn("failed to get account subscriptions by account ID >%v<", err)
 		return server.AuthenData{}, coreerror.NewInternalError("failed to get account subscriptions: %v", err)
 	}
+
+	// Player subscriptions store account_user_id, not account_id.
+	playerSubscriptions, err := mm.GetManyAccountSubscriptionRecs(&coresql.Options{
+		Params: []coresql.Param{
+			{Col: account_record.FieldAccountSubscriptionAccountUserID, Val: accountRec.ID},
+			{Col: account_record.FieldAccountSubscriptionStatus, Val: account_record.AccountSubscriptionStatusActive},
+		},
+	})
+	if err != nil {
+		l.Warn("failed to get player subscriptions by account user ID >%v<", err)
+		return server.AuthenData{}, coreerror.NewInternalError("failed to get player subscriptions: %v", err)
+	}
+	accountSubscriptions = append(accountSubscriptions, playerSubscriptions...)
 
 	l.Info("found >%d< active account subscriptions for account ID >%s<", len(accountSubscriptions), accountRec.ID)
 	for _, sub := range accountSubscriptions {
