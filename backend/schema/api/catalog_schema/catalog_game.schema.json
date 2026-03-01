@@ -1,0 +1,66 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "http://playbymail.games/schema/catalog_schema/catalog_game.schema.json",
+    "title": "CatalogGame",
+    "type": "object",
+    "properties": {
+        "id": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
+        },
+        "name": {
+            "description": "The name of the game.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1024
+        },
+        "description": {
+            "description": "Game description.",
+            "type": "string",
+            "minLength": 0,
+            "maxLength": 512
+        },
+        "game_type": {
+            "description": "The type of the game.",
+            "type": "string",
+            "enum": ["adventure"]
+        },
+        "turn_duration_hours": {
+            "description": "Duration of each turn in hours.",
+            "type": "integer",
+            "minimum": 1
+        },
+        "available_instances": {
+            "description": "Game instances currently open for players to join.",
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
+                    },
+                    "required_player_count": {
+                        "type": "integer",
+                        "minimum": 0
+                    },
+                    "player_count": {
+                        "type": "integer",
+                        "minimum": 0
+                    },
+                    "delivery_physical_post": {
+                        "type": "boolean"
+                    },
+                    "delivery_physical_local": {
+                        "type": "boolean"
+                    },
+                    "delivery_email": {
+                        "type": "boolean"
+                    }
+                },
+                "required": ["id", "required_player_count", "player_count", "delivery_physical_post", "delivery_physical_local", "delivery_email"],
+                "additionalProperties": false
+            }
+        }
+    },
+    "required": ["id", "name", "description", "game_type", "turn_duration_hours", "available_instances"],
+    "additionalProperties": false
+}

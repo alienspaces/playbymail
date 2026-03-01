@@ -18,6 +18,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/jobqueue"
 	"gitlab.com/alienspaces/playbymail/internal/runner/server/account"
 	"gitlab.com/alienspaces/playbymail/internal/runner/server/adventure_game"
+	"gitlab.com/alienspaces/playbymail/internal/runner/server/catalog"
 	"gitlab.com/alienspaces/playbymail/internal/runner/server/game"
 	"gitlab.com/alienspaces/playbymail/internal/runner/server/handler_auth"
 	"gitlab.com/alienspaces/playbymail/internal/runner/server/handler_rls"
@@ -78,6 +79,8 @@ func NewRunner(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Cli
 		account.AccountHandlerConfig,
 		// Adventure Game handlers
 		adventure_game.AdventureGameHandlerConfig,
+		// Catalog handlers (public)
+		catalog.CatalogHandlerConfig,
 		// Player handlers
 		player.PlayerHandlerConfig,
 		// Game handlers
