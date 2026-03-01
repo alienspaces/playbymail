@@ -5,10 +5,12 @@ import PlayerTurnSheetView from './PlayerTurnSheetView.vue'
 
 const mockGetGSITurnSheets = vi.fn()
 const mockSubmitGSITurnSheets = vi.fn()
+const mockDownloadGSITurnSheetPDF = vi.fn()
 
 vi.mock('../api/player', () => ({
   getGSITurnSheets: (...args) => mockGetGSITurnSheets(...args),
   submitGSITurnSheets: (...args) => mockSubmitGSITurnSheets(...args),
+  downloadGSITurnSheetPDF: (...args) => mockDownloadGSITurnSheetPDF(...args),
 }))
 
 vi.mock('vue-router', () => ({
@@ -134,6 +136,37 @@ describe('PlayerTurnSheetView', () => {
     expect(wrapper.find('[data-testid="submit-error"]').exists()).toBe(true)
     expect(wrapper.text()).toContain('Server error')
     expect(wrapper.find('[data-testid="ts-list"]').exists()).toBe(true)
+  })
+
+  it('renders a Download PDF button for each turn sheet', async () => {
+    mockGetGSITurnSheets.mockResolvedValue({ turn_sheets: mockSheets })
+
+    const wrapper = mount(PlayerTurnSheetView)
+    await flushPromises()
+
+    expect(wrapper.find('[data-testid="btn-download-ts-1"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="btn-download-ts-2"]').exists()).toBe(true)
+  })
+
+  it('calls downloadGSITurnSheetPDF when Download PDF is clicked', async () => {
+    mockGetGSITurnSheets.mockResolvedValue({ turn_sheets: mockSheets })
+
+    const mockBlob = new Blob(['%PDF'], { type: 'application/pdf' })
+    mockDownloadGSITurnSheetPDF.mockResolvedValue({
+      blob: () => Promise.resolve(mockBlob),
+    })
+
+    // jsdom doesn't support URL.createObjectURL; mock it
+    URL.createObjectURL = vi.fn(() => 'blob:test-url')
+    URL.revokeObjectURL = vi.fn()
+
+    const wrapper = mount(PlayerTurnSheetView)
+    await flushPromises()
+
+    await wrapper.find('[data-testid="btn-download-ts-1"]').trigger('click')
+    await flushPromises()
+
+    expect(mockDownloadGSITurnSheetPDF).toHaveBeenCalledWith('gsi-abc-123', 'ts-1')
   })
 
   it('calls submitGSITurnSheets with the correct gsi id', async () => {

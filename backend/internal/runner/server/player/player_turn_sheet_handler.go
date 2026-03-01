@@ -3,6 +3,7 @@ package player
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -43,10 +44,11 @@ const (
 
 // New gsi_id-based endpoint names (additive — existing endpoints stay unchanged).
 const (
-	GetGSITurnSheetList = "get-gsi-turn-sheet-list"
-	GetGSITurnSheet     = "get-gsi-turn-sheet"
-	SaveGSITurnSheet    = "save-gsi-turn-sheet"
-	SubmitGSITurnSheets = "submit-gsi-turn-sheets"
+	GetGSITurnSheetList    = "get-gsi-turn-sheet-list"
+	GetGSITurnSheet        = "get-gsi-turn-sheet"
+	SaveGSITurnSheet       = "save-gsi-turn-sheet"
+	SubmitGSITurnSheets    = "submit-gsi-turn-sheets"
+	DownloadGSITurnSheetPDF = "download-gsi-turn-sheet-pdf"
 )
 
 func playerTurnSheetHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error) {
@@ -362,6 +364,24 @@ func playerTurnSheetHandlerConfig(l logger.Logger) (map[string]server.HandlerCon
 		},
 	}
 
+	// GET /api/v1/player/game-subscription-instances/:gsi_id/turn-sheets/:id/download
+	playerTurnSheetConfig[DownloadGSITurnSheetPDF] = server.HandlerConfig{
+		Method:      http.MethodGet,
+		Path:        "/api/v1/player/game-subscription-instances/:game_subscription_instance_id/turn-sheets/:game_turn_sheet_id/download",
+		HandlerFunc: downloadGSITurnSheetPDFHandler,
+		MiddlewareConfig: server.MiddlewareConfig{
+			AuthenTypes: []server.AuthenticationType{server.AuthenticationTypeToken},
+			AuthzPermissions: []server.AuthorizedPermission{
+				handler_auth.PermissionGamePlaying,
+			},
+		},
+		DocumentationConfig: server.DocumentationConfig{
+			Document:    true,
+			Title:       "Download turn sheet PDF",
+			Description: "Download a printable PDF of a specific turn sheet via game_subscription_instance_id. Auth: session token.",
+		},
+	}
+
 	return playerTurnSheetConfig, nil
 }
 
@@ -620,6 +640,67 @@ func submitGSITurnSheetsHandler(w http.ResponseWriter, r *http.Request, pp httpr
 		"submitted_count": completedCount,
 		"total_count":     len(turnSheetRecs),
 	})
+}
+
+// downloadGSITurnSheetPDFHandler returns a printable PDF for a specific turn sheet so the
+// player can fill it in offline and mail it back.
+func downloadGSITurnSheetPDFHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
+	l = logging.LoggerWithFunctionContext(l, packageName, "downloadGSITurnSheetPDFHandler")
+
+	gameTurnSheetID := pp.ByName("game_turn_sheet_id")
+	if gameTurnSheetID == "" {
+		return coreerror.RequiredPathParameter("game_turn_sheet_id")
+	}
+
+	mm := m.(*domain.Domain)
+
+	gsiRec, err := resolveGSI(l, r, pp, mm)
+	if err != nil {
+		return err
+	}
+
+	authData := server.GetRequestAuthenData(l, r)
+
+	subRec, err := mm.GetGameSubscriptionRec(gsiRec.GameSubscriptionID, nil)
+	if err != nil {
+		l.Warn("failed to get game subscription >%s< >%v<", gsiRec.GameSubscriptionID, err)
+		return err
+	}
+
+	turnSheetRec, err := mm.GetGameTurnSheetRec(gameTurnSheetID, nil)
+	if err != nil {
+		l.Warn("failed to get turn sheet >%s< >%v<", gameTurnSheetID, err)
+		return err
+	}
+
+	if turnSheetRec.AccountID != gsiRec.AccountID || turnSheetRec.GameID != subRec.GameID {
+		l.Warn("turn sheet >%s< does not belong to gsi >%s<", gameTurnSheetID, gsiRec.ID)
+		return coreerror.NewNotFoundError("turn_sheet", "Turn sheet not found")
+	}
+	if turnSheetRec.AccountUserID != authData.AccountUser.ID {
+		l.Warn("turn sheet >%s< does not belong to authenticated user >%s<", gameTurnSheetID, authData.AccountUser.ID)
+		return coreerror.NewNotFoundError("turn_sheet", "Turn sheet not found")
+	}
+
+	cfg := mm.Config()
+	processor, err := turnsheet.GetDocumentProcessor(l, cfg, turnSheetRec.SheetType)
+	if err != nil {
+		l.Warn("failed to get document processor for sheet type >%s< >%v<", turnSheetRec.SheetType, err)
+		return err
+	}
+
+	pdfBytes, err := processor.GenerateTurnSheet(r.Context(), l, turnsheet.DocumentFormatPDF, turnSheetRec.SheetData)
+	if err != nil {
+		l.Warn("failed to generate PDF for turn sheet >%s< >%v<", gameTurnSheetID, err)
+		return err
+	}
+
+	filename := fmt.Sprintf("turn-sheet-%s.pdf", gameTurnSheetID)
+	w.Header().Set("Content-Type", "application/pdf")
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%q", filename))
+	w.WriteHeader(http.StatusOK)
+	_, err = w.Write(pdfBytes)
+	return err
 }
 
 // verifyGameSubscriptionTokenHandler verifies a game subscription instance token and returns a session token

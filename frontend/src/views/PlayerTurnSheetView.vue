@@ -50,6 +50,15 @@
           <div class="ts-card-meta">
             <span>Turn {{ sheet.turn_number }}</span>
           </div>
+          <div class="ts-card-actions">
+            <button
+              class="secondary-button"
+              :data-testid="`btn-download-${sheet.id}`"
+              @click="onDownload(sheet.id)"
+            >
+              Download PDF
+            </button>
+          </div>
         </div>
       </div>
 
@@ -72,7 +81,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { getGSITurnSheets, submitGSITurnSheets } from '../api/player'
+import { getGSITurnSheets, submitGSITurnSheets, downloadGSITurnSheetPDF } from '../api/player'
 
 const route = useRoute()
 
@@ -106,6 +115,21 @@ async function loadTurnSheets() {
     loadError.value = err.message || 'Failed to load turn sheets. Please try again.'
   } finally {
     loading.value = false
+  }
+}
+
+async function onDownload(turnSheetId) {
+  try {
+    const res = await downloadGSITurnSheetPDF(route.params.game_subscription_instance_id, turnSheetId)
+    const blob = await res.blob()
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `turn-sheet-${turnSheetId}.pdf`
+    a.click()
+    URL.revokeObjectURL(url)
+  } catch (err) {
+    submitError.value = err.message || 'Failed to download PDF.'
   }
 }
 
@@ -197,6 +221,26 @@ onMounted(loadTurnSheets)
 .ts-card-meta {
   font-size: 0.875rem;
   color: var(--color-text-muted, #6b7280);
+}
+
+.ts-card-actions {
+  margin-top: 0.75rem;
+}
+
+.secondary-button {
+  background: transparent;
+  color: #006ecd;
+  border: 1.5px solid #006ecd;
+  padding: 0.4rem 1rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.secondary-button:hover {
+  background: #e8f3fd;
 }
 
 .ts-actions {

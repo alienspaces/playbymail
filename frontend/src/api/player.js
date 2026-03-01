@@ -85,3 +85,18 @@ export async function submitGSITurnSheets(gsiId) {
   return await res.json();
 }
 
+/**
+ * Download a printable PDF for a turn sheet.
+ * Returns the raw Response so the caller can trigger a file download.
+ * @param {string} gsiId
+ * @param {string} turnSheetId
+ * @returns {Promise<Response>}
+ */
+export async function downloadGSITurnSheetPDF(gsiId, turnSheetId) {
+  const res = await apiFetch(`${gsiPath(gsiId)}/turn-sheets/${turnSheetId}/download`, {
+    headers: { Accept: 'application/pdf' },
+  });
+  await handleApiError(res, 'Failed to download turn sheet PDF');
+  return res;
+}
+
