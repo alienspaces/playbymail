@@ -357,25 +357,124 @@ func (m *Domain) CancelGameInstance(instanceID string) (*game_record.GameInstanc
 func (m *Domain) GetPlayerCountForGameInstance(gameInstanceID string) (int, error) {
 	l := m.Logger("GetPlayerCountForGameInstance")
 
-	instance, err := m.GetGameInstanceRec(gameInstanceID, nil)
-	if err != nil {
+	if err := domain.ValidateUUIDField("game_instance_id", gameInstanceID); err != nil {
 		return 0, err
 	}
 
-	// Get all active Player subscriptions for this game
-	subscriptions, err := m.GetManyGameSubscriptionRecs(&coresql.Options{
+	// Count game_subscription_instance records for this instance
+	gsiRecs, err := m.GetManyGameSubscriptionInstanceRecs(&coresql.Options{
 		Params: []coresql.Param{
-			{Col: game_record.FieldGameSubscriptionGameID, Val: instance.GameID},
-			{Col: game_record.FieldGameSubscriptionSubscriptionType, Val: game_record.GameSubscriptionTypePlayer},
-			{Col: game_record.FieldGameSubscriptionStatus, Val: game_record.GameSubscriptionStatusActive},
+			{Col: game_record.FieldGameSubscriptionInstanceGameInstanceID, Val: gameInstanceID},
 		},
 	})
 	if err != nil {
-		l.Warn("failed to get player subscriptions for game ID >%s< >%v<", instance.GameID, err)
+		l.Warn("failed to get subscription instances for game instance ID >%s< >%v<", gameInstanceID, err)
 		return 0, err
 	}
 
-	return len(subscriptions), nil
+	return len(gsiRecs), nil
+}
+
+// HasAvailableCapacity checks if a game instance has available player slots
+func (m *Domain) HasAvailableCapacity(gameInstanceID string) (bool, error) {
+	instance, err := m.GetGameInstanceRec(gameInstanceID, nil)
+	if err != nil {
+		return false, err
+	}
+
+	// If required_player_count is 0, there's no capacity limit
+	if instance.RequiredPlayerCount == 0 {
+		return true, nil
+	}
+
+	playerCount, err := m.GetPlayerCountForGameInstance(gameInstanceID)
+	if err != nil {
+		return false, err
+	}
+
+	return playerCount < instance.RequiredPlayerCount, nil
+}
+
+// FindAvailableGameInstance finds an available game instance for a game subscription
+// Returns the first instance with available capacity, or nil if none available
+func (m *Domain) FindAvailableGameInstance(gameSubscriptionID string) (*game_record.GameInstance, error) {
+	l := m.Logger("FindAvailableGameInstance")
+
+	// Get the subscription to find the game ID
+	subscription, err := m.GetGameSubscriptionRec(gameSubscriptionID, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get all active instances for this game
+	instances, err := m.GetManyGameInstanceRecs(&coresql.Options{
+		Params: []coresql.Param{
+			{Col: game_record.FieldGameInstanceGameID, Val: subscription.GameID},
+			{Col: game_record.FieldGameInstanceStatus, Val: game_record.GameInstanceStatusCreated},
+		},
+	})
+	if err != nil {
+		l.Warn("failed to get game instances for game ID >%s< >%v<", subscription.GameID, err)
+		return nil, err
+	}
+
+	// Find first instance with available capacity
+	for _, instance := range instances {
+		hasCapacity, err := m.HasAvailableCapacity(instance.ID)
+		if err != nil {
+			l.Warn("failed to check capacity for instance >%s< >%v<", instance.ID, err)
+			continue
+		}
+		if hasCapacity {
+			return instance, nil
+		}
+	}
+
+	return nil, nil
+}
+
+// AssignPlayerToGameInstance assigns a player subscription to a game instance
+// Creates a game_subscription_instance record linking them
+func (m *Domain) AssignPlayerToGameInstance(gameSubscriptionID, gameInstanceID string) (*game_record.GameSubscriptionInstance, error) {
+	l := m.Logger("AssignPlayerToGameInstance")
+
+	// Validate inputs
+	if err := domain.ValidateUUIDField("game_subscription_id", gameSubscriptionID); err != nil {
+		return nil, err
+	}
+	if err := domain.ValidateUUIDField("game_instance_id", gameInstanceID); err != nil {
+		return nil, err
+	}
+
+	// Get subscription to get account_id
+	subscription, err := m.GetGameSubscriptionRec(gameSubscriptionID, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	// Check capacity before assigning
+	hasCapacity, err := m.HasAvailableCapacity(gameInstanceID)
+	if err != nil {
+		return nil, err
+	}
+	if !hasCapacity {
+		return nil, fmt.Errorf("game instance has no available capacity")
+	}
+
+	// Create the subscription-instance link
+	gsiRec := &game_record.GameSubscriptionInstance{
+		AccountID:          subscription.AccountID,
+		GameSubscriptionID: gameSubscriptionID,
+		GameInstanceID:     gameInstanceID,
+	}
+
+	createdRec, err := m.CreateGameSubscriptionInstanceRec(gsiRec)
+	if err != nil {
+		l.Warn("failed to create game subscription instance >%v<", err)
+		return nil, err
+	}
+
+	return createdRec, nil
 }
 
 // GenerateClosedTestingJoinGameKey generates a UUID join game key for closed testing instances.
