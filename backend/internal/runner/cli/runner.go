@@ -66,6 +66,28 @@ Loads seed data. Typically used when deploying QA environments or for local manu
 Loads static reference data that is expected to exist on any environment.`,
 				Action: r.loadSeedReferenceData,
 			},
+			// Test data (named scenarios)
+			{
+				Name:    "db-load-test-data",
+				Aliases: []string{"ltd"},
+				Usage:   "Load test game data by scenario name",
+				Description: `
+Loads test game data for a named scenario (e.g. seed, default) into the target database.
+Use --list-scenarios to print available scenarios.`,
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:    "scenario",
+						Aliases: []string{"s"},
+						Usage:   "Scenario name (e.g. seed, default)",
+						Value:   "seed",
+					},
+					&cli.BoolFlag{
+						Name:  "list-scenarios",
+						Usage: "Print registered scenario names and descriptions, then exit",
+					},
+				},
+				Action: r.loadTestData,
+			},
 		},
 	}
 

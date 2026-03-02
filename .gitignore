@@ -69,6 +69,7 @@ coverage.html
 # =============================
 bin/
 !bin/
+/backend/cli
 backend/bin/
 !backend/bin/
 backend/bin/*

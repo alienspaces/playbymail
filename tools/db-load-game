@@ -1,0 +1,80 @@
+#!/usr/bin/env sh
+
+echo
+echo "** Loading test game data"
+echo
+
+# Colors for output
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+print_status() {
+    echo -e "${GREEN}✅ $1${NC}"
+}
+
+print_warning() {
+    echo -e "${YELLOW}⚠️  $1${NC}"
+}
+
+# Check if we're in the right directory
+if [ ! -f "backend/go.mod" ]; then
+    echo "❌ Must be run from playbymail root directory"
+    exit 1
+fi
+
+if [ -z "$CI" ]; then
+    # Copy environment file if it exists
+    if [ -f ".env.develop" ]; then
+        cp .env.develop .env
+        print_status "Environment file copied"
+    fi
+
+    # Load environment
+    if [ -f "tools/environment" ]; then
+        . tools/environment || exit $?
+        print_status "Environment loaded"
+    fi
+fi
+
+# Remove old CLI binary if it exists
+if [ -f "playbymail-cli" ]; then
+    rm playbymail-cli
+    print_status "Old CLI binary removed"
+fi
+
+# Build CLI binary in backend directory
+cd backend || exit 1
+print_status "Building Go CLI..."
+go build -o ../playbymail-cli ./cmd/cli
+cd ..
+
+# Verify binary exists
+if [ ! -f "playbymail-cli" ]; then
+    echo "❌ CLI build failed - binary not found"
+    exit 1
+fi
+
+# Parse args: --list-scenarios or scenario name (default: seed)
+SCENARIO="seed"
+EXTRA_ARGS=""
+if [ "$1" = "--list-scenarios" ]; then
+    EXTRA_ARGS="--list-scenarios"
+elif [ -n "$1" ] && [ "$1" != "--list-scenarios" ]; then
+    SCENARIO="$1"
+fi
+
+if [ -n "$EXTRA_ARGS" ]; then
+    print_status "Listing test data scenarios"
+    ./playbymail-cli db-load-test-data $EXTRA_ARGS || exit $?
+else
+    print_status "Running CLI to load test data (scenario: $SCENARIO)"
+    ./playbymail-cli db-load-test-data --scenario "$SCENARIO" || exit $?
+    print_status "Test game data loaded successfully"
+fi
+
+# Remove CLI binary after use
+rm playbymail-cli
+print_status "CLI binary removed after use"
+
+echo "** All done ** "
