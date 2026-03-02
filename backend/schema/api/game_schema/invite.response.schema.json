@@ -1,7 +1,7 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
-    "$id": "http://playbymail.games/schema/game_schema/invite_player.response.schema.json",
-    "title": "InvitePlayerResponse",
+    "$id": "http://playbymail.games/schema/game_schema/invite.response.schema.json",
+    "title": "InviteResponse",
     "type": "object",
     "properties": {
         "data": {

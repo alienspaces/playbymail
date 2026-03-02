@@ -13,7 +13,7 @@ vi.mock('../api/joinGame', () => ({
 
 vi.mock('vue-router', () => ({
   useRoute: vi.fn(() => ({
-    params: { game_instance_id: 'inst-abc-123' },
+    params: { game_subscription_id: 'sub-abc-123' },
   })),
   useRouter: vi.fn(() => ({
     push: vi.fn(),
@@ -21,19 +21,16 @@ vi.mock('vue-router', () => ({
 }))
 
 const mockGameInfo = {
-  game_id: 'g1',
+  game_subscription_id: 'sub-abc-123',
   game_name: 'The Lost Kingdom',
   game_description: 'An exciting adventure game',
   game_type: 'adventure',
   turn_duration_hours: 168,
-  instance: {
-    id: 'inst-abc-123',
-    required_player_count: 4,
-    player_count: 1,
-    delivery_email: true,
-    delivery_physical_local: false,
-    delivery_physical_post: false,
-  },
+  total_capacity: 4,
+  total_players: 1,
+  delivery_email: true,
+  delivery_physical_local: false,
+  delivery_physical_post: false,
 }
 
 describe('PlayerJoinGameView', () => {
@@ -114,18 +111,14 @@ describe('PlayerJoinGameView', () => {
     await wrapper.find('[data-testid="btn-join"]').trigger('click')
     await nextTick()
 
-    // Only email delivery — no radio buttons needed
     expect(wrapper.find('[data-testid="delivery-selection"]').exists()).toBe(false)
   })
 
   it('shows delivery selection when multiple delivery methods are available', async () => {
     const multiDeliveryInfo = {
       ...mockGameInfo,
-      instance: {
-        ...mockGameInfo.instance,
-        delivery_email: true,
-        delivery_physical_post: true,
-      },
+      delivery_email: true,
+      delivery_physical_post: true,
     }
     mockGetJoinGameInfo.mockResolvedValue({ data: multiDeliveryInfo })
 
@@ -161,7 +154,7 @@ describe('PlayerJoinGameView', () => {
   it('submits form and shows success step on success', async () => {
     mockGetJoinGameInfo.mockResolvedValue({ data: mockGameInfo })
     mockSubmitJoinGame.mockResolvedValue({
-      data: { game_subscription_id: 'sub-1', game_instance_id: 'inst-abc-123', game_id: 'g1' },
+      data: { game_subscription_id: 'sub-1', game_instance_id: 'inst-1', game_id: 'g1' },
     })
 
     const wrapper = mount(PlayerJoinGameView)
@@ -207,7 +200,7 @@ describe('PlayerJoinGameView', () => {
   it('calls submitJoinGame with correct payload including delivery flags', async () => {
     mockGetJoinGameInfo.mockResolvedValue({ data: mockGameInfo })
     mockSubmitJoinGame.mockResolvedValue({
-      data: { game_subscription_id: 'sub-1', game_instance_id: 'inst-abc-123', game_id: 'g1' },
+      data: { game_subscription_id: 'sub-1', game_instance_id: 'inst-1', game_id: 'g1' },
     })
 
     const wrapper = mount(PlayerJoinGameView)
@@ -227,7 +220,7 @@ describe('PlayerJoinGameView', () => {
     await flushPromises()
 
     expect(mockSubmitJoinGame).toHaveBeenCalledWith(
-      'inst-abc-123',
+      'sub-abc-123',
       expect.objectContaining({
         email: 'player@example.com',
         name: 'Test Player',

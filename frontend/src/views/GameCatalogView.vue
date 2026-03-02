@@ -2,7 +2,7 @@
   <div class="game-catalog-view card">
     <div class="catalog-header">
       <h1>Game Catalog</h1>
-      <p>Browse play-by-mail games with open enrollment. Click <strong>Join Game</strong> on an available instance to play.</p>
+      <p>Browse play-by-mail games with open enrollment. Click <strong>Join Game</strong> to play.</p>
     </div>
 
     <div v-if="loading" class="catalog-loading" data-testid="catalog-loading">
@@ -14,50 +14,42 @@
       <button class="retry-button" @click="fetchCatalog">Try again</button>
     </div>
 
-    <div v-else-if="games.length === 0" class="catalog-empty" data-testid="catalog-empty">
+    <div v-else-if="subscriptions.length === 0" class="catalog-empty" data-testid="catalog-empty">
       <p>No games are currently available for enrollment. Check back soon.</p>
     </div>
 
     <div v-else class="catalog-games" data-testid="catalog-games">
       <div
-        v-for="game in games"
-        :key="game.id"
+        v-for="entry in subscriptions"
+        :key="entry.game_subscription_id"
         class="catalog-game card"
-        :data-testid="`game-card-${game.id}`"
+        :data-testid="`sub-card-${entry.game_subscription_id}`"
       >
         <div class="game-info">
-          <h2 class="game-name">{{ game.name }}</h2>
-          <p v-if="game.description" class="game-description">{{ game.description }}</p>
+          <h2 class="game-name">{{ entry.game_name }}</h2>
+          <p v-if="entry.game_description" class="game-description">{{ entry.game_description }}</p>
           <div class="game-meta">
-            <span class="game-type badge">{{ formatGameType(game.game_type) }}</span>
-            <span class="turn-duration">Turn: {{ game.turn_duration_hours }}h</span>
+            <span class="game-type badge">{{ formatGameType(entry.game_type) }}</span>
+            <span class="turn-duration">Turn: {{ entry.turn_duration_hours }}h</span>
           </div>
         </div>
 
-        <div class="game-instances">
-          <h3 class="instances-heading">Available Instances</h3>
-          <div
-            v-for="instance in game.available_instances"
-            :key="instance.id"
-            class="instance-row"
-            :data-testid="`instance-${instance.id}`"
-          >
-            <div class="instance-delivery">
-              <span v-if="instance.delivery_email" class="delivery-badge">Email</span>
-              <span v-if="instance.delivery_physical_local" class="delivery-badge">Local</span>
-              <span v-if="instance.delivery_physical_post" class="delivery-badge">Post</span>
-            </div>
-            <div v-if="instance.required_player_count > 0" class="instance-capacity">
-              {{ instance.player_count }} / {{ instance.required_player_count }} players
-            </div>
-            <a
-              :href="`/player/join-game/${instance.id}`"
-              class="join-button"
-              :data-testid="`join-button-${instance.id}`"
-            >
-              Join Game
-            </a>
+        <div class="subscription-details">
+          <div class="delivery-methods">
+            <span v-if="entry.delivery_email" class="delivery-badge">Email</span>
+            <span v-if="entry.delivery_physical_local" class="delivery-badge">Local</span>
+            <span v-if="entry.delivery_physical_post" class="delivery-badge">Post</span>
           </div>
+          <div v-if="entry.total_capacity > 0" class="capacity">
+            {{ entry.total_players }} / {{ entry.total_capacity }} players
+          </div>
+          <a
+            :href="`/player/join-game/${entry.game_subscription_id}`"
+            class="join-button"
+            :data-testid="`join-button-${entry.game_subscription_id}`"
+          >
+            Join Game
+          </a>
         </div>
       </div>
     </div>
@@ -68,7 +60,7 @@
 import { ref, onMounted } from 'vue'
 import { listCatalogGames } from '../api/catalog'
 
-const games = ref([])
+const subscriptions = ref([])
 const loading = ref(false)
 const error = ref(null)
 
@@ -82,7 +74,7 @@ async function fetchCatalog() {
   error.value = null
   try {
     const res = await listCatalogGames()
-    games.value = res.data ?? []
+    subscriptions.value = res.data ?? []
   } catch (err) {
     error.value = err.message || 'Failed to load the game catalog. Please try again.'
   } finally {
@@ -177,21 +169,15 @@ onMounted(fetchCatalog)
   color: var(--color-text-muted, #666);
 }
 
-.instances-heading {
-  font-size: var(--font-size-md);
-  margin-bottom: var(--space-sm);
-  font-weight: var(--font-weight-bold);
-}
-
-.instance-row {
+.subscription-details {
   display: flex;
   align-items: center;
   gap: var(--space-md);
-  padding: var(--space-sm) 0;
+  padding-top: var(--space-sm);
   border-top: 1px solid var(--color-border);
 }
 
-.instance-delivery {
+.delivery-methods {
   display: flex;
   gap: var(--space-xs);
   flex: 1;
@@ -205,7 +191,7 @@ onMounted(fetchCatalog)
   font-size: var(--font-size-xs, 0.75rem);
 }
 
-.instance-capacity {
+.capacity {
   font-size: var(--font-size-sm);
   color: var(--color-text-muted, #666);
   white-space: nowrap;

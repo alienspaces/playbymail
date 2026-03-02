@@ -46,7 +46,7 @@ func catalogGameHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig,
 
 	config[GetCatalogGames] = server.HandlerConfig{
 		Method:      http.MethodGet,
-		Path:        "/api/v1/catalog/games",
+		Path:        "/api/v1/catalog/game-subscriptions",
 		HandlerFunc: getCatalogGamesHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes:            []server.AuthenticationType{server.AuthenticationTypePublic},
@@ -56,7 +56,7 @@ func catalogGameHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig,
 			Document:    true,
 			Collection:  true,
 			Title:       "Get game catalog",
-			Description: "Returns all games with active manager subscriptions that have game instances open for player enrollment.",
+			Description: "Returns all active manager subscriptions that have game instances open for player enrollment. Each entry represents a manager's offering of a game.",
 		},
 	}
 
@@ -68,9 +68,6 @@ func getCatalogGamesHandler(w http.ResponseWriter, r *http.Request, pp httproute
 
 	mm := m.(*domain.Domain)
 
-	// Find all games that have at least one active manager subscription.
-	// Use the repository directly so queries are not constrained by per-account RLS
-	// on this public endpoint.
 	managerSubscriptions, err := mm.GameSubscriptionRepository().GetMany(&coresql.Options{
 		Params: []coresql.Param{
 			{Col: game_record.FieldGameSubscriptionSubscriptionType, Val: game_record.GameSubscriptionTypeManager},
@@ -82,26 +79,22 @@ func getCatalogGamesHandler(w http.ResponseWriter, r *http.Request, pp httproute
 		return err
 	}
 
-	// Collect unique game IDs that have an active manager.
+	if len(managerSubscriptions) == 0 {
+		l.Info("no active manager subscriptions found")
+		return server.WriteResponse(l, w, http.StatusOK, catalog_schema.CatalogCollectionResponse{
+			Data: []*catalog_schema.CatalogSubscriptionData{},
+		})
+	}
+
+	// Pre-fetch all game records referenced by subscriptions.
 	gameIDSet := map[string]struct{}{}
 	for _, sub := range managerSubscriptions {
 		gameIDSet[sub.GameID] = struct{}{}
 	}
-
-	if len(gameIDSet) == 0 {
-		l.Info("no games with active manager subscriptions found")
-		res := catalog_schema.CatalogGameCollectionResponse{
-			Data: []*catalog_schema.CatalogGameResponseData{},
-		}
-		return server.WriteResponse(l, w, http.StatusOK, res)
-	}
-
 	gameIDs := make([]string, 0, len(gameIDSet))
 	for id := range gameIDSet {
 		gameIDs = append(gameIDs, id)
 	}
-
-	// Fetch the game records.
 	gameRecs, err := mm.GetManyGameRecs(&coresql.Options{
 		Params: []coresql.Param{
 			{Col: game_record.FieldGameID, Val: gameIDs},
@@ -111,49 +104,68 @@ func getCatalogGamesHandler(w http.ResponseWriter, r *http.Request, pp httproute
 		l.Warn("failed getting game records >%v<", err)
 		return err
 	}
+	gameByID := make(map[string]*game_record.Game, len(gameRecs))
+	for _, g := range gameRecs {
+		gameByID[g.ID] = g
+	}
 
-	// Build the catalog: for each game, collect instances in "created" status
-	// that still have available player capacity.
-	catalogData := make([]*catalog_schema.CatalogGameResponseData, 0, len(gameRecs))
+	catalogData := make([]*catalog_schema.CatalogSubscriptionData, 0, len(managerSubscriptions))
 
-	for _, gameRec := range gameRecs {
-		instanceRecs, err := mm.GetManyGameInstanceRecs(&coresql.Options{
+	for _, sub := range managerSubscriptions {
+		gameRec, ok := gameByID[sub.GameID]
+		if !ok {
+			l.Warn("game >%s< not found for subscription >%s<", sub.GameID, sub.ID)
+			continue
+		}
+
+		// Find instances linked to this subscription via game_subscription_instance.
+		gsiRecs, err := mm.GetManyGameSubscriptionInstanceRecs(&coresql.Options{
 			Params: []coresql.Param{
-				{Col: game_record.FieldGameInstanceGameID, Val: gameRec.ID},
-				{Col: game_record.FieldGameInstanceStatus, Val: game_record.GameInstanceStatusCreated},
+				{Col: game_record.FieldGameSubscriptionInstanceGameSubscriptionID, Val: sub.ID},
 			},
 		})
 		if err != nil {
-			l.Warn("failed getting game instances for game >%s< >%v<", gameRec.ID, err)
+			l.Warn("failed getting subscription instances for subscription >%s< >%v<", sub.ID, err)
 			return err
 		}
 
-		availableInstances := make([]*catalog_schema.CatalogGameInstanceData, 0)
-		for _, inst := range instanceRecs {
-			playerCount, err := mm.GetPlayerCountForGameInstance(inst.ID)
+		// For each linked instance, check status and capacity.
+		availableInstances := make([]*game_record.GameInstance, 0)
+		playerCounts := make(map[string]int)
+		for _, gsi := range gsiRecs {
+			instRec, err := mm.GetGameInstanceRec(gsi.GameInstanceID, nil)
 			if err != nil {
-				l.Warn("failed getting player count for instance >%s< >%v<", inst.ID, err)
-				return err
+				l.Warn("failed getting instance >%s< >%v<", gsi.GameInstanceID, err)
+				continue
 			}
-
-			hasCapacity, err := mm.HasAvailableCapacity(inst.ID)
+			if instRec.Status != game_record.GameInstanceStatusCreated {
+				continue
+			}
+			hasCapacity, err := mm.HasAvailableCapacity(instRec.ID)
 			if err != nil {
-				l.Warn("failed checking capacity for instance >%s< >%v<", inst.ID, err)
-				return err
+				l.Warn("failed checking capacity for instance >%s< >%v<", instRec.ID, err)
+				continue
 			}
-
-			if hasCapacity {
-				availableInstances = append(availableInstances, mapper.CatalogGameInstanceRecordToData(inst, playerCount))
+			if !hasCapacity {
+				continue
 			}
+			count, err := mm.GetPlayerCountForGameInstance(instRec.ID)
+			if err != nil {
+				l.Warn("failed getting player count for instance >%s< >%v<", instRec.ID, err)
+				continue
+			}
+			availableInstances = append(availableInstances, instRec)
+			playerCounts[instRec.ID] = count
 		}
 
-		// Only include games that have at least one open instance.
-		if len(availableInstances) > 0 {
-			catalogData = append(catalogData, mapper.CatalogGameRecordToResponseData(l, gameRec, availableInstances))
+		if len(availableInstances) == 0 {
+			continue
 		}
+
+		catalogData = append(catalogData, mapper.CatalogSubscriptionToData(l, sub, gameRec, availableInstances, playerCounts))
 	}
 
-	res := catalog_schema.CatalogGameCollectionResponse{
+	res := catalog_schema.CatalogCollectionResponse{
 		Data: catalogData,
 	}
 

@@ -22,17 +22,17 @@
         <span class="turn-duration">Turn: {{ gameInfo.turn_duration_hours }}h</span>
       </div>
 
-      <div v-if="gameInfo.instance" class="instance-info">
-        <div class="capacity-info">
+      <div class="instance-info">
+        <div v-if="gameInfo.total_capacity > 0" class="capacity-info">
           <span class="label">Players:</span>
-          <span>{{ gameInfo.instance.player_count }} / {{ gameInfo.instance.required_player_count }}</span>
+          <span>{{ gameInfo.total_players }} / {{ gameInfo.total_capacity }}</span>
         </div>
 
         <div class="delivery-methods">
           <span class="label">Play by:</span>
-          <span v-if="gameInfo.instance.delivery_email" class="delivery-badge">Email</span>
-          <span v-if="gameInfo.instance.delivery_physical_local" class="delivery-badge">Local</span>
-          <span v-if="gameInfo.instance.delivery_physical_post" class="delivery-badge">Post</span>
+          <span v-if="gameInfo.delivery_email" class="delivery-badge">Email</span>
+          <span v-if="gameInfo.delivery_physical_local" class="delivery-badge">Local</span>
+          <span v-if="gameInfo.delivery_physical_post" class="delivery-badge">Post</span>
         </div>
       </div>
 
@@ -135,7 +135,7 @@
         <div v-if="availableDeliveryMethods.length > 1" class="form-group" data-testid="delivery-selection">
           <label>How would you like to play? <span class="required">*</span></label>
           <div class="delivery-options">
-            <label v-if="gameInfo.instance.delivery_email" class="delivery-option">
+            <label v-if="gameInfo.delivery_email" class="delivery-option">
               <input
                 type="radio"
                 v-model="selectedDelivery"
@@ -145,7 +145,7 @@
               />
               By Email
             </label>
-            <label v-if="gameInfo.instance.delivery_physical_local" class="delivery-option">
+            <label v-if="gameInfo.delivery_physical_local" class="delivery-option">
               <input
                 type="radio"
                 v-model="selectedDelivery"
@@ -155,7 +155,7 @@
               />
               Local pickup
             </label>
-            <label v-if="gameInfo.instance.delivery_physical_post" class="delivery-option">
+            <label v-if="gameInfo.delivery_physical_post" class="delivery-option">
               <input
                 type="radio"
                 v-model="selectedDelivery"
@@ -221,11 +221,10 @@ const form = ref({
 const selectedDelivery = ref('')
 
 const availableDeliveryMethods = computed(() => {
-  if (!gameInfo.value.instance) return []
   const methods = []
-  if (gameInfo.value.instance.delivery_email) methods.push('email')
-  if (gameInfo.value.instance.delivery_physical_local) methods.push('local')
-  if (gameInfo.value.instance.delivery_physical_post) methods.push('post')
+  if (gameInfo.value.delivery_email) methods.push('email')
+  if (gameInfo.value.delivery_physical_local) methods.push('local')
+  if (gameInfo.value.delivery_physical_post) methods.push('post')
   return methods
 })
 
@@ -243,7 +242,7 @@ async function loadGameInfo() {
   loading.value = true
   loadError.value = null
   try {
-    const res = await getJoinGameInfo(route.params.game_instance_id)
+    const res = await getJoinGameInfo(route.params.game_subscription_id)
     gameInfo.value = res.data ?? {}
     // Pre-select the only delivery method if there is just one
     if (availableDeliveryMethods.value.length === 1) {
@@ -260,7 +259,7 @@ async function onSubmit() {
   submitError.value = null
   submitting.value = true
   try {
-    await submitJoinGame(route.params.game_instance_id, {
+    await submitJoinGame(route.params.game_subscription_id, {
       email: form.value.email,
       name: form.value.name,
       postal_address_line1: form.value.postal_address_line1,

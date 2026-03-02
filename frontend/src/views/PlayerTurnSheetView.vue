@@ -58,6 +58,20 @@
             >
               Download PDF
             </button>
+            <label
+              v-if="!sheet.is_completed"
+              class="secondary-button upload-label"
+              :data-testid="`btn-upload-${sheet.id}`"
+            >
+              Upload Scan
+              <input
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                class="upload-input"
+                :data-testid="`input-upload-${sheet.id}`"
+                @change="onUploadScan(sheet.id, $event)"
+              />
+            </label>
           </div>
         </div>
       </div>
@@ -81,7 +95,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { getGSITurnSheets, submitGSITurnSheets, downloadGSITurnSheetPDF } from '../api/player'
+import { getGSITurnSheets, submitGSITurnSheets, downloadGSITurnSheetPDF, uploadGSITurnSheetScan } from '../api/player'
 
 const route = useRoute()
 
@@ -115,6 +129,20 @@ async function loadTurnSheets() {
     loadError.value = err.message || 'Failed to load turn sheets. Please try again.'
   } finally {
     loading.value = false
+  }
+}
+
+async function onUploadScan(turnSheetId, event) {
+  const file = event.target.files[0]
+  if (!file) return
+
+  submitError.value = null
+  try {
+    await uploadGSITurnSheetScan(route.params.game_subscription_instance_id, turnSheetId, file)
+    // Refresh the turn sheet list to reflect updated scan data
+    await loadTurnSheets()
+  } catch (err) {
+    submitError.value = err.message || 'Failed to upload scanned image. Please try again.'
   }
 }
 
@@ -241,6 +269,16 @@ onMounted(loadTurnSheets)
 
 .secondary-button:hover {
   background: #e8f3fd;
+}
+
+.upload-label {
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+}
+
+.upload-input {
+  display: none;
 }
 
 .ts-actions {

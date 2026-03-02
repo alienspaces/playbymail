@@ -77,7 +77,7 @@ export async function saveGSITurnSheet(gsiId, turnSheetId, scannedData) {
  * @returns {Promise<object>}
  */
 export async function submitGSITurnSheets(gsiId) {
-  const res = await apiFetch(`${gsiPath(gsiId)}/turn-sheets/submit`, {
+  const res = await apiFetch(`${gsiPath(gsiId)}/turn-sheet-upload`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
   });
@@ -98,5 +98,24 @@ export async function downloadGSITurnSheetPDF(gsiId, turnSheetId) {
   });
   await handleApiError(res, 'Failed to download turn sheet PDF');
   return res;
+}
+
+/**
+ * Upload a scanned turn sheet image for OCR processing.
+ * @param {string} gsiId
+ * @param {string} turnSheetId
+ * @param {File} imageFile
+ * @returns {Promise<object>}
+ */
+export async function uploadGSITurnSheetScan(gsiId, turnSheetId, imageFile) {
+  const formData = new FormData()
+  formData.append('image', imageFile)
+
+  const res = await apiFetch(`${gsiPath(gsiId)}/turn-sheets/${turnSheetId}/scan`, {
+    method: 'POST',
+    body: formData,
+  });
+  await handleApiError(res, 'Failed to upload scanned turn sheet');
+  return await res.json();
 }
 

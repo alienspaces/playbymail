@@ -11,8 +11,8 @@ vi.mock('./baseUrl', () => ({
 
 import { getJoinGameInfo, verifyJoinGameEmail, submitJoinGame } from './joinGame'
 
-const INSTANCE_ID = 'inst-abc-123'
-const BASE = 'http://localhost:8080/api/v1/player/game-instances'
+const SUB_ID = 'sub-abc-123'
+const BASE = 'http://localhost:8080/api/v1/game-subscriptions'
 
 describe('joinGame API', () => {
   beforeEach(() => {
@@ -21,17 +21,17 @@ describe('joinGame API', () => {
   })
 
   describe('getJoinGameInfo', () => {
-    it('calls GET /api/v1/player/game-instances/:id/join-game', async () => {
-      const data = { game_id: 'g1', game_name: 'Test Game', instance: { id: INSTANCE_ID } }
+    it('calls GET /api/v1/game-subscriptions/:id/join', async () => {
+      const data = { game_subscription_id: SUB_ID, game_name: 'Test Game' }
       mockApiFetch.mockResolvedValue({
         ok: true,
         json: () => Promise.resolve({ data }),
       })
 
-      const result = await getJoinGameInfo(INSTANCE_ID)
+      const result = await getJoinGameInfo(SUB_ID)
 
       expect(mockApiFetch).toHaveBeenCalledWith(
-        `${BASE}/${INSTANCE_ID}/join-game`,
+        `${BASE}/${SUB_ID}/join`,
         expect.objectContaining({ headers: { 'Content-Type': 'application/json' } })
       )
       expect(result.data).toEqual(data)
@@ -42,22 +42,22 @@ describe('joinGame API', () => {
       mockApiFetch.mockResolvedValue(errorRes)
       mockHandleApiError.mockRejectedValue(new Error('Failed to load game information'))
 
-      await expect(getJoinGameInfo(INSTANCE_ID)).rejects.toThrow('Failed to load game information')
+      await expect(getJoinGameInfo(SUB_ID)).rejects.toThrow('Failed to load game information')
       expect(mockHandleApiError).toHaveBeenCalledWith(errorRes, 'Failed to load game information')
     })
   })
 
   describe('verifyJoinGameEmail', () => {
-    it('calls POST /api/v1/player/game-instances/:id/join-game/verify-email', async () => {
+    it('calls POST /api/v1/game-subscriptions/:id/join/verify-email', async () => {
       mockApiFetch.mockResolvedValue({
         ok: true,
         json: () => Promise.resolve({ data: { has_account: false } }),
       })
 
-      const result = await verifyJoinGameEmail(INSTANCE_ID, 'player@example.com')
+      const result = await verifyJoinGameEmail(SUB_ID, 'player@example.com')
 
       expect(mockApiFetch).toHaveBeenCalledWith(
-        `${BASE}/${INSTANCE_ID}/join-game/verify-email`,
+        `${BASE}/${SUB_ID}/join/verify-email`,
         expect.objectContaining({
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -72,7 +72,7 @@ describe('joinGame API', () => {
       mockApiFetch.mockResolvedValue(errorRes)
       mockHandleApiError.mockRejectedValue(new Error('Failed to verify email'))
 
-      await expect(verifyJoinGameEmail(INSTANCE_ID, 'bad@example.com')).rejects.toThrow(
+      await expect(verifyJoinGameEmail(SUB_ID, 'bad@example.com')).rejects.toThrow(
         'Failed to verify email'
       )
     })
@@ -91,23 +91,23 @@ describe('joinGame API', () => {
       delivery_physical_post: false,
     }
 
-    it('calls POST /api/v1/player/game-instances/:id/join-game with submit data', async () => {
+    it('calls POST /api/v1/game-subscriptions/:id/join with submit data', async () => {
       mockApiFetch.mockResolvedValue({
         ok: true,
         json: () =>
           Promise.resolve({
             data: {
               game_subscription_id: 'sub-1',
-              game_instance_id: INSTANCE_ID,
+              game_instance_id: 'inst-1',
               game_id: 'g1',
             },
           }),
       })
 
-      const result = await submitJoinGame(INSTANCE_ID, submitData)
+      const result = await submitJoinGame(SUB_ID, submitData)
 
       expect(mockApiFetch).toHaveBeenCalledWith(
-        `${BASE}/${INSTANCE_ID}/join-game`,
+        `${BASE}/${SUB_ID}/join`,
         expect.objectContaining({
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -122,7 +122,7 @@ describe('joinGame API', () => {
       mockApiFetch.mockResolvedValue(errorRes)
       mockHandleApiError.mockRejectedValue(new Error('Failed to submit join game'))
 
-      await expect(submitJoinGame(INSTANCE_ID, submitData)).rejects.toThrow(
+      await expect(submitJoinGame(SUB_ID, submitData)).rejects.toThrow(
         'Failed to submit join game'
       )
     })

@@ -14,7 +14,7 @@ const routes = [
     meta: { requiresAuth: true },
   },
   {
-    path: '/player/join-game/:game_instance_id',
+    path: '/player/join-game/:game_subscription_id',
     name: 'PlayerJoinGame',
     component: () => import('../views/PlayerJoinGameView.vue'),
   },

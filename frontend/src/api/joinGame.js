@@ -1,18 +1,18 @@
 import { baseUrl, apiFetch, handleApiError } from './baseUrl';
 
-const joinGamePath = (gameInstanceId) =>
-  `${baseUrl}/api/v1/player/game-instances/${gameInstanceId}/join-game`;
+const joinPath = (gameSubscriptionId) =>
+  `${baseUrl}/api/v1/game-subscriptions/${gameSubscriptionId}/join`;
 
-export async function getJoinGameInfo(gameInstanceId) {
-  const res = await apiFetch(joinGamePath(gameInstanceId), {
+export async function getJoinGameInfo(gameSubscriptionId) {
+  const res = await apiFetch(joinPath(gameSubscriptionId), {
     headers: { 'Content-Type': 'application/json' },
   });
   await handleApiError(res, 'Failed to load game information');
   return await res.json();
 }
 
-export async function verifyJoinGameEmail(gameInstanceId, email) {
-  const res = await apiFetch(`${joinGamePath(gameInstanceId)}/verify-email`, {
+export async function verifyJoinGameEmail(gameSubscriptionId, email) {
+  const res = await apiFetch(`${joinPath(gameSubscriptionId)}/verify-email`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email }),
@@ -21,8 +21,8 @@ export async function verifyJoinGameEmail(gameInstanceId, email) {
   return await res.json();
 }
 
-export async function submitJoinGame(gameInstanceId, data) {
-  const res = await apiFetch(joinGamePath(gameInstanceId), {
+export async function submitJoinGame(gameSubscriptionId, data) {
+  const res = await apiFetch(joinPath(gameSubscriptionId), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),

@@ -221,10 +221,10 @@ func playerTurnSheetHandlerConfig(l logger.Logger) (map[string]server.HandlerCon
 		},
 	}
 
-	// POST /api/v1/player/turn-sheets/:turn_sheet_key/submit - submit all sheets
+	// POST /api/v1/player/game-subscriptions/.../turn-sheet-upload - submit all sheets
 	playerTurnSheetConfig[SubmitGameSubscriptionTurnSheets] = server.HandlerConfig{
 		Method:      http.MethodPost,
-		Path:        "/api/v1/player/game-subscriptions/:game_subscription_id/game-instances/:game_instance_id/turn-sheets/submit",
+		Path:        "/api/v1/player/game-subscriptions/:game_subscription_id/game-instances/:game_instance_id/turn-sheet-upload",
 		HandlerFunc: submitGameSubscriptionTurnSheetsHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
@@ -339,10 +339,10 @@ func playerTurnSheetHandlerConfig(l logger.Logger) (map[string]server.HandlerCon
 		},
 	}
 
-	// POST /api/v1/player/game-subscription-instances/:gsi_id/turn-sheets/submit
+	// POST /api/v1/player/game-subscription-instances/:gsi_id/turn-sheet-upload
 	playerTurnSheetConfig[SubmitGSITurnSheets] = server.HandlerConfig{
 		Method:      http.MethodPost,
-		Path:        "/api/v1/player/game-subscription-instances/:game_subscription_instance_id/turn-sheets/submit",
+		Path:        "/api/v1/player/game-subscription-instances/:game_subscription_instance_id/turn-sheet-upload",
 		HandlerFunc: submitGSITurnSheetsHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{server.AuthenticationTypeToken},

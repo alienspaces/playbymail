@@ -6,30 +6,36 @@ import (
 	"gitlab.com/alienspaces/playbymail/schema/api/catalog_schema"
 )
 
-// CatalogGameInstanceRecordToData maps a game instance record to catalog instance data.
-func CatalogGameInstanceRecordToData(rec *game_record.GameInstance, playerCount int) *catalog_schema.CatalogGameInstanceData {
-	return &catalog_schema.CatalogGameInstanceData{
-		ID:                    rec.ID,
-		RequiredPlayerCount:   rec.RequiredPlayerCount,
-		PlayerCount:           playerCount,
-		DeliveryPhysicalPost:  rec.DeliveryPhysicalPost,
-		DeliveryPhysicalLocal: rec.DeliveryPhysicalLocal,
-		DeliveryEmail:         rec.DeliveryEmail,
-	}
-}
+// CatalogSubscriptionToData maps a manager subscription, its game, and linked instances
+// into a single catalog entry with aggregated capacity and delivery flags.
+func CatalogSubscriptionToData(
+	l logger.Logger,
+	sub *game_record.GameSubscription,
+	gameRec *game_record.Game,
+	instances []*game_record.GameInstance,
+	playerCounts map[string]int,
+) *catalog_schema.CatalogSubscriptionData {
+	var totalCapacity, totalPlayers int
+	var deliveryPost, deliveryLocal, deliveryEmail bool
 
-// CatalogGameRecordToResponseData maps a game record and its available instances to catalog response data.
-func CatalogGameRecordToResponseData(l logger.Logger, rec *game_record.Game, instances []*catalog_schema.CatalogGameInstanceData) *catalog_schema.CatalogGameResponseData {
-	l.Debug("mapping game record to catalog response data")
-	if instances == nil {
-		instances = []*catalog_schema.CatalogGameInstanceData{}
+	for _, inst := range instances {
+		totalCapacity += inst.RequiredPlayerCount
+		totalPlayers += playerCounts[inst.ID]
+		deliveryPost = deliveryPost || inst.DeliveryPhysicalPost
+		deliveryLocal = deliveryLocal || inst.DeliveryPhysicalLocal
+		deliveryEmail = deliveryEmail || inst.DeliveryEmail
 	}
-	return &catalog_schema.CatalogGameResponseData{
-		ID:                 rec.ID,
-		Name:               rec.Name,
-		Description:        rec.Description,
-		GameType:           rec.GameType,
-		TurnDurationHours:  rec.TurnDurationHours,
-		AvailableInstances: instances,
+
+	return &catalog_schema.CatalogSubscriptionData{
+		GameSubscriptionID:    sub.ID,
+		GameName:              gameRec.Name,
+		GameDescription:       gameRec.Description,
+		GameType:              gameRec.GameType,
+		TurnDurationHours:     gameRec.TurnDurationHours,
+		TotalCapacity:         totalCapacity,
+		TotalPlayers:          totalPlayers,
+		DeliveryPhysicalPost:  deliveryPost,
+		DeliveryPhysicalLocal: deliveryLocal,
+		DeliveryEmail:         deliveryEmail,
 	}
 }

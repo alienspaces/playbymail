@@ -38,6 +38,7 @@ func GameHandlerConfig(cfg config.Config, l logger.Logger, scnr turnsheet.TurnSh
 		gameImageHandlerConfig,
 		gameParameterHandlerConfig,
 		gameSubscriptionHandlerConfig,
+		gameSubscriptionJoinHandlerConfig,
 		gameInstanceHandlerConfig,
 		gameInstanceParameterHandlerConfig,
 	}

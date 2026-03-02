@@ -27,12 +27,11 @@ func Test_getCatalogGamesHandler(t *testing.T) {
 
 	testCases := []testutil.TestCase{
 		{
-			Name: "public request returns catalog with games that have available instances",
+			Name: "public request returns catalog with subscription entries that have available instances",
 			HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 				return rnr.GetHandlerConfig()[catalog.GetCatalogGames]
 			},
-			// No RequestHeaders — public endpoint requires no authentication
-			ResponseDecoder: testutil.TestCaseResponseDecoderGeneric[catalog_schema.CatalogGameCollectionResponse],
+			ResponseDecoder: testutil.TestCaseResponseDecoderGeneric[catalog_schema.CatalogCollectionResponse],
 			ResponseCode:    http.StatusOK,
 		},
 	}
@@ -48,28 +47,16 @@ func Test_getCatalogGamesHandler(t *testing.T) {
 
 				require.NotNil(t, body, "Response body is not nil")
 
-				res := body.(catalog_schema.CatalogGameCollectionResponse)
+				res := body.(catalog_schema.CatalogCollectionResponse)
 				require.NotNil(t, res.Data, "Response data is not nil")
 
-				// The default harness creates GameOneRef with an active manager subscription
-				// (ProManagerAccountRef / GameSubscriptionManagerOneRef) and game instances
-				// in "created" status -- so at least one game should appear in the catalog.
-				require.NotEmpty(t, res.Data, "Catalog contains at least one game")
+				require.NotEmpty(t, res.Data, "Catalog contains at least one subscription entry")
 
-				// Verify the structure of each catalog entry -- do not assert specific IDs
-				// because the full test suite runs tests in parallel and other harnesses may
-				// also commit games that are visible to this handler's transaction.
-				for _, game := range res.Data {
-					require.NotEmpty(t, game.ID, "Game ID is not empty")
-					require.NotEmpty(t, game.Name, "Game name is not empty")
-					require.NotEmpty(t, game.GameType, "Game type is not empty")
-					require.Greater(t, game.TurnDurationHours, 0, "Turn duration hours is greater than 0")
-					require.NotNil(t, game.AvailableInstances, "Available instances is not nil")
-					require.NotEmpty(t, game.AvailableInstances, "Game has at least one available instance")
-
-					for _, inst := range game.AvailableInstances {
-						require.NotEmpty(t, inst.ID, "Instance ID is not empty")
-					}
+				for _, entry := range res.Data {
+					require.NotEmpty(t, entry.GameSubscriptionID, "GameSubscriptionID is not empty")
+					require.NotEmpty(t, entry.GameName, "GameName is not empty")
+					require.NotEmpty(t, entry.GameType, "GameType is not empty")
+					require.Greater(t, entry.TurnDurationHours, 0, "TurnDurationHours is greater than 0")
 				}
 			}
 			testutil.RunTestCase(t, th, &tc, testFunc)

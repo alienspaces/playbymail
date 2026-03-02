@@ -1,7 +1,7 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
     "$id": "http://playbymail.games/schema/catalog_schema/catalog_game.collection.response.schema.json",
-    "title": "CatalogGameCollectionResponse",
+    "title": "CatalogCollectionResponse",
     "type": "object",
     "properties": {
         "data": {

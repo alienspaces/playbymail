@@ -6,11 +6,13 @@ import PlayerTurnSheetView from './PlayerTurnSheetView.vue'
 const mockGetGSITurnSheets = vi.fn()
 const mockSubmitGSITurnSheets = vi.fn()
 const mockDownloadGSITurnSheetPDF = vi.fn()
+const mockUploadGSITurnSheetScan = vi.fn()
 
 vi.mock('../api/player', () => ({
   getGSITurnSheets: (...args) => mockGetGSITurnSheets(...args),
   submitGSITurnSheets: (...args) => mockSubmitGSITurnSheets(...args),
   downloadGSITurnSheetPDF: (...args) => mockDownloadGSITurnSheetPDF(...args),
+  uploadGSITurnSheetScan: (...args) => mockUploadGSITurnSheetScan(...args),
 }))
 
 vi.mock('vue-router', () => ({
@@ -167,6 +169,35 @@ describe('PlayerTurnSheetView', () => {
     await flushPromises()
 
     expect(mockDownloadGSITurnSheetPDF).toHaveBeenCalledWith('gsi-abc-123', 'ts-1')
+  })
+
+  it('renders an Upload Scan button for each pending turn sheet', async () => {
+    mockGetGSITurnSheets.mockResolvedValue({ turn_sheets: mockSheets })
+
+    const wrapper = mount(PlayerTurnSheetView)
+    await flushPromises()
+
+    expect(wrapper.find('[data-testid="btn-upload-ts-1"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="btn-upload-ts-2"]').exists()).toBe(true)
+  })
+
+  it('calls uploadGSITurnSheetScan when a file is selected', async () => {
+    mockGetGSITurnSheets.mockResolvedValue({ turn_sheets: mockSheets })
+    mockUploadGSITurnSheetScan.mockResolvedValue({ data: {} })
+
+    const wrapper = mount(PlayerTurnSheetView)
+    await flushPromises()
+
+    const file = new File(['img'], 'scan.png', { type: 'image/png' })
+    const input = wrapper.find('[data-testid="input-upload-ts-1"]')
+    Object.defineProperty(input.element, 'files', {
+      value: [file],
+      configurable: true,
+    })
+    await input.trigger('change')
+    await flushPromises()
+
+    expect(mockUploadGSITurnSheetScan).toHaveBeenCalledWith('gsi-abc-123', 'ts-1', file)
   })
 
   it('calls submitGSITurnSheets with the correct gsi id', async () => {

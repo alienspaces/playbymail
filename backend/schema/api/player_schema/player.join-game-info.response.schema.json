@@ -7,26 +7,18 @@
         "data": {
             "type": "object",
             "properties": {
-                "game_id": { "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id" },
+                "game_subscription_id": { "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id" },
                 "game_name": { "type": "string" },
                 "game_description": { "type": "string" },
                 "game_type": { "type": "string" },
                 "turn_duration_hours": { "type": "integer", "minimum": 1 },
-                "instance": {
-                    "type": "object",
-                    "properties": {
-                        "id": { "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id" },
-                        "required_player_count": { "type": "integer", "minimum": 0 },
-                        "player_count": { "type": "integer", "minimum": 0 },
-                        "delivery_physical_post": { "type": "boolean" },
-                        "delivery_physical_local": { "type": "boolean" },
-                        "delivery_email": { "type": "boolean" }
-                    },
-                    "required": ["id", "required_player_count", "player_count", "delivery_physical_post", "delivery_physical_local", "delivery_email"],
-                    "additionalProperties": false
-                }
+                "total_capacity": { "type": "integer", "minimum": 0 },
+                "total_players": { "type": "integer", "minimum": 0 },
+                "delivery_physical_post": { "type": "boolean" },
+                "delivery_physical_local": { "type": "boolean" },
+                "delivery_email": { "type": "boolean" }
             },
-            "required": ["game_id", "game_name", "game_description", "game_type", "turn_duration_hours", "instance"],
+            "required": ["game_subscription_id", "game_name", "game_description", "game_type", "turn_duration_hours", "total_capacity", "total_players", "delivery_physical_post", "delivery_physical_local", "delivery_email"],
             "additionalProperties": false
         },
         "error": {

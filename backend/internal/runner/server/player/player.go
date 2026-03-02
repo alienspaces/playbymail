@@ -36,16 +36,22 @@ func PlayerHandlerConfig(cfg config.Config, l logger.Logger, scnr turnsheet.Turn
 	// Additional handler configurations are added here
 	handlerConfigFuncs := []func(logger.Logger) (map[string]server.HandlerConfig, error){
 		playerTurnSheetHandlerConfig,
-		playerJoinGameHandlerConfig,
 	}
 
 	for _, fn := range handlerConfigFuncs {
-		cfg, err := fn(l)
+		handlerCfg, err := fn(l)
 		if err != nil {
 			return nil, err
 		}
-		playerConfig = server.MergeHandlerConfigs(playerConfig, cfg)
+		playerConfig = server.MergeHandlerConfigs(playerConfig, handlerCfg)
 	}
+
+	// Scan upload handler requires the scanner, so it is configured separately.
+	scanCfg, err := playerScanHandlerConfig(l, scnr)
+	if err != nil {
+		return nil, err
+	}
+	playerConfig = server.MergeHandlerConfigs(playerConfig, scanCfg)
 
 	return playerConfig, nil
 }

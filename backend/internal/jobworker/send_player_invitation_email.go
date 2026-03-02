@@ -110,8 +110,13 @@ func (w *SendPlayerInvitationEmailWorker) DoWork(ctx context.Context, m *domain.
 
 	l.Info("preparing player invitation email for game subscription >%s< email >%s<", j.Args.GameSubscriptionID, j.Args.Email)
 
-	// Find an available instance managed under this manager's subscription.
-	// This ensures the join link targets an instance that the inviting manager is responsible for.
+	// Validate the subscription exists and has capacity before sending.
+	subscriptionRec, err := m.GetGameSubscriptionRec(j.Args.GameSubscriptionID, nil)
+	if err != nil {
+		l.Warn("failed to get game subscription record >%v<", err)
+		return nil, err
+	}
+
 	instanceRec, err := m.FindAvailableGameInstance(j.Args.GameSubscriptionID)
 	if err != nil {
 		l.Warn("failed to find available game instance for subscription >%s< >%v<", j.Args.GameSubscriptionID, err)
@@ -121,22 +126,14 @@ func (w *SendPlayerInvitationEmailWorker) DoWork(ctx context.Context, m *domain.
 		return nil, fmt.Errorf("no available game instance found for subscription >%s<", j.Args.GameSubscriptionID)
 	}
 
-	// Get the subscription to resolve the game ID, then fetch the game name.
-	subscriptionRec, err := m.GetGameSubscriptionRec(j.Args.GameSubscriptionID, nil)
-	if err != nil {
-		l.Warn("failed to get game subscription record >%v<", err)
-		return nil, err
-	}
-
 	gameRec, err := m.GetGameRec(subscriptionRec.GameID, nil)
 	if err != nil {
 		l.Warn("failed to get game record >%v<", err)
 		return nil, err
 	}
 
-	// Build the join game URL pointing at the selected instance.
-	joinPath := fmt.Sprintf("/player/join-game/%s", instanceRec.ID)
-	joinURL := fmt.Sprintf("%s%s", w.Config.AppHost, joinPath)
+	// Build the join URL using the subscription ID (instance is auto-assigned at join time).
+	joinURL := fmt.Sprintf("%s/player/join-game/%s", w.Config.AppHost, j.Args.GameSubscriptionID)
 
 	// Render the HTML email template.
 	baseTmplPath := filepath.Join(w.Config.TemplatesPath, "email", "base.email.html")

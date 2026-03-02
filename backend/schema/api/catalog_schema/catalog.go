@@ -4,28 +4,23 @@ import (
 	"gitlab.com/alienspaces/playbymail/schema/api/common_schema"
 )
 
-// CatalogGameInstanceData describes a game instance available for players to join.
-type CatalogGameInstanceData struct {
-	ID                    string `json:"id"`
-	RequiredPlayerCount   int    `json:"required_player_count"`
-	PlayerCount           int    `json:"player_count"`
+// CatalogSubscriptionData represents a manager subscription available in the public catalog.
+// Each entry aggregates capacity and delivery info across the subscription's linked game instances.
+type CatalogSubscriptionData struct {
+	GameSubscriptionID    string `json:"game_subscription_id"`
+	GameName              string `json:"game_name"`
+	GameDescription       string `json:"game_description"`
+	GameType              string `json:"game_type"`
+	TurnDurationHours     int    `json:"turn_duration_hours"`
+	TotalCapacity         int    `json:"total_capacity"`
+	TotalPlayers          int    `json:"total_players"`
 	DeliveryPhysicalPost  bool   `json:"delivery_physical_post"`
 	DeliveryPhysicalLocal bool   `json:"delivery_physical_local"`
 	DeliveryEmail         bool   `json:"delivery_email"`
 }
 
-// CatalogGameResponseData is an entry in the public game catalog.
-type CatalogGameResponseData struct {
-	ID                 string                     `json:"id"`
-	Name               string                     `json:"name"`
-	Description        string                     `json:"description"`
-	GameType           string                     `json:"game_type"`
-	TurnDurationHours  int                        `json:"turn_duration_hours"`
-	AvailableInstances []*CatalogGameInstanceData `json:"available_instances"`
-}
-
-// CatalogGameCollectionResponse is the response body for GET /api/v1/catalog/games.
-type CatalogGameCollectionResponse struct {
-	Data  []*CatalogGameResponseData    `json:"data"`
+// CatalogCollectionResponse is the response body for GET /api/v1/catalog/game-subscriptions.
+type CatalogCollectionResponse struct {
+	Data  []*CatalogSubscriptionData   `json:"data"`
 	Error *common_schema.ResponseError `json:"error,omitempty"`
 }

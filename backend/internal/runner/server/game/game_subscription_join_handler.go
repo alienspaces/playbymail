@@ -1,4 +1,4 @@
-package player
+package game
 
 import (
 	"database/sql"
@@ -14,6 +14,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/queryparam"
 	"gitlab.com/alienspaces/playbymail/core/record"
 	"gitlab.com/alienspaces/playbymail/core/server"
+	coresql "gitlab.com/alienspaces/playbymail/core/sql"
 	"gitlab.com/alienspaces/playbymail/core/type/domainer"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
 	"gitlab.com/alienspaces/playbymail/internal/domain"
@@ -27,24 +28,24 @@ import (
 )
 
 const (
-	GetJoinGameInfo         = "get-join-game-info"
-	VerifyJoinGameEmail     = "verify-join-game-email"
-	GetJoinGameSheet        = "get-join-game-sheet"
-	SaveJoinGameSheet       = "save-join-game-sheet"
-	SubmitJoinGame          = "submit-join-game"
+	GetJoinInfo         = "get-join-info"
+	VerifyJoinEmail     = "verify-join-email"
+	GetJoinSheet        = "get-join-sheet"
+	SaveJoinSheet       = "save-join-sheet"
+	SubmitJoin          = "submit-join"
 )
 
-func playerJoinGameHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error) {
-	l = logging.LoggerWithFunctionContext(l, packageName, "playerJoinGameHandlerConfig")
+func gameSubscriptionJoinHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error) {
+	l = logging.LoggerWithFunctionContext(l, packageName, "gameSubscriptionJoinHandlerConfig")
 
-	l.Debug("Adding player join game handler configuration")
+	l.Debug("Adding game subscription join handler configuration")
 
 	cfg := make(map[string]server.HandlerConfig)
 
-	cfg[GetJoinGameInfo] = server.HandlerConfig{
+	cfg[GetJoinInfo] = server.HandlerConfig{
 		Method:      http.MethodGet,
-		Path:        "/api/v1/player/game-instances/:game_instance_id/join-game",
-		HandlerFunc: getJoinGameInfoHandler,
+		Path:        "/api/v1/game-subscriptions/:game_subscription_id/join",
+		HandlerFunc: getJoinInfoHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{server.AuthenticationTypePublic},
 			ValidateResponseSchema: jsonschema.SchemaWithReferences{
@@ -58,14 +59,14 @@ func playerJoinGameHandlerConfig(l logger.Logger) (map[string]server.HandlerConf
 		DocumentationConfig: server.DocumentationConfig{
 			Document:    true,
 			Title:       "Get join game info",
-			Description: "Returns game and instance information for displaying the join game form.",
+			Description: "Returns game and subscription information for displaying the join game form.",
 		},
 	}
 
-	cfg[VerifyJoinGameEmail] = server.HandlerConfig{
+	cfg[VerifyJoinEmail] = server.HandlerConfig{
 		Method:      http.MethodPost,
-		Path:        "/api/v1/player/game-instances/:game_instance_id/join-game/verify-email",
-		HandlerFunc: verifyJoinGameEmailHandler,
+		Path:        "/api/v1/game-subscriptions/:game_subscription_id/join/verify-email",
+		HandlerFunc: verifyJoinEmailHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{server.AuthenticationTypePublic},
 			ValidateRequestSchema: jsonschema.SchemaWithReferences{
@@ -90,10 +91,10 @@ func playerJoinGameHandlerConfig(l logger.Logger) (map[string]server.HandlerConf
 		},
 	}
 
-	cfg[GetJoinGameSheet] = server.HandlerConfig{
+	cfg[GetJoinSheet] = server.HandlerConfig{
 		Method:      http.MethodGet,
-		Path:        "/api/v1/player/game-instances/:game_instance_id/join-game/sheet",
-		HandlerFunc: getJoinGameSheetHandler,
+		Path:        "/api/v1/game-subscriptions/:game_subscription_id/join/sheet",
+		HandlerFunc: getJoinSheetHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{server.AuthenticationTypePublic},
 		},
@@ -104,10 +105,10 @@ func playerJoinGameHandlerConfig(l logger.Logger) (map[string]server.HandlerConf
 		},
 	}
 
-	cfg[SaveJoinGameSheet] = server.HandlerConfig{
+	cfg[SaveJoinSheet] = server.HandlerConfig{
 		Method:      http.MethodPut,
-		Path:        "/api/v1/player/game-instances/:game_instance_id/join-game/sheet",
-		HandlerFunc: saveJoinGameSheetHandler,
+		Path:        "/api/v1/game-subscriptions/:game_subscription_id/join/sheet",
+		HandlerFunc: saveJoinSheetHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{server.AuthenticationTypePublic},
 		},
@@ -118,10 +119,10 @@ func playerJoinGameHandlerConfig(l logger.Logger) (map[string]server.HandlerConf
 		},
 	}
 
-	cfg[SubmitJoinGame] = server.HandlerConfig{
+	cfg[SubmitJoin] = server.HandlerConfig{
 		Method:      http.MethodPost,
-		Path:        "/api/v1/player/game-instances/:game_instance_id/join-game",
-		HandlerFunc: submitJoinGameHandler,
+		Path:        "/api/v1/game-subscriptions/:game_subscription_id/join",
+		HandlerFunc: submitJoinHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{server.AuthenticationTypePublic},
 			ValidateRequestSchema: jsonschema.SchemaWithReferences{
@@ -142,81 +143,139 @@ func playerJoinGameHandlerConfig(l logger.Logger) (map[string]server.HandlerConf
 		DocumentationConfig: server.DocumentationConfig{
 			Document:    true,
 			Title:       "Submit join game",
-			Description: "Submits the join game form. Creates an account if needed, creates a player subscription, and assigns the player to the game instance.",
+			Description: "Submits the join game form. Creates an account if needed, creates a player subscription, and assigns the player to an available game instance.",
 		},
 	}
 
 	return cfg, nil
 }
 
-// getJoinGameInfoHandler returns game and instance information needed to render the join form.
-func getJoinGameInfoHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
-	l = logging.LoggerWithFunctionContext(l, packageName, "getJoinGameInfoHandler")
-
-	instanceID := pp.ByName("game_instance_id")
-	if instanceID == "" {
-		return coreerror.RequiredPathParameter("game_instance_id")
+// resolveManagerSubscription fetches and validates that a subscription is an active manager subscription.
+func resolveManagerSubscription(l logger.Logger, pp httprouter.Params, mm *domain.Domain) (*game_record.GameSubscription, error) {
+	gameSubscriptionID := pp.ByName("game_subscription_id")
+	if gameSubscriptionID == "" {
+		return nil, coreerror.RequiredPathParameter("game_subscription_id")
 	}
+
+	subRec, err := mm.GetGameSubscriptionRec(gameSubscriptionID, nil)
+	if err != nil {
+		l.Warn("failed to get subscription >%s< >%v<", gameSubscriptionID, err)
+		return nil, err
+	}
+
+	if subRec.SubscriptionType != game_record.GameSubscriptionTypeManager {
+		return nil, coreerror.NewNotFoundError(game_record.TableGameSubscription, gameSubscriptionID)
+	}
+	if subRec.Status != game_record.GameSubscriptionStatusActive {
+		return nil, coreerror.NewNotFoundError(game_record.TableGameSubscription, gameSubscriptionID)
+	}
+
+	return subRec, nil
+}
+
+// aggregateSubscriptionInstances returns available instances and player counts for a subscription.
+func aggregateSubscriptionInstances(l logger.Logger, mm *domain.Domain, subID string) (
+	instances []*game_record.GameInstance,
+	playerCounts map[string]int,
+	err error,
+) {
+	gsiRecs, err := mm.GetManyGameSubscriptionInstanceRecs(&coresql.Options{
+		Params: []coresql.Param{
+			{Col: game_record.FieldGameSubscriptionInstanceGameSubscriptionID, Val: subID},
+		},
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	instances = make([]*game_record.GameInstance, 0)
+	playerCounts = make(map[string]int)
+
+	for _, gsi := range gsiRecs {
+		instRec, err := mm.GetGameInstanceRec(gsi.GameInstanceID, nil)
+		if err != nil {
+			l.Warn("failed getting instance >%s< >%v<", gsi.GameInstanceID, err)
+			continue
+		}
+		if instRec.Status != game_record.GameInstanceStatusCreated {
+			continue
+		}
+		hasCapacity, err := mm.HasAvailableCapacity(instRec.ID)
+		if err != nil {
+			l.Warn("failed checking capacity for instance >%s< >%v<", instRec.ID, err)
+			continue
+		}
+		if !hasCapacity {
+			continue
+		}
+		count, err := mm.GetPlayerCountForGameInstance(instRec.ID)
+		if err != nil {
+			l.Warn("failed getting player count for instance >%s< >%v<", instRec.ID, err)
+			continue
+		}
+		instances = append(instances, instRec)
+		playerCounts[instRec.ID] = count
+	}
+
+	return instances, playerCounts, nil
+}
+
+func getJoinInfoHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
+	l = logging.LoggerWithFunctionContext(l, packageName, "getJoinInfoHandler")
 
 	mm := m.(*domain.Domain)
 
-	instanceRec, err := mm.GetGameInstanceRec(instanceID, nil)
+	subRec, err := resolveManagerSubscription(l, pp, mm)
 	if err != nil {
-		l.Warn("failed to get game instance >%s< >%v<", instanceID, err)
 		return err
 	}
 
-	if instanceRec.Status != game_record.GameInstanceStatusCreated {
-		l.Warn("game instance >%s< is not open for enrollment (status >%s<)", instanceID, instanceRec.Status)
-		return coreerror.NewNotFoundError(game_record.TableGameInstance, instanceID)
-	}
-
-	hasCapacity, err := mm.HasAvailableCapacity(instanceID)
+	gameRec, err := mm.GetGameRec(subRec.GameID, nil)
 	if err != nil {
-		l.Warn("failed to check capacity for instance >%s< >%v<", instanceID, err)
-		return err
-	}
-	if !hasCapacity {
-		l.Warn("game instance >%s< has no available capacity", instanceID)
-		return coreerror.NewInvalidDataError("this game instance is no longer accepting new players")
-	}
-
-	gameRec, err := mm.GetGameRec(instanceRec.GameID, nil)
-	if err != nil {
-		l.Warn("failed to get game record for instance >%s< >%v<", instanceID, err)
+		l.Warn("failed to get game >%s< >%v<", subRec.GameID, err)
 		return err
 	}
 
-	playerCount, err := mm.GetPlayerCountForGameInstance(instanceID)
+	instances, playerCounts, err := aggregateSubscriptionInstances(l, mm, subRec.ID)
 	if err != nil {
-		l.Warn("failed to get player count for instance >%s< >%v<", instanceID, err)
+		l.Warn("failed aggregating instances for subscription >%s< >%v<", subRec.ID, err)
 		return err
+	}
+
+	if len(instances) == 0 {
+		return coreerror.NewInvalidDataError("this subscription has no game instances accepting new players")
+	}
+
+	var totalCapacity, totalPlayers int
+	var deliveryPost, deliveryLocal, deliveryEmail bool
+	for _, inst := range instances {
+		totalCapacity += inst.RequiredPlayerCount
+		totalPlayers += playerCounts[inst.ID]
+		deliveryPost = deliveryPost || inst.DeliveryPhysicalPost
+		deliveryLocal = deliveryLocal || inst.DeliveryPhysicalLocal
+		deliveryEmail = deliveryEmail || inst.DeliveryEmail
 	}
 
 	res := player_schema.JoinGameInfoResponse{
 		Data: &player_schema.JoinGameInfoResponseData{
-			GameID:            gameRec.ID,
-			GameName:          gameRec.Name,
-			GameDescription:   gameRec.Description,
-			GameType:          gameRec.GameType,
-			TurnDurationHours: gameRec.TurnDurationHours,
-			Instance: &player_schema.JoinGameInfoInstanceData{
-				ID:                    instanceRec.ID,
-				RequiredPlayerCount:   instanceRec.RequiredPlayerCount,
-				PlayerCount:           playerCount,
-				DeliveryPhysicalPost:  instanceRec.DeliveryPhysicalPost,
-				DeliveryPhysicalLocal: instanceRec.DeliveryPhysicalLocal,
-				DeliveryEmail:         instanceRec.DeliveryEmail,
-			},
+			GameSubscriptionID:    subRec.ID,
+			GameName:              gameRec.Name,
+			GameDescription:       gameRec.Description,
+			GameType:              gameRec.GameType,
+			TurnDurationHours:     gameRec.TurnDurationHours,
+			TotalCapacity:         totalCapacity,
+			TotalPlayers:          totalPlayers,
+			DeliveryPhysicalPost:  deliveryPost,
+			DeliveryPhysicalLocal: deliveryLocal,
+			DeliveryEmail:         deliveryEmail,
 		},
 	}
 
 	return server.WriteResponse(l, w, http.StatusOK, res)
 }
 
-// verifyJoinGameEmailHandler checks whether the provided email already has an account.
-func verifyJoinGameEmailHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
-	l = logging.LoggerWithFunctionContext(l, packageName, "verifyJoinGameEmailHandler")
+func verifyJoinEmailHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
+	l = logging.LoggerWithFunctionContext(l, packageName, "verifyJoinEmailHandler")
 
 	var req player_schema.JoinGameVerifyEmailRequest
 	if _, err := server.ReadRequest(l, r, &req); err != nil {
@@ -245,62 +304,68 @@ func verifyJoinGameEmailHandler(w http.ResponseWriter, r *http.Request, pp httpr
 	return server.WriteResponse(l, w, http.StatusOK, res)
 }
 
-// getJoinGameSheetHandler returns the join game turn sheet as HTML.
-func getJoinGameSheetHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
-	l = logging.LoggerWithFunctionContext(l, packageName, "getJoinGameSheetHandler")
-
-	instanceID := pp.ByName("game_instance_id")
-	if instanceID == "" {
-		return coreerror.RequiredPathParameter("game_instance_id")
-	}
+func getJoinSheetHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
+	l = logging.LoggerWithFunctionContext(l, packageName, "getJoinSheetHandler")
 
 	mm := m.(*domain.Domain)
 
-	instanceRec, err := mm.GetGameInstanceRec(instanceID, nil)
+	subRec, err := resolveManagerSubscription(l, pp, mm)
 	if err != nil {
-		l.Warn("failed to get game instance >%s< >%v<", instanceID, err)
 		return err
 	}
 
-	gameRec, err := mm.GetGameRec(instanceRec.GameID, nil)
+	gameRec, err := mm.GetGameRec(subRec.GameID, nil)
 	if err != nil {
-		l.Warn("failed to get game for instance >%s< >%v<", instanceID, err)
+		l.Warn("failed to get game for subscription >%s< >%v<", subRec.ID, err)
 		return err
+	}
+
+	instances, _, err := aggregateSubscriptionInstances(l, mm, subRec.ID)
+	if err != nil {
+		return err
+	}
+
+	// Union delivery methods across available instances.
+	var deliveryPost, deliveryLocal, deliveryEmail bool
+	for _, inst := range instances {
+		deliveryPost = deliveryPost || inst.DeliveryPhysicalPost
+		deliveryLocal = deliveryLocal || inst.DeliveryPhysicalLocal
+		deliveryEmail = deliveryEmail || inst.DeliveryEmail
 	}
 
 	cfg := mm.Config()
 
-	// For now only adventure games are supported; extend when new game types are added.
 	joinGameSheetType := adventure_game_record.AdventureGameTurnSheetTypeJoinGame
 
 	processor, err := turnsheet.GetDocumentProcessor(l, cfg, joinGameSheetType)
 	if err != nil {
-		l.Warn("failed to get join game processor for sheet type >%s< >%v<", joinGameSheetType, err)
+		l.Warn("failed to get join game processor >%v<", err)
 		return err
 	}
 
-	// Generate a turn sheet code for the join form.
 	turnSheetCode, err := turnsheetutil.GenerateJoinGameTurnSheetCode(record.NewRecordID())
 	if err != nil {
 		l.Warn("failed to generate join game turn sheet code >%v<", err)
 		return err
 	}
 
-	// Build join game data enriched with the instance's available delivery methods.
+	title := "Join Game"
+	instructions := turnsheet.DefaultJoinGameInstructions()
+
 	sheetData, err := json.Marshal(&turnsheet.JoinGameData{
 		TurnSheetTemplateData: turnsheet.TurnSheetTemplateData{
 			GameName:              &gameRec.Name,
 			GameType:              &gameRec.GameType,
-			TurnSheetTitle:        ptrStr("Join Game"),
+			TurnSheetTitle:        &title,
 			TurnSheetDescription:  &gameRec.Description,
-			TurnSheetInstructions: ptrStr(turnsheet.DefaultJoinGameInstructions()),
+			TurnSheetInstructions: &instructions,
 			TurnSheetCode:         &turnSheetCode,
 		},
 		GameDescription: gameRec.Description,
 		AvailableDeliveryMethods: turnsheet.DeliveryMethods{
-			Email:         instanceRec.DeliveryEmail,
-			PhysicalLocal: instanceRec.DeliveryPhysicalLocal,
-			PhysicalPost:  instanceRec.DeliveryPhysicalPost,
+			Email:         deliveryEmail,
+			PhysicalLocal: deliveryLocal,
+			PhysicalPost:  deliveryPost,
 		},
 	})
 	if err != nil {
@@ -320,26 +385,21 @@ func getJoinGameSheetHandler(w http.ResponseWriter, r *http.Request, pp httprout
 	return err
 }
 
-// ptrStr returns a pointer to the given string.
-func ptrStr(s string) *string { return &s }
+func saveJoinSheetHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
+	l = logging.LoggerWithFunctionContext(l, packageName, "saveJoinSheetHandler")
 
-// saveJoinGameSheetHandler saves partial join game sheet data for multi-step form completion.
-func saveJoinGameSheetHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
-	l = logging.LoggerWithFunctionContext(l, packageName, "saveJoinGameSheetHandler")
-
-	// NOTE: Partial save not yet implemented; reserved for multi-step form support.
-	l.Info("saveJoinGameSheetHandler called (partial save not yet implemented)")
+	l.Info("saveJoinSheetHandler called (partial save not yet implemented)")
 	return server.WriteResponse(l, w, http.StatusAccepted, nil)
 }
 
-// submitJoinGameHandler processes the join game submission: creates an account if needed,
-// creates a player subscription, and assigns the player to the game instance.
-func submitJoinGameHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
-	l = logging.LoggerWithFunctionContext(l, packageName, "submitJoinGameHandler")
+func submitJoinHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
+	l = logging.LoggerWithFunctionContext(l, packageName, "submitJoinHandler")
 
-	instanceID := pp.ByName("game_instance_id")
-	if instanceID == "" {
-		return coreerror.RequiredPathParameter("game_instance_id")
+	mm := m.(*domain.Domain)
+
+	subRec, err := resolveManagerSubscription(l, pp, mm)
+	if err != nil {
+		return err
 	}
 
 	var req player_schema.JoinGameSubmitRequest
@@ -352,25 +412,14 @@ func submitJoinGameHandler(w http.ResponseWriter, r *http.Request, pp httprouter
 		return coreerror.NewInvalidDataError("email is required")
 	}
 
-	mm := m.(*domain.Domain)
-
-	// Verify instance exists and is accepting players.
-	instanceRec, err := mm.GetGameInstanceRec(instanceID, nil)
+	// Auto-assign: find an available instance under this subscription.
+	instanceRec, err := mm.FindAvailableGameInstance(subRec.ID)
 	if err != nil {
-		l.Warn("failed to get game instance >%s< >%v<", instanceID, err)
+		l.Warn("failed to find available instance for subscription >%s< >%v<", subRec.ID, err)
 		return err
 	}
-	if instanceRec.Status != game_record.GameInstanceStatusCreated {
-		return coreerror.NewInvalidDataError("this game instance is not open for enrollment")
-	}
-
-	hasCapacity, err := mm.HasAvailableCapacity(instanceID)
-	if err != nil {
-		l.Warn("failed to check capacity for instance >%s< >%v<", instanceID, err)
-		return err
-	}
-	if !hasCapacity {
-		return coreerror.NewInvalidDataError("this game instance is no longer accepting new players")
+	if instanceRec == nil {
+		return coreerror.NewInvalidDataError("no game instances are currently accepting new players")
 	}
 
 	// Find or create an account for the provided email.
@@ -395,14 +444,11 @@ func submitJoinGameHandler(w http.ResponseWriter, r *http.Request, pp httprouter
 		}
 		accountID = newUser.AccountID
 		accountUserID = newUser.ID
-		l.Info("created new account >%s< for email >%s<", accountID, req.Email)
 	} else {
 		accountID = accountRec.AccountID
 		accountUserID = accountRec.ID
-		l.Info("found existing account >%s< for email >%s<", accountID, req.Email)
 	}
 
-	// Create a contact record for the player — required for player subscriptions.
 	contactRec := &account_record.AccountUserContact{
 		AccountUserID:      accountUserID,
 		Name:               req.Name,
@@ -419,11 +465,9 @@ func submitJoinGameHandler(w http.ResponseWriter, r *http.Request, pp httprouter
 		l.Warn("failed to create account user contact >%v<", err)
 		return err
 	}
-	l.Info("created account user contact >%s< for account user >%s<", createdContact.ID, accountUserID)
 
-	// Create a player subscription for the game associated with this instance.
-	subRec := &game_record.GameSubscription{
-		GameID:               instanceRec.GameID,
+	playerSubRec := &game_record.GameSubscription{
+		GameID:               subRec.GameID,
 		AccountID:            accountID,
 		AccountUserID:        sql.NullString{String: accountUserID, Valid: true},
 		AccountUserContactID: sql.NullString{String: createdContact.ID, Valid: true},
@@ -431,26 +475,23 @@ func submitJoinGameHandler(w http.ResponseWriter, r *http.Request, pp httprouter
 		Status:               game_record.GameSubscriptionStatusActive,
 	}
 
-	createdSub, err := mm.CreateGameSubscriptionRec(subRec)
+	createdSub, err := mm.CreateGameSubscriptionRec(playerSubRec)
 	if err != nil {
 		l.Warn("failed to create game subscription >%v<", err)
 		return err
 	}
-	l.Info("created game subscription >%s< for account >%s<", createdSub.ID, accountID)
 
-	// Assign the player to the game instance.
-	_, err = mm.AssignPlayerToGameInstance(createdSub.ID, instanceID)
+	_, err = mm.AssignPlayerToGameInstance(createdSub.ID, instanceRec.ID)
 	if err != nil {
-		l.Warn("failed to assign player to game instance >%s< >%v<", instanceID, err)
+		l.Warn("failed to assign player to game instance >%s< >%v<", instanceRec.ID, err)
 		return err
 	}
-	l.Info("assigned subscription >%s< to game instance >%s<", createdSub.ID, instanceID)
 
 	res := player_schema.JoinGameSubmitResponse{
 		Data: &player_schema.JoinGameSubmitResponseData{
 			GameSubscriptionID: createdSub.ID,
-			GameInstanceID:     instanceID,
-			GameID:             instanceRec.GameID,
+			GameInstanceID:     instanceRec.ID,
+			GameID:             subRec.GameID,
 		},
 	}
 

@@ -18,8 +18,8 @@ describe('catalog API', () => {
   })
 
   describe('listCatalogGames', () => {
-    it('calls GET /api/v1/catalog/games with no auth headers', async () => {
-      const catalogData = [{ id: 'g1', name: 'Test Game', game_type: 'adventure', turn_duration_hours: 168, description: '', available_instances: [] }]
+    it('calls GET /api/v1/catalog/game-subscriptions with no auth headers', async () => {
+      const catalogData = [{ game_subscription_id: 'sub-1', game_name: 'Test Game', game_type: 'adventure', turn_duration_hours: 168, game_description: '', total_capacity: 4, total_players: 1, delivery_email: true, delivery_physical_local: false, delivery_physical_post: false }]
       mockApiFetch.mockResolvedValue({
         ok: true,
         json: () => Promise.resolve({ data: catalogData }),
@@ -28,7 +28,7 @@ describe('catalog API', () => {
       const result = await listCatalogGames()
 
       expect(mockApiFetch).toHaveBeenCalledWith(
-        'http://localhost:8080/api/v1/catalog/games',
+        'http://localhost:8080/api/v1/catalog/game-subscriptions',
         expect.objectContaining({ headers: { 'Content-Type': 'application/json' } })
       )
       expect(result.data).toEqual(catalogData)
