@@ -69,13 +69,14 @@ coverage.html
 # =============================
 bin/
 !bin/
-/backend/cli
+backend/cli
 backend/bin/
 !backend/bin/
 backend/bin/*
 !backend/bin/migrate
 !backend/bin/river
 dist/
+playbymail-cli
 playbymail-server
 backend/.backend.pid
 frontend/.frontend.pid
