@@ -49,44 +49,48 @@ func NewRunner(cfg config.Config, l logger.Logger, j *river.Client[pgx.Tx], scan
 	// https://github.com/urfave/cli/blob/master/docs/v2/manual.md
 	r.App = &cli.App{
 		Commands: []*cli.Command{
-			// Seed Data Operations
-			{
-				Name:    "db-load-seed-data",
-				Aliases: []string{"lsd"},
-				Usage:   "Load seed data",
-				Description: `
-Loads seed data. Typically used when deploying QA environments or for local manual testing.`,
-				Action: r.loadSeedData,
-			},
-			{
-				Name:    "db-load-seed-reference-data",
-				Aliases: []string{"lsrd"},
-				Usage:   "Load seed reference data",
-				Description: `
-Loads static reference data that is expected to exist on any environment.`,
-				Action: r.loadSeedReferenceData,
-			},
-			// Test data (named scenarios)
+			// Test data operations (E2E / Playwright)
 			{
 				Name:    "db-load-test-data",
 				Aliases: []string{"ltd"},
-				Usage:   "Load test game data by scenario name",
+				Usage:   "Load E2E test data (accounts + games for Playwright)",
 				Description: `
-Loads test game data for a named scenario (e.g. seed, default) into the target database.
-Use --list-scenarios to print available scenarios.`,
+Loads E2E test data: accounts and games used by Playwright tests.
+Typically used when setting up QA or local environments for E2E.`,
+				Action: r.loadTestData,
+			},
+			{
+				Name:    "db-load-test-reference-data",
+				Aliases: []string{"ltrd"},
+				Usage:   "Load test reference data",
+				Description: `
+Loads static reference data expected to exist on any test environment.`,
+				Action: r.loadTestReferenceData,
+			},
+			// Game data operations (scenario-based)
+			{
+				Name:    "db-load-game-data",
+				Aliases: []string{"lgd"},
+				Usage:   "Load game data by scenario (required --scenario)",
+				Description: `
+Loads game data for a named scenario into the target database.
+Use --list-scenarios to print available scenarios. Games are loaded as draft unless --publish is set.`,
 				Flags: []cli.Flag{
 					&cli.StringFlag{
-						Name:    "scenario",
-						Aliases: []string{"s"},
-						Usage:   "Scenario name (e.g. seed, default)",
-						Value:   "seed",
+						Name:     "scenario",
+						Aliases:  []string{"s"},
+						Usage:   "Scenario name (required; use --list-scenarios to see options)",
 					},
 					&cli.BoolFlag{
 						Name:  "list-scenarios",
 						Usage: "Print registered scenario names and descriptions, then exit",
 					},
+					&cli.BoolFlag{
+						Name:  "publish",
+						Usage: "Publish loaded games (default: games remain draft)",
+					},
 				},
-				Action: r.loadTestData,
+				Action: r.loadGameData,
 			},
 		},
 	}

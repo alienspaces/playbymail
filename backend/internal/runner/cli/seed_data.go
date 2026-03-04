@@ -7,11 +7,11 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/runner/cli/seed_data"
 )
 
-// loadSeedData seeds the database with seed data
-func (rnr *Runner) loadSeedData(c *cli.Context) error {
-	l := loggerWithFunctionContext(rnr.Log, "loadSeedData")
+// loadTestData loads E2E test data (accounts + games for Playwright).
+func (rnr *Runner) loadTestData(c *cli.Context) error {
+	l := loggerWithFunctionContext(rnr.Log, "loadTestData")
 
-	l.Info("** Load Seed Data **")
+	l.Info("** Load Test Data **")
 
 	// harness
 	config := seed_data.SeedDataConfig()

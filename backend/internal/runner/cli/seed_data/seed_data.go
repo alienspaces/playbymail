@@ -28,6 +28,18 @@ func SeedDataConfig() harness.DataConfig {
 	}
 }
 
+// FullScenarioDataConfig returns a full adventure-game scenario config (same shape as SeedDataConfig)
+// with all games set to draft status. Used by db-load-game-data --scenario full.
+func FullScenarioDataConfig() harness.DataConfig {
+	cfg := SeedDataConfig()
+	for i := range cfg.GameConfigs {
+		if cfg.GameConfigs[i].Record != nil {
+			cfg.GameConfigs[i].Record.Status = game_record.GameStatusDraft
+		}
+	}
+	return cfg
+}
+
 // AccountConfig returns test account configurations
 func AccountConfig() []harness.AccountConfig {
 	return []harness.AccountConfig{

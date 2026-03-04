@@ -148,8 +148,8 @@ test-e2e:
     - export GOPATH="${HOME}/go"
     - cd backend && go build -o playbymail-server ./cmd/server && cd ..
     - ./tools/db-migrate-up
-    - ./tools/db-load-seed-reference-data
-    - ./tools/db-load-seed-data
+    - ./tools/db-load-test-reference-data
+    - ./tools/db-load-test-data
     - cd frontend && npm ci && cd ..
   script:
     - export PATH="/usr/local/go/bin:${HOME}/go/bin:$PATH"

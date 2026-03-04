@@ -6,15 +6,15 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/harness"
 )
 
-// loadSeedReferenceData loads the supported set of seed reference data for
-// CI and QA test environments
-func (rnr *Runner) loadSeedReferenceData(c *cli.Context) error {
-	l := loggerWithFunctionContext(rnr.Log, "loadSeedReferenceData")
+// loadTestReferenceData loads the supported set of test reference data for
+// CI and QA test environments.
+func (rnr *Runner) loadTestReferenceData(c *cli.Context) error {
+	l := loggerWithFunctionContext(rnr.Log, "loadTestReferenceData")
 
-	l.Info("** Load Seed Reference Data **")
+	l.Info("** Load Test Reference Data **")
 
 	// harness
-	config := rnr.SeedReferenceDataConfig()
+	config := rnr.TestReferenceDataConfig()
 
 	err := rnr.InitDomain()
 	if err != nil {
@@ -41,6 +41,6 @@ func (rnr *Runner) loadSeedReferenceData(c *cli.Context) error {
 	return nil
 }
 
-func (rnr *Runner) SeedReferenceDataConfig() harness.DataConfig {
+func (rnr *Runner) TestReferenceDataConfig() harness.DataConfig {
 	return harness.DataConfig{}
 }
