@@ -208,7 +208,7 @@ type AdventureGameLocationConfig struct {
 	// Background image file path for location-specific turn sheet backgrounds
 	// If set, creates a game_image record with type turn_sheet_background
 	// associated with this location
-	// Path is relative to seed_images or testdata directories
+	// Path is relative to test_data_images or testdata directories
 	BackgroundImagePath string
 }
 
@@ -274,7 +274,7 @@ type AdventureGameItemInstanceConfig struct {
 
 type GameImageConfig struct {
 	Reference string // Reference to the game_image record
-	// Path to image file relative to seed_images or testdata directories
+	// Path to image file relative to test_data_images or testdata directories
 	// (loaded at runtime). If set, the image is loaded from file.
 	// If not set, the Record field must contain the image data.
 	ImagePath     string

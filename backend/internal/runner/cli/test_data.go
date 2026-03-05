@@ -4,7 +4,7 @@ import (
 	"github.com/urfave/cli/v2"
 
 	"gitlab.com/alienspaces/playbymail/internal/harness"
-	"gitlab.com/alienspaces/playbymail/internal/runner/cli/seed_data"
+	"gitlab.com/alienspaces/playbymail/internal/runner/cli/test_data"
 )
 
 // loadTestData loads E2E test data (accounts + games for Playwright).
@@ -14,7 +14,7 @@ func (rnr *Runner) loadTestData(c *cli.Context) error {
 	l.Info("** Load Test Data **")
 
 	// harness
-	config := seed_data.SeedDataConfig()
+	config := test_data.TestDataConfig()
 
 	err := rnr.InitDomain()
 	if err != nil {

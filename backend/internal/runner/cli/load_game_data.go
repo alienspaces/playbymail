@@ -17,7 +17,7 @@ func (rnr *Runner) loadGameData(c *cli.Context) error {
 	l := loggerWithFunctionContext(rnr.Log, "loadGameData")
 
 	if c.Bool("list-scenarios") {
-		return rnr.listGameDataScenarios(c)
+		return rnr.listDemoScenarios(c)
 	}
 
 	scenario := c.String("scenario")
@@ -25,7 +25,7 @@ func (rnr *Runner) loadGameData(c *cli.Context) error {
 		return fmt.Errorf("--scenario is required (use --list-scenarios to see available scenarios)")
 	}
 
-	entry, ok := GameDataScenarios[scenario]
+	entry, ok := DemoScenarios[scenario]
 	if !ok {
 		l.Warn("unknown scenario >%s<", scenario)
 		return fmt.Errorf("unknown scenario %q (use --list-scenarios to see available scenarios)", scenario)
@@ -75,17 +75,17 @@ func (rnr *Runner) loadGameData(c *cli.Context) error {
 	return nil
 }
 
-// listGameDataScenarios prints registered scenario names and descriptions to stdout.
-func (rnr *Runner) listGameDataScenarios(_ *cli.Context) error {
-	names := make([]string, 0, len(GameDataScenarios))
-	for name := range GameDataScenarios {
+// listDemoScenarios prints registered demo scenario names and descriptions to stdout.
+func (rnr *Runner) listDemoScenarios(_ *cli.Context) error {
+	names := make([]string, 0, len(DemoScenarios))
+	for name := range DemoScenarios {
 		names = append(names, name)
 	}
 	sort.Strings(names)
-	fmt.Println("Available game data scenarios:")
+	fmt.Println("Available demo scenarios:")
 	fmt.Println()
 	for _, name := range names {
-		entry := GameDataScenarios[name]
+		entry := DemoScenarios[name]
 		fmt.Printf("  %s\n    %s\n\n", name, entry.Description)
 	}
 	return nil

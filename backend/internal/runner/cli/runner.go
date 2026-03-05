@@ -67,14 +67,14 @@ Typically used when setting up QA or local environments for E2E.`,
 Loads static reference data expected to exist on any test environment.`,
 				Action: r.loadTestReferenceData,
 			},
-			// Game data operations (scenario-based)
-			{
-				Name:    "db-load-game-data",
-				Aliases: []string{"lgd"},
-				Usage:   "Load game data by scenario (required --scenario)",
-				Description: `
-Loads game data for a named scenario into the target database.
-Use --list-scenarios to print available scenarios. Games are loaded as draft unless --publish is set.`,
+		// Demo scenario operations (game data for players to try)
+		{
+			Name:    "db-load-game-data",
+			Aliases: []string{"lgd"},
+			Usage:   "Load game data from a demo scenario (required --scenario)",
+			Description: `
+Loads game data from a named demo scenario into the target database.
+Use --list-scenarios to print available demo scenarios. Games are loaded as draft unless --publish is set.`,
 				Flags: []cli.Flag{
 					&cli.StringFlag{
 						Name:     "scenario",

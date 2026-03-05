@@ -49,7 +49,7 @@ func CreateTestImage(width, height int) []byte {
 	return buf.Bytes()
 }
 
-// LoadTestImageFromPath loads an image from the testdata or seed_images directory
+// LoadTestImageFromPath loads an image from the testdata or test_data_images directory
 // This is a helper function for loading real test images in harness configs
 func LoadTestImageFromPath(imagePath string) ([]byte, string, int, int) {
 	// Get current working directory for debugging
@@ -58,23 +58,22 @@ func LoadTestImageFromPath(imagePath string) ([]byte, string, int, int) {
 	// Try multiple possible image locations
 	// Include paths relative to common project structures
 	imagePaths := []string{
-		// Seed data images (primary location for seed data)
-		"backend/internal/runner/cli/seed_images",
-		"internal/runner/cli/seed_images",
-		// Test data images (for unit tests)
+		"backend/internal/runner/cli/test_data_images",
+		"internal/runner/cli/test_data_images",
+		"backend/internal/runner/cli/demo_scenario_images",
+		"internal/runner/cli/demo_scenario_images",
 		"testdata",
 		"backend/internal/turn_sheet/testdata",
 		"internal/turn_sheet/testdata",
 		"turn_sheet/testdata",
 	}
 
-	// Also try paths based on TEMPLATES_PATH if set (indicates we're in backend/)
 	if templatesPath := os.Getenv("TEMPLATES_PATH"); templatesPath != "" {
-		// TEMPLATES_PATH is typically .../backend/templates
 		backendDir := filepath.Dir(templatesPath)
 		imagePaths = append(imagePaths,
-			filepath.Join(backendDir, "internal/runner/cli/seed_images"), //nolint:gocritic // intentional relative path
-			filepath.Join(backendDir, "internal/turn_sheet/testdata"),    //nolint:gocritic // intentional relative path
+			filepath.Join(backendDir, "internal/runner/cli/test_data_images"),          //nolint:gocritic // intentional relative path
+			filepath.Join(backendDir, "internal/runner/cli/demo_scenario_images"),      //nolint:gocritic // intentional relative path
+			filepath.Join(backendDir, "internal/turn_sheet/testdata"),                  //nolint:gocritic // intentional relative path
 		)
 	}
 
@@ -255,27 +254,25 @@ func (t *Testing) loadImageFromPath(imagePath string) ([]byte, string, int, int,
 	l := t.Logger("loadImageFromPath")
 
 	// Resolve path relative to known image directories
-	// Try multiple possible locations for test/seed images
+	// Try multiple possible locations for test images
 	imagePaths := []string{
-		// Seed data images (primary location for seed data)
-		"backend/internal/runner/cli/seed_images",
-		"internal/runner/cli/seed_images",
-		// Test data images (for unit tests)
+		"backend/internal/runner/cli/test_data_images",
+		"internal/runner/cli/test_data_images",
+		"backend/internal/runner/cli/demo_scenario_images",
+		"internal/runner/cli/demo_scenario_images",
 		"testdata",
 		"backend/internal/turn_sheet/testdata",
 		"internal/turn_sheet/testdata",
 		"turn_sheet/testdata",
-		// Relative paths from harness package to turn_sheet testdata
 		"../turn_sheet/testdata",
 	}
 
-	// Use TEMPLATES_PATH to derive backend directory (most reliable)
-	// TEMPLATES_PATH is typically .../backend/templates
 	if templatesPath := os.Getenv("TEMPLATES_PATH"); templatesPath != "" {
 		backendDir := filepath.Dir(templatesPath)
 		imagePaths = append(imagePaths,
-			filepath.Join(backendDir, "internal/runner/cli/seed_images"), //nolint:gocritic // intentional relative path
-			filepath.Join(backendDir, "internal/turn_sheet/testdata"),    //nolint:gocritic // intentional relative path
+			filepath.Join(backendDir, "internal/runner/cli/test_data_images"),          //nolint:gocritic // intentional relative path
+			filepath.Join(backendDir, "internal/runner/cli/demo_scenario_images"),      //nolint:gocritic // intentional relative path
+			filepath.Join(backendDir, "internal/turn_sheet/testdata"),                  //nolint:gocritic // intentional relative path
 		)
 	}
 

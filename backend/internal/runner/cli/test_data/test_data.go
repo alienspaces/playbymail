@@ -1,4 +1,4 @@
-package seed_data
+package test_data
 
 import (
 	"gitlab.com/alienspaces/playbymail/core/nullstring"
@@ -9,7 +9,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 )
 
-// Image file names in seed_images directory
+// Image file names in test_data_images directory
 const (
 	ImageJoinGame            = "join-game.png"
 	ImageInventoryManagement = "inventory-management.png"
@@ -18,26 +18,13 @@ const (
 	ImageLocationCliffpath   = "location-cliffpath.png"
 )
 
-// SeedDataConfig returns the seed data configuration for
-// test data that can be used for setting up automated tests in
-// the public space.
-func SeedDataConfig() harness.DataConfig {
+// TestDataConfig returns the test data configuration for
+// E2E and Playwright tests in the public space.
+func TestDataConfig() harness.DataConfig {
 	return harness.DataConfig{
 		GameConfigs:    GameConfig(),
 		AccountConfigs: AccountConfig(),
 	}
-}
-
-// FullScenarioDataConfig returns a full adventure-game scenario config (same shape as SeedDataConfig)
-// with all games set to draft status. Used by db-load-game-data --scenario full.
-func FullScenarioDataConfig() harness.DataConfig {
-	cfg := SeedDataConfig()
-	for i := range cfg.GameConfigs {
-		if cfg.GameConfigs[i].Record != nil {
-			cfg.GameConfigs[i].Record.Status = game_record.GameStatusDraft
-		}
-	}
-	return cfg
 }
 
 // AccountConfig returns test account configurations
@@ -106,7 +93,7 @@ func AccountConfig() []harness.AccountConfig {
 	}
 }
 
-// GameConfig returns the seed data configuration for games
+// GameConfig returns the test data configuration for games
 func GameConfig() []harness.GameConfig {
 	return []harness.GameConfig{
 		{
@@ -117,7 +104,7 @@ func GameConfig() []harness.GameConfig {
 				GameType:          game_record.GameTypeAdventure,
 				TurnDurationHours: 168, // 1 week
 			},
-			// Game images for turn sheet backgrounds (loaded from seed_images/)
+			// Game images for turn sheet backgrounds (loaded from test_data_images/)
 			GameImageConfigs: []harness.GameImageConfig{
 				{
 					Reference:     harness.GameImageJoinGameRef,
