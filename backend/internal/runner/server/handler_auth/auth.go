@@ -82,8 +82,7 @@ func AuthenticateRequestTokenFunc(cfg config.Config, l logger.Logger, m domainer
 			}
 
 			return server.AuthenData{
-				Type:    server.AuthenticatedTypeToken,
-				RLSType: server.RLSTypeRestricted,
+				Type: server.AuthenticatedTypeToken,
 				AccountUser: server.AuthenticatedAccountUser{
 					ID:        accountRec.ID,
 					AccountID: accountRec.AccountID,
@@ -212,7 +211,6 @@ func AuthenticateRequestTokenFunc(cfg config.Config, l logger.Logger, m domainer
 
 	authenData := server.AuthenData{
 		Type:        server.AuthenticatedTypeToken,
-		RLSType:     server.RLSTypeRestricted,
 		Permissions: permissions,
 		AccountUser: server.AuthenticatedAccountUser{
 			ID:        accountRec.ID,

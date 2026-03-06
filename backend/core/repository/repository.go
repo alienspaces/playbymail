@@ -20,25 +20,20 @@ import (
 
 // Repository -
 type Repository struct {
-	tx                pgx.Tx
-	tableName         string
-	attributes        []string
-	setAttributes     []string
-	attributeIndex    set.Set[string]
-	arrayFields       set.Set[string]
-	isRLSDisabled     bool
-	rlsIdentifiers    map[string][]string
-	rlsConstraints    []repositor.RLSConstraint
-	hadRLSIdentifiers bool // Track if identifiers were ever set (to distinguish test harness from API mode)
+	tx             pgx.Tx
+	tableName      string
+	attributes     []string
+	setAttributes  []string
+	attributeIndex set.Set[string]
+	arrayFields    set.Set[string]
 }
 
 var _ repositor.Repositor = &Repository{}
 
 type NewArgs struct {
-	Tx            pgx.Tx
-	TableName     string
-	Record        any
-	IsRLSDisabled bool
+	Tx        pgx.Tx
+	TableName string
+	Record    any
 }
 
 // If there is an error initialising the repository, the returned repository
@@ -53,13 +48,10 @@ func New(args NewArgs) (Repository, error) {
 	}
 
 	r := Repository{
-		tx:             args.Tx,
-		tableName:      args.TableName,
-		attributes:     tag.GetFieldTagValues(args.Record, "db"),
-		arrayFields:    tag.GetArrayFieldTagValues(args.Record, "db"),
-		isRLSDisabled:  args.IsRLSDisabled,
-		rlsIdentifiers: make(map[string][]string),
-		rlsConstraints: []repositor.RLSConstraint{},
+		tx:          args.Tx,
+		tableName:   args.TableName,
+		attributes:  tag.GetFieldTagValues(args.Record, "db"),
+		arrayFields: tag.GetArrayFieldTagValues(args.Record, "db"),
 	}
 
 	setAttributes := []string{}
@@ -273,129 +265,11 @@ DELETE FROM %s WHERE id = @id
 `, r.TableName())
 }
 
-func (r *Repository) SetRLSIdentifiers(identifiers map[string][]string) {
-	if r.isRLSDisabled {
-		return
-	}
+func (r *Repository) SetRLSIdentifiers(_ map[string][]string) {}
 
-	// Store all provided identifiers - filtering for direct use happens in withRLS
-	// This allows SetRLSIdentifiers to be called before SetRLSConstraints
-	if len(identifiers) > 0 {
-		r.rlsIdentifiers = identifiers
-		r.hadRLSIdentifiers = true
-	}
-}
-
-// SetRLSConstraints sets the RLS constraints that will be automatically applied
-// when the repository record has matching column names.
-func (r *Repository) SetRLSConstraints(constraints []repositor.RLSConstraint) {
-	if r.isRLSDisabled {
-		return
-	}
-
-	filtered := []repositor.RLSConstraint{}
-
-	// Only include constraints for columns that exist in this repository's record
-	attributeSet := set.FromSlice(r.Attributes())
-
-	for _, constraint := range constraints {
-		if attributeSet.Has(constraint.Column) {
-			filtered = append(filtered, constraint)
-		}
-	}
-
-	r.rlsConstraints = filtered
-}
+func (r *Repository) SetRLSConstraints(_ []repositor.RLSConstraint) {}
 
 func (r *Repository) withRLS(sql string) string {
-
-	// Early return if RLS is disabled or no RLS data is set
-	if r.isRLSDisabled || (len(r.rlsIdentifiers) == 0 && len(r.rlsConstraints) == 0) {
-		return sql
-	}
-
-	// Build set of columns where a constraint handles NULL semantics (template
-	// starts with "IS NULL"). For these columns we skip the direct identifier
-	// IN filter because it would exclude NULL rows that the constraint correctly
-	// allows. Constraints without NULL handling (e.g. subquery-only constraints
-	// like game_instance_id) are complementary and the identifier still applies.
-	nullHandlingConstraintColumns := set.New[string]()
-	for _, c := range r.rlsConstraints {
-		if strings.HasPrefix(c.SQLTemplate, "IS NULL") {
-			nullHandlingConstraintColumns.Add(c.Column)
-		}
-	}
-
-	// Apply RLS identifier filters (direct column filters)
-	// Only apply filters for identifiers that correspond to actual columns in the record
-	attributeSet := set.FromSlice(r.Attributes())
-	for attr, ids := range r.rlsIdentifiers {
-		// Skip identifiers that don't correspond to record columns
-		// (they may be kept for constraint substitution but shouldn't be used as direct filters)
-		if !attributeSet.Has(attr) {
-			continue
-		}
-		// Skip columns whose constraint handles NULL semantics (IS NULL OR ...).
-		// A blunt IN filter would exclude NULL rows that the constraint allows.
-		if nullHandlingConstraintColumns.Has(attr) {
-			continue
-		}
-		var strBuilder strings.Builder
-		for i, id := range ids {
-			strBuilder.WriteString("'")
-			strBuilder.WriteString(id)
-
-			if i != len(ids)-1 {
-				strBuilder.WriteString("',")
-			} else {
-				strBuilder.WriteString("'")
-			}
-		}
-		sql += fmt.Sprintf("AND %s IN (%s)\n", attr, strBuilder.String())
-	}
-
-	// Apply RLS constraint filters (derived column filters via SQL subqueries)
-	for _, constraint := range r.rlsConstraints {
-		// Substitute RLS constraint placeholders with RLS identifier values
-		// Skip constraint if any required RLS identifier is missing or empty
-		constraintSQL := constraint.SQLTemplate
-		allRequiredIdentifiersSubstituted := true
-		for _, requiredRLSIdentifier := range constraint.RequiredRLSIdentifiers {
-			if paramValues, ok := r.rlsIdentifiers[requiredRLSIdentifier]; ok && len(paramValues) > 0 {
-				// Substitute the first value from RLS identifiers
-				placeholder := fmt.Sprintf(":%s", requiredRLSIdentifier)
-				constraintSQL = strings.ReplaceAll(constraintSQL, placeholder, fmt.Sprintf("'%s'", paramValues[0]))
-			} else {
-				allRequiredIdentifiersSubstituted = false
-				break
-			}
-		}
-
-		if !allRequiredIdentifiersSubstituted {
-			// Skip constraint if required RLS identifiers not available
-			// Only apply fail-safe if we had identifiers provided (API mode)
-			// This ensures we don't return data when we can't guarantee constraint safety
-			// but allows test harness mode (no identifiers) to work without fail-safe
-			if len(constraint.RequiredRLSIdentifiers) > 0 && r.hadRLSIdentifiers {
-				// Fail-safe: required RLS identifiers not available
-				// We can't guarantee they'll be available, so return no data
-				sql += "AND 1=0\n"
-			}
-			continue
-		}
-
-		// Only apply constraint if all required RLS identifiers were successfully substituted
-		if allRequiredIdentifiersSubstituted {
-			// Verify no placeholders remain (safety check)
-			if strings.Contains(constraintSQL, ":") {
-				// Still has placeholders - skip to avoid SQL errors
-				continue
-			}
-			// Append constraint SQL to WHERE clause
-			sql += fmt.Sprintf("AND (%s %s)\n", constraint.Column, constraintSQL)
-		}
-	}
-
 	return sql
 }
 

@@ -74,33 +74,6 @@ func (m *Domain) GetGameSubscriptionRec(recID string, lock *sql.Lock) (*game_rec
 	return rec, nil
 }
 
-// GetGameSubscriptionRecByIDForJoinProcess retrieves a game subscription by ID without RLS
-// filtering. This is intended for use when processing a join game turn sheet, where the
-// turn sheet code itself serves as authorization and the caller needs access to the
-// manager's subscription record regardless of their own account permissions.
-func (m *Domain) GetGameSubscriptionRecByIDForJoinProcess(recID string) (*game_record.GameSubscription, error) {
-	l := m.Logger("GetGameSubscriptionRecByIDForJoinProcess")
-	l.Debug("getting game_subscription record by ID for join process (no RLS) >%s<", recID)
-	if err := domain.ValidateUUIDField("id", recID); err != nil {
-		return nil, err
-	}
-	r, err := repository.NewGeneric[game_record.GameSubscription](repository.NewArgs{
-		Tx:            m.Tx,
-		TableName:     game_record.TableGameSubscription,
-		Record:        game_record.GameSubscription{},
-		IsRLSDisabled: true,
-	})
-	if err != nil {
-		return nil, err
-	}
-	rec, err := r.GetOne(recID, nil)
-	if errors.Is(err, pgx.ErrNoRows) {
-		return nil, coreerror.NewNotFoundError(game_record.TableGameSubscription, recID)
-	} else if err != nil {
-		return nil, databaseError(err)
-	}
-	return rec, nil
-}
 
 // GetGameSubscriptionRecByAccountAndGame finds a subscription for a specific
 // account, game, and subscription type.
@@ -140,8 +113,7 @@ func (m *Domain) GetGameSubscriptionRecByAccountAndGame(accountID, gameID, subsc
 
 // CreateDesignerSubscriptionForNewGame creates the initial designer subscription
 // as part of game creation. This uses validation appropriate for the creation
-// context: it does not look up the game via RLS (avoiding a circular dependency
-// for new accounts) and does not require the game to be published.
+// context and does not require the game to be published.
 func (m *Domain) CreateDesignerSubscriptionForNewGame(gameRec *game_record.Game, accountID string) (*game_record.GameSubscription, error) {
 	l := m.Logger("CreateDesignerSubscriptionForNewGame")
 
@@ -344,13 +316,12 @@ func (m *Domain) UpsertPendingGameSubscription(gameID, accountID, accountUserCon
 	return m.CreateGameSubscriptionRec(rec)
 }
 
-// UpsertPendingGameSubscriptionForJoinProcess creates or updates a pending game subscription
-// bypassing RLS. Used during join game turn sheet processing where the turn sheet code itself
-// serves as the authorization token.
+// UpsertPendingGameSubscriptionForJoinProcess creates or updates a pending game subscription.
+// Used during join game turn sheet processing.
 func (m *Domain) UpsertPendingGameSubscriptionForJoinProcess(gameID, accountID, accountUserID, accountUserContactID, subscriptionType string) (*game_record.GameSubscription, error) {
 	l := m.Logger("UpsertPendingGameSubscriptionForJoinProcess")
 
-	l.Debug("upserting pending subscription (no RLS) game_id >%s< account_id >%s< account_user_id >%s< type >%s<", gameID, accountID, accountUserID, subscriptionType)
+	l.Debug("upserting pending subscription game_id >%s< account_id >%s< account_user_id >%s< type >%s<", gameID, accountID, accountUserID, subscriptionType)
 
 	switch {
 	case gameID == "":
@@ -366,10 +337,9 @@ func (m *Domain) UpsertPendingGameSubscriptionForJoinProcess(gameID, accountID, 
 	}
 
 	r, err := repository.NewGeneric[game_record.GameSubscription](repository.NewArgs{
-		Tx:            m.Tx,
-		TableName:     game_record.TableGameSubscription,
-		Record:        game_record.GameSubscription{},
-		IsRLSDisabled: true,
+		Tx:        m.Tx,
+		TableName: game_record.TableGameSubscription,
+		Record:    game_record.GameSubscription{},
 	})
 	if err != nil {
 		return nil, err

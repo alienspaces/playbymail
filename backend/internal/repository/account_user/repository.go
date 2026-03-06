@@ -17,10 +17,9 @@ const (
 func NewRepository(l logger.Logger, tx pgx.Tx) (repositor.Repositor, error) {
 	return repository.NewGeneric[account_record.AccountUser](
 		repository.NewArgs{
-			Tx:            tx,
-			TableName:     TableName,
-			Record:        account_record.AccountUser{},
-			IsRLSDisabled: true,
+			Tx:        tx,
+			TableName: TableName,
+			Record:    account_record.AccountUser{},
 		},
 	)
 }

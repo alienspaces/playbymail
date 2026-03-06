@@ -268,7 +268,7 @@ func getManyGamesHandler(w http.ResponseWriter, r *http.Request, pp httprouter.P
 
 	opts := queryparam.ToSQLOptionsWithDefaults(qp)
 
-	// Add status filter if provided (RLS will handle visibility automatically)
+	// Add status filter if provided
 	if statusValues, ok := qp.Params["status"]; ok && len(statusValues) > 0 {
 		statusFilter := statusValues[0].Val.(string)
 		if statusFilter == game_record.GameStatusDraft || statusFilter == game_record.GameStatusPublished {

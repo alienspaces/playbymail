@@ -21,7 +21,6 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/runner/server/catalog"
 	"gitlab.com/alienspaces/playbymail/internal/runner/server/game"
 	"gitlab.com/alienspaces/playbymail/internal/runner/server/handler_auth"
-	"gitlab.com/alienspaces/playbymail/internal/runner/server/handler_rls"
 	"gitlab.com/alienspaces/playbymail/internal/runner/server/player"
 	"gitlab.com/alienspaces/playbymail/internal/turnsheet"
 	"gitlab.com/alienspaces/playbymail/internal/utils/config"
@@ -69,9 +68,6 @@ func NewRunner(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Cli
 
 	l.Warn("setting authenticate request function")
 	r.AuthenticateRequestFunc = r.authenticateRequestFunc
-
-	l.Warn("setting RLS function")
-	r.RLSFunc = handler_rls.HandlerRLSFunc
 
 	// Additional handler configurations are added here
 	handlerConfigFuncs := []func(config.Config, logger.Logger, turnsheet.TurnSheetScanner) (map[string]server.HandlerConfig, error){

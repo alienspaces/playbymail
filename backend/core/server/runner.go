@@ -87,11 +87,6 @@ type Runner struct {
 
 	// AuthenticateRequestFunc authenticates a request based on the authentication type
 	AuthenticateRequestFunc func(l logger.Logger, m domainer.Domainer, r *http.Request, authType AuthenticationType) (AuthenData, error)
-
-	// RLSFunc is the service specific RLS implementation which is responsible for
-	// returning a map of identifiers the current user has access to. This is used
-	// to set the RLS constraints on the repositories.
-	RLSFunc func(l logger.Logger, m domainer.Domainer, authedReq AuthenData) (RLS, error)
 }
 
 type HTTPCORSConfig struct {
@@ -122,10 +117,9 @@ type HandlerConfig struct {
 }
 
 type AuthenData struct {
-	Type        AuthenticatedType      `json:"type"`
-	RLSType     RLSType                `json:"-"`
+	Type        AuthenticatedType        `json:"type"`
 	AccountUser AuthenticatedAccountUser `json:"account_user"`
-	Permissions []AuthorizedPermission `json:"permissions"`
+	Permissions []AuthorizedPermission   `json:"permissions"`
 }
 
 func (a AuthenData) IsAuthenticated() bool {
@@ -141,13 +135,6 @@ func (a AuthenData) HasPermission(permission AuthorizedPermission) bool {
 	}
 	return false
 }
-
-type RLSType string
-
-const (
-	RLSTypeOpen       RLSType = "open"
-	RLSTypeRestricted RLSType = "restricted"
-)
 
 type AuthenticatedType string
 

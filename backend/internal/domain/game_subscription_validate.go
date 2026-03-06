@@ -159,8 +159,8 @@ func validateGameSubscriptionRecForDelete(args *validateGameSubscriptionArgs) er
 
 // validateDesignerSubscriptionForNewGame validates a designer subscription being
 // auto-created as part of game creation. Unlike the standard create validation,
-// this does not require the game to be published or look up the game via RLS,
-// since the game record was just created in the same transaction.
+// this does not require the game to be published since the game record was just
+// created in the same transaction.
 func validateDesignerSubscriptionForNewGame(rec *game_record.GameSubscription) error {
 	if rec == nil {
 		return coreerror.NewInvalidDataError("record is nil")
@@ -191,7 +191,7 @@ func validateDesignerSubscriptionForNewGame(rec *game_record.GameSubscription) e
 
 // validateManagerSubscriptionForNewGame validates a manager subscription being
 // auto-created as part of game creation. Like the designer variant, this does
-// not require the game to be published or look up the game via RLS.
+// not require the game to be published.
 func validateManagerSubscriptionForNewGame(rec *game_record.GameSubscription) error {
 	if rec == nil {
 		return coreerror.NewInvalidDataError("record is nil")

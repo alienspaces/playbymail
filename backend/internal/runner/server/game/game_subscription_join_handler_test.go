@@ -84,13 +84,14 @@ func Test_submitJoinHandler(t *testing.T) {
 
 	testCases := []testutil.TestCase{
 		{
-			Name: "public request to submit join creates account and subscription",
+			Name: "authenticated request to submit join creates subscription",
 			NewRunner: func(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], scanner turnsheet.TurnSheetScanner, d harness.Data) (testutil.TestRunnerer, error) {
 				return testutil.NewTestRunner(cfg, l, s, j, scanner)
 			},
 			HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 				return rnr.GetHandlerConfig()[game.SubmitJoin]
 			},
+			RequestHeaders: testutil.AuthHeaderStandard,
 			RequestPathParams: func(d harness.Data) map[string]string {
 				return map[string]string{
 					":game_subscription_id": managerSubscriptionID(t, d),

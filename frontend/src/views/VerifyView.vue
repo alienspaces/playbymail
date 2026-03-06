@@ -44,7 +44,11 @@ export default {
         const sessionToken = await verifyAuth(this.email, this.code);
         this.authStore.setSessionToken(sessionToken);
         const redirect = this.$route.query.redirect || '/';
-        this.$router.push(redirect);
+        if (redirect.startsWith('/player/')) {
+          window.location.href = redirect;
+        } else {
+          this.$router.push(redirect);
+        }
       } catch {
         this.message = 'Invalid code or verification failed.';
       } finally {

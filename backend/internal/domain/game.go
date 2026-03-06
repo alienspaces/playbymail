@@ -7,7 +7,6 @@ import (
 
 	"gitlab.com/alienspaces/playbymail/core/domain"
 	coreerror "gitlab.com/alienspaces/playbymail/core/error"
-	"gitlab.com/alienspaces/playbymail/core/repository"
 	coresql "gitlab.com/alienspaces/playbymail/core/sql"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 )
@@ -47,34 +46,6 @@ func (m *Domain) GetGameRec(recID string, lock *coresql.Lock) (*game_record.Game
 		return nil, databaseError(err)
 	}
 
-	return rec, nil
-}
-
-// GetGameRecByIDForJoinProcess retrieves a game record by ID without RLS filtering.
-// This is intended for use when processing a join game turn sheet, where the turn sheet
-// code itself serves as authorization and the caller needs access to the game record
-// regardless of their own subscription status.
-func (m *Domain) GetGameRecByIDForJoinProcess(recID string) (*game_record.Game, error) {
-	l := m.Logger("GetGameRecByIDForJoinProcess")
-	l.Debug("getting game record by ID for join process (no RLS) >%s<", recID)
-	if err := domain.ValidateUUIDField("id", recID); err != nil {
-		return nil, err
-	}
-	r, err := repository.NewGeneric[game_record.Game](repository.NewArgs{
-		Tx:            m.Tx,
-		TableName:     game_record.TableGame,
-		Record:        game_record.Game{},
-		IsRLSDisabled: true,
-	})
-	if err != nil {
-		return nil, err
-	}
-	rec, err := r.GetOne(recID, nil)
-	if errors.Is(err, pgx.ErrNoRows) {
-		return nil, coreerror.NewNotFoundError(game_record.TableGame, recID)
-	} else if err != nil {
-		return nil, databaseError(err)
-	}
 	return rec, nil
 }
 

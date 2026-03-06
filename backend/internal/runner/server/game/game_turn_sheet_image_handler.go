@@ -174,7 +174,7 @@ func uploadGameTurnSheetImageHandler(w http.ResponseWriter, r *http.Request, pp 
 
 	l.Info("uploading turn sheet image for game >%s<", gameID)
 
-	// Verify game exists and user has access (RLS check)
+	// Verify game exists and user has access
 	_, err := mm.GetGameRec(gameID, nil)
 	if err != nil {
 		l.Warn("failed to get game record >%s< >%v<", gameID, err)
@@ -319,8 +319,8 @@ func getManyGameTurnSheetImagesHandler(w http.ResponseWriter, r *http.Request, p
 
 	l.Info("fetching turn sheet images for game >%s<", gameID)
 
-	// Verify game exists - bypass RLS since turn sheet images are publicly accessible
-	_, err := mm.GetGameRecByIDForJoinProcess(gameID)
+	// Verify game exists
+	_, err := mm.GetGameRec(gameID, nil)
 	if err != nil {
 		l.Warn("failed to get game record >%s< >%v<", gameID, err)
 		return err
@@ -388,7 +388,7 @@ func getOneGameTurnSheetImageHandler(w http.ResponseWriter, r *http.Request, pp 
 
 	l.Info("fetching turn sheet image >%s< for game >%s<", gameImageID, gameID)
 
-	// Verify game exists and user has access (RLS check)
+	// Verify game exists and user has access
 	_, err := mm.GetGameRec(gameID, nil)
 	if err != nil {
 		l.Warn("failed to get game record >%s< >%v<", gameID, err)
@@ -452,7 +452,7 @@ func deleteOneGameTurnSheetImageHandler(w http.ResponseWriter, r *http.Request, 
 
 	l.Info("deleting turn sheet image >%s< for game >%s<", gameImageID, gameID)
 
-	// Verify game exists and user has access (RLS check)
+	// Verify game exists and user has access
 	_, err := mm.GetGameRec(gameID, coresql.ForUpdateNoWait)
 	if err != nil {
 		l.Warn("failed to get game record >%s< >%v<", gameID, err)
@@ -519,7 +519,7 @@ func previewGameTurnSheetHandler(w http.ResponseWriter, r *http.Request, pp http
 
 	l.Info("generating turn sheet preview for game >%s< type >%s<", gameID, turnSheetType)
 
-	// Get game record (RLS check)
+	// Get game record
 	gameRec, err := mm.GetGameRec(gameID, nil)
 	if err != nil {
 		l.Warn("failed to get game record >%s< >%v<", gameID, err)

@@ -14,7 +14,6 @@ func (rnr *Runner) defaultMiddlewareFuncs() []MiddlewareFunc {
 		rnr.WaitMiddleware,
 		rnr.ParamMiddleware,
 		rnr.DataMiddleware,
-		rnr.RLSMiddleware,
 		rnr.JobClientMiddleware,
 		rnr.AuthzMiddleware,
 		rnr.AuthenMiddleware,

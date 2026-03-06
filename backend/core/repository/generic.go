@@ -180,11 +180,6 @@ func (r *Generic[Rec, RecPtr]) UpdateOne(rec *Rec) (*Rec, error) {
 	return &modRec, nil
 }
 
-func (r *Generic[Rec, RecPtr]) SetRLSIdentifiers(identifiers map[string][]string) {
-	r.Repository.SetRLSIdentifiers(identifiers)
-}
+func (r *Generic[Rec, RecPtr]) SetRLSIdentifiers(_ map[string][]string) {}
 
-// SetRLSConstraints sets the RLS constraints for this generic repository
-func (r *Generic[Rec, RecPtr]) SetRLSConstraints(constraints []repositor.RLSConstraint) {
-	r.Repository.SetRLSConstraints(constraints)
-}
+func (r *Generic[Rec, RecPtr]) SetRLSConstraints(_ []repositor.RLSConstraint) {}

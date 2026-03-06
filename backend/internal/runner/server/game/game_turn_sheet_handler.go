@@ -188,9 +188,8 @@ func handleJoinGameTurnSheetUpload(ctx context.Context, l logger.Logger, scanner
 
 	l.Info("processing join game turn sheet upload to join game subscription ID >%s< turn sheet code >%s<", turnSheetCodeData.GameSubscriptionID, turnSheetCode)
 
-	// Get the game managers game subscription record - bypasses RLS because the turn
-	// sheet code itself is the authorization token for this operation.
-	gameSubscriptionRec, err := m.GetGameSubscriptionRecByIDForJoinProcess(turnSheetCodeData.GameSubscriptionID)
+	// Get the game managers game subscription record
+	gameSubscriptionRec, err := m.GetGameSubscriptionRec(turnSheetCodeData.GameSubscriptionID, nil)
 	if err != nil {
 		l.Warn("failed to get game subscription record >%s< for join game turn sheet upload >%v<", turnSheetCodeData.GameSubscriptionID, err)
 		return nil, 0, coreerror.NewNotFoundError("game subscription", turnSheetCodeData.GameSubscriptionID)
@@ -198,7 +197,7 @@ func handleJoinGameTurnSheetUpload(ctx context.Context, l logger.Logger, scanner
 
 	l.Info("creating join game turn sheet data for game >%s<", gameSubscriptionRec.GameID)
 
-	gameRec, err := m.GetGameRecByIDForJoinProcess(gameSubscriptionRec.GameID)
+	gameRec, err := m.GetGameRec(gameSubscriptionRec.GameID, nil)
 	if err != nil {
 		l.Warn("failed to get game record >%s< for join game turn sheet upload >%v<", gameSubscriptionRec.GameID, err)
 		return nil, 0, coreerror.NewNotFoundError("game", gameSubscriptionRec.GameID)
@@ -389,8 +388,8 @@ func downloadJoinGameTurnSheetsHandler(w http.ResponseWriter, r *http.Request, p
 		return coreerror.RequiredPathParameter("game_id")
 	}
 
-	// Get game record - bypass RLS since this is a public endpoint
-	gameRec, err := mm.GetGameRecByIDForJoinProcess(gameID)
+	// Get game record
+	gameRec, err := mm.GetGameRec(gameID, nil)
 	if err != nil {
 		l.Warn("failed to get game record >%s< >%v<", gameID, err)
 		return coreerror.NewNotFoundError("game", gameID)
@@ -429,8 +428,8 @@ func downloadJoinGameTurnSheetsHandler(w http.ResponseWriter, r *http.Request, p
 		gameSubscriptionID = subscriptions[0].ID
 	}
 
-	// Get the manager game subscription record - bypass RLS since this is a public endpoint
-	gameSubscriptionRec, err := mm.GetGameSubscriptionRecByIDForJoinProcess(gameSubscriptionID)
+	// Get the manager game subscription record
+	gameSubscriptionRec, err := mm.GetGameSubscriptionRec(gameSubscriptionID, nil)
 	if err != nil {
 		l.Warn("failed to get game subscription record >%s< >%v<", gameSubscriptionID, err)
 		return coreerror.NewNotFoundError("game subscription", gameSubscriptionID)

@@ -107,7 +107,7 @@ func (rnr *Runner) AuthenMiddleware(hc HandlerConfig, h Handle) (Handle, error) 
 // SetRequestAuthenData sets authen/authz data in http request context
 func SetRequestAuthenData(l logger.Logger, r *http.Request, auth AuthenData) (*http.Request, error) {
 
-	l.Info("(authenmiddleware) setting request auth data Type >%s< RLSType >%s< Permissions >%v<", auth.Type, auth.RLSType, auth.Permissions)
+	l.Info("(authenmiddleware) setting request auth data Type >%s< Permissions >%v<", auth.Type, auth.Permissions)
 
 	ctx := r.Context()
 	ctx = context.WithValue(ctx, ctxKeyAuth, auth)
@@ -123,7 +123,7 @@ func GetRequestAuthenData(l logger.Logger, r *http.Request) *AuthenData {
 		return nil
 	}
 
-	l.Info("(authenmiddleware) returning request auth data Type >%s< RLSType >%s< Permissions >%v<", auth.Type, auth.RLSType, auth.Permissions)
+	l.Info("(authenmiddleware) returning request auth data Type >%s< Permissions >%v<", auth.Type, auth.Permissions)
 
 	return &auth
 }

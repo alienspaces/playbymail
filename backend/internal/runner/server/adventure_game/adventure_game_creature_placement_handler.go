@@ -232,7 +232,6 @@ func createOneAdventureGameCreaturePlacementHandler(w http.ResponseWriter, r *ht
 	gameID := pp.ByName("game_id")
 	mm := m.(*domain.Domain)
 
-	// RLS constraints will be applied by the repository
 	gameRec, err := mm.GetGameRec(gameID, nil)
 	if err != nil {
 		l.Warn("failed getting adventure game record >%v<", err)

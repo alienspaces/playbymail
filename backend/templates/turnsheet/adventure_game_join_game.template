@@ -105,7 +105,11 @@
     <div class="account-details">
         <div class="form-group">
             <label class="form-field-title" for="email">Email Address:</label>
+            {{- if .AccountEmail}}
+            <input type="email" id="email" name="email" value="{{.AccountEmail}}" readonly required>
+            {{- else}}
             <input type="email" id="email" name="email" required>
+            {{- end}}
         </div>
         <div class="form-group">
             <label class="form-field-title" for="name">Name:</label>

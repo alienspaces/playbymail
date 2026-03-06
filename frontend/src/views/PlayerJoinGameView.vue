@@ -1,255 +1,122 @@
 <template>
   <div class="join-game-view">
 
-    <!-- Loading game info -->
+    <!-- Loading turn sheet -->
     <div v-if="loading" class="join-loading" data-testid="join-loading">
-      <p>Loading game information...</p>
+      <p>Loading join game turn sheet...</p>
     </div>
 
-    <!-- Failed to load game info -->
+    <!-- Failed to load -->
     <div v-else-if="loadError" class="join-error card" data-testid="join-load-error">
       <p class="error-message">{{ loadError }}</p>
       <a href="/games" class="catalog-link">Browse other games</a>
     </div>
 
-    <!-- Step 1: Game info + delivery method selection -->
-    <div v-else-if="step === 'info'" class="join-step card" data-testid="step-info">
-      <h1 class="game-title">{{ gameInfo.game_name }}</h1>
-      <p v-if="gameInfo.game_description" class="game-description">{{ gameInfo.game_description }}</p>
-
-      <div class="game-meta">
-        <span class="badge">{{ formatGameType(gameInfo.game_type) }}</span>
-        <span class="turn-duration">Turn: {{ gameInfo.turn_duration_hours }}h</span>
-      </div>
-
-      <div class="instance-info">
-        <div v-if="gameInfo.total_capacity > 0" class="capacity-info">
-          <span class="label">Players:</span>
-          <span>{{ gameInfo.total_players }} / {{ gameInfo.total_capacity }}</span>
-        </div>
-
-        <div class="delivery-methods">
-          <span class="label">Play by:</span>
-          <span v-if="gameInfo.delivery_email" class="delivery-badge">Email</span>
-          <span v-if="gameInfo.delivery_physical_local" class="delivery-badge">Local</span>
-          <span v-if="gameInfo.delivery_physical_post" class="delivery-badge">Post</span>
-        </div>
-      </div>
-
-      <button class="primary-button" @click="step = 'contact'" data-testid="btn-join">
-        Join this Game
-      </button>
-    </div>
-
-    <!-- Step 2: Contact details form -->
-    <div v-else-if="step === 'contact'" class="join-step card" data-testid="step-contact">
-      <h1>Your Details</h1>
-      <p class="step-description">Enter your contact information to join <strong>{{ gameInfo.game_name }}</strong>.</p>
-
-      <form @submit.prevent="onSubmit" class="join-form" novalidate>
-
-        <div class="form-group">
-          <label for="email">Email address <span class="required">*</span></label>
-          <input
-            id="email"
-            v-model="form.email"
-            type="email"
-            required
-            autocomplete="email"
-            data-testid="input-email"
-          />
-        </div>
-
-        <div class="form-group">
-          <label for="name">Full name <span class="required">*</span></label>
-          <input
-            id="name"
-            v-model="form.name"
-            type="text"
-            required
-            autocomplete="name"
-            data-testid="input-name"
-          />
-        </div>
-
-        <div class="form-group">
-          <label for="address-line1">Address line 1 <span class="required">*</span></label>
-          <input
-            id="address-line1"
-            v-model="form.postal_address_line1"
-            type="text"
-            required
-            autocomplete="address-line1"
-            data-testid="input-address-line1"
-          />
-        </div>
-
-        <div class="form-group">
-          <label for="address-line2">Address line 2</label>
-          <input
-            id="address-line2"
-            v-model="form.postal_address_line2"
-            type="text"
-            autocomplete="address-line2"
-            data-testid="input-address-line2"
-          />
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label for="state">State / Province <span class="required">*</span></label>
-            <input
-              id="state"
-              v-model="form.state_province"
-              type="text"
-              required
-              autocomplete="address-level1"
-              data-testid="input-state"
-            />
-          </div>
-          <div class="form-group">
-            <label for="postal-code">Postal code <span class="required">*</span></label>
-            <input
-              id="postal-code"
-              v-model="form.postal_code"
-              type="text"
-              required
-              autocomplete="postal-code"
-              data-testid="input-postal-code"
-            />
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label for="country">Country <span class="required">*</span></label>
-          <input
-            id="country"
-            v-model="form.country"
-            type="text"
-            required
-            autocomplete="country-name"
-            data-testid="input-country"
-          />
-        </div>
-
-        <div v-if="availableDeliveryMethods.length > 1" class="form-group" data-testid="delivery-selection">
-          <label>How would you like to play? <span class="required">*</span></label>
-          <div class="delivery-options">
-            <label v-if="gameInfo.delivery_email" class="delivery-option">
-              <input
-                type="radio"
-                v-model="selectedDelivery"
-                value="email"
-                name="delivery"
-                data-testid="delivery-email"
-              />
-              By Email
-            </label>
-            <label v-if="gameInfo.delivery_physical_local" class="delivery-option">
-              <input
-                type="radio"
-                v-model="selectedDelivery"
-                value="local"
-                name="delivery"
-                data-testid="delivery-local"
-              />
-              Local pickup
-            </label>
-            <label v-if="gameInfo.delivery_physical_post" class="delivery-option">
-              <input
-                type="radio"
-                v-model="selectedDelivery"
-                value="post"
-                name="delivery"
-                data-testid="delivery-post"
-              />
-              By Post
-            </label>
-          </div>
-        </div>
-
-        <p v-if="submitError" class="error-message" data-testid="submit-error">{{ submitError }}</p>
-
-        <div class="form-actions">
-          <button type="button" class="secondary-button" @click="step = 'info'" data-testid="btn-back">
-            Back
-          </button>
-          <button type="submit" class="primary-button" :disabled="submitting" data-testid="btn-submit">
-            {{ submitting ? 'Joining...' : 'Join Game' }}
-          </button>
-        </div>
-      </form>
-    </div>
-
-    <!-- Step 3: Success confirmation -->
-    <div v-else-if="step === 'success'" class="join-step join-success card" data-testid="step-success">
+    <!-- Success confirmation -->
+    <div v-else-if="step === 'success'" class="join-success card" data-testid="step-success">
       <h1>You're in!</h1>
       <p class="success-message">
-        You have successfully joined <strong>{{ gameInfo.game_name }}</strong>.
-        You will receive further instructions by {{ deliveryLabel }}.
+        You have successfully joined the game.
+        You will receive further instructions soon.
       </p>
       <a href="/games" class="catalog-link" data-testid="link-browse-more">Browse more games</a>
+    </div>
+
+    <!-- Turn sheet display -->
+    <div v-else class="join-sheet-wrapper" data-testid="join-sheet">
+      <iframe
+        ref="sheetFrame"
+        :srcdoc="turnSheetHtml"
+        class="turn-sheet-frame"
+        sandbox="allow-same-origin"
+        data-testid="join-sheet-iframe"
+        @load="onIframeLoad"
+      ></iframe>
+
+      <div class="join-actions">
+        <p v-if="submitError" class="error-message" data-testid="submit-error">{{ submitError }}</p>
+        <div class="action-buttons">
+          <a href="/games" class="secondary-button" data-testid="btn-back">Back to Catalog</a>
+          <button
+            class="primary-button"
+            :disabled="submitting"
+            data-testid="btn-submit"
+            @click="onSubmit"
+          >
+            {{ submitting ? 'Joining...' : 'Submit & Join Game' }}
+          </button>
+        </div>
+      </div>
     </div>
 
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { getJoinGameInfo, submitJoinGame } from '../api/joinGame'
+import { getJoinSheet, submitJoinGame } from '../api/joinGame'
 
 const route = useRoute()
 
 const loading = ref(true)
 const loadError = ref(null)
-const step = ref('info')
-const gameInfo = ref({})
+const step = ref('form')
+const turnSheetHtml = ref('')
 const submitting = ref(false)
 const submitError = ref(null)
+const sheetFrame = ref(null)
 
-const form = ref({
-  email: '',
-  name: '',
-  postal_address_line1: '',
-  postal_address_line2: '',
-  state_province: '',
-  postal_code: '',
-  country: '',
-})
+function extractFormData() {
+  const doc = sheetFrame.value?.contentDocument
+  if (!doc) return null
 
-const selectedDelivery = ref('')
+  const val = (name) => {
+    const el = doc.querySelector(`[name="${name}"]`)
+    if (!el) return ''
+    if (el.type === 'radio') {
+      const checked = doc.querySelector(`[name="${name}"]:checked`)
+      return checked ? checked.value : ''
+    }
+    return el.value || ''
+  }
 
-const availableDeliveryMethods = computed(() => {
-  const methods = []
-  if (gameInfo.value.delivery_email) methods.push('email')
-  if (gameInfo.value.delivery_physical_local) methods.push('local')
-  if (gameInfo.value.delivery_physical_post) methods.push('post')
-  return methods
-})
+  const deliveryMethod = val('delivery_method')
 
-const deliveryLabel = computed(() => {
-  const labels = { email: 'email', local: 'local pickup', post: 'post' }
-  return labels[selectedDelivery.value] || 'the selected method'
-})
-
-function formatGameType(gameType) {
-  const types = { adventure: 'Adventure' }
-  return types[gameType] ?? gameType
+  return {
+    email: val('email'),
+    name: val('name'),
+    postal_address_line1: val('postal_address_line1'),
+    postal_address_line2: val('postal_address_line2') || undefined,
+    state_province: val('state_province'),
+    country: val('country'),
+    postal_code: val('postal_code'),
+    delivery_email: deliveryMethod === 'email',
+    delivery_physical_local: deliveryMethod === 'local',
+    delivery_physical_post: deliveryMethod === 'post',
+  }
 }
 
-async function loadGameInfo() {
+function onIframeLoad() {
+  const iframe = sheetFrame.value
+  if (!iframe) return
+  try {
+    const doc = iframe.contentDocument
+    if (doc && doc.body) {
+      iframe.style.height = doc.documentElement.scrollHeight + 'px'
+    }
+  } catch {
+    // cross-origin guard
+  }
+}
+
+async function loadSheet() {
   loading.value = true
   loadError.value = null
   try {
-    const res = await getJoinGameInfo(route.params.game_subscription_id)
-    gameInfo.value = res.data ?? {}
-    // Pre-select the only delivery method if there is just one
-    if (availableDeliveryMethods.value.length === 1) {
-      selectedDelivery.value = availableDeliveryMethods.value[0]
-    }
+    turnSheetHtml.value = await getJoinSheet(route.params.game_subscription_id)
   } catch (err) {
-    loadError.value = err.message || 'Failed to load game information. Please try again.'
+    loadError.value = err.message || 'Failed to load the join game turn sheet. Please try again.'
   } finally {
     loading.value = false
   }
@@ -257,20 +124,21 @@ async function loadGameInfo() {
 
 async function onSubmit() {
   submitError.value = null
+
+  const data = extractFormData()
+  if (!data) {
+    submitError.value = 'Unable to read form data. Please try again.'
+    return
+  }
+
+  if (!data.email || !data.name || !data.postal_address_line1 || !data.state_province || !data.country || !data.postal_code) {
+    submitError.value = 'Please fill in all required fields on the turn sheet.'
+    return
+  }
+
   submitting.value = true
   try {
-    await submitJoinGame(route.params.game_subscription_id, {
-      email: form.value.email,
-      name: form.value.name,
-      postal_address_line1: form.value.postal_address_line1,
-      postal_address_line2: form.value.postal_address_line2 || undefined,
-      state_province: form.value.state_province,
-      postal_code: form.value.postal_code,
-      country: form.value.country,
-      delivery_email: selectedDelivery.value === 'email',
-      delivery_physical_local: selectedDelivery.value === 'local',
-      delivery_physical_post: selectedDelivery.value === 'post',
-    })
+    await submitJoinGame(route.params.game_subscription_id, data)
     step.value = 'success'
   } catch (err) {
     submitError.value = err.message || 'Failed to submit. Please try again.'
@@ -279,174 +147,69 @@ async function onSubmit() {
   }
 }
 
-onMounted(loadGameInfo)
+onMounted(loadSheet)
 </script>
 
 <style scoped>
 .join-game-view {
-  max-width: 600px;
-  margin: var(--space-lg) auto;
-  padding: var(--space-md);
+  max-width: 900px;
+  margin: var(--space-lg, 1.5rem) auto;
+  padding: var(--space-md, 1rem);
 }
 
 .join-loading {
-  padding: var(--space-xl);
+  padding: var(--space-xl, 2rem);
   text-align: center;
   color: var(--color-text-muted, #666);
-}
-
-.join-step {
-  padding: var(--space-xl);
 }
 
 .join-error {
-  padding: var(--space-xl);
+  padding: var(--space-xl, 2rem);
   text-align: center;
 }
 
-.game-title {
-  font-size: var(--font-size-xl);
-  margin-bottom: var(--space-md);
-}
-
-.game-description {
-  color: var(--color-text-muted, #444);
-  margin-bottom: var(--space-md);
-}
-
-.game-meta {
-  display: flex;
-  align-items: center;
-  gap: var(--space-md);
-  margin-bottom: var(--space-lg);
-  font-size: var(--font-size-sm);
-}
-
-.badge {
-  padding: 2px var(--space-sm);
-  border-radius: var(--radius-sm);
-  background: var(--color-primary, #3b82f6);
-  color: #fff;
-  font-size: var(--font-size-xs, 0.75rem);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.turn-duration {
-  color: var(--color-text-muted, #666);
-}
-
-.instance-info {
-  margin-bottom: var(--space-xl);
+.join-sheet-wrapper {
   display: flex;
   flex-direction: column;
-  gap: var(--space-sm);
-  font-size: var(--font-size-sm);
+  gap: var(--space-lg, 1.5rem);
 }
 
-.capacity-info,
-.delivery-methods {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
+.turn-sheet-frame {
+  width: 100%;
+  min-height: 800px;
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: var(--radius-md, 8px);
+  background: #fff;
 }
 
-.label {
-  font-weight: var(--font-weight-bold);
-  min-width: 80px;
-}
-
-.delivery-badge {
-  padding: 2px var(--space-sm);
-  background: var(--color-bg, #f5f5f5);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  font-size: var(--font-size-xs, 0.75rem);
-}
-
-.step-description {
-  color: var(--color-text-muted, #444);
-  margin-bottom: var(--space-xl);
-}
-
-.join-form {
+.join-actions {
   display: flex;
   flex-direction: column;
-  gap: var(--space-md);
+  gap: var(--space-md, 1rem);
 }
 
-.form-group {
+.action-buttons {
   display: flex;
-  flex-direction: column;
-  gap: var(--space-xs);
-}
-
-.form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-md);
-}
-
-label {
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-bold);
-}
-
-.required {
-  color: var(--color-warning-dark, #c00);
-}
-
-input[type='text'],
-input[type='email'] {
-  padding: var(--space-sm) var(--space-md);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  font-size: var(--font-size-base);
-  background: var(--color-bg);
-  color: var(--color-text);
-}
-
-input:focus {
-  outline: none;
-  border-color: var(--color-primary, #3b82f6);
-}
-
-.delivery-options {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-sm);
-}
-
-.delivery-option {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  font-weight: normal;
-  cursor: pointer;
-}
-
-.form-actions {
-  display: flex;
-  gap: var(--space-md);
+  gap: var(--space-md, 1rem);
   justify-content: flex-end;
-  margin-top: var(--space-md);
+  align-items: center;
 }
 
 .primary-button {
-  padding: var(--space-sm) var(--space-xl);
+  padding: var(--space-sm, 0.5rem) var(--space-xl, 2rem);
   background: transparent;
-  color: var(--color-button);
-  border: 2px solid var(--color-button);
-  border-radius: var(--radius-sm);
-  font-size: var(--font-size-base);
-  font-weight: var(--font-weight-bold);
+  color: var(--color-button, #006ecd);
+  border: 2px solid var(--color-button, #006ecd);
+  border-radius: var(--radius-sm, 4px);
+  font-size: var(--font-size-base, 1rem);
+  font-weight: var(--font-weight-bold, 600);
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .primary-button:hover {
-  background: var(--color-button);
-  color: var(--color-text-light);
+  background: var(--color-button, #006ecd);
+  color: var(--color-text-light, #fff);
 }
 
 .primary-button:disabled {
@@ -455,12 +218,13 @@ input:focus {
 }
 
 .secondary-button {
-  padding: var(--space-sm) var(--space-lg);
+  padding: var(--space-sm, 0.5rem) var(--space-lg, 1.5rem);
   background: transparent;
   color: var(--color-text-muted, #666);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  font-size: var(--font-size-base);
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: var(--radius-sm, 4px);
+  font-size: var(--font-size-base, 1rem);
+  text-decoration: none;
   cursor: pointer;
   transition: all 0.2s;
 }
@@ -472,37 +236,41 @@ input:focus {
 .error-message {
   color: var(--color-warning-dark, #c00);
   background: var(--color-warning-light, #fff3f3);
-  padding: var(--space-sm) var(--space-md);
+  padding: var(--space-sm, 0.5rem) var(--space-md, 1rem);
   border: 1px solid var(--color-warning, #f99);
-  border-radius: var(--radius-sm);
-  font-size: var(--font-size-sm);
+  border-radius: var(--radius-sm, 4px);
+  font-size: var(--font-size-sm, 0.875rem);
+}
+
+.join-success {
+  padding: var(--space-xl, 2rem);
 }
 
 .join-success h1 {
-  font-size: var(--font-size-xl);
-  margin-bottom: var(--space-md);
+  font-size: var(--font-size-xl, 1.5rem);
+  margin-bottom: var(--space-md, 1rem);
 }
 
 .success-message {
-  margin-bottom: var(--space-xl);
+  margin-bottom: var(--space-xl, 2rem);
   color: var(--color-text-muted, #444);
 }
 
 .catalog-link {
   display: inline-block;
-  padding: var(--space-sm) var(--space-xl);
+  padding: var(--space-sm, 0.5rem) var(--space-xl, 2rem);
   background: transparent;
-  color: var(--color-button);
-  border: 2px solid var(--color-button);
-  border-radius: var(--radius-sm);
+  color: var(--color-button, #006ecd);
+  border: 2px solid var(--color-button, #006ecd);
+  border-radius: var(--radius-sm, 4px);
   text-decoration: none;
-  font-weight: var(--font-weight-bold);
-  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold, 600);
+  font-size: var(--font-size-sm, 0.875rem);
   transition: all 0.2s;
 }
 
 .catalog-link:hover {
-  background: var(--color-button);
-  color: var(--color-text-light);
+  background: var(--color-button, #006ecd);
+  color: var(--color-text-light, #fff);
 }
 </style>

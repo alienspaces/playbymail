@@ -96,7 +96,7 @@ func gameSubscriptionJoinHandlerConfig(l logger.Logger) (map[string]server.Handl
 		Path:        "/api/v1/game-subscriptions/:game_subscription_id/join/sheet",
 		HandlerFunc: getJoinSheetHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
-			AuthenTypes: []server.AuthenticationType{server.AuthenticationTypePublic},
+			AuthenTypes: []server.AuthenticationType{server.AuthenticationTypeToken},
 		},
 		DocumentationConfig: server.DocumentationConfig{
 			Document:    true,
@@ -124,7 +124,7 @@ func gameSubscriptionJoinHandlerConfig(l logger.Logger) (map[string]server.Handl
 		Path:        "/api/v1/game-subscriptions/:game_subscription_id/join",
 		HandlerFunc: submitJoinHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
-			AuthenTypes: []server.AuthenticationType{server.AuthenticationTypePublic},
+			AuthenTypes: []server.AuthenticationType{server.AuthenticationTypeToken},
 			ValidateRequestSchema: jsonschema.SchemaWithReferences{
 				Main: jsonschema.Schema{
 					Location: "api/player_schema",
@@ -309,6 +309,12 @@ func getJoinSheetHandler(w http.ResponseWriter, r *http.Request, pp httprouter.P
 
 	mm := m.(*domain.Domain)
 
+	authenData := server.GetRequestAuthenData(l, r)
+	var accountEmail string
+	if authenData != nil && authenData.IsAuthenticated() {
+		accountEmail = authenData.AccountUser.Email
+	}
+
 	subRec, err := resolveManagerSubscription(l, pp, mm)
 	if err != nil {
 		return err
@@ -351,6 +357,7 @@ func getJoinSheetHandler(w http.ResponseWriter, r *http.Request, pp httprouter.P
 
 	title := "Join Game"
 	instructions := turnsheet.DefaultJoinGameInstructions()
+	turnNumber := 0
 
 	sheetData, err := json.Marshal(&turnsheet.JoinGameData{
 		TurnSheetTemplateData: turnsheet.TurnSheetTemplateData{
@@ -360,6 +367,7 @@ func getJoinSheetHandler(w http.ResponseWriter, r *http.Request, pp httprouter.P
 			TurnSheetDescription:  &gameRec.Description,
 			TurnSheetInstructions: &instructions,
 			TurnSheetCode:         &turnSheetCode,
+			TurnNumber:            &turnNumber,
 		},
 		GameDescription: gameRec.Description,
 		AvailableDeliveryMethods: turnsheet.DeliveryMethods{
@@ -367,6 +375,7 @@ func getJoinSheetHandler(w http.ResponseWriter, r *http.Request, pp httprouter.P
 			PhysicalLocal: deliveryLocal,
 			PhysicalPost:  deliveryPost,
 		},
+		AccountEmail: accountEmail,
 	})
 	if err != nil {
 		l.Warn("failed to marshal join game sheet data >%v<", err)
@@ -397,6 +406,16 @@ func submitJoinHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Par
 
 	mm := m.(*domain.Domain)
 
+	authenData := server.GetRequestAuthenData(l, r)
+	if authenData == nil || !authenData.IsAuthenticated() {
+		return coreerror.NewUnauthorizedError()
+	}
+
+	accountID := authenData.AccountUser.AccountID
+	accountUserID := authenData.AccountUser.ID
+
+	l.Info("authenticated join game submit for account >%s< user >%s<", accountID, accountUserID)
+
 	subRec, err := resolveManagerSubscription(l, pp, mm)
 	if err != nil {
 		return err
@@ -408,10 +427,6 @@ func submitJoinHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Par
 		return err
 	}
 
-	if req.Email == "" {
-		return coreerror.NewInvalidDataError("email is required")
-	}
-
 	// Auto-assign: find an available instance under this subscription.
 	instanceRec, err := mm.FindAvailableGameInstance(subRec.ID)
 	if err != nil {
@@ -420,33 +435,6 @@ func submitJoinHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Par
 	}
 	if instanceRec == nil {
 		return coreerror.NewInvalidDataError("no game instances are currently accepting new players")
-	}
-
-	// Find or create an account for the provided email.
-	accountRec, err := mm.GetAccountRecByEmail(req.Email)
-	if err != nil {
-		l.Warn("failed to find account by email >%v<", err)
-		return err
-	}
-
-	var accountID string
-	var accountUserID string
-
-	if accountRec == nil {
-		l.Info("no existing account for email >%s<, creating new account", req.Email)
-		_, newUser, _, err := mm.CreateAccount(&account_record.AccountUser{
-			Email:  req.Email,
-			Status: account_record.AccountUserStatusActive,
-		})
-		if err != nil {
-			l.Warn("failed to create account for email >%s< >%v<", req.Email, err)
-			return err
-		}
-		accountID = newUser.AccountID
-		accountUserID = newUser.ID
-	} else {
-		accountID = accountRec.AccountID
-		accountUserID = accountRec.ID
 	}
 
 	contactRec := &account_record.AccountUserContact{

@@ -146,7 +146,7 @@ func uploadLocationTurnSheetImageHandler(w http.ResponseWriter, r *http.Request,
 
 	l.Info("uploading turn sheet image for location >%s< in game >%s<", locationID, gameID)
 
-	// Verify game exists and user has access (RLS check)
+	// Verify game exists and user has access
 	_, err := mm.GetGameRec(gameID, nil)
 	if err != nil {
 		l.Warn("failed to get game record >%s< >%v<", gameID, err)
@@ -301,7 +301,7 @@ func getLocationTurnSheetImageHandler(w http.ResponseWriter, r *http.Request, pp
 
 	l.Info("fetching turn sheet image for location >%s< in game >%s<", locationID, gameID)
 
-	// Verify game exists and user has access (RLS check)
+	// Verify game exists and user has access
 	_, err := mm.GetGameRec(gameID, nil)
 	if err != nil {
 		l.Warn("failed to get game record >%s< >%v<", gameID, err)
@@ -365,7 +365,7 @@ func deleteLocationTurnSheetImageHandler(w http.ResponseWriter, r *http.Request,
 		return coreerror.RequiredPathParameter("location_id")
 	}
 
-	// Verify game exists and user has access (RLS check)
+	// Verify game exists and user has access
 	_, err := mm.GetGameRec(gameID, coresql.ForUpdateNoWait)
 	if err != nil {
 		l.Warn("failed to get game record >%s< >%v<", gameID, err)
@@ -425,7 +425,7 @@ func previewLocationChoiceTurnSheetHandler(w http.ResponseWriter, r *http.Reques
 
 	l.Info("generating turn sheet preview for location >%s< in game >%s<", locationID, gameID)
 
-	// Get game record (RLS check)
+	// Get game record
 	gameRec, err := mm.GetGameRec(gameID, nil)
 	if err != nil {
 		l.Warn("failed to get game record >%s< >%v<", gameID, err)

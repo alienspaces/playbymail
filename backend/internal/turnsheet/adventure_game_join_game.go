@@ -28,6 +28,7 @@ type JoinGameData struct {
 
 	GameDescription          string          `json:"game_description,omitempty"`
 	AvailableDeliveryMethods DeliveryMethods `json:"available_delivery_methods"`
+	AccountEmail             string          `json:"account_email,omitempty"`
 }
 
 // HasDeliveryChoice returns true when more than one delivery method is available,
