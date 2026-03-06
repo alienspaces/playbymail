@@ -52,7 +52,8 @@ func (rnr *Runner) loadGameData(c *cli.Context) error {
 	}
 	config.SeedAccountRefs = seedRefs
 
-	for _, gc := range config.GameConfigs {
+	for i := range config.GameConfigs {
+		gc := &config.GameConfigs[i]
 		if gc.Record == nil || gc.Record.Name == "" {
 			continue
 		}

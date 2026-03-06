@@ -54,9 +54,8 @@ func LookupDemoGame(name string) (DemoGameEntry, bool) {
 	if entry, ok := DemoGames[name]; ok {
 		return entry, true
 	}
-	lower := strings.ToLower(name)
 	for key, entry := range DemoGames {
-		if strings.ToLower(key) == lower {
+		if strings.EqualFold(key, name) {
 			return entry, true
 		}
 	}
