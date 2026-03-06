@@ -67,27 +67,32 @@ Typically used when setting up QA or local environments for E2E.`,
 Loads static reference data expected to exist on any test environment.`,
 				Action: r.loadTestReferenceData,
 			},
-		// Demo scenario operations (game data for players to try)
-		{
-			Name:    "db-load-game-data",
-			Aliases: []string{"lgd"},
-			Usage:   "Load game data from a demo scenario (required --scenario)",
-			Description: `
-Loads game data from a named demo scenario into the target database.
-Use --list-scenarios to print available demo scenarios. Games are loaded as draft unless --publish is set.`,
+			// Demo scenario operations (game data for players to try)
+			{
+				Name:    "db-load-demo-game",
+				Aliases: []string{"lddg"},
+				Usage:   "Load a demo game by name (requires --game)",
+				Description: `
+Loads a demo game into the target database.
+Use --list to print available demo games. Games are loaded as draft unless --publish is set.`,
 				Flags: []cli.Flag{
 					&cli.StringFlag{
-						Name:     "scenario",
-						Aliases:  []string{"s"},
-						Usage:   "Scenario name (required; use --list-scenarios to see options)",
+						Name:    "game",
+						Aliases: []string{"g"},
+						Usage:   "Game name (required; use --list to see options)",
 					},
 					&cli.BoolFlag{
-						Name:  "list-scenarios",
-						Usage: "Print registered scenario names and descriptions, then exit",
+						Name:    "list",
+						Aliases: []string{"l"},
+						Usage:   "Print available demo games, then exit",
 					},
 					&cli.BoolFlag{
 						Name:  "publish",
 						Usage: "Publish loaded games (default: games remain draft)",
+					},
+					&cli.BoolFlag{
+						Name:  "replace",
+						Usage: "Remove existing game with same name before loading",
 					},
 				},
 				Action: r.loadGameData,

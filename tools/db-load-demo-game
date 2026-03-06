@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 
 echo
-echo "** Loading game data"
+echo "** Loading demo game"
 echo
 
 # Colors for output
@@ -55,23 +55,22 @@ if [ ! -f "playbymail-cli" ]; then
     exit 1
 fi
 
-# Require --list-scenarios or a scenario name as first argument
-if [ "$1" = "--list-scenarios" ]; then
-    print_status "Listing game data scenarios"
-    ./playbymail-cli db-load-game-data --list-scenarios || exit $?
-else
-    if [ -z "$1" ]; then
-        echo "❌ Scenario is required. Use: ./tools/db-load-game <scenario>"
-        echo "   Or list options: ./tools/db-load-game --list-scenarios"
-        exit 1
-    fi
-    SCENARIO="$1"
-    shift
-    EXTRA_ARGS="$*"
-    print_status "Running CLI to load game data (scenario: $SCENARIO)"
-    ./playbymail-cli db-load-game-data --scenario "$SCENARIO" $EXTRA_ARGS || exit $?
-    print_status "Game data loaded successfully"
+# Pass all arguments through to the CLI binary
+if [ $# -eq 0 ]; then
+    echo "❌ Arguments required."
+    echo
+    echo "Usage:"
+    echo "  ./tools/db-load-demo-game --list                                        List available demo games"
+    echo "  ./tools/db-load-demo-game --game \"<game name>\"                          Load as draft"
+    echo "  ./tools/db-load-demo-game --game \"<game name>\" --publish                Load and publish"
+    echo "  ./tools/db-load-demo-game --game \"<game name>\" --replace                Replace existing game"
+    echo "  ./tools/db-load-demo-game --game \"<game name>\" --replace --publish      Replace and publish"
+    echo
+    exit 1
 fi
+
+./playbymail-cli db-load-demo-game "$@" || exit $?
+print_status "Done"
 
 # Remove CLI binary after use
 rm playbymail-cli

@@ -13,6 +13,22 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 )
 
+// GetManyGameTurnSheetRecs returns game turn sheet records matching the given options.
+func (m *Domain) GetManyGameTurnSheetRecs(opts *coresql.Options) ([]*game_record.GameTurnSheet, error) {
+	l := m.Logger("GetManyGameTurnSheetRecs")
+
+	l.Debug("getting many game_turn_sheet records opts >%#v<", opts)
+
+	r := m.GameTurnSheetRepository()
+
+	recs, err := r.GetMany(opts)
+	if err != nil {
+		return nil, databaseError(err)
+	}
+
+	return recs, nil
+}
+
 // GetGameTurnSheetRec retrieves a game turn sheet record by ID
 func (m *Domain) GetGameTurnSheetRec(recID string, lock *coresql.Lock) (*game_record.GameTurnSheet, error) {
 	l := m.Logger("GetGameTurnSheetRec")

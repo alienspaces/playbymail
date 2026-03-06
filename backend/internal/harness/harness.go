@@ -2,6 +2,7 @@ package harness
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/riverqueue/river"
@@ -82,6 +83,28 @@ func (t *Testing) CreateData() error {
 
 	l.Debug("creating test data")
 
+	// Seed pre-existing account refs into Data so later passes can resolve them
+	if len(t.DataConfig.SeedAccountRefs) > 0 {
+		dm, ok := t.Domain.(*domain.Domain)
+		if !ok {
+			return fmt.Errorf("domain type assertion failed while seeding account refs")
+		}
+		for ref, accountUserID := range t.DataConfig.SeedAccountRefs {
+			accountUserRec, err := dm.GetAccountRec(accountUserID, nil)
+			if err != nil {
+				return fmt.Errorf("failed fetching seeded account user >%s<: %w", accountUserID, err)
+			}
+			parentRec, err := dm.GetAccountParentRec(accountUserRec.AccountID, nil)
+			if err != nil {
+				return fmt.Errorf("failed fetching parent account for >%s<: %w", accountUserRec.AccountID, err)
+			}
+			t.Data.AddAccountUserRec(accountUserRec)
+			t.Data.AddAccountRec(parentRec)
+			t.Data.Refs.AccountUserRefs[ref] = accountUserID
+			l.Info("seeded account ref >%s< -> account user ID >%s<", ref, accountUserID)
+		}
+	}
+
 	// First pass: Create all account users
 	for _, accountConfig := range t.DataConfig.AccountConfigs {
 		accountRec, err := t.createAccountUserRec(accountConfig)
@@ -124,16 +147,13 @@ func (t *Testing) CreateData() error {
 		l.Debug("created adventure game records for game >%s<", gameRec.ID)
 	}
 
-	// Third pass: Create designer game subscriptions first (they don't require game instances)
-	// These are needed to create game instances which require a subscription
+	// Third pass: Create designer subscriptions (nested in account configs)
 	for _, accountConfig := range t.DataConfig.AccountConfigs {
 		accountRec, err := t.Data.GetAccountUserRecByRef(accountConfig.Reference)
 		if err != nil {
 			l.Warn("failed getting account user record for reference >%s<: %v", accountConfig.Reference, err)
 			return err
 		}
-
-		// Create designer subscriptions first (they don't need game instances)
 		for _, subscriptionConfig := range accountConfig.GameSubscriptionConfigs {
 			if subscriptionConfig.SubscriptionType == game_record.GameSubscriptionTypeDesigner {
 				_, err = t.createGameSubscriptionRec(subscriptionConfig, accountRec)
@@ -146,7 +166,85 @@ func (t *Testing) CreateData() error {
 		}
 	}
 
-	// Fourth pass: Create all game instances (now that designer subscriptions exist)
+	// Fourth pass: Create top-level designer subscriptions
+	for _, subscriptionConfig := range t.DataConfig.GameSubscriptionConfigs {
+		if subscriptionConfig.SubscriptionType != game_record.GameSubscriptionTypeDesigner {
+			continue
+		}
+		accountRec, err := t.Data.GetAccountUserRecByRef(subscriptionConfig.AccountRef)
+		if err != nil {
+			l.Warn("failed getting account user record for top-level subscription AccountRef >%s<: %v", subscriptionConfig.AccountRef, err)
+			return err
+		}
+		_, err = t.createGameSubscriptionRec(subscriptionConfig, accountRec)
+		if err != nil {
+			l.Warn("failed creating top-level designer game_subscription record >%v<", err)
+			return err
+		}
+		l.Debug("created top-level designer game_subscription record for account >%s<", accountRec.ID)
+	}
+
+	// Fifth pass: Create manager subscriptions WITHOUT instance linking (nested)
+	// Manager subscriptions must exist before game instances can be created.
+	// Instance linking is deferred to after instances exist.
+	var deferredManagerLinks []struct {
+		config     GameSubscriptionConfig
+		subRec     *game_record.GameSubscription
+		gameRec    *game_record.Game
+	}
+	for _, accountConfig := range t.DataConfig.AccountConfigs {
+		accountRec, err := t.Data.GetAccountUserRecByRef(accountConfig.Reference)
+		if err != nil {
+			l.Warn("failed getting account user record for reference >%s<: %v", accountConfig.Reference, err)
+			return err
+		}
+		for _, subscriptionConfig := range accountConfig.GameSubscriptionConfigs {
+			if subscriptionConfig.SubscriptionType == game_record.GameSubscriptionTypeManager {
+				subRec, err := t.createGameSubscriptionRecOnly(subscriptionConfig, accountRec)
+				if err != nil {
+					l.Warn("failed creating manager game_subscription record >%v<", err)
+					return err
+				}
+				l.Debug("created manager game_subscription record for account >%s<", accountRec.ID)
+				if len(subscriptionConfig.GameInstanceRefs) > 0 {
+					gameRec, _ := t.Data.GetGameRecByRef(subscriptionConfig.GameRef)
+					deferredManagerLinks = append(deferredManagerLinks, struct {
+						config  GameSubscriptionConfig
+						subRec  *game_record.GameSubscription
+						gameRec *game_record.Game
+					}{subscriptionConfig, subRec, gameRec})
+				}
+			}
+		}
+	}
+
+	// Sixth pass: Create top-level manager subscriptions WITHOUT instance linking
+	for _, subscriptionConfig := range t.DataConfig.GameSubscriptionConfigs {
+		if subscriptionConfig.SubscriptionType != game_record.GameSubscriptionTypeManager {
+			continue
+		}
+		accountRec, err := t.Data.GetAccountUserRecByRef(subscriptionConfig.AccountRef)
+		if err != nil {
+			l.Warn("failed getting account user record for top-level subscription AccountRef >%s<: %v", subscriptionConfig.AccountRef, err)
+			return err
+		}
+		subRec, err := t.createGameSubscriptionRecOnly(subscriptionConfig, accountRec)
+		if err != nil {
+			l.Warn("failed creating top-level manager game_subscription record >%v<", err)
+			return err
+		}
+		l.Debug("created top-level manager game_subscription record for account >%s<", accountRec.ID)
+		if len(subscriptionConfig.GameInstanceRefs) > 0 {
+			gameRec, _ := t.Data.GetGameRecByRef(subscriptionConfig.GameRef)
+			deferredManagerLinks = append(deferredManagerLinks, struct {
+				config  GameSubscriptionConfig
+				subRec  *game_record.GameSubscription
+				gameRec *game_record.Game
+			}{subscriptionConfig, subRec, gameRec})
+		}
+	}
+
+	// Seventh pass: Create all game instances (manager subscriptions now exist)
 	for i := range t.DataConfig.GameConfigs {
 		gameConfig := &t.DataConfig.GameConfigs[i]
 		gameRec, err := t.Data.GetGameRecByRef(gameConfig.Reference)
@@ -155,7 +253,6 @@ func (t *Testing) CreateData() error {
 			return err
 		}
 
-		// Create game instance records for this game
 		for j := range gameConfig.GameInstanceConfigs {
 			gameInstanceConfig := &gameConfig.GameInstanceConfigs[j]
 			gameInstanceRec, err := t.createGameInstanceRec(*gameInstanceConfig, gameRec)
@@ -165,7 +262,6 @@ func (t *Testing) CreateData() error {
 			}
 			l.Debug("created game_instance record ID >%s<", gameInstanceRec.ID)
 
-			// Create game instance parameter records for this game instance
 			for _, instanceParameterConfig := range gameInstanceConfig.GameInstanceParameterConfigs {
 				instanceParameterRec, err := t.createGameInstanceParameterRec(instanceParameterConfig, gameInstanceRec)
 				if err != nil {
@@ -174,10 +270,6 @@ func (t *Testing) CreateData() error {
 				}
 				l.Debug("created game_instance_parameter record ID >%s<", instanceParameterRec.ID)
 			}
-
-			// ------------------------------------------------------------
-			// Adventure game specific instance records
-			// ------------------------------------------------------------
 
 			err = t.createAdventureGameInstanceRecords(*gameConfig, *gameInstanceConfig, gameInstanceRec)
 			if err != nil {
@@ -188,32 +280,50 @@ func (t *Testing) CreateData() error {
 		}
 	}
 
-	// Fifth pass: Create manager and player subscriptions (now that game instances exist)
-	// These subscriptions require game instances to be created first
+	// Eighth pass: Link deferred manager subscription instances
+	for _, link := range deferredManagerLinks {
+		if err := t.linkSubscriptionInstances(link.config, link.subRec, link.gameRec); err != nil {
+			l.Warn("failed linking deferred manager subscription instances >%v<", err)
+			return err
+		}
+		l.Debug("linked manager subscription >%s< to instances", link.subRec.ID)
+	}
+
+	// Ninth pass: Create player subscriptions (nested, with instance linking)
 	for _, accountConfig := range t.DataConfig.AccountConfigs {
 		accountRec, err := t.Data.GetAccountUserRecByRef(accountConfig.Reference)
 		if err != nil {
 			l.Warn("failed getting account user record for reference >%s<: %v", accountConfig.Reference, err)
 			return err
 		}
-
-		// Create manager and player subscriptions (they require game instances)
 		for _, subscriptionConfig := range accountConfig.GameSubscriptionConfigs {
-			if subscriptionConfig.SubscriptionType == game_record.GameSubscriptionTypeManager ||
-				subscriptionConfig.SubscriptionType == game_record.GameSubscriptionTypePlayer {
+			if subscriptionConfig.SubscriptionType == game_record.GameSubscriptionTypePlayer {
 				_, err = t.createGameSubscriptionRec(subscriptionConfig, accountRec)
 				if err != nil {
-					l.Warn("failed creating manager/player game_subscription record >%v<", err)
+					l.Warn("failed creating player game_subscription record >%v<", err)
 					return err
 				}
-				l.Debug("created %s game_subscription record for account >%s<", subscriptionConfig.SubscriptionType, accountRec.ID)
+				l.Debug("created player game_subscription record for account >%s<", accountRec.ID)
 			}
 		}
 	}
 
-	// TODO: Remove me
-	for _, rec := range t.Data.AccountUserRecs {
-		l.Info("created account user record ID >%s<", rec.ID)
+	// Tenth pass: Create top-level player subscriptions (with instance linking)
+	for _, subscriptionConfig := range t.DataConfig.GameSubscriptionConfigs {
+		if subscriptionConfig.SubscriptionType != game_record.GameSubscriptionTypePlayer {
+			continue
+		}
+		accountRec, err := t.Data.GetAccountUserRecByRef(subscriptionConfig.AccountRef)
+		if err != nil {
+			l.Warn("failed getting account user record for top-level subscription AccountRef >%s<: %v", subscriptionConfig.AccountRef, err)
+			return err
+		}
+		_, err = t.createGameSubscriptionRec(subscriptionConfig, accountRec)
+		if err != nil {
+			l.Warn("failed creating top-level player game_subscription record >%v<", err)
+			return err
+		}
+		l.Debug("created top-level player game_subscription record for account >%s<", accountRec.ID)
 	}
 
 	l.Debug("created test data")

@@ -11,6 +11,14 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 )
 
+// createGameSubscriptionRecOnly creates the subscription record without linking
+// instances. Use this when instances don't exist yet; call linkSubscriptionInstances later.
+func (t *Testing) createGameSubscriptionRecOnly(subscriptionConfig GameSubscriptionConfig, accountRec *account_record.AccountUser) (*game_record.GameSubscription, error) {
+	stripped := subscriptionConfig
+	stripped.GameInstanceRefs = nil
+	return t.createGameSubscriptionRec(stripped, accountRec)
+}
+
 func (t *Testing) createGameSubscriptionRec(subscriptionConfig GameSubscriptionConfig, accountRec *account_record.AccountUser) (*game_record.GameSubscription, error) {
 	l := t.Logger("createGameSubscriptionRec")
 
@@ -93,36 +101,9 @@ func (t *Testing) createGameSubscriptionRec(subscriptionConfig GameSubscriptionC
 		t.Data.Refs.GameSubscriptionRefs[subscriptionConfig.Reference] = rec.ID
 	}
 
-	// Link game instances if provided
-	if len(subscriptionConfig.GameInstanceRefs) > 0 {
-		for _, instanceRef := range subscriptionConfig.GameInstanceRefs {
-			gameInstanceRec, err := t.Data.GetGameInstanceRecByRef(instanceRef)
-			if err != nil {
-				l.Warn("failed resolving game instance ref >%s<: %v", instanceRef, err)
-				return nil, err
-			}
-
-			// Validate that game instance belongs to the same game
-			if gameInstanceRec.GameID != gameRec.ID {
-				return nil, fmt.Errorf("game_instance >%s< does not belong to game >%s<", instanceRef, subscriptionConfig.GameRef)
-			}
-
-			// Link instance to subscription
-			// account_id will be derived from subscription in validation
-			instanceLinkRec := &game_record.GameSubscriptionInstance{
-				GameSubscriptionID: rec.ID,
-				GameInstanceID:     gameInstanceRec.ID,
-			}
-			instanceLinkRec, err = t.Domain.(*domain.Domain).CreateGameSubscriptionInstanceRec(instanceLinkRec)
-			if err != nil {
-				l.Warn("failed linking game instance >%s< to subscription >%s<: %v", instanceRef, rec.ID, err)
-				return nil, err
-			}
-
-			// Add to data store
-			t.Data.AddGameSubscriptionInstanceRec(instanceLinkRec)
-			t.teardownData.AddGameSubscriptionInstanceRec(instanceLinkRec)
-		}
+	// Link game instances if refs are provided and instances already exist
+	if err := t.linkSubscriptionInstances(subscriptionConfig, rec, gameRec); err != nil {
+		return nil, err
 	}
 
 	// Process join game subscription if scan data is provided
@@ -137,6 +118,40 @@ func (t *Testing) createGameSubscriptionRec(subscriptionConfig GameSubscriptionC
 	}
 
 	return rec, nil
+}
+
+// linkSubscriptionInstances creates game_subscription_instance records for each
+// GameInstanceRef in the config. It is a no-op when GameInstanceRefs is empty.
+// Called from createGameSubscriptionRec when instances exist, or deferred to a
+// later pass when subscriptions must be created before instances.
+func (t *Testing) linkSubscriptionInstances(subscriptionConfig GameSubscriptionConfig, subRec *game_record.GameSubscription, gameRec *game_record.Game) error {
+	l := t.Logger("linkSubscriptionInstances")
+
+	for _, instanceRef := range subscriptionConfig.GameInstanceRefs {
+		gameInstanceRec, err := t.Data.GetGameInstanceRecByRef(instanceRef)
+		if err != nil {
+			l.Warn("failed resolving game instance ref >%s<: %v", instanceRef, err)
+			return err
+		}
+
+		if gameInstanceRec.GameID != gameRec.ID {
+			return fmt.Errorf("game_instance >%s< does not belong to game >%s<", instanceRef, subscriptionConfig.GameRef)
+		}
+
+		instanceLinkRec := &game_record.GameSubscriptionInstance{
+			GameSubscriptionID: subRec.ID,
+			GameInstanceID:     gameInstanceRec.ID,
+		}
+		instanceLinkRec, err = t.Domain.(*domain.Domain).CreateGameSubscriptionInstanceRec(instanceLinkRec)
+		if err != nil {
+			l.Warn("failed linking game instance >%s< to subscription >%s<: %v", instanceRef, subRec.ID, err)
+			return err
+		}
+
+		t.Data.AddGameSubscriptionInstanceRec(instanceLinkRec)
+		t.teardownData.AddGameSubscriptionInstanceRec(instanceLinkRec)
+	}
+	return nil
 }
 
 func (t *Testing) applyGameSubscriptionRecDefaultValues(rec *game_record.GameSubscription) *game_record.GameSubscription {

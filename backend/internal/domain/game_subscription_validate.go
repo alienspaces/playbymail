@@ -79,13 +79,16 @@ func validateGameSubscriptionRecForCreate(args *validateGameSubscriptionArgs) er
 		return coreerror.NewInvalidDataError("subscription_type is required")
 	}
 
-	// Validate that game is published (only published games can be subscribed to)
 	if args.gameRec == nil {
 		return coreerror.NewInvalidDataError("game_id references invalid game")
 	}
 
-	if args.gameRec.Status != game_record.GameStatusPublished {
-		return coreerror.NewInvalidDataError("only published games can be subscribed to")
+	// Player subscriptions require a published game; designer and manager
+	// subscriptions are allowed on draft games because they set up the game.
+	if rec.SubscriptionType == game_record.GameSubscriptionTypePlayer {
+		if args.gameRec.Status != game_record.GameStatusPublished {
+			return coreerror.NewInvalidDataError("only published games can be subscribed to")
+		}
 	}
 
 	if rec.Status == "" {

@@ -156,3 +156,4 @@ func (t *Testing) applyAccountUserRecDefaultValues(rec *account_record.AccountUs
 
 	return rec
 }
+

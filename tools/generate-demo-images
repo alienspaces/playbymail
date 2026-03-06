@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# Generate turn sheet background images for the demo adventure game
+# using the OpenAI DALL-E 3 API.
+#
+# Prerequisites:
+#   export OPENAI_API_KEY="sk-..."
+#
+# Usage:
+#   ./tools/generate-demo-images              # generate all missing images
+#   ./tools/generate-demo-images --all        # regenerate every image
+#   ./tools/generate-demo-images --only NAME  # generate one image by filename (without .png)
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+# Source environment
+if [ -f "$PROJECT_DIR/.env.private" ]; then
+  set -a
+  source "$PROJECT_DIR/.env.private"
+  set +a
+fi
+
+if [ -z "${OPENAI_API_KEY:-}" ]; then
+  echo "ERROR: OPENAI_API_KEY is not set. Export it or add it to .env.private"
+  exit 1
+fi
+
+TARGET_DIR="$PROJECT_DIR/backend/internal/runner/cli/demo_scenario_images"
+mkdir -p "$TARGET_DIR"
+
+exec python3 "$SCRIPT_DIR/generate-demo-images.py" \
+  --api-key "$OPENAI_API_KEY" \
+  --output-dir "$TARGET_DIR" \
+  "$@"

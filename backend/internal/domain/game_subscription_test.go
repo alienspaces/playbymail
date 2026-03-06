@@ -64,6 +64,15 @@ func TestApproveGameSubscription(t *testing.T) {
 							Status: game_record.GameSubscriptionStatusActive,
 						},
 					},
+					{
+						Reference:        "manager-subscription",
+						GameRef:          harness.GameOneRef,
+						GameInstanceRefs: []string{"test-instance-1", "test-instance-2"},
+						SubscriptionType: game_record.GameSubscriptionTypeManager,
+						Record: &game_record.GameSubscription{
+							Status: game_record.GameSubscriptionStatusActive,
+						},
+					},
 				},
 			},
 			{

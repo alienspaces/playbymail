@@ -5,6 +5,7 @@ import (
 
 	"gitlab.com/alienspaces/playbymail/core/domain"
 	coreerror "gitlab.com/alienspaces/playbymail/core/error"
+	coresql "gitlab.com/alienspaces/playbymail/core/sql"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 )
 
@@ -67,6 +68,20 @@ func (m *Domain) validateGameInstanceRecForCreate(rec *game_record.GameInstance)
 		if issue.Severity == ValidationSeverityError {
 			return InvalidField(issue.Field, rec.GameID, issue.Message)
 		}
+	}
+
+	// A manager subscription must exist for the game before instances can be created
+	managerSubs, err := m.GetManyGameSubscriptionRecs(&coresql.Options{
+		Params: []coresql.Param{
+			{Col: game_record.FieldGameSubscriptionGameID, Val: rec.GameID},
+			{Col: game_record.FieldGameSubscriptionSubscriptionType, Val: game_record.GameSubscriptionTypeManager},
+		},
+	})
+	if err != nil {
+		return coreerror.NewInternalError("failed checking manager subscriptions for game >%s<: %v", rec.GameID, err)
+	}
+	if len(managerSubs) == 0 {
+		return coreerror.NewInvalidDataError("game must have a manager subscription before creating instances")
 	}
 
 	return nil

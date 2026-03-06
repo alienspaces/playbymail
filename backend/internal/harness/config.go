@@ -93,8 +93,10 @@ const (
 
 // DataConfig -
 type DataConfig struct {
-	GameConfigs    []GameConfig
-	AccountConfigs []AccountConfig
+	GameConfigs             []GameConfig
+	AccountConfigs          []AccountConfig
+	GameSubscriptionConfigs []GameSubscriptionConfig  // Top-level subscriptions independent of accounts
+	SeedAccountRefs         map[string]string         // ref -> account_user_id (for pre-existing accounts)
 }
 
 type GameConfig struct {
@@ -140,6 +142,7 @@ type GameInstanceConfig struct {
 
 type GameSubscriptionConfig struct {
 	Reference        string   // Reference to the game_subscription record
+	AccountRef       string   // Reference to account (resolved from Data.Refs); used by top-level subscriptions
 	GameRef          string   // Reference to the game (required)
 	GameInstanceRefs []string // References to game_instances (optional, can link multiple instances)
 	SubscriptionType string   // Type of subscription (Player, Manager, Designer)
