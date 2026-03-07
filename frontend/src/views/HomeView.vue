@@ -65,15 +65,6 @@
     <div class="sections">
       <div class="section">
         <div class="section-icon">
-          <HandDrawnIcon type="person" color="blue" />
-        </div>
-        <h2>Play a Game</h2>
-        <p>Browse available play-by-mail games with open enrollment. Join a game and receive your turn sheets by email or post.</p>
-        <router-link to="/games" class="section-link" data-testid="home-catalog-link">Browse Games</router-link>
-      </div>
-
-      <div class="section">
-        <div class="section-icon">
           <HandDrawnIcon type="pencil" color="blue" />
         </div>
         <h2>Game Designer Studio</h2>
@@ -89,6 +80,15 @@
         <p>Subscribe to or purchase games, configure runtime parameters, review game states, process player turns, and
           provide player help.</p>
         <router-link to="/admin" class="section-link" data-testid="home-management-link">Go to Game Management</router-link>
+      </div>
+
+      <div class="section">
+        <div class="section-icon">
+          <HandDrawnIcon type="person" color="blue" />
+        </div>
+        <h2>Play a Game</h2>
+        <p>Browse available play-by-mail games with open enrollment. Join a game and receive your turn sheets by email or post.</p>
+        <router-link to="/games" class="section-link" data-testid="home-catalog-link">Browse Games</router-link>
       </div>
     </div>
   </div>

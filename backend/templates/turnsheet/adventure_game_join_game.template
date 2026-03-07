@@ -7,11 +7,11 @@
 }
 
 .main-content .account-info-section {
-    padding: 6px;
+    padding: 0;
 }
 
 .main-content .account-details {
-    padding: 4px 6px;
+    padding: 0;
 }
 
 .main-content .form-group {

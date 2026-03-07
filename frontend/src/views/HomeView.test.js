@@ -63,16 +63,16 @@ describe('HomeView', () => {
 
     // Check section headings
     const sectionHeadings = wrapper.findAll('.section h2')
-    expect(sectionHeadings[0].text()).toBe('Play a Game')
-    expect(sectionHeadings[1].text()).toBe('Game Designer Studio')
-    expect(sectionHeadings[2].text()).toBe('Game Management')
+    expect(sectionHeadings[0].text()).toBe('Game Designer Studio')
+    expect(sectionHeadings[1].text()).toBe('Game Management')
+    expect(sectionHeadings[2].text()).toBe('Play a Game')
 
     // Check navigation links
     const links = wrapper.findAll('.section-link')
     expect(links).toHaveLength(3)
-    expect(links[0].text()).toBe('Browse Games')
-    expect(links[1].text()).toBe('Go to Studio')
-    expect(links[2].text()).toBe('Go to Game Management')
+    expect(links[0].text()).toBe('Go to Studio')
+    expect(links[1].text()).toBe('Go to Game Management')
+    expect(links[2].text()).toBe('Browse Games')
   })
 
   it('has correct navigation link destinations', () => {
@@ -115,9 +115,9 @@ describe('HomeView', () => {
     const sectionDescriptions = wrapper.findAll('.section p')
     expect(sectionDescriptions).toHaveLength(3)
 
-    expect(sectionDescriptions[0].text()).toContain('Browse available play-by-mail games')
-    expect(sectionDescriptions[1].text()).toContain('Create, edit, and manage')
-    expect(sectionDescriptions[2].text()).toContain('Subscribe to or purchase')
+    expect(sectionDescriptions[0].text()).toContain('Create, edit, and manage')
+    expect(sectionDescriptions[1].text()).toContain('Subscribe to or purchase')
+    expect(sectionDescriptions[2].text()).toContain('Browse available play-by-mail games')
   })
 
   it('has proper semantic structure', () => {

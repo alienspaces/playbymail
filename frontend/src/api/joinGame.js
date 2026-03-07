@@ -1,10 +1,10 @@
-import { baseUrl, apiFetch, getAuthHeaders, handleApiError } from './baseUrl';
+import { baseUrl, handleApiError } from './baseUrl';
 
 const joinPath = (gameSubscriptionId) =>
   `${baseUrl}/api/v1/game-subscriptions/${gameSubscriptionId}/join`;
 
 export async function getJoinGameInfo(gameSubscriptionId) {
-  const res = await apiFetch(joinPath(gameSubscriptionId), {
+  const res = await fetch(joinPath(gameSubscriptionId), {
     headers: { 'Content-Type': 'application/json' },
   });
   await handleApiError(res, 'Failed to load game information');
@@ -12,17 +12,15 @@ export async function getJoinGameInfo(gameSubscriptionId) {
 }
 
 export async function getJoinSheet(gameSubscriptionId) {
-  const res = await apiFetch(`${joinPath(gameSubscriptionId)}/sheet`, {
-    headers: { ...getAuthHeaders() },
-  });
+  const res = await fetch(`${joinPath(gameSubscriptionId)}/sheet`);
   await handleApiError(res, 'Failed to load join game turn sheet');
   return await res.text();
 }
 
 export async function submitJoinGame(gameSubscriptionId, data) {
-  const res = await apiFetch(joinPath(gameSubscriptionId), {
+  const res = await fetch(joinPath(gameSubscriptionId), {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   });
   await handleApiError(res, 'Failed to submit join game');

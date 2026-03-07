@@ -1,30 +1,49 @@
-import { baseUrl, apiFetch, getAuthHeaders, handleApiError } from './baseUrl';
+import { baseUrl, apiFetch, handleApiError } from './baseUrl';
 
 const gsiPath = (gsiId) =>
   `${baseUrl}/api/v1/player/game-subscription-instances/${gsiId}`;
 
 /**
- * Verify game subscription instance turn sheet token
- * @param {string} gameSubscriptionInstanceID - Game subscription instance ID
- * @param {string} email - Account email address
- * @param {string} turnSheetToken - Turn sheet token from email link
+ * Verify game subscription instance turn sheet token.
+ * Email is optional -- when omitted the backend resolves the account from the token.
+ * @param {string} gameSubscriptionInstanceID
+ * @param {string} turnSheetToken
+ * @param {string} [email]
  * @returns {Promise<string>} Session token
  */
-export async function verifyGameSubscriptionToken(gameSubscriptionInstanceID, email, turnSheetToken) {
+export async function verifyGameSubscriptionToken(gameSubscriptionInstanceID, turnSheetToken, email) {
+  const body = { turn_sheet_token: turnSheetToken }
+  if (email) body.email = email
+
   const res = await fetch(
-    `${baseUrl}/api/v1/player/game-subscription-instances/${gameSubscriptionInstanceID}/verify-token`,
+    `${gsiPath(gameSubscriptionInstanceID)}/verify-token`,
     {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...getAuthHeaders(),
-      },
-      body: JSON.stringify({ email, turn_sheet_token: turnSheetToken }),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
     }
   );
   await handleApiError(res, 'Token verification failed');
   const data = await res.json();
   return data.session_token;
+}
+
+/**
+ * Request a new turn sheet token (e.g. when the current one has expired).
+ * The backend sends a fresh email with a new link.
+ * @param {string} gameSubscriptionInstanceID
+ * @param {string} email
+ */
+export async function requestNewTurnSheetToken(gameSubscriptionInstanceID, email) {
+  const res = await fetch(
+    `${gsiPath(gameSubscriptionInstanceID)}/request-token`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    }
+  );
+  await handleApiError(res, 'Failed to request new link');
 }
 
 /**

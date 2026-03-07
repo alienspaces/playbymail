@@ -78,6 +78,7 @@ const router = createRouter({
 
 // Navigation guard for auth
 router.beforeEach((to, from, next) => {
+  console.log('[main-router] navigating to:', to.fullPath, 'matched:', to.matched.length, 'routes')
   const authStore = useAuthStore();
   const sessionToken = authStore.sessionToken;
   if (to.meta.requiresAuth && !sessionToken) {

@@ -1,9 +1,28 @@
 <template>
   <div class="turn-sheet-view">
 
-    <!-- Loading -->
+    <!-- Loading (includes silent token verification) -->
     <div v-if="loading" class="ts-loading" data-testid="ts-loading">
       <p>Loading your turn sheets...</p>
+    </div>
+
+    <!-- Expired / invalid token — request new link -->
+    <div v-else-if="tokenExpired" class="ts-expired card" data-testid="ts-token-expired">
+      <h1 class="hand-drawn-title">Link Expired</h1>
+      <p>This turn sheet link is no longer valid. Enter your email to receive a fresh link.</p>
+      <form @submit.prevent="onRequestNewLink" class="request-link-form">
+        <div class="form-group">
+          <label for="email">Email address</label>
+          <input v-model="requestEmail" id="email" type="email" required autofocus data-testid="expired-email-input" />
+        </div>
+        <div class="form-actions">
+          <button type="submit" :disabled="requestingLink" data-testid="expired-request-btn">
+            {{ requestingLink ? 'Sending...' : 'Send New Link' }}
+          </button>
+        </div>
+      </form>
+      <p v-if="requestLinkMessage" class="success-inline" data-testid="expired-success">{{ requestLinkMessage }}</p>
+      <p v-if="requestLinkError" class="error-message" data-testid="expired-error">{{ requestLinkError }}</p>
     </div>
 
     <!-- Error loading -->
@@ -95,16 +114,31 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { getGSITurnSheets, submitGSITurnSheets, downloadGSITurnSheetPDF, uploadGSITurnSheetScan } from '../api/player'
+import { useAuthStore } from '../stores/auth'
+import {
+  verifyGameSubscriptionToken,
+  requestNewTurnSheetToken,
+  getGSITurnSheets,
+  submitGSITurnSheets,
+  downloadGSITurnSheetPDF,
+  uploadGSITurnSheetScan,
+} from '../api/player'
 
 const route = useRoute()
+const authStore = useAuthStore()
 
 const loading = ref(true)
 const loadError = ref(null)
+const tokenExpired = ref(false)
 const turnSheets = ref([])
 const submitting = ref(false)
 const submitError = ref(null)
 const submitted = ref(false)
+
+const requestEmail = ref('')
+const requestingLink = ref(false)
+const requestLinkMessage = ref(null)
+const requestLinkError = ref(null)
 
 const allCompleted = computed(() =>
   turnSheets.value.length > 0 && turnSheets.value.every((s) => s.is_completed)
@@ -119,16 +153,52 @@ function formatSheetType(sheetType) {
   return labels[sheetType] ?? sheetType
 }
 
+async function authenticateWithToken() {
+  const token = route.params.turn_sheet_token
+  if (!token) return true
+
+  if (authStore.sessionToken) return true
+
+  const gsiId = route.params.game_subscription_instance_id
+  try {
+    const sessionToken = await verifyGameSubscriptionToken(gsiId, token)
+    authStore.setSessionToken(sessionToken)
+    return true
+  } catch {
+    return false
+  }
+}
+
 async function loadTurnSheets() {
   loading.value = true
   loadError.value = null
+  tokenExpired.value = false
   try {
+    const authenticated = await authenticateWithToken()
+    if (!authenticated) {
+      tokenExpired.value = true
+      return
+    }
     const res = await getGSITurnSheets(route.params.game_subscription_instance_id)
     turnSheets.value = res.turn_sheets ?? []
   } catch (err) {
     loadError.value = err.message || 'Failed to load turn sheets. Please try again.'
   } finally {
     loading.value = false
+  }
+}
+
+async function onRequestNewLink() {
+  requestLinkError.value = null
+  requestLinkMessage.value = null
+  requestingLink.value = true
+  try {
+    await requestNewTurnSheetToken(route.params.game_subscription_instance_id, requestEmail.value)
+    requestLinkMessage.value = 'A new link has been sent to your email. Please check your inbox.'
+  } catch (err) {
+    requestLinkError.value = err.message || 'Failed to send a new link. Please try again.'
+  } finally {
+    requestingLink.value = false
   }
 }
 
@@ -139,7 +209,6 @@ async function onUploadScan(turnSheetId, event) {
   submitError.value = null
   try {
     await uploadGSITurnSheetScan(route.params.game_subscription_instance_id, turnSheetId, file)
-    // Refresh the turn sheet list to reflect updated scan data
     await loadTurnSheets()
   } catch (err) {
     submitError.value = err.message || 'Failed to upload scanned image. Please try again.'
@@ -340,5 +409,69 @@ onMounted(loadTurnSheets)
   text-align: center;
   padding: 3rem 0;
   color: var(--color-text-muted, #6b7280);
+}
+
+.ts-expired {
+  text-align: center;
+}
+
+.ts-expired .hand-drawn-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+.request-link-form {
+  max-width: 360px;
+  margin: 1.5rem auto 0;
+  text-align: left;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-group label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.3rem;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border: 1.5px solid var(--color-border, #e2e8f0);
+  border-radius: 8px;
+  font-size: 1rem;
+}
+
+.form-actions {
+  margin-top: 1rem;
+}
+
+.form-actions button {
+  width: 100%;
+  background: #006ecd;
+  color: #fff;
+  border: none;
+  padding: 0.75rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.form-actions button:disabled {
+  background: #93c5fd;
+  cursor: not-allowed;
+}
+
+.success-inline {
+  color: #065f46;
+  background: #d1fae5;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin-top: 1rem;
+  font-size: 0.9rem;
 }
 </style>

@@ -96,7 +96,7 @@ func gameSubscriptionJoinHandlerConfig(l logger.Logger) (map[string]server.Handl
 		Path:        "/api/v1/game-subscriptions/:game_subscription_id/join/sheet",
 		HandlerFunc: getJoinSheetHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
-			AuthenTypes: []server.AuthenticationType{server.AuthenticationTypeToken},
+			AuthenTypes: []server.AuthenticationType{server.AuthenticationTypeOptionalToken},
 		},
 		DocumentationConfig: server.DocumentationConfig{
 			Document:    true,
@@ -124,7 +124,7 @@ func gameSubscriptionJoinHandlerConfig(l logger.Logger) (map[string]server.Handl
 		Path:        "/api/v1/game-subscriptions/:game_subscription_id/join",
 		HandlerFunc: submitJoinHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
-			AuthenTypes: []server.AuthenticationType{server.AuthenticationTypeToken},
+			AuthenTypes: []server.AuthenticationType{server.AuthenticationTypePublic},
 			ValidateRequestSchema: jsonschema.SchemaWithReferences{
 				Main: jsonschema.Schema{
 					Location: "api/player_schema",
@@ -359,7 +359,7 @@ func getJoinSheetHandler(w http.ResponseWriter, r *http.Request, pp httprouter.P
 	instructions := turnsheet.DefaultJoinGameInstructions()
 	turnNumber := 0
 
-	sheetData, err := json.Marshal(&turnsheet.JoinGameData{
+	joinData := &turnsheet.JoinGameData{
 		TurnSheetTemplateData: turnsheet.TurnSheetTemplateData{
 			GameName:              &gameRec.Name,
 			GameType:              &gameRec.GameType,
@@ -376,7 +376,19 @@ func getJoinSheetHandler(w http.ResponseWriter, r *http.Request, pp httprouter.P
 			PhysicalPost:  deliveryPost,
 		},
 		AccountEmail: accountEmail,
-	})
+	}
+
+	backgroundImage, err := mm.GetGameTurnSheetImageDataURL(gameRec.ID, joinGameSheetType)
+	if err != nil {
+		l.Warn("failed to get turn sheet background image >%v<", err)
+	} else if backgroundImage != "" {
+		joinData.BackgroundImage = &backgroundImage
+		l.Info("loaded background image for join sheet, length >%d<", len(backgroundImage))
+	} else {
+		l.Info("no background image found for join sheet")
+	}
+
+	sheetData, err := json.Marshal(joinData)
 	if err != nil {
 		l.Warn("failed to marshal join game sheet data >%v<", err)
 		return err
@@ -406,16 +418,6 @@ func submitJoinHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Par
 
 	mm := m.(*domain.Domain)
 
-	authenData := server.GetRequestAuthenData(l, r)
-	if authenData == nil || !authenData.IsAuthenticated() {
-		return coreerror.NewUnauthorizedError()
-	}
-
-	accountID := authenData.AccountUser.AccountID
-	accountUserID := authenData.AccountUser.ID
-
-	l.Info("authenticated join game submit for account >%s< user >%s<", accountID, accountUserID)
-
 	subRec, err := resolveManagerSubscription(l, pp, mm)
 	if err != nil {
 		return err
@@ -425,6 +427,43 @@ func submitJoinHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Par
 	if _, err := server.ReadRequest(l, r, &req); err != nil {
 		l.Warn("failed to read request >%v<", err)
 		return err
+	}
+
+	if req.Email == "" {
+		return coreerror.NewInvalidDataError("email is required")
+	}
+
+	// Resolve the account: use session if authenticated, otherwise find-or-create by email
+	var accountID, accountUserID string
+
+	authenData := server.GetRequestAuthenData(l, r)
+	if authenData != nil && authenData.IsAuthenticated() {
+		accountID = authenData.AccountUser.AccountID
+		accountUserID = authenData.AccountUser.ID
+		l.Info("authenticated join game submit for account >%s< user >%s<", accountID, accountUserID)
+	} else {
+		accountUserRec, err := mm.GetAccountRecByEmail(req.Email)
+		if err != nil {
+			l.Warn("failed to look up account by email >%v<", err)
+			return err
+		}
+		if accountUserRec != nil {
+			accountID = accountUserRec.AccountID
+			accountUserID = accountUserRec.ID
+			l.Info("found existing account for email >%s< account >%s< user >%s<", req.Email, accountID, accountUserID)
+		} else {
+			newAccountUserRec := &account_record.AccountUser{
+				Email: req.Email,
+			}
+			accountRec, createdUserRec, _, err := mm.CreateAccount(newAccountUserRec)
+			if err != nil {
+				l.Warn("failed to create account for email >%s< >%v<", req.Email, err)
+				return err
+			}
+			accountID = accountRec.ID
+			accountUserID = createdUserRec.ID
+			l.Info("created new account for email >%s< account >%s< user >%s<", req.Email, accountID, accountUserID)
+		}
 	}
 
 	// Auto-assign: find an available instance under this subscription.

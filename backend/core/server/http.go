@@ -337,6 +337,7 @@ func (rnr *Runner) registerDefaultStaticRoutes(r *httprouter.Router) (*httproute
 		// Create a custom NotFound handler that implements SPA fallback
 		r.NotFound = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			filePath := r.URL.Path
+			l.Info("(core) NotFound handler invoked: path >%s< method >%s<", filePath, r.Method)
 
 			// Check if the requested path is a file that exists
 			fullPath := rnr.Config.AppHome + filePath
@@ -344,6 +345,7 @@ func (rnr *Runner) registerDefaultStaticRoutes(r *httprouter.Router) (*httproute
 			
 			// If file exists and is not a directory, serve it
 			if err == nil && !fileInfo.IsDir() {
+				l.Info("(core) STATIC FILE found: >%s< (size: %d)", filePath, fileInfo.Size())
 				// For HTML files, serve directly to avoid FileServer redirects
 				if strings.HasSuffix(filePath, ".html") {
 					if err := serveHTML(w, filePath); err != nil {
@@ -377,25 +379,25 @@ func (rnr *Runner) registerDefaultStaticRoutes(r *httprouter.Router) (*httproute
 				}
 			}
 
-			// File/directory doesn't exist - SPA fallback (except for API routes)
-			if !strings.HasPrefix(filePath, "/api/") && !strings.HasPrefix(filePath, "/v1/") && !strings.HasPrefix(filePath, "/healthz") && !strings.HasPrefix(filePath, "/liveness") {
-				// Player app routes go to player/index.html
-				if strings.HasPrefix(filePath, "/player/") {
-					l.Debug("(core) serving player/index.html for player app route >%s<", filePath)
-					if err := serveHTML(w, "/player/index.html"); err != nil {
-						l.Warn("(core) failed to serve player/index.html: %v", err)
-						http.NotFound(w, r)
-					}
-					return
-				}
-				// All other routes go to main app index.html
-				l.Debug("(core) serving index.html for SPA route >%s<", filePath)
-				if err := serveHTML(w, "/index.html"); err != nil {
-					l.Warn("(core) failed to serve index.html: %v", err)
+		// File/directory doesn't exist - SPA fallback (except for API routes)
+		if !strings.HasPrefix(filePath, "/api/") && !strings.HasPrefix(filePath, "/v1/") && !strings.HasPrefix(filePath, "/healthz") && !strings.HasPrefix(filePath, "/liveness") {
+			// Player app routes go to player/index.html
+			if strings.HasPrefix(filePath, "/player/") {
+				l.Info("(core) SPA FALLBACK: serving player/index.html for >%s< (method: %s, host: %s, user-agent: %s)", filePath, r.Method, r.Host, r.UserAgent())
+				if err := serveHTML(w, "/player/index.html"); err != nil {
+					l.Warn("(core) FAILED to serve player/index.html: %v", err)
 					http.NotFound(w, r)
 				}
 				return
 			}
+			// All other routes go to main app index.html
+			l.Info("(core) SPA FALLBACK: serving index.html for >%s< (method: %s, host: %s, user-agent: %s)", filePath, r.Method, r.Host, r.UserAgent())
+			if err := serveHTML(w, "/index.html"); err != nil {
+				l.Warn("(core) FAILED to serve index.html: %v", err)
+				http.NotFound(w, r)
+			}
+			return
+		}
 
 			// For API routes or other non-SPA routes, return 404
 			http.NotFound(w, r)

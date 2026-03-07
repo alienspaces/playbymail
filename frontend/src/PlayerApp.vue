@@ -7,6 +7,7 @@
 
 <script setup>
 import PlayerSupportFooter from './components/PlayerSupportFooter.vue'
+console.log('[PlayerApp] mounted, current URL:', window.location.href)
 </script>
 
 <style>

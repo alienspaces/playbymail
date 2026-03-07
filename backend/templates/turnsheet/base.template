@@ -56,12 +56,19 @@
             margin-bottom: 2mm;
         }
         
-        /* Page wrapper contains both background and content */
+        /*
+         * Page wrapper defaults to fluid layout for browser display.
+         * We avoid fixed mm/cm units, @media screen, CSS variables for
+         * layout, and other modern features so this template renders
+         * correctly in the widest range of browsers and webmail clients.
+         * Fixed A4 dimensions are applied only inside @media print below,
+         * where they are needed for PDF generation.
+         */
         .page-wrapper {
             position: relative;
-            width: var(--page-width);
-            height: var(--page-height);
-            overflow: hidden;
+            width: 100%;
+            height: auto;
+            overflow: visible;
         }
         
         /* Single background image covering the page */
@@ -70,7 +77,7 @@
             top: 0;
             left: 0;
             width: 100%;
-            height: var(--page-height);
+            height: 100%;
             object-fit: cover;
             object-position: center;
             pointer-events: none;
@@ -83,17 +90,20 @@
             width: 100%;
         }
 
-        /* Main container for all turn sheet content sections */
+        /*
+         * Content container fills available width with a small fixed
+         * margin for browser display. Narrow A4-style margins are
+         * applied in @media print for PDF output only.
+         */
         .content-container {
-            width: var(--content-container-width);
-            margin: var(--content-container-margin-vertical) var(--content-container-margin-horizontal);
+            margin: 6px 16px;
             box-sizing: border-box;
         }
 
         /* Common container for all content sections */
         .content-section {
             margin: 0 0 6mm 0;
-            padding: 2mm;
+            padding: 2mm 16px;
             box-sizing: border-box;
             border-radius: 8px;
             background-color: rgba(255, 255, 255, 0.75);
@@ -130,7 +140,7 @@
             margin: 0;
             color: #555;
             line-height: 1.4;
-            max-width: 560px;
+            max-width: 85%;
             margin-left: auto;
             margin-right: auto;
             text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8);
@@ -224,14 +234,16 @@
             color: #6c757d;
         }
 
+        /*
+         * Footer uses normal document flow for browser display so it
+         * sits below the content instead of overlapping it.
+         * Absolute positioning is applied in @media print where the
+         * page has a fixed A4 height.
+         */
         .footer-content {
-            position: absolute;
-            bottom: var(--content-container-margin-vertical);
-            left: 50%;
-            transform: translateX(-50%);
-            width: var(--content-container-width);
-            margin: 0;
-            padding: 4mm 2mm;
+            position: relative;
+            margin: 0 16px 16px;
+            padding: 4px 2px;
             background-color: rgba(255, 255, 255, 0.7);
             border-top: 1px solid #dee2e6;
             border-radius: 8px;
@@ -328,6 +340,32 @@
                 box-shadow: none;
                 margin: 0;
                 padding: 0;
+            }
+
+            /* Lock to A4 page size for PDF/print output */
+            .page-wrapper {
+                width: 210mm;
+                height: 297mm;
+                overflow: hidden;
+            }
+
+            .content-container {
+                width: 168mm;
+                margin: 6mm 21mm;
+            }
+
+            .background-image {
+                height: 297mm;
+            }
+
+            .footer-content {
+                position: absolute;
+                bottom: 6mm;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 168mm;
+                margin: 0;
+                padding: 4mm 2mm;
             }
         }
     </style>

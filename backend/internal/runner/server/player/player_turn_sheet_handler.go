@@ -736,8 +736,8 @@ func verifyGameSubscriptionTokenHandler(w http.ResponseWriter, r *http.Request, 
 		return err
 	}
 
-	// Verify email matches
-	if accountRec.Email != req.Email {
+	// Verify email matches if provided (optional for direct-link access)
+	if req.Email != "" && accountRec.Email != req.Email {
 		l.Warn("email >%s< does not match account email >%s<", req.Email, accountRec.Email)
 		return coreerror.NewInvalidDataError("email does not match the account for this subscription")
 	}
@@ -749,7 +749,7 @@ func verifyGameSubscriptionTokenHandler(w http.ResponseWriter, r *http.Request, 
 		return err
 	}
 
-	l.Info("verified game subscription instance token for email >%s<, session token >%s<", req.Email, sessionToken)
+	l.Info("verified game subscription instance token for account >%s<, session token >%s<", accountRec.Email, sessionToken)
 
 	return server.WriteResponse(l, w, http.StatusOK, mapper.MapVerifyGameSubscriptionTokenResponse(sessionToken))
 }

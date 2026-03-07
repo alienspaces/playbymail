@@ -3,20 +3,17 @@ import { test, expect } from '@playwright/test'
 test.describe('Join Game Flow', () => {
   test.skip(!!process.env.CI, 'Requires production build served by backend')
 
-  test('unauthenticated user is redirected to login from join game page', async ({ page }) => {
-    await page.goto('http://localhost:8080/player/join-game/test-subscription-id')
-
-    await page.waitForURL('**/login?redirect=**', { timeout: 5000 })
-
-    expect(page.url()).toContain('/login')
-    expect(page.url()).toContain('redirect=%2Fplayer%2Fjoin-game%2Ftest-subscription-id')
-  })
-
-  test('join game page uses player app bundle not main app bundle', async ({ page }) => {
+  test('unauthenticated user sees join game page directly without login redirect', async ({ page }) => {
     await page.goto('http://localhost:8080/player/join-game/test-subscription-id')
     await page.waitForLoadState('domcontentloaded')
 
-    const html = await page.content()
+    expect(page.url()).toContain('/player/join-game/')
+    await expect(page.locator('#player-app').first()).toBeVisible()
+  })
+
+  test('join game page uses player app bundle not main app bundle', async ({ request }) => {
+    const response = await request.get('http://localhost:8080/player/join-game/test-subscription-id')
+    const html = await response.text()
     expect(html).toMatch(/assets\/player-[a-zA-Z0-9_-]+\.js/)
     expect(html).toContain('player-app')
   })

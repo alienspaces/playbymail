@@ -7,6 +7,20 @@ import vueDevTools from 'vite-plugin-vue-devtools'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
+function playerAppFallback() {
+  return {
+    name: 'player-app-fallback',
+    configureServer(server) {
+      server.middlewares.use((req, _res, next) => {
+        if (req.url && req.url.startsWith('/player/') && !req.url.includes('.')) {
+          req.url = '/player/index.html'
+        }
+        next()
+      })
+    },
+  }
+}
+
 // https://vite.dev/config/
 export default defineConfig({
   server: {
@@ -27,6 +41,7 @@ export default defineConfig({
     },
   },
   plugins: [
+    playerAppFallback(),
     vue(),
     vueDevTools(),
   ],

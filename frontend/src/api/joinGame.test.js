@@ -1,14 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-const mockApiFetch = vi.fn()
+const mockFetch = vi.fn()
+globalThis.fetch = mockFetch
+
 const mockHandleApiError = vi.fn()
-const mockGetAuthHeaders = vi.fn()
 
 vi.mock('./baseUrl', () => ({
   baseUrl: 'http://localhost:8080',
-  apiFetch: (...args) => mockApiFetch(...args),
   handleApiError: (...args) => mockHandleApiError(...args),
-  getAuthHeaders: (...args) => mockGetAuthHeaders(...args),
 }))
 
 import { getJoinGameInfo, getJoinSheet, submitJoinGame } from './joinGame'
@@ -20,20 +19,19 @@ describe('joinGame API', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockHandleApiError.mockImplementation(() => {})
-    mockGetAuthHeaders.mockReturnValue({ Authorization: 'Bearer test-token' })
   })
 
   describe('getJoinGameInfo', () => {
     it('calls GET /api/v1/game-subscriptions/:id/join', async () => {
       const data = { game_subscription_id: SUB_ID, game_name: 'Test Game' }
-      mockApiFetch.mockResolvedValue({
+      mockFetch.mockResolvedValue({
         ok: true,
         json: () => Promise.resolve({ data }),
       })
 
       const result = await getJoinGameInfo(SUB_ID)
 
-      expect(mockApiFetch).toHaveBeenCalledWith(
+      expect(mockFetch).toHaveBeenCalledWith(
         `${BASE}/${SUB_ID}/join`,
         expect.objectContaining({ headers: { 'Content-Type': 'application/json' } })
       )
@@ -42,7 +40,7 @@ describe('joinGame API', () => {
 
     it('calls handleApiError on failure', async () => {
       const errorRes = { ok: false, status: 404 }
-      mockApiFetch.mockResolvedValue(errorRes)
+      mockFetch.mockResolvedValue(errorRes)
       mockHandleApiError.mockRejectedValue(new Error('Failed to load game information'))
 
       await expect(getJoinGameInfo(SUB_ID)).rejects.toThrow('Failed to load game information')
@@ -51,27 +49,22 @@ describe('joinGame API', () => {
   })
 
   describe('getJoinSheet', () => {
-    it('calls GET /api/v1/game-subscriptions/:id/join/sheet with auth headers', async () => {
+    it('calls GET /api/v1/game-subscriptions/:id/join/sheet without auth', async () => {
       const html = '<html><body>Turn sheet</body></html>'
-      mockApiFetch.mockResolvedValue({
+      mockFetch.mockResolvedValue({
         ok: true,
         text: () => Promise.resolve(html),
       })
 
       const result = await getJoinSheet(SUB_ID)
 
-      expect(mockApiFetch).toHaveBeenCalledWith(
-        `${BASE}/${SUB_ID}/join/sheet`,
-        expect.objectContaining({
-          headers: expect.objectContaining({ Authorization: 'Bearer test-token' }),
-        })
-      )
+      expect(mockFetch).toHaveBeenCalledWith(`${BASE}/${SUB_ID}/join/sheet`)
       expect(result).toBe(html)
     })
 
     it('calls handleApiError on failure', async () => {
-      const errorRes = { ok: false, status: 401 }
-      mockApiFetch.mockResolvedValue(errorRes)
+      const errorRes = { ok: false, status: 500 }
+      mockFetch.mockResolvedValue(errorRes)
       mockHandleApiError.mockRejectedValue(new Error('Failed to load join game turn sheet'))
 
       await expect(getJoinSheet(SUB_ID)).rejects.toThrow('Failed to load join game turn sheet')
@@ -95,8 +88,8 @@ describe('joinGame API', () => {
       delivery_physical_post: false,
     }
 
-    it('calls POST /api/v1/game-subscriptions/:id/join with auth headers and submit data', async () => {
-      mockApiFetch.mockResolvedValue({
+    it('calls POST /api/v1/game-subscriptions/:id/join without auth headers', async () => {
+      mockFetch.mockResolvedValue({
         ok: true,
         json: () =>
           Promise.resolve({
@@ -110,14 +103,11 @@ describe('joinGame API', () => {
 
       const result = await submitJoinGame(SUB_ID, submitData)
 
-      expect(mockApiFetch).toHaveBeenCalledWith(
+      expect(mockFetch).toHaveBeenCalledWith(
         `${BASE}/${SUB_ID}/join`,
         expect.objectContaining({
           method: 'POST',
-          headers: expect.objectContaining({
-            'Content-Type': 'application/json',
-            Authorization: 'Bearer test-token',
-          }),
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(submitData),
         })
       )
@@ -126,7 +116,7 @@ describe('joinGame API', () => {
 
     it('calls handleApiError on failure', async () => {
       const errorRes = { ok: false, status: 400 }
-      mockApiFetch.mockResolvedValue(errorRes)
+      mockFetch.mockResolvedValue(errorRes)
       mockHandleApiError.mockRejectedValue(new Error('Failed to submit join game'))
 
       await expect(submitJoinGame(SUB_ID, submitData)).rejects.toThrow(

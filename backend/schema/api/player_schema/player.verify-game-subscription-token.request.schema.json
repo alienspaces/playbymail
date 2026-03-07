@@ -13,7 +13,6 @@
         }
     },
     "required": [
-        "email",
         "turn_sheet_token"
     ]
 }

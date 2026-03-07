@@ -59,6 +59,8 @@ import { getJoinSheet, submitJoinGame } from '../api/joinGame'
 
 const route = useRoute()
 
+console.log('[PlayerJoinGame] component setup, route params:', JSON.stringify(route.params))
+
 const loading = ref(true)
 const loadError = ref(null)
 const step = ref('form')
@@ -111,14 +113,18 @@ function onIframeLoad() {
 }
 
 async function loadSheet() {
+  console.log('[PlayerJoinGame] loadSheet called, game_subscription_id:', route.params.game_subscription_id)
   loading.value = true
   loadError.value = null
   try {
     turnSheetHtml.value = await getJoinSheet(route.params.game_subscription_id)
+    console.log('[PlayerJoinGame] loadSheet success, html length:', turnSheetHtml.value?.length)
   } catch (err) {
+    console.error('[PlayerJoinGame] loadSheet error:', err)
     loadError.value = err.message || 'Failed to load the join game turn sheet. Please try again.'
   } finally {
     loading.value = false
+    console.log('[PlayerJoinGame] loadSheet done, loading:', loading.value, 'loadError:', loadError.value, 'step:', step.value)
   }
 }
 
@@ -147,14 +153,19 @@ async function onSubmit() {
   }
 }
 
-onMounted(loadSheet)
+onMounted(() => {
+  console.log('[PlayerJoinGame] onMounted, calling loadSheet')
+  loadSheet()
+})
 </script>
 
 <style scoped>
 .join-game-view {
-  max-width: 900px;
+  width: 100%;
+  max-width: 1200px;
   margin: var(--space-lg, 1.5rem) auto;
   padding: var(--space-md, 1rem);
+  box-sizing: border-box;
 }
 
 .join-loading {

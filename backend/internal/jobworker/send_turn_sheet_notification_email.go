@@ -165,8 +165,8 @@ func (w *SendTurnSheetNotificationEmailWorker) DoWork(ctx context.Context, m *do
 		return nil, err
 	}
 
-	// Build turn sheet viewer login URL
-	turnSheetPath := fmt.Sprintf("/player/game-subscription-instances/%s/login/%s", j.Args.GameSubscriptionInstanceID, turnSheetToken)
+	// Build direct turn sheet viewer URL (token is verified automatically on page load)
+	turnSheetPath := fmt.Sprintf("/player/game-subscription-instances/%s/turn-sheets/%s", j.Args.GameSubscriptionInstanceID, turnSheetToken)
 	turnSheetURL := fmt.Sprintf("%s%s", w.Config.AppHost, turnSheetPath)
 
 	// Format expiration date/time
