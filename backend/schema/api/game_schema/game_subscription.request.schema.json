@@ -31,7 +31,6 @@
     },
     "required": [
         "game_id",
-        "account_id",
         "subscription_type"
     ],
     "additionalProperties": false

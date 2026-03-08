@@ -9,7 +9,7 @@ vi.mock('./baseUrl', () => ({
   handleApiError: (...args) => mockHandleApiError(...args),
 }))
 
-import { listCatalogGames } from './catalog'
+import { listCatalogGames, listCatalogGameInstances } from './catalog'
 
 describe('catalog API', () => {
   beforeEach(() => {
@@ -51,6 +51,34 @@ describe('catalog API', () => {
 
       await expect(listCatalogGames()).rejects.toThrow('Failed to fetch game catalog')
       expect(mockHandleApiError).toHaveBeenCalledWith(errorRes, 'Failed to fetch game catalog')
+    })
+  })
+
+  describe('listCatalogGameInstances', () => {
+    it('calls GET /api/v1/catalog/game-instances with no auth headers', async () => {
+      const instanceData = [{ game_instance_id: 'inst-1', game_id: 'g1', game_name: 'Test Game', game_type: 'adventure', game_description: 'A game', turn_duration_hours: 168, game_subscription_id: 'sub-1', required_player_count: 4, delivery_email: true, delivery_physical_local: false, delivery_physical_post: false, is_closed_testing: false, created_at: '2026-01-01T00:00:00Z' }]
+      mockApiFetch.mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ data: instanceData }),
+      })
+
+      const result = await listCatalogGameInstances()
+
+      expect(mockApiFetch).toHaveBeenCalledWith(
+        'http://localhost:8080/api/v1/catalog/game-instances',
+        expect.objectContaining({ headers: { 'Content-Type': 'application/json' } })
+      )
+      expect(result.data).toEqual(instanceData)
+    })
+
+    it('returns empty data array when no instances available', async () => {
+      mockApiFetch.mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ data: [] }),
+      })
+
+      const result = await listCatalogGameInstances()
+      expect(result.data).toEqual([])
     })
   })
 })

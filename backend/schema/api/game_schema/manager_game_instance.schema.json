@@ -1,0 +1,72 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "http://playbymail.games/schema/game_schema/manager_game_instance.schema.json",
+    "title": "ManagerGameInstance",
+    "type": "object",
+    "properties": {
+        "game_id": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
+        },
+        "game_name": {
+            "type": "string"
+        },
+        "game_type": {
+            "type": "string"
+        },
+        "game_description": {
+            "type": "string"
+        },
+        "game_subscription_id": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
+        },
+        "game_instance_id": {
+            "type": ["string", "null"]
+        },
+        "instance_status": {
+            "type": ["string", "null"],
+            "enum": ["created", "started", "paused", "completed", "cancelled", null]
+        },
+        "current_turn": {
+            "type": ["integer", "null"]
+        },
+        "required_player_count": {
+            "type": ["integer", "null"]
+        },
+        "delivery_email": {
+            "type": ["boolean", "null"]
+        },
+        "delivery_physical_post": {
+            "type": ["boolean", "null"]
+        },
+        "delivery_physical_local": {
+            "type": ["boolean", "null"]
+        },
+        "is_closed_testing": {
+            "type": ["boolean", "null"]
+        },
+        "started_at": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/updated_at"
+        },
+        "next_turn_due_at": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/updated_at"
+        },
+        "instance_created_at": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/updated_at"
+        },
+        "created_at": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/created_at"
+        },
+        "updated_at": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/updated_at"
+        }
+    },
+    "required": [
+        "game_id",
+        "game_name",
+        "game_type",
+        "game_description",
+        "game_subscription_id",
+        "created_at"
+    ],
+    "additionalProperties": false
+}

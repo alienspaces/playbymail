@@ -11,6 +11,54 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 )
 
+// GetManyAccountGameViewRecs returns account game view records
+func (m *Domain) GetManyAccountGameViewRecs(opts *coresql.Options) ([]*game_record.AccountGameView, error) {
+	l := m.Logger("GetManyAccountGameViewRecs")
+
+	l.Debug("getting many account_game_view records opts >%#v<", opts)
+
+	r := m.AccountGameViewRepository()
+
+	recs, err := r.GetMany(opts)
+	if err != nil {
+		return nil, databaseError(err)
+	}
+
+	return recs, nil
+}
+
+// GetManyManagerGameInstanceViewRecs returns manager game instance view records
+func (m *Domain) GetManyManagerGameInstanceViewRecs(opts *coresql.Options) ([]*game_record.ManagerGameInstanceView, error) {
+	l := m.Logger("GetManyManagerGameInstanceViewRecs")
+
+	l.Debug("getting many manager_game_instance_view records opts >%#v<", opts)
+
+	r := m.ManagerGameInstanceViewRepository()
+
+	recs, err := r.GetMany(opts)
+	if err != nil {
+		return nil, databaseError(err)
+	}
+
+	return recs, nil
+}
+
+// GetManyCatalogGameInstanceViewRecs returns catalog game instance view records
+func (m *Domain) GetManyCatalogGameInstanceViewRecs(opts *coresql.Options) ([]*game_record.CatalogGameInstanceView, error) {
+	l := m.Logger("GetManyCatalogGameInstanceViewRecs")
+
+	l.Debug("getting many catalog_game_instance_view records opts >%#v<", opts)
+
+	r := m.CatalogGameInstanceViewRepository()
+
+	recs, err := r.GetMany(opts)
+	if err != nil {
+		return nil, databaseError(err)
+	}
+
+	return recs, nil
+}
+
 // GetManyGameRecs -
 func (m *Domain) GetManyGameRecs(opts *coresql.Options) ([]*game_record.Game, error) {
 	l := m.Logger("GetManyGameRecs")

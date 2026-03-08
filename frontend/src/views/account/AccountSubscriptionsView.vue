@@ -165,9 +165,9 @@ export default {
     },
     formatGameSubscriptionType(type) {
       const types = {
-        Player: 'Player',
-        Manager: 'Manager',
-        Designer: 'Designer'
+        player: 'Player',
+        manager: 'Manager',
+        designer: 'Designer'
       }
       return types[type] || type
     },
@@ -205,7 +205,7 @@ export default {
     getGameSubscriptionActions(subscription) {
       const actions = []
       // Only allow cancelling Player and Manager subscriptions
-      if (subscription.subscription_type === 'Player' || subscription.subscription_type === 'Manager') {
+      if (subscription.subscription_type === 'player' || subscription.subscription_type === 'manager') {
         actions.push({
           key: 'cancel',
           label: 'Cancel',

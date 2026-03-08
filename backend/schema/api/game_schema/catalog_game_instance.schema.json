@@ -1,0 +1,65 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "http://playbymail.games/schema/game_schema/catalog_game_instance.schema.json",
+    "title": "CatalogGameInstance",
+    "type": "object",
+    "properties": {
+        "game_instance_id": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
+        },
+        "game_id": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
+        },
+        "game_name": {
+            "type": "string"
+        },
+        "game_type": {
+            "type": "string"
+        },
+        "game_description": {
+            "type": "string"
+        },
+        "turn_duration_hours": {
+            "type": "integer",
+            "minimum": 1
+        },
+        "game_subscription_id": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
+        },
+        "required_player_count": {
+            "type": "integer",
+            "minimum": 0
+        },
+        "delivery_email": {
+            "type": "boolean"
+        },
+        "delivery_physical_post": {
+            "type": "boolean"
+        },
+        "delivery_physical_local": {
+            "type": "boolean"
+        },
+        "is_closed_testing": {
+            "type": "boolean"
+        },
+        "created_at": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/created_at"
+        }
+    },
+    "required": [
+        "game_instance_id",
+        "game_id",
+        "game_name",
+        "game_type",
+        "game_description",
+        "turn_duration_hours",
+        "game_subscription_id",
+        "required_player_count",
+        "delivery_email",
+        "delivery_physical_post",
+        "delivery_physical_local",
+        "is_closed_testing",
+        "created_at"
+    ],
+    "additionalProperties": false
+}

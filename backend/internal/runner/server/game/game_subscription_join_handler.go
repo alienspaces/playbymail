@@ -223,6 +223,8 @@ func aggregateSubscriptionInstances(l logger.Logger, mm *domain.Domain, subID st
 func getJoinInfoHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = logging.LoggerWithFunctionContext(l, packageName, "getJoinInfoHandler")
 
+	l.Info("getting join info with path params >%#v<", pp)
+
 	mm := m.(*domain.Domain)
 
 	subRec, err := resolveManagerSubscription(l, pp, mm)
@@ -271,11 +273,15 @@ func getJoinInfoHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Pa
 		},
 	}
 
+	l.Info("responding with join info for subscription >%s< game >%s< with >%d< available instances", subRec.ID, gameRec.Name, len(instances))
+
 	return server.WriteResponse(l, w, http.StatusOK, res)
 }
 
 func verifyJoinEmailHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = logging.LoggerWithFunctionContext(l, packageName, "verifyJoinEmailHandler")
+
+	l.Info("verifying join email with path params >%#v<", pp)
 
 	var req player_schema.JoinGameVerifyEmailRequest
 	if _, err := server.ReadRequest(l, r, &req); err != nil {
@@ -301,11 +307,15 @@ func verifyJoinEmailHandler(w http.ResponseWriter, r *http.Request, pp httproute
 		},
 	}
 
+	l.Info("responding with join email verification, has_account >%v<", accountRec != nil)
+
 	return server.WriteResponse(l, w, http.StatusOK, res)
 }
 
 func getJoinSheetHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = logging.LoggerWithFunctionContext(l, packageName, "getJoinSheetHandler")
+
+	l.Info("getting join sheet with path params >%#v<", pp)
 
 	mm := m.(*domain.Domain)
 
@@ -416,6 +426,8 @@ func saveJoinSheetHandler(w http.ResponseWriter, r *http.Request, pp httprouter.
 func submitJoinHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = logging.LoggerWithFunctionContext(l, packageName, "submitJoinHandler")
 
+	l.Info("submitting join game with path params >%#v<", pp)
+
 	mm := m.(*domain.Domain)
 
 	subRec, err := resolveManagerSubscription(l, pp, mm)
@@ -521,6 +533,8 @@ func submitJoinHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Par
 			GameID:             subRec.GameID,
 		},
 	}
+
+	l.Info("responding with created player subscription >%s< assigned to instance >%s<", createdSub.ID, instanceRec.ID)
 
 	return server.WriteResponse(l, w, http.StatusCreated, res)
 }

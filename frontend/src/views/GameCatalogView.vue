@@ -14,16 +14,16 @@
       <button class="retry-button" @click="fetchCatalog">Try again</button>
     </div>
 
-    <div v-else-if="subscriptions.length === 0" class="catalog-empty" data-testid="catalog-empty">
+    <div v-else-if="instances.length === 0" class="catalog-empty" data-testid="catalog-empty">
       <p>No games are currently available for enrollment. Check back soon.</p>
     </div>
 
     <div v-else class="catalog-games" data-testid="catalog-games">
       <div
-        v-for="entry in subscriptions"
-        :key="entry.game_subscription_id"
+        v-for="entry in instances"
+        :key="entry.game_instance_id"
         class="catalog-game card"
-        :data-testid="`sub-card-${entry.game_subscription_id}`"
+        :data-testid="`instance-card-${entry.game_instance_id}`"
       >
         <div class="game-info">
           <h2 class="game-name">{{ entry.game_name }}</h2>
@@ -31,6 +31,7 @@
           <div class="game-meta">
             <span class="game-type badge">{{ formatGameType(entry.game_type) }}</span>
             <span class="turn-duration">Turn: {{ entry.turn_duration_hours }}h</span>
+            <span v-if="entry.required_player_count > 0" class="capacity">{{ entry.required_player_count }} players needed</span>
           </div>
         </div>
 
@@ -39,9 +40,6 @@
             <span v-if="entry.delivery_email" class="delivery-badge">Email</span>
             <span v-if="entry.delivery_physical_local" class="delivery-badge">Local</span>
             <span v-if="entry.delivery_physical_post" class="delivery-badge">Post</span>
-          </div>
-          <div v-if="entry.total_capacity > 0" class="capacity">
-            {{ entry.total_players }} / {{ entry.total_capacity }} players
           </div>
           <a
             :href="`/player/join-game/${entry.game_subscription_id}`"
@@ -58,9 +56,9 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { listCatalogGames } from '../api/catalog'
+import { listCatalogGameInstances } from '../api/catalog'
 
-const subscriptions = ref([])
+const instances = ref([])
 const loading = ref(false)
 const error = ref(null)
 
@@ -73,8 +71,8 @@ async function fetchCatalog() {
   loading.value = true
   error.value = null
   try {
-    const res = await listCatalogGames()
-    subscriptions.value = res.data ?? []
+    const res = await listCatalogGameInstances()
+    instances.value = res.data ?? []
   } catch (err) {
     error.value = err.message || 'Failed to load the game catalog. Please try again.'
   } finally {

@@ -38,11 +38,11 @@ describe('gameInstances API', () => {
   })
 
   describe('listAllGameInstances', () => {
-    it('calls GET /api/v1/game-instances with correct headers', async () => {
+    it('calls GET /api/v1/manager/game-instances with correct headers', async () => {
       mockApiFetch.mockResolvedValue(mockJson({ data: [] }))
       await listAllGameInstances()
       expect(mockApiFetch).toHaveBeenCalledWith(
-        'http://localhost:8080/api/v1/game-instances',
+        'http://localhost:8080/api/v1/manager/game-instances',
         expect.objectContaining({
           headers: expect.objectContaining({
             'Content-Type': 'application/json',
@@ -54,34 +54,34 @@ describe('gameInstances API', () => {
   })
 
   describe('listGameInstances', () => {
-    it('calls GET /api/v1/games/:gameId/instances', async () => {
+    it('calls GET /api/v1/manager/games/:gameId/instances', async () => {
       mockApiFetch.mockResolvedValue(mockJson({ data: [] }))
       await listGameInstances('g1')
       expect(mockApiFetch).toHaveBeenCalledWith(
-        'http://localhost:8080/api/v1/games/g1/instances',
+        'http://localhost:8080/api/v1/manager/games/g1/instances',
         expect.any(Object)
       )
     })
   })
 
   describe('getGameInstance', () => {
-    it('calls GET /api/v1/games/:gameId/instances/:instanceId', async () => {
+    it('calls GET /api/v1/manager/games/:gameId/instances/:instanceId', async () => {
       mockApiFetch.mockResolvedValue(mockJson({ data: { id: 'i1' } }))
       await getGameInstance('g1', 'i1')
       expect(mockApiFetch).toHaveBeenCalledWith(
-        'http://localhost:8080/api/v1/games/g1/instances/i1',
+        'http://localhost:8080/api/v1/manager/games/g1/instances/i1',
         expect.any(Object)
       )
     })
   })
 
   describe('createGameInstance', () => {
-    it('calls POST /api/v1/games/:gameId/instances with body', async () => {
+    it('calls POST /api/v1/manager/games/:gameId/instances with body', async () => {
       const data = { name: 'Instance 1' }
       mockApiFetch.mockResolvedValue(mockJson({ data: { id: 'i1', ...data } }))
       await createGameInstance('g1', data)
       expect(mockApiFetch).toHaveBeenCalledWith(
-        'http://localhost:8080/api/v1/games/g1/instances',
+        'http://localhost:8080/api/v1/manager/games/g1/instances',
         expect.objectContaining({
           method: 'POST',
           body: JSON.stringify(data),
@@ -91,12 +91,12 @@ describe('gameInstances API', () => {
   })
 
   describe('updateGameInstance', () => {
-    it('calls PUT /api/v1/games/:gameId/instances/:instanceId with body', async () => {
+    it('calls PUT /api/v1/manager/games/:gameId/instances/:instanceId with body', async () => {
       const data = { name: 'Updated' }
       mockApiFetch.mockResolvedValue(mockJson({ data: { id: 'i1', ...data } }))
       await updateGameInstance('g1', 'i1', data)
       expect(mockApiFetch).toHaveBeenCalledWith(
-        'http://localhost:8080/api/v1/games/g1/instances/i1',
+        'http://localhost:8080/api/v1/manager/games/g1/instances/i1',
         expect.objectContaining({
           method: 'PUT',
           body: JSON.stringify(data),
@@ -106,11 +106,11 @@ describe('gameInstances API', () => {
   })
 
   describe('deleteGameInstance', () => {
-    it('calls DELETE /api/v1/games/:gameId/instances/:instanceId', async () => {
+    it('calls DELETE /api/v1/manager/games/:gameId/instances/:instanceId', async () => {
       mockApiFetch.mockResolvedValue(mockJson({}))
       await deleteGameInstance('g1', 'i1')
       expect(mockApiFetch).toHaveBeenCalledWith(
-        'http://localhost:8080/api/v1/games/g1/instances/i1',
+        'http://localhost:8080/api/v1/manager/games/g1/instances/i1',
         expect.objectContaining({ method: 'DELETE' })
       )
     })
@@ -121,7 +121,7 @@ describe('gameInstances API', () => {
       mockApiFetch.mockResolvedValue(mockJson({ data: {} }))
       await startGameInstance('g1', 'i1')
       expect(mockApiFetch).toHaveBeenCalledWith(
-        'http://localhost:8080/api/v1/games/g1/instances/i1/start',
+        'http://localhost:8080/api/v1/manager/games/g1/instances/i1/start',
         expect.objectContaining({ method: 'POST' })
       )
     })
@@ -132,7 +132,7 @@ describe('gameInstances API', () => {
       mockApiFetch.mockResolvedValue(mockJson({ data: {} }))
       await pauseGameInstance('g1', 'i1')
       expect(mockApiFetch).toHaveBeenCalledWith(
-        'http://localhost:8080/api/v1/games/g1/instances/i1/pause',
+        'http://localhost:8080/api/v1/manager/games/g1/instances/i1/pause',
         expect.objectContaining({ method: 'POST' })
       )
     })
@@ -143,7 +143,7 @@ describe('gameInstances API', () => {
       mockApiFetch.mockResolvedValue(mockJson({ data: {} }))
       await resumeGameInstance('g1', 'i1')
       expect(mockApiFetch).toHaveBeenCalledWith(
-        'http://localhost:8080/api/v1/games/g1/instances/i1/resume',
+        'http://localhost:8080/api/v1/manager/games/g1/instances/i1/resume',
         expect.objectContaining({ method: 'POST' })
       )
     })
@@ -154,7 +154,7 @@ describe('gameInstances API', () => {
       mockApiFetch.mockResolvedValue(mockJson({ data: {} }))
       await cancelGameInstance('g1', 'i1')
       expect(mockApiFetch).toHaveBeenCalledWith(
-        'http://localhost:8080/api/v1/games/g1/instances/i1/cancel',
+        'http://localhost:8080/api/v1/manager/games/g1/instances/i1/cancel',
         expect.objectContaining({ method: 'POST' })
       )
     })
@@ -165,7 +165,7 @@ describe('gameInstances API', () => {
       mockApiFetch.mockResolvedValue(mockJson({ data: {} }))
       await resetGameInstance('g1', 'i1')
       expect(mockApiFetch).toHaveBeenCalledWith(
-        'http://localhost:8080/api/v1/games/g1/instances/i1/reset',
+        'http://localhost:8080/api/v1/manager/games/g1/instances/i1/reset',
         expect.objectContaining({ method: 'POST' })
       )
     })
@@ -176,7 +176,7 @@ describe('gameInstances API', () => {
       mockApiFetch.mockResolvedValue(mockJson({ data: { link: 'http://...' } }))
       await getJoinGameLink('g1', 'i1')
       expect(mockApiFetch).toHaveBeenCalledWith(
-        'http://localhost:8080/api/v1/games/g1/instances/i1/join-link',
+        'http://localhost:8080/api/v1/manager/games/g1/instances/i1/join-link',
         expect.any(Object)
       )
     })
@@ -187,7 +187,7 @@ describe('gameInstances API', () => {
       mockApiFetch.mockResolvedValue(mockJson({ data: {} }))
       await inviteTester('g1', 'i1', 'tester@example.com')
       expect(mockApiFetch).toHaveBeenCalledWith(
-        'http://localhost:8080/api/v1/games/g1/instances/i1/invite-tester',
+        'http://localhost:8080/api/v1/manager/games/g1/instances/i1/invite-tester',
         expect.objectContaining({
           method: 'POST',
           body: JSON.stringify({ email: 'tester@example.com' }),

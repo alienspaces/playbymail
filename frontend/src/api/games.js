@@ -1,10 +1,16 @@
 import { baseUrl, getAuthHeaders, apiFetch, handleApiError } from './baseUrl';
 
 export async function listGames(options = {}) {
-  const { subscriptionType, status } = options;
+  const { isDesigner, isManager, canManage, status } = options;
   const params = new URLSearchParams();
-  if (subscriptionType) {
-    params.append('subscription_type', subscriptionType);
+  if (isDesigner) {
+    params.append('is_designer', 'true');
+  }
+  if (isManager) {
+    params.append('is_manager', 'true');
+  }
+  if (canManage) {
+    params.append('can_manage', 'true');
   }
   if (status) {
     params.append('status', status);

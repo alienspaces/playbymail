@@ -302,19 +302,53 @@ func TestJoinGameProcessor_GenerateTurnSheet_WithDeliveryMethods(t *testing.T) {
 	require.NoError(t, err)
 
 	tests := []struct {
-		name              string
-		deliveryMethods   turnsheet.DeliveryMethods
-		expectRadioButton bool
+		name                string
+		deliveryMethods     turnsheet.DeliveryMethods
+		expectRadioButton   bool
+		expectAddressFields bool
+		expectToggleScript  bool
 	}{
 		{
-			name:              "single delivery method — no radio buttons",
-			deliveryMethods:   turnsheet.DeliveryMethods{Email: true},
-			expectRadioButton: false,
+			name:                "email only — no radio buttons, no address fields",
+			deliveryMethods:     turnsheet.DeliveryMethods{Email: true},
+			expectRadioButton:   false,
+			expectAddressFields: false,
+			expectToggleScript:  false,
 		},
 		{
-			name:              "multiple delivery methods — radio buttons shown",
-			deliveryMethods:   turnsheet.DeliveryMethods{Email: true, PhysicalPost: true},
-			expectRadioButton: true,
+			name:                "local only — no radio buttons, no address fields",
+			deliveryMethods:     turnsheet.DeliveryMethods{PhysicalLocal: true},
+			expectRadioButton:   false,
+			expectAddressFields: false,
+			expectToggleScript:  false,
+		},
+		{
+			name:                "post only — no radio buttons, address fields shown",
+			deliveryMethods:     turnsheet.DeliveryMethods{PhysicalPost: true},
+			expectRadioButton:   false,
+			expectAddressFields: true,
+			expectToggleScript:  false,
+		},
+		{
+			name:                "email and local — radio buttons, no address fields",
+			deliveryMethods:     turnsheet.DeliveryMethods{Email: true, PhysicalLocal: true},
+			expectRadioButton:   true,
+			expectAddressFields: false,
+			expectToggleScript:  false,
+		},
+		{
+			name:                "email and post — radio buttons, address fields, toggle script",
+			deliveryMethods:     turnsheet.DeliveryMethods{Email: true, PhysicalPost: true},
+			expectRadioButton:   true,
+			expectAddressFields: true,
+			expectToggleScript:  true,
+		},
+		{
+			name:                "all three — radio buttons, address fields, toggle script",
+			deliveryMethods:     turnsheet.DeliveryMethods{Email: true, PhysicalLocal: true, PhysicalPost: true},
+			expectRadioButton:   true,
+			expectAddressFields: true,
+			expectToggleScript:  true,
 		},
 	}
 
@@ -338,9 +372,136 @@ func TestJoinGameProcessor_GenerateTurnSheet_WithDeliveryMethods(t *testing.T) {
 			require.NotEmpty(t, html)
 
 			htmlStr := string(html)
+
 			hasRadio := strings.Contains(htmlStr, `name="delivery_method"`)
 			require.Equal(t, tt.expectRadioButton, hasRadio,
 				"expected radio button presence to be %v", tt.expectRadioButton)
+
+			hasAddress := strings.Contains(htmlStr, `id="postal-address-fields"`)
+			require.Equal(t, tt.expectAddressFields, hasAddress,
+				"expected address fields presence to be %v", tt.expectAddressFields)
+
+			hasScript := strings.Contains(htmlStr, `postal-address-fields`)&& strings.Contains(htmlStr, `<script>`)
+			require.Equal(t, tt.expectToggleScript, hasScript,
+				"expected toggle script presence to be %v", tt.expectToggleScript)
+		})
+	}
+}
+
+func TestJoinGameScanData_Validate(t *testing.T) {
+	fullPostal := turnsheet.JoinGameScanData{
+		Email:              "test@example.com",
+		Name:               "Test User",
+		PostalAddressLine1: "123 Main St",
+		StateProvince:      "NSW",
+		Country:            "Australia",
+		PostalCode:         "2000",
+	}
+
+	tests := []struct {
+		name      string
+		data      turnsheet.JoinGameScanData
+		expectErr string
+	}{
+		{
+			name:      "missing email",
+			data:      turnsheet.JoinGameScanData{Name: "Test"},
+			expectErr: "email is required",
+		},
+		{
+			name:      "missing name",
+			data:      turnsheet.JoinGameScanData{Email: "a@b.com"},
+			expectErr: "name is required",
+		},
+		{
+			name: "post delivery — missing address",
+			data: turnsheet.JoinGameScanData{
+				Email:          "a@b.com",
+				Name:           "Test",
+				DeliveryMethod: "post",
+			},
+			expectErr: "postal address line 1 is required",
+		},
+		{
+			name: "empty delivery method — missing address (treated as postal)",
+			data: turnsheet.JoinGameScanData{
+				Email: "a@b.com",
+				Name:  "Test",
+			},
+			expectErr: "postal address line 1 is required",
+		},
+		{
+			name: "email delivery — postal fields not required",
+			data: turnsheet.JoinGameScanData{
+				Email:          "a@b.com",
+				Name:           "Test",
+				DeliveryMethod: "email",
+			},
+		},
+		{
+			name: "local delivery — postal fields not required",
+			data: turnsheet.JoinGameScanData{
+				Email:          "a@b.com",
+				Name:           "Test",
+				DeliveryMethod: "local",
+			},
+		},
+		{
+			name: "post delivery — all fields present",
+			data: func() turnsheet.JoinGameScanData {
+				d := fullPostal
+				d.DeliveryMethod = "post"
+				return d
+			}(),
+		},
+		{
+			name:     "empty delivery method — all fields present",
+			data:     fullPostal,
+		},
+		{
+			name: "post delivery — missing state",
+			data: turnsheet.JoinGameScanData{
+				Email:              "a@b.com",
+				Name:               "Test",
+				DeliveryMethod:     "post",
+				PostalAddressLine1: "123 Main St",
+			},
+			expectErr: "state or province is required",
+		},
+		{
+			name: "post delivery — missing country",
+			data: turnsheet.JoinGameScanData{
+				Email:              "a@b.com",
+				Name:               "Test",
+				DeliveryMethod:     "post",
+				PostalAddressLine1: "123 Main St",
+				StateProvince:      "NSW",
+			},
+			expectErr: "country is required",
+		},
+		{
+			name: "post delivery — missing post code",
+			data: turnsheet.JoinGameScanData{
+				Email:              "a@b.com",
+				Name:               "Test",
+				DeliveryMethod:     "post",
+				PostalAddressLine1: "123 Main St",
+				StateProvince:      "NSW",
+				Country:            "Australia",
+			},
+			expectErr: "post code is required",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.data.Validate()
+			if tt.expectErr != "" {
+				require.Error(t, err)
+				require.Contains(t, err.Error(), tt.expectErr)
+			} else {
+				require.NoError(t, err)
+			}
 		})
 	}
 }

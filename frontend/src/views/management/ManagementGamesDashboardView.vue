@@ -12,32 +12,36 @@
     />
 
     <!-- Loading state -->
-    <p v-if="gamesStore.loading">Loading games...</p>
+    <p v-if="managedGamesLoading">Loading games...</p>
 
     <!-- Error state -->
-    <div v-else-if="gamesStore.error" class="error-state">
-      <p>Error loading games: {{ gamesStore.error }}</p>
-      <button @click="loadGames">Retry</button>
+    <div v-else-if="managedGamesError" class="error-state">
+      <p>Error loading games: {{ managedGamesError }}</p>
+      <button @click="loadManagedGames">Retry</button>
     </div>
 
     <!-- Games table -->
     <ResourceTable 
       v-else
       :columns="columns" 
-      :rows="games" 
-      :loading="gamesStore.loading"
-      :error="gamesStore.error"
+      :rows="managedGames" 
+      :loading="managedGamesLoading"
+      :error="managedGamesError"
     >
       <template #cell-name="{ row }">
-        <a href="#" class="game-link" @click.prevent="viewGameInstances(row)">{{ row.name }}</a>
+        <a href="#" class="game-link" @click.prevent="viewGameInstances(row)">{{ row.game_name }}</a>
+      </template>
+
+      <template #cell-game_type="{ row }">
+        {{ row.game_type }}
       </template>
 
       <template #cell-instances="{ row }">
-        {{ getGameInstanceCount(row.id) }}
+        {{ row.instance_count }}
       </template>
 
       <template #cell-active="{ row }">
-        {{ getActiveInstanceCount(row.id) }}
+        {{ row.active_count }}
       </template>
 
       <template #actions="{ row }">
@@ -46,8 +50,8 @@
     </ResourceTable>
 
     <!-- Empty state -->
-    <p v-if="!gamesStore.loading && !gamesStore.error && games.length === 0" class="empty-message">
-      You don't have access to any games yet. Contact an administrator to get access to games.
+    <p v-if="!managedGamesLoading && !managedGamesError && managedGames.length === 0" class="empty-message">
+      You don't have access to any games yet. Subscribe to a published game below.
     </p>
 
     <!-- Available Games for Subscription Section -->
@@ -89,12 +93,12 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useGamesStore } from '../../stores/games';
-import { useGameInstancesStore } from '../../stores/gameInstances';
+import { listAllGameInstances } from '../../api/gameInstances';
 import { listGames } from '../../api/games';
-import { createGameSubscription, getMyGameSubscriptions } from '../../api/gameSubscriptions';
+import { createGameSubscription } from '../../api/gameSubscriptions';
 import PageHeader from '../../components/PageHeader.vue';
 import ResourceTable from '../../components/ResourceTable.vue';
 import TableActions from '../../components/TableActions.vue';
@@ -104,11 +108,11 @@ import AppButton from '../../components/Button.vue';
 
 const router = useRouter();
 const gamesStore = useGamesStore();
-const gameInstancesStore = useGameInstancesStore();
 
-const games = computed(() => gamesStore.games);
+const managedGames = ref([]);
+const managedGamesLoading = ref(false);
+const managedGamesError = ref(null);
 const availableGames = ref([]);
-const myGameSubscriptions = ref([]);
 const availableGamesLoading = ref(false);
 const availableGamesError = ref(null);
 const subscribing = ref(false);
@@ -121,17 +125,47 @@ const columns = [
 ];
 
 onMounted(async () => {
-  await loadGames();
+  await loadManagedGames();
   await loadAvailableGames();
 });
 
-const loadGames = async () => {
+const loadManagedGames = async () => {
   try {
-    // Filter to only show games where the user has Manager subscription
-    await gamesStore.fetchGames({ subscriptionType: 'Manager' });
-    await gameInstancesStore.fetchAllGameInstances();
+    managedGamesLoading.value = true;
+    managedGamesError.value = null;
+
+    const response = await listAllGameInstances();
+    const rows = response.data || [];
+
+    const gameMap = new Map();
+    for (const row of rows) {
+      if (!gameMap.has(row.game_id)) {
+        gameMap.set(row.game_id, {
+          game_id: row.game_id,
+          game_name: row.game_name,
+          game_type: row.game_type,
+          game_description: row.game_description,
+          game_subscription_id: row.game_subscription_id,
+          created_at: row.created_at,
+          instance_count: 0,
+          active_count: 0,
+        });
+      }
+      const game = gameMap.get(row.game_id);
+      if (row.game_instance_id) {
+        game.instance_count++;
+        if (row.instance_status === 'started') {
+          game.active_count++;
+        }
+      }
+    }
+
+    managedGames.value = Array.from(gameMap.values());
   } catch (error) {
-    console.error('Failed to load games:', error);
+    managedGamesError.value = error.message || 'Failed to load managed games';
+    console.error('Failed to load managed games:', error);
+  } finally {
+    managedGamesLoading.value = false;
   }
 };
 
@@ -140,19 +174,8 @@ const loadAvailableGames = async () => {
     availableGamesLoading.value = true;
     availableGamesError.value = null;
 
-    // Get published games
-    const publishedGamesResponse = await listGames({ status: 'published' });
-    const publishedGames = publishedGamesResponse.data || [];
-
-    // Get my game subscriptions to filter out games I'm already subscribed to
-    const subscriptionsResponse = await getMyGameSubscriptions();
-    myGameSubscriptions.value = subscriptionsResponse.data || [];
-    const subscribedGameIds = new Set(myGameSubscriptions.value
-      .filter(sub => sub.subscription_type === 'Manager')
-      .map(sub => sub.game_id));
-
-    // Filter to only show games I don't have manager subscription for
-    availableGames.value = publishedGames.filter(game => !subscribedGameIds.has(game.id));
+    const response = await listGames({ canManage: true });
+    availableGames.value = response.data || [];
   } catch (error) {
     availableGamesError.value = error.message || 'Failed to load available games';
     console.error('Failed to load available games:', error);
@@ -164,7 +187,8 @@ const loadAvailableGames = async () => {
 const subscribeToGame = async (game) => {
   try {
     subscribing.value = true;
-    await createGameSubscription(game.id, 'Manager');
+    await createGameSubscription(game.id, 'manager');
+    await loadManagedGames();
     await loadAvailableGames();
   } catch (error) {
     availableGamesError.value = error.message || 'Failed to subscribe to game';
@@ -187,20 +211,9 @@ const formatTurnDuration = (hours) => {
   return `${hours} hour${hours === 1 ? '' : 's'}`;
 };
 
-const getGameInstanceCount = (gameId) => {
-  return gameInstancesStore.gameInstances.filter(instance => instance.game_id === gameId).length;
-};
-
-const getActiveInstanceCount = (gameId) => {
-  return gameInstancesStore.gameInstances.filter(instance =>
-    instance.game_id === gameId &&
-    ['started'].includes(instance.status)
-  ).length;
-};
-
 const viewGameInstances = (game) => {
-  gamesStore.setSelectedGame(game);
-  router.push(`/admin/games/${game.id}/instances`);
+  gamesStore.setSelectedGame({ id: game.game_id, name: game.game_name, game_type: game.game_type });
+  router.push(`/admin/games/${game.game_id}/instances`);
 };
 
 const getGameActions = (game) => {

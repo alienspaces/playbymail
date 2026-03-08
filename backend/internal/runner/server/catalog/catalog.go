@@ -33,6 +33,7 @@ func CatalogHandlerConfig(cfg config.Config, l logger.Logger, scnr turnsheet.Tur
 
 	handlerConfigFuncs := []func(logger.Logger) (map[string]server.HandlerConfig, error){
 		catalogGameHandlerConfig,
+		catalogGameInstanceHandlerConfig,
 	}
 
 	for _, fn := range handlerConfigFuncs {

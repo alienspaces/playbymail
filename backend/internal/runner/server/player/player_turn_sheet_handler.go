@@ -463,6 +463,8 @@ func getGSITurnSheetListHandler(w http.ResponseWriter, r *http.Request, pp httpr
 func getGSITurnSheetHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = logging.LoggerWithFunctionContext(l, packageName, "getGSITurnSheetHandler")
 
+	l.Info("getting gsi turn sheet with path params >%#v<", pp)
+
 	gameTurnSheetID := pp.ByName("game_turn_sheet_id")
 	if gameTurnSheetID == "" {
 		return coreerror.RequiredPathParameter("game_turn_sheet_id")
@@ -509,11 +511,14 @@ func getGSITurnSheetHandler(w http.ResponseWriter, r *http.Request, pp httproute
 		if err != nil {
 			return err
 		}
+		l.Info("responding with HTML turn sheet >%s< size >%d<", gameTurnSheetID, len(htmlBytes))
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		w.WriteHeader(http.StatusOK)
 		_, err = w.Write(htmlBytes)
 		return err
 	}
+
+	l.Info("responding with turn sheet >%s< for gsi >%s<", gameTurnSheetID, gsiRec.ID)
 
 	return server.WriteResponse(l, w, http.StatusOK, turnSheetRec)
 }
@@ -647,6 +652,8 @@ func submitGSITurnSheetsHandler(w http.ResponseWriter, r *http.Request, pp httpr
 func downloadGSITurnSheetPDFHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = logging.LoggerWithFunctionContext(l, packageName, "downloadGSITurnSheetPDFHandler")
 
+	l.Info("downloading gsi turn sheet PDF with path params >%#v<", pp)
+
 	gameTurnSheetID := pp.ByName("game_turn_sheet_id")
 	if gameTurnSheetID == "" {
 		return coreerror.RequiredPathParameter("game_turn_sheet_id")
@@ -694,6 +701,8 @@ func downloadGSITurnSheetPDFHandler(w http.ResponseWriter, r *http.Request, pp h
 		l.Warn("failed to generate PDF for turn sheet >%s< >%v<", gameTurnSheetID, err)
 		return err
 	}
+
+	l.Info("responding with turn sheet PDF >%s< size >%d<", gameTurnSheetID, len(pdfBytes))
 
 	filename := fmt.Sprintf("turn-sheet-%s.pdf", gameTurnSheetID)
 	w.Header().Set("Content-Type", "application/pdf")

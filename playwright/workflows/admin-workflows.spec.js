@@ -310,7 +310,7 @@ test.describe('Admin Workflows', () => {
 
         // Should have made API calls to load games and instances
         expect(apiCalls).toContain(expect.stringContaining('/api/v1/games'))
-        expect(apiCalls).toContain(expect.stringContaining('/api/v1/game-instances'))
+        expect(apiCalls).toContain(expect.stringContaining('/api/v1/manager/game-instances'))
 
         // Should not be stuck loading
         const body = page.locator('body')

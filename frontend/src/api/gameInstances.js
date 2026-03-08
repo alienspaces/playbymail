@@ -1,7 +1,7 @@
 import { baseUrl, getAuthHeaders, apiFetch, handleApiError } from './baseUrl';
 
 export async function listAllGameInstances() {
-  const res = await apiFetch(`${baseUrl}/api/v1/game-instances`, {
+  const res = await apiFetch(`${baseUrl}/api/v1/manager/game-instances`, {
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
   });
   await handleApiError(res, 'Failed to fetch all game instances');
@@ -9,7 +9,7 @@ export async function listAllGameInstances() {
 }
 
 export async function listGameInstances(gameId) {
-  const res = await apiFetch(`${baseUrl}/api/v1/games/${gameId}/instances`, {
+  const res = await apiFetch(`${baseUrl}/api/v1/manager/games/${gameId}/instances`, {
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
   });
   await handleApiError(res, 'Failed to fetch game instances');
@@ -17,7 +17,7 @@ export async function listGameInstances(gameId) {
 }
 
 export async function getGameInstance(gameId, instanceId) {
-  const res = await apiFetch(`${baseUrl}/api/v1/games/${gameId}/instances/${instanceId}`, {
+  const res = await apiFetch(`${baseUrl}/api/v1/manager/games/${gameId}/instances/${instanceId}`, {
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
   });
   await handleApiError(res, 'Failed to fetch game instance');
@@ -25,7 +25,7 @@ export async function getGameInstance(gameId, instanceId) {
 }
 
 export async function createGameInstance(gameId, data) {
-  const res = await apiFetch(`${baseUrl}/api/v1/games/${gameId}/instances`, {
+  const res = await apiFetch(`${baseUrl}/api/v1/manager/games/${gameId}/instances`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
     body: JSON.stringify(data),
@@ -35,7 +35,7 @@ export async function createGameInstance(gameId, data) {
 }
 
 export async function updateGameInstance(gameId, instanceId, data) {
-  const res = await apiFetch(`${baseUrl}/api/v1/games/${gameId}/instances/${instanceId}`, {
+  const res = await apiFetch(`${baseUrl}/api/v1/manager/games/${gameId}/instances/${instanceId}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
     body: JSON.stringify(data),
@@ -45,7 +45,7 @@ export async function updateGameInstance(gameId, instanceId, data) {
 }
 
 export async function deleteGameInstance(gameId, instanceId) {
-  const res = await apiFetch(`${baseUrl}/api/v1/games/${gameId}/instances/${instanceId}`, {
+  const res = await apiFetch(`${baseUrl}/api/v1/manager/games/${gameId}/instances/${instanceId}`, {
     method: 'DELETE',
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
   });
@@ -55,7 +55,7 @@ export async function deleteGameInstance(gameId, instanceId) {
 
 // Game instance runtime management
 export async function startGameInstance(gameId, instanceId) {
-  const res = await apiFetch(`${baseUrl}/api/v1/games/${gameId}/instances/${instanceId}/start`, {
+  const res = await apiFetch(`${baseUrl}/api/v1/manager/games/${gameId}/instances/${instanceId}/start`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
   });
@@ -64,7 +64,7 @@ export async function startGameInstance(gameId, instanceId) {
 }
 
 export async function pauseGameInstance(gameId, instanceId) {
-  const res = await apiFetch(`${baseUrl}/api/v1/games/${gameId}/instances/${instanceId}/pause`, {
+  const res = await apiFetch(`${baseUrl}/api/v1/manager/games/${gameId}/instances/${instanceId}/pause`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
   });
@@ -73,7 +73,7 @@ export async function pauseGameInstance(gameId, instanceId) {
 }
 
 export async function resumeGameInstance(gameId, instanceId) {
-  const res = await apiFetch(`${baseUrl}/api/v1/games/${gameId}/instances/${instanceId}/resume`, {
+  const res = await apiFetch(`${baseUrl}/api/v1/manager/games/${gameId}/instances/${instanceId}/resume`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
   });
@@ -82,7 +82,7 @@ export async function resumeGameInstance(gameId, instanceId) {
 }
 
 export async function cancelGameInstance(gameId, instanceId) {
-  const res = await apiFetch(`${baseUrl}/api/v1/games/${gameId}/instances/${instanceId}/cancel`, {
+  const res = await apiFetch(`${baseUrl}/api/v1/manager/games/${gameId}/instances/${instanceId}/cancel`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
   });
@@ -91,7 +91,7 @@ export async function cancelGameInstance(gameId, instanceId) {
 }
 
 export async function resetGameInstance(gameId, instanceId) {
-  const res = await apiFetch(`${baseUrl}/api/v1/games/${gameId}/instances/${instanceId}/reset`, {
+  const res = await apiFetch(`${baseUrl}/api/v1/manager/games/${gameId}/instances/${instanceId}/reset`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
   });
@@ -101,7 +101,7 @@ export async function resetGameInstance(gameId, instanceId) {
 
 // Closed testing features
 export async function getJoinGameLink(gameId, instanceId) {
-  const res = await apiFetch(`${baseUrl}/api/v1/games/${gameId}/instances/${instanceId}/join-link`, {
+  const res = await apiFetch(`${baseUrl}/api/v1/manager/games/${gameId}/instances/${instanceId}/join-link`, {
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
   });
   await handleApiError(res, 'Failed to get join game link');
@@ -109,7 +109,7 @@ export async function getJoinGameLink(gameId, instanceId) {
 }
 
 export async function inviteTester(gameId, instanceId, email) {
-  const res = await apiFetch(`${baseUrl}/api/v1/games/${gameId}/instances/${instanceId}/invite-tester`, {
+  const res = await apiFetch(`${baseUrl}/api/v1/manager/games/${gameId}/instances/${instanceId}/invite-tester`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
     body: JSON.stringify({ email }),

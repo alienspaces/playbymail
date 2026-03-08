@@ -30,11 +30,11 @@ describe('gameInstanceParameters API', () => {
   })
 
   describe('listGameInstanceParameters', () => {
-    it('calls GET /api/v1/games/:gameId/instances/:gameInstanceId/parameters', async () => {
+    it('calls GET /api/v1/manager/games/:gameId/instances/:gameInstanceId/parameters', async () => {
       mockApiFetch.mockResolvedValue(mockJson({ data: [] }))
       await listGameInstanceParameters('g1', 'i1')
       expect(mockApiFetch).toHaveBeenCalledWith(
-        'http://localhost:8080/api/v1/games/g1/instances/i1/parameters',
+        'http://localhost:8080/api/v1/manager/games/g1/instances/i1/parameters',
         expect.any(Object)
       )
     })
@@ -52,7 +52,7 @@ describe('gameInstanceParameters API', () => {
       mockApiFetch.mockResolvedValue(mockJson({ data: { id: 'p1' } }))
       await getGameInstanceParameter('g1', 'i1', 'p1')
       expect(mockApiFetch).toHaveBeenCalledWith(
-        'http://localhost:8080/api/v1/games/g1/instances/i1/parameters/p1',
+        'http://localhost:8080/api/v1/manager/games/g1/instances/i1/parameters/p1',
         expect.any(Object)
       )
     })
@@ -64,7 +64,7 @@ describe('gameInstanceParameters API', () => {
       mockApiFetch.mockResolvedValue(mockJson({ data: { id: 'p1', ...data } }))
       await createGameInstanceParameter('g1', 'i1', data)
       expect(mockApiFetch).toHaveBeenCalledWith(
-        'http://localhost:8080/api/v1/games/g1/instances/i1/parameters',
+        'http://localhost:8080/api/v1/manager/games/g1/instances/i1/parameters',
         expect.objectContaining({
           method: 'POST',
           body: JSON.stringify(data),
@@ -79,7 +79,7 @@ describe('gameInstanceParameters API', () => {
       mockApiFetch.mockResolvedValue(mockJson({ data: { id: 'p1', ...data } }))
       await updateGameInstanceParameter('g1', 'i1', 'p1', data)
       expect(mockApiFetch).toHaveBeenCalledWith(
-        'http://localhost:8080/api/v1/games/g1/instances/i1/parameters/p1',
+        'http://localhost:8080/api/v1/manager/games/g1/instances/i1/parameters/p1',
         expect.objectContaining({
           method: 'PUT',
           body: JSON.stringify(data),
@@ -93,7 +93,7 @@ describe('gameInstanceParameters API', () => {
       mockApiFetch.mockResolvedValue(mockJson({}))
       await deleteGameInstanceParameter('g1', 'i1', 'p1')
       expect(mockApiFetch).toHaveBeenCalledWith(
-        'http://localhost:8080/api/v1/games/g1/instances/i1/parameters/p1',
+        'http://localhost:8080/api/v1/manager/games/g1/instances/i1/parameters/p1',
         expect.objectContaining({ method: 'DELETE' })
       )
     })

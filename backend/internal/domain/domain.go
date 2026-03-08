@@ -25,6 +25,9 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/repository/adventure_game_location_link"
 	"gitlab.com/alienspaces/playbymail/internal/repository/adventure_game_location_link_requirement"
 	"gitlab.com/alienspaces/playbymail/internal/repository/adventure_game_turn_sheet"
+	"gitlab.com/alienspaces/playbymail/internal/repository/account_game_view"
+	"gitlab.com/alienspaces/playbymail/internal/repository/catalog_game_instance_view"
+	"gitlab.com/alienspaces/playbymail/internal/repository/manager_game_instance_view"
 	"gitlab.com/alienspaces/playbymail/internal/repository/game"
 	"gitlab.com/alienspaces/playbymail/internal/repository/game_image"
 	"gitlab.com/alienspaces/playbymail/internal/repository/game_instance"
@@ -66,6 +69,9 @@ func NewDomain(l logger.Logger, cfg config.Config) (*Domain, error) {
 		game_subscription.NewRepository,
 		game_subscription_instance.NewRepository,
 		game_subscription_view.NewRepository,
+		account_game_view.NewRepository,
+		manager_game_instance_view.NewRepository,
+		catalog_game_instance_view.NewRepository,
 		game_turn_sheet.NewRepository,
 
 		// Adventure game repositories
@@ -202,6 +208,21 @@ func (m *Domain) GameSubscriptionInstanceRepository() *repository.Generic[game_r
 // GameSubscriptionViewRepository -
 func (m *Domain) GameSubscriptionViewRepository() *repository.GenericView[game_record.GameSubscriptionView] {
 	return m.Repositories[game_subscription_view.TableName].(*repository.GenericView[game_record.GameSubscriptionView])
+}
+
+// AccountGameViewRepository -
+func (m *Domain) AccountGameViewRepository() *repository.GenericView[game_record.AccountGameView] {
+	return m.Repositories[account_game_view.TableName].(*repository.GenericView[game_record.AccountGameView])
+}
+
+// ManagerGameInstanceViewRepository -
+func (m *Domain) ManagerGameInstanceViewRepository() *repository.GenericView[game_record.ManagerGameInstanceView] {
+	return m.Repositories[manager_game_instance_view.TableName].(*repository.GenericView[game_record.ManagerGameInstanceView])
+}
+
+// CatalogGameInstanceViewRepository -
+func (m *Domain) CatalogGameInstanceViewRepository() *repository.GenericView[game_record.CatalogGameInstanceView] {
+	return m.Repositories[catalog_game_instance_view.TableName].(*repository.GenericView[game_record.CatalogGameInstanceView])
 }
 
 // GameInstanceParameterRepository -

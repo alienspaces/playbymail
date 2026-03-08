@@ -62,6 +62,8 @@ func uploadGSITurnSheetScanHandler(scnr turnsheet.TurnSheetScanner) server.Handl
 	return func(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 		l = logging.LoggerWithFunctionContext(l, packageName, "uploadGSITurnSheetScanHandler")
 
+		l.Info("uploading turn sheet scan with path params >%#v<", pp)
+
 		gameTurnSheetID := pp.ByName("game_turn_sheet_id")
 		if gameTurnSheetID == "" {
 			return coreerror.RequiredPathParameter("game_turn_sheet_id")

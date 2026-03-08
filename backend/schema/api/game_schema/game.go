@@ -16,6 +16,9 @@ type GameResponseData struct {
 	Status            string     `json:"status"`
 	CreatedAt         time.Time  `json:"created_at"`
 	UpdatedAt         *time.Time `json:"updated_at,omitempty"`
+	IsDesigner        *bool      `json:"is_designer,omitempty"`
+	IsManager         *bool      `json:"is_manager,omitempty"`
+	CanManage         *bool      `json:"can_manage,omitempty"`
 }
 
 type GameResponse struct {

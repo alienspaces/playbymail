@@ -22,11 +22,11 @@ import (
 
 // API Resource CRUD Paths
 //
-// GET (collection)  /api/v1/games/{game_id}/instances/{instance_id}/parameters
-// GET (document)    /api/v1/games/{game_id}/instances/{instance_id}/parameters/{parameter_id}
-// POST (document)   /api/v1/games/{game_id}/instances/{instance_id}/parameters
-// PUT (document)    /api/v1/games/{game_id}/instances/{instance_id}/parameters/{parameter_id}
-// DELETE (document) /api/v1/games/{game_id}/instances/{instance_id}/parameters/{parameter_id}
+// GET (collection)  /api/v1/manager/games/{game_id}/instances/{instance_id}/parameters
+// GET (document)    /api/v1/manager/games/{game_id}/instances/{instance_id}/parameters/{parameter_id}
+// POST (document)   /api/v1/manager/games/{game_id}/instances/{instance_id}/parameters
+// PUT (document)    /api/v1/manager/games/{game_id}/instances/{instance_id}/parameters/{parameter_id}
+// DELETE (document) /api/v1/manager/games/{game_id}/instances/{instance_id}/parameters/{parameter_id}
 
 const (
 	GetManyGameInstanceParameters  = "get-many-game-instance-parameters"
@@ -79,7 +79,7 @@ func gameInstanceParameterHandlerConfig(l logger.Logger) (map[string]server.Hand
 
 	gameInstanceParameterConfig[GetManyGameInstanceParameters] = server.HandlerConfig{
 		Method:      http.MethodGet,
-		Path:        "/api/v1/games/:game_id/instances/:instance_id/parameters",
+		Path:        "/api/v1/manager/games/:game_id/instances/:instance_id/parameters",
 		HandlerFunc: getManyGameInstanceParametersHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
@@ -96,7 +96,7 @@ func gameInstanceParameterHandlerConfig(l logger.Logger) (map[string]server.Hand
 
 	gameInstanceParameterConfig[GetOneGameInstanceParameter] = server.HandlerConfig{
 		Method:      http.MethodGet,
-		Path:        "/api/v1/games/:game_id/instances/:instance_id/parameters/:parameter_id",
+		Path:        "/api/v1/manager/games/:game_id/instances/:instance_id/parameters/:parameter_id",
 		HandlerFunc: getOneGameInstanceParameterHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
@@ -112,7 +112,7 @@ func gameInstanceParameterHandlerConfig(l logger.Logger) (map[string]server.Hand
 
 	gameInstanceParameterConfig[CreateOneGameInstanceParameter] = server.HandlerConfig{
 		Method:      http.MethodPost,
-		Path:        "/api/v1/games/:game_id/instances/:instance_id/parameters",
+		Path:        "/api/v1/manager/games/:game_id/instances/:instance_id/parameters",
 		HandlerFunc: createOneGameInstanceParameterHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
@@ -132,7 +132,7 @@ func gameInstanceParameterHandlerConfig(l logger.Logger) (map[string]server.Hand
 
 	gameInstanceParameterConfig[UpdateOneGameInstanceParameter] = server.HandlerConfig{
 		Method:      http.MethodPut,
-		Path:        "/api/v1/games/:game_id/instances/:instance_id/parameters/:parameter_id",
+		Path:        "/api/v1/manager/games/:game_id/instances/:instance_id/parameters/:parameter_id",
 		HandlerFunc: updateOneGameInstanceParameterHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
@@ -152,7 +152,7 @@ func gameInstanceParameterHandlerConfig(l logger.Logger) (map[string]server.Hand
 
 	gameInstanceParameterConfig[DeleteOneGameInstanceParameter] = server.HandlerConfig{
 		Method:      http.MethodDelete,
-		Path:        "/api/v1/games/:game_id/instances/:instance_id/parameters/:parameter_id",
+		Path:        "/api/v1/manager/games/:game_id/instances/:instance_id/parameters/:parameter_id",
 		HandlerFunc: deleteOneGameInstanceParameterHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{

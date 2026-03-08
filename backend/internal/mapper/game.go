@@ -78,3 +78,40 @@ func GameRecordsToCollectionResponse(l logger.Logger, recs []*game_record.Game) 
 		Data: data,
 	}, nil
 }
+
+func AccountGameViewRecordToResponseData(l logger.Logger, rec *game_record.AccountGameView) (*game_schema.GameResponseData, error) {
+	l.Debug("mapping account_game_view record to response data")
+
+	isDesigner := rec.IsDesigner
+	isManager := rec.IsManager
+	canManage := rec.CanManage
+
+	return &game_schema.GameResponseData{
+		ID:                rec.GameID,
+		Name:              rec.GameName,
+		GameType:          rec.GameType,
+		TurnDurationHours: rec.TurnDurationHours,
+		Description:       rec.Description,
+		Status:            rec.GameStatus,
+		CreatedAt:         rec.CreatedAt,
+		UpdatedAt:         nulltime.ToTimePtr(rec.UpdatedAt),
+		IsDesigner:        &isDesigner,
+		IsManager:         &isManager,
+		CanManage:         &canManage,
+	}, nil
+}
+
+func AccountGameViewRecordsToCollectionResponse(l logger.Logger, recs []*game_record.AccountGameView) (game_schema.GameCollectionResponse, error) {
+	l.Debug("mapping account_game_view records to collection response")
+	data := []*game_schema.GameResponseData{}
+	for _, rec := range recs {
+		d, err := AccountGameViewRecordToResponseData(l, rec)
+		if err != nil {
+			return game_schema.GameCollectionResponse{}, err
+		}
+		data = append(data, d)
+	}
+	return game_schema.GameCollectionResponse{
+		Data: data,
+	}, nil
+}

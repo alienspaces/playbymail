@@ -278,6 +278,8 @@ email, name, postal_address_line1, postal_address_line2, state_province, country
 
 For delivery_method: if the form shows a delivery method selection, extract the chosen option as one of "email", "local", or "post". Leave empty if no delivery selection is present on the form.
 
+NOTE: Some forms may not include postal address fields (address, state/province, country, post code) when the game only supports email or local pickup delivery. If these fields are not present on the form, leave them as empty strings.
+
 IMPORTANT: For email addresses, pay special attention to the domain portion.
 Common email domains include: gmail.com, yahoo.com, hotmail.com, outlook.com, etc.
 If you see "gmail" written, extract it as "gmail" (not "email").

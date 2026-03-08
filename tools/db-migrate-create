@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-example="Example: ./tools/db-migrate-create create_template_objects [branch]"
+example="Example: ./tools/db-migrate-create create_template_objects"
 
 description=$1
 if [ -z "$description" ]; then
@@ -9,11 +9,6 @@ if [ -z "$description" ]; then
     exit 1
 fi
 shift
-
-branch_name=$1
-if [ -z "$branch_name" ]; then
-    branch_name=$(git rev-parse --abbrev-ref HEAD)
-fi
 
 # copy develop env
 cp .env.develop .env
@@ -38,4 +33,4 @@ esac
 # Ensure backend/db directory exists
 mkdir -p ./backend/db
 
-migrate create -ext sql -dir ./backend/db "${branch_name}_${description}"
+migrate create -ext sql -dir ./backend/db "${description}"

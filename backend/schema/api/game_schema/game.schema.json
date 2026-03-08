@@ -54,6 +54,18 @@
         },
         "updated_at": {
             "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/updated_at"
+        },
+        "is_designer": {
+            "description": "Whether the requesting account is the designer of this game.",
+            "type": "boolean"
+        },
+        "is_manager": {
+            "description": "Whether the requesting account is currently managing this game.",
+            "type": "boolean"
+        },
+        "can_manage": {
+            "description": "Whether the requesting account can subscribe to manage this game.",
+            "type": "boolean"
         }
     },
     "required": [

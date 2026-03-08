@@ -28,7 +28,7 @@
         ref="sheetFrame"
         :srcdoc="turnSheetHtml"
         class="turn-sheet-frame"
-        sandbox="allow-same-origin"
+        sandbox="allow-same-origin allow-scripts"
         data-testid="join-sheet-iframe"
         @load="onIframeLoad"
       ></iframe>

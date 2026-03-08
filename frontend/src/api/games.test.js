@@ -35,16 +35,16 @@ describe('games API', () => {
       expect(result.data).toEqual(games)
     })
 
-    it('appends query params for subscriptionType and status', async () => {
+    it('appends query params for view filters and status', async () => {
       mockApiFetch.mockResolvedValue({
         ok: true,
         json: () => Promise.resolve({ data: [] }),
       })
 
-      await listGames({ subscriptionType: 'basic', status: 'active' })
+      await listGames({ isDesigner: true, status: 'active' })
 
       const calledUrl = mockApiFetch.mock.calls[0][0]
-      expect(calledUrl).toContain('subscription_type=basic')
+      expect(calledUrl).toContain('is_designer=true')
       expect(calledUrl).toContain('status=active')
     })
   })

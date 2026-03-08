@@ -4,7 +4,7 @@ export async function listGameInstanceParameters(gameId, gameInstanceId, params 
   const queryParams = new URLSearchParams();
   if (params.configKey) queryParams.append('config_key', params.configKey);
   
-  const url = `${baseUrl}/api/v1/games/${gameId}/instances/${gameInstanceId}/parameters${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+  const url = `${baseUrl}/api/v1/manager/games/${gameId}/instances/${gameInstanceId}/parameters${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
   const res = await apiFetch(url, {
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
   });
@@ -13,7 +13,7 @@ export async function listGameInstanceParameters(gameId, gameInstanceId, params 
 }
 
 export async function getGameInstanceParameter(gameId, gameInstanceId, parameterId) {
-  const res = await apiFetch(`${baseUrl}/api/v1/games/${gameId}/instances/${gameInstanceId}/parameters/${parameterId}`, {
+  const res = await apiFetch(`${baseUrl}/api/v1/manager/games/${gameId}/instances/${gameInstanceId}/parameters/${parameterId}`, {
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
   });
   await handleApiError(res, 'Failed to fetch game instance parameter');
@@ -21,7 +21,7 @@ export async function getGameInstanceParameter(gameId, gameInstanceId, parameter
 }
 
 export async function createGameInstanceParameter(gameId, gameInstanceId, data) {
-  const res = await apiFetch(`${baseUrl}/api/v1/games/${gameId}/instances/${gameInstanceId}/parameters`, {
+  const res = await apiFetch(`${baseUrl}/api/v1/manager/games/${gameId}/instances/${gameInstanceId}/parameters`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
     body: JSON.stringify(data),
@@ -31,7 +31,7 @@ export async function createGameInstanceParameter(gameId, gameInstanceId, data) 
 }
 
 export async function updateGameInstanceParameter(gameId, gameInstanceId, parameterId, data) {
-  const res = await apiFetch(`${baseUrl}/api/v1/games/${gameId}/instances/${gameInstanceId}/parameters/${parameterId}`, {
+  const res = await apiFetch(`${baseUrl}/api/v1/manager/games/${gameId}/instances/${gameInstanceId}/parameters/${parameterId}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
     body: JSON.stringify(data),
@@ -41,7 +41,7 @@ export async function updateGameInstanceParameter(gameId, gameInstanceId, parame
 }
 
 export async function deleteGameInstanceParameter(gameId, gameInstanceId, parameterId) {
-  const res = await apiFetch(`${baseUrl}/api/v1/games/${gameId}/instances/${gameInstanceId}/parameters/${parameterId}`, {
+  const res = await apiFetch(`${baseUrl}/api/v1/manager/games/${gameId}/instances/${gameInstanceId}/parameters/${parameterId}`, {
     method: 'DELETE',
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
   });

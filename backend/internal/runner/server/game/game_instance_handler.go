@@ -26,23 +26,23 @@ import (
 
 // API Resource Search Path
 //
-// GET (collection) /api/v1/game-instances
+// GET (collection) /api/v1/manager/game-instances
 //
 // # API Resource CRUD Paths
 //
-//   - GET (collection)  /api/v1/games/{game_id}/instances
-//   - GET (document)    /api/v1/games/{game_id}/instances/{instance_id}
-//   - POST (document)   /api/v1/games/{game_id}/instances
-//   - PUT (document)    /api/v1/games/{game_id}/instances/{instance_id}
-//   - DELETE (document) /api/v1/games/{game_id}/instances/{instance_id}
+//   - GET (collection)  /api/v1/manager/games/{game_id}/instances
+//   - GET (document)    /api/v1/manager/games/{game_id}/instances/{instance_id}
+//   - POST (document)   /api/v1/manager/games/{game_id}/instances
+//   - PUT (document)    /api/v1/manager/games/{game_id}/instances/{instance_id}
+//   - DELETE (document) /api/v1/manager/games/{game_id}/instances/{instance_id}
 //
 // # Runtime Management Endpoints
 //
-//   - POST (document)   /api/v1/games/{game_id}/instances/{instance_id}/start
-//   - POST (document)   /api/v1/games/{game_id}/instances/{instance_id}/pause
-//   - POST (document)   /api/v1/games/{game_id}/instances/{instance_id}/resume
-//   - POST (document)   /api/v1/games/{game_id}/instances/{instance_id}/cancel
-//   - POST (document)   /api/v1/games/{game_id}/instances/{instance_id}/reset
+//   - POST (document)   /api/v1/manager/games/{game_id}/instances/{instance_id}/start
+//   - POST (document)   /api/v1/manager/games/{game_id}/instances/{instance_id}/pause
+//   - POST (document)   /api/v1/manager/games/{game_id}/instances/{instance_id}/resume
+//   - POST (document)   /api/v1/manager/games/{game_id}/instances/{instance_id}/cancel
+//   - POST (document)   /api/v1/manager/games/{game_id}/instances/{instance_id}/reset
 const (
 	SearchManyGameInstances = "search-many-game-instances"
 	GetManyGameInstances    = "get-many-game-instances"
@@ -100,26 +100,39 @@ func gameInstanceHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig
 		}...),
 	}
 
+	managerViewCollectionResponseSchema := jsonschema.SchemaWithReferences{
+		Main: jsonschema.Schema{
+			Location: "api/game_schema",
+			Name:     "manager_game_instance.collection.response.schema.json",
+		},
+		References: append(referenceSchemas, []jsonschema.Schema{
+			{
+				Location: "api/game_schema",
+				Name:     "manager_game_instance.schema.json",
+			},
+		}...),
+	}
+
 	gameInstanceConfig[SearchManyGameInstances] = server.HandlerConfig{
 		Method:      http.MethodGet,
-		Path:        "/api/v1/game-instances",
-		HandlerFunc: searchManyGameInstancesHandler,
+		Path:        "/api/v1/manager/game-instances",
+		HandlerFunc: getManyManagerGameInstancesHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
 				server.AuthenticationTypeToken,
 			},
-			ValidateResponseSchema: collectionResponseSchema,
+			ValidateResponseSchema: managerViewCollectionResponseSchema,
 		},
 		DocumentationConfig: server.DocumentationConfig{
 			Document:   true,
 			Collection: true,
-			Title:      "Search game instances",
+			Title:      "Get manager game instances",
 		},
 	}
 
 	gameInstanceConfig[GetManyGameInstances] = server.HandlerConfig{
 		Method:      http.MethodGet,
-		Path:        "/api/v1/games/:game_id/instances",
+		Path:        "/api/v1/manager/games/:game_id/instances",
 		HandlerFunc: getManyGameInstancesHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
@@ -136,7 +149,7 @@ func gameInstanceHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig
 
 	gameInstanceConfig[GetOneGameInstance] = server.HandlerConfig{
 		Method:      http.MethodGet,
-		Path:        "/api/v1/games/:game_id/instances/:instance_id",
+		Path:        "/api/v1/manager/games/:game_id/instances/:instance_id",
 		HandlerFunc: getOneGameInstanceHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
@@ -152,7 +165,7 @@ func gameInstanceHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig
 
 	gameInstanceConfig[CreateOneGameInstance] = server.HandlerConfig{
 		Method:      http.MethodPost,
-		Path:        "/api/v1/games/:game_id/instances",
+		Path:        "/api/v1/manager/games/:game_id/instances",
 		HandlerFunc: createOneGameInstanceHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
@@ -172,7 +185,7 @@ func gameInstanceHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig
 
 	gameInstanceConfig[UpdateOneGameInstance] = server.HandlerConfig{
 		Method:      http.MethodPut,
-		Path:        "/api/v1/games/:game_id/instances/:instance_id",
+		Path:        "/api/v1/manager/games/:game_id/instances/:instance_id",
 		HandlerFunc: updateOneGameInstanceHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
@@ -192,7 +205,7 @@ func gameInstanceHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig
 
 	gameInstanceConfig[DeleteOneGameInstance] = server.HandlerConfig{
 		Method:      http.MethodDelete,
-		Path:        "/api/v1/games/:game_id/instances/:instance_id",
+		Path:        "/api/v1/manager/games/:game_id/instances/:instance_id",
 		HandlerFunc: deleteOneGameInstanceHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
@@ -211,7 +224,7 @@ func gameInstanceHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig
 	// Runtime management endpoints
 	gameInstanceConfig[StartGameInstance] = server.HandlerConfig{
 		Method:      http.MethodPost,
-		Path:        "/api/v1/games/:game_id/instances/:instance_id/start",
+		Path:        "/api/v1/manager/games/:game_id/instances/:instance_id/start",
 		HandlerFunc: startGameInstanceHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
@@ -230,7 +243,7 @@ func gameInstanceHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig
 
 	gameInstanceConfig[PauseGameInstance] = server.HandlerConfig{
 		Method:      http.MethodPost,
-		Path:        "/api/v1/games/:game_id/instances/:instance_id/pause",
+		Path:        "/api/v1/manager/games/:game_id/instances/:instance_id/pause",
 		HandlerFunc: pauseGameInstanceHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
@@ -249,7 +262,7 @@ func gameInstanceHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig
 
 	gameInstanceConfig[ResumeGameInstance] = server.HandlerConfig{
 		Method:      http.MethodPost,
-		Path:        "/api/v1/games/:game_id/instances/:instance_id/resume",
+		Path:        "/api/v1/manager/games/:game_id/instances/:instance_id/resume",
 		HandlerFunc: resumeGameInstanceHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
@@ -268,7 +281,7 @@ func gameInstanceHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig
 
 	gameInstanceConfig[CancelGameInstance] = server.HandlerConfig{
 		Method:      http.MethodPost,
-		Path:        "/api/v1/games/:game_id/instances/:instance_id/cancel",
+		Path:        "/api/v1/manager/games/:game_id/instances/:instance_id/cancel",
 		HandlerFunc: cancelGameInstanceHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
@@ -287,7 +300,7 @@ func gameInstanceHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig
 
 	gameInstanceConfig[ResetGameInstance] = server.HandlerConfig{
 		Method:      http.MethodPost,
-		Path:        "/api/v1/games/:game_id/instances/:instance_id/reset",
+		Path:        "/api/v1/manager/games/:game_id/instances/:instance_id/reset",
 		HandlerFunc: resetOneGameInstanceHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
@@ -317,7 +330,7 @@ func gameInstanceHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig
 
 	gameInstanceConfig[GetJoinGameLink] = server.HandlerConfig{
 		Method:      http.MethodGet,
-		Path:        "/api/v1/games/:game_id/instances/:instance_id/join-link",
+		Path:        "/api/v1/manager/games/:game_id/instances/:instance_id/join-link",
 		HandlerFunc: getJoinGameLinkHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
@@ -354,7 +367,7 @@ func gameInstanceHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig
 
 	gameInstanceConfig[InviteTester] = server.HandlerConfig{
 		Method:      http.MethodPost,
-		Path:        "/api/v1/games/:game_id/instances/:instance_id/invite-tester",
+		Path:        "/api/v1/manager/games/:game_id/instances/:instance_id/invite-tester",
 		HandlerFunc: inviteTesterHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
@@ -377,23 +390,42 @@ func gameInstanceHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig
 	return gameInstanceConfig, nil
 }
 
-func searchManyGameInstancesHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
-	l = logging.LoggerWithFunctionContext(l, packageName, "searchManyGameInstancesHandler")
+func getManyManagerGameInstancesHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
+	l = logging.LoggerWithFunctionContext(l, packageName, "getManyManagerGameInstancesHandler")
+
+	authenData := server.GetRequestAuthenData(l, r)
+	if authenData == nil || authenData.AccountUser.ID == "" {
+		l.Warn("authenticated account is required")
+		return coreerror.NewUnauthorizedError()
+	}
+
+	accountID := authenData.AccountUser.AccountID
+	l.Info("listing manager game instances for account >%s< with params >%#v<", accountID, qp)
 
 	mm := m.(*domain.Domain)
 	opts := queryparam.ToSQLOptionsWithDefaults(qp)
+	opts.Params = append(opts.Params, sql.Param{
+		Col: game_record.FieldManagerGameInstanceVAccountID,
+		Val: accountID,
+	})
 
-	recs, err := mm.GameInstanceRepository().GetMany(opts)
+	gameID := r.URL.Query().Get("game_id")
+	if gameID != "" {
+		opts.Params = append(opts.Params, sql.Param{
+			Col: game_record.FieldManagerGameInstanceVGameID,
+			Val: gameID,
+		})
+	}
+
+	recs, err := mm.GetManyManagerGameInstanceViewRecs(opts)
 	if err != nil {
-		l.Warn("failed getting game instance records >%v<", err)
+		l.Warn("failed getting manager game instance view records >%v<", err)
 		return err
 	}
 
-	getPlayerCount := func(instanceID string) (int, error) {
-		return mm.GetPlayerCountForGameInstance(instanceID)
-	}
+	l.Info("mapping >%d< manager game instance view records for response", len(recs))
 
-	res, err := mapper.GameInstanceRecordsToCollectionResponse(l, recs, getPlayerCount)
+	res, err := mapper.ManagerGameInstanceViewRecordsToCollectionResponse(l, recs)
 	if err != nil {
 		return err
 	}

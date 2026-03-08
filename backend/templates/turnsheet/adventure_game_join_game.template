@@ -68,6 +68,33 @@
 }
 
 </style>
+{{- if and (.HasDeliveryChoice) (.AvailableDeliveryMethods.PhysicalPost)}}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var radios = document.querySelectorAll('input[name="delivery_method"]');
+    var section = document.getElementById('postal-address-fields');
+    if (!radios.length || !section) return;
+
+    var requiredInputs = section.querySelectorAll('input[required]');
+
+    function toggle(show) {
+        console.log(`Toggle address fields ${show}`)
+        section.style.display = show ? '' : 'none';
+        for (var i = 0; i < requiredInputs.length; i++) {
+            requiredInputs[i].required = show;
+        }
+    }
+
+    toggle(false);
+
+    for (var i = 0; i < radios.length; i++) {
+        radios[i].addEventListener('change', function() {
+            toggle(this.value === 'post');
+        });
+    }
+});
+</script>
+{{- end}}
 {{end}}
 
 {{define "content"}}
@@ -115,6 +142,8 @@
             <label class="form-field-title" for="name">Name:</label>
             <input type="text" id="name" name="name" required>
         </div>
+        {{- if .AvailableDeliveryMethods.PhysicalPost}}
+        <div id="postal-address-fields">
         <div class="form-group">
             <label class="form-field-title" for="postal_address_line1">Address Line 1:</label>
             <input type="text" id="postal_address_line1" name="postal_address_line1" required>
@@ -139,6 +168,8 @@
                 <input type="text" id="postal_code" name="postal_code" required>
             </div>
         </div>
+        </div>
+        {{- end}}
     </div>
 </div>
 

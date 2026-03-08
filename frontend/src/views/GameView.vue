@@ -106,8 +106,7 @@ export default {
   },
   async created() {
     this.gamesStore = useGamesStore();
-    // Filter to only show games where the user has Designer subscription
-    await this.gamesStore.fetchGames({ subscriptionType: 'Designer' });
+    await this.gamesStore.fetchGames({ isDesigner: true });
     await this.loadSubscriptionInfo();
   },
   methods: {

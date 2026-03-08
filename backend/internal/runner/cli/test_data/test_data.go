@@ -43,12 +43,13 @@ func AccountConfig() []harness.AccountConfig {
 					SubscriptionType: game_record.GameSubscriptionTypeDesigner,
 					Record:           &game_record.GameSubscription{},
 				},
-				{
-					Reference:        harness.GameSubscriptionManagerOneRef,
-					GameRef:          harness.GameOneRef,
-					SubscriptionType: game_record.GameSubscriptionTypeManager,
-					Record:           &game_record.GameSubscription{},
-				},
+			{
+				Reference:        harness.GameSubscriptionManagerOneRef,
+				GameRef:          harness.GameOneRef,
+				GameInstanceRefs: []string{harness.GameInstanceOneRef},
+				SubscriptionType: game_record.GameSubscriptionTypeManager,
+				Record:           &game_record.GameSubscription{},
+			},
 				{
 					Reference:        harness.GameSubscriptionPlayerOneRef,
 					GameRef:          harness.GameOneRef,
@@ -70,12 +71,13 @@ func AccountConfig() []harness.AccountConfig {
 					SubscriptionType: game_record.GameSubscriptionTypePlayer,
 					Record:           &game_record.GameSubscription{},
 				},
-				{
-					Reference:        "game-subscription-two",
-					GameRef:          harness.GameTwoRef,
-					SubscriptionType: game_record.GameSubscriptionTypeManager,
-					Record:           &game_record.GameSubscription{},
-				},
+			{
+				Reference:        "game-subscription-two",
+				GameRef:          harness.GameTwoRef,
+				GameInstanceRefs: []string{harness.GameInstanceTwoRef},
+				SubscriptionType: game_record.GameSubscriptionTypeManager,
+				Record:           &game_record.GameSubscription{},
+			},
 				{
 					Reference:        "game-subscription-two-designer",
 					GameRef:          harness.GameTwoRef,
@@ -478,6 +480,13 @@ func GameConfig() []harness.GameConfig {
 				GameType:          game_record.GameTypeAdventure,
 				TurnDurationHours: 336, // 2 weeks
 			},
+			GameImageConfigs: []harness.GameImageConfig{
+				{
+					Reference:     "game-image-join-game-two",
+					ImagePath:     ImageJoinGame,
+					TurnSheetType: adventure_game_record.AdventureGameTurnSheetTypeJoinGame,
+				},
+			},
 			// Simpler world for the second game
 			AdventureGameLocationConfigs: []harness.AdventureGameLocationConfig{
 				{
@@ -516,8 +525,11 @@ func GameConfig() []harness.GameConfig {
 			},
 			GameInstanceConfigs: []harness.GameInstanceConfig{
 				{
-					Reference: harness.GameInstanceTwoRef,
-					Record:    &game_record.GameInstance{},
+				Reference: harness.GameInstanceTwoRef,
+				Record: &game_record.GameInstance{
+					DeliveryEmail:        true,
+					DeliveryPhysicalPost: true,
+				},
 					GameInstanceParameterConfigs: []harness.GameInstanceParameterConfig{
 						{
 							Reference: "game-instance-parameter-three",

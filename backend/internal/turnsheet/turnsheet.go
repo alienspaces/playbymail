@@ -268,26 +268,34 @@ type JoinGameScanData struct {
 	DeliveryMethod     string `json:"delivery_method,omitempty"` // "email", "local", or "post"; empty when only one method available
 }
 
-// Validate ensures required fields are present in the scanned data
+// Validate ensures required fields are present in the scanned data.
+// Postal address fields are only required when the delivery method is
+// "post" or empty (empty indicates a single-method game where postal
+// was the only option, so the form included address fields).
 // Note: game_subscription_id is optional during scanning (added during processing)
-// but required when processing the join game turn sheet
+// but required when processing the join game turn sheet.
 func (d *JoinGameScanData) Validate() error {
-	switch {
-	case d.Email == "":
+	if d.Email == "" {
 		return fmt.Errorf("email is required")
-	case d.Name == "":
-		return fmt.Errorf("name is required")
-	case d.PostalAddressLine1 == "":
-		return fmt.Errorf("postal address line 1 is required")
-	case d.StateProvince == "":
-		return fmt.Errorf("state or province is required")
-	case d.Country == "":
-		return fmt.Errorf("country is required")
-	case d.PostalCode == "":
-		return fmt.Errorf("post code is required")
-	default:
-		return nil
 	}
+	if d.Name == "" {
+		return fmt.Errorf("name is required")
+	}
+
+	if d.DeliveryMethod == "" || d.DeliveryMethod == "post" {
+		switch {
+		case d.PostalAddressLine1 == "":
+			return fmt.Errorf("postal address line 1 is required")
+		case d.StateProvince == "":
+			return fmt.Errorf("state or province is required")
+		case d.Country == "":
+			return fmt.Errorf("country is required")
+		case d.PostalCode == "":
+			return fmt.Errorf("post code is required")
+		}
+	}
+
+	return nil
 }
 
 // ValidateForProcessing ensures all required fields including game_subscription_id are present

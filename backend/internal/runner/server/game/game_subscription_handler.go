@@ -269,6 +269,8 @@ func gameSubscriptionHandlerConfig(l logger.Logger) (map[string]server.HandlerCo
 func getManyGameSubscriptionsHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = logging.LoggerWithFunctionContext(l, packageName, "getManyGameSubscriptionsHandler")
 
+	l.Info("querying many game subscription records with params >%#v<", qp)
+
 	mm := m.(*domain.Domain)
 
 	opts := queryparam.ToSQLOptionsWithDefaults(qp)
@@ -286,11 +288,15 @@ func getManyGameSubscriptionsHandler(w http.ResponseWriter, r *http.Request, pp 
 		return err
 	}
 
+	l.Info("responding with >%d< game subscription records", len(recs))
+
 	return server.WriteResponse(l, w, http.StatusOK, res, server.XPaginationHeader(len(recs), qp.PageSize))
 }
 
 func getGameSubscriptionHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = logging.LoggerWithFunctionContext(l, packageName, "getGameSubscriptionHandler")
+
+	l.Info("querying game subscription record with path params >%#v<", pp)
 
 	mm := m.(*domain.Domain)
 
@@ -313,11 +319,15 @@ func getGameSubscriptionHandler(w http.ResponseWriter, r *http.Request, pp httpr
 		return err
 	}
 
+	l.Info("responding with game subscription record id >%s<", rec.ID)
+
 	return server.WriteResponse(l, w, http.StatusOK, res)
 }
 
 func createGameSubscriptionHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = logging.LoggerWithFunctionContext(l, packageName, "createGameSubscriptionHandler")
+
+	l.Info("creating game subscription record")
 
 	mm := m.(*domain.Domain)
 
@@ -353,11 +363,15 @@ func createGameSubscriptionHandler(w http.ResponseWriter, r *http.Request, pp ht
 		return err
 	}
 
+	l.Info("responding with created game subscription record id >%s<", rec.ID)
+
 	return server.WriteResponse(l, w, http.StatusCreated, res)
 }
 
 func updateGameSubscriptionHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = logging.LoggerWithFunctionContext(l, packageName, "updateGameSubscriptionHandler")
+
+	l.Info("updating game subscription record with path params >%#v<", pp)
 
 	mm := m.(*domain.Domain)
 
@@ -397,11 +411,15 @@ func updateGameSubscriptionHandler(w http.ResponseWriter, r *http.Request, pp ht
 		return err
 	}
 
+	l.Info("responding with updated game subscription record id >%s<", rec.ID)
+
 	return server.WriteResponse(l, w, http.StatusOK, res)
 }
 
 func deleteGameSubscriptionHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = logging.LoggerWithFunctionContext(l, packageName, "deleteGameSubscriptionHandler")
+
+	l.Info("deleting game subscription record with path params >%#v<", pp)
 
 	mm := m.(*domain.Domain)
 
@@ -417,6 +435,8 @@ func deleteGameSubscriptionHandler(w http.ResponseWriter, r *http.Request, pp ht
 		l.Warn("failed to delete game subscription record >%v<", err)
 		return err
 	}
+
+	l.Info("deleted game subscription record id >%s<", rec.ID)
 
 	return server.WriteResponse(l, w, http.StatusNoContent, nil)
 }
@@ -478,6 +498,8 @@ func approveGameSubscriptionHandler(w http.ResponseWriter, r *http.Request, pp h
 func linkGameInstanceToSubscriptionHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = logging.LoggerWithFunctionContext(l, packageName, "linkGameInstanceToSubscriptionHandler")
 
+	l.Info("linking game instance to subscription with path params >%#v<", pp)
+
 	mm := m.(*domain.Domain)
 
 	subscriptionID := pp.ByName("game_subscription_id")
@@ -507,6 +529,8 @@ func linkGameInstanceToSubscriptionHandler(w http.ResponseWriter, r *http.Reques
 		l.Warn("failed to map game subscription instance record to response >%v<", err)
 		return err
 	}
+
+	l.Info("responding with linked game subscription instance record id >%s<", linkedRec.ID)
 
 	return server.WriteResponse(l, w, http.StatusCreated, res)
 }
@@ -580,6 +604,8 @@ func inviteHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params,
 func unlinkGameInstanceFromSubscriptionHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = logging.LoggerWithFunctionContext(l, packageName, "unlinkGameInstanceFromSubscriptionHandler")
 
+	l.Info("unlinking game instance from subscription with path params >%#v<", pp)
+
 	mm := m.(*domain.Domain)
 
 	subscriptionID := pp.ByName("game_subscription_id")
@@ -617,6 +643,8 @@ func unlinkGameInstanceFromSubscriptionHandler(w http.ResponseWriter, r *http.Re
 		l.Warn("failed to delete game subscription instance link >%v<", err)
 		return err
 	}
+
+	l.Info("unlinked game instance >%s< from subscription >%s<", instanceID, subscriptionID)
 
 	return server.WriteResponse(l, w, http.StatusNoContent, nil)
 }
