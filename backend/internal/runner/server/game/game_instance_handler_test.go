@@ -55,7 +55,7 @@ func Test_searchManyGameInstancesHandler(t *testing.T) {
 						"game_id":     gameRec.ID,
 					}
 				},
-				ResponseDecoder: testutil.TestCaseResponseDecoderGeneric[game_schema.GameInstanceCollectionResponse],
+				ResponseDecoder: testutil.TestCaseResponseDecoderGeneric[game_schema.ManagerGameInstanceCollectionResponse],
 				ResponseCode:    http.StatusOK,
 			},
 			expectedCount: 2, // GameInstanceOneRef and GameInstanceCleanRef
@@ -74,7 +74,7 @@ func Test_searchManyGameInstancesHandler(t *testing.T) {
 						"game_id":     gameRec.ID,
 					}
 				},
-				ResponseDecoder: testutil.TestCaseResponseDecoderGeneric[game_schema.GameInstanceCollectionResponse],
+				ResponseDecoder: testutil.TestCaseResponseDecoderGeneric[game_schema.ManagerGameInstanceCollectionResponse],
 				ResponseCode:    http.StatusOK,
 			},
 			expectedCount: 2, // GameInstanceOneRef and GameInstanceCleanRef
@@ -88,15 +88,18 @@ func Test_searchManyGameInstancesHandler(t *testing.T) {
 			testFunc := func(method string, body any) {
 				require.NotNil(t, body, "Response body is not nil")
 
-				resp := body.(game_schema.GameInstanceCollectionResponse)
+				resp := body.(game_schema.ManagerGameInstanceCollectionResponse)
 				require.NotNil(t, resp.Data, "Response data is not nil")
 				require.Equal(t, testCase.expectedCount, len(resp.Data), "Response contains expected number of instances")
 
-				// Confirm type of each record
-				for _, instance := range resp.Data {
-					require.NotEmpty(t, instance.ID, "Instance ID is not empty")
-					require.NotEmpty(t, instance.Status, "Instance Status is not empty")
-					require.GreaterOrEqual(t, instance.CurrentTurn, 0, "Instance CurrentTurn is valid")
+				// Confirm manager view shape: each record has game and subscription info
+				for _, row := range resp.Data {
+					require.NotEmpty(t, row.GameID, "GameID is not empty")
+					require.NotEmpty(t, row.GameName, "GameName is not empty")
+					require.NotEmpty(t, row.GameType, "GameType is not empty")
+					require.NotEmpty(t, row.GameDescription, "GameDescription is not empty")
+					require.NotEmpty(t, row.GameSubscriptionID, "GameSubscriptionID is not empty")
+					require.False(t, row.CreatedAt.IsZero(), "CreatedAt is set")
 				}
 			}
 
