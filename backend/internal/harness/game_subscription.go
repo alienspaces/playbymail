@@ -54,15 +54,9 @@ func (t *Testing) createGameSubscriptionRec(subscriptionConfig GameSubscriptionC
 		rec.SubscriptionType = subscriptionConfig.SubscriptionType
 	}
 
-	if rec.SubscriptionType == game_record.GameSubscriptionTypeDesigner || rec.SubscriptionType == game_record.GameSubscriptionTypeManager {
-		rec.AccountID = accountRec.AccountID
-		rec.AccountUserID = nullstring.FromString("")
-	} else {
-		// Player subscription
-		rec.AccountID = accountRec.AccountID
-		// User Subscriptions use account_user_id.
-		rec.AccountUserID = nullstring.FromString(accountRec.ID)
-	}
+	// All subscription types are tied to an account user (designer/manager/player).
+	rec.AccountID = accountRec.AccountID
+	rec.AccountUserID = accountRec.ID
 
 	// Set instance limit if provided
 	if subscriptionConfig.InstanceLimit != nil {
@@ -124,7 +118,7 @@ func (t *Testing) createGameSubscriptionRec(subscriptionConfig GameSubscriptionC
 // GameInstanceRef in the config. It is a no-op when GameInstanceRefs is empty.
 // Called from createGameSubscriptionRec when instances exist, or deferred to a
 // later pass when subscriptions must be created before instances.
-func (t *Testing) linkSubscriptionInstances(subscriptionConfig GameSubscriptionConfig, subRec *game_record.GameSubscription, gameRec *game_record.Game) error {
+func (t *Testing) linkSubscriptionInstances(subscriptionConfig GameSubscriptionConfig, gameSubscriptionRec *game_record.GameSubscription, gameRec *game_record.Game) error {
 	l := t.Logger("linkSubscriptionInstances")
 
 	for _, instanceRef := range subscriptionConfig.GameInstanceRefs {
@@ -139,18 +133,21 @@ func (t *Testing) linkSubscriptionInstances(subscriptionConfig GameSubscriptionC
 		}
 
 		instanceLinkRec := &game_record.GameSubscriptionInstance{
-			GameSubscriptionID: subRec.ID,
+			AccountID:          gameSubscriptionRec.AccountID,
+			AccountUserID:      gameSubscriptionRec.AccountUserID,
+			GameSubscriptionID: gameSubscriptionRec.ID,
 			GameInstanceID:     gameInstanceRec.ID,
 		}
 		instanceLinkRec, err = t.Domain.(*domain.Domain).CreateGameSubscriptionInstanceRec(instanceLinkRec)
 		if err != nil {
-			l.Warn("failed linking game instance >%s< to subscription >%s<: %v", instanceRef, subRec.ID, err)
+			l.Warn("failed linking game instance >%s< to subscription >%s<: %v", instanceRef, gameSubscriptionRec.ID, err)
 			return err
 		}
 
 		t.Data.AddGameSubscriptionInstanceRec(instanceLinkRec)
 		t.teardownData.AddGameSubscriptionInstanceRec(instanceLinkRec)
 	}
+
 	return nil
 }
 

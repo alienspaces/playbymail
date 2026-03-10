@@ -39,15 +39,6 @@ func (m *Domain) validateGameInstanceRecForCreate(rec *game_record.GameInstance)
 		return err
 	}
 
-	// Draft games require closed testing — instances of unpublished games
-	// cannot be joined by the public and require a specific invitation.
-	if args.gameRec != nil && args.gameRec.Status == game_record.GameStatusDraft {
-		rec.IsClosedTesting = true
-		if !rec.DeliveryEmail {
-			rec.DeliveryEmail = true
-		}
-	}
-
 	// Basic validation first
 	if err := validateGameInstanceRec(args, false); err != nil {
 		return err

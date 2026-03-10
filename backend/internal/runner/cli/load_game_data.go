@@ -3,7 +3,6 @@ package runner
 import (
 	"fmt"
 
-	"github.com/brianvoe/gofakeit"
 	"github.com/urfave/cli/v2"
 
 	coresql "gitlab.com/alienspaces/playbymail/core/sql"
@@ -123,13 +122,11 @@ func (rnr *Runner) loadGameData(c *cli.Context) error {
 	}
 
 	l.Info("game data loaded successfully")
+
 	return nil
 }
 
-// ensureDemoAccounts checks each demo account definition by email. If an account
-// already exists it is reused; otherwise a new account (with contact record) is
-// created. The result is a SeedAccountRefs map (ref -> account_user_id) that can
-// be passed to the harness via DataConfig.
+// ensureDemoAccounts checks each demo account, user account and user account contact records exist.
 func (rnr *Runner) ensureDemoAccounts() (map[string]string, error) {
 	l := loggerWithFunctionContext(rnr.Log, "ensureDemoAccounts")
 
@@ -141,7 +138,7 @@ func (rnr *Runner) ensureDemoAccounts() (map[string]string, error) {
 	refs := make(map[string]string, len(demo_scenarios.DemoAccountDefs))
 
 	for _, def := range demo_scenarios.DemoAccountDefs {
-		existing, err := dm.GetAccountRecByEmail(def.Email)
+		existing, err := dm.GetAccountUserRecByEmail(def.Email)
 		if err != nil {
 			return nil, fmt.Errorf("failed looking up account by email >%s<: %w", def.Email, err)
 		}
@@ -152,33 +149,27 @@ func (rnr *Runner) ensureDemoAccounts() (map[string]string, error) {
 		}
 
 		l.Info("creating demo account ref >%s< email >%s<", def.Ref, def.Email)
-		_, createdRec, _, err := dm.CreateAccount(&account_record.AccountUser{
-			Email: def.Email,
-		})
+
+		_, accountUserRec, _, _, err := dm.UpsertAccount(
+			&account_record.Account{},
+			&account_record.AccountUser{
+				Email: def.Email,
+			},
+			nil,
+		)
 		if err != nil {
 			return nil, fmt.Errorf("failed creating demo account >%s<: %w", def.Email, err)
 		}
 
-		_, err = dm.CreateAccountUserContactRec(&account_record.AccountUserContact{
-			AccountUserID:      createdRec.ID,
-			Name:               gofakeit.Name(),
-			PostalAddressLine1: gofakeit.Address().Address,
-			StateProvince:      gofakeit.Address().State,
-			Country:            gofakeit.Address().Country,
-			PostalCode:         gofakeit.Address().Zip,
-		})
-		if err != nil {
-			return nil, fmt.Errorf("failed creating contact for demo account >%s<: %w", def.Email, err)
-		}
-
-		refs[def.Ref] = createdRec.ID
-		l.Info("created demo account ref >%s< ID >%s<", def.Ref, createdRec.ID)
+		refs[def.Ref] = accountUserRec.ID
+		l.Info("created demo account ref >%s< ID >%s<", def.Ref, accountUserRec.ID)
 	}
 
 	// Commit the account creation and re-init so the harness starts with a clean tx
 	if err := rnr.Domain.Commit(); err != nil {
 		return nil, fmt.Errorf("failed committing demo accounts: %w", err)
 	}
+
 	if err := rnr.InitDomainTx(); err != nil {
 		return nil, fmt.Errorf("failed re-init domain tx after account creation: %w", err)
 	}
@@ -189,10 +180,12 @@ func (rnr *Runner) ensureDemoAccounts() (map[string]string, error) {
 // gameExistsByName returns true if at least one non-deleted game with the
 // given name exists in the database.
 func (rnr *Runner) gameExistsByName(name string) (bool, error) {
+
 	dm, ok := rnr.Domain.(*domain.Domain)
 	if !ok {
 		return false, fmt.Errorf("domain type assertion failed")
 	}
+
 	games, err := dm.GetManyGameRecs(&coresql.Options{
 		Params: []coresql.Param{
 			{Col: game_record.FieldGameName, Val: name},
@@ -201,6 +194,7 @@ func (rnr *Runner) gameExistsByName(name string) (bool, error) {
 	if err != nil {
 		return false, fmt.Errorf("failed checking for existing game >%s<: %w", name, err)
 	}
+
 	return len(games) > 0, nil
 }
 
@@ -223,6 +217,7 @@ func (rnr *Runner) removeGameByName(name string) error {
 	if err != nil {
 		return fmt.Errorf("failed looking up game by name >%s<: %w", name, err)
 	}
+
 	if len(games) == 0 {
 		l.Info("no existing game named >%s<, nothing to remove", name)
 		return nil
@@ -238,6 +233,9 @@ func (rnr *Runner) removeGameByName(name string) error {
 	return nil
 }
 
+// TODO: This function is potentially brittle and should be implemented by a domain or harnessmethod
+// that has a test backing it.
+
 // removeGameAndDependents cascades removal of all records that belong to a
 // single game. The order mirrors the harness RemoveData teardown sequence.
 func (rnr *Runner) removeGameAndDependents(dm *domain.Domain, gameID string) error {
@@ -252,6 +250,7 @@ func (rnr *Runner) removeGameAndDependents(dm *domain.Domain, gameID string) err
 	if err != nil {
 		return fmt.Errorf("failed getting adventure game turn sheets: %w", err)
 	}
+
 	for _, rec := range agts {
 		if err := dm.RemoveAdventureGameTurnSheetRec(rec.ID); err != nil {
 			return fmt.Errorf("failed removing adventure game turn sheet >%s<: %w", rec.ID, err)
@@ -283,6 +282,7 @@ func (rnr *Runner) removeGameAndDependents(dm *domain.Domain, gameID string) err
 	if err != nil {
 		return fmt.Errorf("failed getting game subscriptions: %w", err)
 	}
+
 	for _, sub := range subs {
 		l.Info("removing game subscription >%s<", sub.ID)
 		if err := dm.RemoveGameSubscriptionRec(sub.ID); err != nil {
@@ -295,6 +295,7 @@ func (rnr *Runner) removeGameAndDependents(dm *domain.Domain, gameID string) err
 	if err != nil {
 		return fmt.Errorf("failed getting item placements: %w", err)
 	}
+
 	for _, rec := range itemPlacements {
 		if err := dm.RemoveAdventureGameItemPlacementRec(rec.ID); err != nil {
 			return fmt.Errorf("failed removing item placement >%s<: %w", rec.ID, err)
@@ -306,6 +307,7 @@ func (rnr *Runner) removeGameAndDependents(dm *domain.Domain, gameID string) err
 	if err != nil {
 		return fmt.Errorf("failed getting creature placements: %w", err)
 	}
+
 	for _, rec := range creaturePlacements {
 		if err := dm.RemoveAdventureGameCreaturePlacementRec(rec.ID); err != nil {
 			return fmt.Errorf("failed removing creature placement >%s<: %w", rec.ID, err)
@@ -317,6 +319,7 @@ func (rnr *Runner) removeGameAndDependents(dm *domain.Domain, gameID string) err
 	if err != nil {
 		return fmt.Errorf("failed getting link requirements: %w", err)
 	}
+
 	for _, rec := range linkReqs {
 		if err := dm.RemoveAdventureGameLocationLinkRequirementRec(rec.ID); err != nil {
 			return fmt.Errorf("failed removing link requirement >%s<: %w", rec.ID, err)
@@ -330,6 +333,7 @@ func (rnr *Runner) removeGameAndDependents(dm *domain.Domain, gameID string) err
 	if err != nil {
 		return fmt.Errorf("failed getting location links: %w", err)
 	}
+
 	for _, rec := range links {
 		if err := dm.RemoveAdventureGameLocationLinkRec(rec.ID); err != nil {
 			return fmt.Errorf("failed removing location link >%s<: %w", rec.ID, err)
@@ -341,6 +345,7 @@ func (rnr *Runner) removeGameAndDependents(dm *domain.Domain, gameID string) err
 	if err != nil {
 		return fmt.Errorf("failed getting locations: %w", err)
 	}
+
 	for _, rec := range locs {
 		if err := dm.RemoveAdventureGameLocationRec(rec.ID); err != nil {
 			return fmt.Errorf("failed removing location >%s<: %w", rec.ID, err)
@@ -352,6 +357,7 @@ func (rnr *Runner) removeGameAndDependents(dm *domain.Domain, gameID string) err
 	if err != nil {
 		return fmt.Errorf("failed getting items: %w", err)
 	}
+
 	for _, rec := range items {
 		if err := dm.RemoveAdventureGameItemRec(rec.ID); err != nil {
 			return fmt.Errorf("failed removing item >%s<: %w", rec.ID, err)
@@ -363,6 +369,7 @@ func (rnr *Runner) removeGameAndDependents(dm *domain.Domain, gameID string) err
 	if err != nil {
 		return fmt.Errorf("failed getting creatures: %w", err)
 	}
+
 	for _, rec := range creatures {
 		if err := dm.RemoveAdventureGameCreatureRec(rec.ID); err != nil {
 			return fmt.Errorf("failed removing creature >%s<: %w", rec.ID, err)
@@ -374,6 +381,7 @@ func (rnr *Runner) removeGameAndDependents(dm *domain.Domain, gameID string) err
 	if err != nil {
 		return fmt.Errorf("failed getting characters: %w", err)
 	}
+
 	for _, rec := range chars {
 		if err := dm.RemoveAdventureGameCharacterRec(rec.ID); err != nil {
 			return fmt.Errorf("failed removing character >%s<: %w", rec.ID, err)
@@ -387,6 +395,7 @@ func (rnr *Runner) removeGameAndDependents(dm *domain.Domain, gameID string) err
 	if err != nil {
 		return fmt.Errorf("failed getting game images: %w", err)
 	}
+
 	for _, rec := range images {
 		if err := dm.RemoveGameImageRec(rec.ID); err != nil {
 			return fmt.Errorf("failed removing game image >%s<: %w", rec.ID, err)

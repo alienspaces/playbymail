@@ -9,6 +9,7 @@ import (
 
 	"github.com/riverqueue/river"
 
+	"gitlab.com/alienspaces/playbymail/core/nullstring"
 	coresql "gitlab.com/alienspaces/playbymail/core/sql"
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/jobworker"
@@ -178,6 +179,32 @@ func (t *Testing) assignTurnSheetReferencesForTurnNumber(gameInstanceRef string,
 	return t.assignTurnSheetReferencesForTurn(*turnCfg, turnSheetRecs)
 }
 
+// addAdventureGameTurnSheetLinksToTeardown ensures adventure_game_turn_sheet link records for the
+// given turn sheets are in teardownData so they are removed before character instances on teardown.
+func (t *Testing) addAdventureGameTurnSheetLinksToTeardown(turnSheetRecs []*game_record.GameTurnSheet) error {
+	dom := t.Domain.(*domain.Domain)
+	for _, rec := range turnSheetRecs {
+		linkRecs, err := dom.GetManyAdventureGameTurnSheetRecs(&coresql.Options{
+			Params: []coresql.Param{
+				{
+					Col: adventure_game_record.FieldAdventureGameTurnSheetGameTurnSheetID,
+					Val: rec.ID,
+				},
+			},
+			Limit: 1,
+		})
+		if err != nil {
+			return fmt.Errorf("failed to lookup adventure game turn sheet link for turn sheet ID %s: %w", rec.ID, err)
+		}
+		if len(linkRecs) == 0 {
+			continue
+		}
+		t.Data.AddAdventureGameTurnSheetRec(linkRecs[0])
+		t.teardownData.AddAdventureGameTurnSheetRec(linkRecs[0])
+	}
+	return nil
+}
+
 func (t *Testing) assignTurnSheetReferencesForTurn(turnCfg GameTurnConfig, turnSheetRecs []*game_record.GameTurnSheet) error {
 	if len(turnCfg.AdventureGameTurnSheetConfigs) == 0 {
 		return nil
@@ -308,22 +335,22 @@ func (t *Testing) processJoinGameSubscriptionInSetup(ctx context.Context, subscr
 		scanData.Email = accountRec.Email
 	}
 	if scanData.Name == "" && accountUserContactRec != nil {
-		scanData.Name = accountUserContactRec.Name
+		scanData.Name = nullstring.ToString(accountUserContactRec.Name)
 	}
 	if scanData.PostalAddressLine1 == "" && accountUserContactRec != nil {
-		scanData.PostalAddressLine1 = accountUserContactRec.PostalAddressLine1
+		scanData.PostalAddressLine1 = nullstring.ToString(accountUserContactRec.PostalAddressLine1)
 	}
 	if scanData.PostalAddressLine2 == "" && accountUserContactRec != nil {
-		scanData.PostalAddressLine2 = accountUserContactRec.PostalAddressLine2.String
+		scanData.PostalAddressLine2 = nullstring.ToString(accountUserContactRec.PostalAddressLine2)
 	}
 	if scanData.StateProvince == "" && accountUserContactRec != nil {
-		scanData.StateProvince = accountUserContactRec.StateProvince
+		scanData.StateProvince = nullstring.ToString(accountUserContactRec.StateProvince)
 	}
 	if scanData.Country == "" && accountUserContactRec != nil {
-		scanData.Country = accountUserContactRec.Country
+		scanData.Country = nullstring.ToString(accountUserContactRec.Country)
 	}
 	if scanData.PostalCode == "" && accountUserContactRec != nil {
-		scanData.PostalCode = accountUserContactRec.PostalCode
+		scanData.PostalCode = nullstring.ToString(accountUserContactRec.PostalCode)
 	}
 
 	// Validate scan data
@@ -364,7 +391,7 @@ func (t *Testing) processJoinGameSubscriptionInSetup(ctx context.Context, subscr
 	turnSheetRec := &game_record.GameTurnSheet{
 		GameID:           gameRec.ID,
 		AccountID:        accountRec.ID,
-		AccountUserID:    subscriptionRec.AccountUserID.String,
+		AccountUserID:    subscriptionRec.AccountUserID,
 		TurnNumber:       0,
 		SheetType:        adventure_game_record.AdventureGameTurnSheetTypeJoinGame,
 		SheetOrder:       1,

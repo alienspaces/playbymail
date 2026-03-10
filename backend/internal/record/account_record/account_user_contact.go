@@ -29,12 +29,12 @@ const (
 type AccountUserContact struct {
 	record.Record
 	AccountUserID      string         `db:"account_user_id"`
-	Name               string         `db:"name"`
-	PostalAddressLine1 string         `db:"postal_address_line1"`
+	Name               sql.NullString `db:"name"`
+	PostalAddressLine1 sql.NullString `db:"postal_address_line1"`
 	PostalAddressLine2 sql.NullString `db:"postal_address_line2"`
-	StateProvince      string         `db:"state_province"`
-	Country            string         `db:"country"`
-	PostalCode         string         `db:"postal_code"`
+	StateProvince      sql.NullString `db:"state_province"`
+	Country            sql.NullString `db:"country"`
+	PostalCode         sql.NullString `db:"postal_code"`
 }
 
 func (r *AccountUserContact) ToNamedArgs() pgx.NamedArgs {

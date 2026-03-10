@@ -1,116 +1,156 @@
 #!/usr/bin/env sh
 
-# E2E test runner (Playwright). Run from project root: ./tools/test-e2e
-# CI runs this same script after starting backend and frontend.
+# Local E2E test runner (Playwright). Run from project root: ./tools/test-e2e
 #
-# Prerequisites (local):
-# - Backend running: ./tools/start-backend
-# - TEST_BYPASS_HEADER_NAME and TEST_BYPASS_HEADER_VALUE set (e.g. .env.develop)
+# Sets up everything needed and runs the tests in one command:
+#   - Database (Docker + migrations + seed data)
+#   - Backend (build + start)
+#   - Frontend dev server (npm install + start)
+#   - MailPit (Docker SMTP catcher for email adventure tests)
+#   - Playwright browsers (install if missing)
+#
+# Services are left running after tests. Use ./tools/stop to clean up.
+# For CI, use ./tools/test-e2e-ci instead.
+#
+# Usage:
+#   ./tools/test-e2e                    # Run all tests (chromium)
+#   ./tools/test-e2e --ui               # Interactive Playwright UI
+#   ./tools/test-e2e --headed           # Visible browser
+#   ./tools/test-e2e --grep 'auth'      # Filter by test name
+#   ./tools/test-e2e playwright/core/   # Run one directory
 
 set -e
+
+if [ -n "$CI" ]; then
+    echo "❌ This script is for local development. Use ./tools/test-e2e-ci in CI."
+    exit 1
+fi
 
 script_dir="$(dirname "$0")"
 cd "$script_dir/.."
 
+# ── Help ──────────────────────────────────────────────────────────────
+case "${1:-}" in
+    --help|-h)
+        sed -n '2,/^[^#]/s/^# \{0,1\}//p' "$0"
+        exit 0
+        ;;
+esac
+
+# ── Environment ───────────────────────────────────────────────────────
+if [ -f ".env.e2e" ]; then
+    cp .env.e2e .env
+elif [ -f ".env.develop" ]; then
+    cp .env.develop .env
+fi
+
 . "$script_dir/environment" || exit $?
 
+# Re-apply E2E overrides that .env.private may have clobbered
+export EMAILER_PROVIDER=smtp
+export GAME_TURN_QUEUEING_INTERVAL_SECONDS=10
+
 if [ -z "$TEST_BYPASS_HEADER_NAME" ]; then
-    echo "❌ Error: TEST_BYPASS_HEADER_NAME environment variable is not set."
+    echo "❌ TEST_BYPASS_HEADER_NAME is not set (check .env.develop)"
     exit 1
 fi
-
 if [ -z "$TEST_BYPASS_HEADER_VALUE" ]; then
-    echo "❌ Error: TEST_BYPASS_HEADER_VALUE environment variable is not set."
+    echo "❌ TEST_BYPASS_HEADER_VALUE is not set (check .env.develop)"
     exit 1
 fi
 
-echo "🔍 Checking Playwright setup..."
+# ── Database ──────────────────────────────────────────────────────────
+echo ""
+echo "📦 Setting up database..."
+./tools/db-setup || { echo "❌ Database setup failed"; exit 1; }
+echo "✅ Database ready"
 
-if ! command -v node >/dev/null 2>&1; then
-    echo "❌ Error: Node.js not found. Please install Node.js first."
+# ── MailPit (must start before backend — backend needs SMTP on port 1025) ─
+echo ""
+echo "📬 Starting MailPit..."
+./tools/mailpit-start 2>/dev/null || echo "⚠️  MailPit start failed (email adventure tests may be skipped)"
+
+# ── Backend ───────────────────────────────────────────────────────────
+echo ""
+echo "🔨 Building backend..."
+(cd backend && go build -o ../playbymail-server ./cmd/server) || { echo "❌ Backend build failed"; exit 1; }
+echo "✅ Backend built"
+
+# Always restart backend so it picks up the E2E environment
+if [ -f backend/.backend.pid ]; then
+    OLD_PID=$(cat backend/.backend.pid)
+    if kill -0 "$OLD_PID" 2>/dev/null; then
+        echo "🔄 Stopping existing backend (PID: $OLD_PID) to apply E2E config..."
+        kill "$OLD_PID" 2>/dev/null
+        sleep 2
+        kill -0 "$OLD_PID" 2>/dev/null && kill -9 "$OLD_PID" 2>/dev/null
+    fi
+    rm -f backend/.backend.pid
+fi
+# Kill anything else on port 8080
+PORT_PIDS=$(lsof -ti:8080 2>/dev/null || true)
+if [ -n "$PORT_PIDS" ]; then
+    echo "🔄 Killing stale processes on port 8080: $PORT_PIDS"
+    for pid in $PORT_PIDS; do kill -9 "$pid" 2>/dev/null; done
+    sleep 1
+fi
+
+echo "🚀 Starting backend with E2E config..."
+./playbymail-server &
+BACKEND_PID=$!
+echo "$BACKEND_PID" > backend/.backend.pid
+sleep 2
+if ! kill -0 "$BACKEND_PID" 2>/dev/null; then
+    echo "❌ Backend failed to start"
     exit 1
 fi
+echo "✅ Backend started (PID: $BACKEND_PID, EMAILER_PROVIDER=$EMAILER_PROVIDER)"
 
-if ! command -v npm >/dev/null 2>&1; then
-    echo "❌ Error: npm not found. Please install npm first."
-    exit 1
+# ── Frontend ──────────────────────────────────────────────────────────
+echo ""
+if curl -s http://localhost:3000 >/dev/null 2>&1; then
+    echo "✅ Frontend dev server already running"
+else
+    echo "📦 Preparing frontend..."
+    if [ ! -d "frontend/node_modules" ] || [ "frontend/package-lock.json" -nt "frontend/node_modules/.package-lock.json" ]; then
+        (cd frontend && npm ci --prefer-offline) || { echo "❌ Frontend npm install failed"; exit 1; }
+    fi
+    echo "🚀 Starting frontend dev server..."
+    (cd frontend && npm run dev) &
+    FRONTEND_PID=$!
+    echo "$FRONTEND_PID" > frontend/.frontend.pid
+    echo "✅ Frontend dev server starting (PID: $FRONTEND_PID)"
 fi
 
-if [ ! -f "package.json" ]; then
-    echo "❌ Error: package.json not found. Please run this from the project root."
-    exit 1
-fi
-
-if ! npm list @playwright/test >/dev/null 2>&1; then
-    echo "❌ Error: Playwright not installed. Running 'npm install'..."
-    npm install
-fi
-
-# In CI the matching Playwright Docker image already has browsers pre-installed.
-# Locally, check if chromium is available and install if needed.
-if [ -n "$CI" ]; then
-    echo "✅ Using browsers from Playwright Docker image"
-elif ls /ms-playwright/chromium-* >/dev/null 2>&1 || ls "$HOME/.cache/ms-playwright/chromium-"* >/dev/null 2>&1; then
-    echo "✅ Playwright browsers already installed"
+# ── Playwright browsers ──────────────────────────────────────────────
+echo ""
+if ls "$HOME/.cache/ms-playwright/chromium-"* >/dev/null 2>&1; then
+    echo "✅ Playwright browsers installed"
 else
     echo "📦 Installing Playwright browsers..."
     npx playwright install chromium --with-deps
 fi
 
-if [ ! -f "playwright.config.js" ]; then
-    echo "❌ Error: playwright.config.js not found."
-    exit 1
-fi
+# ── Wait for services ────────────────────────────────────────────────
+echo ""
+echo "⏳ Waiting for services..."
+npx wait-on \
+    http-get://localhost:8080/healthz \
+    http-get://localhost:3000 \
+    --timeout 60000 || { echo "❌ Services did not become healthy in time"; exit 1; }
+echo "✅ All services healthy"
 
-if [ ! -d "playwright" ]; then
-    echo "❌ Error: playwright directory not found."
-    exit 1
-fi
-
-echo "✅ Playwright setup verified"
-
-if [ -z "$CI" ]; then
-    echo "🔍 Checking backend..."
-    if ! curl -s http://localhost:8080/healthz >/dev/null 2>&1; then
-        echo "❌ Backend not running on localhost:8080"
-        echo "   Start it: ./tools/start-backend"
-        exit 1
-    fi
-    echo "✅ Backend running"
-    echo ""
-    echo "💡 Tip: To reduce backend log spam during tests, set LOG_LEVEL=error in .env.develop"
-    echo "   before starting the backend. Current setting: ${LOG_LEVEL:-not set}"
-fi
-
-case "${1:-}" in
-    --help|-h)
-        echo "Usage: ./tools/test-e2e [PLAYWRIGHT_ARGS]"
-        echo ""
-        echo "Runs Playwright E2E tests. With no args, runs --project chromium (same as CI)."
-        echo ""
-        echo "Examples:"
-        echo "  ./tools/test-e2e                    # Same as CI"
-        echo "  ./tools/test-e2e --ui               # Interactive UI"
-        echo "  ./tools/test-e2e --headed            # Visible browser"
-        echo "  ./tools/test-e2e --grep 'auth'       # Match test name"
-        echo "  ./tools/test-e2e playwright/core/    # Run one directory"
-        exit 0
-        ;;
-esac
-
-# Default: same as CI (chromium only). Pass args for local use (--ui, --grep, etc.).
+# ── Run tests ─────────────────────────────────────────────────────────
 if [ $# -eq 0 ]; then
     set -- --project chromium
 fi
 
 echo ""
+echo "💡 Tip: E2E config comes from .env.e2e (falls back to .env.develop)."
+echo "   Current LOG_LEVEL: ${LOG_LEVEL:-not set}"
+echo ""
 echo "🚀 Running E2E tests..."
 echo "Command: npx playwright test $*"
 echo ""
 
-# Use stdbuf to disable output buffering in CI
-if [ -n "$CI" ]; then
-    exec stdbuf -oL -eL npx playwright test "$@"
-else
-    exec npx playwright test "$@"
-fi
+exec npx playwright test "$@"

@@ -123,14 +123,8 @@ func (m *Domain) RemoveAdventureGameLocationLinkRequirementRec(recID string) err
 
 	l.Debug("removing adventure_game_location_link_requirement record ID >%s<", recID)
 
-	_, err := m.GetAdventureGameLocationLinkRequirementRec(recID, coresql.ForUpdateNoWait)
-	if err != nil {
-		return err
-	}
-
 	r := m.AdventureGameLocationLinkRequirementRepository()
 
-	// Add validation here if needed
 	if err := r.RemoveOne(recID); err != nil {
 		return databaseError(err)
 	}

@@ -16,7 +16,18 @@ const (
 	ImageLocationDarkforest  = "location-darkforest.png"
 	ImageLocationDungeon     = "location-dungeon.png"
 	ImageLocationCliffpath   = "location-cliffpath.png"
+
+	// Desert Kingdom images
+	ImageDesertJoinGame  = "desert-join-game.jpg"
+	ImageDesertInventory = "desert-inventory.jpg"
+	// No game-level location choice image: location choice sheets use the current location's background (oasis, ruins, canyon, temple).
+	ImageDesertOasis  = "desert-oasis.jpg"
+	ImageDesertRuins  = "desert-ruins.jpg"
+	ImageDesertCanyon = "desert-canyon.jpg"
+	ImageDesertTemple = "desert-temple.jpg"
 )
+
+func strPtr(s string) *string { return &s }
 
 // TestDataConfig returns the test data configuration for
 // E2E and Playwright tests in the public space.
@@ -43,13 +54,13 @@ func AccountConfig() []harness.AccountConfig {
 					SubscriptionType: game_record.GameSubscriptionTypeDesigner,
 					Record:           &game_record.GameSubscription{},
 				},
-			{
-				Reference:        harness.GameSubscriptionManagerOneRef,
-				GameRef:          harness.GameOneRef,
-				GameInstanceRefs: []string{harness.GameInstanceOneRef},
-				SubscriptionType: game_record.GameSubscriptionTypeManager,
-				Record:           &game_record.GameSubscription{},
-			},
+				{
+					Reference:        harness.GameSubscriptionManagerOneRef,
+					GameRef:          harness.GameOneRef,
+					GameInstanceRefs: []string{harness.GameInstanceOneRef},
+					SubscriptionType: game_record.GameSubscriptionTypeManager,
+					Record:           &game_record.GameSubscription{},
+				},
 				{
 					Reference:        harness.GameSubscriptionPlayerOneRef,
 					GameRef:          harness.GameOneRef,
@@ -71,13 +82,13 @@ func AccountConfig() []harness.AccountConfig {
 					SubscriptionType: game_record.GameSubscriptionTypePlayer,
 					Record:           &game_record.GameSubscription{},
 				},
-			{
-				Reference:        "game-subscription-two",
-				GameRef:          harness.GameTwoRef,
-				GameInstanceRefs: []string{harness.GameInstanceTwoRef},
-				SubscriptionType: game_record.GameSubscriptionTypeManager,
-				Record:           &game_record.GameSubscription{},
-			},
+				{
+					Reference:        "game-subscription-two",
+					GameRef:          harness.GameTwoRef,
+					GameInstanceRefs: []string{harness.GameInstanceTwoRef},
+					SubscriptionType: game_record.GameSubscriptionTypeManager,
+					Record:           &game_record.GameSubscription{},
+				},
 				{
 					Reference:        "game-subscription-two-designer",
 					GameRef:          harness.GameTwoRef,
@@ -476,67 +487,294 @@ func GameConfig() []harness.GameConfig {
 			Reference: harness.GameTwoRef,
 			Record: &game_record.Game{
 				Name:              "The Desert Kingdom",
-				Description:       "Welcome to The Desert Kingdom! Embark on an epic journey across vast sand dunes, ancient ruins, and hidden oases in this sprawling desert adventure. Navigate treacherous terrain, encounter nomadic tribes, and uncover the lost secrets of a forgotten civilization. In this harsh but beautiful landscape, survival requires wit, courage, and careful planning. Every turn brings new challenges - seek out legendary treasures, forge alliances, or carve your own path through the shifting sands. Join us!",
+				Description:       "Welcome to The Desert Kingdom! Embark on a solo quest across scorching sand dunes, crumbling ancient ruins, and hidden oases in this single-player email adventure. Survive the elements, gather legendary artefacts, and unlock the sealed passages of a forgotten civilisation. Every turn challenges you to choose your path carefully — equip the right gear, explore boldly, and uncover the secrets buried beneath the shifting sands. Your destiny awaits!",
 				GameType:          game_record.GameTypeAdventure,
-				TurnDurationHours: 336, // 2 weeks
+				TurnDurationHours: 1,
 			},
 			GameImageConfigs: []harness.GameImageConfig{
 				{
-					Reference:     "game-image-join-game-two",
-					ImagePath:     ImageJoinGame,
+					Reference:     "desert-image-join-game",
+					ImagePath:     ImageDesertJoinGame,
 					TurnSheetType: adventure_game_record.AdventureGameTurnSheetTypeJoinGame,
 				},
+				{
+					Reference:     "desert-image-inventory",
+					ImagePath:     ImageDesertInventory,
+					TurnSheetType: adventure_game_record.AdventureGameTurnSheetTypeInventoryManagement,
+				},
+				// Location choice sheets use each location's BackgroundImagePath (oasis, ruins, canyon, temple), not a game-level image.
 			},
-			// Simpler world for the second game
+			// 4 locations forming a rich, interconnected desert world
 			AdventureGameLocationConfigs: []harness.AdventureGameLocationConfig{
 				{
-					Reference: "game-location-five",
+					Reference: "desert-location-oasis",
 					Record: &adventure_game_record.AdventureGameLocation{
 						Name:               "Oasis Village",
-						Description:        "A bustling village built around a life-giving oasis in the desert.",
+						Description:        "A bustling village built around a life-giving oasis. Palm trees sway over turquoise pools while merchants hawk exotic wares under colourful canopies. Travellers rest here before venturing into the unforgiving desert beyond.",
 						IsStartingLocation: true,
 					},
+					BackgroundImagePath: ImageDesertOasis,
 				},
 				{
-					Reference: "game-location-six",
+					Reference: "desert-location-ruins",
 					Record: &adventure_game_record.AdventureGameLocation{
 						Name:        "Ancient Ruins",
-						Description: "Crumbling ruins of a lost civilization, filled with secrets and danger.",
+						Description: "Crumbling columns and weathered arches rise from the sand, remnants of a once-great civilisation. Hieroglyphs cover every surface, and the air is thick with the dust of ages. Something valuable — and dangerous — surely lies deeper within.",
 					},
+					BackgroundImagePath: ImageDesertRuins,
+				},
+				{
+					Reference: "desert-location-canyon",
+					Record: &adventure_game_record.AdventureGameLocation{
+						Name:        "Sandstone Canyon",
+						Description: "Towering walls of red and gold sandstone hem in a narrow path that winds ever deeper. Shafts of sunlight pierce the gloom, and the wind sings eerie melodies through natural arches overhead. Creatures lurk in the shadowed crevices.",
+					},
+					BackgroundImagePath: ImageDesertCanyon,
+				},
+				{
+					Reference: "desert-location-temple",
+					Record: &adventure_game_record.AdventureGameLocation{
+						Name:        "Hidden Temple",
+						Description: "Half-swallowed by the dunes, an ancient temple glows with an otherworldly light. Serpent carvings frame the entrance, and golden runes pulse with forgotten magic. Only those who carry the right tokens may pass the sealed doors within.",
+					},
+					BackgroundImagePath: ImageDesertTemple,
 				},
 			},
+			// 4 items exercising all inventory actions (pick up, drop, equip, unequip)
 			AdventureGameItemConfigs: []harness.AdventureGameItemConfig{
 				{
-					Reference: "game-item-five",
+					Reference: "desert-item-compass",
 					Record: &adventure_game_record.AdventureGameItem{
-						Name:        "Desert Compass",
-						Description: "A magical compass that always points to water sources.",
+						Name:          "Desert Compass",
+						Description:   "A gleaming brass compass inlaid with sapphire. Its needle always points toward the nearest water source — an invaluable tool in the wastes.",
+						CanBeEquipped: true,
+						EquipmentSlot: strPtr("jewelry"),
+					},
+				},
+				{
+					Reference: "desert-item-flask",
+					Record: &adventure_game_record.AdventureGameItem{
+						Name:        "Water Flask",
+						Description: "A sturdy leather flask filled with cool, clear water from the oasis. Essential for desert survival, but heavy to carry.",
+					},
+				},
+				{
+					Reference: "desert-item-cloak",
+					Record: &adventure_game_record.AdventureGameItem{
+						Name:          "Sand Cloak",
+						Description:   "A shimmering cloak woven from enchanted desert silk. It bends light around the wearer, granting near-invisibility in sandy terrain.",
+						CanBeEquipped: true,
+						EquipmentSlot: strPtr("clothing"),
+					},
+				},
+				{
+					Reference: "desert-item-scarab-key",
+					Record: &adventure_game_record.AdventureGameItem{
+						Name:          "Ancient Scarab Key",
+						Description:   "A golden scarab amulet etched with temple hieroglyphs. It hums with power when brought near the sealed passages of the Hidden Temple.",
+						CanBeEquipped: true,
+						EquipmentSlot: strPtr("jewelry"),
 					},
 				},
 			},
+			// 2 creatures placed in the world
 			AdventureGameCreatureConfigs: []harness.AdventureGameCreatureConfig{
 				{
-					Reference: "game-creature-three",
+					Reference: "desert-creature-serpent",
 					Record: &adventure_game_record.AdventureGameCreature{
 						Name:        "Sand Serpent",
-						Description: "A massive serpent that burrows through the desert sands.",
+						Description: "A massive serpent that burrows through the desert sands, ambushing unwary travellers with lightning speed.",
+					},
+				},
+				{
+					Reference: "desert-creature-guardian",
+					Record: &adventure_game_record.AdventureGameCreature{
+						Name:        "Temple Guardian",
+						Description: "An ancient stone golem animated by temple magic. It guards the inner sanctum and will challenge any who enter.",
 					},
 				},
 			},
+			// Location links — bidirectional, some with item requirements
+			AdventureGameLocationLinkConfigs: []harness.AdventureGameLocationLinkConfig{
+				// Oasis Village <-> Ancient Ruins (free)
+				{
+					Reference:       "desert-link-oasis-to-ruins",
+					FromLocationRef: "desert-location-oasis",
+					ToLocationRef:   "desert-location-ruins",
+					Record: &adventure_game_record.AdventureGameLocationLink{
+						Name:        "The Dusty Trail",
+						Description: "A well-worn trail leads east through the dunes toward the ancient ruins.",
+					},
+				},
+				{
+					Reference:       "desert-link-ruins-to-oasis",
+					FromLocationRef: "desert-location-ruins",
+					ToLocationRef:   "desert-location-oasis",
+					Record: &adventure_game_record.AdventureGameLocationLink{
+						Name:        "The Trade Road",
+						Description: "The main road west winds back to the oasis village.",
+					},
+				},
+				// Oasis Village <-> Sandstone Canyon (free)
+				{
+					Reference:       "desert-link-oasis-to-canyon",
+					FromLocationRef: "desert-location-oasis",
+					ToLocationRef:   "desert-location-canyon",
+					Record: &adventure_game_record.AdventureGameLocationLink{
+						Name:        "The Canyon Descent",
+						Description: "A narrow switchback path descends south into the sandstone canyon.",
+					},
+				},
+				{
+					Reference:       "desert-link-canyon-to-oasis",
+					FromLocationRef: "desert-location-canyon",
+					ToLocationRef:   "desert-location-oasis",
+					Record: &adventure_game_record.AdventureGameLocationLink{
+						Name:        "The Rope Climb",
+						Description: "Knotted ropes and iron spikes mark the climb back up to the oasis.",
+					},
+				},
+				// Ancient Ruins -> Hidden Temple (requires Ancient Scarab Key)
+				{
+					Reference:       "desert-link-ruins-to-temple",
+					FromLocationRef: "desert-location-ruins",
+					ToLocationRef:   "desert-location-temple",
+					Record: &adventure_game_record.AdventureGameLocationLink{
+						Name:        "The Sealed Passage",
+						Description: "A massive stone door blocks the way. Scarab-shaped indentations line its surface.",
+					},
+					AdventureGameLocationLinkRequirementConfigs: []harness.AdventureGameLocationLinkRequirementConfig{
+						{
+							Reference:   "desert-link-req-scarab",
+							GameItemRef: "desert-item-scarab-key",
+							Record: &adventure_game_record.AdventureGameLocationLinkRequirement{
+								Quantity: 1,
+							},
+						},
+					},
+				},
+				// Hidden Temple -> Ancient Ruins (free)
+				{
+					Reference:       "desert-link-temple-to-ruins",
+					FromLocationRef: "desert-location-temple",
+					ToLocationRef:   "desert-location-ruins",
+					Record: &adventure_game_record.AdventureGameLocationLink{
+						Name:        "The Crumbling Steps",
+						Description: "Worn stone steps lead back out to the ruins.",
+					},
+				},
+				// Sandstone Canyon -> Hidden Temple (requires Sand Cloak)
+				{
+					Reference:       "desert-link-canyon-to-temple",
+					FromLocationRef: "desert-location-canyon",
+					ToLocationRef:   "desert-location-temple",
+					Record: &adventure_game_record.AdventureGameLocationLink{
+						Name:        "The Shadow Path",
+						Description: "A hidden passage through the canyon wall, visible only to those cloaked in sand magic.",
+					},
+					AdventureGameLocationLinkRequirementConfigs: []harness.AdventureGameLocationLinkRequirementConfig{
+						{
+							Reference:   "desert-link-req-cloak",
+							GameItemRef: "desert-item-cloak",
+							Record: &adventure_game_record.AdventureGameLocationLinkRequirement{
+								Quantity: 1,
+							},
+						},
+					},
+				},
+				// Hidden Temple -> Sandstone Canyon (free)
+				{
+					Reference:       "desert-link-temple-to-canyon",
+					FromLocationRef: "desert-location-temple",
+					ToLocationRef:   "desert-location-canyon",
+					Record: &adventure_game_record.AdventureGameLocationLink{
+						Name:        "The Wind Tunnel",
+						Description: "A blast of dry wind funnels through a narrow tunnel back to the canyon.",
+					},
+				},
+			},
+			// Single game instance: email + post delivery (E2E), single player, process-when-all-submitted
 			GameInstanceConfigs: []harness.GameInstanceConfig{
 				{
-				Reference: harness.GameInstanceTwoRef,
-				Record: &game_record.GameInstance{
-					DeliveryEmail:        true,
-					DeliveryPhysicalPost: true,
-				},
+					Reference: harness.GameInstanceTwoRef,
+					Record: &game_record.GameInstance{
+						DeliveryEmail:           true,
+						DeliveryPhysicalPost:    true,
+						RequiredPlayerCount:     1,
+						ProcessWhenAllSubmitted: true,
+					},
 					GameInstanceParameterConfigs: []harness.GameInstanceParameterConfig{
 						{
-							Reference: "game-instance-parameter-three",
+							Reference: "desert-instance-param-lives",
 							Record: &game_record.GameInstanceParameter{
 								ParameterKey:   domain.AdventureGameParameterCharacterLives,
-								ParameterValue: nullstring.FromString("3"),
+								ParameterValue: nullstring.FromString("5"),
 							},
+						},
+					},
+					// Location instances for all 4 locations
+					AdventureGameLocationInstanceConfigs: []harness.AdventureGameLocationInstanceConfig{
+						{
+							Reference:       "desert-loc-inst-oasis",
+							GameLocationRef: "desert-location-oasis",
+							Record:          &adventure_game_record.AdventureGameLocationInstance{},
+						},
+						{
+							Reference:       "desert-loc-inst-ruins",
+							GameLocationRef: "desert-location-ruins",
+							Record:          &adventure_game_record.AdventureGameLocationInstance{},
+						},
+						{
+							Reference:       "desert-loc-inst-canyon",
+							GameLocationRef: "desert-location-canyon",
+							Record:          &adventure_game_record.AdventureGameLocationInstance{},
+						},
+						{
+							Reference:       "desert-loc-inst-temple",
+							GameLocationRef: "desert-location-temple",
+							Record:          &adventure_game_record.AdventureGameLocationInstance{},
+						},
+					},
+					// Item instances placed at specific locations
+					AdventureGameItemInstanceConfigs: []harness.AdventureGameItemInstanceConfig{
+						{
+							Reference:       "desert-item-inst-compass",
+							GameItemRef:     "desert-item-compass",
+							GameLocationRef: "desert-location-oasis",
+							Record:          &adventure_game_record.AdventureGameItemInstance{},
+						},
+						{
+							Reference:       "desert-item-inst-flask",
+							GameItemRef:     "desert-item-flask",
+							GameLocationRef: "desert-location-oasis",
+							Record:          &adventure_game_record.AdventureGameItemInstance{},
+						},
+						{
+							Reference:       "desert-item-inst-cloak",
+							GameItemRef:     "desert-item-cloak",
+							GameLocationRef: "desert-location-ruins",
+							Record:          &adventure_game_record.AdventureGameItemInstance{},
+						},
+						{
+							Reference:       "desert-item-inst-scarab",
+							GameItemRef:     "desert-item-scarab-key",
+							GameLocationRef: "desert-location-canyon",
+							Record:          &adventure_game_record.AdventureGameItemInstance{},
+						},
+					},
+					// Creature instances placed in the world
+					AdventureGameCreatureInstanceConfigs: []harness.AdventureGameCreatureInstanceConfig{
+						{
+							Reference:       "desert-creature-inst-serpent",
+							GameCreatureRef: "desert-creature-serpent",
+							GameLocationRef: "desert-location-canyon",
+							Record:          &adventure_game_record.AdventureGameCreatureInstance{},
+						},
+						{
+							Reference:       "desert-creature-inst-guardian",
+							GameCreatureRef: "desert-creature-guardian",
+							GameLocationRef: "desert-location-temple",
+							Record:          &adventure_game_record.AdventureGameCreatureInstance{},
 						},
 					},
 				},

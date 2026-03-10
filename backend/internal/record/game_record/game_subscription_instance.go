@@ -16,6 +16,7 @@ const (
 const (
 	FieldGameSubscriptionInstanceID                      = "id"
 	FieldGameSubscriptionInstanceAccountID               = "account_id"
+	FieldGameSubscriptionInstanceAccountUserID           = "account_user_id"
 	FieldGameSubscriptionInstanceGameSubscriptionID      = "game_subscription_id"
 	FieldGameSubscriptionInstanceGameInstanceID          = "game_instance_id"
 	FieldGameSubscriptionInstanceTurnSheetToken          = "turn_sheet_token"
@@ -29,6 +30,7 @@ const (
 type GameSubscriptionInstance struct {
 	record.Record
 	AccountID               string         `db:"account_id"`
+	AccountUserID           string         `db:"account_user_id"`
 	GameSubscriptionID      string         `db:"game_subscription_id"`
 	GameInstanceID          string         `db:"game_instance_id"`
 	TurnSheetToken          sql.NullString `db:"turn_sheet_token"`
@@ -38,6 +40,7 @@ type GameSubscriptionInstance struct {
 func (r *GameSubscriptionInstance) ToNamedArgs() pgx.NamedArgs {
 	args := r.Record.ToNamedArgs()
 	args[FieldGameSubscriptionInstanceAccountID] = r.AccountID
+	args[FieldGameSubscriptionInstanceAccountUserID] = r.AccountUserID
 	args[FieldGameSubscriptionInstanceGameSubscriptionID] = r.GameSubscriptionID
 	args[FieldGameSubscriptionInstanceGameInstanceID] = r.GameInstanceID
 	args[FieldGameSubscriptionInstanceTurnSheetToken] = r.TurnSheetToken

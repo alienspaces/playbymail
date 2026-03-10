@@ -102,12 +102,7 @@ func (m *Domain) DeleteAdventureGameItemRec(recID string) error {
 func (m *Domain) RemoveAdventureGameItemRec(recID string) error {
 	l := m.Logger("RemoveAdventureGameItemRec")
 	l.Debug("removing adventure_game_item record ID >%s<", recID)
-	_, err := m.GetAdventureGameItemRec(recID, coresql.ForUpdateNoWait)
-	if err != nil {
-		return err
-	}
 	r := m.AdventureGameItemRepository()
-	// Add validation here if needed
 	if err := r.RemoveOne(recID); err != nil {
 		return databaseError(err)
 	}

@@ -3,6 +3,7 @@ package domain
 import (
 	"gitlab.com/alienspaces/playbymail/core/domain"
 	coreerror "gitlab.com/alienspaces/playbymail/core/error"
+	"gitlab.com/alienspaces/playbymail/core/nullstring"
 	"gitlab.com/alienspaces/playbymail/internal/record/account_record"
 )
 
@@ -54,26 +55,35 @@ func validateAccountUserContactRecForCreate(args *validateAccountUserContactArgs
 		return err
 	}
 
-	if rec.Name == "" {
-		return coreerror.NewInvalidDataError("name is required")
+	if err := validatePostalAddressGroup(rec); err != nil {
+		return err
 	}
 
-	if rec.PostalAddressLine1 == "" {
-		return coreerror.NewInvalidDataError("postal_address_line1 is required")
-	}
+	return nil
+}
 
-	if rec.StateProvince == "" {
-		return coreerror.NewInvalidDataError("state_province is required")
+// validatePostalAddressGroup checks that if any postal address field is set, all are required.
+func validatePostalAddressGroup(rec *account_record.AccountUserContact) error {
+	p1 := nullstring.ToString(rec.PostalAddressLine1)
+	sp := nullstring.ToString(rec.StateProvince)
+	co := nullstring.ToString(rec.Country)
+	pc := nullstring.ToString(rec.PostalCode)
+	hasAny := p1 != "" || sp != "" || co != "" || pc != ""
+	if !hasAny {
+		return nil
 	}
-
-	if rec.Country == "" {
-		return coreerror.NewInvalidDataError("country is required")
+	if p1 == "" {
+		return coreerror.NewInvalidDataError("postal_address_line1 is required when other postal fields are set")
 	}
-
-	if rec.PostalCode == "" {
-		return coreerror.NewInvalidDataError("postal_code is required")
+	if sp == "" {
+		return coreerror.NewInvalidDataError("state_province is required when other postal fields are set")
 	}
-
+	if co == "" {
+		return coreerror.NewInvalidDataError("country is required when other postal fields are set")
+	}
+	if pc == "" {
+		return coreerror.NewInvalidDataError("postal_code is required when other postal fields are set")
+	}
 	return nil
 }
 
@@ -89,24 +99,8 @@ func validateAccountUserContactRecForUpdate(args *validateAccountUserContactArgs
 		return coreerror.NewInvalidDataError("account_user_id cannot be updated")
 	}
 
-	if nextRec.Name == "" {
-		return coreerror.NewInvalidDataError("name is required")
-	}
-
-	if nextRec.PostalAddressLine1 == "" {
-		return coreerror.NewInvalidDataError("postal_address_line1 is required")
-	}
-
-	if nextRec.StateProvince == "" {
-		return coreerror.NewInvalidDataError("state_province is required")
-	}
-
-	if nextRec.Country == "" {
-		return coreerror.NewInvalidDataError("country is required")
-	}
-
-	if nextRec.PostalCode == "" {
-		return coreerror.NewInvalidDataError("postal_code is required")
+	if err := validatePostalAddressGroup(nextRec); err != nil {
+		return err
 	}
 
 	return nil

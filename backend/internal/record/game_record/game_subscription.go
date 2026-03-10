@@ -42,7 +42,7 @@ type GameSubscription struct {
 	record.Record
 	GameID               string         `db:"game_id"`
 	AccountID            string         `db:"account_id"`
-	AccountUserID        sql.NullString `db:"account_user_id"`
+	AccountUserID        string         `db:"account_user_id"`
 	AccountUserContactID sql.NullString `db:"account_contact_id"`
 	SubscriptionType     string         `db:"subscription_type"`
 	Status               string         `db:"status"`

@@ -3,20 +3,22 @@ import { nextTick } from 'vue'
 import { mount, flushPromises } from '@vue/test-utils'
 import PlayerTurnSheetView from './PlayerTurnSheetView.vue'
 
-const mockGetGSITurnSheets = vi.fn()
-const mockSubmitGSITurnSheets = vi.fn()
-const mockDownloadGSITurnSheetPDF = vi.fn()
-const mockUploadGSITurnSheetScan = vi.fn()
+const mockGetGameSubscriptionInstanceTurnSheets = vi.fn()
+const mockGetGameSubscriptionInstanceTurnSheetHTML = vi.fn()
+const mockSaveGameSubscriptionInstanceTurnSheet = vi.fn()
+const mockSubmitGameSubscriptionInstanceTurnSheets = vi.fn()
 const mockVerifyGameSubscriptionToken = vi.fn()
 const mockRequestNewTurnSheetToken = vi.fn()
 
 vi.mock('../api/player', () => ({
   verifyGameSubscriptionToken: (...args) => mockVerifyGameSubscriptionToken(...args),
   requestNewTurnSheetToken: (...args) => mockRequestNewTurnSheetToken(...args),
-  getGSITurnSheets: (...args) => mockGetGSITurnSheets(...args),
-  submitGSITurnSheets: (...args) => mockSubmitGSITurnSheets(...args),
-  downloadGSITurnSheetPDF: (...args) => mockDownloadGSITurnSheetPDF(...args),
-  uploadGSITurnSheetScan: (...args) => mockUploadGSITurnSheetScan(...args),
+  getGameSubscriptionInstanceTurnSheets: (...args) => mockGetGameSubscriptionInstanceTurnSheets(...args),
+  getGameSubscriptionInstanceTurnSheetHTML: (...args) => mockGetGameSubscriptionInstanceTurnSheetHTML(...args),
+  saveGameSubscriptionInstanceTurnSheet: (...args) => mockSaveGameSubscriptionInstanceTurnSheet(...args),
+  submitGameSubscriptionInstanceTurnSheets: (...args) => mockSubmitGameSubscriptionInstanceTurnSheets(...args),
+  downloadGameSubscriptionInstanceTurnSheetPDF: vi.fn(),
+  uploadGameSubscriptionInstanceTurnSheetScan: vi.fn(),
 }))
 
 const mockSetSessionToken = vi.fn()
@@ -38,62 +40,42 @@ vi.mock('vue-router', () => ({
 }))
 
 const mockSheets = [
-  { id: 'ts-1', sheet_type: 'location_choice', turn_number: 1, is_completed: false },
-  { id: 'ts-2', sheet_type: 'inventory_management', turn_number: 1, is_completed: false },
+  { id: 'ts-1', sheet_type: 'adventure_game_location_choice', turn_number: 1, is_completed: false, scanned_data: null },
+  { id: 'ts-2', sheet_type: 'adventure_game_inventory_management', turn_number: 1, is_completed: false, scanned_data: null },
 ]
 
 describe('PlayerTurnSheetView', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     routeParams = { game_subscription_instance_id: 'gsi-abc-123' }
+    mockGetGameSubscriptionInstanceTurnSheetHTML.mockResolvedValue('<p>Turn sheet</p>')
   })
 
-  describe('without turn_sheet_token in route', () => {
+  describe('loading and auth states', () => {
     it('shows loading state while fetching', async () => {
-      mockGetGSITurnSheets.mockReturnValue(new Promise(() => {}))
-
+      mockGetGameSubscriptionInstanceTurnSheets.mockReturnValue(new Promise(() => { }))
       const wrapper = mount(PlayerTurnSheetView)
       await nextTick()
-
       expect(wrapper.find('[data-testid="ts-loading"]').exists()).toBe(true)
-      expect(wrapper.find('[data-testid="ts-list"]').exists()).toBe(false)
-    })
-
-    it('shows turn sheet list after successful load', async () => {
-      mockGetGSITurnSheets.mockResolvedValue({ turn_sheets: mockSheets })
-
-      const wrapper = mount(PlayerTurnSheetView)
-      await flushPromises()
-
-      expect(wrapper.find('[data-testid="ts-loading"]').exists()).toBe(false)
-      expect(wrapper.find('[data-testid="ts-list"]').exists()).toBe(true)
-      expect(wrapper.find('[data-testid="ts-title"]').text()).toBe('Your Turn Sheets')
-      expect(wrapper.find('[data-testid="ts-card-ts-1"]').exists()).toBe(true)
-      expect(wrapper.find('[data-testid="ts-card-ts-2"]').exists()).toBe(true)
     })
 
     it('shows empty state when no turn sheets', async () => {
-      mockGetGSITurnSheets.mockResolvedValue({ turn_sheets: [] })
-
+      mockGetGameSubscriptionInstanceTurnSheets.mockResolvedValue({ turn_sheets: [] })
       const wrapper = mount(PlayerTurnSheetView)
       await flushPromises()
-
       expect(wrapper.find('[data-testid="ts-empty"]').exists()).toBe(true)
-      expect(wrapper.find('[data-testid="btn-submit"]').exists()).toBe(false)
     })
 
     it('shows load error when fetch fails', async () => {
-      mockGetGSITurnSheets.mockRejectedValue(new Error('Server error'))
-
+      mockGetGameSubscriptionInstanceTurnSheets.mockRejectedValue(new Error('Server error'))
       const wrapper = mount(PlayerTurnSheetView)
       await flushPromises()
-
       expect(wrapper.find('[data-testid="ts-load-error"]').exists()).toBe(true)
       expect(wrapper.text()).toContain('Server error')
     })
   })
 
-  describe('with turn_sheet_token in route (auto-verify)', () => {
+  describe('token auto-verify', () => {
     beforeEach(() => {
       routeParams = {
         game_subscription_instance_id: 'gsi-abc-123',
@@ -101,180 +83,161 @@ describe('PlayerTurnSheetView', () => {
       }
     })
 
-    it('auto-verifies token and loads turn sheets on success', async () => {
+    it('verifies token and loads turn sheets on success', async () => {
       mockVerifyGameSubscriptionToken.mockResolvedValue('session-abc')
-      mockGetGSITurnSheets.mockResolvedValue({ turn_sheets: mockSheets })
-
+      mockGetGameSubscriptionInstanceTurnSheets.mockResolvedValue({ turn_sheets: mockSheets })
       const wrapper = mount(PlayerTurnSheetView)
       await flushPromises()
-
       expect(mockVerifyGameSubscriptionToken).toHaveBeenCalledWith('gsi-abc-123', 'token-xyz')
       expect(mockSetSessionToken).toHaveBeenCalledWith('session-abc')
-      expect(wrapper.find('[data-testid="ts-list"]').exists()).toBe(true)
+      expect(wrapper.find('[data-testid="ts-viewer"]').exists()).toBe(true)
     })
 
     it('shows expired-token UI when verify fails', async () => {
       mockVerifyGameSubscriptionToken.mockRejectedValue(new Error('Token expired'))
-
       const wrapper = mount(PlayerTurnSheetView)
       await flushPromises()
-
       expect(wrapper.find('[data-testid="ts-token-expired"]').exists()).toBe(true)
-      expect(wrapper.find('[data-testid="expired-email-input"]').exists()).toBe(true)
-      expect(wrapper.find('[data-testid="expired-request-btn"]').exists()).toBe(true)
-      expect(wrapper.find('[data-testid="ts-list"]').exists()).toBe(false)
     })
 
-    it('requests new link when email is submitted on expired-token UI', async () => {
+    it('requests new link on expired-token form submit', async () => {
       mockVerifyGameSubscriptionToken.mockRejectedValue(new Error('Token expired'))
       mockRequestNewTurnSheetToken.mockResolvedValue()
-
       const wrapper = mount(PlayerTurnSheetView)
       await flushPromises()
-
       await wrapper.find('[data-testid="expired-email-input"]').setValue('player@example.com')
       await wrapper.find('[data-testid="expired-request-btn"]').trigger('submit')
       await flushPromises()
-
       expect(mockRequestNewTurnSheetToken).toHaveBeenCalledWith('gsi-abc-123', 'player@example.com')
       expect(wrapper.find('[data-testid="expired-success"]').exists()).toBe(true)
     })
   })
 
-  describe('turn sheet interactions', () => {
-    it('shows pending and completed status for each sheet', async () => {
-      const sheets = [
-        { id: 'ts-1', sheet_type: 'location_choice', turn_number: 1, is_completed: false },
-        { id: 'ts-2', sheet_type: 'inventory_management', turn_number: 1, is_completed: true },
-      ]
-      mockGetGSITurnSheets.mockResolvedValue({ turn_sheets: sheets })
-
+  describe('stepper and viewer', () => {
+    it('renders stepper with correct number of steps', async () => {
+      mockGetGameSubscriptionInstanceTurnSheets.mockResolvedValue({ turn_sheets: mockSheets })
       const wrapper = mount(PlayerTurnSheetView)
       await flushPromises()
-
-      expect(wrapper.find('[data-testid="ts-status-ts-1"]').text()).toBe('Pending')
-      expect(wrapper.find('[data-testid="ts-status-ts-2"]').text()).toBe('Completed')
+      expect(wrapper.find('[data-testid="ts-stepper"]').exists()).toBe(true)
+      expect(wrapper.find('[data-testid="ts-step-0"]').exists()).toBe(true)
+      expect(wrapper.find('[data-testid="ts-step-1"]').exists()).toBe(true)
     })
 
-    it('submit button is disabled when all sheets are already completed', async () => {
-      const completedSheets = mockSheets.map((s) => ({ ...s, is_completed: true }))
-      mockGetGSITurnSheets.mockResolvedValue({ turn_sheets: completedSheets })
-
+    it('loads HTML for the first sheet on mount', async () => {
+      mockGetGameSubscriptionInstanceTurnSheets.mockResolvedValue({ turn_sheets: mockSheets })
       const wrapper = mount(PlayerTurnSheetView)
       await flushPromises()
-
-      expect(wrapper.find('[data-testid="btn-submit"]').attributes('disabled')).toBeDefined()
-      expect(wrapper.find('[data-testid="btn-submit"]').text()).toBe('Already submitted')
+      expect(mockGetGameSubscriptionInstanceTurnSheetHTML).toHaveBeenCalledWith('gsi-abc-123', 'ts-1')
+      expect(wrapper.find('[data-testid="ts-viewer-iframe"]').exists()).toBe(true)
     })
 
-    it('submit button is enabled when there are pending sheets', async () => {
-      mockGetGSITurnSheets.mockResolvedValue({ turn_sheets: mockSheets })
+    it('submit-all button is disabled when no sheets are marked ready', async () => {
+      mockGetGameSubscriptionInstanceTurnSheets.mockResolvedValue({ turn_sheets: mockSheets })
+      const wrapper = mount(PlayerTurnSheetView)
+      await flushPromises()
+      const btn = wrapper.find('[data-testid="btn-submit-all"]')
+      expect(btn.exists()).toBe(true)
+      expect(btn.attributes('disabled')).toBeDefined()
+    })
 
+    it('mark-ready toggles ready state', async () => {
+      mockGetGameSubscriptionInstanceTurnSheets.mockResolvedValue({ turn_sheets: mockSheets })
       const wrapper = mount(PlayerTurnSheetView)
       await flushPromises()
 
-      expect(wrapper.find('[data-testid="btn-submit"]').attributes('disabled')).toBeUndefined()
+      const markBtn = wrapper.find('[data-testid="btn-mark-ready"]')
+      expect(markBtn.text()).toBe('Mark Ready')
+
+      await markBtn.trigger('click')
+      await nextTick()
+      expect(wrapper.find('[data-testid="btn-mark-ready"]').text()).toBe('Unmark Ready')
+
+      await wrapper.find('[data-testid="btn-mark-ready"]').trigger('click')
+      await nextTick()
+      expect(wrapper.find('[data-testid="btn-mark-ready"]').text()).toBe('Mark Ready')
     })
 
     it('shows success state after submission', async () => {
-      mockGetGSITurnSheets.mockResolvedValue({ turn_sheets: mockSheets })
-      mockSubmitGSITurnSheets.mockResolvedValue({ submitted_count: 2, total_count: 2 })
-
+      mockGetGameSubscriptionInstanceTurnSheets.mockResolvedValue({ turn_sheets: mockSheets })
+      mockSubmitGameSubscriptionInstanceTurnSheets.mockResolvedValue({ submitted_count: 2, total_count: 2 })
       const wrapper = mount(PlayerTurnSheetView)
       await flushPromises()
 
-      await wrapper.find('[data-testid="btn-submit"]').trigger('click')
+      // Mark both sheets ready
+      await wrapper.find('[data-testid="btn-mark-ready"]').trigger('click')
+      await wrapper.find('[data-testid="ts-step-1"]').trigger('click')
+      await nextTick()
+      await wrapper.find('[data-testid="btn-mark-ready"]').trigger('click')
+      await nextTick()
+
+      await wrapper.find('[data-testid="btn-submit-all"]').trigger('click')
       await flushPromises()
 
+      expect(mockSubmitGameSubscriptionInstanceTurnSheets).toHaveBeenCalledWith('gsi-abc-123')
       expect(wrapper.find('[data-testid="ts-success"]').exists()).toBe(true)
-      expect(wrapper.find('[data-testid="link-browse-more"]').attributes('href')).toBe('/games')
-      expect(wrapper.find('[data-testid="ts-list"]').exists()).toBe(false)
     })
 
     it('shows submit error when submission fails', async () => {
-      mockGetGSITurnSheets.mockResolvedValue({ turn_sheets: mockSheets })
-      mockSubmitGSITurnSheets.mockRejectedValue(new Error('Server error'))
-
+      mockGetGameSubscriptionInstanceTurnSheets.mockResolvedValue({ turn_sheets: mockSheets })
+      mockSubmitGameSubscriptionInstanceTurnSheets.mockRejectedValue(new Error('Server error'))
       const wrapper = mount(PlayerTurnSheetView)
       await flushPromises()
 
-      await wrapper.find('[data-testid="btn-submit"]').trigger('click')
+      // Mark both sheets ready
+      await wrapper.find('[data-testid="btn-mark-ready"]').trigger('click')
+      await wrapper.find('[data-testid="ts-step-1"]').trigger('click')
+      await nextTick()
+      await wrapper.find('[data-testid="btn-mark-ready"]').trigger('click')
+      await nextTick()
+
+      await wrapper.find('[data-testid="btn-submit-all"]').trigger('click')
       await flushPromises()
 
       expect(wrapper.find('[data-testid="submit-error"]').exists()).toBe(true)
       expect(wrapper.text()).toContain('Server error')
     })
 
-    it('renders a Download PDF button for each turn sheet', async () => {
-      mockGetGSITurnSheets.mockResolvedValue({ turn_sheets: mockSheets })
-
+    it('calls saveGameSubscriptionInstanceTurnSheet when save button is clicked', async () => {
+      mockGetGameSubscriptionInstanceTurnSheets.mockResolvedValue({ turn_sheets: mockSheets })
+      mockSaveGameSubscriptionInstanceTurnSheet.mockResolvedValue({})
       const wrapper = mount(PlayerTurnSheetView)
       await flushPromises()
 
-      expect(wrapper.find('[data-testid="btn-download-ts-1"]').exists()).toBe(true)
-      expect(wrapper.find('[data-testid="btn-download-ts-2"]').exists()).toBe(true)
+      await wrapper.find('[data-testid="btn-save-sheet"]').trigger('click')
+      await flushPromises()
+
+      expect(mockSaveGameSubscriptionInstanceTurnSheet).toHaveBeenCalledWith('gsi-abc-123', 'ts-1', expect.any(Object))
     })
 
-    it('calls downloadGSITurnSheetPDF when Download PDF is clicked', async () => {
-      mockGetGSITurnSheets.mockResolvedValue({ turn_sheets: mockSheets })
-
-      const mockBlob = new Blob(['%PDF'], { type: 'application/pdf' })
-      mockDownloadGSITurnSheetPDF.mockResolvedValue({
-        blob: () => Promise.resolve(mockBlob),
-      })
-
-      URL.createObjectURL = vi.fn(() => 'blob:test-url')
-      URL.revokeObjectURL = vi.fn()
-
+    it('navigates between sheets with prev/next buttons', async () => {
+      mockGetGameSubscriptionInstanceTurnSheets.mockResolvedValue({ turn_sheets: mockSheets })
       const wrapper = mount(PlayerTurnSheetView)
       await flushPromises()
 
-      await wrapper.find('[data-testid="btn-download-ts-1"]').trigger('click')
+      expect(wrapper.find('[data-testid="btn-prev-sheet"]').attributes('disabled')).toBeDefined()
+      expect(wrapper.find('[data-testid="btn-next-sheet"]').attributes('disabled')).toBeUndefined()
+
+      await wrapper.find('[data-testid="btn-next-sheet"]').trigger('click')
       await flushPromises()
 
-      expect(mockDownloadGSITurnSheetPDF).toHaveBeenCalledWith('gsi-abc-123', 'ts-1')
+      expect(mockGetGameSubscriptionInstanceTurnSheetHTML).toHaveBeenCalledWith('gsi-abc-123', 'ts-2')
+      expect(wrapper.find('[data-testid="btn-next-sheet"]').attributes('disabled')).toBeDefined()
+      expect(wrapper.find('[data-testid="btn-prev-sheet"]').attributes('disabled')).toBeUndefined()
     })
 
-    it('renders an Upload Scan button for each pending turn sheet', async () => {
-      mockGetGSITurnSheets.mockResolvedValue({ turn_sheets: mockSheets })
-
+    it('only shows current turn sheets (latest turn, not completed)', async () => {
+      const mixed = [
+        { id: 'ts-old', sheet_type: 'adventure_game_location_choice', turn_number: 1, is_completed: true, scanned_data: null },
+        { id: 'ts-new-1', sheet_type: 'adventure_game_location_choice', turn_number: 2, is_completed: false, scanned_data: null },
+        { id: 'ts-new-2', sheet_type: 'adventure_game_inventory_management', turn_number: 2, is_completed: false, scanned_data: null },
+      ]
+      mockGetGameSubscriptionInstanceTurnSheets.mockResolvedValue({ turn_sheets: mixed })
       const wrapper = mount(PlayerTurnSheetView)
       await flushPromises()
 
-      expect(wrapper.find('[data-testid="btn-upload-ts-1"]').exists()).toBe(true)
-      expect(wrapper.find('[data-testid="btn-upload-ts-2"]').exists()).toBe(true)
-    })
-
-    it('calls uploadGSITurnSheetScan when a file is selected', async () => {
-      mockGetGSITurnSheets.mockResolvedValue({ turn_sheets: mockSheets })
-      mockUploadGSITurnSheetScan.mockResolvedValue({ data: {} })
-
-      const wrapper = mount(PlayerTurnSheetView)
-      await flushPromises()
-
-      const file = new File(['img'], 'scan.png', { type: 'image/png' })
-      const input = wrapper.find('[data-testid="input-upload-ts-1"]')
-      Object.defineProperty(input.element, 'files', {
-        value: [file],
-        configurable: true,
-      })
-      await input.trigger('change')
-      await flushPromises()
-
-      expect(mockUploadGSITurnSheetScan).toHaveBeenCalledWith('gsi-abc-123', 'ts-1', file)
-    })
-
-    it('calls submitGSITurnSheets with the correct gsi id', async () => {
-      mockGetGSITurnSheets.mockResolvedValue({ turn_sheets: mockSheets })
-      mockSubmitGSITurnSheets.mockResolvedValue({ submitted_count: 2, total_count: 2 })
-
-      const wrapper = mount(PlayerTurnSheetView)
-      await flushPromises()
-
-      await wrapper.find('[data-testid="btn-submit"]').trigger('click')
-      await flushPromises()
-
-      expect(mockSubmitGSITurnSheets).toHaveBeenCalledWith('gsi-abc-123')
+      expect(wrapper.find('[data-testid="ts-step-0"]').exists()).toBe(true)
+      expect(wrapper.find('[data-testid="ts-step-1"]').exists()).toBe(true)
+      expect(wrapper.find('[data-testid="ts-step-2"]').exists()).toBe(false)
     })
   })
 })

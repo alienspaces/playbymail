@@ -135,11 +135,6 @@ func (m *Domain) RemoveGameInstanceParameterRec(recID string) error {
 
 	l.Debug("removing game_instance_parameter record ID >%s<", recID)
 
-	_, err := m.GetGameInstanceParameterRec(recID, coresql.ForUpdateNoWait)
-	if err != nil {
-		return err
-	}
-
 	r := m.GameInstanceParameterRepository()
 
 	if err := r.RemoveOne(recID); err != nil {

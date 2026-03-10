@@ -1,7 +1,7 @@
-import { baseUrl, apiFetch, handleApiError } from './baseUrl';
+import { baseUrl, getAuthHeaders, apiFetch, handleApiError } from './baseUrl';
 
-const gsiPath = (gsiId) =>
-  `${baseUrl}/api/v1/player/game-subscription-instances/${gsiId}`;
+const gameSubscriptionInstancePath = (gameSubscriptionInstanceId) =>
+  `${baseUrl}/api/v1/player/game-subscription-instances/${gameSubscriptionInstanceId}`;
 
 /**
  * Verify game subscription instance turn sheet token.
@@ -16,7 +16,7 @@ export async function verifyGameSubscriptionToken(gameSubscriptionInstanceID, tu
   if (email) body.email = email
 
   const res = await fetch(
-    `${gsiPath(gameSubscriptionInstanceID)}/verify-token`,
+    `${gameSubscriptionInstancePath(gameSubscriptionInstanceID)}/verify-token`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -36,7 +36,7 @@ export async function verifyGameSubscriptionToken(gameSubscriptionInstanceID, tu
  */
 export async function requestNewTurnSheetToken(gameSubscriptionInstanceID, email) {
   const res = await fetch(
-    `${gsiPath(gameSubscriptionInstanceID)}/request-token`,
+    `${gameSubscriptionInstancePath(gameSubscriptionInstanceID)}/request-token`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -48,12 +48,12 @@ export async function requestNewTurnSheetToken(gameSubscriptionInstanceID, email
 
 /**
  * Get the list of turn sheets for a game subscription instance.
- * @param {string} gsiId
+ * @param {string} gameSubscriptionInstanceId
  * @returns {Promise<object>}
  */
-export async function getGSITurnSheets(gsiId) {
-  const res = await apiFetch(`${gsiPath(gsiId)}/turn-sheets`, {
-    headers: { 'Content-Type': 'application/json' },
+export async function getGameSubscriptionInstanceTurnSheets(gameSubscriptionInstanceId) {
+  const res = await apiFetch(`${gameSubscriptionInstancePath(gameSubscriptionInstanceId)}/turn-sheets`, {
+    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
   });
   await handleApiError(res, 'Failed to load turn sheets');
   return await res.json();
@@ -61,13 +61,13 @@ export async function getGSITurnSheets(gsiId) {
 
 /**
  * Get a specific turn sheet for a game subscription instance.
- * @param {string} gsiId
+ * @param {string} gameSubscriptionInstanceId
  * @param {string} turnSheetId
  * @returns {Promise<object>}
  */
-export async function getGSITurnSheet(gsiId, turnSheetId) {
-  const res = await apiFetch(`${gsiPath(gsiId)}/turn-sheets/${turnSheetId}`, {
-    headers: { 'Content-Type': 'application/json' },
+export async function getGameSubscriptionInstanceTurnSheet(gameSubscriptionInstanceId, turnSheetId) {
+  const res = await apiFetch(`${gameSubscriptionInstancePath(gameSubscriptionInstanceId)}/turn-sheets/${turnSheetId}`, {
+    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
   });
   await handleApiError(res, 'Failed to load turn sheet');
   return await res.json();
@@ -75,15 +75,15 @@ export async function getGSITurnSheet(gsiId, turnSheetId) {
 
 /**
  * Save (auto-save) form data for a turn sheet.
- * @param {string} gsiId
+ * @param {string} gameSubscriptionInstanceId
  * @param {string} turnSheetId
  * @param {object} scannedData
  * @returns {Promise<object>}
  */
-export async function saveGSITurnSheet(gsiId, turnSheetId, scannedData) {
-  const res = await apiFetch(`${gsiPath(gsiId)}/turn-sheets/${turnSheetId}`, {
+export async function saveGameSubscriptionInstanceTurnSheet(gameSubscriptionInstanceId, turnSheetId, scannedData) {
+  const res = await apiFetch(`${gameSubscriptionInstancePath(gameSubscriptionInstanceId)}/turn-sheets/${turnSheetId}`, {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
     body: JSON.stringify({ scanned_data: scannedData }),
   });
   await handleApiError(res, 'Failed to save turn sheet');
@@ -92,28 +92,42 @@ export async function saveGSITurnSheet(gsiId, turnSheetId, scannedData) {
 
 /**
  * Submit all turn sheets for a game subscription instance.
- * @param {string} gsiId
+ * @param {string} gameSubscriptionInstanceId
  * @returns {Promise<object>}
  */
-export async function submitGSITurnSheets(gsiId) {
-  const res = await apiFetch(`${gsiPath(gsiId)}/turn-sheet-upload`, {
+export async function submitGameSubscriptionInstanceTurnSheets(gameSubscriptionInstanceId) {
+  const res = await apiFetch(`${gameSubscriptionInstancePath(gameSubscriptionInstanceId)}/turn-sheet-upload`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
   });
   await handleApiError(res, 'Failed to submit turn sheets');
   return await res.json();
 }
 
 /**
+ * Get a turn sheet rendered as HTML (for inline viewer).
+ * @param {string} gameSubscriptionInstanceId
+ * @param {string} turnSheetId
+ * @returns {Promise<string>} HTML string
+ */
+export async function getGameSubscriptionInstanceTurnSheetHTML(gameSubscriptionInstanceId, turnSheetId) {
+  const res = await apiFetch(`${gameSubscriptionInstancePath(gameSubscriptionInstanceId)}/turn-sheets/${turnSheetId}`, {
+    headers: { Accept: 'text/html', ...getAuthHeaders() },
+  });
+  await handleApiError(res, 'Failed to load turn sheet HTML');
+  return await res.text();
+}
+
+/**
  * Download a printable PDF for a turn sheet.
  * Returns the raw Response so the caller can trigger a file download.
- * @param {string} gsiId
+ * @param {string} gameSubscriptionInstanceId
  * @param {string} turnSheetId
  * @returns {Promise<Response>}
  */
-export async function downloadGSITurnSheetPDF(gsiId, turnSheetId) {
-  const res = await apiFetch(`${gsiPath(gsiId)}/turn-sheets/${turnSheetId}/download`, {
-    headers: { Accept: 'application/pdf' },
+export async function downloadGameSubscriptionInstanceTurnSheetPDF(gameSubscriptionInstanceId, turnSheetId) {
+  const res = await apiFetch(`${gameSubscriptionInstancePath(gameSubscriptionInstanceId)}/turn-sheets/${turnSheetId}/download`, {
+    headers: { Accept: 'application/pdf', ...getAuthHeaders() },
   });
   await handleApiError(res, 'Failed to download turn sheet PDF');
   return res;
@@ -121,17 +135,18 @@ export async function downloadGSITurnSheetPDF(gsiId, turnSheetId) {
 
 /**
  * Upload a scanned turn sheet image for OCR processing.
- * @param {string} gsiId
+ * @param {string} gameSubscriptionInstanceId
  * @param {string} turnSheetId
  * @param {File} imageFile
  * @returns {Promise<object>}
  */
-export async function uploadGSITurnSheetScan(gsiId, turnSheetId, imageFile) {
+export async function uploadGameSubscriptionInstanceTurnSheetScan(gameSubscriptionInstanceId, turnSheetId, imageFile) {
   const formData = new FormData()
   formData.append('image', imageFile)
 
-  const res = await apiFetch(`${gsiPath(gsiId)}/turn-sheets/${turnSheetId}/scan`, {
+  const res = await apiFetch(`${gameSubscriptionInstancePath(gameSubscriptionInstanceId)}/turn-sheets/${turnSheetId}/scan`, {
     method: 'POST',
+    headers: { ...getAuthHeaders() },
     body: formData,
   });
   await handleApiError(res, 'Failed to upload scanned turn sheet');

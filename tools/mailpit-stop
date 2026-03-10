@@ -1,0 +1,8 @@
+#!/bin/sh
+
+# environment
+. ./tools/environment || exit $?
+
+echo "=> (mailpit-stop) Stopping MailPit (docker service)"
+
+docker ps -a | grep "${PROJECT_NAME}-mailpit" | awk '{print $1}' | xargs sh -c 'for arg do docker stop $arg; docker rm $arg; done' _

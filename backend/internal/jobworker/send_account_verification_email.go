@@ -24,7 +24,7 @@ import (
 )
 
 type SendAccountVerificationEmailWorkerArgs struct {
-	AccountID string
+	AccountUserID string
 }
 
 func (SendAccountVerificationEmailWorkerArgs) Kind() string { return "send-account-verification-token" }
@@ -114,14 +114,15 @@ type SendAccountVerificationEmailDoWorkResult struct {
 func (w *SendAccountVerificationEmailWorker) DoWork(ctx context.Context, m *domain.Domain, c *river.Client[pgx.Tx], j *river.Job[SendAccountVerificationEmailWorkerArgs]) (*SendAccountVerificationEmailDoWorkResult, error) {
 	l := w.Log.WithFunctionContext("SendAccountVerificationEmailWorker/DoWork")
 
-	l.Info("send account verification email worker report work record ID >%s<", j.Args.AccountID)
+	l.Info("send account verification email worker report work record ID >%s<", j.Args.AccountUserID)
 
-	accountRec, err := m.GetAccountRec(j.Args.AccountID, nil)
+	accountUserRec, err := m.GetAccountUserRec(j.Args.AccountUserID, nil)
 	if err != nil {
 		l.Warn("failed to get account record >%v<", err)
 		return nil, err
 	}
-	token, err := m.GenerateAccountVerificationToken(accountRec)
+
+	token, err := m.GenerateAccountUserVerificationToken(accountUserRec)
 	if err != nil {
 		l.Warn("failed to generate account verification token >%v<", err)
 		return nil, err
@@ -154,7 +155,7 @@ func (w *SendAccountVerificationEmailWorker) DoWork(ctx context.Context, m *doma
 
 	emailMsg := &emailer.Message{
 		From:    w.Config.NoReplyEmailAddress,
-		To:      []string{accountRec.Email},
+		To:      []string{accountUserRec.Email},
 		Subject: "Your PlayByMail verification code",
 		Body:    body.String(),
 	}
@@ -163,7 +164,7 @@ func (w *SendAccountVerificationEmailWorker) DoWork(ctx context.Context, m *doma
 		return nil, err
 	}
 
-	l.Info("sent verification email to >%s< with code >%s<", accountRec.Email, token)
+	l.Info("sent verification email to >%s< with code >%s<", accountUserRec.Email, token)
 
 	return &SendAccountVerificationEmailDoWorkResult{
 		RecordCount: 1,

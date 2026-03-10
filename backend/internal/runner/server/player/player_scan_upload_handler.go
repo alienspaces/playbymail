@@ -11,8 +11,8 @@ import (
 
 	coreerror "gitlab.com/alienspaces/playbymail/core/error"
 	"gitlab.com/alienspaces/playbymail/core/queryparam"
-	coresql "gitlab.com/alienspaces/playbymail/core/sql"
 	"gitlab.com/alienspaces/playbymail/core/server"
+	coresql "gitlab.com/alienspaces/playbymail/core/sql"
 	"gitlab.com/alienspaces/playbymail/core/type/domainer"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
 	"gitlab.com/alienspaces/playbymail/internal/domain"
@@ -21,7 +21,7 @@ import (
 )
 
 const (
-	UploadGSITurnSheetScan = "upload-gsi-turn-sheet-scan"
+	UploadGameSubscriptionInstanceTurnSheetScan = "upload-game-subscription-instance-turn-sheet-scan"
 )
 
 // maxScanUploadBytes is the maximum accepted multipart upload size for player scans.
@@ -34,10 +34,10 @@ func playerScanHandlerConfig(l logger.Logger, scnr turnsheet.TurnSheetScanner) (
 
 	cfg := make(map[string]server.HandlerConfig)
 
-	cfg[UploadGSITurnSheetScan] = server.HandlerConfig{
+	cfg[UploadGameSubscriptionInstanceTurnSheetScan] = server.HandlerConfig{
 		Method:      http.MethodPost,
 		Path:        "/api/v1/player/game-subscription-instances/:game_subscription_instance_id/turn-sheets/:game_turn_sheet_id/scan",
-		HandlerFunc: uploadGSITurnSheetScanHandler(scnr),
+		HandlerFunc: uploadGameSubscriptionInstanceTurnSheetScanHandler(scnr),
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{server.AuthenticationTypeToken},
 			AuthzPermissions: []server.AuthorizedPermission{
@@ -56,11 +56,11 @@ func playerScanHandlerConfig(l logger.Logger, scnr turnsheet.TurnSheetScanner) (
 	return cfg, nil
 }
 
-// uploadGSITurnSheetScanHandler accepts a scanned turn sheet image, runs OCR on it,
+// uploadGameSubscriptionInstanceTurnSheetScanHandler accepts a scanned turn sheet image, runs OCR on it,
 // and saves the extracted data to the turn sheet record.
-func uploadGSITurnSheetScanHandler(scnr turnsheet.TurnSheetScanner) server.Handle {
+func uploadGameSubscriptionInstanceTurnSheetScanHandler(scnr turnsheet.TurnSheetScanner) server.Handle {
 	return func(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
-		l = logging.LoggerWithFunctionContext(l, packageName, "uploadGSITurnSheetScanHandler")
+		l = logging.LoggerWithFunctionContext(l, packageName, "uploadGameSubscriptionInstanceTurnSheetScanHandler")
 
 		l.Info("uploading turn sheet scan with path params >%#v<", pp)
 
@@ -71,16 +71,16 @@ func uploadGSITurnSheetScanHandler(scnr turnsheet.TurnSheetScanner) server.Handl
 
 		mm := m.(*domain.Domain)
 
-		gsiRec, err := resolveGSI(l, r, pp, mm)
+		gameSubscriptionInstanceRec, err := resolveGameSubscriptionInstance(l, r, pp, mm)
 		if err != nil {
 			return err
 		}
 
 		authData := server.GetRequestAuthenData(l, r)
 
-		subRec, err := mm.GetGameSubscriptionRec(gsiRec.GameSubscriptionID, nil)
+		subRec, err := mm.GetGameSubscriptionRec(gameSubscriptionInstanceRec.GameSubscriptionID, nil)
 		if err != nil {
-			l.Warn("failed to get game subscription >%s< >%v<", gsiRec.GameSubscriptionID, err)
+			l.Warn("failed to get game subscription >%s< >%v<", gameSubscriptionInstanceRec.GameSubscriptionID, err)
 			return err
 		}
 
@@ -90,8 +90,8 @@ func uploadGSITurnSheetScanHandler(scnr turnsheet.TurnSheetScanner) server.Handl
 			return err
 		}
 
-		if turnSheetRec.AccountID != gsiRec.AccountID || turnSheetRec.GameID != subRec.GameID {
-			l.Warn("turn sheet >%s< does not belong to gsi >%s<", gameTurnSheetID, gsiRec.ID)
+		if turnSheetRec.AccountID != gameSubscriptionInstanceRec.AccountID || turnSheetRec.GameID != subRec.GameID {
+			l.Warn("turn sheet >%s< does not belong to game subscription instance >%s<", gameTurnSheetID, gameSubscriptionInstanceRec.ID)
 			return coreerror.NewNotFoundError("turn_sheet", "Turn sheet not found")
 		}
 		if turnSheetRec.AccountUserID != authData.AccountUser.ID {
@@ -153,7 +153,7 @@ func uploadGSITurnSheetScanHandler(scnr turnsheet.TurnSheetScanner) server.Handl
 			return err
 		}
 
-		l.Info("saved scanned data for turn sheet >%s< via gsi >%s<", gameTurnSheetID, gsiRec.ID)
+		l.Info("saved scanned data for turn sheet >%s< via game subscription instance >%s<", gameTurnSheetID, gameSubscriptionInstanceRec.ID)
 
 		return server.WriteResponse(l, w, http.StatusOK, updatedRec)
 	}

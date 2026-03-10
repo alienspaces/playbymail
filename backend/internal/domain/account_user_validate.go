@@ -59,7 +59,7 @@ func validateAccountUserRecForCreate(args *validateAccountUserArgs) error {
 	}
 
 	if rec.Status == "" {
-		rec.Status = account_record.AccountUserStatusPendingApproval
+		return coreerror.NewInvalidDataError("status is required")
 	}
 
 	if err := validateAccountUserStatus(rec.Status); err != nil {
@@ -86,7 +86,7 @@ func validateAccountUserRecForUpdate(args *validateAccountUserArgs) error {
 	}
 
 	if nextRec.Status == "" {
-		nextRec.Status = currRec.Status
+		return coreerror.NewInvalidDataError("status is required")
 	}
 
 	if err := validateAccountUserStatus(nextRec.Status); err != nil {

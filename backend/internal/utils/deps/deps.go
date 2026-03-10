@@ -10,6 +10,7 @@ import (
 
 	"gitlab.com/alienspaces/playbymail/core/email/fake"
 	"gitlab.com/alienspaces/playbymail/core/email/forwardemail"
+	"gitlab.com/alienspaces/playbymail/core/email/smtp"
 	"gitlab.com/alienspaces/playbymail/core/log"
 	"gitlab.com/alienspaces/playbymail/core/store"
 	"gitlab.com/alienspaces/playbymail/core/type/emailer"
@@ -70,12 +71,16 @@ func NewDefaultDependencies(cfg config.Config) (*log.Log, *store.Store, *river.C
 
 	// Emailer
 	var e emailer.Emailer
-	if cfg.EmailerFaked {
+	switch cfg.EmailerProvider {
+	case "smtp":
+		l.Info("using SMTP emailer")
+		e, err = smtp.NewSMTP(l, cfg.Config)
+	case "forwardemail":
+		l.Info("using ForwardEmail emailer")
+		e, err = forwardemail.New(l, cfg.Config)
+	default:
 		l.Info("using fake emailer")
 		e, err = fake.New(l, cfg.Config)
-	} else {
-		l.Info("using forward emailer")
-		e, err = forwardemail.New(l, cfg.Config)
 	}
 	if err != nil {
 		l.Warn("failed new emailer >%v<", err)

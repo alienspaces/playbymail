@@ -5,6 +5,7 @@ import (
 
 	coreconfig "gitlab.com/alienspaces/playbymail/core/config"
 	coreerror "gitlab.com/alienspaces/playbymail/core/error"
+	"gitlab.com/alienspaces/playbymail/core/nullstring"
 	"gitlab.com/alienspaces/playbymail/core/server"
 	coresql "gitlab.com/alienspaces/playbymail/core/sql"
 	"gitlab.com/alienspaces/playbymail/core/type/domainer"
@@ -45,9 +46,9 @@ func AuthenticateRequestTokenFunc(cfg config.Config, l logger.Logger, m domainer
 		if bypassEmail := r.Header.Get("X-Bypass-Authentication"); bypassEmail != "" {
 			l.Info("development mode: using bypass authentication for email >%s<", bypassEmail)
 
-			// In development mode, query the actual account record by email bypassing
+			// In development mode, query the actual account user record by email bypassing
 			// the need for actual session tokens and using real account data.
-			accountRecs, err := mm.GetManyAccountRecs(&coresql.Options{
+			accountUserRecs, err := mm.GetManyAccountUserRecs(&coresql.Options{
 				Params: []coresql.Param{
 					{Col: account_record.FieldAccountUserEmail, Val: bypassEmail},
 				},
@@ -58,36 +59,39 @@ func AuthenticateRequestTokenFunc(cfg config.Config, l logger.Logger, m domainer
 				return server.AuthenData{}, err
 			}
 
-			if len(accountRecs) == 0 {
+			if len(accountUserRecs) == 0 {
 				l.Warn("development mode: no account found for email >%s<", bypassEmail)
 				return server.AuthenData{}, nil
 			}
 
-			accountRec := accountRecs[0]
-			l.Info("development mode: found account ID >%s< for email >%s<", accountRec.ID, bypassEmail)
+			accountUserRec := accountUserRecs[0]
+			l.Info("development mode: found account user ID >%s< for email >%s<", accountUserRec.ID, bypassEmail)
 
 			// Get account contact name if available
 			accountName := ""
 			contactRecs, err := mm.GetManyAccountUserContactRecs(&coresql.Options{
 				Params: []coresql.Param{
-					{Col: account_record.FieldAccountUserContactAccountUserID, Val: accountRec.ID},
+					{Col: account_record.FieldAccountUserContactAccountUserID, Val: accountUserRec.ID},
 				},
 				Limit: 1,
 				OrderBy: []coresql.OrderBy{
 					{Col: account_record.FieldAccountUserContactCreatedAt, Direction: coresql.OrderDirectionASC},
 				},
 			})
+			accountUserContactID := ""
 			if err == nil && len(contactRecs) > 0 {
-				accountName = contactRecs[0].Name
+				accountName = nullstring.ToString(contactRecs[0].Name)
+				accountUserContactID = contactRecs[0].ID
 			}
 
 			return server.AuthenData{
 				Type: server.AuthenticatedTypeToken,
 				AccountUser: server.AuthenticatedAccountUser{
-					ID:        accountRec.ID,
-					AccountID: accountRec.AccountID,
-					Name:      accountName,
-					Email:     accountRec.Email,
+					ID:                   accountUserRec.ID,
+					AccountID:            accountUserRec.AccountID,
+					AccountUserContactID: accountUserContactID,
+					Name:                 accountName,
+					Email:                accountUserRec.Email,
 				},
 			}, nil
 		}
@@ -122,41 +126,39 @@ func AuthenticateRequestTokenFunc(cfg config.Config, l logger.Logger, m domainer
 		tokenPreview = token[:20]
 	}
 	l.Info("verifying session token >%s<", tokenPreview)
-	accountRec, err := mm.VerifyAccountSessionToken(token)
+	accountUserRec, err := mm.VerifyAccountUserSessionToken(token)
 	if err != nil {
 		l.Warn("failed to verify account session token >%v<", err)
 		return server.AuthenData{}, err
 	}
 
-	if accountRec == nil {
+	if accountUserRec == nil {
 		l.Warn("no account found for session token")
 		return server.AuthenData{}, nil
 	}
 
-	l.Info("verified session token for account ID >%s< Email >%s<", accountRec.ID, accountRec.Email)
+	l.Info("verified session token for account user ID >%s< Email >%s<", accountUserRec.ID, accountUserRec.Email)
 
-	// Get account contact name if available
-	accountName := ""
-	contactRecs, err := mm.GetManyAccountUserContactRecs(&coresql.Options{
-		Params: []coresql.Param{
-			{Col: account_record.FieldAccountUserContactAccountUserID, Val: accountRec.ID},
-		},
-		OrderBy: []coresql.OrderBy{
-			{Col: account_record.FieldAccountUserContactCreatedAt, Direction: coresql.OrderDirectionASC},
-		},
-		Limit: 1,
-	})
-	if err == nil && len(contactRecs) > 0 {
-		accountName = contactRecs[0].Name
+	// Get account contact name and ID if available
+	accountUserContactRec, err := mm.GetAccountUserContactRecByAccountUserID(accountUserRec.ID, nil)
+	if err != nil {
+		l.Warn("failed to get account user contact for account user ID >%s< >%v<", accountUserRec.ID, err)
+		return server.AuthenData{}, err
 	}
 
-	// Get active account subscriptions. Designer/manager subscriptions are keyed by account_id;
-	// player subscriptions are keyed by account_user_id. Query both to build the full set.
-	l.Info("getting account subscriptions for account ID >%s< account user ID >%s<", accountRec.AccountID, accountRec.ID)
+	if accountUserContactRec == nil {
+		l.Warn("no account user contact found for account user ID >%s<", accountUserRec.ID)
+		return server.AuthenData{}, nil
+	}
+
+	l.Info("found account user contact ID >%s< for account user ID >%s<", accountUserContactRec.ID, accountUserRec.ID)
+
+	// Get active account subscriptions
+	l.Info("getting account subscriptions for account ID >%s< account user ID >%s<", accountUserRec.AccountID, accountUserRec.ID)
 
 	accountSubscriptions, err := mm.GetManyAccountSubscriptionRecs(&coresql.Options{
 		Params: []coresql.Param{
-			{Col: account_record.FieldAccountSubscriptionAccountID, Val: accountRec.AccountID},
+			{Col: account_record.FieldAccountSubscriptionAccountUserID, Val: accountUserRec.ID},
 			{Col: account_record.FieldAccountSubscriptionStatus, Val: account_record.AccountSubscriptionStatusActive},
 		},
 	})
@@ -165,28 +167,16 @@ func AuthenticateRequestTokenFunc(cfg config.Config, l logger.Logger, m domainer
 		return server.AuthenData{}, coreerror.NewInternalError("failed to get account subscriptions: %v", err)
 	}
 
-	// Player subscriptions store account_user_id, not account_id.
-	playerSubscriptions, err := mm.GetManyAccountSubscriptionRecs(&coresql.Options{
-		Params: []coresql.Param{
-			{Col: account_record.FieldAccountSubscriptionAccountUserID, Val: accountRec.ID},
-			{Col: account_record.FieldAccountSubscriptionStatus, Val: account_record.AccountSubscriptionStatusActive},
-		},
-	})
-	if err != nil {
-		l.Warn("failed to get player subscriptions by account user ID >%v<", err)
-		return server.AuthenData{}, coreerror.NewInternalError("failed to get player subscriptions: %v", err)
-	}
-	accountSubscriptions = append(accountSubscriptions, playerSubscriptions...)
+	l.Info("found >%d< active account subscriptions for account user ID >%s<", len(accountSubscriptions), accountUserRec.ID)
 
-	l.Info("found >%d< active account subscriptions for account ID >%s<", len(accountSubscriptions), accountRec.ID)
 	for _, sub := range accountSubscriptions {
-		l.Info("account subscription ID >%s< Type >%s< Status >%s< AccountID >%s<",
-			sub.ID, sub.SubscriptionType, sub.Status, sub.AccountID)
+		l.Info("account subscription ID >%s< Type >%s< Status >%s< AccountUserID >%s<",
+			sub.ID, sub.SubscriptionType, sub.Status, sub.AccountUserID)
 	}
 
 	// All accounts must have at least some account subscriptions
 	if len(accountSubscriptions) == 0 {
-		l.Warn("account ID >%s< has no active account subscriptions", accountRec.ID)
+		l.Warn("account user ID >%s< has no active account subscriptions", accountUserRec.ID)
 		return server.AuthenData{}, coreerror.NewUnauthorizedError()
 	}
 
@@ -213,10 +203,11 @@ func AuthenticateRequestTokenFunc(cfg config.Config, l logger.Logger, m domainer
 		Type:        server.AuthenticatedTypeToken,
 		Permissions: permissions,
 		AccountUser: server.AuthenticatedAccountUser{
-			ID:        accountRec.ID,
-			AccountID: accountRec.AccountID,
-			Name:      accountName,
-			Email:     accountRec.Email,
+			ID:                   accountUserRec.ID,
+			AccountID:            accountUserRec.AccountID,
+			AccountUserContactID: accountUserContactRec.ID,
+			Name:                 nullstring.ToString(accountUserContactRec.Name),
+			Email:                accountUserRec.Email,
 		},
 	}
 

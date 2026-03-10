@@ -10,8 +10,11 @@ import (
 type Config struct {
 	config.Config
 
-	// Emailer
-	EmailerFaked bool `env:"EMAILER_FAKED" envDefault:"false"`
+	// Emailer provider: "fake" (default, no-op), "smtp" (local/MailPit), "forwardemail"
+	EmailerProvider string `env:"EMAILER_PROVIDER" envDefault:"fake"`
+
+	// Game turn queueing periodic job interval
+	GameTurnQueueingIntervalSeconds int `env:"GAME_TURN_QUEUEING_INTERVAL_SECONDS" envDefault:"3600"`
 
 	// Email addresses
 	SupportEmailAddress string `env:"SUPPORT_EMAIL_ADDRESS" envDefault:"support@playbymail.games"`

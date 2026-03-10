@@ -43,6 +43,12 @@ else
     echo "No backend PID file found; nothing to stop."
 fi
 
+# Stop Mailpit (used by backend for dev mail)
+./tools/mailpit-stop || true
+
+# Stop database (Docker container)
+./tools/db-stop || true
+
 # Also check for processes listening on port 8080
 echo "Checking for processes on port 8080..."
 PORT_PIDS=$(lsof -ti:8080)

@@ -170,6 +170,27 @@ func (t *Testing) createAdventureGameInstanceRecords(gameConfig GameConfig, game
 	turnSheetsCache := map[int][]*game_record.GameTurnSheet{}
 	if len(turnSheets) > 0 {
 		turnSheetsCache[turnSheets[0].TurnNumber] = turnSheets
+		if err := t.addAdventureGameTurnSheetLinksToTeardown(turnSheets); err != nil {
+			l.Warn("failed adding initial turn sheet links to teardown >%v<", err)
+			return err
+		}
+	}
+
+	// If the first configured turn is after the initial turn (0), process earlier turns so those sheets exist.
+	firstConfiguredTurn := turnConfigs[0].TurnNumber
+	for turn := 0; turn < firstConfiguredTurn; turn++ {
+		if err := t.processGameTurnForInstanceInTx(ctx, instanceRec.ID); err != nil {
+			l.Warn("failed processing turn >%d< to create sheets for configured turn >%d< >%v<", turn, firstConfiguredTurn, err)
+			return err
+		}
+		// Prime cache with the turn we just created so the next iteration can use it
+		nextTurn := turn + 1
+		nextSheets, err := t.getTurnSheetsForTurn(instanceRec.ID, nextTurn)
+		if err != nil {
+			l.Warn("failed fetching turn sheets after processing >%v<", err)
+			return err
+		}
+		turnSheetsCache[nextTurn] = nextSheets
 	}
 
 	for idx, turnCfg := range turnConfigs {
@@ -207,13 +228,17 @@ func (t *Testing) createAdventureGameInstanceRecords(gameConfig GameConfig, game
 			return err
 		}
 
-		nextTurn := turnCfg.TurnNumber + 1
-		nextSheets, err := t.getTurnSheetsForTurn(instanceRec.ID, nextTurn)
-		if err != nil {
-			l.Warn("failed fetching next turn sheets >%v<", err)
-			return err
+		// Only fetch next turn sheets when there may be a subsequent config that needs them.
+		// Next turn sheets are created by processGameTurnForInstanceInTx above.
+		if !isLastTurn {
+			nextTurn := turnCfg.TurnNumber + 1
+			nextSheets, err := t.getTurnSheetsForTurn(instanceRec.ID, nextTurn)
+			if err != nil {
+				l.Warn("failed fetching next turn sheets >%v<", err)
+				return err
+			}
+			turnSheetsCache[nextTurn] = nextSheets
 		}
-		turnSheetsCache[nextTurn] = nextSheets
 	}
 
 	return nil

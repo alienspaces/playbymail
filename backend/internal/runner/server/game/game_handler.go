@@ -347,14 +347,14 @@ func createGameHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Par
 	}
 
 	// Auto-create designer subscription so the creator can access their game
-	_, err = mm.CreateDesignerSubscriptionForNewGame(rec, authenData.AccountUser.AccountID)
+	_, err = mm.CreateDesignerSubscriptionForNewGame(rec, authenData.AccountUser.AccountID, authenData.AccountUser.ID)
 	if err != nil {
 		l.Warn("failed creating designer subscription for game >%s< >%v<", rec.ID, err)
 		return err
 	}
 
 	// Auto-create manager subscription so the designer can create instances
-	_, err = mm.CreateManagerSubscriptionForNewGame(rec, authenData.AccountUser.AccountID)
+	_, err = mm.CreateManagerSubscriptionForNewGame(rec, authenData.AccountUser.AccountID, authenData.AccountUser.ID)
 	if err != nil {
 		l.Warn("failed creating manager subscription for game >%s< >%v<", rec.ID, err)
 		return err

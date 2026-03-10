@@ -13,7 +13,7 @@ vi.mock('./baseUrl', () => ({
 
 import { verifyGameSubscriptionToken, requestNewTurnSheetToken } from './player'
 
-const GSI_BASE = 'http://localhost:8080/api/v1/player/game-subscription-instances'
+const GAME_SUBSCRIPTION_INSTANCE_BASE = 'http://localhost:8080/api/v1/player/game-subscription-instances'
 
 describe('player API', () => {
   beforeEach(() => {
@@ -31,7 +31,7 @@ describe('player API', () => {
       const result = await verifyGameSubscriptionToken('gsi-123', 'token-xyz')
 
       expect(mockFetch).toHaveBeenCalledWith(
-        `${GSI_BASE}/gsi-123/verify-token`,
+        `${GAME_SUBSCRIPTION_INSTANCE_BASE}/gsi-123/verify-token`,
         expect.objectContaining({
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -50,7 +50,7 @@ describe('player API', () => {
       const result = await verifyGameSubscriptionToken('gsi-123', 'token-xyz', 'user@example.com')
 
       expect(mockFetch).toHaveBeenCalledWith(
-        `${GSI_BASE}/gsi-123/verify-token`,
+        `${GAME_SUBSCRIPTION_INSTANCE_BASE}/gsi-123/verify-token`,
         expect.objectContaining({
           body: JSON.stringify({ turn_sheet_token: 'token-xyz', email: 'user@example.com' }),
         })
@@ -66,7 +66,7 @@ describe('player API', () => {
       await requestNewTurnSheetToken('gsi-456', 'player@example.com')
 
       expect(mockFetch).toHaveBeenCalledWith(
-        `${GSI_BASE}/gsi-456/request-token`,
+        `${GAME_SUBSCRIPTION_INSTANCE_BASE}/gsi-456/request-token`,
         expect.objectContaining({
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

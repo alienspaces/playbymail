@@ -36,7 +36,7 @@ func gsiIDForPlayer(t *testing.T, data harness.Data) string {
 	return ""
 }
 
-func Test_getGSITurnSheetListHandler(t *testing.T) {
+func Test_getGameSubscriptionInstanceTurnSheetListHandler(t *testing.T) {
 	t.Parallel()
 
 	th := testutil.NewTestHarness(t)
@@ -59,7 +59,7 @@ func Test_getGSITurnSheetListHandler(t *testing.T) {
 					return testutil.NewTestRunner(cfg, l, s, j, scanner)
 				},
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
-					return rnr.GetHandlerConfig()[player.GetGSITurnSheetList]
+					return rnr.GetHandlerConfig()[player.GetGameSubscriptionInstanceTurnSheetList]
 				},
 				RequestHeaders: testutil.AuthHeaderProPlayer,
 				RequestPathParams: func(d harness.Data) map[string]string {
@@ -74,7 +74,7 @@ func Test_getGSITurnSheetListHandler(t *testing.T) {
 			TestCase: testutil.TestCase{
 				Name: "unauthenticated request returns unauthorized",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
-					return rnr.GetHandlerConfig()[player.GetGSITurnSheetList]
+					return rnr.GetHandlerConfig()[player.GetGameSubscriptionInstanceTurnSheetList]
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
@@ -94,7 +94,7 @@ func Test_getGSITurnSheetListHandler(t *testing.T) {
 	}
 }
 
-func Test_downloadGSITurnSheetPDFHandler(t *testing.T) {
+func Test_downloadGameSubscriptionInstanceTurnSheetPDFHandler(t *testing.T) {
 	t.Parallel()
 
 	th := testutil.NewTestHarness(t)
@@ -114,7 +114,7 @@ func Test_downloadGSITurnSheetPDFHandler(t *testing.T) {
 			TestCase: testutil.TestCase{
 				Name: "unauthenticated request returns unauthorized",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
-					return rnr.GetHandlerConfig()[player.DownloadGSITurnSheetPDF]
+					return rnr.GetHandlerConfig()[player.DownloadGameSubscriptionInstanceTurnSheetPDF]
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
@@ -135,7 +135,7 @@ func Test_downloadGSITurnSheetPDFHandler(t *testing.T) {
 	}
 }
 
-func Test_submitGSITurnSheetsHandler(t *testing.T) {
+func Test_submitGameSubscriptionInstanceTurnSheetsHandler(t *testing.T) {
 	t.Parallel()
 
 	th := testutil.NewTestHarness(t)
@@ -158,7 +158,7 @@ func Test_submitGSITurnSheetsHandler(t *testing.T) {
 					return testutil.NewTestRunner(cfg, l, s, j, scanner)
 				},
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
-					return rnr.GetHandlerConfig()[player.SubmitGSITurnSheets]
+					return rnr.GetHandlerConfig()[player.SubmitGameSubscriptionInstanceTurnSheets]
 				},
 				RequestHeaders: testutil.AuthHeaderProPlayer,
 				RequestPathParams: func(d harness.Data) map[string]string {
@@ -173,7 +173,7 @@ func Test_submitGSITurnSheetsHandler(t *testing.T) {
 			TestCase: testutil.TestCase{
 				Name: "unauthenticated request returns unauthorized",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
-					return rnr.GetHandlerConfig()[player.SubmitGSITurnSheets]
+					return rnr.GetHandlerConfig()[player.SubmitGameSubscriptionInstanceTurnSheets]
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{

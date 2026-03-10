@@ -103,6 +103,10 @@ func (m *Domain) CreateGameRec(rec *game_record.Game) (*game_record.Game, error)
 
 	l.Debug("creating client record >%#v<", rec)
 
+	if rec != nil && rec.Status == "" {
+		rec.Status = game_record.GameStatusDraft
+	}
+
 	r := m.GameRepository()
 
 	if err := m.validateGameRecForCreate(rec); err != nil {
@@ -176,17 +180,7 @@ func (m *Domain) RemoveGameRec(recID string) error {
 
 	l.Debug("removing game record ID >%s<", recID)
 
-	rec, err := m.GetGameRec(recID, coresql.ForUpdateNoWait)
-	if err != nil {
-		return err
-	}
-
 	r := m.GameRepository()
-
-	if err := m.validateGameRecForDelete(rec); err != nil {
-		l.Warn("failed to validate game record >%v<", err)
-		return err
-	}
 
 	if err := r.RemoveOne(recID); err != nil {
 		return databaseError(err)

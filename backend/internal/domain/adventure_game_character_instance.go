@@ -124,11 +124,6 @@ func (m *Domain) RemoveAdventureGameCharacterInstanceRec(recID string) error {
 
 	l.Debug("removing adventure_game_character_instance record ID >%s<", recID)
 
-	_, err := m.GetAdventureGameCharacterInstanceRec(recID, coresql.ForUpdateNoWait)
-	if err != nil {
-		return err
-	}
-
 	r := m.AdventureGameCharacterInstanceRepository()
 
 	if err := r.RemoveOne(recID); err != nil {

@@ -145,10 +145,11 @@ const (
 )
 
 type AuthenticatedAccountUser struct {
-	ID        string `json:"id"`
-	AccountID string `json:"account_id"`
-	Name      string `json:"name"`
-	Email     string `json:"email"`
+	ID                   string `json:"id"`                      // Account user record ID
+	AccountID            string `json:"account_id"`              // Account record ID
+	AccountUserContactID string `json:"account_user_contact_id"` // Account user contact record ID (optional)
+	Name                 string `json:"name"`
+	Email                string `json:"email"`
 }
 
 type AuthenticationType string

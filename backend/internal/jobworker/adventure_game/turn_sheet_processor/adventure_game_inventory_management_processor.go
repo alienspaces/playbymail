@@ -8,11 +8,13 @@ import (
 	"strings"
 
 	"gitlab.com/alienspaces/playbymail/core/convert"
+	"gitlab.com/alienspaces/playbymail/core/record"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 	"gitlab.com/alienspaces/playbymail/internal/turnsheet"
+	"gitlab.com/alienspaces/playbymail/internal/utils/turnsheetutil"
 )
 
 // AdventureGameInventoryManagementProcessor processes inventory management turn sheet business logic for adventure games
@@ -132,7 +134,7 @@ func (p *AdventureGameInventoryManagementProcessor) CreateNextTurnSheet(ctx cont
 	}
 
 	// Step 4: Get account for name
-	accountRec, err := p.Domain.GetAccountRec(characterRec.AccountUserID, nil)
+	accountUserRec, err := p.Domain.GetAccountUserRec(characterRec.AccountUserID, nil)
 	if err != nil {
 		l.Warn("failed to get account >%v<", err)
 		return nil, fmt.Errorf("failed to get account: %w", err)
@@ -261,16 +263,24 @@ func (p *AdventureGameInventoryManagementProcessor) CreateNextTurnSheet(ctx cont
 		locationItemList = append(locationItemList, locationItem)
 	}
 
-	// Step 10: Create sheet data
+	// Step 10: Generate turn sheet code for template rendering
+	turnSheetCode, err := turnsheetutil.GeneratePlayGameTurnSheetCode(record.NewRecordID())
+	if err != nil {
+		l.Warn("failed to generate turn sheet code >%v<", err)
+		return nil, fmt.Errorf("failed to generate turn sheet code: %w", err)
+	}
+
+	// Step 11: Create sheet data
 	sheetData := turnsheet.InventoryManagementData{
 		TurnSheetTemplateData: turnsheet.TurnSheetTemplateData{
 			GameName:              convert.Ptr(gameRec.Name),
 			GameType:              convert.Ptr("adventure"),
-			TurnNumber:            convert.Ptr(gameInstanceRec.CurrentTurn + 1),
-			AccountName:           convert.Ptr(accountRec.Email),
+			TurnNumber:            convert.Ptr(gameInstanceRec.CurrentTurn),
+			AccountName:           convert.Ptr(accountUserRec.Email),
 			TurnSheetTitle:        convert.Ptr("Inventory Management"),
 			TurnSheetDescription:  convert.Ptr(fmt.Sprintf("Manage your inventory and equipment. Carrying %d/%d items.", len(inventoryItemList), characterInstanceRec.InventoryCapacity)),
 			TurnSheetInstructions: convert.Ptr(turnsheet.DefaultInventoryManagementInstructions()),
+			TurnSheetCode:         convert.Ptr(turnSheetCode),
 		},
 		CharacterName:       characterRec.Name,
 		CurrentLocationName: locationRec.Name,
@@ -290,9 +300,9 @@ func (p *AdventureGameInventoryManagementProcessor) CreateNextTurnSheet(ctx cont
 	// Step 11: Create turn sheet record
 	turnSheet := &game_record.GameTurnSheet{
 		GameID:           gameInstanceRec.GameID,
-		AccountID:        accountRec.AccountID,
+		AccountID:        accountUserRec.AccountID,
 		AccountUserID:    characterRec.AccountUserID,
-		TurnNumber:       gameInstanceRec.CurrentTurn + 1,
+		TurnNumber:       gameInstanceRec.CurrentTurn,
 		SheetType:        adventure_game_record.AdventureGameTurnSheetTypeInventoryManagement,
 		SheetOrder:       1,
 		SheetData:        json.RawMessage(sheetDataBytes),

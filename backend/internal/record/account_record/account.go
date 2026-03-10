@@ -15,6 +15,11 @@ const (
 	FieldAccountStatus string = "status"
 )
 
+const (
+	AccountStatusActive   string = "active"
+	AccountStatusDisabled string = "disabled"
+)
+
 type Account struct {
 	record.Record
 	Name   string `db:"name"`

@@ -142,15 +142,7 @@ func (m *Domain) DeleteGameSubscriptionInstanceRec(recID string) error {
 func (m *Domain) RemoveGameSubscriptionInstanceRec(recID string) error {
 	l := m.Logger("RemoveGameSubscriptionInstanceRec")
 	l.Debug("removing game_subscription_instance record ID >%s<", recID)
-	rec, err := m.GetGameSubscriptionInstanceRec(recID, sql.ForUpdateNoWait)
-	if err != nil {
-		return err
-	}
 	r := m.GameSubscriptionInstanceRepository()
-	if err := m.validateGameSubscriptionInstanceRecForDelete(rec); err != nil {
-		l.Warn("failed domain validation >%v<", err)
-		return err
-	}
 	if err := r.RemoveOne(recID); err != nil {
 		return databaseError(err)
 	}
@@ -176,9 +168,15 @@ func (m *Domain) validateGameSubscriptionInstanceRecForCreate(rec *game_record.G
 		return coreerror.NewInvalidDataError("game_subscription_id references invalid subscription")
 	}
 
-	// Derive account_id from subscription if not provided
+	// Derive account_id and account_user_id from subscription if not provided
 	if rec.AccountID == "" {
 		rec.AccountID = subscriptionRec.AccountID
+	}
+	if rec.AccountUserID == "" && subscriptionRec.AccountUserID != "" {
+		rec.AccountUserID = subscriptionRec.AccountUserID
+	}
+	if rec.AccountUserID == "" {
+		return coreerror.NewInvalidDataError("account_user_id is required")
 	}
 
 	// Validate account_id matches subscription's account_id
@@ -221,6 +219,10 @@ func (m *Domain) validateGameSubscriptionInstanceRecForUpdate(currRec, nextRec *
 
 	if nextRec.AccountID != currRec.AccountID {
 		return coreerror.NewInvalidDataError("account_id cannot be updated")
+	}
+
+	if nextRec.AccountUserID != currRec.AccountUserID {
+		return coreerror.NewInvalidDataError("account_user_id cannot be updated")
 	}
 
 	// Validate subscription exists

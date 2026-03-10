@@ -22,26 +22,11 @@ type JoinGameInfoResponse struct {
 	Error *common_schema.ResponseError `json:"error,omitempty"`
 }
 
-// JoinGameVerifyEmailRequest is the request for POST /join/verify-email.
-type JoinGameVerifyEmailRequest struct {
-	Email string `json:"email"`
-}
-
-// JoinGameVerifyEmailResponseData is the data for the verify-email response.
-type JoinGameVerifyEmailResponseData struct {
-	HasAccount bool `json:"has_account"`
-}
-
-// JoinGameVerifyEmailResponse is the response for POST /join/verify-email.
-type JoinGameVerifyEmailResponse struct {
-	Data  *JoinGameVerifyEmailResponseData `json:"data"`
-	Error *common_schema.ResponseError     `json:"error,omitempty"`
-}
-
 // JoinGameSubmitRequest is the request for POST /join.
 type JoinGameSubmitRequest struct {
 	Email                 string `json:"email"`
 	Name                  string `json:"name"`
+	CharacterName         string `json:"character_name,omitempty"`
 	PostalAddressLine1    string `json:"postal_address_line1"`
 	PostalAddressLine2    string `json:"postal_address_line2,omitempty"`
 	StateProvince         string `json:"state_province"`

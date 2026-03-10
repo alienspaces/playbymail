@@ -23,19 +23,19 @@ func AccountUserContactRequestToRecord(l logger.Logger, r *http.Request, rec *ac
 
 	switch server.HttpMethod(r.Method) {
 	case server.HttpMethodPost:
-		rec.Name = req.Name
-		rec.PostalAddressLine1 = req.PostalAddressLine1
+		rec.Name = nullstring.FromString(req.Name)
+		rec.PostalAddressLine1 = nullstring.FromString(req.PostalAddressLine1)
 		rec.PostalAddressLine2 = nullstring.FromString(req.PostalAddressLine2)
-		rec.StateProvince = req.StateProvince
-		rec.Country = req.Country
-		rec.PostalCode = req.PostalCode
+		rec.StateProvince = nullstring.FromString(req.StateProvince)
+		rec.Country = nullstring.FromString(req.Country)
+		rec.PostalCode = nullstring.FromString(req.PostalCode)
 	case server.HttpMethodPut, server.HttpMethodPatch:
-		rec.Name = req.Name
-		rec.PostalAddressLine1 = req.PostalAddressLine1
+		rec.Name = nullstring.FromString(req.Name)
+		rec.PostalAddressLine1 = nullstring.FromString(req.PostalAddressLine1)
 		rec.PostalAddressLine2 = nullstring.FromString(req.PostalAddressLine2)
-		rec.StateProvince = req.StateProvince
-		rec.Country = req.Country
-		rec.PostalCode = req.PostalCode
+		rec.StateProvince = nullstring.FromString(req.StateProvince)
+		rec.Country = nullstring.FromString(req.Country)
+		rec.PostalCode = nullstring.FromString(req.PostalCode)
 	default:
 		return nil, fmt.Errorf("unsupported HTTP method")
 	}
@@ -48,12 +48,12 @@ func AccountUserContactRecordToResponseData(l logger.Logger, rec *account_record
 	return &account_schema.AccountContactResponseData{
 		ID:                 rec.ID,
 		AccountUserID:      rec.AccountUserID,
-		Name:               rec.Name,
-		PostalAddressLine1: rec.PostalAddressLine1,
+		Name:               nullstring.ToString(rec.Name),
+		PostalAddressLine1: nullstring.ToString(rec.PostalAddressLine1),
 		PostalAddressLine2: nullstring.ToString(rec.PostalAddressLine2),
-		StateProvince:      rec.StateProvince,
-		Country:            rec.Country,
-		PostalCode:         rec.PostalCode,
+		StateProvince:      nullstring.ToString(rec.StateProvince),
+		Country:            nullstring.ToString(rec.Country),
+		PostalCode:         nullstring.ToString(rec.PostalCode),
 		CreatedAt:          rec.CreatedAt,
 		UpdatedAt:          nulltime.ToTimePtr(rec.UpdatedAt),
 	}, nil

@@ -2,6 +2,7 @@ package domain
 
 import (
 	coreerror "gitlab.com/alienspaces/playbymail/core/error"
+	"gitlab.com/alienspaces/playbymail/core/domain"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 )
 
@@ -68,11 +69,19 @@ func validateGameSubscriptionRecForCreate(args *validateGameSubscriptionArgs) er
 		return coreerror.NewInvalidDataError("account_id is required")
 	}
 
+	if rec.AccountUserID == "" {
+		return coreerror.NewInvalidDataError("account_user_id is required")
+	}
+
 	// Account contact is required for player subscriptions
 	if rec.SubscriptionType == game_record.GameSubscriptionTypePlayer {
 		if !rec.AccountUserContactID.Valid || rec.AccountUserContactID.String == "" {
 			return coreerror.NewInvalidDataError("account_contact_id is required for player subscriptions")
 		}
+	}
+
+	if err := domain.ValidateUUIDField(game_record.FieldGameSubscriptionAccountUserID, rec.AccountUserID); err != nil {
+		return coreerror.NewInvalidDataError("account_user_id is invalid")
 	}
 
 	if rec.SubscriptionType == "" {
@@ -92,7 +101,7 @@ func validateGameSubscriptionRecForCreate(args *validateGameSubscriptionArgs) er
 	}
 
 	if rec.Status == "" {
-		rec.Status = game_record.GameSubscriptionStatusActive
+		return coreerror.NewInvalidDataError("status is required")
 	}
 
 	if err := validateGameSubscriptionStatus(rec.Status); err != nil {
@@ -125,12 +134,20 @@ func validateGameSubscriptionRecForUpdate(args *validateGameSubscriptionArgs) er
 		return coreerror.NewInvalidDataError("account_id is required")
 	}
 
+	if currRec != nil && nextRec.AccountUserID != currRec.AccountUserID {
+		return coreerror.NewInvalidDataError("account_user_id cannot be updated")
+	}
+
+	if nextRec.AccountUserID == "" {
+		return coreerror.NewInvalidDataError("account_user_id is required")
+	}
+
 	if nextRec.SubscriptionType == "" {
 		return coreerror.NewInvalidDataError("subscription_type is required")
 	}
 
 	if nextRec.Status == "" {
-		nextRec.Status = currRec.Status
+		return coreerror.NewInvalidDataError("status is required")
 	}
 
 	if err := validateGameSubscriptionStatus(nextRec.Status); err != nil {
@@ -174,12 +191,16 @@ func validateDesignerSubscriptionForNewGame(rec *game_record.GameSubscription) e
 		return coreerror.NewInvalidDataError("account_id is required")
 	}
 
+	if rec.AccountUserID == "" {
+		return coreerror.NewInvalidDataError("account_user_id is required")
+	}
+
 	if rec.SubscriptionType != game_record.GameSubscriptionTypeDesigner {
 		return coreerror.NewInvalidDataError("subscription_type must be designer for new game creation")
 	}
 
 	if rec.Status == "" {
-		rec.Status = game_record.GameSubscriptionStatusActive
+		return coreerror.NewInvalidDataError("status is required")
 	}
 
 	if err := validateGameSubscriptionStatus(rec.Status); err != nil {
@@ -205,12 +226,16 @@ func validateManagerSubscriptionForNewGame(rec *game_record.GameSubscription) er
 		return coreerror.NewInvalidDataError("account_id is required")
 	}
 
+	if rec.AccountUserID == "" {
+		return coreerror.NewInvalidDataError("account_user_id is required")
+	}
+
 	if rec.SubscriptionType != game_record.GameSubscriptionTypeManager {
 		return coreerror.NewInvalidDataError("subscription_type must be manager for new game creation")
 	}
 
 	if rec.Status == "" {
-		rec.Status = game_record.GameSubscriptionStatusActive
+		return coreerror.NewInvalidDataError("status is required")
 	}
 
 	if err := validateGameSubscriptionStatus(rec.Status); err != nil {

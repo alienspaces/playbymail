@@ -1,7 +1,6 @@
 package game
 
 import (
-	"database/sql"
 	"encoding/json"
 	"net/http"
 
@@ -11,6 +10,7 @@ import (
 
 	coreerror "gitlab.com/alienspaces/playbymail/core/error"
 	"gitlab.com/alienspaces/playbymail/core/jsonschema"
+	"gitlab.com/alienspaces/playbymail/core/nullstring"
 	"gitlab.com/alienspaces/playbymail/core/queryparam"
 	"gitlab.com/alienspaces/playbymail/core/record"
 	"gitlab.com/alienspaces/playbymail/core/server"
@@ -28,11 +28,10 @@ import (
 )
 
 const (
-	GetJoinInfo         = "get-join-info"
-	VerifyJoinEmail     = "verify-join-email"
-	GetJoinSheet        = "get-join-sheet"
-	SaveJoinSheet       = "save-join-sheet"
-	SubmitJoin          = "submit-join"
+	GetJoinInfo   = "get-join-info"
+	GetJoinSheet  = "get-join-sheet"
+	SaveJoinSheet = "save-join-sheet"
+	SubmitJoin    = "submit-join"
 )
 
 func gameSubscriptionJoinHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error) {
@@ -63,34 +62,6 @@ func gameSubscriptionJoinHandlerConfig(l logger.Logger) (map[string]server.Handl
 		},
 	}
 
-	cfg[VerifyJoinEmail] = server.HandlerConfig{
-		Method:      http.MethodPost,
-		Path:        "/api/v1/game-subscriptions/:game_subscription_id/join/verify-email",
-		HandlerFunc: verifyJoinEmailHandler,
-		MiddlewareConfig: server.MiddlewareConfig{
-			AuthenTypes: []server.AuthenticationType{server.AuthenticationTypePublic},
-			ValidateRequestSchema: jsonschema.SchemaWithReferences{
-				Main: jsonschema.Schema{
-					Location: "api/player_schema",
-					Name:     "player.join-game-verify-email.request.schema.json",
-				},
-				References: referenceSchemas,
-			},
-			ValidateResponseSchema: jsonschema.SchemaWithReferences{
-				Main: jsonschema.Schema{
-					Location: "api/player_schema",
-					Name:     "player.join-game-verify-email.response.schema.json",
-				},
-				References: referenceSchemas,
-			},
-		},
-		DocumentationConfig: server.DocumentationConfig{
-			Document:    true,
-			Title:       "Verify join game email",
-			Description: "Checks whether the provided email already has an account on the platform.",
-		},
-	}
-
 	cfg[GetJoinSheet] = server.HandlerConfig{
 		Method:      http.MethodGet,
 		Path:        "/api/v1/game-subscriptions/:game_subscription_id/join/sheet",
@@ -102,20 +73,6 @@ func gameSubscriptionJoinHandlerConfig(l logger.Logger) (map[string]server.Handl
 			Document:    true,
 			Title:       "Get join game turn sheet",
 			Description: "Returns the join game turn sheet as HTML for online completion or printing.",
-		},
-	}
-
-	cfg[SaveJoinSheet] = server.HandlerConfig{
-		Method:      http.MethodPut,
-		Path:        "/api/v1/game-subscriptions/:game_subscription_id/join/sheet",
-		HandlerFunc: saveJoinSheetHandler,
-		MiddlewareConfig: server.MiddlewareConfig{
-			AuthenTypes: []server.AuthenticationType{server.AuthenticationTypePublic},
-		},
-		DocumentationConfig: server.DocumentationConfig{
-			Document:    true,
-			Title:       "Save join game sheet",
-			Description: "Saves partial join game sheet data for multi-step form completion.",
 		},
 	}
 
@@ -152,36 +109,40 @@ func gameSubscriptionJoinHandlerConfig(l logger.Logger) (map[string]server.Handl
 
 // resolveManagerSubscription fetches and validates that a subscription is an active manager subscription.
 func resolveManagerSubscription(l logger.Logger, pp httprouter.Params, mm *domain.Domain) (*game_record.GameSubscription, error) {
+	l = logging.LoggerWithFunctionContext(l, packageName, "resolveManagerSubscription")
+
+	l.Info("resolving manager subscription with path params >%#v<", pp)
+
 	gameSubscriptionID := pp.ByName("game_subscription_id")
 	if gameSubscriptionID == "" {
 		return nil, coreerror.RequiredPathParameter("game_subscription_id")
 	}
 
-	subRec, err := mm.GetGameSubscriptionRec(gameSubscriptionID, nil)
+	gameSubscriptionRec, err := mm.GetGameSubscriptionRec(gameSubscriptionID, nil)
 	if err != nil {
-		l.Warn("failed to get subscription >%s< >%v<", gameSubscriptionID, err)
+		l.Warn("failed to get game subscription >%s< >%v<", gameSubscriptionID, err)
 		return nil, err
 	}
 
-	if subRec.SubscriptionType != game_record.GameSubscriptionTypeManager {
+	if gameSubscriptionRec.SubscriptionType != game_record.GameSubscriptionTypeManager {
 		return nil, coreerror.NewNotFoundError(game_record.TableGameSubscription, gameSubscriptionID)
 	}
-	if subRec.Status != game_record.GameSubscriptionStatusActive {
+	if gameSubscriptionRec.Status != game_record.GameSubscriptionStatusActive {
 		return nil, coreerror.NewNotFoundError(game_record.TableGameSubscription, gameSubscriptionID)
 	}
 
-	return subRec, nil
+	return gameSubscriptionRec, nil
 }
 
 // aggregateSubscriptionInstances returns available instances and player counts for a subscription.
-func aggregateSubscriptionInstances(l logger.Logger, mm *domain.Domain, subID string) (
+func aggregateSubscriptionInstances(l logger.Logger, mm *domain.Domain, gameSubscriptionID string) (
 	instances []*game_record.GameInstance,
 	playerCounts map[string]int,
 	err error,
 ) {
-	gsiRecs, err := mm.GetManyGameSubscriptionInstanceRecs(&coresql.Options{
+	gameSubscriptionInstanceRecs, err := mm.GetManyGameSubscriptionInstanceRecs(&coresql.Options{
 		Params: []coresql.Param{
-			{Col: game_record.FieldGameSubscriptionInstanceGameSubscriptionID, Val: subID},
+			{Col: game_record.FieldGameSubscriptionInstanceGameSubscriptionID, Val: gameSubscriptionID},
 		},
 	})
 	if err != nil {
@@ -191,30 +152,30 @@ func aggregateSubscriptionInstances(l logger.Logger, mm *domain.Domain, subID st
 	instances = make([]*game_record.GameInstance, 0)
 	playerCounts = make(map[string]int)
 
-	for _, gsi := range gsiRecs {
-		instRec, err := mm.GetGameInstanceRec(gsi.GameInstanceID, nil)
+	for _, gameSubscriptionInstanceRec := range gameSubscriptionInstanceRecs {
+		gameInstanceRec, err := mm.GetGameInstanceRec(gameSubscriptionInstanceRec.GameInstanceID, nil)
 		if err != nil {
-			l.Warn("failed getting instance >%s< >%v<", gsi.GameInstanceID, err)
+			l.Warn("failed getting game instance >%s< >%v<", gameSubscriptionInstanceRec.GameInstanceID, err)
 			continue
 		}
-		if instRec.Status != game_record.GameInstanceStatusCreated {
+		if gameInstanceRec.Status != game_record.GameInstanceStatusCreated {
 			continue
 		}
-		hasCapacity, err := mm.HasAvailableCapacity(instRec.ID)
+		hasCapacity, err := mm.GameInstanceHasAvailableCapacity(gameInstanceRec.ID)
 		if err != nil {
-			l.Warn("failed checking capacity for instance >%s< >%v<", instRec.ID, err)
+			l.Warn("failed checking capacity for game instance >%s< >%v<", gameInstanceRec.ID, err)
 			continue
 		}
 		if !hasCapacity {
 			continue
 		}
-		count, err := mm.GetPlayerCountForGameInstance(instRec.ID)
+		count, err := mm.GetPlayerCountForGameInstance(gameInstanceRec.ID)
 		if err != nil {
-			l.Warn("failed getting player count for instance >%s< >%v<", instRec.ID, err)
+			l.Warn("failed getting player count for game instance >%s< >%v<", gameInstanceRec.ID, err)
 			continue
 		}
-		instances = append(instances, instRec)
-		playerCounts[instRec.ID] = count
+		instances = append(instances, gameInstanceRec)
+		playerCounts[gameInstanceRec.ID] = count
 	}
 
 	return instances, playerCounts, nil
@@ -274,40 +235,6 @@ func getJoinInfoHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Pa
 	}
 
 	l.Info("responding with join info for subscription >%s< game >%s< with >%d< available instances", subRec.ID, gameRec.Name, len(instances))
-
-	return server.WriteResponse(l, w, http.StatusOK, res)
-}
-
-func verifyJoinEmailHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
-	l = logging.LoggerWithFunctionContext(l, packageName, "verifyJoinEmailHandler")
-
-	l.Info("verifying join email with path params >%#v<", pp)
-
-	var req player_schema.JoinGameVerifyEmailRequest
-	if _, err := server.ReadRequest(l, r, &req); err != nil {
-		l.Warn("failed to read request >%v<", err)
-		return err
-	}
-
-	if req.Email == "" {
-		return coreerror.NewInvalidDataError("email is required")
-	}
-
-	mm := m.(*domain.Domain)
-
-	accountRec, err := mm.GetAccountRecByEmail(req.Email)
-	if err != nil {
-		l.Warn("failed to check account by email >%v<", err)
-		return err
-	}
-
-	res := player_schema.JoinGameVerifyEmailResponse{
-		Data: &player_schema.JoinGameVerifyEmailResponseData{
-			HasAccount: accountRec != nil,
-		},
-	}
-
-	l.Info("responding with join email verification, has_account >%v<", accountRec != nil)
 
 	return server.WriteResponse(l, w, http.StatusOK, res)
 }
@@ -416,13 +343,6 @@ func getJoinSheetHandler(w http.ResponseWriter, r *http.Request, pp httprouter.P
 	return err
 }
 
-func saveJoinSheetHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
-	l = logging.LoggerWithFunctionContext(l, packageName, "saveJoinSheetHandler")
-
-	l.Info("saveJoinSheetHandler called (partial save not yet implemented)")
-	return server.WriteResponse(l, w, http.StatusAccepted, nil)
-}
-
 func submitJoinHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = logging.LoggerWithFunctionContext(l, packageName, "submitJoinHandler")
 
@@ -430,7 +350,7 @@ func submitJoinHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Par
 
 	mm := m.(*domain.Domain)
 
-	subRec, err := resolveManagerSubscription(l, pp, mm)
+	gameSubscriptionRec, err := resolveManagerSubscription(l, pp, mm)
 	if err != nil {
 		return err
 	}
@@ -445,96 +365,167 @@ func submitJoinHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Par
 		return coreerror.NewInvalidDataError("email is required")
 	}
 
-	// Resolve the account: use session if authenticated, otherwise find-or-create by email
-	var accountID, accountUserID string
+	if req.DeliveryPhysicalPost {
+		if req.PostalAddressLine1 == "" || req.StateProvince == "" || req.Country == "" || req.PostalCode == "" {
+			return coreerror.NewInvalidDataError("postal address is required for post delivery")
+		}
+	}
+
+	// Source account record IDs from authenticated session if available.
+	var accountID, accountUserID, accountUserContactID string
 
 	authenData := server.GetRequestAuthenData(l, r)
 	if authenData != nil && authenData.IsAuthenticated() {
 		accountID = authenData.AccountUser.AccountID
 		accountUserID = authenData.AccountUser.ID
-		l.Info("authenticated join game submit for account >%s< user >%s<", accountID, accountUserID)
-	} else {
-		accountUserRec, err := mm.GetAccountRecByEmail(req.Email)
-		if err != nil {
-			l.Warn("failed to look up account by email >%v<", err)
-			return err
-		}
-		if accountUserRec != nil {
-			accountID = accountUserRec.AccountID
-			accountUserID = accountUserRec.ID
-			l.Info("found existing account for email >%s< account >%s< user >%s<", req.Email, accountID, accountUserID)
-		} else {
-			newAccountUserRec := &account_record.AccountUser{
-				Email: req.Email,
-			}
-			accountRec, createdUserRec, _, err := mm.CreateAccount(newAccountUserRec)
-			if err != nil {
-				l.Warn("failed to create account for email >%s< >%v<", req.Email, err)
-				return err
-			}
-			accountID = accountRec.ID
-			accountUserID = createdUserRec.ID
-			l.Info("created new account for email >%s< account >%s< user >%s<", req.Email, accountID, accountUserID)
-		}
+		accountUserContactID = authenData.AccountUser.AccountUserContactID
+	}
+
+	accountRec := &account_record.Account{
+		Record: record.Record{
+			ID: accountID,
+		},
+		Name: req.Name,
+	}
+	accountUserRec := &account_record.AccountUser{
+		Record: record.Record{
+			ID: accountUserID,
+		},
+		AccountID: accountID,
+		Email:     req.Email,
+	}
+	accountUserContactRec := &account_record.AccountUserContact{
+		Record: record.Record{
+			ID: accountUserContactID,
+		},
+		AccountUserID:      accountUserID,
+		Name:               nullstring.FromString(req.Name),
+		PostalAddressLine1: nullstring.FromString(req.PostalAddressLine1),
+		StateProvince:      nullstring.FromString(req.StateProvince),
+		Country:            nullstring.FromString(req.Country),
+		PostalCode:         nullstring.FromString(req.PostalCode),
+	}
+
+	// Create or update account, account user, and account user contact and basic subscriptions records.
+	accountRec, accountUserRec, accountUserContactRec, _, err = mm.UpsertAccount(accountRec, accountUserRec, accountUserContactRec)
+	if err != nil {
+		l.Warn("failed to upsert account >%v<", err)
+		return err
 	}
 
 	// Auto-assign: find an available instance under this subscription.
-	instanceRec, err := mm.FindAvailableGameInstance(subRec.ID)
+	gameInstanceRec, err := mm.FindAvailableGameInstance(gameSubscriptionRec.ID)
 	if err != nil {
-		l.Warn("failed to find available instance for subscription >%s< >%v<", subRec.ID, err)
+		l.Warn("failed to find available instance for subscription >%s< >%v<", gameSubscriptionRec.ID, err)
 		return err
 	}
-	if instanceRec == nil {
+	if gameInstanceRec == nil {
 		return coreerror.NewInvalidDataError("no game instances are currently accepting new players")
 	}
 
-	contactRec := &account_record.AccountUserContact{
-		AccountUserID:      accountUserID,
-		Name:               req.Name,
-		PostalAddressLine1: req.PostalAddressLine1,
-		StateProvince:      req.StateProvince,
-		Country:            req.Country,
-		PostalCode:         req.PostalCode,
-	}
-	if req.PostalAddressLine2 != "" {
-		contactRec.PostalAddressLine2 = sql.NullString{String: req.PostalAddressLine2, Valid: true}
-	}
-	createdContact, err := mm.CreateAccountUserContactRec(contactRec)
-	if err != nil {
-		l.Warn("failed to create account user contact >%v<", err)
-		return err
-	}
-
-	playerSubRec := &game_record.GameSubscription{
-		GameID:               subRec.GameID,
+	playerGameSubscriptionRec, err := mm.CreateGameSubscriptionRec(&game_record.GameSubscription{
+		GameID:               gameSubscriptionRec.GameID,
 		AccountID:            accountID,
-		AccountUserID:        sql.NullString{String: accountUserID, Valid: true},
-		AccountUserContactID: sql.NullString{String: createdContact.ID, Valid: true},
+		AccountUserID:        accountUserID,
+		AccountUserContactID: nullstring.FromString(accountUserContactID),
 		SubscriptionType:     game_record.GameSubscriptionTypePlayer,
 		Status:               game_record.GameSubscriptionStatusActive,
-	}
-
-	createdSub, err := mm.CreateGameSubscriptionRec(playerSubRec)
+	})
 	if err != nil {
-		l.Warn("failed to create game subscription >%v<", err)
+		l.Warn("failed to create player game subscription >%v<", err)
 		return err
 	}
 
-	_, err = mm.AssignPlayerToGameInstance(createdSub.ID, instanceRec.ID)
+	// For adventure games, create the character and character instance so turn sheets can be generated.
+	gameRec, err := mm.GetGameRec(gameSubscriptionRec.GameID, nil)
 	if err != nil {
-		l.Warn("failed to assign player to game instance >%s< >%v<", instanceRec.ID, err)
+		l.Warn("failed to get game record >%v<", err)
 		return err
+	}
+
+	if gameRec.GameType == game_record.GameTypeAdventure {
+		characterName := req.CharacterName
+		if characterName == "" {
+			characterName = req.Name
+		}
+
+		characterRec := &adventure_game_record.AdventureGameCharacter{
+			GameID:        gameSubscriptionRec.GameID,
+			AccountID:     accountID,
+			AccountUserID: accountUserID,
+			Name:          characterName,
+		}
+		characterRec, err = mm.CreateAdventureGameCharacterRec(characterRec)
+		if err != nil {
+			l.Warn("failed to create adventure game character >%v<", err)
+			return err
+		}
+
+		startingLocationInstanceID := findStartingLocationInstance(l, mm, gameSubscriptionRec.GameID, gameInstanceRec.ID)
+
+		characterInstanceRec := &adventure_game_record.AdventureGameCharacterInstance{
+			GameID:                          gameSubscriptionRec.GameID,
+			GameInstanceID:                  gameInstanceRec.ID,
+			AdventureGameCharacterID:        characterRec.ID,
+			AdventureGameLocationInstanceID: startingLocationInstanceID,
+			Health:                          100,
+			InventoryCapacity:               10,
+		}
+		characterInstanceRec, err = mm.CreateAdventureGameCharacterInstanceRec(characterInstanceRec)
+		if err != nil {
+			l.Warn("failed to create character instance >%v<", err)
+			return err
+		}
+
+		if err := mm.AssignStartingItemsToCharacterInstance(characterInstanceRec); err != nil {
+			l.Warn("failed to assign starting items >%v<", err)
+		}
+
+		l.Info("created adventure game character >%s< and instance >%s<", characterRec.ID, characterInstanceRec.ID)
 	}
 
 	res := player_schema.JoinGameSubmitResponse{
 		Data: &player_schema.JoinGameSubmitResponseData{
-			GameSubscriptionID: createdSub.ID,
-			GameInstanceID:     instanceRec.ID,
-			GameID:             subRec.GameID,
+			GameSubscriptionID: playerGameSubscriptionRec.ID,
+			GameInstanceID:     gameInstanceRec.ID,
+			GameID:             gameSubscriptionRec.GameID,
 		},
 	}
 
-	l.Info("responding with created player subscription >%s< assigned to instance >%s<", createdSub.ID, instanceRec.ID)
+	l.Info("responding with created player subscription >%s< assigned to instance >%s<", playerGameSubscriptionRec.ID, gameInstanceRec.ID)
 
 	return server.WriteResponse(l, w, http.StatusCreated, res)
+}
+
+// findStartingLocationInstance finds the starting location instance for a game instance.
+// Returns empty string if none found (location is nullable on the character instance).
+func findStartingLocationInstance(l logger.Logger, mm *domain.Domain, gameID, gameInstanceID string) string {
+	locationRecs, err := mm.GetManyAdventureGameLocationRecs(&coresql.Options{
+		Params: []coresql.Param{
+			{Col: adventure_game_record.FieldAdventureGameLocationGameID, Val: gameID},
+			{Col: adventure_game_record.FieldAdventureGameLocationIsStartingLocation, Val: true},
+		},
+		Limit: 1,
+		OrderBy: []coresql.OrderBy{
+			{Col: record.FieldCreatedAt, Direction: coresql.OrderDirectionASC},
+		},
+	})
+	if err != nil || len(locationRecs) == 0 {
+		return ""
+	}
+
+	instanceRecs, err := mm.GetManyAdventureGameLocationInstanceRecs(&coresql.Options{
+		Params: []coresql.Param{
+			{Col: adventure_game_record.FieldAdventureGameLocationInstanceGameInstanceID, Val: gameInstanceID},
+			{Col: adventure_game_record.FieldAdventureGameLocationInstanceAdventureGameLocationID, Val: locationRecs[0].ID},
+		},
+		Limit: 1,
+	})
+	if err != nil || len(instanceRecs) == 0 {
+		return ""
+	}
+
+	l.Info("found starting location instance >%s< for game instance >%s<", instanceRecs[0].ID, gameInstanceID)
+
+	return instanceRecs[0].ID
 }

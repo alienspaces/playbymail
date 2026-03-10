@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 	"time"
@@ -62,7 +63,7 @@ func (m *Domain) CreateGameInstanceRec(rec *game_record.GameInstance) (*game_rec
 
 	l.Debug("creating game_instance record >%#v<", rec)
 
-	// Set initial status and default values if not already set
+	// Set initial status and default values when missing (do not overwrite user-provided data)
 	if rec.Status == "" {
 		rec.Status = game_record.GameInstanceStatusCreated
 	}
@@ -75,9 +76,17 @@ func (m *Domain) CreateGameInstanceRec(rec *game_record.GameInstance) (*game_rec
 		rec.DeliveryPhysicalPost = true
 	}
 
-	if err := m.validateGameInstanceRecForCreate(rec); err != nil {
-		l.Warn("failed to validate game_instance record >%v<", err)
-		return rec, err
+	// Draft games: default closed testing and email delivery when not already set
+	if rec.GameID != "" {
+		gameRec, getErr := m.GetGameRec(rec.GameID, nil)
+		if getErr == nil && gameRec != nil && gameRec.Status == game_record.GameStatusDraft {
+			if !rec.IsClosedTesting {
+				rec.IsClosedTesting = true
+			}
+			if !rec.DeliveryEmail {
+				rec.DeliveryEmail = true
+			}
+		}
 	}
 
 	// Generate join_game_key if closed testing is enabled
@@ -88,6 +97,11 @@ func (m *Domain) CreateGameInstanceRec(rec *game_record.GameInstance) (*game_rec
 			return rec, err
 		}
 		rec.ClosedTestingJoinGameKey = nullstring.FromString(closedTestingJoinGameKey)
+	}
+
+	if err := m.validateGameInstanceRecForCreate(rec); err != nil {
+		l.Warn("failed to validate game_instance record >%v<", err)
+		return rec, err
 	}
 
 	r := m.GameInstanceRepository()
@@ -152,11 +166,6 @@ func (m *Domain) RemoveGameInstanceRec(recID string) error {
 	l := m.Logger("RemoveGameInstanceRec")
 
 	l.Debug("removing game_instance record ID >%s<", recID)
-
-	_, err := m.GetGameInstanceRec(recID, coresql.ForUpdateNoWait)
-	if err != nil {
-		return err
-	}
 
 	r := m.GameInstanceRepository()
 
@@ -244,37 +253,44 @@ func (m *Domain) BeginTurnProcessing(instanceID string) (*game_record.GameInstan
 func (m *Domain) CompleteTurn(instanceID string) (*game_record.GameInstance, error) {
 	l := m.Logger("CompleteTurn")
 
-	instance, err := m.GetGameInstanceRec(instanceID, coresql.ForUpdateNoWait)
+	gameInstanceRec, err := m.GetGameInstanceRec(instanceID, coresql.ForUpdateNoWait)
 	if err != nil {
 		return nil, err
 	}
 
-	if instance.Status != game_record.GameInstanceStatusStarted {
+	if gameInstanceRec.Status != game_record.GameInstanceStatusStarted {
 		return nil, fmt.Errorf("game instance must be started to complete turns")
 	}
 
 	// Check if we've reached max turns
 	// max turns handled via configuration; not tracked directly on instance
 	if false {
-		instance.Status = game_record.GameInstanceStatusCompleted
+		gameInstanceRec.Status = game_record.GameInstanceStatusCompleted
 		now := time.Now()
-		instance.CompletedAt = nulltime.FromTime(now)
+		gameInstanceRec.CompletedAt = nulltime.FromTime(now)
 		l.Info("game instance >%s< completed", instanceID)
 	} else {
 		// Advance to next turn
-		instance.CurrentTurn++
-		// next turn due at computed elsewhere
-		instance.NextTurnDueAt = record.NewRecordNullTimestamp()
-		l.Info("advanced game instance >%s< to turn >%d<", instanceID, instance.CurrentTurn)
+		gameInstanceRec.CurrentTurn++
+
+		if gameInstanceRec.ProcessWhenAllSubmitted {
+			// Player-driven: leave NextTurnDueAt null so the periodic worker
+			// won't queue processing until the player submits all sheets.
+			gameInstanceRec.NextTurnDueAt = sql.NullTime{}
+			l.Info("advanced game instance >%s< to turn >%d< (process-when-all-submitted; awaiting player)", instanceID, gameInstanceRec.CurrentTurn)
+		} else {
+			gameInstanceRec.NextTurnDueAt = record.NewRecordNullTimestamp()
+			l.Info("advanced game instance >%s< to turn >%d<", instanceID, gameInstanceRec.CurrentTurn)
+		}
 	}
 
-	instance, err = m.UpdateGameInstanceRec(instance)
+	gameInstanceRec, err = m.UpdateGameInstanceRec(gameInstanceRec)
 	if err != nil {
 		l.Warn("failed updating game instance after turn completion >%v<", err)
 		return nil, err
 	}
 
-	return instance, nil
+	return gameInstanceRec, nil
 }
 
 // PauseGameInstance pauses a running game instance
@@ -353,7 +369,8 @@ func (m *Domain) CancelGameInstance(instanceID string) (*game_record.GameInstanc
 	return instanceRec, nil
 }
 
-// GetPlayerCountForGameInstance counts active Player subscriptions for the game instance's game
+// GetPlayerCountForGameInstance counts player-type subscriptions linked to the game instance.
+// Manager and designer subscription instances are excluded from the count.
 func (m *Domain) GetPlayerCountForGameInstance(gameInstanceID string) (int, error) {
 	l := m.Logger("GetPlayerCountForGameInstance")
 
@@ -361,8 +378,7 @@ func (m *Domain) GetPlayerCountForGameInstance(gameInstanceID string) (int, erro
 		return 0, err
 	}
 
-	// Count game_subscription_instance records for this instance
-	gsiRecs, err := m.GetManyGameSubscriptionInstanceRecs(&coresql.Options{
+	gameSubscriptionInstanceRecs, err := m.GetManyGameSubscriptionInstanceRecs(&coresql.Options{
 		Params: []coresql.Param{
 			{Col: game_record.FieldGameSubscriptionInstanceGameInstanceID, Val: gameInstanceID},
 		},
@@ -372,11 +388,25 @@ func (m *Domain) GetPlayerCountForGameInstance(gameInstanceID string) (int, erro
 		return 0, err
 	}
 
-	return len(gsiRecs), nil
+	count := 0
+	for _, gameSubscriptionInstanceRec := range gameSubscriptionInstanceRecs {
+		gameSubscriptionRec, err := m.GetGameSubscriptionRec(gameSubscriptionInstanceRec.GameSubscriptionID, nil)
+		if err != nil {
+			l.Warn("failed to get game subscription >%s< >%v<", gameSubscriptionInstanceRec.GameSubscriptionID, err)
+			continue
+		}
+		if gameSubscriptionRec.SubscriptionType == game_record.GameSubscriptionTypePlayer {
+			count++
+		}
+	}
+
+	l.Info("player count for game instance >%s< is >%d<", gameInstanceID, count)
+
+	return count, nil
 }
 
-// HasAvailableCapacity checks if a game instance has available player slots
-func (m *Domain) HasAvailableCapacity(gameInstanceID string) (bool, error) {
+// GameInstanceHasAvailableCapacity checks if a game instance has available player slots
+func (m *Domain) GameInstanceHasAvailableCapacity(gameInstanceID string) (bool, error) {
 	instance, err := m.GetGameInstanceRec(gameInstanceID, nil)
 	if err != nil {
 		return false, err
@@ -420,7 +450,7 @@ func (m *Domain) FindAvailableGameInstance(gameSubscriptionID string) (*game_rec
 
 	// Find first instance with available capacity
 	for _, instance := range instances {
-		hasCapacity, err := m.HasAvailableCapacity(instance.ID)
+		hasCapacity, err := m.GameInstanceHasAvailableCapacity(instance.ID)
 		if err != nil {
 			l.Warn("failed to check capacity for instance >%s< >%v<", instance.ID, err)
 			continue
@@ -447,13 +477,13 @@ func (m *Domain) AssignPlayerToGameInstance(gameSubscriptionID, gameInstanceID s
 	}
 
 	// Get subscription to get account_id
-	subscription, err := m.GetGameSubscriptionRec(gameSubscriptionID, nil)
+	gameSubscriptionRec, err := m.GetGameSubscriptionRec(gameSubscriptionID, nil)
 	if err != nil {
 		return nil, err
 	}
 
 	// Check capacity before assigning
-	hasCapacity, err := m.HasAvailableCapacity(gameInstanceID)
+	hasCapacity, err := m.GameInstanceHasAvailableCapacity(gameInstanceID)
 	if err != nil {
 		return nil, err
 	}
@@ -462,13 +492,14 @@ func (m *Domain) AssignPlayerToGameInstance(gameSubscriptionID, gameInstanceID s
 	}
 
 	// Create the subscription-instance link
-	gsiRec := &game_record.GameSubscriptionInstance{
-		AccountID:          subscription.AccountID,
+	gameSubscriptionInstanceRec := &game_record.GameSubscriptionInstance{
+		AccountID:          gameSubscriptionRec.AccountID,
+		AccountUserID:      gameSubscriptionRec.AccountUserID,
 		GameSubscriptionID: gameSubscriptionID,
 		GameInstanceID:     gameInstanceID,
 	}
 
-	createdRec, err := m.CreateGameSubscriptionInstanceRec(gsiRec)
+	createdRec, err := m.CreateGameSubscriptionInstanceRec(gameSubscriptionInstanceRec)
 	if err != nil {
 		l.Warn("failed to create game subscription instance >%v<", err)
 		return nil, err

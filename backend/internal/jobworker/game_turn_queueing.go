@@ -76,6 +76,11 @@ func (w *GameTurnQueueingWorker) DoWork(ctx context.Context, m *domain.Domain, c
 
 	l.Info("checking for games that need turn processing")
 
+	// Auto-start any 'created' instances that have enough players
+	if err := w.autoStartFullInstances(m); err != nil {
+		l.Warn("auto-start check failed >%v<", err)
+	}
+
 	// Get all game instances that need turn processing
 	instanceRecs, err := w.getGameInstanceRecsNeedingTurnProcessing(m)
 	if err != nil {
@@ -157,4 +162,67 @@ func (w *GameTurnQueueingWorker) getGameInstanceRecsNeedingTurnProcessing(m *dom
 	l.Info("returning >%d< game instances needing turn processing", len(instanceRecs))
 
 	return instanceRecs, nil
+}
+
+// autoStartFullInstances finds 'created' game instances that have reached
+// their required player count and transitions them to 'started' with
+// NextTurnDueAt set to now so the next periodic run queues turn processing.
+func (w *GameTurnQueueingWorker) autoStartFullInstances(m *domain.Domain) error {
+	l := w.Log.WithFunctionContext("GameTurnQueueingWorker/autoStartFullInstances")
+
+	opts := &coresql.Options{
+		Params: []coresql.Param{
+			{
+				Col: game_record.FieldGameInstanceStatus,
+				Val: game_record.GameInstanceStatusCreated,
+			},
+		},
+	}
+
+	createdRecs, err := m.GetManyGameInstanceRecs(opts)
+	if err != nil {
+		return err
+	}
+
+	if len(createdRecs) == 0 {
+		return nil
+	}
+
+	l.Info("found >%d< created game instances, checking capacity", len(createdRecs))
+
+	started := 0
+	for _, rec := range createdRecs {
+		hasCapacity, err := m.GameInstanceHasAvailableCapacity(rec.ID)
+		if err != nil {
+			l.Warn("failed capacity check for instance >%s< >%v<", rec.ID, err)
+			continue
+		}
+
+		if hasCapacity {
+			continue
+		}
+
+		// Instance is full — start it
+		instance, err := m.StartGameInstance(rec.ID)
+		if err != nil {
+			l.Warn("failed to auto-start instance >%s< >%v<", rec.ID, err)
+			continue
+		}
+
+		// Set NextTurnDueAt to now so turn processing is queued on this run
+		instance.NextTurnDueAt = nulltime.FromTime(time.Now())
+		if _, err := m.UpdateGameInstanceRec(instance); err != nil {
+			l.Warn("failed to set NextTurnDueAt for instance >%s< >%v<", rec.ID, err)
+			continue
+		}
+
+		started++
+		l.Info("auto-started game instance >%s<", rec.ID)
+	}
+
+	if started > 0 {
+		l.Info("auto-started >%d< game instances", started)
+	}
+
+	return nil
 }

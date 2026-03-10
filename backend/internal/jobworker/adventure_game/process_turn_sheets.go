@@ -92,6 +92,12 @@ func (p *AdventureGame) processTurnSheet(ctx context.Context, gameInstanceRec *g
 
 	l.Info("processing turn sheet >%s< type >%s< for character >%s<", turnSheet.ID, turnSheet.SheetType, characterInstance.ID)
 
+	// Skip turn sheets without scanned data (not yet submitted by the player)
+	if len(turnSheet.ScannedData) == 0 {
+		l.Info("skipping turn sheet >%s< — no scanned data (not yet submitted)", turnSheet.ID)
+		return nil
+	}
+
 	// Get the appropriate processor for this sheet type
 	processor, exists := p.Processors[turnSheet.SheetType]
 	if !exists {
@@ -128,6 +134,9 @@ func (p *AdventureGame) getTurnSheetsForCharacter(characterInstance *adventure_g
 		if err != nil {
 			l.Error("failed to get turn sheet >%s< for adventure game turn sheet >%s< error >%v<", adventureGameTurnSheetRec.GameTurnSheetID, adventureGameTurnSheetRec.ID, err)
 			return nil, err
+		}
+		if turnSheetRec.TurnNumber != turnNumber {
+			continue
 		}
 		turnSheetRecs = append(turnSheetRecs, turnSheetRec)
 	}

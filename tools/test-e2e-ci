@@ -1,0 +1,31 @@
+#!/usr/bin/env sh
+
+# CI-only E2E test runner (Playwright).
+# Called by .gitlab-ci.yml after services (DB, backend, frontend) are already started.
+# For local development, use ./tools/test-e2e instead.
+
+set -e
+
+if [ -z "$CI" ]; then
+    echo "❌ This script is intended for CI only. Use ./tools/test-e2e for local development."
+    exit 1
+fi
+
+script_dir="$(dirname "$0")"
+cd "$script_dir/.."
+
+if [ -z "$TEST_BYPASS_HEADER_NAME" ]; then
+    echo "❌ Error: TEST_BYPASS_HEADER_NAME environment variable is not set."
+    exit 1
+fi
+
+if [ -z "$TEST_BYPASS_HEADER_VALUE" ]; then
+    echo "❌ Error: TEST_BYPASS_HEADER_VALUE environment variable is not set."
+    exit 1
+fi
+
+echo "🚀 Running E2E tests (CI)..."
+echo "Command: npx playwright test --project chromium"
+echo ""
+
+exec stdbuf -oL -eL npx playwright test --project chromium

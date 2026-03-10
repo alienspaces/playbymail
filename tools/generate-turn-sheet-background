@@ -1,0 +1,50 @@
+#!/bin/sh
+# Generate a single turn sheet background image using the OpenAI DALL-E 3 API.
+#
+# The image is generated in portrait orientation at 1024x1792, then resized to
+# 1240x1754 (A4 at ~150 DPI) and saved as a JPEG under 1 MB.
+#
+# Prerequisites:
+#   export OPENAI_API_KEY="sk-..."   (or add to .env.private)
+#   pip install requests Pillow      (Python dependencies)
+#
+# Usage:
+#   ./tools/generate-turn-sheet-background --name desert-oasis \
+#       --prompt "A lush desert oasis surrounded by sand dunes" \
+#       --output-dir backend/internal/runner/cli/test_data_images
+#
+# Options:
+#   --name NAME          Output filename without extension (required)
+#   --prompt PROMPT      Image generation prompt (required)
+#   --output-dir DIR     Target directory (default: backend/internal/runner/cli/test_data_images)
+#   --style-prefix STR   Prepended to the prompt (default: see below)
+#   --width PX           Target width in pixels (default: 1240)
+#   --height PX          Target height in pixels (default: 1754)
+#   --max-size BYTES     Max file size in bytes (default: 1048576 = 1 MB)
+#   --quality INT        Initial JPEG quality 1-100 (default: 92)
+#   --format FMT         Output format: jpg or png (default: jpg)
+#   --force              Overwrite existing file
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+# Source private env if available
+if [ -f "$PROJECT_DIR/.env.private" ]; then
+    set -a
+    # shellcheck source=/dev/null
+    . "$PROJECT_DIR/.env.private"
+    set +a
+fi
+
+if [ -z "${OPENAI_API_KEY:-}" ]; then
+    echo "ERROR: OPENAI_API_KEY is not set. Export it or add it to .env.private"
+    exit 1
+fi
+
+# Default output dir (relative to project root)
+DEFAULT_OUTPUT_DIR="$PROJECT_DIR/backend/internal/runner/cli/test_data_images"
+
+exec python3 "$SCRIPT_DIR/generate-turn-sheet-background.py" \
+    --api-key "$OPENAI_API_KEY" \
+    --default-output-dir "$DEFAULT_OUTPUT_DIR" \
+    "$@"

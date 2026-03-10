@@ -33,9 +33,23 @@ type LocationOption struct {
 	LocationLinkDescription string `json:"location_link_description"`
 }
 
-// LocationChoiceScanData represents the scanned data from a location choice turn sheet
+// LocationChoiceScanData represents the scanned data from a location choice turn sheet.
+// Accepts both the programmatic format {"choices":["id"]} and the HTML form format
+// {"location_choice":"id"} produced by the in-browser turn sheet form.
 type LocationChoiceScanData struct {
-	Choices []string `json:"choices"`
+	Choices        []string `json:"choices"`
+	LocationChoice string   `json:"location_choice"`
+}
+
+// GetChoices returns the chosen location IDs, normalising both input formats.
+func (d *LocationChoiceScanData) GetChoices() []string {
+	if len(d.Choices) > 0 {
+		return d.Choices
+	}
+	if d.LocationChoice != "" {
+		return []string{d.LocationChoice}
+	}
+	return nil
 }
 
 const defaultLocationChoiceInstructions = "Select your next location and return this form by the deadline to continue your adventure."
@@ -269,7 +283,7 @@ func validateLocationChoices(sheetData *LocationChoiceData, scanData *LocationCh
 		}
 	}
 
-	for _, choice := range scanData.Choices {
+	for _, choice := range scanData.GetChoices() {
 		if !validIDs[choice] {
 			return fmt.Errorf("invalid location_id returned: %s", choice)
 		}

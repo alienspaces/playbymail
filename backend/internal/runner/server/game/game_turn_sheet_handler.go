@@ -15,6 +15,7 @@ import (
 
 	coreerror "gitlab.com/alienspaces/playbymail/core/error"
 	"gitlab.com/alienspaces/playbymail/core/nullstring"
+	"gitlab.com/alienspaces/playbymail/core/nulltime"
 	"gitlab.com/alienspaces/playbymail/core/queryparam"
 	"gitlab.com/alienspaces/playbymail/core/server"
 	coresql "gitlab.com/alienspaces/playbymail/core/sql"
@@ -229,60 +230,68 @@ func handleJoinGameTurnSheetUpload(ctx context.Context, l logger.Logger, scanner
 		return nil, 0, coreerror.NewInvalidDataError("invalid join game turn sheet data")
 	}
 
-	accountRec, err := m.GetAccountRecByEmail(joinGameScanData.Email)
+	accountUserRec, err := m.GetAccountUserRecByEmail(joinGameScanData.Email)
 	if err != nil {
 		l.Warn("failed to get account by email >%s< >%v<", joinGameScanData.Email, err)
 		return nil, 0, err
 	}
 
-	if accountRec == nil {
+	var accountUserContactRec *account_record.AccountUserContact
+
+	if accountUserRec == nil {
 		l.Info("creating new pending account for email >%s<", joinGameScanData.Email)
-		pendingRec := &account_record.AccountUser{
+		accountUserRec = &account_record.AccountUser{
 			Email:  joinGameScanData.Email,
 			Status: account_record.AccountUserStatusPendingApproval,
 		}
-		_, accountRec, _, err = m.CreateAccount(pendingRec)
+		accountUserContactRec = &account_record.AccountUserContact{
+			AccountUserID:      accountUserRec.ID,
+			Name:               nullstring.FromString(joinGameScanData.Name),
+			PostalAddressLine1: nullstring.FromString(joinGameScanData.PostalAddressLine1),
+			PostalAddressLine2: nullstring.FromString(joinGameScanData.PostalAddressLine2),
+			StateProvince:      nullstring.FromString(joinGameScanData.StateProvince),
+			Country:            nullstring.FromString(joinGameScanData.Country),
+			PostalCode:         nullstring.FromString(joinGameScanData.PostalCode),
+		}
+		_, accountUserRec, accountUserContactRec, _, err = m.UpsertAccount(&account_record.Account{}, accountUserRec, accountUserContactRec)
 		if err != nil {
 			l.Warn("failed to create pending account >%v<", err)
 			return nil, 0, err
 		}
+	} else {
+		accountUserContactRec, err = m.GetAccountUserContactRecByAccountUserID(accountUserRec.ID, nil)
+		if err != nil {
+			l.Warn("failed to get account user contact record >%s< >%v<", accountUserRec.ID, err)
+			return nil, 0, err
+		}
 	}
 
-	// Create or get account contact
-	accountUserContactRec := &account_record.AccountUserContact{
-		AccountUserID:      accountRec.ID,
-		Name:               joinGameScanData.Name,
-		PostalAddressLine1: joinGameScanData.PostalAddressLine1,
-		PostalAddressLine2: nullstring.FromString(joinGameScanData.PostalAddressLine2),
-		StateProvince:      joinGameScanData.StateProvince,
-		Country:            joinGameScanData.Country,
-		PostalCode:         joinGameScanData.PostalCode,
-	}
-
-	accountUserContactRec, err = m.CreateAccountUserContactRec(accountUserContactRec)
+	// Create or get pending game subscription for the join process (reuses existing only if still pending_approval)
+	subscriptionRec, err := m.CreateOrGetPendingGameSubscriptionForJoinProcess(&game_record.GameSubscription{
+		GameID:               gameRec.ID,
+		AccountID:            accountUserRec.AccountID,
+		AccountUserID:        accountUserRec.ID,
+		AccountUserContactID: nullstring.FromString(accountUserContactRec.ID),
+		SubscriptionType:     game_record.GameSubscriptionTypePlayer,
+	})
 	if err != nil {
-		l.Warn("failed to create account contact >%v<", err)
+		l.Warn("failed to upsert pending game subscription >%v<", err)
 		return nil, 0, err
 	}
 
-	subscriptionRec, err := m.UpsertPendingGameSubscriptionForJoinProcess(gameRec.ID, accountRec.AccountID, accountRec.ID, accountUserContactRec.ID, game_record.GameSubscriptionTypePlayer)
-	if err != nil {
-		l.Warn("failed to upsert game subscription >%v<", err)
-		return nil, 0, err
-	}
-
+	// Create initial turn sheet record for the join process
 	turnSheetRec := &game_record.GameTurnSheet{
 		GameID:           gameRec.ID,
-		AccountID:        accountRec.AccountID,
-		AccountUserID:    accountRec.ID,
+		AccountID:        accountUserRec.AccountID,
+		AccountUserID:    accountUserRec.ID,
 		TurnNumber:       0,
 		SheetType:        adventure_game_record.AdventureGameTurnSheetTypeJoinGame,
 		SheetOrder:       1,
 		SheetData:        json.RawMessage(joinGameDataBytes),
 		ScannedData:      json.RawMessage(joinGameScanDataBytes),
+		ScannedAt:        nulltime.FromTime(time.Now()),
 		ProcessingStatus: game_record.TurnSheetProcessingStatusPending,
 	}
-	turnSheetRec.ScannedAt = sql.NullTime{Time: time.Now(), Valid: true}
 
 	createdTurnSheetRec, err := m.CreateGameTurnSheetRec(turnSheetRec)
 	if err != nil {

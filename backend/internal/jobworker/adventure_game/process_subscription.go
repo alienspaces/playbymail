@@ -80,8 +80,9 @@ func (p *AdventureGameSubscriptionProcessingProcessor) ProcessGameSubscriptionPr
 	}
 
 	// Link player subscription to game instance via game_subscription_instance
-	// account_id will be derived from subscription in validation
 	instanceLinkRec := &game_record.GameSubscriptionInstance{
+		AccountID:          subscriptionRec.AccountID,
+		AccountUserID:      subscriptionRec.AccountUserID,
 		GameSubscriptionID: subscriptionRec.ID,
 		GameInstanceID:     gameInstanceRec.ID,
 	}
@@ -94,7 +95,7 @@ func (p *AdventureGameSubscriptionProcessingProcessor) ProcessGameSubscriptionPr
 	l.Info("linked player subscription >%s< to game_instance_id >%s<", subscriptionRec.ID, gameInstanceRec.ID)
 
 	// Create or get adventure game character
-	characterRec, err := p.getOrCreateAdventureGameCharacter(subscriptionRec.GameID, subscriptionRec.AccountID, subscriptionRec.AccountUserID.String, scanData.CharacterName)
+	characterRec, err := p.getOrCreateAdventureGameCharacter(subscriptionRec.GameID, subscriptionRec.AccountID, subscriptionRec.AccountUserID, scanData.CharacterName)
 	if err != nil {
 		l.Warn("failed to get or create adventure game character >%v<", err)
 		return fmt.Errorf("failed to get or create adventure game character: %w", err)

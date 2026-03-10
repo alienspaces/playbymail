@@ -322,7 +322,7 @@ func createOneAdventureGameCharacterHandler(w http.ResponseWriter, r *http.Reque
 		if auth != nil && auth.AccountUser.ID == rec.AccountUserID {
 			rec.AccountID = auth.AccountUser.AccountID
 		} else {
-			accountUserRec, err := mm.GetAccountRec(rec.AccountUserID, nil)
+			accountUserRec, err := mm.GetAccountUserRec(rec.AccountUserID, nil)
 			if err != nil {
 				l.Warn("failed getting account user record >%s< >%v<", rec.AccountUserID, err)
 				return err
@@ -386,7 +386,7 @@ func updateOneAdventureGameCharacterHandler(w http.ResponseWriter, r *http.Reque
 
 	// If AccountUserID changed, update AccountID
 	if rec.AccountUserID != "" {
-		accountUserRec, err := mm.GetAccountRec(rec.AccountUserID, nil)
+		accountUserRec, err := mm.GetAccountUserRec(rec.AccountUserID, nil)
 		if err != nil {
 			l.Warn("failed getting account user record >%s< >%v<", rec.AccountUserID, err)
 			return err

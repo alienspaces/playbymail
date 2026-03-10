@@ -141,7 +141,7 @@ func getCatalogGamesHandler(w http.ResponseWriter, r *http.Request, pp httproute
 			if instRec.Status != game_record.GameInstanceStatusCreated {
 				continue
 			}
-			hasCapacity, err := mm.HasAvailableCapacity(instRec.ID)
+			hasCapacity, err := mm.GameInstanceHasAvailableCapacity(instRec.ID)
 			if err != nil {
 				l.Warn("failed checking capacity for instance >%s< >%v<", instRec.ID, err)
 				continue

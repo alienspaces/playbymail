@@ -8,7 +8,6 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/domain"
 	coreerror "gitlab.com/alienspaces/playbymail/core/error"
 	"gitlab.com/alienspaces/playbymail/core/nullstring"
-	"gitlab.com/alienspaces/playbymail/core/repository"
 	"gitlab.com/alienspaces/playbymail/core/sql"
 	"gitlab.com/alienspaces/playbymail/internal/record/account_record"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
@@ -18,11 +17,15 @@ import (
 func (m *Domain) GetManyGameSubscriptionRecs(opts *sql.Options) ([]*game_record.GameSubscription, error) {
 	l := m.Logger("GetManyGameSubscriptionRecs")
 	l.Debug("getting many game_subscription records opts >%#v<", opts)
+
 	r := m.GameSubscriptionRepository()
+
 	recs, err := r.GetMany(opts)
 	if err != nil {
+		l.Warn("failed to get many game_subscription records >%v<", err)
 		return nil, databaseError(err)
 	}
+
 	return recs, nil
 }
 
@@ -31,11 +34,15 @@ func (m *Domain) GetManyGameSubscriptionRecs(opts *sql.Options) ([]*game_record.
 func (m *Domain) GetManyGameSubscriptionViewRecs(opts *sql.Options) ([]*game_record.GameSubscriptionView, error) {
 	l := m.Logger("GetManyGameSubscriptionViewRecs")
 	l.Debug("getting many game_subscription_view records opts >%#v<", opts)
+
 	r := m.GameSubscriptionViewRepository()
+
 	recs, err := r.GetMany(opts)
 	if err != nil {
+		l.Warn("failed to get many game_subscription view records >%v<", err)
 		return nil, databaseError(err)
 	}
+
 	return recs, nil
 }
 
@@ -44,16 +51,20 @@ func (m *Domain) GetManyGameSubscriptionViewRecs(opts *sql.Options) ([]*game_rec
 func (m *Domain) GetGameSubscriptionViewRec(recID string, lock *sql.Lock) (*game_record.GameSubscriptionView, error) {
 	l := m.Logger("GetGameSubscriptionViewRec")
 	l.Debug("getting game_subscription_view record ID >%s<", recID)
+
 	if err := domain.ValidateUUIDField("id", recID); err != nil {
 		return nil, err
 	}
+
 	r := m.GameSubscriptionViewRepository()
+
 	rec, err := r.GetOne(recID, lock)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, coreerror.NewNotFoundError(game_record.TableGameSubscriptionView, recID)
 	} else if err != nil {
 		return nil, databaseError(err)
 	}
+
 	return rec, nil
 }
 
@@ -61,22 +72,24 @@ func (m *Domain) GetGameSubscriptionViewRec(recID string, lock *sql.Lock) (*game
 func (m *Domain) GetGameSubscriptionRec(recID string, lock *sql.Lock) (*game_record.GameSubscription, error) {
 	l := m.Logger("GetGameSubscriptionRec")
 	l.Debug("getting game_subscription record ID >%s<", recID)
+
 	if err := domain.ValidateUUIDField("id", recID); err != nil {
 		return nil, err
 	}
+
 	r := m.GameSubscriptionRepository()
+
 	rec, err := r.GetOne(recID, lock)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, coreerror.NewNotFoundError(game_record.TableGameSubscription, recID)
 	} else if err != nil {
 		return nil, databaseError(err)
 	}
+
 	return rec, nil
 }
 
-
-// GetGameSubscriptionRecByAccountAndGame finds a subscription for a specific
-// account, game, and subscription type.
+// GetGameSubscriptionRecByAccountAndGame finds a subscription for a specific account, game, and subscription type.
 func (m *Domain) GetGameSubscriptionRecByAccountAndGame(accountID, gameID, subscriptionType string) (*game_record.GameSubscription, error) {
 	l := m.Logger("GetGameSubscriptionRecByAccountAndGame")
 	l.Debug("getting game_subscription for account >%s< game >%s< type >%s<", accountID, gameID, subscriptionType)
@@ -114,12 +127,13 @@ func (m *Domain) GetGameSubscriptionRecByAccountAndGame(accountID, gameID, subsc
 // CreateDesignerSubscriptionForNewGame creates the initial designer subscription
 // as part of game creation. This uses validation appropriate for the creation
 // context and does not require the game to be published.
-func (m *Domain) CreateDesignerSubscriptionForNewGame(gameRec *game_record.Game, accountID string) (*game_record.GameSubscription, error) {
+func (m *Domain) CreateDesignerSubscriptionForNewGame(gameRec *game_record.Game, accountID, accountUserID string) (*game_record.GameSubscription, error) {
 	l := m.Logger("CreateDesignerSubscriptionForNewGame")
 
 	rec := &game_record.GameSubscription{
 		GameID:           gameRec.ID,
 		AccountID:        accountID,
+		AccountUserID:    accountUserID,
 		SubscriptionType: game_record.GameSubscriptionTypeDesigner,
 		Status:           game_record.GameSubscriptionStatusActive,
 	}
@@ -145,12 +159,13 @@ func (m *Domain) CreateDesignerSubscriptionForNewGame(gameRec *game_record.Game,
 // CreateManagerSubscriptionForNewGame creates the initial manager subscription
 // as part of game creation. This allows the game designer to create and manage
 // instances of their game before it is published.
-func (m *Domain) CreateManagerSubscriptionForNewGame(gameRec *game_record.Game, accountID string) (*game_record.GameSubscription, error) {
+func (m *Domain) CreateManagerSubscriptionForNewGame(gameRec *game_record.Game, accountID, accountUserID string) (*game_record.GameSubscription, error) {
 	l := m.Logger("CreateManagerSubscriptionForNewGame")
 
 	rec := &game_record.GameSubscription{
 		GameID:           gameRec.ID,
 		AccountID:        accountID,
+		AccountUserID:    accountUserID,
 		SubscriptionType: game_record.GameSubscriptionTypeManager,
 		Status:           game_record.GameSubscriptionStatusActive,
 	}
@@ -206,6 +221,10 @@ func (m *Domain) UpdateGameSubscriptionRec(rec *game_record.GameSubscription) (*
 
 	l.Debug("updating game_subscription record >%#v<", rec)
 
+	if rec.Status == "" {
+		rec.Status = curr.Status
+	}
+
 	if err := m.validateGameSubscriptionRecForUpdate(curr, rec); err != nil {
 		l.Warn("failed to validate game_subscription record >%v<", err)
 		return rec, err
@@ -244,31 +263,25 @@ func (m *Domain) DeleteGameSubscriptionRec(recID string) error {
 func (m *Domain) RemoveGameSubscriptionRec(recID string) error {
 	l := m.Logger("RemoveGameSubscriptionRec")
 	l.Debug("removing game_subscription record ID >%s<", recID)
-	rec, err := m.GetGameSubscriptionRec(recID, sql.ForUpdateNoWait)
-	if err != nil {
-		return err
-	}
 	r := m.GameSubscriptionRepository()
-	if err := m.validateGameSubscriptionRecForDelete(rec); err != nil {
-		l.Warn("failed domain validation >%v<", err)
-		return err
-	}
 	if err := r.RemoveOne(recID); err != nil {
 		return databaseError(err)
 	}
 	return nil
 }
 
-func (m *Domain) UpsertPendingGameSubscription(gameID, accountID, accountUserContactID, subscriptionType string) (*game_record.GameSubscription, error) {
+func (m *Domain) UpsertPendingGameSubscription(gameID, accountID, accountUserID, accountUserContactID, subscriptionType string) (*game_record.GameSubscription, error) {
 	l := m.Logger("UpsertPendingGameSubscription")
 
-	l.Debug("upserting pending subscription game_id >%s< account_id >%s< account_contact_id >%s< type >%s<", gameID, accountID, accountUserContactID, subscriptionType)
+	l.Debug("upserting pending subscription game_id >%s< account_id >%s< account_user_id >%s< type >%s<", gameID, accountID, accountUserID, subscriptionType)
 
 	switch {
 	case gameID == "":
 		return nil, coreerror.NewInvalidDataError("game_id is required")
 	case accountID == "":
 		return nil, coreerror.NewInvalidDataError("account_id is required")
+	case accountUserID == "":
+		return nil, coreerror.NewInvalidDataError("account_user_id is required")
 	case accountUserContactID == "":
 		return nil, coreerror.NewInvalidDataError("account_contact_id is required")
 	case subscriptionType == "":
@@ -308,6 +321,7 @@ func (m *Domain) UpsertPendingGameSubscription(gameID, accountID, accountUserCon
 	rec := &game_record.GameSubscription{
 		GameID:               gameID,
 		AccountID:            accountID,
+		AccountUserID:        accountUserID,
 		AccountUserContactID: nullstring.FromString(accountUserContactID),
 		SubscriptionType:     subscriptionType,
 		Status:               game_record.GameSubscriptionStatusPendingApproval,
@@ -316,40 +330,40 @@ func (m *Domain) UpsertPendingGameSubscription(gameID, accountID, accountUserCon
 	return m.CreateGameSubscriptionRec(rec)
 }
 
-// UpsertPendingGameSubscriptionForJoinProcess creates or updates a pending game subscription.
-// Used during join game turn sheet processing.
-func (m *Domain) UpsertPendingGameSubscriptionForJoinProcess(gameID, accountID, accountUserID, accountUserContactID, subscriptionType string) (*game_record.GameSubscription, error) {
-	l := m.Logger("UpsertPendingGameSubscriptionForJoinProcess")
+// CreateOrGetPendingGameSubscriptionForJoinProcess creates a new pending game subscription for the join process,
+// or returns an existing one if the same game, account user, and subscription type already has a subscription
+// in pending_approval status. Used during join game turn sheet processing.
+// Caller must pass a GameSubscription record with GameID, AccountID, AccountUserID, AccountUserContactID (required), and SubscriptionType set.
+// Caps on how many times a player can join will be enforced later via account-level subscriptions.
+func (m *Domain) CreateOrGetPendingGameSubscriptionForJoinProcess(rec *game_record.GameSubscription) (*game_record.GameSubscription, error) {
+	l := m.Logger("CreateOrGetPendingGameSubscriptionForJoinProcess")
 
-	l.Debug("upserting pending subscription game_id >%s< account_id >%s< account_user_id >%s< type >%s<", gameID, accountID, accountUserID, subscriptionType)
+	if rec == nil {
+		return nil, coreerror.NewInvalidDataError("game_subscription record is required")
+	}
+
+	l.Debug("create or get pending subscription game_id >%s< account_id >%s< account_user_id >%s< type >%s<",
+		rec.GameID, rec.AccountID, rec.AccountUserID, rec.SubscriptionType)
 
 	switch {
-	case gameID == "":
+	case rec.GameID == "":
 		return nil, coreerror.NewInvalidDataError("game_id is required")
-	case accountID == "":
+	case rec.AccountID == "":
 		return nil, coreerror.NewInvalidDataError("account_id is required")
-	case accountUserID == "":
+	case rec.AccountUserID == "":
 		return nil, coreerror.NewInvalidDataError("account_user_id is required")
-	case accountUserContactID == "":
-		return nil, coreerror.NewInvalidDataError("account_contact_id is required")
-	case subscriptionType == "":
+	case !nullstring.IsValid(rec.AccountUserContactID):
+		return nil, coreerror.NewInvalidDataError("account_user_contact_id is required")
+	case rec.SubscriptionType == "":
 		return nil, coreerror.NewInvalidDataError("subscription_type is required")
 	}
 
-	r, err := repository.NewGeneric[game_record.GameSubscription](repository.NewArgs{
-		Tx:        m.Tx,
-		TableName: game_record.TableGameSubscription,
-		Record:    game_record.GameSubscription{},
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	recs, err := r.GetMany(&sql.Options{
+	existingRecs, err := m.GetManyGameSubscriptionRecs(&sql.Options{
 		Params: []sql.Param{
-			{Col: game_record.FieldGameSubscriptionGameID, Val: gameID},
-			{Col: game_record.FieldGameSubscriptionAccountUserID, Val: accountUserID},
-			{Col: game_record.FieldGameSubscriptionSubscriptionType, Val: subscriptionType},
+			{Col: game_record.FieldGameSubscriptionGameID, Val: rec.GameID},
+			{Col: game_record.FieldGameSubscriptionAccountUserID, Val: rec.AccountUserID},
+			{Col: game_record.FieldGameSubscriptionSubscriptionType, Val: rec.SubscriptionType},
+			{Col: game_record.FieldGameSubscriptionStatus, Val: game_record.GameSubscriptionStatusPendingApproval},
 		},
 		Limit: 1,
 	})
@@ -357,35 +371,16 @@ func (m *Domain) UpsertPendingGameSubscriptionForJoinProcess(gameID, accountID, 
 		return nil, databaseError(err)
 	}
 
-	if len(recs) > 0 {
-		rec := recs[0]
-		if !rec.AccountUserContactID.Valid || rec.AccountUserContactID.String != accountUserContactID {
-			rec.AccountUserContactID = nullstring.FromString(accountUserContactID)
-		}
-		if rec.Status != game_record.GameSubscriptionStatusPendingApproval {
-			rec.Status = game_record.GameSubscriptionStatusPendingApproval
-		}
-		updated, err := r.UpdateOne(rec)
-		if err != nil {
-			return nil, databaseError(err)
-		}
-		return updated, nil
+	if len(existingRecs) > 0 {
+		l.Warn("reusing existing pending game subscription id >%s< for game >%s< account_user >%s<",
+			existingRecs[0].ID, rec.GameID, rec.AccountUserID)
+		return existingRecs[0], nil
 	}
 
-	rec := &game_record.GameSubscription{
-		GameID:               gameID,
-		AccountID:            accountID,
-		AccountUserID:        nullstring.FromString(accountUserID),
-		AccountUserContactID: nullstring.FromString(accountUserContactID),
-		SubscriptionType:     subscriptionType,
-		Status:               game_record.GameSubscriptionStatusPendingApproval,
-	}
+	// Default to pending approval status
+	rec.Status = game_record.GameSubscriptionStatusPendingApproval
 
-	created, err := r.CreateOne(rec)
-	if err != nil {
-		return nil, databaseError(err)
-	}
-	return created, nil
+	return m.CreateGameSubscriptionRec(rec)
 }
 
 // ApproveGameSubscription approves a pending game subscription by verifying the email
@@ -416,7 +411,7 @@ func (m *Domain) ApproveGameSubscription(subscriptionID, email string) (*game_re
 
 	// Get the account user record(s) linked to this tenant
 	// Note: We use the sql alias for core/sql as defined in imports
-	accountRecs, err := m.GetManyAccountRecs(&sql.Options{
+	accountUserRecs, err := m.GetManyAccountUserRecs(&sql.Options{
 		Params: []sql.Param{
 			{Col: account_record.FieldAccountUserAccountID, Val: rec.AccountID},
 		},
@@ -426,15 +421,15 @@ func (m *Domain) ApproveGameSubscription(subscriptionID, email string) (*game_re
 		l.Warn("failed to get account records >%v<", err)
 		return nil, err
 	}
-	if len(accountRecs) == 0 {
+	if len(accountUserRecs) == 0 {
 		l.Warn("no account user found for tenant >%s<", rec.AccountID)
 		return nil, coreerror.NewNotFoundError("account_user", "for tenant "+rec.AccountID)
 	}
-	accountRec := accountRecs[0]
+	accountUserRec := accountUserRecs[0]
 
 	// Verify email matches
-	if accountRec.Email != email {
-		l.Warn("email mismatch: subscription account email >%s< does not match provided email >%s<", accountRec.Email, email)
+	if accountUserRec.Email != email {
+		l.Warn("email mismatch: subscription account email >%s< does not match provided email >%s<", accountUserRec.Email, email)
 		return nil, coreerror.NewInvalidDataError("email does not match subscription")
 	}
 

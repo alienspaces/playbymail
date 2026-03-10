@@ -49,11 +49,42 @@ func (m *Domain) GetAccountSubscriptionRec(recID string, lock *coresql.Lock) (*a
 	return rec, nil
 }
 
+// GetAccountSubscriptionRecByAccountUserID -
+func (m *Domain) GetAccountSubscriptionRecByAccountUserID(accountUserID string, subscriptionType string) (*account_record.AccountSubscription, error) {
+	l := m.Logger("GetAccountSubscriptionRecByAccountUserID")
+
+	l.Debug("getting account_subscription record by account user ID >%s<", accountUserID)
+
+	recs, err := m.GetManyAccountSubscriptionRecs(&coresql.Options{
+		Params: []coresql.Param{
+			{Col: account_record.FieldAccountSubscriptionAccountUserID, Val: accountUserID},
+			{Col: account_record.FieldAccountSubscriptionSubscriptionType, Val: subscriptionType},
+		},
+		Limit: 1,
+	})
+	if err != nil {
+		return nil, databaseError(err)
+	}
+
+	if len(recs) > 0 {
+		l.Info("found %d account_subscription records for account user ID >%s< and subscription type >%s<", len(recs), accountUserID, subscriptionType)
+		return recs[0], nil
+	}
+
+	l.Info("no account_subscription records found for account user ID >%s< and subscription type >%s<", accountUserID, subscriptionType)
+
+	return nil, nil
+}
+
 // CreateAccountSubscriptionRec -
 func (m *Domain) CreateAccountSubscriptionRec(rec *account_record.AccountSubscription) (*account_record.AccountSubscription, error) {
 	l := m.Logger("CreateAccountSubscriptionRec")
 
 	l.Debug("creating account_subscription record >%#v<", rec)
+
+	if rec != nil && rec.SubscriptionPeriod == "" {
+		rec.SubscriptionPeriod = account_record.AccountSubscriptionPeriodEternal
+	}
 
 	r := m.AccountSubscriptionRepository()
 
@@ -101,18 +132,22 @@ func (m *Domain) UpdateAccountSubscriptionRec(rec *account_record.AccountSubscri
 func (m *Domain) DeleteAccountSubscriptionRec(recID string) error {
 	l := m.Logger("DeleteAccountSubscriptionRec")
 	l.Debug("deleting account_subscription record ID >%s<", recID)
+
 	rec, err := m.GetAccountSubscriptionRec(recID, coresql.ForUpdateNoWait)
 	if err != nil {
 		return err
 	}
+
 	r := m.AccountSubscriptionRepository()
 	if err := m.validateAccountSubscriptionRecForDelete(rec); err != nil {
 		l.Warn("failed domain validation >%v<", err)
 		return err
 	}
+
 	if err := r.DeleteOne(recID); err != nil {
 		return databaseError(err)
 	}
+
 	return nil
 }
 
@@ -120,17 +155,12 @@ func (m *Domain) DeleteAccountSubscriptionRec(recID string) error {
 func (m *Domain) RemoveAccountSubscriptionRec(recID string) error {
 	l := m.Logger("RemoveAccountSubscriptionRec")
 	l.Debug("removing account_subscription record ID >%s<", recID)
-	rec, err := m.GetAccountSubscriptionRec(recID, coresql.ForUpdateNoWait)
-	if err != nil {
-		return err
-	}
+
 	r := m.AccountSubscriptionRepository()
-	if err := m.validateAccountSubscriptionRecForDelete(rec); err != nil {
-		l.Warn("failed domain validation >%v<", err)
-		return err
-	}
 	if err := r.RemoveOne(recID); err != nil {
+		l.Warn("failed to remove account_subscription record >%v<", err)
 		return databaseError(err)
 	}
+
 	return nil
 }

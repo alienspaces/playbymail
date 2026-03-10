@@ -25,7 +25,7 @@ func (t *Testing) createAccountUserRec(accountConfig AccountConfig) (*account_re
 	rec = t.applyAccountUserRecDefaultValues(rec)
 
 	l.Info("creating account record with basic subscriptions for ref >%s<", accountConfig.Reference)
-	accountRec, createdRec, accountSubscriptionRecs, err := t.Domain.(*domain.Domain).CreateAccount(rec)
+	accountRec, createdRec, accountUserContactRec, accountSubscriptionRecs, err := t.Domain.(*domain.Domain).UpsertAccount(&account_record.Account{}, rec, &account_record.AccountUserContact{})
 	if err != nil {
 		l.Warn("failed creating account record >%v<", err)
 		return nil, err
@@ -49,7 +49,7 @@ func (t *Testing) createAccountUserRec(accountConfig AccountConfig) (*account_re
 	}
 
 	// Always generate session token for all accounts and store in harness data
-	sessionToken, err := t.Domain.(*domain.Domain).GenerateAccountSessionToken(createdRec)
+	sessionToken, err := t.Domain.(*domain.Domain).GenerateAccountUserSessionToken(createdRec)
 	if err != nil {
 		l.Warn("failed to generate session token for account >%s< >%v<", createdRec.ID, err)
 		return nil, err
@@ -62,10 +62,13 @@ func (t *Testing) createAccountUserRec(accountConfig AccountConfig) (*account_re
 
 	// Add the account user record to the data store
 	t.Data.AddAccountUserRec(createdRec)
-
-	// Add the account user record to the teardown data store
 	t.teardownData.AddAccountUserRec(createdRec)
 
+	// Add the account user contact record to the data store
+	t.Data.AddAccountUserContactRec(accountUserContactRec)
+	t.teardownData.AddAccountUserContactRec(accountUserContactRec)
+
+	// Add the account record to the data store
 	t.Data.AddAccountRec(accountRec)
 	t.teardownData.AddAccountRec(accountRec)
 
@@ -99,15 +102,9 @@ func (t *Testing) createAccountSubscriptionRec(subscriptionConfig AccountSubscri
 		rec.SubscriptionType = subscriptionConfig.SubscriptionType
 	}
 
-	// Set account or account user ID based on subscription type
-	if rec.SubscriptionType == account_record.AccountSubscriptionTypeBasicPlayer ||
-		rec.SubscriptionType == account_record.AccountSubscriptionTypeProfessionalPlayer {
-		rec.AccountUserID = nullstring.FromString(accountRec.ID)
-		rec.AccountID = nullstring.FromString("")
-	} else {
-		rec.AccountID = nullstring.FromString(accountRec.AccountID)
-		rec.AccountUserID = nullstring.FromString("")
-	}
+	// All subscription types use both account_id and account_user_id.
+	rec.AccountID = nullstring.FromString(accountRec.AccountID)
+	rec.AccountUserID = nullstring.FromString(accountRec.ID)
 
 	// Create record
 	l.Debug("creating account_subscription record >%#v<", rec)
@@ -156,4 +153,3 @@ func (t *Testing) applyAccountUserRecDefaultValues(rec *account_record.AccountUs
 
 	return rec
 }
-

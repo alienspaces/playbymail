@@ -158,16 +158,16 @@ func (t *Testing) seedAccountRefs() error {
 		return fmt.Errorf("domain type assertion failed while seeding account refs")
 	}
 	for ref, accountUserID := range t.DataConfig.SeedAccountRefs {
-		accountUserRec, err := dm.GetAccountRec(accountUserID, nil)
+		accountUserRec, err := dm.GetAccountUserRec(accountUserID, nil)
 		if err != nil {
 			return fmt.Errorf("failed fetching seeded account user >%s<: %w", accountUserID, err)
 		}
-		parentRec, err := dm.GetAccountParentRec(accountUserRec.AccountID, nil)
+		accountRec, err := dm.GetAccountRec(accountUserRec.AccountID, nil)
 		if err != nil {
-			return fmt.Errorf("failed fetching parent account for >%s<: %w", accountUserRec.AccountID, err)
+			return fmt.Errorf("failed fetching account record for account user reecord ID >%s<: %w", accountUserRec.AccountID, err)
 		}
 		t.Data.AddAccountUserRec(accountUserRec)
-		t.Data.AddAccountRec(parentRec)
+		t.Data.AddAccountRec(accountRec)
 		t.Data.Refs.AccountUserRefs[ref] = accountUserID
 		l.Info("seeded account ref >%s< -> account user ID >%s<", ref, accountUserID)
 	}
@@ -177,18 +177,13 @@ func (t *Testing) seedAccountRefs() error {
 func (t *Testing) createAllAccountUsers() error {
 	l := t.Logger("createAllAccountUsers")
 	for _, accountConfig := range t.DataConfig.AccountConfigs {
-		accountRec, err := t.createAccountUserRec(accountConfig)
+		accountUserRec, err := t.createAccountUserRec(accountConfig)
 		if err != nil {
 			l.Warn("failed creating account record >%v<", err)
 			return err
 		}
-		l.Debug("created account record ID >%s< Email >%s<", accountRec.ID, accountRec.Email)
-		_, err = t.createAccountUserContactRec(accountRec.ID)
-		if err != nil {
-			l.Warn("failed creating account contact record >%v<", err)
-			return err
-		}
-		l.Debug("created account contact record for account ID >%s<", accountRec.ID)
+		l.Debug("created account record ID >%s< Email >%s<", accountUserRec.ID, accountUserRec.Email)
+		// Contact is already created by UpsertAccount inside createAccountUserRec and added to Data
 	}
 	return nil
 }

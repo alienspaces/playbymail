@@ -18,7 +18,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/utils/testutil"
 )
 
-func Test_uploadGSITurnSheetScanHandler(t *testing.T) {
+func Test_uploadGameSubscriptionInstanceTurnSheetScanHandler(t *testing.T) {
 	t.Parallel()
 
 	th := testutil.NewTestHarness(t)
@@ -38,7 +38,7 @@ func Test_uploadGSITurnSheetScanHandler(t *testing.T) {
 			TestCase: testutil.TestCase{
 				Name: "unauthenticated request returns unauthorized",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
-					return rnr.GetHandlerConfig()[player.UploadGSITurnSheetScan]
+					return rnr.GetHandlerConfig()[player.UploadGameSubscriptionInstanceTurnSheetScan]
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
@@ -56,7 +56,7 @@ func Test_uploadGSITurnSheetScanHandler(t *testing.T) {
 					return testutil.NewTestRunner(cfg, l, s, j, scanner)
 				},
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
-					return rnr.GetHandlerConfig()[player.UploadGSITurnSheetScan]
+					return rnr.GetHandlerConfig()[player.UploadGameSubscriptionInstanceTurnSheetScan]
 				},
 				RequestHeaders: testutil.AuthHeaderProPlayer,
 				RequestPathParams: func(d harness.Data) map[string]string {

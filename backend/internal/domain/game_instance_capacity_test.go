@@ -43,13 +43,11 @@ func TestDomain_GetPlayerCountForGameInstance(t *testing.T) {
 		expectError   bool
 	}{
 		{
-			// Default harness links 3 subscriptions to GameInstanceOneRef:
-			// GameSubscriptionPlayerThreeRef (StandardAccount),
-			// GameSubscriptionPlayerOneRef (ProPlayerAccount),
-			// GameSubscriptionManagerOneRef (ProManagerAccount)
+			// Default harness links subscriptions to GameInstanceOneRef. GetPlayerCountForGameInstance
+			// counts only player-type subscriptions (manager and designer are excluded).
 			name:          "returns player count for valid instance",
 			instanceID:    instanceRec.ID,
-			expectedCount: 3,
+			expectedCount: 2,
 			expectError:   false,
 		},
 		{
@@ -152,7 +150,7 @@ func TestDomain_HasAvailableCapacity(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			hasCapacity, err := m.HasAvailableCapacity(tc.instanceID)
+			hasCapacity, err := m.GameInstanceHasAvailableCapacity(tc.instanceID)
 
 			if tc.expectError {
 				require.Error(t, err, "Should return error")
@@ -276,6 +274,7 @@ func TestDomain_AssignPlayerToGameInstance(t *testing.T) {
 
 	_, err = m.CreateGameSubscriptionInstanceRec(&game_record.GameSubscriptionInstance{
 		AccountID:          playerSubscriptionRec.AccountID,
+		AccountUserID:      playerSubscriptionRec.AccountUserID,
 		GameSubscriptionID: playerSubscriptionRec.ID,
 		GameInstanceID:     instanceFull.ID,
 	})

@@ -25,6 +25,7 @@ const (
 	FieldGameInstanceIsClosedTesting                   string = "is_closed_testing"
 	FieldGameInstanceClosedTestingJoinGameKey          string = "closed_testing_join_game_key"
 	FieldGameInstanceClosedTestingJoinGameKeyExpiresAt string = "closed_testing_join_game_key_expires_at"
+	FieldGameInstanceProcessWhenAllSubmitted           string = "process_when_all_submitted"
 	FieldGameInstanceStartedAt                         string = "started_at"
 	FieldGameInstanceCompletedAt                       string = "completed_at"
 	FieldGameInstanceLastTurnProcessedAt               string = "last_turn_processed_at"
@@ -59,6 +60,7 @@ type GameInstance struct {
 	IsClosedTesting                   bool           `db:"is_closed_testing"`
 	ClosedTestingJoinGameKey          sql.NullString `db:"closed_testing_join_game_key"`
 	ClosedTestingJoinGameKeyExpiresAt sql.NullTime   `db:"closed_testing_join_game_key_expires_at"`
+	ProcessWhenAllSubmitted           bool           `db:"process_when_all_submitted"`
 }
 
 func (r *GameInstance) ToNamedArgs() pgx.NamedArgs {
@@ -77,5 +79,6 @@ func (r *GameInstance) ToNamedArgs() pgx.NamedArgs {
 	args[FieldGameInstanceIsClosedTesting] = r.IsClosedTesting
 	args[FieldGameInstanceClosedTestingJoinGameKey] = r.ClosedTestingJoinGameKey
 	args[FieldGameInstanceClosedTestingJoinGameKeyExpiresAt] = r.ClosedTestingJoinGameKeyExpiresAt
+	args[FieldGameInstanceProcessWhenAllSubmitted] = r.ProcessWhenAllSubmitted
 	return args
 }

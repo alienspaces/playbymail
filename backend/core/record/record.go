@@ -39,10 +39,10 @@ const (
 //
 // DeletedAt is the UTC timestamp for when the record was logically deleted.
 type Record struct {
-	ID        string       `db:"id"`
-	CreatedAt time.Time    `db:"created_at"`
-	UpdatedAt sql.NullTime `db:"updated_at"`
-	DeletedAt sql.NullTime `db:"deleted_at"`
+	ID        string       `db:"id" json:"id"`
+	CreatedAt time.Time    `db:"created_at" json:"created_at"`
+	UpdatedAt sql.NullTime `db:"updated_at" json:"updated_at"`
+	DeletedAt sql.NullTime `db:"deleted_at" json:"deleted_at"`
 }
 
 func (r *Record) clearID() {

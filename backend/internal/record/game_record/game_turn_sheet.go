@@ -48,21 +48,21 @@ const (
 
 type GameTurnSheet struct {
 	record.Record
-	GameID           string          `db:"game_id"`
-	GameInstanceID   sql.NullString  `db:"game_instance_id"`
-	AccountID        string          `db:"account_id"`
-	AccountUserID    string          `db:"account_user_id"`
-	TurnNumber       int             `db:"turn_number"`
-	SheetType        string          `db:"sheet_type"`
-	SheetOrder       int             `db:"sheet_order"`
-	SheetData        json.RawMessage `db:"sheet_data"`
-	IsCompleted      bool            `db:"is_completed"`
-	CompletedAt      sql.NullTime    `db:"completed_at"`
-	ScannedData      json.RawMessage `db:"scanned_data"`
-	ScannedAt        sql.NullTime    `db:"scanned_at"`
-	ScannedBy        sql.NullString  `db:"scanned_by"`
-	ProcessingStatus string          `db:"processing_status"`
-	ErrorMessage     sql.NullString  `db:"error_message"`
+	GameID           string          `db:"game_id" json:"game_id"`
+	GameInstanceID   sql.NullString  `db:"game_instance_id" json:"game_instance_id"`
+	AccountID        string          `db:"account_id" json:"account_id"`
+	AccountUserID    string          `db:"account_user_id" json:"account_user_id"`
+	TurnNumber       int             `db:"turn_number" json:"turn_number"`
+	SheetType        string          `db:"sheet_type" json:"sheet_type"`
+	SheetOrder       int             `db:"sheet_order" json:"sheet_order"`
+	SheetData        json.RawMessage `db:"sheet_data" json:"sheet_data"`
+	IsCompleted      bool            `db:"is_completed" json:"is_completed"`
+	CompletedAt      sql.NullTime    `db:"completed_at" json:"completed_at"`
+	ScannedData      json.RawMessage `db:"scanned_data" json:"scanned_data"`
+	ScannedAt        sql.NullTime    `db:"scanned_at" json:"scanned_at"`
+	ScannedBy        sql.NullString  `db:"scanned_by" json:"scanned_by"`
+	ProcessingStatus string          `db:"processing_status" json:"processing_status"`
+	ErrorMessage     sql.NullString  `db:"error_message" json:"error_message"`
 }
 
 func (r *GameTurnSheet) ToNamedArgs() pgx.NamedArgs {

@@ -15,6 +15,7 @@ import (
 	"github.com/riverqueue/river"
 
 	corejobworker "gitlab.com/alienspaces/playbymail/core/jobworker"
+	"gitlab.com/alienspaces/playbymail/core/nullstring"
 	coresql "gitlab.com/alienspaces/playbymail/core/sql"
 	"gitlab.com/alienspaces/playbymail/core/type/emailer"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
@@ -114,25 +115,25 @@ func (w *SendGameSubscriptionApprovalEmailWorker) DoWork(ctx context.Context, m 
 
 	l.Info("preparing approval email for game subscription ID >%s<", j.Args.GameSubscriptionID)
 
-	subscriptionRec, err := m.GetGameSubscriptionRec(j.Args.GameSubscriptionID, nil)
+	gameSubscriptionRec, err := m.GetGameSubscriptionRec(j.Args.GameSubscriptionID, nil)
 	if err != nil {
 		l.Warn("failed to get game subscription record >%v<", err)
 		return nil, err
 	}
 
-	accountRec, err := m.GetAccountRec(subscriptionRec.AccountID, nil)
+	accountUserRec, err := m.GetAccountUserRec(gameSubscriptionRec.AccountUserID, nil)
 	if err != nil {
 		l.Warn("failed to get account record >%v<", err)
 		return nil, err
 	}
 
-	gameRec, err := m.GetGameRec(subscriptionRec.GameID, nil)
+	gameRec, err := m.GetGameRec(gameSubscriptionRec.GameID, nil)
 	if err != nil {
 		l.Warn("failed to get game record >%v<", err)
 		return nil, err
 	}
 
-	approvalPath := fmt.Sprintf("/api/v1/game-subscriptions/%s/approve?email=%s", subscriptionRec.ID, url.QueryEscape(accountRec.Email))
+	approvalPath := fmt.Sprintf("/api/v1/game-subscriptions/%s/approve?email=%s", gameSubscriptionRec.ID, url.QueryEscape(accountUserRec.Email))
 
 	// Construct full URL using configured app host
 	approvalURL := fmt.Sprintf("%s%s", w.Config.AppHost, approvalPath)
@@ -141,7 +142,7 @@ func (w *SendGameSubscriptionApprovalEmailWorker) DoWork(ctx context.Context, m 
 	accountName := ""
 	contactRecs, err := m.GetManyAccountUserContactRecs(&coresql.Options{
 		Params: []coresql.Param{
-			{Col: account_record.FieldAccountUserContactAccountUserID, Val: accountRec.ID},
+			{Col: account_record.FieldAccountUserContactAccountUserID, Val: accountUserRec.ID},
 		},
 		Limit: 1,
 		OrderBy: []coresql.OrderBy{
@@ -149,7 +150,7 @@ func (w *SendGameSubscriptionApprovalEmailWorker) DoWork(ctx context.Context, m 
 		},
 	})
 	if err == nil && len(contactRecs) > 0 {
-		accountName = contactRecs[0].Name
+		accountName = nullstring.ToString(contactRecs[0].Name)
 	}
 
 	// Render the HTML email template
@@ -188,7 +189,7 @@ func (w *SendGameSubscriptionApprovalEmailWorker) DoWork(ctx context.Context, m 
 
 	emailMsg := &emailer.Message{
 		From:    w.Config.NoReplyEmailAddress,
-		To:      []string{accountRec.Email},
+		To:      []string{accountUserRec.Email},
 		Subject: fmt.Sprintf("Confirm your subscription to %s", gameRec.Name),
 		Body:    body.String(),
 	}
@@ -198,7 +199,7 @@ func (w *SendGameSubscriptionApprovalEmailWorker) DoWork(ctx context.Context, m 
 		return nil, err
 	}
 
-	l.Info("sent subscription approval email to >%s< for game >%s<", accountRec.Email, gameRec.Name)
+	l.Info("sent subscription approval email to >%s< for game >%s<", accountUserRec.Email, gameRec.Name)
 
 	return &SendGameSubscriptionApprovalEmailDoWorkResult{RecordCount: 1}, nil
 }

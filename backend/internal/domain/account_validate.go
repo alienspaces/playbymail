@@ -6,11 +6,11 @@ import (
 )
 
 type validateAccountArgs struct {
-	nextRec *account_record.AccountUser
-	currRec *account_record.AccountUser
+	nextRec *account_record.Account
+	currRec *account_record.Account
 }
 
-func (m *Domain) populateAccountValidateArgs(currRec, nextRec *account_record.AccountUser) (*validateAccountArgs, error) {
+func (m *Domain) populateAccountValidateArgs(currRec, nextRec *account_record.Account) (*validateAccountArgs, error) {
 	args := &validateAccountArgs{
 		currRec: currRec,
 		nextRec: nextRec,
@@ -18,7 +18,7 @@ func (m *Domain) populateAccountValidateArgs(currRec, nextRec *account_record.Ac
 	return args, nil
 }
 
-func (m *Domain) validateAccountRecForCreate(rec *account_record.AccountUser) error {
+func (m *Domain) validateAccountRecForCreate(rec *account_record.Account) error {
 	args, err := m.populateAccountValidateArgs(nil, rec)
 	if err != nil {
 		return err
@@ -26,7 +26,7 @@ func (m *Domain) validateAccountRecForCreate(rec *account_record.AccountUser) er
 	return validateAccountRecForCreate(args)
 }
 
-func (m *Domain) validateAccountRecForUpdate(currRec, nextRec *account_record.AccountUser) error {
+func (m *Domain) validateAccountRecForUpdate(currRec, nextRec *account_record.Account) error {
 	args, err := m.populateAccountValidateArgs(currRec, nextRec)
 	if err != nil {
 		return err
@@ -34,7 +34,7 @@ func (m *Domain) validateAccountRecForUpdate(currRec, nextRec *account_record.Ac
 	return validateAccountRecForUpdate(args)
 }
 
-func (m *Domain) validateAccountRecForDelete(rec *account_record.AccountUser) error {
+func (m *Domain) validateAccountRecForDelete(rec *account_record.Account) error {
 	args, err := m.populateAccountValidateArgs(nil, rec)
 	if err != nil {
 		return err
@@ -49,12 +49,8 @@ func validateAccountRecForCreate(args *validateAccountArgs) error {
 		return coreerror.NewInvalidDataError("record is nil")
 	}
 
-	if rec.Email == "" {
-		return coreerror.NewInvalidDataError("email is required")
-	}
-
 	if rec.Status == "" {
-		rec.Status = account_record.AccountUserStatusActive
+		return coreerror.NewInvalidDataError("status is required")
 	}
 
 	if err := validateAccountStatus(rec.Status); err != nil {
@@ -66,18 +62,13 @@ func validateAccountRecForCreate(args *validateAccountArgs) error {
 
 func validateAccountRecForUpdate(args *validateAccountArgs) error {
 	nextRec := args.nextRec
-	currRec := args.currRec
 
 	if nextRec == nil {
 		return coreerror.NewInvalidDataError("record is nil")
 	}
 
-	if nextRec.Email != currRec.Email {
-		return coreerror.NewInvalidDataError("email cannot be updated")
-	}
-
 	if nextRec.Status == "" {
-		nextRec.Status = currRec.Status
+		return coreerror.NewInvalidDataError("status is required")
 	}
 
 	if err := validateAccountStatus(nextRec.Status); err != nil {
@@ -99,9 +90,8 @@ func validateAccountRecForDelete(args *validateAccountArgs) error {
 
 func validateAccountStatus(status string) error {
 	switch status {
-	case account_record.AccountUserStatusPendingApproval,
-		account_record.AccountUserStatusActive,
-		account_record.AccountUserStatusDisabled:
+	case account_record.AccountStatusActive,
+		account_record.AccountStatusDisabled:
 		return nil
 	default:
 		return coreerror.NewInvalidDataError("invalid account status >%s<", status)

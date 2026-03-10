@@ -331,6 +331,7 @@ func TestGameSubscriptionInstanceLinking(t *testing.T) {
 		subscription := &game_record.GameSubscription{
 			GameID:           th.Data.GameRecs[0].ID,
 			AccountID:        th.Data.AccountRecs[0].ID,
+			AccountUserID:    th.Data.AccountUserRecs[0].ID,
 			SubscriptionType: game_record.GameSubscriptionTypeManager,
 			Status:           game_record.GameSubscriptionStatusActive,
 		}
@@ -345,6 +346,8 @@ func TestGameSubscriptionInstanceLinking(t *testing.T) {
 
 		// Create subscription-instance link (account_id will be derived from subscription in validation)
 		instanceLinkRec := &game_record.GameSubscriptionInstance{
+			AccountID:          managerSub.AccountID,
+			AccountUserID:      managerSub.AccountUserID,
 			GameSubscriptionID: managerSub.ID,
 			GameInstanceID:     gameInstanceID,
 		}
@@ -360,11 +363,12 @@ func TestGameSubscriptionInstanceLinking(t *testing.T) {
 
 	// Test instance limit validation
 	t.Run("instance limit validation", func(t *testing.T) {
-		// Create subscription with limit of 1
+		// Create subscription with limit of 1 (account_user_id required for instance links)
 		limit := int32(1)
 		subscription := &game_record.GameSubscription{
 			GameID:           th.Data.GameRecs[0].ID,
 			AccountID:        th.Data.AccountRecs[0].ID,
+			AccountUserID:    th.Data.AccountUserRecs[0].ID,
 			SubscriptionType: game_record.GameSubscriptionTypeManager,
 			Status:           game_record.GameSubscriptionStatusActive,
 			InstanceLimit:    nullint32.FromInt32(limit),
@@ -374,6 +378,8 @@ func TestGameSubscriptionInstanceLinking(t *testing.T) {
 
 		// Link first instance (should succeed)
 		instanceLinkRec1 := &game_record.GameSubscriptionInstance{
+			AccountID:          subscription.AccountID,
+			AccountUserID:      subscription.AccountUserID,
 			GameSubscriptionID: subscription.ID,
 			GameInstanceID:     gameInstanceID,
 		}
@@ -389,6 +395,8 @@ func TestGameSubscriptionInstanceLinking(t *testing.T) {
 		require.NoError(t, err)
 
 		instanceLinkRec2 := &game_record.GameSubscriptionInstance{
+			AccountID:          subscription.AccountID,
+			AccountUserID:      subscription.AccountUserID,
 			GameSubscriptionID: subscription.ID,
 			GameInstanceID:     gameInstance2.ID,
 		}

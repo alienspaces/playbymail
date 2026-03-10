@@ -59,9 +59,9 @@
          
         .page-wrapper {
             position: relative;
-            width: var(--page-width);
-            height: var(--page-height);
-            overflow: hidden;
+            width: 100%;
+            height: auto;
+            overflow: visible;
         }
         
          
@@ -70,7 +70,7 @@
             top: 0;
             left: 0;
             width: 100%;
-            height: var(--page-height);
+            height: 100%;
             object-fit: cover;
             object-position: center;
             pointer-events: none;
@@ -85,15 +85,14 @@
 
          
         .content-container {
-            width: var(--content-container-width);
-            margin: var(--content-container-margin-vertical) var(--content-container-margin-horizontal);
+            margin: 6px 16px;
             box-sizing: border-box;
         }
 
          
         .content-section {
             margin: 0 0 6mm 0;
-            padding: 2mm;
+            padding: 2mm 16px;
             box-sizing: border-box;
             border-radius: 8px;
             background-color: rgba(255, 255, 255, 0.75);
@@ -130,7 +129,7 @@
             margin: 0;
             color: #555;
             line-height: 1.4;
-            max-width: 560px;
+            max-width: 85%;
             margin-left: auto;
             margin-right: auto;
             text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8);
@@ -224,14 +223,11 @@
             color: #6c757d;
         }
 
+         
         .footer-content {
-            position: absolute;
-            bottom: var(--content-container-margin-vertical);
-            left: 50%;
-            transform: translateX(-50%);
-            width: var(--content-container-width);
-            margin: 0;
-            padding: 4mm 2mm;
+            position: relative;
+            margin: 0 16px 16px;
+            padding: 4px 2px;
             background-color: rgba(255, 255, 255, 0.7);
             border-top: 1px solid #dee2e6;
             border-radius: 8px;
@@ -328,6 +324,32 @@
                 box-shadow: none;
                 margin: 0;
                 padding: 0;
+            }
+
+             
+            .page-wrapper {
+                width: 210mm;
+                height: 297mm;
+                overflow: hidden;
+            }
+
+            .content-container {
+                width: 168mm;
+                margin: 6mm 21mm;
+            }
+
+            .background-image {
+                height: 297mm;
+            }
+
+            .footer-content {
+                position: absolute;
+                bottom: 6mm;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 168mm;
+                margin: 0;
+                padding: 4mm 2mm;
             }
         }
     </style>
@@ -469,7 +491,7 @@
             
             <div class="footer-content-item">
                 <div class="footer-content-label">Turn Sheet Deadline:</div>
-                <div class="footer-content-value">2026-03-07 06:30:01.327404178 &#43;0000 UTC</div>
+                <div class="footer-content-value">2026-03-11 03:52:36.653147268 &#43;0000 UTC</div>
             </div>
             
 

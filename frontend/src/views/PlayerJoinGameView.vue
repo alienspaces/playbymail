@@ -24,25 +24,14 @@
 
     <!-- Turn sheet display -->
     <div v-else class="join-sheet-wrapper" data-testid="join-sheet">
-      <iframe
-        ref="sheetFrame"
-        :srcdoc="turnSheetHtml"
-        class="turn-sheet-frame"
-        sandbox="allow-same-origin allow-scripts"
-        data-testid="join-sheet-iframe"
-        @load="onIframeLoad"
-      ></iframe>
+      <iframe ref="sheetFrame" :srcdoc="turnSheetHtml" class="turn-sheet-frame"
+        sandbox="allow-same-origin allow-scripts" data-testid="join-sheet-iframe" @load="onIframeLoad"></iframe>
 
       <div class="join-actions">
         <p v-if="submitError" class="error-message" data-testid="submit-error">{{ submitError }}</p>
         <div class="action-buttons">
           <a href="/games" class="secondary-button" data-testid="btn-back">Back to Catalog</a>
-          <button
-            class="primary-button"
-            :disabled="submitting"
-            data-testid="btn-submit"
-            @click="onSubmit"
-          >
+          <button class="primary-button" :disabled="submitting" data-testid="btn-submit" @click="onSubmit">
             {{ submitting ? 'Joining...' : 'Submit & Join Game' }}
           </button>
         </div>
@@ -88,6 +77,7 @@ function extractFormData() {
   return {
     email: val('email'),
     name: val('name'),
+    character_name: val('character_name') || undefined,
     postal_address_line1: val('postal_address_line1'),
     postal_address_line2: val('postal_address_line2') || undefined,
     state_province: val('state_province'),
@@ -137,9 +127,16 @@ async function onSubmit() {
     return
   }
 
-  if (!data.email || !data.name || !data.postal_address_line1 || !data.state_province || !data.country || !data.postal_code) {
+  if (!data.email || !data.name) {
     submitError.value = 'Please fill in all required fields on the turn sheet.'
     return
+  }
+  // Postal address required only when player chose post delivery
+  if (data.delivery_physical_post) {
+    if (!data.postal_address_line1 || !data.state_province || !data.country || !data.postal_code) {
+      submitError.value = 'Please fill in all required fields on the turn sheet.'
+      return
+    }
   }
 
   submitting.value = true

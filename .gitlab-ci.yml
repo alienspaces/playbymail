@@ -36,7 +36,7 @@ test-backend:
     PORT: 8080
     LOG_LEVEL: info
     GO_VERSION: 1.24.5
-    EMAILER_FAKED: "true"
+    EMAILER_PROVIDER: "fake"
     JOBCLIENT_MAX_WORKERS: "10"
     TOKEN_HMAC_KEY: "changeme-super-secret-key"
     TEMPLATES_PATH: "${CI_PROJECT_DIR}/backend/templates"
@@ -121,7 +121,7 @@ test-e2e:
     PORT: 8080
     LOG_LEVEL: error
     GO_VERSION: 1.24.5
-    EMAILER_FAKED: "true"
+    EMAILER_PROVIDER: "fake"
     JOBCLIENT_MAX_WORKERS: "10"
     TOKEN_HMAC_KEY: "changeme-super-secret-key"
     TEMPLATES_PATH: "${CI_PROJECT_DIR}/backend/templates"
@@ -165,7 +165,7 @@ test-e2e:
     - echo "Testing frontend endpoint..."
     - curl -v http://localhost:3000 || echo "Frontend check failed"
     - npx wait-on http-get://localhost:8080/healthz http-get://localhost:3000 --timeout 60000 --verbose
-    - ./tools/test-e2e
+    - ./tools/test-e2e-ci
   artifacts:
     when: on_failure
     paths:

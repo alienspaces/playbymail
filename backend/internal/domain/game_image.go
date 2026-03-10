@@ -222,17 +222,7 @@ func (m *Domain) RemoveGameImageRec(recID string) error {
 
 	l.Debug("removing game image record ID >%s<", recID)
 
-	rec, err := m.GetGameImageRec(recID, coresql.ForUpdateNoWait)
-	if err != nil {
-		return err
-	}
-
 	r := m.GameImageRepository()
-
-	if err := m.validateGameImageRecForDelete(rec); err != nil {
-		l.Warn("failed domain validation >%v<", err)
-		return err
-	}
 
 	if err := r.RemoveOne(recID); err != nil {
 		return databaseError(err)

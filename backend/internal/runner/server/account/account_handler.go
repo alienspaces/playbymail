@@ -262,7 +262,7 @@ func getManyAccountsHandler(w http.ResponseWriter, r *http.Request, pp httproute
 		})
 	}
 
-	recs, err := mm.GetManyAccountParentRecs(opts)
+	recs, err := mm.GetManyAccountRecs(opts)
 	if err != nil {
 		l.Warn("failed getting account records >%v<", err)
 		return err
@@ -295,7 +295,7 @@ func getAccountHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Par
 
 	mm := m.(*domain.Domain)
 
-	rec, err := mm.GetAccountParentRec(accountID, nil)
+	rec, err := mm.GetAccountRec(accountID, nil)
 	if err != nil {
 		l.Warn("failed getting account record >%v<", err)
 		return err
@@ -334,7 +334,7 @@ func createAccountHandler(w http.ResponseWriter, r *http.Request, pp httprouter.
 		Email: accountRec.Name,
 	}
 
-	createdAccountRec, _, _, err := mm.CreateAccount(userRec)
+	createdAccountRec, _, _, _, err := mm.UpsertAccount(&account_record.Account{}, userRec, &account_record.AccountUserContact{})
 	if err != nil {
 		l.Warn("failed creating account record >%v<", err)
 		return err
@@ -343,7 +343,7 @@ func createAccountHandler(w http.ResponseWriter, r *http.Request, pp httprouter.
 	// The domain sets the account name from the email; override with the requested name
 	if accountRec.Name != "" {
 		createdAccountRec.Name = accountRec.Name
-		createdAccountRec, err = mm.UpdateAccountParentRec(createdAccountRec)
+		createdAccountRec, err = mm.UpdateAccountRec(createdAccountRec)
 		if err != nil {
 			l.Warn("failed updating account name >%v<", err)
 			return err
@@ -379,7 +379,7 @@ func updateAccountHandler(w http.ResponseWriter, r *http.Request, pp httprouter.
 		return coreerror.RequiredPathParameter("account_id")
 	}
 
-	rec, err := mm.GetAccountParentRec(accountID, coresql.ForUpdateNoWait)
+	rec, err := mm.GetAccountRec(accountID, coresql.ForUpdateNoWait)
 	if err != nil {
 		l.Warn("failed getting account record >%v<", err)
 		return err
@@ -391,7 +391,7 @@ func updateAccountHandler(w http.ResponseWriter, r *http.Request, pp httprouter.
 		return err
 	}
 
-	updatedRec, err := mm.UpdateAccountParentRec(rec)
+	updatedRec, err := mm.UpdateAccountRec(rec)
 	if err != nil {
 		l.Warn("failed updating account record >%v<", err)
 		return err
@@ -465,7 +465,7 @@ func verifyAuthHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Par
 		}
 	}
 
-	sessionToken, err := mm.VerifyAccountVerificationToken(req.VerificationToken, testBypassEnabled)
+	sessionToken, err := mm.VerifyAccountUserVerificationToken(req.VerificationToken, testBypassEnabled)
 	if err != nil {
 		l.Warn("failed verifying account verification token >%v<", err)
 		return err
@@ -496,46 +496,35 @@ func refreshSessionHandler(w http.ResponseWriter, r *http.Request, pp httprouter
 func sendAccountVerificationEmail(m *domain.Domain, jc *river.Client[pgx.Tx], emailAddr string) error {
 	l := m.Logger("SendAccountVerificationEmail")
 
-	// Look up account by email
-	repo := m.AccountUserRepository()
-
-	recs, err := repo.GetMany(&coresql.Options{
-		Params: []coresql.Param{
-			{Col: account_record.FieldAccountUserEmail, Val: emailAddr},
-		},
-		Limit: 1,
-	})
+	accountUserRec, err := m.GetAccountUserRecByEmail(emailAddr)
 	if err != nil {
-		l.Warn("failed to get account by email >%s< >%v<", emailAddr, err)
+		l.Warn("failed to get account user by email >%s< >%v<", emailAddr, err)
 		return err
 	}
 
-	var rec *account_record.AccountUser
-	if len(recs) == 0 {
-		l.Info("no account found for email >%s<, creating account", emailAddr)
-		rec = &account_record.AccountUser{
+	if accountUserRec == nil {
+		l.Info("no account user found for email >%s<, creating account user", emailAddr)
+		accountUserRec = &account_record.AccountUser{
 			Email: emailAddr,
 		}
-		_, rec, _, err = m.CreateAccount(rec)
+		_, accountUserRec, _, _, err = m.UpsertAccount(&account_record.Account{}, accountUserRec, &account_record.AccountUserContact{})
 		if err != nil {
-			l.Warn("failed to create account >%v<", err)
+			l.Warn("failed to create account user record >%v<", err)
 			return err
 		}
-	} else {
-		rec = recs[0]
 	}
 
 	// Register job to send verification token
-	l.Info("registering job to send verification token for account ID >%s<", rec.ID)
+	l.Info("registering job to send verification token for account user ID >%s<", accountUserRec.ID)
 
 	// Within API handler context we must use the transaction from the domain model so
 	// if there is an error the entire API request transaction is rolled back.
 	if _, err := jc.InsertTx(context.Background(), m.Tx, &jobworker.SendAccountVerificationEmailWorkerArgs{
-		AccountID: rec.ID,
+		AccountUserID: accountUserRec.ID,
 	}, &river.InsertOpts{
 		Queue: jobqueue.QueueDefault,
 	}); err != nil {
-		l.Warn("failed to enqueue account verification email job >%v<", err)
+		l.Warn("failed to enqueue account user verification email job >%v<", err)
 		return err
 	}
 

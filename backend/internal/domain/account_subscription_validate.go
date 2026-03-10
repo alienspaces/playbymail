@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"gitlab.com/alienspaces/playbymail/core/collection/set"
 	"gitlab.com/alienspaces/playbymail/core/domain"
 	coresql "gitlab.com/alienspaces/playbymail/core/sql"
 	"gitlab.com/alienspaces/playbymail/internal/record/account_record"
@@ -18,22 +19,13 @@ func (m *Domain) populateAccountSubscriptionValidateArgs(currRec, nextRec *accou
 		nextRec: nextRec,
 	}
 
-	// Only gather existing subscriptions for create operations (when currRec is nil)
-	// We check for existing subscriptions based on AccountID (Tenant) OR AccountUserID (User)
-	if currRec == nil {
-		var params []coresql.Param
-		if nextRec.AccountID.Valid && nextRec.AccountID.String != "" {
-			params = []coresql.Param{
-				{Col: account_record.FieldAccountSubscriptionAccountID, Val: nextRec.AccountID.String},
-				{Col: account_record.FieldAccountSubscriptionStatus, Val: account_record.AccountSubscriptionStatusActive},
-			}
-		} else if nextRec.AccountUserID.Valid && nextRec.AccountUserID.String != "" {
-			params = []coresql.Param{
-				{Col: account_record.FieldAccountSubscriptionAccountUserID, Val: nextRec.AccountUserID.String},
-				{Col: account_record.FieldAccountSubscriptionStatus, Val: account_record.AccountSubscriptionStatusActive},
-			}
+	// Only gather existing subscriptions for create operations (when currRec is nil).
+	// All subscription types require account_user_id; check for duplicates by user and status.
+	if currRec == nil && nextRec.AccountUserID.Valid && nextRec.AccountUserID.String != "" {
+		params := []coresql.Param{
+			{Col: account_record.FieldAccountSubscriptionAccountUserID, Val: nextRec.AccountUserID.String},
+			{Col: account_record.FieldAccountSubscriptionStatus, Val: account_record.AccountSubscriptionStatusActive},
 		}
-
 		if len(params) > 0 {
 			existingSubs, err := m.GetManyAccountSubscriptionRecs(&coresql.Options{
 				Params: params,
@@ -75,9 +67,8 @@ func (m *Domain) validateAccountSubscriptionRecForDelete(rec *account_record.Acc
 func validateAccountSubscriptionRecForCreate(args *validateAccountSubscriptionArgs) error {
 	rec := args.nextRec
 
-	// Set default subscription_period if not provided
 	if rec.SubscriptionPeriod == "" {
-		rec.SubscriptionPeriod = account_record.AccountSubscriptionPeriodEternal
+		return InvalidField(account_record.FieldAccountSubscriptionSubscriptionPeriod, "", "subscription_period is required")
 	}
 
 	// Check if a subscription of the same type already exists
@@ -105,41 +96,35 @@ func validateAccountSubscriptionRecForUpdate(args *validateAccountSubscriptionAr
 func validateAccountSubscriptionRec(args *validateAccountSubscriptionArgs) error {
 	rec := args.nextRec
 
-	// Validate Access IDs based on Subscription Type
-	isTenantSub := rec.SubscriptionType == account_record.AccountSubscriptionTypeBasicGameDesigner ||
-		rec.SubscriptionType == account_record.AccountSubscriptionTypeProfessionalGameDesigner ||
-		rec.SubscriptionType == account_record.AccountSubscriptionTypeBasicManager ||
-		rec.SubscriptionType == account_record.AccountSubscriptionTypeProfessionalManager
+	// All subscription types require an account user.
+	if !rec.AccountUserID.Valid || rec.AccountUserID.String == "" {
+		return InvalidField(account_record.FieldAccountSubscriptionAccountUserID, "", "account_user_id is required for all subscription types")
+	}
+	if err := domain.ValidateUUIDField(account_record.FieldAccountSubscriptionAccountUserID, rec.AccountUserID.String); err != nil {
+		return err
+	}
 
-	isUserSub := rec.SubscriptionType == account_record.AccountSubscriptionTypeBasicPlayer ||
-		rec.SubscriptionType == account_record.AccountSubscriptionTypeProfessionalPlayer
+	// All subscription types require account_id and account_user_id.
+	if !rec.AccountID.Valid || rec.AccountID.String == "" {
+		return InvalidField(account_record.FieldAccountSubscriptionAccountID, "", "account_id is required for all subscription types")
+	}
+	if err := domain.ValidateUUIDField(account_record.FieldAccountSubscriptionAccountID, rec.AccountID.String); err != nil {
+		return err
+	}
 
-	if isTenantSub {
-		if !rec.AccountID.Valid || rec.AccountID.String == "" {
-			return InvalidField(account_record.FieldAccountSubscriptionAccountID, rec.AccountID.String, "account_id is required for designer/manager subscriptions")
-		}
-		if err := domain.ValidateUUIDField(account_record.FieldAccountSubscriptionAccountID, rec.AccountID.String); err != nil {
-			return err
-		}
-	} else if isUserSub {
-		if !rec.AccountUserID.Valid || rec.AccountUserID.String == "" {
-			return InvalidField(account_record.FieldAccountSubscriptionAccountUserID, rec.AccountUserID.String, "account_user_id is required for player subscriptions")
-		}
-		if err := domain.ValidateUUIDField(account_record.FieldAccountSubscriptionAccountUserID, rec.AccountUserID.String); err != nil {
-			return err
-		}
-	} else {
+	// Reject unknown subscription types
+	subscriptionTypeSet := set.New(account_record.AccountSubscriptionTypeBasicGameDesigner, account_record.AccountSubscriptionTypeProfessionalGameDesigner, account_record.AccountSubscriptionTypeBasicManager, account_record.AccountSubscriptionTypeProfessionalManager, account_record.AccountSubscriptionTypeBasicPlayer, account_record.AccountSubscriptionTypeProfessionalPlayer)
+	if !subscriptionTypeSet.Has(rec.SubscriptionType) {
 		return InvalidField(account_record.FieldAccountSubscriptionSubscriptionType, rec.SubscriptionType, "subscription type is not valid")
 	}
 
-	if rec.SubscriptionPeriod != account_record.AccountSubscriptionPeriodMonth &&
-		rec.SubscriptionPeriod != account_record.AccountSubscriptionPeriodYear &&
-		rec.SubscriptionPeriod != account_record.AccountSubscriptionPeriodEternal {
+	subscriptionPeriodSet := set.New(account_record.AccountSubscriptionPeriodMonth, account_record.AccountSubscriptionPeriodYear, account_record.AccountSubscriptionPeriodEternal)
+	if !subscriptionPeriodSet.Has(rec.SubscriptionPeriod) {
 		return InvalidField(account_record.FieldAccountSubscriptionSubscriptionPeriod, rec.SubscriptionPeriod, "subscription period is not valid")
 	}
 
-	if rec.Status != account_record.AccountSubscriptionStatusActive &&
-		rec.Status != account_record.AccountSubscriptionStatusExpired {
+	statusSet := set.New(account_record.AccountSubscriptionStatusActive, account_record.AccountSubscriptionStatusExpired)
+	if !statusSet.Has(rec.Status) {
 		return InvalidField(account_record.FieldAccountSubscriptionStatus, rec.Status, "status is not valid")
 	}
 

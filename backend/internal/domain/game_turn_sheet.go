@@ -126,11 +126,6 @@ func (m *Domain) RemoveGameTurnSheetRec(recID string) error {
 
 	l.Debug("removing game_turn_sheet record ID >%s<", recID)
 
-	_, err := m.GetGameTurnSheetRec(recID, coresql.ForUpdateNoWait)
-	if err != nil {
-		return err
-	}
-
 	r := m.GameTurnSheetRepository()
 
 	if err := r.RemoveOne(recID); err != nil {

@@ -36,7 +36,7 @@ func removeDemoAccounts(t *testing.T, rnr *Runner) {
 	require.True(t, ok)
 
 	for _, def := range demo_scenarios.DemoAccountDefs {
-		rec, err := dm.GetAccountRecByEmail(def.Email)
+		rec, err := dm.GetAccountUserRecByEmail(def.Email)
 		if err != nil || rec == nil {
 			continue
 		}

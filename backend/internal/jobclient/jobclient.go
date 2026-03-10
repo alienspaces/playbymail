@@ -2,6 +2,7 @@ package jobclient
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/riverqueue/river"
@@ -54,7 +55,7 @@ func getRiverConfig(l logger.Logger, cfg config.Config, s storer.Storer, e email
 	}
 
 	// Periodic job configuration functions
-	periodicJobFuncs := map[string]func(l logger.Logger, s storer.Storer, p []*river.PeriodicJob) ([]*river.PeriodicJob, error){
+	periodicJobFuncs := map[string]func(l logger.Logger, cfg config.Config, s storer.Storer, p []*river.PeriodicJob) ([]*river.PeriodicJob, error){
 		jobqueue.QueueDefault: addDefaultPeriodicJobs,
 		jobqueue.QueueGame:    addGamePeriodicJobs,
 	}
@@ -76,7 +77,7 @@ func getRiverConfig(l logger.Logger, cfg config.Config, s storer.Storer, e email
 		}
 
 		// Add queue periodic jobs
-		p, err = periodicJobFuncs[queueName](l, s, p)
+		p, err = periodicJobFuncs[queueName](l, cfg, s, p)
 		if err != nil {
 			return nil, err
 		}
@@ -90,7 +91,7 @@ func getRiverConfig(l logger.Logger, cfg config.Config, s storer.Storer, e email
 	return &riverConfig, nil
 }
 
-func addDefaultPeriodicJobs(l logger.Logger, s storer.Storer, p []*river.PeriodicJob) ([]*river.PeriodicJob, error) {
+func addDefaultPeriodicJobs(l logger.Logger, cfg config.Config, s storer.Storer, p []*river.PeriodicJob) ([]*river.PeriodicJob, error) {
 	l = l.WithFunctionContext("addDefaultPeriodicJobs")
 
 	l.Info("adding default periodic jobs")
@@ -98,13 +99,21 @@ func addDefaultPeriodicJobs(l logger.Logger, s storer.Storer, p []*river.Periodi
 	return p, nil
 }
 
-func addGamePeriodicJobs(l logger.Logger, s storer.Storer, p []*river.PeriodicJob) ([]*river.PeriodicJob, error) {
+func addGamePeriodicJobs(l logger.Logger, cfg config.Config, s storer.Storer, p []*river.PeriodicJob) ([]*river.PeriodicJob, error) {
 	l = l.WithFunctionContext("addGamePeriodicJobs")
 
-	l.Info("adding game periodic jobs")
+	interval := time.Duration(cfg.GameTurnQueueingIntervalSeconds) * time.Second
+	l.Info("adding game turn queueing periodic job with interval >%s<", interval)
 
-	// TODO: Add periodic job to check game deadlines every hour
-	// Need to check river documentation for correct PeriodicJob structure
+	p = append(p, river.NewPeriodicJob(
+		river.PeriodicInterval(interval),
+		func() (river.JobArgs, *river.InsertOpts) {
+			return jobworker.GameTurnQueueingWorkerArgs{}, &river.InsertOpts{
+				Queue: jobqueue.QueueGame,
+			}
+		},
+		&river.PeriodicJobOpts{RunOnStart: true},
+	))
 
 	return p, nil
 }

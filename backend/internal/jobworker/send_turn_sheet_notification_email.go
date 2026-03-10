@@ -137,10 +137,10 @@ func (w *SendTurnSheetNotificationEmailWorker) DoWork(ctx context.Context, m *do
 		return &SendTurnSheetNotificationEmailDoWorkResult{RecordCount: 0}, nil
 	}
 
-	// Get the account to get the email address
-	accountRec, err := m.GetAccountRec(instanceRec.AccountID, nil)
+	// Get the account user to get the email address
+	accountRec, err := m.GetAccountUserRecByAccountID(instanceRec.AccountID, nil)
 	if err != nil {
-		l.Warn("failed to get account record >%v<", err)
+		l.Warn("failed to get account user record for account >%s< >%v<", instanceRec.AccountID, err)
 		return nil, err
 	}
 

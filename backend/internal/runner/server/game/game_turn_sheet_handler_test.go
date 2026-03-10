@@ -34,10 +34,11 @@ func Test_uploadTurnSheetHandler(t *testing.T) {
 	// Create a custom harness config
 	testDataConfig := harness.DefaultDataConfig()
 
-	// Configure expected turn sheets so references can be resolved after job workers run
+	// Configure expected turn sheets so references can be resolved after job workers run.
+	// Use TurnNumber 0 because the harness creates turn 0 sheets when the instance is started.
 	err := testDataConfig.ReplaceGameTurnConfigs(harness.GameInstanceOneRef, []harness.GameTurnConfig{
 		{
-			TurnNumber: 1,
+			TurnNumber: 0,
 			AdventureGameTurnSheetConfigs: []harness.AdventureGameTurnSheetConfig{
 				{
 					GameTurnSheetConfig: harness.GameTurnSheetConfig{

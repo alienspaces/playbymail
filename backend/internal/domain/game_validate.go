@@ -133,9 +133,8 @@ func (m *Domain) validateGameRecForDelete(rec *game_record.Game) error {
 func validateGameRecForCreate(args *validateGameArgs) error {
 	rec := args.nextRec
 
-	// Set default status if not provided
 	if rec.Status == "" {
-		rec.Status = game_record.GameStatusDraft
+		return InvalidField(game_record.FieldGameStatus, "", "status is required")
 	}
 
 	// Note: Subscription limit validation has been moved to handler level

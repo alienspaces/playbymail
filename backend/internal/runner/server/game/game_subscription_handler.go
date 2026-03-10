@@ -344,8 +344,9 @@ func createGameSubscriptionHandler(w http.ResponseWriter, r *http.Request, pp ht
 		return err
 	}
 
-	// Set accountID from authenticated account (self-subscription) using the tenant account.id
+	// Set account and account user from authenticated account (self-subscription)
 	rec.AccountID = authenData.AccountUser.AccountID
+	rec.AccountUserID = authenData.AccountUser.ID
 
 	// Set status to active (self-subscription, no approval required)
 	rec.Status = game_record.GameSubscriptionStatusActive

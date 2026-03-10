@@ -26,14 +26,14 @@ func GameSubscriptionRequestToRecord(l logger.Logger, r *http.Request, rec *game
 	case server.HttpMethodPost:
 		rec.GameID = req.GameID
 		rec.AccountID = req.AccountID
-		rec.AccountUserID = nullstring.FromStringPtr(req.AccountUserID)
+		rec.AccountUserID = nullstring.ToString(nullstring.FromStringPtr(req.AccountUserID))
 		rec.AccountUserContactID = nullstring.FromStringPtr(req.AccountUserContactID)
 		rec.SubscriptionType = req.SubscriptionType
 		rec.InstanceLimit = nullint32.FromInt32Ptr(req.InstanceLimit)
 	case server.HttpMethodPut, server.HttpMethodPatch:
 		rec.GameID = req.GameID
 		rec.AccountID = req.AccountID
-		rec.AccountUserID = nullstring.FromStringPtr(req.AccountUserID)
+		rec.AccountUserID = nullstring.ToString(nullstring.FromStringPtr(req.AccountUserID))
 		rec.AccountUserContactID = nullstring.FromStringPtr(req.AccountUserContactID)
 		rec.SubscriptionType = req.SubscriptionType
 		rec.InstanceLimit = nullint32.FromInt32Ptr(req.InstanceLimit)
@@ -51,7 +51,7 @@ func GameSubscriptionRecordToResponseData(l logger.Logger, rec *game_record.Game
 		ID:               rec.ID,
 		GameID:           rec.GameID,
 		AccountID:        rec.AccountID,
-		AccountUserID:    nullstring.ToStringPtr(rec.AccountUserID),
+		AccountUserID:    &rec.AccountUserID,
 		GameInstanceIDs:  instanceIDs,
 		SubscriptionType: rec.SubscriptionType,
 		InstanceLimit:    instanceLimitPtr,
