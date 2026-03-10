@@ -13,12 +13,12 @@
         },
         "name": {
             "type": "string",
-            "minLength": 1,
+            "minLength": 0,
             "maxLength": 255
         },
         "postal_address_line1": {
             "type": "string",
-            "minLength": 1,
+            "minLength": 0,
             "maxLength": 255
         },
         "postal_address_line2": {
@@ -27,17 +27,17 @@
         },
         "state_province": {
             "type": "string",
-            "minLength": 1,
+            "minLength": 0,
             "maxLength": 100
         },
         "country": {
             "type": "string",
-            "minLength": 1,
+            "minLength": 0,
             "maxLength": 100
         },
         "postal_code": {
             "type": "string",
-            "minLength": 1,
+            "minLength": 0,
             "maxLength": 20
         },
         "created_at": {
@@ -50,11 +50,6 @@
     "required": [
         "id",
         "account_user_id",
-        "name",
-        "postal_address_line1",
-        "state_province",
-        "country",
-        "postal_code",
         "created_at"
     ],
     "additionalProperties": false

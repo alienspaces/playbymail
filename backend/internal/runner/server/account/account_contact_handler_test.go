@@ -142,11 +142,7 @@ func Test_getAccountUserContactHandler(t *testing.T) {
 				for _, d := range responses {
 					require.NotEmpty(t, d.ID, "Account contact ID is not empty")
 					require.NotEmpty(t, d.AccountUserID, "Account contact AccountUserID is not empty")
-					require.NotEmpty(t, d.Name, "Account contact Name is not empty")
-					require.NotEmpty(t, d.PostalAddressLine1, "Account contact PostalAddressLine1 is not empty")
-					require.NotEmpty(t, d.StateProvince, "Account contact StateProvince is not empty")
-					require.NotEmpty(t, d.Country, "Account contact Country is not empty")
-					require.NotEmpty(t, d.PostalCode, "Account contact PostalCode is not empty")
+					// name and postal fields are optional (nullable in DB)
 				}
 			}
 
