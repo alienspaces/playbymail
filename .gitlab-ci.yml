@@ -150,6 +150,7 @@ test-e2e:
     - ./tools/db-migrate-up
     - ./tools/db-load-test-reference-data
     - ./tools/db-load-test-data
+    - npm ci
     - cd frontend && npm ci && cd ..
   script:
     - export PATH="/usr/local/go/bin:${HOME}/go/bin:$PATH"
