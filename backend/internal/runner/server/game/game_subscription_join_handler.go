@@ -485,6 +485,14 @@ func submitJoinHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Par
 		l.Info("created adventure game character >%s< and instance >%s<", characterRec.ID, characterInstanceRec.ID)
 	}
 
+	// Link the player subscription to the game instance so the instance can auto-start and
+	// turn processing can create turn sheets and send notification emails.
+	_, err = mm.AssignPlayerToGameInstance(playerGameSubscriptionRec.ID, gameInstanceRec.ID)
+	if err != nil {
+		l.Warn("failed to assign player to game instance >%v<", err)
+		return err
+	}
+
 	res := player_schema.JoinGameSubmitResponse{
 		Data: &player_schema.JoinGameSubmitResponseData{
 			GameSubscriptionID: playerGameSubscriptionRec.ID,

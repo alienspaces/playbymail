@@ -5,22 +5,17 @@ const gameSubscriptionInstancePath = (gameSubscriptionInstanceId) =>
 
 /**
  * Verify game subscription instance turn sheet token.
- * Email is optional -- when omitted the backend resolves the account from the token.
  * @param {string} gameSubscriptionInstanceID
  * @param {string} turnSheetToken
- * @param {string} [email]
  * @returns {Promise<string>} Session token
  */
-export async function verifyGameSubscriptionToken(gameSubscriptionInstanceID, turnSheetToken, email) {
-  const body = { turn_sheet_token: turnSheetToken }
-  if (email) body.email = email
-
+export async function verifyGameSubscriptionToken(gameSubscriptionInstanceID, turnSheetToken) {
   const res = await fetch(
     `${gameSubscriptionInstancePath(gameSubscriptionInstanceID)}/verify-token`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
+      body: JSON.stringify({ turn_sheet_token: turnSheetToken }),
     }
   );
   await handleApiError(res, 'Token verification failed');

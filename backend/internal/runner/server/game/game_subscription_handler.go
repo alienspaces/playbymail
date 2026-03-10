@@ -248,7 +248,7 @@ func gameSubscriptionHandlerConfig(l logger.Logger) (map[string]server.HandlerCo
 	config[Invite] = server.HandlerConfig{
 		Method:      http.MethodPost,
 		Path:        "/api/v1/game-subscriptions/:game_subscription_id/invite",
-		HandlerFunc: inviteHandler,
+		HandlerFunc: gameSubscriptionInviteHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{server.AuthenticationTypeToken},
 			AuthzPermissions: []server.AuthorizedPermission{
@@ -564,8 +564,8 @@ func linkGameInstanceToSubscriptionHandler(w http.ResponseWriter, r *http.Reques
 	return server.WriteResponse(l, w, http.StatusCreated, res)
 }
 
-func inviteHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
-	l = logging.LoggerWithFunctionContext(l, packageName, "inviteHandler")
+func gameSubscriptionInviteHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
+	l = logging.LoggerWithFunctionContext(l, packageName, "gameSubscriptionInviteHandler")
 
 	gameSubscriptionID := pp.ByName("game_subscription_id")
 	if gameSubscriptionID == "" {

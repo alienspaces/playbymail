@@ -40,23 +40,6 @@ describe('player API', () => {
       )
       expect(result).toBe('session-abc')
     })
-
-    it('includes email when provided', async () => {
-      mockFetch.mockResolvedValue({
-        ok: true,
-        json: () => Promise.resolve({ session_token: 'session-def' }),
-      })
-
-      const result = await verifyGameSubscriptionToken('gsi-123', 'token-xyz', 'user@example.com')
-
-      expect(mockFetch).toHaveBeenCalledWith(
-        `${GAME_SUBSCRIPTION_INSTANCE_BASE}/gsi-123/verify-token`,
-        expect.objectContaining({
-          body: JSON.stringify({ turn_sheet_token: 'token-xyz', email: 'user@example.com' }),
-        })
-      )
-      expect(result).toBe('session-def')
-    })
   })
 
   describe('requestNewTurnSheetToken', () => {

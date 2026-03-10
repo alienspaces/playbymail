@@ -670,12 +670,6 @@ func verifyGameSubscriptionTokenHandler(w http.ResponseWriter, r *http.Request, 
 		return err
 	}
 
-	// Verify email matches
-	if req.Email == "" || accountUserRec.Email != req.Email {
-		l.Warn("email >%s< does not match account user email >%s<", req.Email, accountUserRec.Email)
-		return coreerror.NewInvalidDataError("email does not match the account for this subscription")
-	}
-
 	// Generate session token for the account
 	sessionToken, err := mm.GenerateAccountUserSessionToken(accountUserRec)
 	if err != nil {

@@ -4,10 +4,6 @@
     "title": "VerifyGameSubscriptionTokenRequest",
     "type": "object",
     "properties": {
-        "email": {
-            "format": "email",
-            "type": "string"
-        },
         "turn_sheet_token": {
             "type": "string"
         }

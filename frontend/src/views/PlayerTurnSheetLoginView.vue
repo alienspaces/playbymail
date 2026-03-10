@@ -63,7 +63,6 @@ export default {
       try {
         const sessionToken = await verifyGameSubscriptionToken(
           gameSubscriptionInstanceID,
-          this.email,
           token
         );
 

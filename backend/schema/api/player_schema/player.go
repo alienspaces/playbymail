@@ -5,9 +5,8 @@ type RequestGameSubscriptionTokenRequest struct {
 	Email string `json:"email"`
 }
 
-// VerifyGameSubscriptionTokenRequest maps to the /verify-game-subscription-token request schema
+// VerifyGameSubscriptionTokenRequest maps to the /verify-game-subscription-token request schema.
 type VerifyGameSubscriptionTokenRequest struct {
-	Email          string `json:"email"`
 	TurnSheetToken string `json:"turn_sheet_token"`
 }
 
