@@ -425,9 +425,9 @@ func submitJoinHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Par
 
 	playerGameSubscriptionRec, err := mm.CreateGameSubscriptionRec(&game_record.GameSubscription{
 		GameID:               gameSubscriptionRec.GameID,
-		AccountID:            accountID,
-		AccountUserID:        accountUserID,
-		AccountUserContactID: nullstring.FromString(accountUserContactID),
+		AccountID:            accountRec.ID,
+		AccountUserID:        accountUserRec.ID,
+		AccountUserContactID: nullstring.FromString(accountUserContactRec.ID),
 		SubscriptionType:     game_record.GameSubscriptionTypePlayer,
 		Status:               game_record.GameSubscriptionStatusActive,
 	})
@@ -450,9 +450,9 @@ func submitJoinHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Par
 		}
 
 		characterRec := &adventure_game_record.AdventureGameCharacter{
-			GameID:        gameSubscriptionRec.GameID,
-			AccountID:     accountID,
-			AccountUserID: accountUserID,
+			GameID:        gameRec.ID,
+			AccountID:     accountRec.ID,
+			AccountUserID: accountUserRec.ID,
 			Name:          characterName,
 		}
 		characterRec, err = mm.CreateAdventureGameCharacterRec(characterRec)
@@ -461,10 +461,10 @@ func submitJoinHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Par
 			return err
 		}
 
-		startingLocationInstanceID := findStartingLocationInstance(l, mm, gameSubscriptionRec.GameID, gameInstanceRec.ID)
+		startingLocationInstanceID := findStartingLocationInstance(l, mm, gameRec.ID, gameInstanceRec.ID)
 
 		characterInstanceRec := &adventure_game_record.AdventureGameCharacterInstance{
-			GameID:                          gameSubscriptionRec.GameID,
+			GameID:                          gameRec.ID,
 			GameInstanceID:                  gameInstanceRec.ID,
 			AdventureGameCharacterID:        characterRec.ID,
 			AdventureGameLocationInstanceID: startingLocationInstanceID,
@@ -479,6 +479,7 @@ func submitJoinHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Par
 
 		if err := mm.AssignStartingItemsToCharacterInstance(characterInstanceRec); err != nil {
 			l.Warn("failed to assign starting items >%v<", err)
+			return err
 		}
 
 		l.Info("created adventure game character >%s< and instance >%s<", characterRec.ID, characterInstanceRec.ID)
