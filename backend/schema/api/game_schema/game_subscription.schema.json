@@ -7,6 +7,9 @@
         "account_id": {
             "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
         },
+        "account_user_id": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
+        },
         "created_at": {
             "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/created_at"
         },
@@ -53,6 +56,7 @@
         "id",
         "game_id",
         "account_id",
+        "account_user_id",
         "subscription_type",
         "status",
         "created_at"

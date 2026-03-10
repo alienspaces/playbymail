@@ -15,7 +15,7 @@ type GameSubscriptionResponseData struct {
 	ID               string     `json:"id"`
 	GameID           string     `json:"game_id"`
 	AccountID        string     `json:"account_id"`
-	AccountUserID    *string    `json:"account_user_id,omitempty"`
+	AccountUserID    string     `json:"account_user_id"`
 	GameInstanceIDs  []string   `json:"game_instance_ids,omitempty"`
 	SubscriptionType string     `json:"subscription_type"`
 	InstanceLimit    *int32     `json:"instance_limit,omitempty"`

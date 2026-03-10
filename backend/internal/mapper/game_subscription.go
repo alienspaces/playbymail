@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"gitlab.com/alienspaces/playbymail/core/nullint32"
-	"gitlab.com/alienspaces/playbymail/core/nullstring"
 	"gitlab.com/alienspaces/playbymail/core/nulltime"
 	"gitlab.com/alienspaces/playbymail/core/server"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
@@ -25,16 +24,10 @@ func GameSubscriptionRequestToRecord(l logger.Logger, r *http.Request, rec *game
 	switch server.HttpMethod(r.Method) {
 	case server.HttpMethodPost:
 		rec.GameID = req.GameID
-		rec.AccountID = req.AccountID
-		rec.AccountUserID = nullstring.ToString(nullstring.FromStringPtr(req.AccountUserID))
-		rec.AccountUserContactID = nullstring.FromStringPtr(req.AccountUserContactID)
 		rec.SubscriptionType = req.SubscriptionType
 		rec.InstanceLimit = nullint32.FromInt32Ptr(req.InstanceLimit)
 	case server.HttpMethodPut, server.HttpMethodPatch:
 		rec.GameID = req.GameID
-		rec.AccountID = req.AccountID
-		rec.AccountUserID = nullstring.ToString(nullstring.FromStringPtr(req.AccountUserID))
-		rec.AccountUserContactID = nullstring.FromStringPtr(req.AccountUserContactID)
 		rec.SubscriptionType = req.SubscriptionType
 		rec.InstanceLimit = nullint32.FromInt32Ptr(req.InstanceLimit)
 	default:
@@ -51,7 +44,7 @@ func GameSubscriptionRecordToResponseData(l logger.Logger, rec *game_record.Game
 		ID:               rec.ID,
 		GameID:           rec.GameID,
 		AccountID:        rec.AccountID,
-		AccountUserID:    &rec.AccountUserID,
+		AccountUserID:    rec.AccountUserID,
 		GameInstanceIDs:  instanceIDs,
 		SubscriptionType: rec.SubscriptionType,
 		InstanceLimit:    instanceLimitPtr,
@@ -82,6 +75,7 @@ func GameSubscriptionViewRecordToResponseData(l logger.Logger, rec *game_record.
 		ID:               rec.ID,
 		GameID:           rec.GameID,
 		AccountID:        rec.AccountID,
+		AccountUserID:    rec.AccountUserID,
 		GameInstanceIDs:  rec.GameInstanceIDs,
 		SubscriptionType: rec.SubscriptionType,
 		InstanceLimit:    instanceLimitPtr,

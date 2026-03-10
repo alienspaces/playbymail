@@ -10,6 +10,7 @@ type GameSubscriptionInstanceRequest struct {
 type GameSubscriptionInstanceResponseData struct {
 	ID                      string     `json:"id"`
 	AccountID               string     `json:"account_id"`
+	AccountUserID           string     `json:"account_user_id"`
 	GameSubscriptionID      string     `json:"game_subscription_id"`
 	GameInstanceID          string     `json:"game_instance_id"`
 	TurnSheetTokenMasked    *string    `json:"turn_sheet_token_masked,omitempty"`

@@ -9,6 +9,7 @@ import (
 
 	coreerror "gitlab.com/alienspaces/playbymail/core/error"
 	"gitlab.com/alienspaces/playbymail/core/jsonschema"
+	"gitlab.com/alienspaces/playbymail/core/nullstring"
 	"gitlab.com/alienspaces/playbymail/core/queryparam"
 	"gitlab.com/alienspaces/playbymail/core/server"
 	coresql "gitlab.com/alienspaces/playbymail/core/sql"
@@ -347,6 +348,7 @@ func createGameSubscriptionHandler(w http.ResponseWriter, r *http.Request, pp ht
 	// Set account and account user from authenticated account (self-subscription)
 	rec.AccountID = authenData.AccountUser.AccountID
 	rec.AccountUserID = authenData.AccountUser.ID
+	rec.AccountUserContactID = nullstring.FromString(authenData.AccountUser.AccountUserContactID)
 
 	// Set status to active (self-subscription, no approval required)
 	rec.Status = game_record.GameSubscriptionStatusActive
@@ -376,12 +378,25 @@ func updateGameSubscriptionHandler(w http.ResponseWriter, r *http.Request, pp ht
 
 	mm := m.(*domain.Domain)
 
+	// Get authenticated account
+	authenData := server.GetRequestAuthenData(l, r)
+	if authenData == nil || authenData.AccountUser.ID == "" {
+		l.Warn("authenticated account is required")
+		return coreerror.NewUnauthorizedError()
+	}
+
 	recID := pp.ByName("game_subscription_id")
 
-	rec, err := mm.GetGameSubscriptionRec(recID, coresql.ForUpdateNoWait)
+	rec, err := mm.GetGameSubscriptionRec(recID, coresql.ForUpdate)
 	if err != nil {
 		l.Warn("failed to get game subscription record >%v<", err)
 		return err
+	}
+
+	// Check if authenticated account is the owner of the subscription
+	if rec.AccountID != authenData.AccountUser.AccountID || rec.AccountUserID != authenData.AccountUser.ID {
+		l.Warn("authenticated account >%s< is not the owner of the subscription >%s<", authenData.AccountUser.AccountID, rec.ID)
+		return coreerror.NewUnauthorizedError()
 	}
 
 	rec, err = mapper.GameSubscriptionRequestToRecord(l, r, rec)
@@ -424,12 +439,25 @@ func deleteGameSubscriptionHandler(w http.ResponseWriter, r *http.Request, pp ht
 
 	mm := m.(*domain.Domain)
 
+	// Get authenticated account
+	authenData := server.GetRequestAuthenData(l, r)
+	if authenData == nil || authenData.AccountUser.ID == "" {
+		l.Warn("authenticated account is required")
+		return coreerror.NewUnauthorizedError()
+	}
+
 	recID := pp.ByName("game_subscription_id")
 
-	rec, err := mm.GetGameSubscriptionRec(recID, coresql.ForUpdateNoWait)
+	rec, err := mm.GetGameSubscriptionRec(recID, coresql.ForUpdate)
 	if err != nil {
 		l.Warn("failed to get game subscription record >%v<", err)
 		return err
+	}
+
+	// Check if authenticated account is the owner of the subscription
+	if rec.AccountID != authenData.AccountUser.AccountID || rec.AccountUserID != authenData.AccountUser.ID {
+		l.Warn("authenticated account >%s< is not the owner of the subscription >%s<", authenData.AccountUser.AccountID, rec.ID)
+		return coreerror.NewUnauthorizedError()
 	}
 
 	if err := mm.DeleteGameSubscriptionRec(rec.ID); err != nil {

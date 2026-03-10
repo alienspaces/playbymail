@@ -49,6 +49,7 @@ func GameSubscriptionInstanceRecordToResponseData(l logger.Logger, rec *game_rec
 	return &game_schema.GameSubscriptionInstanceResponseData{
 		ID:                      rec.ID,
 		AccountID:               rec.AccountID,
+		AccountUserID:           rec.AccountUserID,
 		GameSubscriptionID:      rec.GameSubscriptionID,
 		GameInstanceID:          rec.GameInstanceID,
 		TurnSheetTokenMasked:    maskedToken,

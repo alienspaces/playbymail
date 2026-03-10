@@ -10,6 +10,9 @@
         "account_id": {
             "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
         },
+        "account_user_id": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
+        },
         "game_subscription_id": {
             "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
         },
@@ -38,6 +41,7 @@
     "required": [
         "id",
         "account_id",
+        "account_user_id",
         "game_subscription_id",
         "game_instance_id",
         "created_at"
