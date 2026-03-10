@@ -37,31 +37,6 @@ export async function cancelGameSubscription(subscriptionId) {
   return await res.json();
 }
 
-export async function linkGameInstanceToSubscription(subscriptionId, instanceId) {
-  const res = await apiFetch(`${baseUrl}/api/v1/game-subscriptions/${subscriptionId}/instances`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
-    body: JSON.stringify({
-      game_subscription_id: subscriptionId,
-      game_instance_id: instanceId,
-    }),
-  });
-  await handleApiError(res, 'Failed to link game instance to subscription');
-  return await res.json();
-}
-
-export async function unlinkGameInstanceFromSubscription(subscriptionId, instanceId) {
-  const res = await apiFetch(`${baseUrl}/api/v1/game-subscriptions/${subscriptionId}/instances/${instanceId}`, {
-    method: 'DELETE',
-    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
-  });
-  await handleApiError(res, 'Failed to unlink game instance from subscription');
-  if (res.status === 204) {
-    return null;
-  }
-  return await res.json();
-}
-
 export async function getSubscriptionInstances(subscriptionId) {
   const res = await apiFetch(`${baseUrl}/api/v1/game-subscriptions/${subscriptionId}`, {
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },

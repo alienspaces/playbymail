@@ -14,8 +14,6 @@ import {
   getMyGameSubscriptions,
   createGameSubscription,
   cancelGameSubscription,
-  linkGameInstanceToSubscription,
-  unlinkGameInstanceFromSubscription,
   getSubscriptionInstances,
 } from './gameSubscriptions'
 
@@ -86,40 +84,6 @@ describe('gameSubscriptions API', () => {
     it('returns null on 204 status', async () => {
       mockApiFetch.mockResolvedValue({ ok: true, status: 204 })
       const result = await cancelGameSubscription('s1')
-      expect(result).toBeNull()
-    })
-  })
-
-  describe('linkGameInstanceToSubscription', () => {
-    it('calls POST /api/v1/game-subscriptions/:subscriptionId/instances with body', async () => {
-      mockApiFetch.mockResolvedValue(mockJson({ data: {} }))
-      await linkGameInstanceToSubscription('s1', 'i1')
-      expect(mockApiFetch).toHaveBeenCalledWith(
-        'http://localhost:8080/api/v1/game-subscriptions/s1/instances',
-        expect.objectContaining({
-          method: 'POST',
-          body: JSON.stringify({
-            game_subscription_id: 's1',
-            game_instance_id: 'i1',
-          }),
-        })
-      )
-    })
-  })
-
-  describe('unlinkGameInstanceFromSubscription', () => {
-    it('calls DELETE /api/v1/game-subscriptions/:subscriptionId/instances/:instanceId', async () => {
-      mockApiFetch.mockResolvedValue(mockJson({}))
-      await unlinkGameInstanceFromSubscription('s1', 'i1')
-      expect(mockApiFetch).toHaveBeenCalledWith(
-        'http://localhost:8080/api/v1/game-subscriptions/s1/instances/i1',
-        expect.objectContaining({ method: 'DELETE' })
-      )
-    })
-
-    it('returns null on 204 status', async () => {
-      mockApiFetch.mockResolvedValue({ ok: true, status: 204 })
-      const result = await unlinkGameInstanceFromSubscription('s1', 'i1')
       expect(result).toBeNull()
     })
   })

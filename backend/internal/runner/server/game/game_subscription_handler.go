@@ -30,10 +30,8 @@ const (
 	CreateOneGameSubscription          = "create-one-game-subscription"
 	UpdateOneGameSubscription          = "update-one-game-subscription"
 	DeleteOneGameSubscription          = "delete-one-game-subscription"
-	ApproveGameSubscription            = "approve-game-subscription"
-	LinkGameInstanceToSubscription     = "link-game-instance-to-subscription"
-	UnlinkGameInstanceFromSubscription = "unlink-game-instance-from-subscription"
-	Invite                             = "invite"
+	ApproveGameSubscription = "approve-game-subscription"
+	Invite                  = "invite"
 )
 
 func gameSubscriptionHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error) {
@@ -164,68 +162,6 @@ func gameSubscriptionHandlerConfig(l logger.Logger) (map[string]server.HandlerCo
 			Description: "Approve a pending game subscription by verifying the email matches " +
 				"the subscription's account and updating the status to active. " +
 				"Requires email query parameter.",
-		},
-	}
-
-	instanceRequestSchema := jsonschema.SchemaWithReferences{
-		Main: jsonschema.Schema{
-			Location: "api/game_schema",
-			Name:     "game_subscription_instance.request.schema.json",
-		},
-		References: referenceSchemas,
-	}
-
-	instanceResponseSchema := jsonschema.SchemaWithReferences{
-		Main: jsonschema.Schema{
-			Location: "api/game_schema",
-			Name:     "game_subscription_instance.response.schema.json",
-		},
-		References: append(referenceSchemas, []jsonschema.Schema{
-			{
-				Location: "api/game_schema",
-				Name:     "game_subscription_instance.schema.json",
-			},
-		}...),
-	}
-
-	// Link instance to subscription
-	config[LinkGameInstanceToSubscription] = server.HandlerConfig{
-		Method:      http.MethodPost,
-		Path:        "/api/v1/game-subscriptions/:game_subscription_id/instances",
-		HandlerFunc: linkGameInstanceToSubscriptionHandler,
-		MiddlewareConfig: server.MiddlewareConfig{
-			AuthenTypes: []server.AuthenticationType{server.AuthenticationTypeToken},
-			AuthzPermissions: []server.AuthorizedPermission{
-				handler_auth.PermissionGameManagement,
-				handler_auth.PermissionGameDesign,
-			},
-			ValidateRequestSchema:  instanceRequestSchema,
-			ValidateResponseSchema: instanceResponseSchema,
-		},
-		DocumentationConfig: server.DocumentationConfig{
-			Document: true,
-			Title:    "Link game instance to subscription",
-			Description: "Link a game instance to a game subscription. " +
-				"Validates instance limit and that instance belongs to same game.",
-		},
-	}
-
-	// Unlink instance from subscription
-	config[UnlinkGameInstanceFromSubscription] = server.HandlerConfig{
-		Method:      http.MethodDelete,
-		Path:        "/api/v1/game-subscriptions/:game_subscription_id/instances/:game_instance_id",
-		HandlerFunc: unlinkGameInstanceFromSubscriptionHandler,
-		MiddlewareConfig: server.MiddlewareConfig{
-			AuthenTypes: []server.AuthenticationType{server.AuthenticationTypeToken},
-			AuthzPermissions: []server.AuthorizedPermission{
-				handler_auth.PermissionGameManagement,
-				handler_auth.PermissionGameDesign,
-			},
-		},
-		DocumentationConfig: server.DocumentationConfig{
-			Document:    true,
-			Title:       "Unlink game instance from subscription",
-			Description: "Remove the link between a game instance and a game subscription.",
 		},
 	}
 
@@ -524,46 +460,6 @@ func approveGameSubscriptionHandler(w http.ResponseWriter, r *http.Request, pp h
 	return server.WriteResponse(l, w, http.StatusOK, res)
 }
 
-func linkGameInstanceToSubscriptionHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
-	l = logging.LoggerWithFunctionContext(l, packageName, "linkGameInstanceToSubscriptionHandler")
-
-	l.Info("linking game instance to subscription with path params >%#v<", pp)
-
-	mm := m.(*domain.Domain)
-
-	subscriptionID := pp.ByName("game_subscription_id")
-	if subscriptionID == "" {
-		l.Warn("game subscription ID is required")
-		return coreerror.NewNotFoundError(game_record.TableGameSubscription, subscriptionID)
-	}
-
-	rec, err := mapper.GameSubscriptionInstanceRequestToRecord(l, r, &game_record.GameSubscriptionInstance{})
-	if err != nil {
-		l.Warn("failed to map game subscription instance request to record >%v<", err)
-		return err
-	}
-
-	// Override subscription ID from path
-	rec.GameSubscriptionID = subscriptionID
-
-	// Create the subscription-instance link (account_id will be derived from subscription in validation)
-	linkedRec, err := mm.CreateGameSubscriptionInstanceRec(rec)
-	if err != nil {
-		l.Warn("failed to create game subscription instance link >%v<", err)
-		return err
-	}
-
-	res, err := mapper.GameSubscriptionInstanceRecordToResponse(l, linkedRec)
-	if err != nil {
-		l.Warn("failed to map game subscription instance record to response >%v<", err)
-		return err
-	}
-
-	l.Info("responding with linked game subscription instance record id >%s<", linkedRec.ID)
-
-	return server.WriteResponse(l, w, http.StatusCreated, res)
-}
-
 func gameSubscriptionInviteHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = logging.LoggerWithFunctionContext(l, packageName, "gameSubscriptionInviteHandler")
 
@@ -628,52 +524,4 @@ func gameSubscriptionInviteHandler(w http.ResponseWriter, r *http.Request, pp ht
 	}
 
 	return nil
-}
-
-func unlinkGameInstanceFromSubscriptionHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
-	l = logging.LoggerWithFunctionContext(l, packageName, "unlinkGameInstanceFromSubscriptionHandler")
-
-	l.Info("unlinking game instance from subscription with path params >%#v<", pp)
-
-	mm := m.(*domain.Domain)
-
-	subscriptionID := pp.ByName("game_subscription_id")
-	if subscriptionID == "" {
-		l.Warn("game subscription ID is required")
-		return coreerror.NewNotFoundError(game_record.TableGameSubscription, subscriptionID)
-	}
-
-	instanceID := pp.ByName("game_instance_id")
-	if instanceID == "" {
-		l.Warn("game instance ID is required")
-		return coreerror.NewNotFoundError(game_record.TableGameInstance, instanceID)
-	}
-
-	// Find the subscription-instance link
-	recs, err := mm.GetManyGameSubscriptionInstanceRecs(&coresql.Options{
-		Params: []coresql.Param{
-			{Col: game_record.FieldGameSubscriptionInstanceGameSubscriptionID, Val: subscriptionID},
-			{Col: game_record.FieldGameSubscriptionInstanceGameInstanceID, Val: instanceID},
-		},
-		Limit: 1,
-	})
-	if err != nil {
-		l.Warn("failed to find game subscription instance link >%v<", err)
-		return err
-	}
-
-	if len(recs) == 0 {
-		return coreerror.NewNotFoundError(game_record.TableGameSubscriptionInstance,
-			"subscription_id="+subscriptionID+", instance_id="+instanceID)
-	}
-
-	// Delete the link
-	if err := mm.DeleteGameSubscriptionInstanceRec(recs[0].ID); err != nil {
-		l.Warn("failed to delete game subscription instance link >%v<", err)
-		return err
-	}
-
-	l.Info("unlinked game instance >%s< from subscription >%s<", instanceID, subscriptionID)
-
-	return server.WriteResponse(l, w, http.StatusNoContent, nil)
 }
