@@ -245,11 +245,8 @@ func (t *Testing) constructLocationChoiceScanData(turnSheetRec *game_record.Game
 	// Otherwise, use the first available option
 	chosenLocationID := choice.LocationInstanceID
 	if chosenLocationID == "" && len(locationChoiceData.LocationOptions) > 0 {
-		// Find the first valid location instance ID from the options
-		// We need to map from location IDs in options to location instance IDs
-		// For now, we'll use the LocationID from the first option as a fallback
-		// TODO: This needs to be more sophisticated - LocationOptions contain LocationID
-		// but we need LocationInstanceID. This is a limitation we need to address.
+		// Find the first valid location instance ID from the options.
+		// TODO: (agent) Confirm whether LocationOption.LocationID is already the location instance ID in this code path; if not, add a proper mapping from location ID to location instance ID for the game instance and use it here instead of the first option's LocationID.
 		l.Warn("no location instance ID specified, using first option")
 		if len(locationChoiceData.LocationOptions) > 0 {
 			// The LocationID in LocationOption is actually the location instance ID

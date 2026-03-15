@@ -456,9 +456,7 @@ func (dc *DataConfig) AppendGameInstanceConfigs(gameRef string, configs []GameIn
 	return fmt.Errorf("manager subscription config for game ref >%s< not found", gameRef)
 }
 
-// TODO: Possibly rename the following to AdventureGameDataConfig when additional game types are added
-
-// DefaultDataConfig
+// DefaultDataConfig returns default data config; currently adventure-game focused. Consider renaming to AdventureGameDataConfig when adding more game types.
 func DefaultDataConfig() DataConfig {
 	return DataConfig{
 		AccountConfigs: []AccountConfig{

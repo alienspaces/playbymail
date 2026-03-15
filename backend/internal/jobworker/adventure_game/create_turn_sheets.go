@@ -28,8 +28,7 @@ func (p *AdventureGame) CreateTurnSheets(ctx context.Context, gameInstanceRec *g
 		return nil, nil
 	}
 
-	// TODO: Wrap this all in a new database transaction so we can roll back
-	// changes for a single character if anything fails.
+	// TODO: (agent) Wrap each character's createCharacterTurnSheets in its own transaction (or the whole loop in one transaction with clear rollback semantics). Ensure job/runner transaction boundaries are respected and add tests for rollback on partial failure.
 
 	// Process turn sheets for each character
 	var errs []error

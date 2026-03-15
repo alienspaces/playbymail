@@ -1,6 +1,6 @@
 package domain_test
 
-// TODO: Fix tests
+// TODO: (agent) Re-enable and fix game subscription tests. Uncomment the harness-based tests and update setup to match current harness config and domain API. Run package tests and fix any breakage.
 
 // func TestApproveGameSubscription(t *testing.T) {
 

@@ -1,6 +1,6 @@
 package domain_test
 
-// TODO: Fix tests
+// TODO: (agent) Re-enable and fix adventure game validation tests. Uncomment the harness-based tests and update setup to match current harness.DataConfig and domain API. Run package tests and fix any breakage; ensure TestApproveGameSubscription and related cases pass.
 
 // func setupAdventureGameHarness(t *testing.T) (*harness.Testing, *domain.Domain) {
 // 	t.Helper()

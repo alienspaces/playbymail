@@ -181,9 +181,7 @@ func (w *GameSubscriptionProcessingWorker) initializeProcessors(l logger.Logger,
 	}
 	processors[game_record.GameTypeAdventure] = adventureProcessor
 
-	// TODO: Add new game type processors here
-	// Example: processors[game_record.GameTypeStrategy] = strategyProcessor
-	// Example: processors[game_record.GameTypePuzzle] = puzzleProcessor
+	// TODO: (agent) When adding a new game type: implement a subscription processor for it and register in initializeProcessors (e.g. processors[game_record.GameTypeX] = xProcessor).
 
 	return processors, nil
 }

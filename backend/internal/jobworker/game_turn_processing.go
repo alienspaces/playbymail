@@ -155,7 +155,7 @@ func (w *GameTurnProcessingWorker) DoWork(ctx context.Context, m *domain.Domain,
 		return nil, err
 	}
 
-	// TODO: Generate post run processing jobs such as notifications, etc.
+	// TODO: (agent) Add further post-run processing jobs if needed (e.g. non-email notifications). Email notifications for new turn sheets are already queued below when DeliveryEmail is set.
 
 	// Complete the turn
 	gameInstanceRec, err = m.CompleteTurn(j.Args.GameInstanceID)
@@ -203,9 +203,7 @@ func (w *GameTurnProcessingWorker) initializeProcessors(l logger.Logger, d *doma
 	}
 	processors[game_record.GameTypeAdventure] = adventureProcessor
 
-	// TODO: Add new game type processors here
-	// Example: processors[game_record.GameTypeStrategy] = strategyProcessor
-	// Example: processors[game_record.GameTypePuzzle] = puzzleProcessor
+	// TODO: (agent) When adding a new game type: implement a GameTurnProcessor for it, register it in initializeProcessors (e.g. processors[game_record.GameTypeX] = xProcessor), and add corresponding jobworker/adventure_game-style package if needed.
 
 	return processors, nil
 }

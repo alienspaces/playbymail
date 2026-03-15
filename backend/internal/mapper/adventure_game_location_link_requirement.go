@@ -39,7 +39,7 @@ func AdventureGameLocationLinkRequirementRecordToResponseData(l logger.Logger, r
 		ID:                 rec.ID,
 		GameID:             rec.GameID,
 		GameLocationLinkID: rec.AdventureGameLocationLinkID, // Map old field name to new
-		RequirementType:    "item",                          // TODO: This field doesn't exist in record, hardcoded for now
+		RequirementType:    "item", // RequirementType is always item for current schema; record has no type column yet.
 		RequirementValue:   rec.AdventureGameItemID,         // Map old field name to new
 		CreatedAt:          rec.CreatedAt,
 		UpdatedAt:          nulltime.ToTimePtr(rec.UpdatedAt),

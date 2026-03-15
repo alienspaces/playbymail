@@ -181,9 +181,8 @@ func (p *AdventureGameSubscriptionProcessingProcessor) getOrCreateGameInstance(g
 		}
 	}
 
-	// Try to find an instance with capacity (status created or started)
-	// For now, we'll use instances that are created or started and haven't reached required_player_count
-	// TODO: Add logic to check actual player count vs capacity if needed
+	// Try to find an instance with capacity (status created or started).
+	// Capacity is currently based on player subscription count; required_player_count or other rules can be added later if needed.
 	for _, instance := range activeInstances {
 		if instance.Status == game_record.GameInstanceStatusCreated || instance.Status == game_record.GameInstanceStatusStarted {
 			// Check if instance has capacity by counting player subscriptions

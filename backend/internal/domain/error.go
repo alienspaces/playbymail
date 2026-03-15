@@ -45,7 +45,7 @@ const (
 	ActionDelete = "delete"
 )
 
-// TODO: Move/revise these into core domain
+// TODO: (agent) If introducing a shared core domain package, move these error helpers (InternalInvalidArgumentOrProperty, RequiredField, InvalidField, Internal) there and have this package delegate. Otherwise leave as-is; they wrap coreerror for domain use.
 
 // Use for runtime errors where object properties are missing or function arguments are
 // missing. The error will be logged at warning log level using the provided logger.

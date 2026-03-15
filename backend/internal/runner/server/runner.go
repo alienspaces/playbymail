@@ -94,12 +94,6 @@ func NewRunner(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Cli
 	return &r, nil
 }
 
-// GetHandlerConfig returns the HandlerConfig map
-// TODO: The core runner equivalent method should work fine and this should be removed.
-func (r *Runner) GetHandlerConfig() map[string]server.HandlerConfig {
-	return r.HandlerConfig
-}
-
 // jobClientFunc returns a new job client instance.
 func (rnr *Runner) jobClientFunc(l logger.Logger, s storer.Storer) (*river.Client[pgx.Tx], error) {
 	l = l.WithFunctionContext("jobClientFunc")

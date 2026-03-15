@@ -41,7 +41,7 @@
           <p class="section-description">
             Basic instance settings. Game-specific parameters can be configured after the instance is created.
           </p>
-          <!-- TODO: Add basic instance configuration fields here (e.g., name, description) -->
+          <!-- TODO: (agent) Add optional instance name/description fields when the create-instance API supports them; include in instanceData in createInstance() and ensure backend/mapper accept and persist them. -->
         </div>
 
         <!-- Game Type Configuration Section - REMOVED -->

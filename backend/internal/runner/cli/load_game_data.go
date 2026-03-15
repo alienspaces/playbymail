@@ -272,8 +272,7 @@ func (rnr *Runner) removeGameByName(name string) error {
 	return nil
 }
 
-// TODO: This function is potentially brittle and should be implemented by a domain or harnessmethod
-// that has a test backing it.
+// TODO: (agent) Move this cascade into domain (e.g. domain.RemoveGameAndDependents(ctx, gameID)) and call it from here; add integration or harness tests that create a game with dependents, call the method, and assert full teardown. Remove this private helper once done.
 
 // removeGameAndDependents cascades removal of all records that belong to a
 // single game. The order mirrors the harness RemoveData teardown sequence.

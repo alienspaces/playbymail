@@ -16,7 +16,7 @@ func AdventureGameInstanceRecordToResponseData(l logger.Logger, rec *adventure_g
 	return &adventure_game_schema.AdventureGameInstanceResponseData{
 		ID:        rec.ID,
 		GameID:    rec.GameID,
-		AccountID: "", // TODO: This field doesn't exist in the record, needs to be added
+		AccountID: "", // TODO: (agent) Add account_id to game_instance (migration + record + domain), then set AccountID from rec here. If product decision is to not have instance owner, remove AccountID from API schema and this mapping instead.
 		Status:    rec.Status,
 		CreatedAt: rec.CreatedAt,
 		UpdatedAt: nulltime.ToTimePtr(rec.UpdatedAt),
@@ -62,7 +62,7 @@ func AdventureGameInstanceRequestToRecord(l logger.Logger, r *http.Request, rec 
 
 	switch server.HttpMethod(r.Method) {
 	case server.HttpMethodPost:
-		// TODO: AccountID field doesn't exist in record, needs to be added
+		// TODO: (agent) When account_id exists on game_instance record, map req or context account to rec.AccountID in request-to-record mapping.
 		if req.Status != "" {
 			rec.Status = req.Status
 		}
