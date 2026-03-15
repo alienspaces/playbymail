@@ -200,7 +200,7 @@ func (t *Testing) Teardown() error {
 
 	// If we are not committing data, we need to rollback the tx.
 	if !t.ShouldCommitData {
-		l.Info("Rolling back Tx")
+		l.Debug("Rolling back Tx")
 		err := t.RollbackTx()
 		if err != nil {
 			l.Warn("failed rolling back data >%v<", err)

@@ -39,7 +39,7 @@ func (t *Testing) processAccountConfig(accountConfig AccountConfig) (
 		// Apply account user record harness default values
 		accountUserRec = t.applyAccountUserRecDefaultValues(accountUserRec)
 
-		l.Info("creating account record with basic subscriptions for ref >%s<", accountConfig.Reference)
+		l.Debug("creating account record with basic subscriptions for ref >%s<", accountConfig.Reference)
 
 		// Upsert account creates or upodates an account, account user, account user contact and
 		// basic subscriptions records. If the account user contact or subscriptions are not provided,

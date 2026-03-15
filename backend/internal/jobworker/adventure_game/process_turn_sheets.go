@@ -58,7 +58,7 @@ func (p *AdventureGame) ProcessTurnSheets(ctx context.Context, gameInstanceRec *
 func (p *AdventureGame) processCharacterTurnSheets(ctx context.Context, gameInstanceRec *game_record.GameInstance, characterInstance *adventure_game_record.AdventureGameCharacterInstance) error {
 	l := p.Logger.WithFunctionContext("AdventureGame/processCharacterTurnSheets")
 
-	l.Info("processing turn sheets for character >%s< turn >%d<", characterInstance.ID, gameInstanceRec.CurrentTurn)
+	l.Debug("processing turn sheets for character >%s< turn >%d<", characterInstance.ID, gameInstanceRec.CurrentTurn)
 
 	// Get turn sheets for this character and turn
 	turnSheetRecs, err := p.getTurnSheetsForCharacter(characterInstance, gameInstanceRec.CurrentTurn)
@@ -90,7 +90,7 @@ func (p *AdventureGame) processCharacterTurnSheets(ctx context.Context, gameInst
 func (p *AdventureGame) processTurnSheet(ctx context.Context, gameInstanceRec *game_record.GameInstance, characterInstance *adventure_game_record.AdventureGameCharacterInstance, turnSheet *game_record.GameTurnSheet) error {
 	l := p.Logger.WithFunctionContext("AdventureGame/processTurnSheet")
 
-	l.Info("processing turn sheet >%s< type >%s< for character >%s<", turnSheet.ID, turnSheet.SheetType, characterInstance.ID)
+	l.Debug("processing turn sheet >%s< type >%s< for character >%s<", turnSheet.ID, turnSheet.SheetType, characterInstance.ID)
 
 	// Skip turn sheets without scanned data (not yet submitted by the player)
 	if len(turnSheet.ScannedData) == 0 {

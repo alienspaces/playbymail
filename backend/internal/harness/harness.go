@@ -103,7 +103,7 @@ func (t *Testing) CreateData() error {
 		return err
 	}
 
-	l.Info("created test data")
+	l.Debug("created test data")
 
 	return nil
 }
@@ -132,10 +132,10 @@ func (t *Testing) createAccounts() error {
 		allAccountSubscriptionRecs = append(allAccountSubscriptionRecs, accountSubscriptionRecs...)
 	}
 
-	l.Info("created >%d< account records", len(allAccountRecs))
-	l.Info("created >%d< account user records", len(allAccountUserRecs))
-	l.Info("created >%d< account user contact records", len(allAccountUserContactRecs))
-	l.Info("created >%d< account subscription records", len(allAccountSubscriptionRecs))
+	l.Debug("created >%d< account records", len(allAccountRecs))
+	l.Debug("created >%d< account user records", len(allAccountUserRecs))
+	l.Debug("created >%d< account user contact records", len(allAccountUserContactRecs))
+	l.Debug("created >%d< account subscription records", len(allAccountSubscriptionRecs))
 
 	return nil
 }
@@ -163,16 +163,16 @@ func (t *Testing) createGames() error {
 			return err
 		}
 
-		l.Info("created >%d< adventure game item records", len(adventureGameRecs.Items))
-		l.Info("created >%d< adventure game location records", len(adventureGameRecs.Locations))
-		l.Info("created >%d< adventure game creature records", len(adventureGameRecs.Creatures))
-		l.Info("created >%d< adventure game location link records", len(adventureGameRecs.LocationLinks))
-		l.Info("created >%d< adventure game location link requirement records", len(adventureGameRecs.LocationLinkRequirements))
-		l.Info("created >%d< adventure game character records", len(adventureGameRecs.Characters))
+		l.Debug("created >%d< adventure game item records", len(adventureGameRecs.Items))
+		l.Debug("created >%d< adventure game location records", len(adventureGameRecs.Locations))
+		l.Debug("created >%d< adventure game creature records", len(adventureGameRecs.Creatures))
+		l.Debug("created >%d< adventure game location link records", len(adventureGameRecs.LocationLinks))
+		l.Debug("created >%d< adventure game location link requirement records", len(adventureGameRecs.LocationLinkRequirements))
+		l.Debug("created >%d< adventure game character records", len(adventureGameRecs.Characters))
 	}
 
-	l.Info("created >%d< game records", len(allGameRecs))
-	l.Info("created >%d< game image records", len(allGameImageRecs))
+	l.Debug("created >%d< game records", len(allGameRecs))
+	l.Debug("created >%d< game image records", len(allGameImageRecs))
 
 	return nil
 }
@@ -206,7 +206,9 @@ func (t *Testing) createGameInstances() error {
 		}
 
 		for j := range subConfig.GameInstanceConfigs {
+
 			gameInstanceConfig := &subConfig.GameInstanceConfigs[j]
+
 			gameInstanceRec, err := t.createGameInstanceRec(*gameInstanceConfig, gameRec)
 			if err != nil {
 				l.Warn("failed creating game_instance record >%v<", err)
@@ -220,11 +222,13 @@ func (t *Testing) createGameInstances() error {
 			}
 
 			for _, playerSubRef := range gameInstanceConfig.PlayerSubscriptionRefs {
+
 				playerSubRec, err := t.Data.GetGameSubscriptionRecByRef(playerSubRef)
 				if err != nil {
 					l.Warn("failed getting player subscription by ref >%s< >%v<", playerSubRef, err)
 					return err
 				}
+
 				_, err = t.createGameSubscriptionInstanceRec(playerSubRec, gameInstanceRec)
 				if err != nil {
 					l.Warn("failed creating game_subscription_instance link for player >%s< >%v<", playerSubRef, err)
@@ -233,21 +237,25 @@ func (t *Testing) createGameInstances() error {
 			}
 
 			l.Debug("created game_instance record ID >%s< linked to manager subscription", gameInstanceRec.ID)
+
 			for _, ipc := range gameInstanceConfig.GameInstanceParameterConfigs {
 				if _, err := t.createGameInstanceParameterRec(ipc, gameInstanceRec); err != nil {
 					l.Warn("failed creating game_instance_parameter record >%v<", err)
 					return err
 				}
 			}
+
 			if err = t.createAdventureGameInstanceRecords(*gameConfig, *gameInstanceConfig, gameInstanceRec); err != nil {
 				l.Warn("failed creating adventure game instance records >%v<", err)
 				return err
 			}
+
 			count++
 		}
 	}
 
-	l.Info("created >%d< game instance records", count)
+	l.Debug("created >%d< game instance records", count)
+
 	return nil
 }
 

@@ -118,7 +118,7 @@ func (m *Domain) UpsertAccount(
 	}
 
 	if designerAccountSubscriptionRec == nil {
-		l.Warn("no basic game designer subscription found for account user >%s<", accountUserRec.ID)
+		l.Debug("no basic game designer subscription found for account user >%s<", accountUserRec.ID)
 
 		designerAccountSubscriptionRec, err = m.CreateAccountSubscriptionRec(&account_record.AccountSubscription{
 			AccountID:          nullstring.FromString(accountRec.ID),
@@ -141,7 +141,7 @@ func (m *Domain) UpsertAccount(
 	}
 
 	if managerAccountSubscriptionRec == nil {
-		l.Warn("no basic game manager subscription found for account user >%s<", accountUserRec.ID)
+		l.Debug("no basic game manager subscription found for account user >%s<", accountUserRec.ID)
 
 		managerAccountSubscriptionRec, err = m.CreateAccountSubscriptionRec(&account_record.AccountSubscription{
 			AccountID:          nullstring.FromString(accountRec.ID),
@@ -164,7 +164,7 @@ func (m *Domain) UpsertAccount(
 	}
 
 	if playerAccountSubscriptionRec == nil {
-		l.Warn("no basic player subscription found for account user >%s<", accountUserRec.ID)
+		l.Debug("no basic player subscription found for account user >%s<", accountUserRec.ID)
 
 		playerAccountSubscriptionRec, err = m.CreateAccountSubscriptionRec(&account_record.AccountSubscription{
 			AccountID:          nullstring.FromString(accountRec.ID),

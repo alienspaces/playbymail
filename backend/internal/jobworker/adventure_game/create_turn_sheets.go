@@ -59,7 +59,7 @@ func (p *AdventureGame) CreateTurnSheets(ctx context.Context, gameInstanceRec *g
 func (p *AdventureGame) createCharacterTurnSheets(ctx context.Context, gameInstanceRec *game_record.GameInstance, characterInstance *adventure_game_record.AdventureGameCharacterInstance) ([]*game_record.GameTurnSheet, error) {
 	l := p.Logger.WithFunctionContext("AdventureGame/processCharacterTurnSheets")
 
-	l.Info("creating turn sheets for game instance ID >%s< character instance ID >%s< turn number >%d<", gameInstanceRec.ID, characterInstance.ID, gameInstanceRec.CurrentTurn)
+	l.Debug("creating turn sheets for game instance ID >%s< character instance ID >%s< turn number >%d<", gameInstanceRec.ID, characterInstance.ID, gameInstanceRec.CurrentTurn)
 
 	var createdTurnSheets []*game_record.GameTurnSheet
 
@@ -79,7 +79,7 @@ func (p *AdventureGame) createCharacterTurnSheets(ctx context.Context, gameInsta
 			return nil, err
 		}
 
-		l.Info("created turn sheet >%s< for character instance ID >%s< turn sheet type >%s< turn number >%d<", turnSheetRec.ID, characterInstance.ID, turnSheetType, gameInstanceRec.CurrentTurn)
+		l.Debug("created turn sheet >%s< for character instance ID >%s< turn sheet type >%s< turn number >%d<", turnSheetRec.ID, characterInstance.ID, turnSheetType, gameInstanceRec.CurrentTurn)
 		createdTurnSheets = append(createdTurnSheets, turnSheetRec)
 	}
 
@@ -90,7 +90,7 @@ func (p *AdventureGame) createCharacterTurnSheets(ctx context.Context, gameInsta
 func (p *AdventureGame) createTurnSheet(ctx context.Context, gameInstanceRec *game_record.GameInstance, characterInstance *adventure_game_record.AdventureGameCharacterInstance, turnSheetType string) (*game_record.GameTurnSheet, error) {
 	l := p.Logger.WithFunctionContext("AdventureGame/createTurnSheet")
 
-	l.Info("creating turn sheet type >%s< for game instance ID >%s< character instance ID >%s<", turnSheetType, gameInstanceRec.ID, characterInstance.ID)
+	l.Debug("creating turn sheet type >%s< for game instance ID >%s< character instance ID >%s<", turnSheetType, gameInstanceRec.ID, characterInstance.ID)
 
 	// Get the appropriate processor for this sheet type
 	processor, exists := p.Processors[turnSheetType]

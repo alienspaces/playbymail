@@ -71,7 +71,7 @@ func (m *Domain) GetAccountSubscriptionRecByAccountUserID(accountUserID string, 
 		return recs[0], nil
 	}
 
-	l.Info("no account_subscription records found for account user ID >%s< and subscription type >%s<", accountUserID, subscriptionType)
+	l.Debug("no account_subscription records found for account user ID >%s< and subscription type >%s<", accountUserID, subscriptionType)
 
 	return nil, nil
 }
