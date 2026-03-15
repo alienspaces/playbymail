@@ -32,17 +32,10 @@ func NewCLI(l logger.Logger, s storer.Storer, r runnable.Runnable) (*CLI, error)
 
 // Init -
 func (cli *CLI) Init() error {
-
-	// TODO: alerting, retries
 	return cli.Runner.Init(cli.Store)
 }
 
 // Run -
 func (cli *CLI) Run(args map[string]interface{}) error {
-
-	// TODO:
-	// - alerting on errors
-	// - retries on start up
-	// - reload  on config changes
 	return cli.Runner.Run(args)
 }

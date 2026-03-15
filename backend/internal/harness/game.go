@@ -8,8 +8,10 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 )
 
-func (t *Testing) createGameRec(gameConfig GameConfig) (*game_record.Game, error) {
-	l := t.Logger("createGameRec")
+func (t *Testing) processGameConfig(gameConfig GameConfig) (*game_record.Game, []*game_record.GameImage, error) {
+	l := t.Logger("processGameConfig")
+
+	var allGameImageRecs []*game_record.GameImage
 
 	// Create a new record instance to avoid reusing the same record across tests
 	var rec *game_record.Game
@@ -17,8 +19,6 @@ func (t *Testing) createGameRec(gameConfig GameConfig) (*game_record.Game, error
 		// Copy the record to avoid modifying the original
 		recCopy := *gameConfig.Record
 		rec = &recCopy
-	} else {
-		rec = &game_record.Game{}
 	}
 
 	rec = t.applyGameRecDefaultValues(rec)
@@ -29,7 +29,7 @@ func (t *Testing) createGameRec(gameConfig GameConfig) (*game_record.Game, error
 	rec, err := t.Domain.(*domain.Domain).CreateGameRec(rec)
 	if err != nil {
 		l.Warn("failed creating game record >%v<", err)
-		return nil, err
+		return nil, nil, err
 	}
 
 	// Add to data store
@@ -43,27 +43,18 @@ func (t *Testing) createGameRec(gameConfig GameConfig) (*game_record.Game, error
 		t.Data.Refs.GameRefs[gameConfig.Reference] = rec.ID
 	}
 
-	// Create background image for game if specified (legacy support)
-	if gameConfig.BackgroundImagePath != "" {
-		_, err = t.createGameImageRecFromPath(rec.ID, "", gameConfig.BackgroundImagePath)
-		if err != nil {
-			l.Warn("failed creating game background image >%v<", err)
-			return nil, err
-		}
-		l.Debug("created game background image for game >%s<", rec.ID)
-	}
-
 	// Create game images from config
 	for _, imageConfig := range gameConfig.GameImageConfigs {
-		_, err = t.createGameImageRecFromConfig(rec.ID, imageConfig)
+		gameImageRec, err := t.processGameImageConfig(imageConfig, rec)
 		if err != nil {
-			l.Warn("failed creating game image from config >%v<", err)
-			return nil, err
+			l.Warn("failed processing game image config >%v<", err)
+			return nil, nil, err
 		}
 		l.Debug("created game image from config for game >%s<", rec.ID)
+		allGameImageRecs = append(allGameImageRecs, gameImageRec)
 	}
 
-	return rec, nil
+	return rec, allGameImageRecs, nil
 }
 
 func (t *Testing) applyGameRecDefaultValues(rec *game_record.Game) *game_record.Game {
@@ -80,7 +71,7 @@ func (t *Testing) applyGameRecDefaultValues(rec *game_record.Game) *game_record.
 	}
 
 	if rec.TurnDurationHours == 0 {
-		rec.TurnDurationHours = 168 // Default to 1 week
+		rec.TurnDurationHours = 48 // Default to 2 days
 	}
 
 	if rec.Description == "" {

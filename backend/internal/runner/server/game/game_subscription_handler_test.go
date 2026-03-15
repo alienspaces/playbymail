@@ -142,7 +142,7 @@ func Test_gameSubscriptionHandler(t *testing.T) {
 			HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 				return rnr.GetHandlerConfig()[game.GetManyGameSubscriptions]
 			},
-			RequestHeaders: testutil.AuthHeaderProManager,
+			RequestHeaders:  testutil.AuthHeaderProManager,
 			ResponseDecoder: collectionDecoder,
 			ResponseCode:    http.StatusOK,
 		},
@@ -154,7 +154,7 @@ func Test_gameSubscriptionHandler(t *testing.T) {
 			RequestHeaders: testutil.AuthHeaderProManager,
 			RequestBody: func(d harness.Data) any {
 				gameRec, _ := d.GetGameRecByRef(harness.GameOneRef)
-				accountRec, _ := d.GetAccountUserRecByRef(harness.ProManagerAccountRef)
+				accountRec, _ := d.GetAccountUserRecByRef(harness.AccountUserProManagerRef)
 				accountUserContactRec, _ := d.GetAccountUserContactRecByAccountUserID(accountRec.ID)
 				return game_schema.GameSubscriptionRequest{
 					GameID:               gameRec.ID,

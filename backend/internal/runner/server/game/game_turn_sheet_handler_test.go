@@ -43,7 +43,7 @@ func Test_uploadTurnSheetHandler(t *testing.T) {
 				{
 					GameTurnSheetConfig: harness.GameTurnSheetConfig{
 						Reference:        harness.GameTurnSheetOneRef,
-						AccountRef:       harness.StandardAccountRef,
+						AccountRef:       harness.AccountUserStandardRef,
 						SheetType:        adventure_game_record.AdventureGameTurnSheetTypeLocationChoice,
 						ProcessingStatus: game_record.TurnSheetProcessingStatusPending,
 					},
@@ -168,7 +168,7 @@ func Test_uploadTurnSheetHandler(t *testing.T) {
 					return []byte("fake-image-data")
 				},
 				RequestHeaders: func(d harness.Data) map[string]string {
-					headers := testutil.AuthHeaderByAccountRef(d, harness.StandardAccountRef)
+					headers := testutil.AuthHeaderByAccountRef(d, harness.AccountUserStandardRef)
 					headers["Content-Type"] = "image/jpeg"
 					return headers
 				},
@@ -224,7 +224,7 @@ func Test_uploadTurnSheetHandler(t *testing.T) {
 					return []byte("fake-image-data")
 				},
 				RequestHeaders: func(d harness.Data) map[string]string {
-					headers := testutil.AuthHeaderByAccountRef(d, harness.ProPlayerAccountRef)
+					headers := testutil.AuthHeaderByAccountRef(d, harness.AccountUserProPlayerRef)
 					headers["Content-Type"] = "image/jpeg"
 					return headers
 				},
@@ -290,7 +290,7 @@ func Test_uploadTurnSheetHandler(t *testing.T) {
 					return []byte("fake-image-data")
 				},
 				RequestHeaders: func(d harness.Data) map[string]string {
-					headers := testutil.AuthHeaderByAccountRef(d, harness.ProPlayerAccountRef)
+					headers := testutil.AuthHeaderByAccountRef(d, harness.AccountUserProPlayerRef)
 					headers["Content-Type"] = "image/jpeg"
 					return headers
 				},

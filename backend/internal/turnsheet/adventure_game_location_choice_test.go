@@ -363,3 +363,17 @@ func TestGenerateLocationChoiceFormatsForPrinting(t *testing.T) {
 		})
 	}
 }
+
+// TestLocationChoiceScanData_UnmarshalHTMLForm tests that scanned_data unmarshals
+// correctly for HTML form format (location_choice as string) and GetChoices() returns it.
+func TestLocationChoiceScanData_UnmarshalHTMLForm(t *testing.T) {
+	t.Parallel()
+
+	raw := []byte(`{"location_choice":"loc-next-1"}`)
+	var scanData turnsheet.LocationChoiceScanData
+	err := json.Unmarshal(raw, &scanData)
+	require.NoError(t, err)
+	choices := scanData.GetChoices()
+	require.Len(t, choices, 1)
+	require.Equal(t, "loc-next-1", choices[0])
+}

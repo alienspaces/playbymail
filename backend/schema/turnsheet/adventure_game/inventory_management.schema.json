@@ -1,0 +1,46 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "http://playbymail.games/schema/turnsheet/adventure_game/inventory_management.schema.json",
+    "title": "ScannedDataAdventureGameInventoryManagement",
+    "description": "scanned_data shape for turn sheet type adventure_game_inventory_management. equip may be array of item_instance_id strings (HTML form) or array of { item_instance_id, slot } objects.",
+    "type": "object",
+    "properties": {
+        "pick_up": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Item instance IDs to pick up from location"
+        },
+        "drop": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Item instance IDs to drop"
+        },
+        "unequip": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Item instance IDs to unequip (move to backpack)"
+        },
+        "equip": {
+            "oneOf": [
+                {
+                    "type": "array",
+                    "items": { "type": "string" },
+                    "description": "HTML form: item instance IDs to equip (backend assigns default slot)"
+                },
+                {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "item_instance_id": { "type": "string" },
+                            "slot": { "type": "string" }
+                        },
+                        "required": [ "item_instance_id", "slot" ]
+                    },
+                    "description": "Full format: item instance ID and slot name"
+                }
+            ]
+        }
+    },
+    "additionalProperties": true
+}

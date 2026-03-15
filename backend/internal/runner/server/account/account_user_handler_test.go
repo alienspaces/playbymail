@@ -37,7 +37,7 @@ func Test_getAccountUserHandler(t *testing.T) {
 	testCaseResponseDecoder := testutil.TestCaseResponseDecoderGeneric[account_schema.AccountUserResponse]
 
 	// accountUserRec IS the AccountUser record returned by GetAccountUserRecByRef
-	accountUserRec, err := th.Data.GetAccountUserRecByRef(harness.StandardAccountRef)
+	accountUserRec, err := th.Data.GetAccountUserRecByRef(harness.AccountUserStandardRef)
 	require.NoError(t, err, "GetAccountUserRecByRef returns without error")
 
 	testCases := []testCase{
@@ -166,7 +166,7 @@ func Test_createUpdateDeleteAccountUserHandler(t *testing.T) {
 	testCaseResponseDecoder := testutil.TestCaseResponseDecoderGeneric[account_schema.AccountUserResponse]
 
 	// accountUserRec IS the AccountUser; .AccountID is the parent account_record.Account ID
-	accountUserRec, err := th.Data.GetAccountUserRecByRef(harness.StandardAccountRef)
+	accountUserRec, err := th.Data.GetAccountUserRecByRef(harness.AccountUserStandardRef)
 	require.NoError(t, err, "GetAccountUserRecByRef returns without error")
 
 	testCases := []testCase{

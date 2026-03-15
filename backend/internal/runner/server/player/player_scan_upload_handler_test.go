@@ -42,7 +42,7 @@ func Test_uploadGameSubscriptionInstanceTurnSheetScanHandler(t *testing.T) {
 				},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
-						":game_subscription_instance_id": gsiIDForPlayer(t, d),
+						":game_subscription_instance_id": gameSubscriptionInstanceIDForPlayer(t, d),
 						":game_turn_sheet_id":            "00000000-0000-0000-0000-000000000000",
 					}
 				},
@@ -61,7 +61,7 @@ func Test_uploadGameSubscriptionInstanceTurnSheetScanHandler(t *testing.T) {
 				RequestHeaders: testutil.AuthHeaderProPlayer,
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
-						":game_subscription_instance_id": gsiIDForPlayer(t, d),
+						":game_subscription_instance_id": gameSubscriptionInstanceIDForPlayer(t, d),
 						":game_turn_sheet_id":            "00000000-0000-0000-0000-000000000000",
 					}
 				},

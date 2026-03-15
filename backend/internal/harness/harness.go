@@ -1,7 +1,6 @@
 package harness
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/jackc/pgx/v5"
@@ -12,6 +11,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
 	"gitlab.com/alienspaces/playbymail/core/type/storer"
 	"gitlab.com/alienspaces/playbymail/internal/domain"
+	"gitlab.com/alienspaces/playbymail/internal/record/account_record"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 	"gitlab.com/alienspaces/playbymail/internal/turnsheet"
 	"gitlab.com/alienspaces/playbymail/internal/utils/config"
@@ -83,227 +83,155 @@ func (t *Testing) CreateData() error {
 
 	l.Debug("creating test data")
 
-	if err := t.seedAccountRefs(); err != nil {
-		return err
-	}
-	if err := t.createAllAccountUsers(); err != nil {
-		return err
-	}
-	if err := t.createAllGames(); err != nil {
-		return err
-	}
-	if err := t.createDesignerSubscriptions(); err != nil {
-		return err
-	}
-	deferredLinks, err := t.createManagerSubscriptionsDeferred()
-	if err != nil {
-		return err
-	}
-	if err := t.createAllGameInstances(); err != nil {
-		return err
-	}
-	if err := t.linkDeferredManagerSubscriptions(deferredLinks); err != nil {
-		return err
-	}
-	if err := t.createPlayerSubscriptions(); err != nil {
+	if err := t.createAccounts(); err != nil {
+		l.Warn("failed creating accounts >%v<", err)
 		return err
 	}
 
-	l.Debug("created test data")
-
-	// Force commit to ensure data is visible to handlers running in separate transactions
-	if t.ShouldCommitData {
-		l.Info("forcing commit of harness data")
-		if err := t.CommitTx(); err != nil {
-			l.Warn("failed force commit >%v<", err)
-			return err
-		}
-
-		// Re-open transaction to satisfy callers expecting an open transaction (like Setup wrapper)
-		tx, err := t.InitTx()
-		if err != nil {
-			l.Warn("failed to re-init tx >%v<", err)
-			return err
-		}
-		l.Info("re-opened transaction for test harness")
-
-		// Verify game visibility
-		for _, gameID := range t.Data.Refs.GameRefs {
-			var count int
-			err := tx.QueryRow(context.Background(), "SELECT count(*) FROM game WHERE id = $1", gameID).Scan(&count)
-			if err != nil {
-				l.Warn("failed to query game count >%v<", err)
-			} else {
-				l.Info("VERIFICATION: Game ID >%s< Count >%d< (Should be 1)", gameID, count)
-			}
-		}
+	if err := t.createGames(); err != nil {
+		l.Warn("failed creating games >%v<", err)
+		return err
 	}
+
+	if err := t.createGameSubscriptions(); err != nil {
+		l.Warn("failed creating game subscriptions >%v<", err)
+		return err
+	}
+
+	if err := t.createGameInstances(); err != nil {
+		l.Warn("failed creating game instances >%v<", err)
+		return err
+	}
+
+	l.Info("created test data")
 
 	return nil
 }
 
-type deferredManagerLink struct {
-	config  GameSubscriptionConfig
-	subRec  *game_record.GameSubscription
-	gameRec *game_record.Game
-}
+func (t *Testing) createAccounts() error {
+	l := t.Logger("createAccounts")
 
-func (t *Testing) seedAccountRefs() error {
-	l := t.Logger("seedAccountRefs")
-	if len(t.DataConfig.SeedAccountRefs) == 0 {
-		return nil
-	}
-	dm, ok := t.Domain.(*domain.Domain)
-	if !ok {
-		return fmt.Errorf("domain type assertion failed while seeding account refs")
-	}
-	for ref, accountUserID := range t.DataConfig.SeedAccountRefs {
-		accountUserRec, err := dm.GetAccountUserRec(accountUserID, nil)
-		if err != nil {
-			return fmt.Errorf("failed fetching seeded account user >%s<: %w", accountUserID, err)
-		}
-		accountRec, err := dm.GetAccountRec(accountUserRec.AccountID, nil)
-		if err != nil {
-			return fmt.Errorf("failed fetching account record for account user reecord ID >%s<: %w", accountUserRec.AccountID, err)
-		}
-		t.Data.AddAccountUserRec(accountUserRec)
-		t.Data.AddAccountRec(accountRec)
-		t.Data.Refs.AccountUserRefs[ref] = accountUserID
-		l.Info("seeded account ref >%s< -> account user ID >%s<", ref, accountUserID)
-	}
-	return nil
-}
+	// Create all account, account user, account user contact, and account subscription records
+	var allAccountRecs []*account_record.Account
+	var allAccountUserRecs []*account_record.AccountUser
+	var allAccountUserContactRecs []*account_record.AccountUserContact
+	var allAccountSubscriptionRecs []*account_record.AccountSubscription
 
-func (t *Testing) createAllAccountUsers() error {
-	l := t.Logger("createAllAccountUsers")
 	for _, accountConfig := range t.DataConfig.AccountConfigs {
-		accountUserRec, err := t.createAccountUserRec(accountConfig)
+
+		// Create account, account user, account user contact, and account subscription records
+		accountRec, accountUserRecs, accountUserContactRecs, accountSubscriptionRecs, err := t.processAccountConfig(accountConfig)
 		if err != nil {
-			l.Warn("failed creating account record >%v<", err)
+			l.Warn("failed processing account config >%v<", err)
 			return err
 		}
-		l.Debug("created account record ID >%s< Email >%s<", accountUserRec.ID, accountUserRec.Email)
-		// Contact is already created by UpsertAccount inside createAccountUserRec and added to Data
+
+		allAccountRecs = append(allAccountRecs, accountRec)
+		allAccountUserRecs = append(allAccountUserRecs, accountUserRecs...)
+		allAccountUserContactRecs = append(allAccountUserContactRecs, accountUserContactRecs...)
+		allAccountSubscriptionRecs = append(allAccountSubscriptionRecs, accountSubscriptionRecs...)
 	}
+
+	l.Info("created >%d< account records", len(allAccountRecs))
+	l.Info("created >%d< account user records", len(allAccountUserRecs))
+	l.Info("created >%d< account user contact records", len(allAccountUserContactRecs))
+	l.Info("created >%d< account subscription records", len(allAccountSubscriptionRecs))
+
 	return nil
 }
 
-func (t *Testing) createAllGames() error {
-	l := t.Logger("createAllGames")
-	for i := range t.DataConfig.GameConfigs {
-		gameConfig := &t.DataConfig.GameConfigs[i]
-		gameRec, err := t.createGameRec(*gameConfig)
+func (t *Testing) createGames() error {
+	l := t.Logger("createGames")
+
+	var allGameRecs []*game_record.Game
+	var allGameImageRecs []*game_record.GameImage
+
+	for _, gameConfig := range t.DataConfig.GameConfigs {
+		gameRec, gameImageRecs, err := t.processGameConfig(gameConfig)
 		if err != nil {
-			l.Warn("failed creating game record >%v<", err)
+			l.Warn("failed processing game config >%v<", err)
 			return err
 		}
-		l.Debug("created game record ID >%s< Name >%s<", gameRec.ID, gameRec.Name)
-		err = t.createAdventureGameRecords(*gameConfig, gameRec)
+
+		allGameRecs = append(allGameRecs, gameRec)
+		allGameImageRecs = append(allGameImageRecs, gameImageRecs...)
+
+		// Process adventure game config
+		adventureGameRecs, err := t.processAdventureGameConfig(gameConfig, gameRec)
 		if err != nil {
-			l.Warn("failed creating adventure game records >%v<", err)
+			l.Warn("failed processing adventure game config >%v<", err)
 			return err
 		}
-		l.Debug("created adventure game records for game >%s<", gameRec.ID)
+
+		l.Info("created >%d< adventure game item records", len(adventureGameRecs.Items))
+		l.Info("created >%d< adventure game location records", len(adventureGameRecs.Locations))
+		l.Info("created >%d< adventure game creature records", len(adventureGameRecs.Creatures))
+		l.Info("created >%d< adventure game location link records", len(adventureGameRecs.LocationLinks))
+		l.Info("created >%d< adventure game location link requirement records", len(adventureGameRecs.LocationLinkRequirements))
+		l.Info("created >%d< adventure game character records", len(adventureGameRecs.Characters))
 	}
+
+	l.Info("created >%d< game records", len(allGameRecs))
+	l.Info("created >%d< game image records", len(allGameImageRecs))
+
 	return nil
 }
 
-func (t *Testing) createDesignerSubscriptions() error {
-	l := t.Logger("createDesignerSubscriptions")
-	for _, accountConfig := range t.DataConfig.AccountConfigs {
-		accountRec, err := t.Data.GetAccountUserRecByRef(accountConfig.Reference)
-		if err != nil {
-			return err
-		}
-		for _, sc := range accountConfig.GameSubscriptionConfigs {
-			if sc.SubscriptionType == game_record.GameSubscriptionTypeDesigner {
-				if _, err = t.createGameSubscriptionRec(sc, accountRec); err != nil {
-					l.Warn("failed creating nested designer subscription >%v<", err)
-					return err
-				}
-				l.Debug("created designer game_subscription for account >%s<", accountRec.ID)
-			}
-		}
-	}
-	for _, sc := range t.DataConfig.GameSubscriptionConfigs {
-		if sc.SubscriptionType != game_record.GameSubscriptionTypeDesigner {
+func (t *Testing) createGameInstances() error {
+	l := t.Logger("createGameInstances")
+
+	var count int
+	for _, subConfig := range t.DataConfig.AccountUserGameSubscriptionConfigs {
+		if subConfig.SubscriptionType != game_record.GameSubscriptionTypeManager || len(subConfig.GameInstanceConfigs) == 0 {
 			continue
 		}
-		accountRec, err := t.Data.GetAccountUserRecByRef(sc.AccountRef)
+
+		managerSubRec, err := t.Data.GetGameSubscriptionRecByRef(subConfig.Reference)
 		if err != nil {
+			l.Warn("failed getting manager subscription by ref >%s< >%v<", subConfig.Reference, err)
 			return err
 		}
-		if _, err = t.createGameSubscriptionRec(sc, accountRec); err != nil {
-			l.Warn("failed creating top-level designer subscription >%v<", err)
+
+		gameRec, err := t.Data.GetGameRecByRef(subConfig.GameRef)
+		if err != nil {
+			l.Warn("failed getting game record by reference >%s< >%v<", subConfig.GameRef, err)
 			return err
 		}
-		l.Debug("created top-level designer game_subscription for account >%s<", accountRec.ID)
-	}
-	return nil
-}
 
-func (t *Testing) createManagerSubscriptionsDeferred() ([]deferredManagerLink, error) {
-	l := t.Logger("createManagerSubscriptionsDeferred")
-	var links []deferredManagerLink
+		gameConfig := t.findGameConfigByRef(subConfig.GameRef)
+		if gameConfig == nil {
+			l.Warn("game config for ref >%s< not found", subConfig.GameRef)
+			return fmt.Errorf("game config for ref >%s< not found", subConfig.GameRef)
+		}
 
-	for _, accountConfig := range t.DataConfig.AccountConfigs {
-		accountRec, err := t.Data.GetAccountUserRecByRef(accountConfig.Reference)
-		if err != nil {
-			return nil, err
-		}
-		for _, sc := range accountConfig.GameSubscriptionConfigs {
-			if sc.SubscriptionType == game_record.GameSubscriptionTypeManager {
-				subRec, err := t.createGameSubscriptionRecOnly(sc, accountRec)
-				if err != nil {
-					l.Warn("failed creating nested manager subscription >%v<", err)
-					return nil, err
-				}
-				l.Debug("created manager game_subscription for account >%s<", accountRec.ID)
-				if len(sc.GameInstanceRefs) > 0 {
-					gameRec, _ := t.Data.GetGameRecByRef(sc.GameRef)
-					links = append(links, deferredManagerLink{sc, subRec, gameRec})
-				}
-			}
-		}
-	}
-	for _, sc := range t.DataConfig.GameSubscriptionConfigs {
-		if sc.SubscriptionType != game_record.GameSubscriptionTypeManager {
-			continue
-		}
-		accountRec, err := t.Data.GetAccountUserRecByRef(sc.AccountRef)
-		if err != nil {
-			return nil, err
-		}
-		subRec, err := t.createGameSubscriptionRecOnly(sc, accountRec)
-		if err != nil {
-			l.Warn("failed creating top-level manager subscription >%v<", err)
-			return nil, err
-		}
-		l.Debug("created top-level manager game_subscription for account >%s<", accountRec.ID)
-		if len(sc.GameInstanceRefs) > 0 {
-			gameRec, _ := t.Data.GetGameRecByRef(sc.GameRef)
-			links = append(links, deferredManagerLink{sc, subRec, gameRec})
-		}
-	}
-	return links, nil
-}
-
-func (t *Testing) createAllGameInstances() error {
-	l := t.Logger("createAllGameInstances")
-	for i := range t.DataConfig.GameConfigs {
-		gameConfig := &t.DataConfig.GameConfigs[i]
-		gameRec, err := t.Data.GetGameRecByRef(gameConfig.Reference)
-		if err != nil {
-			return err
-		}
-		for j := range gameConfig.GameInstanceConfigs {
-			gameInstanceConfig := &gameConfig.GameInstanceConfigs[j]
+		for j := range subConfig.GameInstanceConfigs {
+			gameInstanceConfig := &subConfig.GameInstanceConfigs[j]
 			gameInstanceRec, err := t.createGameInstanceRec(*gameInstanceConfig, gameRec)
 			if err != nil {
 				l.Warn("failed creating game_instance record >%v<", err)
 				return err
 			}
-			l.Debug("created game_instance record ID >%s<", gameInstanceRec.ID)
+
+			_, err = t.createGameSubscriptionInstanceRec(managerSubRec, gameInstanceRec)
+			if err != nil {
+				l.Warn("failed creating game_subscription_instance link >%v<", err)
+				return err
+			}
+
+			for _, playerSubRef := range gameInstanceConfig.PlayerSubscriptionRefs {
+				playerSubRec, err := t.Data.GetGameSubscriptionRecByRef(playerSubRef)
+				if err != nil {
+					l.Warn("failed getting player subscription by ref >%s< >%v<", playerSubRef, err)
+					return err
+				}
+				_, err = t.createGameSubscriptionInstanceRec(playerSubRec, gameInstanceRec)
+				if err != nil {
+					l.Warn("failed creating game_subscription_instance link for player >%s< >%v<", playerSubRef, err)
+					return err
+				}
+			}
+
+			l.Debug("created game_instance record ID >%s< linked to manager subscription", gameInstanceRec.ID)
 			for _, ipc := range gameInstanceConfig.GameInstanceParameterConfigs {
 				if _, err := t.createGameInstanceParameterRec(ipc, gameInstanceRec); err != nil {
 					l.Warn("failed creating game_instance_parameter record >%v<", err)
@@ -314,54 +242,20 @@ func (t *Testing) createAllGameInstances() error {
 				l.Warn("failed creating adventure game instance records >%v<", err)
 				return err
 			}
+			count++
 		}
 	}
+
+	l.Info("created >%d< game instance records", count)
 	return nil
 }
 
-func (t *Testing) linkDeferredManagerSubscriptions(links []deferredManagerLink) error {
-	l := t.Logger("linkDeferredManagerSubscriptions")
-	for i := range links {
-		link := &links[i]
-		if err := t.linkSubscriptionInstances(link.config, link.subRec, link.gameRec); err != nil {
-			l.Warn("failed linking deferred manager subscription instances >%v<", err)
-			return err
+// findGameConfigByRef returns the GameConfig with the given reference, or nil if not found.
+func (t *Testing) findGameConfigByRef(gameRef string) *GameConfig {
+	for i := range t.DataConfig.GameConfigs {
+		if t.DataConfig.GameConfigs[i].Reference == gameRef {
+			return &t.DataConfig.GameConfigs[i]
 		}
-		l.Debug("linked manager subscription >%s< to instances", link.subRec.ID)
-	}
-	return nil
-}
-
-func (t *Testing) createPlayerSubscriptions() error {
-	l := t.Logger("createPlayerSubscriptions")
-	for _, accountConfig := range t.DataConfig.AccountConfigs {
-		accountRec, err := t.Data.GetAccountUserRecByRef(accountConfig.Reference)
-		if err != nil {
-			return err
-		}
-		for _, sc := range accountConfig.GameSubscriptionConfigs {
-			if sc.SubscriptionType == game_record.GameSubscriptionTypePlayer {
-				if _, err = t.createGameSubscriptionRec(sc, accountRec); err != nil {
-					l.Warn("failed creating nested player subscription >%v<", err)
-					return err
-				}
-				l.Debug("created player game_subscription for account >%s<", accountRec.ID)
-			}
-		}
-	}
-	for _, sc := range t.DataConfig.GameSubscriptionConfigs {
-		if sc.SubscriptionType != game_record.GameSubscriptionTypePlayer {
-			continue
-		}
-		accountRec, err := t.Data.GetAccountUserRecByRef(sc.AccountRef)
-		if err != nil {
-			return err
-		}
-		if _, err = t.createGameSubscriptionRec(sc, accountRec); err != nil {
-			l.Warn("failed creating top-level player subscription >%v<", err)
-			return err
-		}
-		l.Debug("created top-level player game_subscription for account >%s<", accountRec.ID)
 	}
 	return nil
 }
@@ -382,6 +276,16 @@ func (t *Testing) RemoveData() error {
 		return err
 	}
 	l.Debug("removed adventure game instance records")
+
+	// Query and add any turn sheets for our instances to teardown so they are removed before game_instance.
+	for _, instanceRec := range t.teardownData.GameInstanceRecs {
+		if instanceRec.ID == "" {
+			continue
+		}
+		if err := t.EnsureGameTurnSheetsInTeardownForInstance(instanceRec.ID); err != nil {
+			l.Warn("failed ensuring game turn sheets in teardown for instance >%s< >%v<", instanceRec.ID, err)
+		}
+	}
 
 	// Remove game turn sheet records first (they reference game instances)
 	l.Debug("removing >%d< game turn sheet records", len(t.teardownData.GameTurnSheetRecs))
@@ -566,11 +470,4 @@ func (t *Testing) RemoveData() error {
 	l.Debug("removed test data")
 
 	return nil
-}
-
-// AddGameImageRecToTeardown adds a game image record to the teardown data store
-// so it will be cleaned up during teardown. This is useful for test cases that
-// create images in separate transactions.
-func (t *Testing) AddGameImageRecToTeardown(rec *game_record.GameImage) {
-	t.teardownData.AddGameImageRec(rec)
 }

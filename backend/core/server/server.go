@@ -6,8 +6,6 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/type/storer"
 )
 
-// TODO CX-??: Remove server
-
 // Server -
 type Server struct {
 	log    logger.Logger
@@ -34,8 +32,6 @@ func NewServer(l logger.Logger, s storer.Storer, r runnable.Runnable) (*Server, 
 
 // Init -
 func (svr *Server) Init() error {
-
-	// TODO: alerting, retries
 	return svr.runner.Init(svr.store)
 }
 

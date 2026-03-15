@@ -461,3 +461,34 @@ func TestGenerateInventoryManagementFormatsForPrinting(t *testing.T) {
 		})
 	}
 }
+
+// TestInventoryManagementScanData_UnmarshalHTMLFormEquip tests that scanned_data
+// unmarshals correctly for both HTML form format (equip as []string) and full format (equip as []EquipAction).
+func TestInventoryManagementScanData_UnmarshalHTMLFormEquip(t *testing.T) {
+	t.Parallel()
+
+	t.Run("HTML form format: equip as array of item IDs", func(t *testing.T) {
+		raw := []byte(`{"pick_up":["item-1"],"drop":[],"equip":["item-2","item-3"],"unequip":[]}`)
+		var scanData turnsheet.InventoryManagementScanData
+		err := json.Unmarshal(raw, &scanData)
+		require.NoError(t, err)
+		require.Len(t, scanData.Equip, 2)
+		require.Equal(t, "item-2", scanData.Equip[0].ItemInstanceID)
+		require.Equal(t, turnsheet.DefaultEquipSlot, scanData.Equip[0].Slot)
+		require.Equal(t, "item-3", scanData.Equip[1].ItemInstanceID)
+		require.Equal(t, turnsheet.DefaultEquipSlot, scanData.Equip[1].Slot)
+		require.Equal(t, []string{"item-1"}, scanData.PickUp)
+	})
+
+	t.Run("full format: equip as array of objects with slot", func(t *testing.T) {
+		raw := []byte(`{"equip":[{"item_instance_id":"item-a","slot":"armor"},{"item_instance_id":"item-b","slot":"weapon"}]}`)
+		var scanData turnsheet.InventoryManagementScanData
+		err := json.Unmarshal(raw, &scanData)
+		require.NoError(t, err)
+		require.Len(t, scanData.Equip, 2)
+		require.Equal(t, "item-a", scanData.Equip[0].ItemInstanceID)
+		require.Equal(t, "armor", scanData.Equip[0].Slot)
+		require.Equal(t, "item-b", scanData.Equip[1].ItemInstanceID)
+		require.Equal(t, "weapon", scanData.Equip[1].Slot)
+	})
+}

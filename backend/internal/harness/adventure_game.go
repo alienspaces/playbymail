@@ -4,21 +4,35 @@ import (
 	"context"
 	"fmt"
 
+	coresql "gitlab.com/alienspaces/playbymail/core/sql"
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 )
 
-// createAdventureGameRecords creates the adventure game records for a game
-func (t *Testing) createAdventureGameRecords(gameConfig GameConfig, gameRec *game_record.Game) error {
-	l := t.Logger("createAdventureGameRecords")
+// AdventureGameRecords holds all adventure game records created by processAdventureGameConfig.
+type AdventureGameRecords struct {
+	Items                    []*adventure_game_record.AdventureGameItem
+	Locations                 []*adventure_game_record.AdventureGameLocation
+	Creatures                 []*adventure_game_record.AdventureGameCreature
+	LocationLinks             []*adventure_game_record.AdventureGameLocationLink
+	LocationLinkRequirements []*adventure_game_record.AdventureGameLocationLinkRequirement
+	Characters                []*adventure_game_record.AdventureGameCharacter
+}
+
+// processAdventureGameConfig creates adventure game records from config and returns all created records.
+func (t *Testing) processAdventureGameConfig(gameConfig GameConfig, gameRec *game_record.Game) (*AdventureGameRecords, error) {
+	l := t.Logger("processAdventureGameConfig")
+
+	out := &AdventureGameRecords{}
 
 	for _, itemConfig := range gameConfig.AdventureGameItemConfigs {
-		_, err := t.createAdventureGameItemRec(itemConfig, gameRec)
+		itemRec, err := t.createAdventureGameItemRec(itemConfig, gameRec)
 		if err != nil {
 			l.Warn("failed creating game_item record >%v<", err)
-			return err
+			return nil, err
 		}
+		out.Items = append(out.Items, itemRec)
 		l.Debug("created game_item record for game >%s<", gameRec.ID)
 	}
 
@@ -26,16 +40,22 @@ func (t *Testing) createAdventureGameRecords(gameConfig GameConfig, gameRec *gam
 		gameLocationRec, err := t.createAdventureGameLocationRec(locationConfig, gameRec)
 		if err != nil {
 			l.Warn("failed creating game location record >%v<", err)
-			return err
+			return nil, err
 		}
+		out.Locations = append(out.Locations, gameLocationRec)
 		l.Debug("created game location record ID >%s< Name >%s<", gameLocationRec.ID, gameLocationRec.Name)
 
 		// Create background image for location if specified
-		if locationConfig.BackgroundImagePath != "" {
-			_, err = t.createGameImageRecFromPath(gameRec.ID, gameLocationRec.ID, locationConfig.BackgroundImagePath)
+		if locationConfig.BackgroundImage != nil {
+			cfg := *locationConfig.BackgroundImage
+			cfg.RecordID = gameLocationRec.ID
+			if cfg.TurnSheetType == "" {
+				cfg.TurnSheetType = adventure_game_record.AdventureGameTurnSheetTypeLocationChoice
+			}
+			_, err = t.processGameImageConfig(cfg, gameRec)
 			if err != nil {
 				l.Warn("failed creating location background image >%v<", err)
-				return err
+				return nil, err
 			}
 			l.Debug("created location background image for location >%s<", gameLocationRec.ID)
 		}
@@ -45,8 +65,9 @@ func (t *Testing) createAdventureGameRecords(gameConfig GameConfig, gameRec *gam
 		creatureRec, err := t.createAdventureGameCreatureRec(creatureConfig, gameRec)
 		if err != nil {
 			l.Warn("failed creating game creature record >%v<", err)
-			return err
+			return nil, err
 		}
+		out.Creatures = append(out.Creatures, creatureRec)
 		l.Debug("created game creature record ID >%s< Name >%s<", creatureRec.ID, creatureRec.Name)
 	}
 
@@ -54,30 +75,33 @@ func (t *Testing) createAdventureGameRecords(gameConfig GameConfig, gameRec *gam
 		gameLocationLinkRec, err := t.createAdventureGameLocationLinkRec(linkConfig, gameRec)
 		if err != nil {
 			l.Warn("failed creating location link record >%v<", err)
-			return err
+			return nil, err
 		}
+		out.LocationLinks = append(out.LocationLinks, gameLocationLinkRec)
 		l.Debug("created location link record ID >%s<", gameLocationLinkRec.ID)
 
 		for _, reqConfig := range linkConfig.AdventureGameLocationLinkRequirementConfigs {
-			_, err = t.createAdventureGameLocationLinkRequirementRec(reqConfig, gameLocationLinkRec)
+			reqRec, err := t.createAdventureGameLocationLinkRequirementRec(reqConfig, gameLocationLinkRec)
 			if err != nil {
 				l.Warn("failed creating game_location_link_requirement record >%v<", err)
-				return err
+				return nil, err
 			}
+			out.LocationLinkRequirements = append(out.LocationLinkRequirements, reqRec)
 			l.Debug("created game_location_link_requirement record for game >%s<", gameRec.ID)
 		}
 	}
 
 	for _, charConfig := range gameConfig.AdventureGameCharacterConfigs {
-		_, err := t.createAdventureGameCharacterRec(charConfig, gameRec)
+		charRec, err := t.createAdventureGameCharacterRec(charConfig, gameRec)
 		if err != nil {
 			l.Warn("failed creating game_character record >%v<", err)
-			return err
+			return nil, err
 		}
+		out.Characters = append(out.Characters, charRec)
 		l.Debug("created game_character record for game >%s<", gameRec.ID)
 	}
 
-	return nil
+	return out, nil
 }
 
 // createAdventureGameInstanceRecords creates the adventure game instance records for a game instance
@@ -170,10 +194,6 @@ func (t *Testing) createAdventureGameInstanceRecords(gameConfig GameConfig, game
 	turnSheetsCache := map[int][]*game_record.GameTurnSheet{}
 	if len(turnSheets) > 0 {
 		turnSheetsCache[turnSheets[0].TurnNumber] = turnSheets
-		if err := t.addAdventureGameTurnSheetLinksToTeardown(turnSheets); err != nil {
-			l.Warn("failed adding initial turn sheet links to teardown >%v<", err)
-			return err
-		}
 	}
 
 	// If the first configured turn is after the initial turn (0), process earlier turns so those sheets exist.
@@ -239,6 +259,12 @@ func (t *Testing) createAdventureGameInstanceRecords(gameConfig GameConfig, game
 			}
 			turnSheetsCache[nextTurn] = nextSheets
 		}
+	}
+
+	// Ensure all turn sheets for this instance are in teardown (catches any created by turn processing or other paths).
+	if err := t.EnsureGameTurnSheetsInTeardownForInstance(gameInstanceRec.ID); err != nil {
+		l.Warn("failed ensuring game turn sheets in teardown for instance >%s< >%v<", gameInstanceRec.ID, err)
+		return err
 	}
 
 	return nil
@@ -362,6 +388,29 @@ func (t *Testing) removeAdventureGameInstanceRecords() error {
 		if err != nil {
 			l.Warn("failed removing adventure game turn sheet record >%v<", err)
 			return err
+		}
+	}
+
+	// Remove any remaining adventure_game_turn_sheet links that reference our character instances
+	// (in case some were created but not added to teardown, e.g. by turn processing)
+	dom := t.Domain.(*domain.Domain)
+	for _, characterInstanceRec := range t.teardownData.AdventureGameCharacterInstanceRecs {
+		if characterInstanceRec.ID == "" {
+			continue
+		}
+		linkRecs, err := dom.GetManyAdventureGameTurnSheetRecs(&coresql.Options{
+			Params: []coresql.Param{
+				{Col: adventure_game_record.FieldAdventureGameTurnSheetAdventureGameCharacterInstanceID, Val: characterInstanceRec.ID},
+			},
+		})
+		if err != nil {
+			l.Warn("failed getting adventure game turn sheet links for character instance >%s< >%v<", characterInstanceRec.ID, err)
+			continue
+		}
+		for _, linkRec := range linkRecs {
+			if err := dom.RemoveAdventureGameTurnSheetRec(linkRec.ID); err != nil {
+				l.Warn("failed removing adventure game turn sheet link >%s< >%v<", linkRec.ID, err)
+			}
 		}
 	}
 

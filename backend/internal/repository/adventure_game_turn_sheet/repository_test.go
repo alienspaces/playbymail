@@ -35,7 +35,7 @@ func TestCreateOne(t *testing.T) {
 				// Create a game turn sheet first
 				gameInstanceRec, err := d.GetGameInstanceRecByRef(harness.GameInstanceOneRef)
 				require.NoError(t, err, "GetGameInstanceRecByRef returns without error")
-				accountRec, err := d.GetAccountUserRecByRef(harness.StandardAccountRef)
+				accountRec, err := d.GetAccountUserRecByRef(harness.AccountUserStandardRef)
 				require.NoError(t, err, "GetAccountUserRecByRef returns without error")
 
 				gameTurnSheetRec := &game_record.GameTurnSheet{
@@ -74,7 +74,7 @@ func TestCreateOne(t *testing.T) {
 				// Create a game turn sheet first
 				gameInstanceRec, err := d.GetGameInstanceRecByRef(harness.GameInstanceOneRef)
 				require.NoError(t, err, "GetGameInstanceRecByRef returns without error")
-				accountRec, err := d.GetAccountUserRecByRef(harness.StandardAccountRef)
+				accountRec, err := d.GetAccountUserRecByRef(harness.AccountUserStandardRef)
 				require.NoError(t, err, "GetAccountUserRecByRef returns without error")
 
 				gameTurnSheetRec := &game_record.GameTurnSheet{
@@ -157,7 +157,7 @@ func TestGetOne(t *testing.T) {
 
 				gameInstanceRec, err := d.GetGameInstanceRecByRef(harness.GameInstanceOneRef)
 				require.NoError(t, err, "GetGameInstanceRecByRef returns without error")
-				accountRec, err := d.GetAccountUserRecByRef(harness.StandardAccountRef)
+				accountRec, err := d.GetAccountUserRecByRef(harness.AccountUserStandardRef)
 				require.NoError(t, err, "GetAccountUserRecByRef returns without error")
 
 				gameTurnSheetRec := &game_record.GameTurnSheet{
@@ -250,7 +250,7 @@ func TestDeleteOne(t *testing.T) {
 
 				gameInstanceRec, err := d.GetGameInstanceRecByRef(harness.GameInstanceOneRef)
 				require.NoError(t, err, "GetGameInstanceRecByRef returns without error")
-				accountRec, err := d.GetAccountUserRecByRef(harness.StandardAccountRef)
+				accountRec, err := d.GetAccountUserRecByRef(harness.AccountUserStandardRef)
 				require.NoError(t, err, "GetAccountUserRecByRef returns without error")
 
 				gameTurnSheetRec := &game_record.GameTurnSheet{

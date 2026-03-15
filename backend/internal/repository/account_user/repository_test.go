@@ -25,7 +25,7 @@ func TestCreateOne(t *testing.T) {
 		{
 			name: "Without ID",
 			rec: func(d harness.Data, t *testing.T) *account_record.AccountUser {
-				existing, err := d.GetAccountUserRecByRef(harness.StandardAccountRef)
+				existing, err := d.GetAccountUserRecByRef(harness.AccountUserStandardRef)
 				require.NoError(t, err)
 
 				return &account_record.AccountUser{
@@ -39,7 +39,7 @@ func TestCreateOne(t *testing.T) {
 		{
 			name: "With ID",
 			rec: func(d harness.Data, t *testing.T) *account_record.AccountUser {
-				existing, err := d.GetAccountUserRecByRef(harness.StandardAccountRef)
+				existing, err := d.GetAccountUserRecByRef(harness.AccountUserStandardRef)
 				require.NoError(t, err)
 
 				rec := &account_record.AccountUser{
@@ -97,7 +97,7 @@ func TestGetOne(t *testing.T) {
 		{
 			name: "With ID",
 			id: func(d harness.Data, t *testing.T) string {
-				accRec, err := d.GetAccountUserRecByRef(harness.StandardAccountRef)
+				accRec, err := d.GetAccountUserRecByRef(harness.AccountUserStandardRef)
 				require.NoError(t, err, "GetAccountUserRecByRef returns without error")
 				return accRec.ID
 			},
@@ -153,7 +153,7 @@ func TestUpdateOne(t *testing.T) {
 		{
 			name: "With ID",
 			rec: func(d harness.Data, t *testing.T) *account_record.AccountUser {
-				accRec, err := d.GetAccountUserRecByRef(harness.StandardAccountRef)
+				accRec, err := d.GetAccountUserRecByRef(harness.AccountUserStandardRef)
 				require.NoError(t, err, "GetAccountUserRecByRef returns without error")
 				return accRec
 			},
@@ -162,7 +162,7 @@ func TestUpdateOne(t *testing.T) {
 		{
 			name: "Without ID",
 			rec: func(d harness.Data, t *testing.T) *account_record.AccountUser {
-				accRec, err := d.GetAccountUserRecByRef(harness.StandardAccountRef)
+				accRec, err := d.GetAccountUserRecByRef(harness.AccountUserStandardRef)
 				require.NoError(t, err, "GetAccountUserRecByRef returns without error")
 				rec := accRec
 				rec.ID = ""
@@ -214,7 +214,7 @@ func TestDeleteOne(t *testing.T) {
 		{
 			name: "With ID",
 			id: func(d harness.Data, t *testing.T) string {
-				accRec, err := d.GetAccountUserRecByRef(harness.StandardAccountRef)
+				accRec, err := d.GetAccountUserRecByRef(harness.AccountUserStandardRef)
 				require.NoError(t, err, "GetAccountUserRecByRef returns without error")
 				return accRec.ID
 			},

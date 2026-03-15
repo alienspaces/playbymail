@@ -52,6 +52,9 @@ func (d *LocationChoiceScanData) GetChoices() []string {
 	return nil
 }
 
+// LocationChoiceScannedDataSchemaName is the filename of the JSON schema for location choice scanned_data (under schema/turnsheet/adventure_game/).
+const LocationChoiceScannedDataSchemaName = "location_choice.schema.json"
+
 const defaultLocationChoiceInstructions = "Select your next location and return this form by the deadline to continue your adventure."
 
 // DefaultLocationChoiceInstructions returns the default instruction text for location choice turn sheets.

@@ -433,9 +433,11 @@ func saveGameSubscriptionInstanceTurnSheetHandler(w http.ResponseWriter, r *http
 		return coreerror.NewInvalidDataError("turn sheet is already completed and cannot be modified")
 	}
 
+	// Read request body
 	var req struct {
-		ScannedData map[string]interface{} `json:"scanned_data"`
+		ScannedData map[string]any `json:"scanned_data"`
 	}
+
 	if _, err := server.ReadRequest(l, r, &req); err != nil {
 		l.Warn("failed reading request >%v<", err)
 		return err
@@ -445,6 +447,21 @@ func saveGameSubscriptionInstanceTurnSheetHandler(w http.ResponseWriter, r *http
 	if err != nil {
 		l.Warn("failed to marshal scanned data >%v<", err)
 		return coreerror.NewInvalidDataError("invalid scanned_data format")
+	}
+
+	// Validate scanned_data against per-sheet-type schema when one is defined
+	if schemaName := turnsheet.ScannedDataSchemaName(turnSheetRec.SheetType); schemaName != "" {
+		schema := jsonschema.SchemaWithReferences{
+			Main: jsonschema.Schema{
+				Location: turnsheet.ScannedDataSchemaLocation,
+				Name:     schemaName,
+			},
+		}
+		schema = jsonschema.ResolveSchemaLocation(mm.Config().SchemaPath, schema)
+		if err := jsonschema.ValidateJSON(schema, scannedDataBytes); err != nil {
+			l.Warn("scanned_data validation failed for sheet type >%s< >%v<", turnSheetRec.SheetType, err)
+			return coreerror.NewInvalidDataError("invalid scanned_data for this turn sheet type: %s", err.Error())
+		}
 	}
 
 	turnSheetRec.ScannedData = scannedDataBytes

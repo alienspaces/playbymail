@@ -30,8 +30,8 @@ func Test_adventureGameCharacterHandler(t *testing.T) {
 	gameRec, err := th.Data.GetGameRecByRef(harness.GameOneRef)
 	require.NoError(t, err, "GetGameRecByRef returns without error")
 
-	accountRec, err := th.Data.GetAccountUserRecByRef(harness.ProDesignerAccountRef)
-	require.NoError(t, err, "GetAccountUserRecByRef(ProDesignerAccountRef) returns without error")
+	accountRec, err := th.Data.GetAccountUserRecByRef(harness.AccountUserProDesignerRef)
+	require.NoError(t, err, "GetAccountUserRecByRef(AccountUserProDesignerRef) returns without error")
 
 	charRec, err := th.Data.GetAdventureGameCharacterRecByRef(harness.GameCharacterOneRef)
 	require.NoError(t, err, "GetGameCharacterRecByRef returns without error")
@@ -68,7 +68,7 @@ func Test_adventureGameCharacterHandler(t *testing.T) {
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[adventure_game.CreateOneAdventureGameCharacter]
 				},
-			RequestHeaders: testutil.AuthHeaderProDesigner,
+				RequestHeaders: testutil.AuthHeaderProDesigner,
 				RequestBody: func(d harness.Data) any {
 					return adventure_game_schema.AdventureGameCharacterRequest{
 						AccountID:     accountRec.AccountID,

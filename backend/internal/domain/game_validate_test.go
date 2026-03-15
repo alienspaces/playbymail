@@ -19,9 +19,14 @@ func TestCreateGameRec_Validation(t *testing.T) {
 		AccountConfigs: []harness.AccountConfig{
 			{
 				Reference: "test-account",
-				Record: &account_record.AccountUser{
-					Email:  harness.UniqueEmail("game-test@example.com"),
-					Status: account_record.AccountUserStatusActive,
+				AccountUserConfigs: []harness.AccountUserConfig{
+					{
+						Reference: "test-account-user",
+						Record: &account_record.AccountUser{
+							Email:  harness.UniqueEmail("game-test@example.com"),
+							Status: account_record.AccountUserStatusActive,
+						},
+					},
 				},
 			},
 		},
@@ -176,9 +181,14 @@ func TestUpdateGameRec_StatusTransitions(t *testing.T) {
 		AccountConfigs: []harness.AccountConfig{
 			{
 				Reference: "test-account",
-				Record: &account_record.AccountUser{
-					Email:  harness.UniqueEmail("status-test@example.com"),
-					Status: account_record.AccountUserStatusActive,
+				AccountUserConfigs: []harness.AccountUserConfig{
+					{
+						Reference: "test-account-user",
+						Record: &account_record.AccountUser{
+							Email:  harness.UniqueEmail("status-test@example.com"),
+							Status: account_record.AccountUserStatusActive,
+						},
+					},
 				},
 			},
 		},
@@ -308,9 +318,14 @@ func TestValidateGameReadyForInstance(t *testing.T) {
 		AccountConfigs: []harness.AccountConfig{
 			{
 				Reference: "test-account",
-				Record: &account_record.AccountUser{
-					Email:  harness.UniqueEmail("ready-test@example.com"),
-					Status: account_record.AccountUserStatusActive,
+				AccountUserConfigs: []harness.AccountUserConfig{
+					{
+						Reference: "test-account-user",
+						Record: &account_record.AccountUser{
+							Email:  harness.UniqueEmail("ready-test@example.com"),
+							Status: account_record.AccountUserStatusActive,
+						},
+					},
 				},
 			},
 		},

@@ -10,6 +10,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 	"gitlab.com/alienspaces/playbymail/internal/repository/account"
 	"gitlab.com/alienspaces/playbymail/internal/repository/account_contact"
+	"gitlab.com/alienspaces/playbymail/internal/repository/account_game_view"
 	"gitlab.com/alienspaces/playbymail/internal/repository/account_subscription"
 	"gitlab.com/alienspaces/playbymail/internal/repository/account_user"
 	"gitlab.com/alienspaces/playbymail/internal/repository/adventure_game_character"
@@ -25,9 +26,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/repository/adventure_game_location_link"
 	"gitlab.com/alienspaces/playbymail/internal/repository/adventure_game_location_link_requirement"
 	"gitlab.com/alienspaces/playbymail/internal/repository/adventure_game_turn_sheet"
-	"gitlab.com/alienspaces/playbymail/internal/repository/account_game_view"
 	"gitlab.com/alienspaces/playbymail/internal/repository/catalog_game_instance_view"
-	"gitlab.com/alienspaces/playbymail/internal/repository/manager_game_instance_view"
 	"gitlab.com/alienspaces/playbymail/internal/repository/game"
 	"gitlab.com/alienspaces/playbymail/internal/repository/game_image"
 	"gitlab.com/alienspaces/playbymail/internal/repository/game_instance"
@@ -36,6 +35,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/repository/game_subscription_instance"
 	"gitlab.com/alienspaces/playbymail/internal/repository/game_subscription_view"
 	"gitlab.com/alienspaces/playbymail/internal/repository/game_turn_sheet"
+	"gitlab.com/alienspaces/playbymail/internal/repository/manager_game_instance_view"
 	"gitlab.com/alienspaces/playbymail/internal/utils/config"
 )
 
@@ -249,10 +249,6 @@ func (m *Domain) GameImageRepository() *repository.Generic[game_record.GameImage
 func (m *Domain) Logger(functionName string) logger.Logger {
 	return m.Log.WithFunctionContext(functionName)
 }
-
-// TODO: The player turn sheet handler is the only place we are accessing the config from the domain
-// object. Perhaps config should be passed in as a parameter to the handler as an argument consistently
-// before the logger and this method removed.
 
 // Config - Returns the domain configuration
 func (m *Domain) Config() config.Config {

@@ -1,6 +1,7 @@
 package test_data
 
 import (
+	"gitlab.com/alienspaces/playbymail/core/convert"
 	"gitlab.com/alienspaces/playbymail/core/nullstring"
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/harness"
@@ -20,88 +21,206 @@ const (
 	// Desert Kingdom images
 	ImageDesertJoinGame  = "desert-join-game.jpg"
 	ImageDesertInventory = "desert-inventory.jpg"
-	// No game-level location choice image: location choice sheets use the current location's background (oasis, ruins, canyon, temple).
+
+	// Desert Kingdom location choice turn sheet background images
 	ImageDesertOasis  = "desert-oasis.jpg"
 	ImageDesertRuins  = "desert-ruins.jpg"
 	ImageDesertCanyon = "desert-canyon.jpg"
 	ImageDesertTemple = "desert-temple.jpg"
 )
 
-func strPtr(s string) *string { return &s }
-
-// TestDataConfig returns the test data configuration for
-// E2E and Playwright tests in the public space.
+// TestDataConfig returns the test data configuration for E2E and Playwright tests in the public space.
 func TestDataConfig() harness.DataConfig {
 	return harness.DataConfig{
-		GameConfigs:    GameConfig(),
-		AccountConfigs: AccountConfig(),
+		AccountConfigs:                     AccountConfig(),
+		GameConfigs:                        GameConfig(),
+		AccountUserGameSubscriptionConfigs: AccountUserGameSubscriptionConfig(),
 	}
 }
 
-// AccountConfig returns test account configurations
+// AccountConfig returns test account configurations that will later be subscribed to games
 func AccountConfig() []harness.AccountConfig {
 	return []harness.AccountConfig{
 		{
-			Reference: harness.StandardAccountRef,
-			Record: &account_record.AccountUser{
-				Email: "test-account-one@example.com",
-			},
-			// Game subscriptions for account one
-			GameSubscriptionConfigs: []harness.GameSubscriptionConfig{
+			Reference: harness.AccountStandardRef,
+			AccountUserConfigs: []harness.AccountUserConfig{
 				{
-					Reference:        harness.GameSubscriptionDesignerOneRef,
-					GameRef:          harness.GameOneRef,
-					SubscriptionType: game_record.GameSubscriptionTypeDesigner,
-					Record:           &game_record.GameSubscription{},
-				},
-				{
-					Reference:        harness.GameSubscriptionManagerOneRef,
-					GameRef:          harness.GameOneRef,
-					GameInstanceRefs: []string{harness.GameInstanceOneRef},
-					SubscriptionType: game_record.GameSubscriptionTypeManager,
-					Record:           &game_record.GameSubscription{},
-				},
-				{
-					Reference:        harness.GameSubscriptionPlayerOneRef,
-					GameRef:          harness.GameOneRef,
-					SubscriptionType: game_record.GameSubscriptionTypePlayer,
-					Record:           &game_record.GameSubscription{},
+					Reference: harness.AccountUserStandardRef,
+					Record: &account_record.AccountUser{
+						Email: "test-account-one@example.com",
+					},
 				},
 			},
 		},
 		{
-			Reference: harness.ProPlayerAccountRef,
-			Record: &account_record.AccountUser{
-				Email: "test-account-two@example.com",
-			},
-			// Game subscriptions for account two
-			GameSubscriptionConfigs: []harness.GameSubscriptionConfig{
+			Reference: harness.AccountProPlayerRef,
+			AccountUserConfigs: []harness.AccountUserConfig{
 				{
-					Reference:        harness.GameSubscriptionPlayerTwoRef,
-					GameRef:          harness.GameOneRef,
-					SubscriptionType: game_record.GameSubscriptionTypePlayer,
-					Record:           &game_record.GameSubscription{},
-				},
-				{
-					Reference:        "game-subscription-two",
-					GameRef:          harness.GameTwoRef,
-					GameInstanceRefs: []string{harness.GameInstanceTwoRef},
-					SubscriptionType: game_record.GameSubscriptionTypeManager,
-					Record:           &game_record.GameSubscription{},
-				},
-				{
-					Reference:        "game-subscription-two-designer",
-					GameRef:          harness.GameTwoRef,
-					SubscriptionType: game_record.GameSubscriptionTypeDesigner,
-					Record:           &game_record.GameSubscription{},
+					Reference: harness.AccountUserProPlayerRef,
+					Record: &account_record.AccountUser{
+						Email: "test-account-two@example.com",
+					},
 				},
 			},
 		},
 		{
-			Reference: harness.ProDesignerAccountRef,
-			Record: &account_record.AccountUser{
-				Email: "test-account-three@example.com",
+			Reference: harness.AccountProDesignerRef,
+			AccountUserConfigs: []harness.AccountUserConfig{
+				{
+					Reference: harness.AccountUserProDesignerRef,
+					Record: &account_record.AccountUser{
+						Email: "test-account-three@example.com",
+					},
+				},
 			},
+		},
+		{
+			Reference: harness.AccountProManagerRef,
+			AccountUserConfigs: []harness.AccountUserConfig{
+				{
+					Reference: harness.AccountUserProManagerRef,
+					Record: &account_record.AccountUser{
+						Email: "test-account-four@example.com",
+					},
+				},
+			},
+		},
+	}
+}
+
+// Once accounts have been created and games have been created the following account
+// user game subscription configurations can be created.
+func AccountUserGameSubscriptionConfig() []harness.AccountUserGameSubscriptionConfig {
+
+	return []harness.AccountUserGameSubscriptionConfig{
+		// Game One
+		{
+			Reference:                          harness.GameSubscriptionPlayerOneRef,
+			GameRef:                            harness.GameOneRef,
+			AccountUserRef:                     harness.AccountUserStandardRef,
+			SubscriptionType:                   game_record.GameSubscriptionTypePlayer,
+			AccountUserManagerGameSubscriptionRef: harness.GameSubscriptionManagerOneRef,
+			Record:                             &game_record.GameSubscription{},
+		},
+		{
+			Reference:                          harness.GameSubscriptionPlayerTwoRef,
+			GameRef:                            harness.GameOneRef,
+			AccountUserRef:                     harness.AccountUserProPlayerRef,
+			SubscriptionType:                   game_record.GameSubscriptionTypePlayer,
+			AccountUserManagerGameSubscriptionRef: harness.GameSubscriptionManagerOneRef,
+			Record:                             &game_record.GameSubscription{},
+		},
+		{
+			Reference:        harness.GameSubscriptionDesignerOneRef,
+			GameRef:          harness.GameOneRef,
+			AccountUserRef:   harness.AccountUserProDesignerRef,
+			SubscriptionType: game_record.GameSubscriptionTypeDesigner,
+			Record:           &game_record.GameSubscription{},
+		},
+		{
+			Reference:        harness.GameSubscriptionManagerOneRef,
+			GameRef:          harness.GameOneRef,
+			AccountUserRef:   harness.AccountUserProManagerRef,
+			SubscriptionType: game_record.GameSubscriptionTypeManager,
+			Record:           &game_record.GameSubscription{},
+			GameInstanceConfigs: []harness.GameInstanceConfig{
+				{
+					Reference: harness.GameInstanceOneRef,
+					Record:    &game_record.GameInstance{},
+					GameInstanceParameterConfigs: []harness.GameInstanceParameterConfig{
+						{
+							Reference: "game-instance-parameter-one",
+							Record: &game_record.GameInstanceParameter{
+								ParameterKey:   domain.AdventureGameParameterCharacterLives,
+								ParameterValue: nullstring.FromString("5"),
+							},
+						},
+					},
+					AdventureGameItemInstanceConfigs: []harness.AdventureGameItemInstanceConfig{
+						{
+							Reference:       harness.GameItemInstanceOneRef,
+							GameItemRef:     harness.GameItemOneRef,
+							GameLocationRef: harness.GameLocationOneRef,
+							Record:          &adventure_game_record.AdventureGameItemInstance{},
+						},
+					},
+					AdventureGameCreatureInstanceConfigs: []harness.AdventureGameCreatureInstanceConfig{
+						{
+							Reference:       harness.GameCreatureInstanceOneRef,
+							GameCreatureRef: harness.GameCreatureOneRef,
+							GameLocationRef: harness.GameLocationOneRef,
+							Record:          &adventure_game_record.AdventureGameCreatureInstance{},
+						},
+					},
+					AdventureGameCharacterInstanceConfigs: []harness.AdventureGameCharacterInstanceConfig{
+						{
+							Reference:        harness.GameCharacterInstanceOneRef,
+							GameCharacterRef: harness.GameCharacterOneRef,
+							GameLocationRef:  harness.GameLocationOneRef,
+							Record:           &adventure_game_record.AdventureGameCharacterInstance{},
+						},
+					},
+				},
+			},
+		},
+		// Game Two
+		{
+			Reference:                          harness.GameSubscriptionPlayerThreeRef,
+			GameRef:                            harness.GameTwoRef,
+			AccountUserRef:                     harness.AccountUserProPlayerRef,
+			SubscriptionType:                   game_record.GameSubscriptionTypePlayer,
+			AccountUserManagerGameSubscriptionRef: harness.GameSubscriptionManagerTwoRef,
+			Record:                             &game_record.GameSubscription{},
+		},
+		{
+			Reference:        harness.GameSubscriptionManagerTwoRef,
+			GameRef:          harness.GameTwoRef,
+			AccountUserRef:   harness.AccountUserProManagerRef,
+			SubscriptionType: game_record.GameSubscriptionTypeManager,
+			Record:           &game_record.GameSubscription{},
+			GameInstanceConfigs: []harness.GameInstanceConfig{
+				{
+					Reference: harness.GameInstanceTwoRef,
+					Record: &game_record.GameInstance{
+						DeliveryEmail:           true,
+						DeliveryPhysicalPost:    true,
+						RequiredPlayerCount:     1,
+						ProcessWhenAllSubmitted: true,
+					},
+					GameInstanceParameterConfigs: []harness.GameInstanceParameterConfig{
+						{
+							Reference: "desert-instance-param-lives",
+							Record: &game_record.GameInstanceParameter{
+								ParameterKey:   domain.AdventureGameParameterCharacterLives,
+								ParameterValue: nullstring.FromString("5"),
+							},
+						},
+					},
+					AdventureGameLocationInstanceConfigs: []harness.AdventureGameLocationInstanceConfig{
+						{Reference: "desert-loc-inst-oasis", GameLocationRef: "desert-location-oasis", Record: &adventure_game_record.AdventureGameLocationInstance{}},
+						{Reference: "desert-loc-inst-ruins", GameLocationRef: "desert-location-ruins", Record: &adventure_game_record.AdventureGameLocationInstance{}},
+						{Reference: "desert-loc-inst-canyon", GameLocationRef: "desert-location-canyon", Record: &adventure_game_record.AdventureGameLocationInstance{}},
+						{Reference: "desert-loc-inst-temple", GameLocationRef: "desert-location-temple", Record: &adventure_game_record.AdventureGameLocationInstance{}},
+					},
+					AdventureGameItemInstanceConfigs: []harness.AdventureGameItemInstanceConfig{
+						{Reference: "desert-item-inst-compass", GameItemRef: "desert-item-compass", GameLocationRef: "desert-location-oasis", Record: &adventure_game_record.AdventureGameItemInstance{}},
+						{Reference: "desert-item-inst-flask", GameItemRef: "desert-item-flask", GameLocationRef: "desert-location-oasis", Record: &adventure_game_record.AdventureGameItemInstance{}},
+						{Reference: "desert-item-inst-cloak", GameItemRef: "desert-item-cloak", GameLocationRef: "desert-location-ruins", Record: &adventure_game_record.AdventureGameItemInstance{}},
+						{Reference: "desert-item-inst-scarab", GameItemRef: "desert-item-scarab-key", GameLocationRef: "desert-location-canyon", Record: &adventure_game_record.AdventureGameItemInstance{}},
+					},
+					AdventureGameCreatureInstanceConfigs: []harness.AdventureGameCreatureInstanceConfig{
+						{Reference: "desert-creature-inst-serpent", GameCreatureRef: "desert-creature-serpent", GameLocationRef: "desert-location-canyon", Record: &adventure_game_record.AdventureGameCreatureInstance{}},
+						{Reference: "desert-creature-inst-guardian", GameCreatureRef: "desert-creature-guardian", GameLocationRef: "desert-location-temple", Record: &adventure_game_record.AdventureGameCreatureInstance{}},
+					},
+				},
+			},
+		},
+		{
+			Reference:        harness.GameSubscriptionDesignerTwoRef,
+			GameRef:          harness.GameTwoRef,
+			AccountUserRef:   harness.AccountUserProDesignerRef,
+			SubscriptionType: game_record.GameSubscriptionTypeDesigner,
+			Record:           &game_record.GameSubscription{},
 		},
 	}
 }
@@ -139,7 +258,7 @@ func GameConfig() []harness.GameConfig {
 						Description:        "A peaceful grove filled with ancient trees and magical flowers. The air shimmers with enchantment.",
 						IsStartingLocation: true,
 					},
-					BackgroundImagePath: ImageLocationDarkforest,
+					BackgroundImage: &harness.GameImageConfig{ImagePath: ImageLocationDarkforest},
 				},
 				{
 					Reference: harness.GameLocationTwoRef,
@@ -147,7 +266,7 @@ func GameConfig() []harness.GameConfig {
 						Name:        "Crystal Caverns",
 						Description: "Deep underground caves filled with glowing crystals. Strange sounds echo from the depths.",
 					},
-					BackgroundImagePath: ImageLocationDungeon,
+					BackgroundImage: &harness.GameImageConfig{ImagePath: ImageLocationDungeon},
 				},
 				{
 					Reference: harness.GameLocationThreeRef,
@@ -155,7 +274,7 @@ func GameConfig() []harness.GameConfig {
 						Name:        "Floating Islands",
 						Description: "Mysterious islands suspended in the sky by unknown magic. Wind howls between them.",
 					},
-					BackgroundImagePath: ImageLocationCliffpath,
+					BackgroundImage: &harness.GameImageConfig{ImagePath: ImageLocationCliffpath},
 				},
 				{
 					Reference: harness.GameLocationFourRef,
@@ -163,7 +282,7 @@ func GameConfig() []harness.GameConfig {
 						Name:        "Shadow Valley",
 						Description: "A dark valley shrouded in perpetual shadows. Danger lurks in every corner.",
 					},
-					BackgroundImagePath: ImageLocationDarkforest,
+					BackgroundImage: &harness.GameImageConfig{ImagePath: ImageLocationDarkforest},
 				},
 			},
 			// Items that can be found and used
@@ -211,30 +330,6 @@ func GameConfig() []harness.GameConfig {
 					Record: &adventure_game_record.AdventureGameCreature{
 						Name:        "Crystal Spider",
 						Description: "A giant spider with a body made of living crystal. Spins webs of light.",
-					},
-				},
-			},
-			// Characters that players can control
-			AdventureGameCharacterConfigs: []harness.AdventureGameCharacterConfig{
-				{
-					Reference:  harness.GameCharacterOneRef,
-					AccountRef: harness.StandardAccountRef,
-					Record: &adventure_game_record.AdventureGameCharacter{
-						Name: "Aria the Mage",
-					},
-				},
-				{
-					Reference:  harness.GameCharacterTwoRef,
-					AccountRef: harness.ProPlayerAccountRef,
-					Record: &adventure_game_record.AdventureGameCharacter{
-						Name: "Thorne the Warrior",
-					},
-				},
-				{
-					Reference:  harness.GameCharacterThreeRef,
-					AccountRef: harness.ProDesignerAccountRef,
-					Record: &adventure_game_record.AdventureGameCharacter{
-						Name: "Luna the Scout",
 					},
 				},
 			},
@@ -426,59 +521,34 @@ func GameConfig() []harness.GameConfig {
 					},
 				},
 			},
-			// Game instances with all the resources
-			GameInstanceConfigs: []harness.GameInstanceConfig{
+			// Character configuration will be used during the account user game subscription creation
+			AdventureGameCharacterConfigs: []harness.AdventureGameCharacterConfig{
 				{
-					Reference: harness.GameInstanceOneRef,
-					Record:    &game_record.GameInstance{},
-					GameInstanceParameterConfigs: []harness.GameInstanceParameterConfig{
-						{
-							Reference: "game-instance-parameter-one",
-							Record: &game_record.GameInstanceParameter{
-								ParameterKey:   domain.AdventureGameParameterCharacterLives,
-								ParameterValue: nullstring.FromString("5"),
-							},
-						},
+					Reference:  harness.GameCharacterOneRef,
+					AccountRef: harness.AccountUserStandardRef,
+					Record: &adventure_game_record.AdventureGameCharacter{
+						Name: "Aria the Mage",
 					},
-					// Location instances for this game instance
-					AdventureGameLocationInstanceConfigs: []harness.AdventureGameLocationInstanceConfig{
-						{
-							Reference:       harness.GameLocationInstanceOneRef,
-							GameLocationRef: harness.GameLocationOneRef,
-							Record:          &adventure_game_record.AdventureGameLocationInstance{},
-						},
-						{
-							Reference:       harness.GameLocationInstanceTwoRef,
-							GameLocationRef: harness.GameLocationTwoRef,
-							Record:          &adventure_game_record.AdventureGameLocationInstance{},
-						},
+				},
+				{
+					Reference:  harness.GameCharacterTwoRef,
+					AccountRef: harness.AccountUserProPlayerRef,
+					Record: &adventure_game_record.AdventureGameCharacter{
+						Name: "Thorne the Warrior",
 					},
-					// Item instances placed in the world
-					AdventureGameItemInstanceConfigs: []harness.AdventureGameItemInstanceConfig{
-						{
-							Reference:       harness.GameItemInstanceOneRef,
-							GameItemRef:     harness.GameItemOneRef,
-							GameLocationRef: harness.GameLocationOneRef,
-							Record:          &adventure_game_record.AdventureGameItemInstance{},
-						},
+				},
+				{
+					Reference:  harness.GameCharacterThreeRef,
+					AccountRef: harness.AccountUserProDesignerRef,
+					Record: &adventure_game_record.AdventureGameCharacter{
+						Name: "Luna the Scout",
 					},
-					// Creature instances in the world
-					AdventureGameCreatureInstanceConfigs: []harness.AdventureGameCreatureInstanceConfig{
-						{
-							Reference:       harness.GameCreatureInstanceOneRef,
-							GameCreatureRef: harness.GameCreatureOneRef,
-							GameLocationRef: harness.GameLocationOneRef,
-							Record:          &adventure_game_record.AdventureGameCreatureInstance{},
-						},
-					},
-					// Character instances
-					AdventureGameCharacterInstanceConfigs: []harness.AdventureGameCharacterInstanceConfig{
-						{
-							Reference:        harness.GameCharacterInstanceOneRef,
-							GameCharacterRef: harness.GameCharacterOneRef,
-							GameLocationRef:  harness.GameLocationOneRef,
-							Record:           &adventure_game_record.AdventureGameCharacterInstance{},
-						},
+				},
+				{
+					Reference:  harness.GameCharacterFourRef,
+					AccountRef: harness.AccountUserProManagerRef,
+					Record: &adventure_game_record.AdventureGameCharacter{
+						Name: "Max the Manager",
 					},
 				},
 			},
@@ -502,7 +572,6 @@ func GameConfig() []harness.GameConfig {
 					ImagePath:     ImageDesertInventory,
 					TurnSheetType: adventure_game_record.AdventureGameTurnSheetTypeInventoryManagement,
 				},
-				// Location choice sheets use each location's BackgroundImagePath (oasis, ruins, canyon, temple), not a game-level image.
 			},
 			// 4 locations forming a rich, interconnected desert world
 			AdventureGameLocationConfigs: []harness.AdventureGameLocationConfig{
@@ -513,7 +582,7 @@ func GameConfig() []harness.GameConfig {
 						Description:        "A bustling village built around a life-giving oasis. Palm trees sway over turquoise pools while merchants hawk exotic wares under colourful canopies. Travellers rest here before venturing into the unforgiving desert beyond.",
 						IsStartingLocation: true,
 					},
-					BackgroundImagePath: ImageDesertOasis,
+					BackgroundImage: &harness.GameImageConfig{ImagePath: ImageDesertOasis},
 				},
 				{
 					Reference: "desert-location-ruins",
@@ -521,7 +590,7 @@ func GameConfig() []harness.GameConfig {
 						Name:        "Ancient Ruins",
 						Description: "Crumbling columns and weathered arches rise from the sand, remnants of a once-great civilisation. Hieroglyphs cover every surface, and the air is thick with the dust of ages. Something valuable — and dangerous — surely lies deeper within.",
 					},
-					BackgroundImagePath: ImageDesertRuins,
+					BackgroundImage: &harness.GameImageConfig{ImagePath: ImageDesertRuins},
 				},
 				{
 					Reference: "desert-location-canyon",
@@ -529,7 +598,7 @@ func GameConfig() []harness.GameConfig {
 						Name:        "Sandstone Canyon",
 						Description: "Towering walls of red and gold sandstone hem in a narrow path that winds ever deeper. Shafts of sunlight pierce the gloom, and the wind sings eerie melodies through natural arches overhead. Creatures lurk in the shadowed crevices.",
 					},
-					BackgroundImagePath: ImageDesertCanyon,
+					BackgroundImage: &harness.GameImageConfig{ImagePath: ImageDesertCanyon},
 				},
 				{
 					Reference: "desert-location-temple",
@@ -537,7 +606,7 @@ func GameConfig() []harness.GameConfig {
 						Name:        "Hidden Temple",
 						Description: "Half-swallowed by the dunes, an ancient temple glows with an otherworldly light. Serpent carvings frame the entrance, and golden runes pulse with forgotten magic. Only those who carry the right tokens may pass the sealed doors within.",
 					},
-					BackgroundImagePath: ImageDesertTemple,
+					BackgroundImage: &harness.GameImageConfig{ImagePath: ImageDesertTemple},
 				},
 			},
 			// 4 items exercising all inventory actions (pick up, drop, equip, unequip)
@@ -548,7 +617,7 @@ func GameConfig() []harness.GameConfig {
 						Name:          "Desert Compass",
 						Description:   "A gleaming brass compass inlaid with sapphire. Its needle always points toward the nearest water source — an invaluable tool in the wastes.",
 						CanBeEquipped: true,
-						EquipmentSlot: strPtr("jewelry"),
+						EquipmentSlot: convert.PtrStrict("jewelry"),
 					},
 				},
 				{
@@ -564,7 +633,7 @@ func GameConfig() []harness.GameConfig {
 						Name:          "Sand Cloak",
 						Description:   "A shimmering cloak woven from enchanted desert silk. It bends light around the wearer, granting near-invisibility in sandy terrain.",
 						CanBeEquipped: true,
-						EquipmentSlot: strPtr("clothing"),
+						EquipmentSlot: convert.PtrStrict("clothing"),
 					},
 				},
 				{
@@ -573,7 +642,7 @@ func GameConfig() []harness.GameConfig {
 						Name:          "Ancient Scarab Key",
 						Description:   "A golden scarab amulet etched with temple hieroglyphs. It hums with power when brought near the sealed passages of the Hidden Temple.",
 						CanBeEquipped: true,
-						EquipmentSlot: strPtr("jewelry"),
+						EquipmentSlot: convert.PtrStrict("jewelry"),
 					},
 				},
 			},
@@ -690,92 +759,6 @@ func GameConfig() []harness.GameConfig {
 					Record: &adventure_game_record.AdventureGameLocationLink{
 						Name:        "The Wind Tunnel",
 						Description: "A blast of dry wind funnels through a narrow tunnel back to the canyon.",
-					},
-				},
-			},
-			// Single game instance: email + post delivery (E2E), single player, process-when-all-submitted
-			GameInstanceConfigs: []harness.GameInstanceConfig{
-				{
-					Reference: harness.GameInstanceTwoRef,
-					Record: &game_record.GameInstance{
-						DeliveryEmail:           true,
-						DeliveryPhysicalPost:    true,
-						RequiredPlayerCount:     1,
-						ProcessWhenAllSubmitted: true,
-					},
-					GameInstanceParameterConfigs: []harness.GameInstanceParameterConfig{
-						{
-							Reference: "desert-instance-param-lives",
-							Record: &game_record.GameInstanceParameter{
-								ParameterKey:   domain.AdventureGameParameterCharacterLives,
-								ParameterValue: nullstring.FromString("5"),
-							},
-						},
-					},
-					// Location instances for all 4 locations
-					AdventureGameLocationInstanceConfigs: []harness.AdventureGameLocationInstanceConfig{
-						{
-							Reference:       "desert-loc-inst-oasis",
-							GameLocationRef: "desert-location-oasis",
-							Record:          &adventure_game_record.AdventureGameLocationInstance{},
-						},
-						{
-							Reference:       "desert-loc-inst-ruins",
-							GameLocationRef: "desert-location-ruins",
-							Record:          &adventure_game_record.AdventureGameLocationInstance{},
-						},
-						{
-							Reference:       "desert-loc-inst-canyon",
-							GameLocationRef: "desert-location-canyon",
-							Record:          &adventure_game_record.AdventureGameLocationInstance{},
-						},
-						{
-							Reference:       "desert-loc-inst-temple",
-							GameLocationRef: "desert-location-temple",
-							Record:          &adventure_game_record.AdventureGameLocationInstance{},
-						},
-					},
-					// Item instances placed at specific locations
-					AdventureGameItemInstanceConfigs: []harness.AdventureGameItemInstanceConfig{
-						{
-							Reference:       "desert-item-inst-compass",
-							GameItemRef:     "desert-item-compass",
-							GameLocationRef: "desert-location-oasis",
-							Record:          &adventure_game_record.AdventureGameItemInstance{},
-						},
-						{
-							Reference:       "desert-item-inst-flask",
-							GameItemRef:     "desert-item-flask",
-							GameLocationRef: "desert-location-oasis",
-							Record:          &adventure_game_record.AdventureGameItemInstance{},
-						},
-						{
-							Reference:       "desert-item-inst-cloak",
-							GameItemRef:     "desert-item-cloak",
-							GameLocationRef: "desert-location-ruins",
-							Record:          &adventure_game_record.AdventureGameItemInstance{},
-						},
-						{
-							Reference:       "desert-item-inst-scarab",
-							GameItemRef:     "desert-item-scarab-key",
-							GameLocationRef: "desert-location-canyon",
-							Record:          &adventure_game_record.AdventureGameItemInstance{},
-						},
-					},
-					// Creature instances placed in the world
-					AdventureGameCreatureInstanceConfigs: []harness.AdventureGameCreatureInstanceConfig{
-						{
-							Reference:       "desert-creature-inst-serpent",
-							GameCreatureRef: "desert-creature-serpent",
-							GameLocationRef: "desert-location-canyon",
-							Record:          &adventure_game_record.AdventureGameCreatureInstance{},
-						},
-						{
-							Reference:       "desert-creature-inst-guardian",
-							GameCreatureRef: "desert-creature-guardian",
-							GameLocationRef: "desert-location-temple",
-							Record:          &adventure_game_record.AdventureGameCreatureInstance{},
-						},
 					},
 				},
 			},

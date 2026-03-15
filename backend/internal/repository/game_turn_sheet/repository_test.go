@@ -29,7 +29,7 @@ func TestCreateOne(t *testing.T) {
 				require.NoError(t, err, "GetGameRecByRef returns without error")
 				gameInstanceRec, err := d.GetGameInstanceRecByRef(harness.GameInstanceOneRef)
 				require.NoError(t, err, "GetGameInstanceRecByRef returns without error")
-				accountRec, err := d.GetAccountUserRecByRef(harness.StandardAccountRef)
+				accountRec, err := d.GetAccountUserRecByRef(harness.AccountUserStandardRef)
 				require.NoError(t, err, "GetAccountUserRecByRef returns without error")
 
 				sheetData := map[string]interface{}{
@@ -66,7 +66,7 @@ func TestCreateOne(t *testing.T) {
 				require.NoError(t, err, "GetGameRecByRef returns without error")
 				gameInstanceRec, err := d.GetGameInstanceRecByRef(harness.GameInstanceOneRef)
 				require.NoError(t, err, "GetGameInstanceRecByRef returns without error")
-				accountRec, err := d.GetAccountUserRecByRef(harness.StandardAccountRef)
+				accountRec, err := d.GetAccountUserRecByRef(harness.AccountUserStandardRef)
 				require.NoError(t, err, "GetAccountUserRecByRef returns without error")
 
 				sheetData := map[string]interface{}{
@@ -145,7 +145,7 @@ func TestGetOne(t *testing.T) {
 				require.NoError(t, err, "GetGameRecByRef returns without error")
 				gameInstanceRec, err := d.GetGameInstanceRecByRef(harness.GameInstanceOneRef)
 				require.NoError(t, err, "GetGameInstanceRecByRef returns without error")
-				accountRec, err := d.GetAccountUserRecByRef(harness.StandardAccountRef)
+				accountRec, err := d.GetAccountUserRecByRef(harness.AccountUserStandardRef)
 				require.NoError(t, err, "GetAccountUserRecByRef returns without error")
 
 				sheetData := map[string]interface{}{
@@ -231,7 +231,7 @@ func TestUpdateOne(t *testing.T) {
 				require.NoError(t, err, "GetGameRecByRef returns without error")
 				gameInstanceRec, err := d.GetGameInstanceRecByRef(harness.GameInstanceOneRef)
 				require.NoError(t, err, "GetGameInstanceRecByRef returns without error")
-				accountRec, err := d.GetAccountUserRecByRef(harness.StandardAccountRef)
+				accountRec, err := d.GetAccountUserRecByRef(harness.AccountUserStandardRef)
 				require.NoError(t, err, "GetAccountUserRecByRef returns without error")
 
 				sheetData := map[string]interface{}{
@@ -319,7 +319,7 @@ func TestDeleteOne(t *testing.T) {
 				require.NoError(t, err, "GetGameRecByRef returns without error")
 				gameInstanceRec, err := d.GetGameInstanceRecByRef(harness.GameInstanceOneRef)
 				require.NoError(t, err, "GetGameInstanceRecByRef returns without error")
-				accountRec, err := d.GetAccountUserRecByRef(harness.StandardAccountRef)
+				accountRec, err := d.GetAccountUserRecByRef(harness.AccountUserStandardRef)
 				require.NoError(t, err, "GetAccountUserRecByRef returns without error")
 
 				sheetData := map[string]interface{}{

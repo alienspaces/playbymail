@@ -19,9 +19,14 @@ func TestCreateAccountUserRec_Validation(t *testing.T) {
 		AccountConfigs: []harness.AccountConfig{
 			{
 				Reference: "existing-account",
-				Record: &account_record.AccountUser{
-					Email:  harness.UniqueEmail("existing@example.com"),
-					Status: account_record.AccountUserStatusActive,
+				AccountUserConfigs: []harness.AccountUserConfig{
+					{
+						Reference: "existing-account-user",
+						Record: &account_record.AccountUser{
+							Email:  harness.UniqueEmail("existing@example.com"),
+							Status: account_record.AccountUserStatusActive,
+						},
+					},
 				},
 			},
 		},
@@ -45,7 +50,7 @@ func TestCreateAccountUserRec_Validation(t *testing.T) {
 		require.NoError(t, err)
 	}()
 
-	existingAccount, err := th.Data.GetAccountUserRecByRef("existing-account")
+	existingAccount, err := th.Data.GetAccountUserRecByRef("existing-account-user")
 	require.NoError(t, err)
 
 	m := th.Domain.(*domain.Domain)
@@ -130,9 +135,14 @@ func TestUpdateAccountUserRec_Validation(t *testing.T) {
 		AccountConfigs: []harness.AccountConfig{
 			{
 				Reference: "test-account",
-				Record: &account_record.AccountUser{
-					Email:  harness.UniqueEmail("update-test@example.com"),
-					Status: account_record.AccountUserStatusActive,
+				AccountUserConfigs: []harness.AccountUserConfig{
+					{
+						Reference: "test-account-user",
+						Record: &account_record.AccountUser{
+							Email:  harness.UniqueEmail("update-test@example.com"),
+							Status: account_record.AccountUserStatusActive,
+						},
+					},
 				},
 			},
 		},
@@ -158,7 +168,7 @@ func TestUpdateAccountUserRec_Validation(t *testing.T) {
 
 	m := th.Domain.(*domain.Domain)
 
-	accountUser, err := th.Data.GetAccountUserRecByRef("test-account")
+	accountUser, err := th.Data.GetAccountUserRecByRef("test-account-user")
 	require.NoError(t, err)
 
 	t.Run("fails when email is changed", func(t *testing.T) {

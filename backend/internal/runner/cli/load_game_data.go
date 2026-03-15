@@ -44,12 +44,23 @@ func (rnr *Runner) loadGameData(c *cli.Context) error {
 	}
 
 	// Ensure demo accounts exist -- create if missing, reuse if present.
-	seedRefs, err := rnr.ensureDemoAccounts()
+	demoRecs, err := rnr.ensureDemoAccounts()
 	if err != nil {
 		l.Warn("failed ensuring demo accounts >%v<", err)
 		return err
 	}
-	config.SeedAccountRefs = seedRefs
+
+	// Populate each top-level subscription Record with account IDs (same order as DemoAccountDefs).
+	for i := range config.AccountUserGameSubscriptionConfigs {
+		if i >= len(demoRecs.AccountUsers) {
+			break
+		}
+		rec := config.AccountUserGameSubscriptionConfigs[i].Record
+		if rec != nil {
+			rec.AccountID = demoRecs.AccountUsers[i].AccountID
+			rec.AccountUserID = demoRecs.AccountUsers[i].ID
+		}
+	}
 
 	for i := range config.GameConfigs {
 		gc := &config.GameConfigs[i]
@@ -126,8 +137,17 @@ func (rnr *Runner) loadGameData(c *cli.Context) error {
 	return nil
 }
 
-// ensureDemoAccounts checks each demo account, user account and user account contact records exist.
-func (rnr *Runner) ensureDemoAccounts() (map[string]string, error) {
+// DemoAccountRecords holds all account, account user, and account user contact
+// records for the demo accounts (one per DemoAccountDef, same order).
+type DemoAccountRecords struct {
+	Accounts            []*account_record.Account
+	AccountUsers        []*account_record.AccountUser
+	AccountUserContacts []*account_record.AccountUserContact
+}
+
+// ensureDemoAccounts ensures each demo account, account user, and account_user_contact exist;
+// it returns all such records (create or fetch), one set per DemoAccountDef in order.
+func (rnr *Runner) ensureDemoAccounts() (*DemoAccountRecords, error) {
 	l := loggerWithFunctionContext(rnr.Log, "ensureDemoAccounts")
 
 	dm, ok := rnr.Domain.(*domain.Domain)
@@ -135,7 +155,10 @@ func (rnr *Runner) ensureDemoAccounts() (map[string]string, error) {
 		return nil, fmt.Errorf("domain type assertion failed")
 	}
 
-	refs := make(map[string]string, len(demo_scenarios.DemoAccountDefs))
+	n := len(demo_scenarios.DemoAccountDefs)
+	accounts := make([]*account_record.Account, 0, n)
+	accountUsers := make([]*account_record.AccountUser, 0, n)
+	accountUserContacts := make([]*account_record.AccountUserContact, 0, n)
 
 	for _, def := range demo_scenarios.DemoAccountDefs {
 		existing, err := dm.GetAccountUserRecByEmail(def.Email)
@@ -144,13 +167,23 @@ func (rnr *Runner) ensureDemoAccounts() (map[string]string, error) {
 		}
 		if existing != nil {
 			l.Info("demo account already exists ref >%s< email >%s< ID >%s<", def.Ref, def.Email, existing.ID)
-			refs[def.Ref] = existing.ID
+			acctRec, err := dm.GetAccountRec(existing.AccountID, nil)
+			if err != nil {
+				return nil, fmt.Errorf("failed getting account for email >%s<: %w", def.Email, err)
+			}
+			contactRec, err := dm.GetAccountUserContactRecByAccountUserID(existing.ID, nil)
+			if err != nil {
+				return nil, fmt.Errorf("failed getting account user contact for email >%s<: %w", def.Email, err)
+			}
+			accounts = append(accounts, acctRec)
+			accountUsers = append(accountUsers, existing)
+			accountUserContacts = append(accountUserContacts, contactRec)
 			continue
 		}
 
 		l.Info("creating demo account ref >%s< email >%s<", def.Ref, def.Email)
 
-		_, accountUserRec, _, _, err := dm.UpsertAccount(
+		acctRec, accountUserRec, contactRec, _, err := dm.UpsertAccount(
 			&account_record.Account{},
 			&account_record.AccountUser{
 				Email: def.Email,
@@ -161,8 +194,10 @@ func (rnr *Runner) ensureDemoAccounts() (map[string]string, error) {
 			return nil, fmt.Errorf("failed creating demo account >%s<: %w", def.Email, err)
 		}
 
-		refs[def.Ref] = accountUserRec.ID
 		l.Info("created demo account ref >%s< ID >%s<", def.Ref, accountUserRec.ID)
+		accounts = append(accounts, acctRec)
+		accountUsers = append(accountUsers, accountUserRec)
+		accountUserContacts = append(accountUserContacts, contactRec)
 	}
 
 	// Commit the account creation and re-init so the harness starts with a clean tx
@@ -174,7 +209,11 @@ func (rnr *Runner) ensureDemoAccounts() (map[string]string, error) {
 		return nil, fmt.Errorf("failed re-init domain tx after account creation: %w", err)
 	}
 
-	return refs, nil
+	return &DemoAccountRecords{
+		Accounts:            accounts,
+		AccountUsers:        accountUsers,
+		AccountUserContacts: accountUserContacts,
+	}, nil
 }
 
 // gameExistsByName returns true if at least one non-deleted game with the

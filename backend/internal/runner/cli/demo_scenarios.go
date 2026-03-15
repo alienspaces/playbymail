@@ -22,7 +22,7 @@ var DemoGames = map[string]DemoGameEntry{
 	demo_scenarios.DemoAdventureGameName: {
 		Config:      demo_scenarios.AdventureGameConfig,
 		GameType:    game_record.GameTypeAdventure,
-		Description: "Locations, links, link requirements, items, creatures, instances, accounts. Loaded as draft. Use --publish to publish.",
+		Description: "TODO",
 	},
 }
 

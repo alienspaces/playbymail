@@ -35,10 +35,6 @@ const (
 	OpIsNotNull        Operator = "IS NOT NULL"
 )
 
-// TODO: `OR` support, provide the ability to express `AND expires_at is null OR expires_at >= :datetime`
-// negating the need to do `COALESCE(pg.expires_at, now() + interval '1000 years') as "expires_at"` with
-// `AND expires_at >= :datetime`
-
 type Options struct {
 	Params  []Param
 	OrderBy []OrderBy

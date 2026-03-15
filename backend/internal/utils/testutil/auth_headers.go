@@ -31,25 +31,25 @@ func AuthHeaderByAccountID(data harness.Data, accountID string) map[string]strin
 // AuthHeaderStandard returns Authorization header with standard test user token
 // Uses StandardAccountRef to get the token from harness data
 func AuthHeaderStandard(data harness.Data) map[string]string {
-	return AuthHeaderByAccountRef(data, harness.StandardAccountRef)
+	return AuthHeaderByAccountRef(data, harness.AccountUserStandardRef)
 }
 
 // AuthHeaderProPlayer returns Authorization header with pro player test user token
 // Uses ProPlayerAccountRef to get the token from harness data
 func AuthHeaderProPlayer(data harness.Data) map[string]string {
-	return AuthHeaderByAccountRef(data, harness.ProPlayerAccountRef)
+	return AuthHeaderByAccountRef(data, harness.AccountUserProPlayerRef)
 }
 
 // AuthHeaderProDesigner returns Authorization header with pro designer test user token
 // Uses ProDesignerAccountRef to get the token from harness data
 func AuthHeaderProDesigner(data harness.Data) map[string]string {
-	return AuthHeaderByAccountRef(data, harness.ProDesignerAccountRef)
+	return AuthHeaderByAccountRef(data, harness.AccountUserProDesignerRef)
 }
 
 // AuthHeaderProManager returns Authorization header with pro manager test user token
 // Uses ProManagerAccountRef to get the token from harness data
 func AuthHeaderProManager(data harness.Data) map[string]string {
-	return AuthHeaderByAccountRef(data, harness.ProManagerAccountRef)
+	return AuthHeaderByAccountRef(data, harness.AccountUserProManagerRef)
 }
 
 // AuthHeaderWithToken returns Authorization header with custom token

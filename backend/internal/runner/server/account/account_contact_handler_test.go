@@ -37,7 +37,7 @@ func Test_getAccountUserContactHandler(t *testing.T) {
 	testCaseResponseDecoder := testutil.TestCaseResponseDecoderGeneric[account_schema.AccountContactResponse]
 
 	// Setup: get an account for reference
-	accountRec, err := th.Data.GetAccountUserRecByRef(harness.StandardAccountRef)
+	accountRec, err := th.Data.GetAccountUserRecByRef(harness.AccountUserStandardRef)
 	require.NoError(t, err, "GetAccountUserRecByRef returns without error")
 
 	// Get account contact (created by harness for all accounts)
@@ -51,7 +51,7 @@ func Test_getAccountUserContactHandler(t *testing.T) {
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()["get-many-account-user-contacts-by-user"]
 				},
-			RequestHeaders: testutil.AuthHeaderStandard,
+				RequestHeaders: testutil.AuthHeaderStandard,
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
 						":account_id":      accountRec.AccountID,
@@ -76,7 +76,7 @@ func Test_getAccountUserContactHandler(t *testing.T) {
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[account.GetManyAccountUserContacts]
 				},
-			RequestHeaders: testutil.AuthHeaderStandard,
+				RequestHeaders: testutil.AuthHeaderStandard,
 				RequestQueryParams: func(d harness.Data) map[string]any {
 					return map[string]any{
 						"page_size":   10,
@@ -95,7 +95,7 @@ func Test_getAccountUserContactHandler(t *testing.T) {
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[account.GetOneAccountUserContact]
 				},
-			RequestHeaders: testutil.AuthHeaderStandard,
+				RequestHeaders: testutil.AuthHeaderStandard,
 				RequestPathParams: func(d harness.Data) map[string]string {
 					params := map[string]string{
 						":account_id":              accountRec.AccountID,
@@ -172,7 +172,7 @@ func Test_createUpdateDeleteAccountUserContactHandler(t *testing.T) {
 	testCaseResponseDecoder := testutil.TestCaseResponseDecoderGeneric[account_schema.AccountContactResponse]
 
 	// Setup: get an account for reference
-	accountRec, err := th.Data.GetAccountUserRecByRef(harness.StandardAccountRef)
+	accountRec, err := th.Data.GetAccountUserRecByRef(harness.AccountUserStandardRef)
 	require.NoError(t, err, "GetAccountUserRecByRef returns without error")
 
 	// Get account contact (created by harness for all accounts)
@@ -188,7 +188,7 @@ func Test_createUpdateDeleteAccountUserContactHandler(t *testing.T) {
 					t.Logf("DEBUG CONFIG PATH: %s", cfg.Path)
 					return cfg
 				},
-			RequestHeaders: testutil.AuthHeaderStandard,
+				RequestHeaders: testutil.AuthHeaderStandard,
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
 						":account_id":      accountRec.AccountID,
@@ -228,7 +228,7 @@ func Test_createUpdateDeleteAccountUserContactHandler(t *testing.T) {
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[account.UpdateOneAccountUserContact]
 				},
-			RequestHeaders: testutil.AuthHeaderStandard,
+				RequestHeaders: testutil.AuthHeaderStandard,
 				RequestPathParams: func(d harness.Data) map[string]string {
 					params := map[string]string{
 						":account_id":              accountRec.AccountID,
@@ -270,7 +270,7 @@ func Test_createUpdateDeleteAccountUserContactHandler(t *testing.T) {
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[account.DeleteOneAccountUserContact]
 				},
-			RequestHeaders: testutil.AuthHeaderStandard,
+				RequestHeaders: testutil.AuthHeaderStandard,
 				RequestPathParams: func(d harness.Data) map[string]string {
 					params := map[string]string{
 						":account_id":              accountRec.AccountID,

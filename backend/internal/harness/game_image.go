@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"image"
 	_ "image/jpeg"
-	"image/png"
 	"os"
 	"path/filepath"
 
@@ -13,207 +12,46 @@ import (
 
 	"gitlab.com/alienspaces/playbymail/core/nullstring"
 	"gitlab.com/alienspaces/playbymail/internal/domain"
-	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 )
 
-// CreateTestImage creates a simple PNG image for testing with visible content
-// This is a helper function for creating test image data in harness configs
-func CreateTestImage(width, height int) []byte {
-	img := image.NewRGBA(image.Rect(0, 0, width, height))
+// processGameImageConfig creates a game image record from a GameImageConfig and associates it with the given game record.
+func (t *Testing) processGameImageConfig(config GameImageConfig, gameRec *game_record.Game) (*game_record.GameImage, error) {
+	l := t.Logger("processGameImageConfig")
 
-	// Fill with a light gray background so the image is visible
-	for y := 0; y < height; y++ {
-		for x := 0; x < width; x++ {
-			// Light gray color (RGB: 220, 220, 220, fully opaque)
-			img.Set(x, y, image.White)
-		}
+	if gameRec == nil {
+		return nil, fmt.Errorf("gameRec is required")
 	}
 
-	// Add a simple border pattern to make it obvious it's a test image
-	borderWidth := 20
-	for y := 0; y < height; y++ {
-		for x := 0; x < width; x++ {
-			// Draw a dark gray border
-			if x < borderWidth || x >= width-borderWidth ||
-				y < borderWidth || y >= height-borderWidth {
-				img.Set(x, y, image.Black)
-			}
-		}
+	if config.ImagePath == "" {
+		return nil, fmt.Errorf("config.ImagePath is required")
 	}
 
-	var buf bytes.Buffer
-	if err := png.Encode(&buf, img); err != nil {
-		return nil
-	}
-	return buf.Bytes()
-}
+	l.Info("loading image from path >%s< for turnSheetType >%s<", config.ImagePath, config.TurnSheetType)
 
-// LoadTestImageFromPath loads an image from the testdata or test_data_images directory
-// This is a helper function for loading real test images in harness configs
-func LoadTestImageFromPath(imagePath string) ([]byte, string, int, int) {
-	// Get current working directory for debugging
-	cwd, _ := os.Getwd()
-
-	// Try multiple possible image locations
-	// Include paths relative to common project structures
-	imagePaths := []string{
-		"backend/internal/runner/cli/test_data_images",
-		"internal/runner/cli/test_data_images",
-		"backend/internal/runner/cli/demo_scenario_images",
-		"internal/runner/cli/demo_scenario_images",
-		"testdata",
-		"backend/internal/turn_sheet/testdata",
-		"internal/turn_sheet/testdata",
-		"turn_sheet/testdata",
-	}
-
-	if templatesPath := os.Getenv("TEMPLATES_PATH"); templatesPath != "" {
-		backendDir := filepath.Dir(templatesPath)
-		imagePaths = append(imagePaths,
-			filepath.Join(backendDir, "internal/runner/cli/test_data_images"),          //nolint:gocritic // intentional relative path
-			filepath.Join(backendDir, "internal/runner/cli/demo_scenario_images"),      //nolint:gocritic // intentional relative path
-			filepath.Join(backendDir, "internal/turn_sheet/testdata"),                  //nolint:gocritic // intentional relative path
-		)
-	}
-
-	var fullPath string
-	var found bool
-	for _, basePath := range imagePaths {
-		candidate := filepath.Join(basePath, imagePath)
-		if _, err := os.Stat(candidate); err == nil {
-			fullPath = candidate
-			found = true
-			break
-		}
-	}
-
-	if !found {
-		// Try absolute path
-		if _, err := os.Stat(imagePath); err == nil {
-			fullPath = imagePath
-			found = true
-		}
-	}
-
-	if !found {
-		// Log that we couldn't find the image
-		fmt.Printf("LoadTestImageFromPath: image not found >%s< cwd >%s< tried paths: %v\n", imagePath, cwd, imagePaths)
-		// Return empty data - caller should handle this
-		return nil, "", 0, 0
-	}
-
-	fmt.Printf("LoadTestImageFromPath: found image at >%s<\n", fullPath)
-
-	// Read image file
-	imageData, err := os.ReadFile(fullPath)
+	// Load the image from file at runtime
+	imageData, mimeType, width, height, err := t.loadImageFromPath(config.ImagePath)
 	if err != nil {
-		return nil, "", 0, 0
+		l.Warn("failed loading image from path >%s<: >%v<", config.ImagePath, err)
+		return nil, err
 	}
 
-	// Determine MIME type from extension
-	ext := filepath.Ext(imagePath)
-	var mimeType string
-	switch ext {
-	case ".png":
-		mimeType = "image/png"
-	case ".jpg", ".jpeg":
-		mimeType = "image/jpeg"
-	case ".webp":
-		mimeType = "image/webp"
-	default:
-		mimeType = "image/png"
+	rec := &game_record.GameImage{
+		GameID:        gameRec.ID,
+		RecordID:      nullstring.FromString(config.RecordID),
+		Type:          game_record.GameImageTypeTurnSheetBackground,
+		TurnSheetType: config.TurnSheetType,
+		ImageData:     imageData,
+		MimeType:      mimeType,
+		FileSize:      len(imageData),
+		Width:         width,
+		Height:        height,
 	}
 
-	// Decode image to get dimensions
-	reader := bytes.NewReader(imageData)
-	img, _, err := image.Decode(reader)
-	if err != nil {
-		return imageData, mimeType, 0, 0
-	}
+	l.Info("creating game image record from path: gameID >%s< type >%s< turnSheetType >%s< mimeType >%s< imageDataLen >%d< width >%d< height >%d<",
+		gameRec.ID, rec.Type, rec.TurnSheetType, rec.MimeType, len(rec.ImageData), rec.Width, rec.Height)
 
-	bounds := img.Bounds()
-	width := bounds.Max.X - bounds.Min.X
-	height := bounds.Max.Y - bounds.Min.Y
-
-	return imageData, mimeType, width, height
-}
-
-// createGameImageRecFromConfig creates a game image record from a GameImageConfig
-func (t *Testing) createGameImageRecFromConfig(gameID string, config GameImageConfig) (*game_record.GameImage, error) {
-	l := t.Logger("createGameImageRecFromConfig")
-
-	// If ImagePath is specified, load the image from file at runtime
-	if config.ImagePath != "" {
-		l.Info("loading image from path >%s< for turnSheetType >%s<", config.ImagePath, config.TurnSheetType)
-		imageData, mimeType, width, height, err := t.loadImageFromPath(config.ImagePath)
-		if err != nil {
-			l.Warn("failed loading image from path >%s<: >%v<", config.ImagePath, err)
-			return nil, err
-		}
-
-		rec := &game_record.GameImage{
-			GameID:        gameID,
-			Type:          game_record.GameImageTypeTurnSheetBackground,
-			TurnSheetType: config.TurnSheetType,
-			ImageData:     imageData,
-			MimeType:      mimeType,
-			FileSize:      len(imageData),
-			Width:         width,
-			Height:        height,
-		}
-
-		l.Info("creating game image record from path: gameID >%s< type >%s< turnSheetType >%s< mimeType >%s< imageDataLen >%d< width >%d< height >%d<",
-			gameID, rec.Type, rec.TurnSheetType, rec.MimeType, len(rec.ImageData), rec.Width, rec.Height)
-
-		rec, err = t.Domain.(*domain.Domain).UpsertGameImageRec(rec)
-		if err != nil {
-			l.Warn("failed creating game image record >%v<", err)
-			return nil, err
-		}
-
-		l.Info("created game image record ID >%s< with imageDataLen >%d<", rec.ID, len(rec.ImageData))
-
-		// Add to data store
-		t.Data.AddGameImageRec(rec)
-
-		// Add to teardown data store
-		t.teardownData.AddGameImageRec(rec)
-
-		// Add to references store
-		if config.Reference != "" {
-			t.Data.Refs.GameImageRefs[config.Reference] = rec.ID
-		}
-
-		return rec, nil
-	}
-
-	// Otherwise use the Record from config
-	var rec *game_record.GameImage
-	if config.Record != nil {
-		// Copy the record to avoid modifying the original
-		recCopy := *config.Record
-		rec = &recCopy
-	} else {
-		rec = &game_record.GameImage{}
-	}
-
-	// Set game ID
-	rec.GameID = gameID
-
-	// Set FileSize from ImageData if not already set
-	if rec.FileSize == 0 && len(rec.ImageData) > 0 {
-		rec.FileSize = len(rec.ImageData)
-	}
-
-	// Apply default values if needed
-	rec = t.applyGameImageRecDefaultValues(rec)
-
-	// Debug logging for image data
-	l.Info("creating game image record: gameID >%s< type >%s< turnSheetType >%s< mimeType >%s< imageDataLen >%d< width >%d< height >%d<",
-		gameID, rec.Type, rec.TurnSheetType, rec.MimeType, len(rec.ImageData), rec.Width, rec.Height)
-
-	rec, err := t.Domain.(*domain.Domain).UpsertGameImageRec(rec)
+	rec, err = t.Domain.(*domain.Domain).UpsertGameImageRec(rec)
 	if err != nil {
 		l.Warn("failed creating game image record >%v<", err)
 		return nil, err
@@ -232,24 +70,17 @@ func (t *Testing) createGameImageRecFromConfig(gameID string, config GameImageCo
 		t.Data.Refs.GameImageRefs[config.Reference] = rec.ID
 	}
 
-	l.Debug("created game image record ID >%s<", rec.ID)
-
 	return rec, nil
 }
 
-func (t *Testing) applyGameImageRecDefaultValues(rec *game_record.GameImage) *game_record.GameImage {
-	if rec == nil {
-		rec = &game_record.GameImage{}
-	}
-
-	// No default values needed - all fields should be set explicitly
-	// or loaded from image data if creating from path
-
-	return rec
+// AddGameImageRecToTeardown adds a game image record to the teardown data store
+// so it will be cleaned up during teardown. This is useful for test cases that
+// create images in separate transactions.
+func (t *Testing) AddGameImageRecToTeardown(rec *game_record.GameImage) {
+	t.teardownData.AddGameImageRec(rec)
 }
 
-// loadImageFromPath loads an image from a file path and returns the data,
-// MIME type, and dimensions
+// loadImageFromPath loads an image from a file path and returns the data, MIME type, and dimensions
 func (t *Testing) loadImageFromPath(imagePath string) ([]byte, string, int, int, error) {
 	l := t.Logger("loadImageFromPath")
 
@@ -270,9 +101,9 @@ func (t *Testing) loadImageFromPath(imagePath string) ([]byte, string, int, int,
 	if templatesPath := os.Getenv("TEMPLATES_PATH"); templatesPath != "" {
 		backendDir := filepath.Dir(templatesPath)
 		imagePaths = append(imagePaths,
-			filepath.Join(backendDir, "internal/runner/cli/test_data_images"),          //nolint:gocritic // intentional relative path
-			filepath.Join(backendDir, "internal/runner/cli/demo_scenario_images"),      //nolint:gocritic // intentional relative path
-			filepath.Join(backendDir, "internal/turn_sheet/testdata"),                  //nolint:gocritic // intentional relative path
+			filepath.Join(backendDir, "internal/runner/cli/test_data_images"),     //nolint:gocritic // intentional relative path
+			filepath.Join(backendDir, "internal/runner/cli/demo_scenario_images"), //nolint:gocritic // intentional relative path
+			filepath.Join(backendDir, "internal/turn_sheet/testdata"),             //nolint:gocritic // intentional relative path
 		)
 	}
 
@@ -330,49 +161,6 @@ func (t *Testing) loadImageFromPath(imagePath string) ([]byte, string, int, int,
 	return imageData, mimeType, width, height, nil
 }
 
-// Deprecated: Use createGameImageRecFromConfig instead
-//
-// createGameImageRecFromPath creates a game image record from a file path.
-// recordID: if empty, this is a game-level image (defaults to join_game), otherwise it's a location-level image (location_choice)
-func (t *Testing) createGameImageRecFromPath(gameID string, recordID string, imagePath string) (*game_record.GameImage, error) {
-	l := t.Logger("createGameImageRecFromPath")
-
-	if imagePath == "" {
-		return nil, nil
-	}
-
-	// Load image data from path
-	imageData, mimeType, width, height, err := t.loadImageFromPath(imagePath)
-	if err != nil {
-		l.Warn("failed to load image from path >%s< >%v<", imagePath, err)
-		return nil, err
-	}
-
-	// Determine turn_sheet_type based on context
-	// If recordID is empty, this is a game-level image (for join_game turn sheets)
-	// If recordID is set, this is a location-level image (for location_choice turn sheets)
-	turnSheetType := adventure_game_record.AdventureGameTurnSheetTypeJoinGame
-	if recordID != "" {
-		turnSheetType = adventure_game_record.AdventureGameTurnSheetTypeLocationChoice
-	}
-
-	// Use the new config-based approach with Record
-	config := GameImageConfig{
-		Record: &game_record.GameImage{
-			GameID:        gameID,
-			RecordID:      nullstring.FromString(recordID),
-			Type:          game_record.GameImageTypeTurnSheetBackground,
-			TurnSheetType: turnSheetType,
-			ImageData:     imageData,
-			MimeType:      mimeType,
-			FileSize:      len(imageData),
-			Width:         width,
-			Height:        height,
-		},
-	}
-	return t.createGameImageRecFromConfig(gameID, config)
-}
-
 // detectMimeType detects the MIME type from image data
 func detectMimeType(imageData []byte) string {
 	if len(imageData) < 12 {
@@ -396,3 +184,127 @@ func detectMimeType(imageData []byte) string {
 
 	return ""
 }
+
+// TODO: Remove if ununsed
+
+// // CreateTestImage creates a simple PNG image for testing with visible content
+// // This is a helper function for creating test image data in harness configs
+// func CreateTestImage(width, height int) []byte {
+// 	img := image.NewRGBA(image.Rect(0, 0, width, height))
+
+// 	// Fill with a light gray background so the image is visible
+// 	for y := 0; y < height; y++ {
+// 		for x := 0; x < width; x++ {
+// 			// Light gray color (RGB: 220, 220, 220, fully opaque)
+// 			img.Set(x, y, image.White)
+// 		}
+// 	}
+
+// 	// Add a simple border pattern to make it obvious it's a test image
+// 	borderWidth := 20
+// 	for y := 0; y < height; y++ {
+// 		for x := 0; x < width; x++ {
+// 			// Draw a dark gray border
+// 			if x < borderWidth || x >= width-borderWidth ||
+// 				y < borderWidth || y >= height-borderWidth {
+// 				img.Set(x, y, image.Black)
+// 			}
+// 		}
+// 	}
+
+// 	var buf bytes.Buffer
+// 	if err := png.Encode(&buf, img); err != nil {
+// 		return nil
+// 	}
+// 	return buf.Bytes()
+// }
+
+// // LoadTestImageFromPath loads an image from the testdata or test_data_images directory
+// // This is a helper function for loading real test images in harness configs
+// func LoadTestImageFromPath(imagePath string) ([]byte, string, int, int) {
+// 	// Get current working directory for debugging
+// 	cwd, _ := os.Getwd()
+
+// 	// Try multiple possible image locations
+// 	// Include paths relative to common project structures
+// 	imagePaths := []string{
+// 		"backend/internal/runner/cli/test_data_images",
+// 		"internal/runner/cli/test_data_images",
+// 		"backend/internal/runner/cli/demo_scenario_images",
+// 		"internal/runner/cli/demo_scenario_images",
+// 		"testdata",
+// 		"backend/internal/turn_sheet/testdata",
+// 		"internal/turn_sheet/testdata",
+// 		"turn_sheet/testdata",
+// 	}
+
+// 	if templatesPath := os.Getenv("TEMPLATES_PATH"); templatesPath != "" {
+// 		backendDir := filepath.Dir(templatesPath)
+// 		imagePaths = append(imagePaths,
+// 			filepath.Join(backendDir, "internal/runner/cli/test_data_images"),     //nolint:gocritic // intentional relative path
+// 			filepath.Join(backendDir, "internal/runner/cli/demo_scenario_images"), //nolint:gocritic // intentional relative path
+// 			filepath.Join(backendDir, "internal/turn_sheet/testdata"),             //nolint:gocritic // intentional relative path
+// 		)
+// 	}
+
+// 	var fullPath string
+// 	var found bool
+// 	for _, basePath := range imagePaths {
+// 		candidate := filepath.Join(basePath, imagePath)
+// 		if _, err := os.Stat(candidate); err == nil {
+// 			fullPath = candidate
+// 			found = true
+// 			break
+// 		}
+// 	}
+
+// 	if !found {
+// 		// Try absolute path
+// 		if _, err := os.Stat(imagePath); err == nil {
+// 			fullPath = imagePath
+// 			found = true
+// 		}
+// 	}
+
+// 	if !found {
+// 		// Log that we couldn't find the image
+// 		fmt.Printf("LoadTestImageFromPath: image not found >%s< cwd >%s< tried paths: %v\n", imagePath, cwd, imagePaths)
+// 		// Return empty data - caller should handle this
+// 		return nil, "", 0, 0
+// 	}
+
+// 	fmt.Printf("LoadTestImageFromPath: found image at >%s<\n", fullPath)
+
+// 	// Read image file
+// 	imageData, err := os.ReadFile(fullPath)
+// 	if err != nil {
+// 		return nil, "", 0, 0
+// 	}
+
+// 	// Determine MIME type from extension
+// 	ext := filepath.Ext(imagePath)
+// 	var mimeType string
+// 	switch ext {
+// 	case ".png":
+// 		mimeType = "image/png"
+// 	case ".jpg", ".jpeg":
+// 		mimeType = "image/jpeg"
+// 	case ".webp":
+// 		mimeType = "image/webp"
+// 	default:
+// 		mimeType = "image/png"
+// 	}
+
+// 	// Decode image to get dimensions
+// 	reader := bytes.NewReader(imageData)
+// 	img, _, err := image.Decode(reader)
+// 	if err != nil {
+// 		return imageData, mimeType, 0, 0
+// 	}
+
+// 	bounds := img.Bounds()
+// 	width := bounds.Max.X - bounds.Min.X
+// 	height := bounds.Max.Y - bounds.Min.Y
+
+// 	return imageData, mimeType, width, height
+// }

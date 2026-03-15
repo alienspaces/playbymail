@@ -64,7 +64,7 @@ func Test_getAccountHandler(t *testing.T) {
 				},
 				RequestHeaders: testutil.AuthHeaderStandard,
 				RequestPathParams: func(d harness.Data) map[string]string {
-					accountRec, err := d.GetAccountUserRecByRef(harness.StandardAccountRef)
+					accountRec, err := d.GetAccountUserRecByRef(harness.AccountUserStandardRef)
 					require.NoError(t, err, "GetAccountUserRecByRef returns without error")
 					params := map[string]string{
 						":account_id": accountRec.AccountID,
@@ -170,7 +170,7 @@ func Test_createUpdateAccountHandler(t *testing.T) {
 				},
 				RequestHeaders: testutil.AuthHeaderStandard,
 				RequestPathParams: func(d harness.Data) map[string]string {
-					accountRec, err := d.GetAccountUserRecByRef(harness.StandardAccountRef)
+					accountRec, err := d.GetAccountUserRecByRef(harness.AccountUserStandardRef)
 					require.NoError(t, err, "GetAccountUserRecByRef returns without error")
 					params := map[string]string{
 						":account_id": accountRec.AccountID,
@@ -242,7 +242,7 @@ func Test_getMeHandler(t *testing.T) {
 
 	testCaseResponseDecoder := testutil.TestCaseResponseDecoderGeneric[account_schema.AccountUserResponse]
 
-	accountUserRec, err := th.Data.GetAccountUserRecByRef(harness.StandardAccountRef)
+	accountUserRec, err := th.Data.GetAccountUserRecByRef(harness.AccountUserStandardRef)
 	require.NoError(t, err, "GetAccountUserRecByRef returns without error")
 
 	testCases := []testutil.TestCase{
@@ -251,7 +251,7 @@ func Test_getMeHandler(t *testing.T) {
 			HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 				return rnr.GetHandlerConfig()[account.GetMe]
 			},
-			RequestHeaders: testutil.AuthHeaderStandard,
+			RequestHeaders:  testutil.AuthHeaderStandard,
 			ResponseDecoder: testCaseResponseDecoder,
 			ResponseCode:    http.StatusOK,
 		},

@@ -68,6 +68,7 @@ func (p *AdventureGameLocationChoiceProcessor) ProcessTurnSheetResponse(ctx cont
 	}
 
 	chosenLocationID := choices[0]
+
 	l.Info("player chose location >%s<", chosenLocationID)
 
 	// Step 2: Parse SheetData to get the original location options and validate
@@ -93,16 +94,15 @@ func (p *AdventureGameLocationChoiceProcessor) ProcessTurnSheetResponse(ctx cont
 		return fmt.Errorf("invalid location choice: %s is not an available option", chosenLocationID)
 	}
 
-	// Step 3: Update character's location in the game state
+	// Step 3: Update character's location
 	characterInstanceRec.AdventureGameLocationInstanceID = chosenLocationID
-	updatedCharacter, err := p.Domain.UpdateAdventureGameCharacterInstanceRec(characterInstanceRec)
+	characterInstanceRec, err := p.Domain.UpdateAdventureGameCharacterInstanceRec(characterInstanceRec)
 	if err != nil {
 		l.Warn("failed to update character location >%v<", err)
 		return fmt.Errorf("failed to update character location: %w", err)
 	}
 
-	l.Info("successfully updated character >%s< to location >%s< via pathway >%s<",
-		updatedCharacter.ID, chosenLocationID, chosenLocationOption.LocationLinkName)
+	l.Info("successfully updated character >%s< to location >%s< via pathway >%s<", characterInstanceRec.ID, chosenLocationID, chosenLocationOption.LocationLinkName)
 
 	return nil
 }

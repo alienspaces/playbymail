@@ -15,10 +15,15 @@ const (
 	GameTwoRef   = "game-two"
 	GameDraftRef = "game-draft"
 
-	StandardAccountRef    = "account-standard"
-	ProPlayerAccountRef   = "account-pro-player"
-	ProDesignerAccountRef = "account-pro-designer"
-	ProManagerAccountRef  = "account-pro-manager"
+	AccountStandardRef    = "account-standard"
+	AccountProPlayerRef   = "account-pro-player"
+	AccountProDesignerRef = "account-pro-designer"
+	AccountProManagerRef  = "account-pro-manager"
+
+	AccountUserStandardRef    = "account-user-standard"
+	AccountUserProPlayerRef   = "account-user-pro-player"
+	AccountUserProDesignerRef = "account-user-pro-designer"
+	AccountUserProManagerRef  = "account-user-pro-manager"
 
 	GameLocationOneRef   = "game-location-one"
 	GameLocationTwoRef   = "game-location-two"
@@ -46,6 +51,7 @@ const (
 	GameCharacterOneRef   = "game-character-one"
 	GameCharacterTwoRef   = "game-character-two"
 	GameCharacterThreeRef = "game-character-three"
+	GameCharacterFourRef  = "game-character-four"
 
 	GameInstanceOneRef   = "game-instance-one"
 	GameInstanceTwoRef   = "game-instance-two"
@@ -61,6 +67,7 @@ const (
 	GameCreatureInstanceOneRef = "game-creature-instance-one"
 
 	GameCharacterInstanceOneRef = "game-character-instance-one"
+	GameCharacterInstanceTwoRef = "game-character-instance-two"
 
 	// Designer subscriptions
 	GameSubscriptionDesignerOneRef = "game-subscription-designer-one"
@@ -93,61 +100,96 @@ const (
 
 // DataConfig -
 type DataConfig struct {
-	GameConfigs             []GameConfig
-	AccountConfigs          []AccountConfig
-	GameSubscriptionConfigs []GameSubscriptionConfig  // Top-level subscriptions independent of accounts
-	SeedAccountRefs         map[string]string         // ref -> account_user_id (for pre-existing accounts)
+
+	// Account configurations result in account, account_user, and account_user_contact records.
+	AccountConfigs []AccountConfig
+
+	// Game configurations result in game, game_instance, and game_image records.
+	GameConfigs []GameConfig
+
+	// Account user game subscription configurations may only be be resolved
+	// once both accounts and games have been created.
+	AccountUserGameSubscriptionConfigs []AccountUserGameSubscriptionConfig
 }
 
 type GameConfig struct {
-	Reference                        string // Reference to the game record
-	Record                           *game_record.Game
-	GameInstanceConfigs              []GameInstanceConfig
-	AdventureGameLocationConfigs     []AdventureGameLocationConfig     // Locations associated with this game
-	AdventureGameLocationLinkConfigs []AdventureGameLocationLinkConfig // Links associated with this game
+	Reference        string // Reference to the game record
+	Record           *game_record.Game
+	GameImageConfigs []GameImageConfig // Game images for turn sheet backgrounds
+
+	// Adventure game specific configurations
+	AdventureGameLocationConfigs     []AdventureGameLocationConfig
+	AdventureGameLocationLinkConfigs []AdventureGameLocationLinkConfig
 	AdventureGameItemConfigs         []AdventureGameItemConfig
 	AdventureGameCreatureConfigs     []AdventureGameCreatureConfig
-	AdventureGameCharacterConfigs    []AdventureGameCharacterConfig
-	GameImageConfigs []GameImageConfig // Game image configurations
+	AdventureGameCharacterConfigs    []AdventureGameCharacterConfig // Characters associated with this game
+}
 
-	// Deprecated: Use GameImageConfigs instead
-	//
-	// Background image file path for game-level turn sheet backgrounds.
-	// If set, creates a game_image record with type turn_sheet_background.
-	BackgroundImagePath string // Path to image file relative to testdata directory
+type GameImageConfig struct {
+	// Reference to the game_image record
+	Reference string
+	// Path to image file relative to test_data_images or testdata directories (loaded at runtime). Required.
+	ImagePath string
+	// The turn sheet type for this image
+	TurnSheetType string
+	// RecordID is the optional record ID (e.g. location ID) for the related record.
+	RecordID string
 }
 
 type AccountConfig struct {
-	Reference                  string // Reference to the account record
-	Record                     *account_record.AccountUser
-	GameSubscriptionConfigs    []GameSubscriptionConfig    // Game subscriptions for this account
-	AccountSubscriptionConfigs []AccountSubscriptionConfig // Account subscriptions for this account
+	Reference          string // Reference to the account record
+	Record             *account_record.Account
+	AccountUserConfigs []AccountUserConfig
 }
 
-type AccountSubscriptionConfig struct {
+type AccountUserConfig struct {
+	Reference string // Reference to the account_user record
+	Record    *account_record.AccountUser
+
+	// Every account user by default will be assigned basic subscriptions.
+	// Additional subscriptions may be explicitly configured here.
+	AccountUserSubscriptionConfigs []AccountUserSubscriptionConfig
+}
+
+type AccountUserSubscriptionConfig struct {
 	SubscriptionType string // e.g., AccountSubscriptionTypeProfessionalPlayer
 	Record           *account_record.AccountSubscription
 }
 
 type GameInstanceConfig struct {
-	Reference                             string // Reference to the game_instance record
-	Record                                *game_record.GameInstance
-	GameInstanceParameterConfigs          []GameInstanceParameterConfig
+	Reference                    string // Reference to the game_instance record
+	Record                       *game_record.GameInstance
+	GameInstanceParameterConfigs []GameInstanceParameterConfig
+
+	// PlayerSubscriptionRefs links player-type game subscriptions to this instance (for GetPlayerCountForGameInstance, etc.)
+	PlayerSubscriptionRefs []string
+
+	// Adventure game specific instance configurations
 	AdventureGameLocationInstanceConfigs  []AdventureGameLocationInstanceConfig
 	AdventureGameItemInstanceConfigs      []AdventureGameItemInstanceConfig
 	AdventureGameCreatureInstanceConfigs  []AdventureGameCreatureInstanceConfig
 	AdventureGameCharacterInstanceConfigs []AdventureGameCharacterInstanceConfig
-	GameTurnConfigs                       []GameTurnConfig
+
+	// Game specific turn sheet configurations
+	GameTurnConfigs []GameTurnConfig
 }
 
-type GameSubscriptionConfig struct {
-	Reference        string   // Reference to the game_subscription record
-	AccountRef       string   // Reference to account (resolved from Data.Refs); used by top-level subscriptions
-	GameRef          string   // Reference to the game (required)
-	GameInstanceRefs []string // References to game_instances (optional, can link multiple instances)
-	SubscriptionType string   // Type of subscription (Player, Manager, Designer)
-	InstanceLimit    *int32   // Instance limit (nil = unlimited)
-	Record           *game_record.GameSubscription
+type AccountUserGameSubscriptionConfig struct {
+	Reference        string                        // Reference to the game_subscription record
+	AccountUserRef   string                        // Reference to account user (resolved from Data.Refs)
+	SubscriptionType string                        // Type of subscription (Player, Manager, Designer)
+	GameRef          string                        // Reference to the game
+	InstanceLimit    *int32                        // Instance limit (nil = unlimited)
+	Record           *game_record.GameSubscription // Optional record to use instead of default values
+
+	// For Manager subscriptions: instances this manager creates. Each instance is created and linked
+	// to this subscription via GameSubscriptionInstance.
+	GameInstanceConfigs []GameInstanceConfig
+
+	// For Player subscriptions: reference to the manager's game subscription (resolved from Data.Refs).
+	// Semantically: this player joined via this manager's subscription.
+	AccountUserManagerGameSubscriptionRef string
+
 	// JoinGameScanData configures scan data for join game turn sheets
 	// If provided, the harness will create a join game turn sheet and process it
 	// For adventure games, use turn_sheet.AdventureGameJoinGameScanData
@@ -208,11 +250,10 @@ type AdventureGameCreatureConfig struct {
 type AdventureGameLocationConfig struct {
 	Reference string // Reference to the game_location record
 	Record    *adventure_game_record.AdventureGameLocation
-	// Background image file path for location-specific turn sheet backgrounds
-	// If set, creates a game_image record with type turn_sheet_background
-	// associated with this location
-	// Path is relative to test_data_images or testdata directories
-	BackgroundImagePath string
+	// BackgroundImage if set, creates a game_image (turn_sheet_background) for this location.
+	// Only ImagePath (and optionally Reference) are set in config; RecordID and TurnSheetType
+	// are set at runtime from the created location ID and adventure_game_location_choice.
+	BackgroundImage *GameImageConfig
 }
 
 type AdventureGameLocationLinkConfig struct {
@@ -275,24 +316,19 @@ type AdventureGameItemInstanceConfig struct {
 	Record *adventure_game_record.AdventureGameItemInstance
 }
 
-type GameImageConfig struct {
-	Reference string // Reference to the game_image record
-	// Path to image file relative to test_data_images or testdata directories
-	// (loaded at runtime). If set, the image is loaded from file.
-	// If not set, the Record field must contain the image data.
-	ImagePath     string
-	TurnSheetType string // The turn sheet type for this image
-	Record        *game_record.GameImage
-}
-
 // Helper methods for modifying DataConfig
 
-// findGameInstanceConfig finds a game instance config by reference
-func (dc *DataConfig) findGameInstanceConfig(gameInstanceRef string) (*GameInstanceConfig, error) {
-	for i := range dc.GameConfigs {
-		for j := range dc.GameConfigs[i].GameInstanceConfigs {
-			if dc.GameConfigs[i].GameInstanceConfigs[j].Reference == gameInstanceRef {
-				return &dc.GameConfigs[i].GameInstanceConfigs[j], nil
+// FindGameInstanceConfig finds a game instance config by reference.
+// Instance configs live under manager subscription configs.
+func (dc *DataConfig) FindGameInstanceConfig(gameInstanceRef string) (*GameInstanceConfig, error) {
+	for i := range dc.AccountUserGameSubscriptionConfigs {
+		sub := &dc.AccountUserGameSubscriptionConfigs[i]
+		if sub.SubscriptionType != game_record.GameSubscriptionTypeManager {
+			continue
+		}
+		for j := range sub.GameInstanceConfigs {
+			if sub.GameInstanceConfigs[j].Reference == gameInstanceRef {
+				return &sub.GameInstanceConfigs[j], nil
 			}
 		}
 	}
@@ -301,7 +337,7 @@ func (dc *DataConfig) findGameInstanceConfig(gameInstanceRef string) (*GameInsta
 
 // findGameTurnConfig finds a turn config for a given game instance and turn number
 func (dc *DataConfig) findGameTurnConfig(gameInstanceRef string, turnNumber int) (*GameTurnConfig, error) {
-	instanceConfig, err := dc.findGameInstanceConfig(gameInstanceRef)
+	instanceConfig, err := dc.FindGameInstanceConfig(gameInstanceRef)
 	if err != nil {
 		return nil, err
 	}
@@ -332,7 +368,7 @@ func normalizeTurnConfigs(configs []GameTurnConfig) []GameTurnConfig {
 
 // ReplaceGameTurnConfigs replaces the full set of turn configs for a game instance
 func (dc *DataConfig) ReplaceGameTurnConfigs(gameInstanceRef string, configs []GameTurnConfig) error {
-	instanceConfig, err := dc.findGameInstanceConfig(gameInstanceRef)
+	instanceConfig, err := dc.FindGameInstanceConfig(gameInstanceRef)
 	if err != nil {
 		return err
 	}
@@ -342,7 +378,7 @@ func (dc *DataConfig) ReplaceGameTurnConfigs(gameInstanceRef string, configs []G
 
 // AppendGameTurnConfigs appends additional turn configs to a game instance
 func (dc *DataConfig) AppendGameTurnConfigs(gameInstanceRef string, configs []GameTurnConfig) error {
-	instanceConfig, err := dc.findGameInstanceConfig(gameInstanceRef)
+	instanceConfig, err := dc.FindGameInstanceConfig(gameInstanceRef)
 	if err != nil {
 		return err
 	}
@@ -352,7 +388,7 @@ func (dc *DataConfig) AppendGameTurnConfigs(gameInstanceRef string, configs []Ga
 
 // AppendAdventureGameTurnSheetConfigs appends configs to the first turn (for backwards compatibility)
 func (dc *DataConfig) AppendAdventureGameTurnSheetConfigs(gameInstanceRef string, configs []AdventureGameTurnSheetConfig) error {
-	instanceConfig, err := dc.findGameInstanceConfig(gameInstanceRef)
+	instanceConfig, err := dc.FindGameInstanceConfig(gameInstanceRef)
 	if err != nil {
 		return err
 	}
@@ -383,7 +419,7 @@ func (dc *DataConfig) ReplaceAdventureGameTurnSheetConfigs(gameInstanceRef strin
 
 // AppendGameTurnSheetConfigs appends configs to a specific turn (creating it if necessary)
 func (dc *DataConfig) AppendGameTurnSheetConfigs(gameInstanceRef string, turnNumber int, configs []AdventureGameTurnSheetConfig) error {
-	instanceConfig, err := dc.findGameInstanceConfig(gameInstanceRef)
+	instanceConfig, err := dc.FindGameInstanceConfig(gameInstanceRef)
 	if err != nil {
 		return err
 	}
@@ -407,15 +443,17 @@ func (dc *DataConfig) AppendGameTurnSheetConfigs(gameInstanceRef string, turnNum
 	return nil
 }
 
-// AppendGameInstanceConfigs appends game instance configs to a game
+// AppendGameInstanceConfigs appends game instance configs to the first manager subscription
+// config that has the given gameRef. Used by tests to add instances to a game's manager.
 func (dc *DataConfig) AppendGameInstanceConfigs(gameRef string, configs []GameInstanceConfig) error {
-	for i := range dc.GameConfigs {
-		if dc.GameConfigs[i].Reference == gameRef {
-			dc.GameConfigs[i].GameInstanceConfigs = append(dc.GameConfigs[i].GameInstanceConfigs, configs...)
+	for i := range dc.AccountUserGameSubscriptionConfigs {
+		sub := &dc.AccountUserGameSubscriptionConfigs[i]
+		if sub.SubscriptionType == game_record.GameSubscriptionTypeManager && sub.GameRef == gameRef {
+			sub.GameInstanceConfigs = append(sub.GameInstanceConfigs, configs...)
 			return nil
 		}
 	}
-	return fmt.Errorf("game config with reference >%s< not found", gameRef)
+	return fmt.Errorf("manager subscription config for game ref >%s< not found", gameRef)
 }
 
 // TODO: Possibly rename the following to AdventureGameDataConfig when additional game types are added
@@ -425,82 +463,64 @@ func DefaultDataConfig() DataConfig {
 	return DataConfig{
 		AccountConfigs: []AccountConfig{
 			{
-				// Standard account with basic subscriptions only
-				Reference:                  StandardAccountRef,
-				Record:                     &account_record.AccountUser{},
-				AccountSubscriptionConfigs: []AccountSubscriptionConfig{},
-				GameSubscriptionConfigs: []GameSubscriptionConfig{
+				// Standard account with a single user withbasic subscriptions only
+				Reference: AccountStandardRef,
+				Record:    &account_record.Account{},
+				AccountUserConfigs: []AccountUserConfig{
 					{
-						Reference:        GameSubscriptionDesignerOneRef,
-						GameRef:          GameOneRef,
-						SubscriptionType: game_record.GameSubscriptionTypeDesigner,
-						Record:           &game_record.GameSubscription{},
-					},
-					{
-						Reference:        GameSubscriptionPlayerThreeRef, // Use a new ref or existing unused one
-						GameRef:          GameOneRef,
-						GameInstanceRefs: []string{GameInstanceOneRef},
-						SubscriptionType: game_record.GameSubscriptionTypePlayer,
-						Record:           &game_record.GameSubscription{},
+						Reference: AccountUserStandardRef,
+						Record:    &account_record.AccountUser{},
 					},
 				},
 			},
 			{
-				// Pro player account with basic subscriptions + pro player subscription
-				Reference: ProPlayerAccountRef,
-				Record:    &account_record.AccountUser{},
-				AccountSubscriptionConfigs: []AccountSubscriptionConfig{
+				// Pro player account with a single user with basic subscriptions + pro player subscription
+				Reference: AccountProPlayerRef,
+				Record:    &account_record.Account{},
+				AccountUserConfigs: []AccountUserConfig{
 					{
-						SubscriptionType: account_record.AccountSubscriptionTypeProfessionalPlayer,
-						Record:           &account_record.AccountSubscription{},
-					},
-				},
-				GameSubscriptionConfigs: []GameSubscriptionConfig{
-					{
-						Reference:        GameSubscriptionPlayerOneRef,
-						GameRef:          GameOneRef,
-						GameInstanceRefs: []string{GameInstanceOneRef},
-						SubscriptionType: game_record.GameSubscriptionTypePlayer,
-						Record:           &game_record.GameSubscription{},
+						Reference: AccountUserProPlayerRef,
+						Record:    &account_record.AccountUser{},
+						AccountUserSubscriptionConfigs: []AccountUserSubscriptionConfig{
+							{
+								SubscriptionType: account_record.AccountSubscriptionTypeProfessionalPlayer,
+								Record:           &account_record.AccountSubscription{},
+							},
+						},
 					},
 				},
 			},
 			{
-				// Pro designer account with basic subscriptions + pro designer subscription
-				Reference: ProDesignerAccountRef,
-				Record:    &account_record.AccountUser{},
-				AccountSubscriptionConfigs: []AccountSubscriptionConfig{
+				// Pro designer account with a single user with basic subscriptions + pro designer subscription
+				Reference: AccountProDesignerRef,
+				Record:    &account_record.Account{},
+				AccountUserConfigs: []AccountUserConfig{
 					{
-						SubscriptionType: account_record.AccountSubscriptionTypeProfessionalGameDesigner,
-						Record:           &account_record.AccountSubscription{},
-					},
-				},
-				GameSubscriptionConfigs: []GameSubscriptionConfig{
-					{
-						Reference:        GameSubscriptionDesignerOneRef,
-						GameRef:          GameOneRef,
-						SubscriptionType: game_record.GameSubscriptionTypeDesigner,
-						Record:           &game_record.GameSubscription{},
+						Reference: AccountUserProDesignerRef,
+						Record:    &account_record.AccountUser{},
+						AccountUserSubscriptionConfigs: []AccountUserSubscriptionConfig{
+							{
+								SubscriptionType: account_record.AccountSubscriptionTypeProfessionalGameDesigner,
+								Record:           &account_record.AccountSubscription{},
+							},
+						},
 					},
 				},
 			},
 			{
-				// Pro manager account with basic subscriptions + pro manager subscription
-				Reference: ProManagerAccountRef,
-				Record:    &account_record.AccountUser{},
-				AccountSubscriptionConfigs: []AccountSubscriptionConfig{
+				// Pro manager account with a single user with basic subscriptions + pro manager subscription
+				Reference: AccountProManagerRef,
+				Record:    &account_record.Account{},
+				AccountUserConfigs: []AccountUserConfig{
 					{
-						SubscriptionType: account_record.AccountSubscriptionTypeProfessionalManager,
-						Record:           &account_record.AccountSubscription{},
-					},
-				},
-				GameSubscriptionConfigs: []GameSubscriptionConfig{
-					{
-						Reference:        GameSubscriptionManagerOneRef,
-						GameRef:          GameOneRef,
-						GameInstanceRefs: []string{GameInstanceOneRef, GameInstanceCleanRef},
-						SubscriptionType: game_record.GameSubscriptionTypeManager,
-						Record:           &game_record.GameSubscription{},
+						Reference: AccountUserProManagerRef,
+						Record:    &account_record.AccountUser{},
+						AccountUserSubscriptionConfigs: []AccountUserSubscriptionConfig{
+							{
+								SubscriptionType: account_record.AccountSubscriptionTypeProfessionalManager,
+								Record:           &account_record.AccountSubscription{},
+							},
+						},
 					},
 				},
 			},
@@ -598,75 +618,17 @@ func DefaultDataConfig() DataConfig {
 				AdventureGameCharacterConfigs: []AdventureGameCharacterConfig{
 					{
 						Reference:  GameCharacterOneRef,
-						AccountRef: StandardAccountRef,
+						AccountRef: AccountUserStandardRef,
 						Record: &adventure_game_record.AdventureGameCharacter{
 							Name: UniqueName("Default Character One"),
 						},
 					},
 					{
 						Reference:  GameCharacterTwoRef,
-						AccountRef: ProPlayerAccountRef,
+						AccountRef: AccountUserProPlayerRef,
 						Record: &adventure_game_record.AdventureGameCharacter{
 							Name: UniqueName("Default Character Two"),
 						},
-					},
-				},
-				// Default adventure game instance with a location and an item assigned to the location
-				GameInstanceConfigs: []GameInstanceConfig{
-					{
-						Reference: GameInstanceOneRef,
-						Record:    &game_record.GameInstance{},
-						GameInstanceParameterConfigs: []GameInstanceParameterConfig{
-							{
-								Reference: GameInstanceParameterOneRef,
-								Record: &game_record.GameInstanceParameter{
-									ParameterKey:   domain.AdventureGameParameterCharacterLives,
-									ParameterValue: nullstring.FromString("3"),
-								},
-							},
-						},
-						// AdventureGameLocationInstanceConfigs: []AdventureGameLocationInstanceConfig{
-						// 	{
-						// 		Reference:       GameLocationInstanceOneRef,
-						// 		GameLocationRef: GameLocationOneRef,
-						// 		Record:          &adventure_game_record.AdventureGameLocationInstance{},
-						// 	},
-						// 	{
-						// 		Reference:       GameLocationInstanceTwoRef,
-						// 		GameLocationRef: GameLocationTwoRef,
-						// 		Record:          &adventure_game_record.AdventureGameLocationInstance{},
-						// 	},
-						// },
-						AdventureGameItemInstanceConfigs: []AdventureGameItemInstanceConfig{
-							{
-								Reference:       GameItemInstanceOneRef,
-								GameItemRef:     GameItemOneRef,
-								GameLocationRef: GameLocationOneRef, // Assign to location
-								Record:          &adventure_game_record.AdventureGameItemInstance{},
-							},
-						},
-						AdventureGameCreatureInstanceConfigs: []AdventureGameCreatureInstanceConfig{
-							{
-								Reference:       GameCreatureInstanceOneRef,
-								GameCreatureRef: GameCreatureOneRef,
-								GameLocationRef: GameLocationOneRef, // Assign to location
-								Record:          &adventure_game_record.AdventureGameCreatureInstance{},
-							},
-						},
-						AdventureGameCharacterInstanceConfigs: []AdventureGameCharacterInstanceConfig{
-							{
-								Reference:        GameCharacterInstanceOneRef,
-								GameCharacterRef: GameCharacterOneRef,
-								GameLocationRef:  GameLocationOneRef,
-								Record:           &adventure_game_record.AdventureGameCharacterInstance{},
-							},
-						},
-					},
-					// Clean game instance with no parameters for testing
-					{
-						Reference: GameInstanceCleanRef,
-						Record:    &game_record.GameInstance{},
-						// No parameters, no instances - clean slate for testing
 					},
 				},
 			},
@@ -678,6 +640,94 @@ func DefaultDataConfig() DataConfig {
 					GameType:          game_record.GameTypeAdventure,
 					TurnDurationHours: 168,
 					Status:            game_record.GameStatusDraft,
+				},
+			},
+		},
+		// Account user game subscription configurations may only be be resolved
+		// once both accounts and games have been created.
+		AccountUserGameSubscriptionConfigs: []AccountUserGameSubscriptionConfig{
+			{
+				Reference:        GameSubscriptionDesignerOneRef,
+				AccountUserRef:   AccountUserStandardRef,
+				GameRef:          GameOneRef,
+				SubscriptionType: game_record.GameSubscriptionTypeDesigner,
+				Record:           &game_record.GameSubscription{},
+			},
+			{
+				Reference:                          GameSubscriptionPlayerThreeRef,
+				AccountUserRef:                     AccountUserStandardRef,
+				GameRef:                            GameOneRef,
+				SubscriptionType:                   game_record.GameSubscriptionTypePlayer,
+				AccountUserManagerGameSubscriptionRef: GameSubscriptionManagerOneRef,
+				Record:                             &game_record.GameSubscription{},
+			},
+			{
+				Reference:                          GameSubscriptionPlayerOneRef,
+				AccountUserRef:                     AccountUserStandardRef,
+				GameRef:                            GameOneRef,
+				SubscriptionType:                   game_record.GameSubscriptionTypePlayer,
+				AccountUserManagerGameSubscriptionRef: GameSubscriptionManagerOneRef,
+				Record:                             &game_record.GameSubscription{},
+			},
+			{
+				Reference:        GameSubscriptionDesignerOneRef,
+				AccountUserRef:   AccountUserProDesignerRef,
+				GameRef:          GameOneRef,
+				SubscriptionType: game_record.GameSubscriptionTypeDesigner,
+				Record:           &game_record.GameSubscription{},
+			},
+			{
+				Reference:        GameSubscriptionManagerOneRef,
+				AccountUserRef:   AccountUserProManagerRef,
+				GameRef:          GameOneRef,
+				SubscriptionType: game_record.GameSubscriptionTypeManager,
+				Record:           &game_record.GameSubscription{},
+				GameInstanceConfigs: []GameInstanceConfig{
+					{
+						Reference: GameInstanceOneRef,
+						Record:    &game_record.GameInstance{},
+						PlayerSubscriptionRefs:      []string{GameSubscriptionPlayerOneRef, GameSubscriptionPlayerThreeRef},
+						GameInstanceParameterConfigs: []GameInstanceParameterConfig{
+							{
+								Reference: GameInstanceParameterOneRef,
+								Record: &game_record.GameInstanceParameter{
+									ParameterKey:   domain.AdventureGameParameterCharacterLives,
+									ParameterValue: nullstring.FromString("3"),
+								},
+							},
+						},
+						AdventureGameItemInstanceConfigs: []AdventureGameItemInstanceConfig{
+							{
+								Reference:       GameItemInstanceOneRef,
+								GameItemRef:     GameItemOneRef,
+								GameLocationRef: GameLocationOneRef,
+								Record:          &adventure_game_record.AdventureGameItemInstance{},
+							},
+						},
+						AdventureGameCreatureInstanceConfigs: []AdventureGameCreatureInstanceConfig{
+							{
+								Reference:       GameCreatureInstanceOneRef,
+								GameCreatureRef: GameCreatureOneRef,
+								GameLocationRef: GameLocationOneRef,
+								Record:          &adventure_game_record.AdventureGameCreatureInstance{},
+							},
+						},
+						AdventureGameCharacterInstanceConfigs: []AdventureGameCharacterInstanceConfig{
+							{
+								Reference:        GameCharacterInstanceOneRef,
+								GameCharacterRef: GameCharacterOneRef,
+								GameLocationRef:  GameLocationOneRef,
+								Record:           &adventure_game_record.AdventureGameCharacterInstance{},
+							},
+						},
+						GameTurnConfigs: []GameTurnConfig{
+							{TurnNumber: 1},
+						},
+					},
+					{
+						Reference: GameInstanceCleanRef,
+						Record:    &game_record.GameInstance{},
+					},
 				},
 			},
 		},

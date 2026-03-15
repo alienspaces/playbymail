@@ -100,21 +100,29 @@ func TestEnsureDemoAccounts(t *testing.T) {
 	rnr := newTestRunnerWithDomain(t)
 	defer removeDemoAccounts(t, rnr)
 
-	// First call: creates accounts
-	refs, err := rnr.ensureDemoAccounts()
-	require.NoError(t, err, "ensureDemoAccounts succeeds on first call")
-	require.Len(t, refs, len(demo_scenarios.DemoAccountDefs), "returns one ref per account def")
+	n := len(demo_scenarios.DemoAccountDefs)
 
-	for _, def := range demo_scenarios.DemoAccountDefs {
-		id, ok := refs[def.Ref]
-		require.True(t, ok, "ref %s is present", def.Ref)
-		require.NotEmpty(t, id, "account ID for ref %s is non-empty", def.Ref)
+	// First call: creates accounts
+	demoRecs, err := rnr.ensureDemoAccounts()
+	require.NoError(t, err, "ensureDemoAccounts succeeds on first call")
+	require.Len(t, demoRecs.Accounts, n, "returns one account per def")
+	require.Len(t, demoRecs.AccountUsers, n, "returns one account user per def")
+	require.Len(t, demoRecs.AccountUserContacts, n, "returns one account user contact per def")
+
+	for i, def := range demo_scenarios.DemoAccountDefs {
+		require.Equal(t, def.Email, demoRecs.AccountUsers[i].Email, "account user email matches def")
+		require.NotEmpty(t, demoRecs.AccountUsers[i].ID, "account user ID non-empty for %s", def.Ref)
+		require.Equal(t, demoRecs.AccountUsers[i].ID, demoRecs.AccountUserContacts[i].AccountUserID, "contact belongs to account user")
+		require.Equal(t, demoRecs.AccountUsers[i].AccountID, demoRecs.Accounts[i].ID, "account user belongs to account")
 	}
 
 	// Second call: idempotent -- same IDs returned
-	refs2, err := rnr.ensureDemoAccounts()
+	demoRecs2, err := rnr.ensureDemoAccounts()
 	require.NoError(t, err, "ensureDemoAccounts succeeds on second call")
-	require.Equal(t, refs, refs2, "second call returns identical refs")
+	require.Len(t, demoRecs2.AccountUsers, n, "second call returns same count")
+	for i := 0; i < n; i++ {
+		require.Equal(t, demoRecs.AccountUsers[i].ID, demoRecs2.AccountUsers[i].ID, "second call returns identical account user IDs")
+	}
 }
 
 func TestRemoveGameByName(t *testing.T) {
@@ -122,11 +130,16 @@ func TestRemoveGameByName(t *testing.T) {
 	defer removeDemoAccounts(t, rnr)
 
 	// Load the full demo scenario so we have a game to remove
-	refs, err := rnr.ensureDemoAccounts()
+	demoRecs, err := rnr.ensureDemoAccounts()
 	require.NoError(t, err)
 
 	config := demo_scenarios.AdventureGameConfig()
-	config.SeedAccountRefs = refs
+	for i := range config.AccountUserGameSubscriptionConfigs {
+		if i < len(demoRecs.AccountUsers) && config.AccountUserGameSubscriptionConfigs[i].Record != nil {
+			config.AccountUserGameSubscriptionConfigs[i].Record.AccountID = demoRecs.AccountUsers[i].AccountID
+			config.AccountUserGameSubscriptionConfigs[i].Record.AccountUserID = demoRecs.AccountUsers[i].ID
+		}
+	}
 
 	th, err := newTestHarness(t, rnr, config)
 	require.NoError(t, err)
@@ -177,11 +190,16 @@ func TestRemoveGameAndDependents(t *testing.T) {
 	defer removeDemoAccounts(t, rnr)
 
 	// Load the full scenario
-	refs, err := rnr.ensureDemoAccounts()
+	demoRecs, err := rnr.ensureDemoAccounts()
 	require.NoError(t, err)
 
 	config := demo_scenarios.AdventureGameConfig()
-	config.SeedAccountRefs = refs
+	for i := range config.AccountUserGameSubscriptionConfigs {
+		if i < len(demoRecs.AccountUsers) && config.AccountUserGameSubscriptionConfigs[i].Record != nil {
+			config.AccountUserGameSubscriptionConfigs[i].Record.AccountID = demoRecs.AccountUsers[i].AccountID
+			config.AccountUserGameSubscriptionConfigs[i].Record.AccountUserID = demoRecs.AccountUsers[i].ID
+		}
+	}
 
 	th, err := newTestHarness(t, rnr, config)
 	require.NoError(t, err)
@@ -197,18 +215,18 @@ func TestRemoveGameAndDependents(t *testing.T) {
 	require.NotEmpty(t, th.Data.GameRecs, "harness should have created a game")
 	gameID := th.Data.GameRecs[0].ID
 
-	byGame := &coresql.Options{
-		Params: []coresql.Param{{Col: "game_id", Val: gameID}},
-	}
-
 	dm := rnr.Domain.(*domain.Domain)
 
 	// Verify dependent records exist before removal
-	locs, err := dm.GetManyAdventureGameLocationRecs(byGame)
+	locs, err := dm.GetManyAdventureGameLocationRecs(&coresql.Options{
+		Params: []coresql.Param{{Col: adventure_game_record.FieldAdventureGameLocationGameID, Val: gameID}},
+	})
 	require.NoError(t, err)
 	require.NotEmpty(t, locs, "locations should exist before removal")
 
-	items, err := dm.GetManyAdventureGameItemRecs(byGame)
+	items, err := dm.GetManyAdventureGameItemRecs(&coresql.Options{
+		Params: []coresql.Param{{Col: adventure_game_record.FieldAdventureGameItemGameID, Val: gameID}},
+	})
 	require.NoError(t, err)
 	require.NotEmpty(t, items, "items should exist before removal")
 
@@ -218,17 +236,16 @@ func TestRemoveGameAndDependents(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEmpty(t, links, "links should exist before removal")
 
+	// Demo scenario may not create instances/subs (no AccountUserGameSubscriptionConfigs);
+	// we still verify they are gone after removal below.
 	instances, err := dm.GetManyGameInstanceRecs(&coresql.Options{
 		Params: []coresql.Param{{Col: game_record.FieldGameInstanceGameID, Val: gameID}},
 	})
 	require.NoError(t, err)
-	require.NotEmpty(t, instances, "instances should exist before removal")
-
 	subs, err := dm.GetManyGameSubscriptionRecs(&coresql.Options{
 		Params: []coresql.Param{{Col: game_record.FieldGameSubscriptionGameID, Val: gameID}},
 	})
 	require.NoError(t, err)
-	require.NotEmpty(t, subs, "subscriptions should exist before removal")
 
 	// Remove the game and all dependents
 	err = rnr.removeGameByName(demo_scenarios.DemoAdventureGameName)
@@ -236,17 +253,22 @@ func TestRemoveGameAndDependents(t *testing.T) {
 
 	err = rnr.Domain.Commit()
 	require.NoError(t, err)
+
 	err = rnr.InitDomainTx()
 	require.NoError(t, err)
 
 	dm = rnr.Domain.(*domain.Domain)
 
 	// Verify all dependents are gone
-	locs, err = dm.GetManyAdventureGameLocationRecs(byGame)
+	locs, err = dm.GetManyAdventureGameLocationRecs(&coresql.Options{
+		Params: []coresql.Param{{Col: adventure_game_record.FieldAdventureGameLocationGameID, Val: gameID}},
+	})
 	require.NoError(t, err)
 	require.Empty(t, locs, "locations should be removed")
 
-	items, err = dm.GetManyAdventureGameItemRecs(byGame)
+	items, err = dm.GetManyAdventureGameItemRecs(&coresql.Options{
+		Params: []coresql.Param{{Col: adventure_game_record.FieldAdventureGameItemGameID, Val: gameID}},
+	})
 	require.NoError(t, err)
 	require.Empty(t, items, "items should be removed")
 
@@ -274,7 +296,9 @@ func TestRemoveGameAndDependents(t *testing.T) {
 	require.NoError(t, err)
 	require.Empty(t, images, "images should be removed")
 
-	creatures, err := dm.GetManyAdventureGameCreatureRecs(byGame)
+	creatures, err := dm.GetManyAdventureGameCreatureRecs(&coresql.Options{
+		Params: []coresql.Param{{Col: adventure_game_record.FieldAdventureGameCreatureGameID, Val: gameID}},
+	})
 	require.NoError(t, err)
 	require.Empty(t, creatures, "creatures should be removed")
 

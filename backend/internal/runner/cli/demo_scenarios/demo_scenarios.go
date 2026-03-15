@@ -2,7 +2,6 @@ package demo_scenarios
 
 import (
 	"gitlab.com/alienspaces/playbymail/internal/harness"
-	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 )
 
 const (
@@ -33,27 +32,27 @@ var DemoAccountDefs = []struct {
 }
 
 // AdventureGameConfig returns a standalone demo scenario exercising all adventure game features.
-// Accounts are managed by the CLI -- AccountConfigs is empty. Subscriptions reference
-// accounts via AccountRef and are processed as top-level GameSubscriptionConfigs.
+// Accounts are managed by the CLI -- AccountConfigs is empty. Subscriptions are top-level
+// GameSubscriptionConfigs; the caller must set each Record.AccountID and Record.AccountUserID
+// from the demo account records (e.g. from ensureDemoAccounts()) in order: first subscription
+// uses first demo account, second uses second.
 func AdventureGameConfig() harness.DataConfig {
 	return harness.DataConfig{
 		GameConfigs: adventureGameConfigs(),
-		GameSubscriptionConfigs: []harness.GameSubscriptionConfig{
-			{
-				Reference:        DemoSubscriptionDesignerOneRef,
-				AccountRef:       DemoAccountDesignerRef,
-				GameRef:          DemoAdventureGameRef,
-				SubscriptionType: game_record.GameSubscriptionTypeDesigner,
-				Record:           &game_record.GameSubscription{},
-			},
-			{
-				Reference:        DemoSubscriptionManagerOneRef,
-				AccountRef:       DemoAccountManagerRef,
-				GameRef:          DemoAdventureGameRef,
-				GameInstanceRefs: []string{DemoInstanceOneRef},
-				SubscriptionType: game_record.GameSubscriptionTypeManager,
-				Record:           &game_record.GameSubscription{},
-			},
-		},
+		// AccountUserGameSubscriptionConfigs: []harness.AccountUserGameSubscriptionConfig{
+		// 	{
+		// 		Reference:        DemoSubscriptionDesignerOneRef,
+		// 		GameRef:          DemoAdventureGameRef,
+		// 		SubscriptionType: game_record.GameSubscriptionTypeDesigner,
+		// 		Record:           &game_record.GameSubscription{},
+		// 	},
+		// 	{
+		// 		Reference:        DemoSubscriptionManagerOneRef,
+		// 		GameRef:          DemoAdventureGameRef,
+		// 		GameInstanceRefs: []string{DemoInstanceOneRef},
+		// 		SubscriptionType: game_record.GameSubscriptionTypeManager,
+		// 		Record:           &game_record.GameSubscription{},
+		// 	},
+		// },
 	}
 }

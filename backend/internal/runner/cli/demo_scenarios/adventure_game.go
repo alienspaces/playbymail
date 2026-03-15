@@ -1,8 +1,6 @@
 package demo_scenarios
 
 import (
-	"gitlab.com/alienspaces/playbymail/core/nullstring"
-	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/harness"
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
@@ -37,7 +35,7 @@ const (
 	DemoLocInstanceNarrowPassageRef  = "demo-loc-inst-narrow-passage"
 	DemoLocInstanceWineCellarRef     = "demo-loc-inst-wine-cellar"
 
-	DemoItemInstanceRustyKeyRef     = "demo-item-inst-rusty-key"
+	DemoItemInstanceRustyKeyRef      = "demo-item-inst-rusty-key"
 	DemoCreatureInstanceCellarRatRef = "demo-creature-inst-cellar-rat"
 
 	DemoImageJoinGameRef  = "demo-image-join-game"
@@ -93,7 +91,7 @@ func adventureGameConfigs() []harness.GameConfig {
 						Description:        "A wide stone staircase sweeps upward through the abbey's entrance hall. Dust motes drift in the pale light. Beneath the lowest step, a small wooden door is barely visible, its iron handle dark with age.",
 						IsStartingLocation: true,
 					},
-					BackgroundImagePath: ImageLocGrandStaircase,
+					BackgroundImage: &harness.GameImageConfig{ImagePath: ImageLocGrandStaircase},
 				},
 				{
 					Reference: DemoLocNarrowPassageRef,
@@ -101,7 +99,7 @@ func adventureGameConfigs() []harness.GameConfig {
 						Name:        "The Narrow Passage",
 						Description: "A cramped tunnel of rough-hewn stone stretches ahead, so low you must stoop. A single candle would barely push back the darkness here.",
 					},
-					BackgroundImagePath: ImageLocNarrowPassage,
+					BackgroundImage: &harness.GameImageConfig{ImagePath: ImageLocNarrowPassage},
 				},
 				{
 					Reference: DemoLocWineCellarRef,
@@ -109,7 +107,7 @@ func adventureGameConfigs() []harness.GameConfig {
 						Name:        "The Wine Cellar",
 						Description: "Vaulted stone arches line a long cellar. Dusty bottles fill sagging wooden shelves, and cobwebs drape every surface. Something rustles in the shadows between the racks.",
 					},
-					BackgroundImagePath: ImageLocWineCellar,
+					BackgroundImage: &harness.GameImageConfig{ImagePath: ImageLocWineCellar},
 				},
 				{
 					Reference: DemoLocCryptRef,
@@ -117,7 +115,7 @@ func adventureGameConfigs() []harness.GameConfig {
 						Name:        "The Crypt",
 						Description: "Cold stone sarcophagi rest in alcoves along the walls. Faded inscriptions in an old language cover the floor. A chill hangs in the air that has nothing to do with the depth underground.",
 					},
-					BackgroundImagePath: ImageLocCrypt,
+					BackgroundImage: &harness.GameImageConfig{ImagePath: ImageLocCrypt},
 				},
 				{
 					Reference: DemoLocUndergroundChapelRef,
@@ -125,7 +123,7 @@ func adventureGameConfigs() []harness.GameConfig {
 						Name:        "The Underground Chapel",
 						Description: "A forgotten chapel carved from the bedrock. Crumbling wooden pews face a cracked stone altar. Faint light filters down through a narrow shaft in the ceiling far above.",
 					},
-					BackgroundImagePath: ImageLocUndergroundChapel,
+					BackgroundImage: &harness.GameImageConfig{ImagePath: ImageLocUndergroundChapel},
 				},
 				{
 					Reference: DemoLocFloodedCorridorRef,
@@ -133,7 +131,7 @@ func adventureGameConfigs() []harness.GameConfig {
 						Name:        "The Flooded Corridor",
 						Description: "Dark water covers the floor of this vaulted passage, reflecting distant torchlight. Drips echo from the ceiling. The water is cold and still, hiding whatever lies beneath.",
 					},
-					BackgroundImagePath: ImageLocFloodedCorridor,
+					BackgroundImage: &harness.GameImageConfig{ImagePath: ImageLocFloodedCorridor},
 				},
 				{
 					Reference: DemoLocAbbotsStudyRef,
@@ -141,7 +139,7 @@ func adventureGameConfigs() []harness.GameConfig {
 						Name:        "The Abbot's Study",
 						Description: "A hidden room behind a false wall. A heavy oak desk is buried under scattered manuscripts, and old leather-bound books line the shelves. A single candle stub sits in a brass holder.",
 					},
-					BackgroundImagePath: ImageLocAbbotsStudy,
+					BackgroundImage: &harness.GameImageConfig{ImagePath: ImageLocAbbotsStudy},
 				},
 				{
 					Reference: DemoLocWellChamberRef,
@@ -149,7 +147,7 @@ func adventureGameConfigs() []harness.GameConfig {
 						Name:        "The Well Chamber",
 						Description: "A circular stone chamber built around an ancient well. A frayed rope hangs over the lip, and darkness yawns below. The stones are slick with moisture.",
 					},
-					BackgroundImagePath: ImageLocWellChamber,
+					BackgroundImage: &harness.GameImageConfig{ImagePath: ImageLocWellChamber},
 				},
 				{
 					Reference: DemoLocHerbGardenRef,
@@ -157,7 +155,7 @@ func adventureGameConfigs() []harness.GameConfig {
 						Name:        "The Herb Garden",
 						Description: "An overgrown walled garden behind the abbey. Tangled herbs push through cracked flagstones. Crumbling stone walls frame a grey overcast sky. The air smells of thyme and damp earth.",
 					},
-					BackgroundImagePath: ImageLocHerbGarden,
+					BackgroundImage: &harness.GameImageConfig{ImagePath: ImageLocHerbGarden},
 				},
 				{
 					Reference: DemoLocBellTowerVaultRef,
@@ -165,7 +163,7 @@ func adventureGameConfigs() []harness.GameConfig {
 						Name:        "The Bell Tower Vault",
 						Description: "A small secret vault beneath the bell tower, reached by a hidden stair. Iron-bound chests sit under low stone arches. Dust motes swirl in a thin shaft of light from above.",
 					},
-					BackgroundImagePath: ImageLocBellTowerVault,
+					BackgroundImage: &harness.GameImageConfig{ImagePath: ImageLocBellTowerVault},
 				},
 			},
 
@@ -401,56 +399,6 @@ func adventureGameConfigs() []harness.GameConfig {
 					Record: &adventure_game_record.AdventureGameLocationLink{
 						Name:        "The Spiral Stair Down",
 						Description: "The narrow staircase winds back down to the well chamber.",
-					},
-				},
-			},
-
-			// ── Game Instances ─────────────────────────────────────────
-			GameInstanceConfigs: []harness.GameInstanceConfig{
-				{
-					Reference: DemoInstanceOneRef,
-					Record:    &game_record.GameInstance{},
-					GameInstanceParameterConfigs: []harness.GameInstanceParameterConfig{
-						{
-							Reference: DemoInstanceParamOneRef,
-							Record: &game_record.GameInstanceParameter{
-								ParameterKey:   domain.AdventureGameParameterCharacterLives,
-								ParameterValue: nullstring.FromString("5"),
-							},
-						},
-					},
-					AdventureGameLocationInstanceConfigs: []harness.AdventureGameLocationInstanceConfig{
-						{
-							Reference:       DemoLocInstanceGrandStaircaseRef,
-							GameLocationRef: DemoLocGrandStaircaseRef,
-							Record:          &adventure_game_record.AdventureGameLocationInstance{},
-						},
-						{
-							Reference:       DemoLocInstanceNarrowPassageRef,
-							GameLocationRef: DemoLocNarrowPassageRef,
-							Record:          &adventure_game_record.AdventureGameLocationInstance{},
-						},
-						{
-							Reference:       DemoLocInstanceWineCellarRef,
-							GameLocationRef: DemoLocWineCellarRef,
-							Record:          &adventure_game_record.AdventureGameLocationInstance{},
-						},
-					},
-					AdventureGameItemInstanceConfigs: []harness.AdventureGameItemInstanceConfig{
-						{
-							Reference:       DemoItemInstanceRustyKeyRef,
-							GameItemRef:     DemoItemRustyKeyRef,
-							GameLocationRef: DemoLocGrandStaircaseRef,
-							Record:          &adventure_game_record.AdventureGameItemInstance{},
-						},
-					},
-					AdventureGameCreatureInstanceConfigs: []harness.AdventureGameCreatureInstanceConfig{
-						{
-							Reference:       DemoCreatureInstanceCellarRatRef,
-							GameCreatureRef: DemoCreatureCellarRatRef,
-							GameLocationRef: DemoLocWineCellarRef,
-							Record:          &adventure_game_record.AdventureGameCreatureInstance{},
-						},
 					},
 				},
 			},

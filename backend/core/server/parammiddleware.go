@@ -122,14 +122,6 @@ func paramsToJSON(q url.Values, queryParamTypes map[string]jsonschema.JSONType) 
 		jsonBuilder.WriteString(`"` + k + `"`)
 		jsonBuilder.WriteString(":")
 
-		// TODO: consider comma or pipe separators for OR instead of [] suffix.
-		// Currently, query params with the [] suffix are not being validated.
-		// Currently, we can express (OR *) (AND *); but with the above suggested
-		// change, it would be possible to express ((OR *) [AND])*
-		// However, this would also mean that multiple rounds of jsonschema
-		// validation for the query param would be needed, as a string type field
-		// cannot be an array. So each item in the string array would require one
-		// round of validation.
 		if strings.HasSuffix(k, "[]") || queryParamTypes[k].IsArray {
 			paramKey := strings.ReplaceAll(k, "[]", "")
 			arr := "["

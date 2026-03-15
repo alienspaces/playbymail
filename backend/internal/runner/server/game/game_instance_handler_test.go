@@ -236,10 +236,11 @@ func Test_getOneGameInstanceHandler(t *testing.T) {
 				ResponseCode:    http.StatusOK,
 			},
 			expectResponse: func(d harness.Data) game_schema.GameInstanceResponse {
+				// GameInstanceOneRef has GameTurnConfigs so harness starts it and processes turn 0 → status "started", CurrentTurn 1
 				return game_schema.GameInstanceResponse{
 					Data: &game_schema.GameInstanceResponseData{
-						Status:      "created",
-						CurrentTurn: 0,
+						Status:      "started",
+						CurrentTurn: 1,
 					},
 				}
 			},
@@ -394,10 +395,11 @@ func Test_updateOneGameInstanceHandler(t *testing.T) {
 				ResponseCode:    http.StatusOK,
 			},
 			expectResponse: func(d harness.Data, req game_schema.GameInstanceRequest) game_schema.GameInstanceResponse {
+				// GameInstanceOneRef has GameTurnConfigs so harness starts it → status "started"
 				return game_schema.GameInstanceResponse{
 					Data: &game_schema.GameInstanceResponseData{
 						GameID:      req.GameID,
-						Status:      "created",
+						Status:      "started",
 						CurrentTurn: req.CurrentTurn,
 					},
 				}
@@ -496,11 +498,11 @@ func Test_startGameInstanceHandler(t *testing.T) {
 		require.NoError(t, err, "Test data teardown returns without error")
 	}()
 
-	// Get a game and game instance from the harness data
+	// Use GameInstanceCleanRef: no GameTurnConfigs so it stays "created"; test can start it
 	gameRec, err := th.Data.GetGameRecByRef(harness.GameOneRef)
 	require.NoError(t, err, "GetGameRecByRef returns without error")
 
-	gameInstanceRec, err := th.Data.GetGameInstanceRecByRef(harness.GameInstanceOneRef)
+	gameInstanceRec, err := th.Data.GetGameInstanceRecByRef(harness.GameInstanceCleanRef)
 	require.NoError(t, err, "GetGameInstanceRecByRef returns without error")
 
 	testCases := []struct {
@@ -569,17 +571,14 @@ func Test_pauseGameInstanceHandler(t *testing.T) {
 		require.NoError(t, err, "Test data teardown returns without error")
 	}()
 
-	// Get a game and game instance from the harness data
+	// Use GameInstanceCleanRef: no GameTurnConfigs so it stays "created"; test expects error when pausing non-started
 	gameRec, err := th.Data.GetGameRecByRef(harness.GameOneRef)
 	require.NoError(t, err, "GetGameRecByRef returns without error")
 
-	gameInstanceRec, err := th.Data.GetGameInstanceRecByRef(harness.GameInstanceOneRef)
+	gameInstanceRec, err := th.Data.GetGameInstanceRecByRef(harness.GameInstanceCleanRef)
 	require.NoError(t, err, "GetGameInstanceRecByRef returns without error")
 
-	// For testing pause, we need a started instance
-	// Since the harness creates instances with "created" status,
-	// we'll test that the pause endpoint correctly returns an error
-	// when trying to pause a non-started instance
+	// Pause on a non-started instance should return an error
 	testCases := []struct {
 		testutil.TestCase
 		expectResponseCode int
@@ -723,10 +722,11 @@ func Test_cancelGameInstanceHandler(t *testing.T) {
 				ResponseCode:    http.StatusOK,
 			},
 			expectResponse: func(d harness.Data) game_schema.GameInstanceResponse {
+				// GameInstanceOneRef was started (CurrentTurn 1); cancel does not reset current_turn
 				return game_schema.GameInstanceResponse{
 					Data: &game_schema.GameInstanceResponseData{
 						Status:      "cancelled",
-						CurrentTurn: 0,
+						CurrentTurn: 1,
 					},
 				}
 			},
@@ -826,12 +826,14 @@ func Test_getJoinGameLinkHandler(t *testing.T) {
 	require.NotNil(t, th, "TestHarness returns without error")
 
 	// Configure the first game instance as closed testing before setup
-	th.DataConfig.GameConfigs[0].GameInstanceConfigs[0].Record.IsClosedTesting = true
-	th.DataConfig.GameConfigs[0].GameInstanceConfigs[0].Record.DeliveryEmail = true
-	th.DataConfig.GameConfigs[0].GameInstanceConfigs[0].Record.DeliveryPhysicalPost = false
-	th.DataConfig.GameConfigs[0].GameInstanceConfigs[0].Record.DeliveryPhysicalLocal = false
+	instanceConfig, err := th.DataConfig.FindGameInstanceConfig(harness.GameInstanceOneRef)
+	require.NoError(t, err, "findGameInstanceConfig returns without error")
+	instanceConfig.Record.IsClosedTesting = true
+	instanceConfig.Record.DeliveryEmail = true
+	instanceConfig.Record.DeliveryPhysicalPost = false
+	instanceConfig.Record.DeliveryPhysicalLocal = false
 
-	_, err := th.Setup()
+	_, err = th.Setup()
 	require.NoError(t, err, "Test data setup returns without error")
 	defer func() {
 		err = th.Teardown()
@@ -910,12 +912,14 @@ func Test_inviteTesterHandler(t *testing.T) {
 	require.NotNil(t, th, "TestHarness returns without error")
 
 	// Configure the first game instance as closed testing before setup
-	th.DataConfig.GameConfigs[0].GameInstanceConfigs[0].Record.IsClosedTesting = true
-	th.DataConfig.GameConfigs[0].GameInstanceConfigs[0].Record.DeliveryEmail = true
-	th.DataConfig.GameConfigs[0].GameInstanceConfigs[0].Record.DeliveryPhysicalPost = false
-	th.DataConfig.GameConfigs[0].GameInstanceConfigs[0].Record.DeliveryPhysicalLocal = false
+	instanceConfig, err := th.DataConfig.FindGameInstanceConfig(harness.GameInstanceOneRef)
+	require.NoError(t, err, "findGameInstanceConfig returns without error")
+	instanceConfig.Record.IsClosedTesting = true
+	instanceConfig.Record.DeliveryEmail = true
+	instanceConfig.Record.DeliveryPhysicalPost = false
+	instanceConfig.Record.DeliveryPhysicalLocal = false
 
-	_, err := th.Setup()
+	_, err = th.Setup()
 	require.NoError(t, err, "Test data setup returns without error")
 	defer func() {
 		err = th.Teardown()

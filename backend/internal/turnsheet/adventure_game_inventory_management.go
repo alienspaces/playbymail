@@ -67,12 +67,52 @@ type LocationItem struct {
 	ItemDescription string `json:"item_description,omitempty"`
 }
 
-// InventoryManagementScanData represents the scanned data from an inventory management turn sheet
+// DefaultEquipSlot is used when the HTML form sends equip as an array of item IDs (no slot chosen).
+const DefaultEquipSlot = "weapon"
+
+// InventoryManagementScanData represents the scanned data from an inventory management turn sheet.
+// Equip accepts both the full format ([]EquipAction with item_instance_id and slot) and the HTML
+// form format ([]string of item_instance_id; backend assigns DefaultEquipSlot).
 type InventoryManagementScanData struct {
-	PickUp  []string      `json:"pick_up,omitempty"`
-	Drop    []string      `json:"drop,omitempty"`
-	Equip   []EquipAction `json:"equip,omitempty"`
-	Unequip []string      `json:"unequip,omitempty"`
+	PickUp  []string     `json:"pick_up,omitempty"`
+	Drop    []string     `json:"drop,omitempty"`
+	Equip   EquipPayload `json:"equip,omitempty"`
+	Unequip []string     `json:"unequip,omitempty"`
+}
+
+// InventoryManagementScannedDataSchemaName is the filename of the JSON schema for inventory management scanned_data (under schema/turnsheet/adventure_game/).
+const InventoryManagementScannedDataSchemaName = "inventory_management.schema.json"
+
+// EquipPayload unmarshals from either []EquipAction (full format) or []string (HTML form: item IDs only).
+// When unmarshaling from []string, each ID is mapped to DefaultEquipSlot.
+type EquipPayload []EquipAction
+
+// UnmarshalJSON accepts []{"item_instance_id":"...","slot":"..."} or ["id1","id2"] (HTML form).
+func (e *EquipPayload) UnmarshalJSON(data []byte) error {
+	if len(data) == 0 || string(data) == "null" {
+		*e = nil
+		return nil
+	}
+	// Try full format first
+	var asActions []EquipAction
+	if err := json.Unmarshal(data, &asActions); err == nil {
+		// If we got non-empty and first element has ItemInstanceID, treat as full format
+		if len(asActions) > 0 && asActions[0].ItemInstanceID != "" {
+			*e = asActions
+			return nil
+		}
+	}
+	// Try HTML form format: array of strings (item instance IDs)
+	var asStrings []string
+	if err := json.Unmarshal(data, &asStrings); err != nil {
+		return err
+	}
+	actions := make([]EquipAction, len(asStrings))
+	for i, id := range asStrings {
+		actions[i] = EquipAction{ItemInstanceID: id, Slot: DefaultEquipSlot}
+	}
+	*e = actions
+	return nil
 }
 
 // EquipAction represents an equip action with slot

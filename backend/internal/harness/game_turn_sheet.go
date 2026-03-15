@@ -155,9 +155,19 @@ func (t *Testing) processGameTurnForInstanceInTx(ctx context.Context, gameInstan
 		return fmt.Errorf("failed to complete turn: %w", err)
 	}
 
-	if _, err := processor.CreateTurnSheets(ctx, instanceRec); err != nil {
+	turnSheetRecs, err := processor.CreateTurnSheets(ctx, instanceRec)
+	if err != nil {
 		l.Warn("failed to create next turn sheets >%v<", err)
 		return fmt.Errorf("failed to create next turn sheets: %w", err)
+	}
+	for _, rec := range turnSheetRecs {
+		t.Data.AddGameTurnSheetRec(rec)
+		t.teardownData.AddGameTurnSheetRec(rec)
+	}
+	if len(turnSheetRecs) > 0 {
+		if err := t.addAdventureGameTurnSheetsToTeardown(turnSheetRecs); err != nil {
+			l.Warn("failed adding turn sheet links to teardown after CreateTurnSheets >%v<", err)
+		}
 	}
 
 	l.Info("processed turn for game instance >%s< turn >%d<", gameInstanceID, instanceRec.CurrentTurn)
@@ -179,11 +189,15 @@ func (t *Testing) assignTurnSheetReferencesForTurnNumber(gameInstanceRef string,
 	return t.assignTurnSheetReferencesForTurn(*turnCfg, turnSheetRecs)
 }
 
-// addAdventureGameTurnSheetLinksToTeardown ensures adventure_game_turn_sheet link records for the
+// addAdventureGameTurnSheetsToTeardown ensures adventure_game_turn_sheet link records for the
 // given turn sheets are in teardownData so they are removed before character instances on teardown.
-func (t *Testing) addAdventureGameTurnSheetLinksToTeardown(turnSheetRecs []*game_record.GameTurnSheet) error {
+// Looks up by game_turn_sheet_id; turn sheets with no link (e.g. join-game before processing) are skipped.
+func (t *Testing) addAdventureGameTurnSheetsToTeardown(turnSheetRecs []*game_record.GameTurnSheet) error {
+
 	dom := t.Domain.(*domain.Domain)
+
 	for _, rec := range turnSheetRecs {
+
 		linkRecs, err := dom.GetManyAdventureGameTurnSheetRecs(&coresql.Options{
 			Params: []coresql.Param{
 				{
@@ -191,17 +205,17 @@ func (t *Testing) addAdventureGameTurnSheetLinksToTeardown(turnSheetRecs []*game
 					Val: rec.ID,
 				},
 			},
-			Limit: 1,
 		})
 		if err != nil {
-			return fmt.Errorf("failed to lookup adventure game turn sheet link for turn sheet ID %s: %w", rec.ID, err)
+			return fmt.Errorf("failed to lookup adventure game turn sheet for turn sheet ID %s: %w", rec.ID, err)
 		}
-		if len(linkRecs) == 0 {
-			continue
+
+		for _, linkRec := range linkRecs {
+			t.Data.AddAdventureGameTurnSheetRec(linkRec)
+			t.teardownData.AddAdventureGameTurnSheetRec(linkRec)
 		}
-		t.Data.AddAdventureGameTurnSheetRec(linkRecs[0])
-		t.teardownData.AddAdventureGameTurnSheetRec(linkRecs[0])
 	}
+
 	return nil
 }
 
@@ -454,6 +468,35 @@ func (t *Testing) getTurnSheetsForTurn(gameInstanceID string, turnNumber int) ([
 		t.teardownData.AddGameTurnSheetRec(rec)
 	}
 	return turnSheets, nil
+}
+
+// EnsureGameTurnSheetsInTeardownForInstance queries all game_turn_sheet rows that reference the
+// given game instance and adds them (and their adventure_game_turn_sheet links) to teardownData
+// so they are removed in the correct order on teardown. Call after setup or after any flow that
+// may create turn sheets for an instance (e.g. so tests that use the instance don't hit FK on teardown).
+func (t *Testing) EnsureGameTurnSheetsInTeardownForInstance(gameInstanceID string) error {
+	if gameInstanceID == "" {
+		return nil
+	}
+	dom := t.Domain.(*domain.Domain)
+	turnSheets, err := dom.GetManyGameTurnSheetRecs(&coresql.Options{
+		Params: []coresql.Param{
+			{Col: game_record.FieldGameTurnSheetGameInstanceID, Val: gameInstanceID},
+		},
+	})
+	if err != nil {
+		return fmt.Errorf("getting game turn sheets for instance %s: %w", gameInstanceID, err)
+	}
+	for _, rec := range turnSheets {
+		t.Data.AddGameTurnSheetRec(rec)
+		t.teardownData.AddGameTurnSheetRec(rec)
+	}
+	if len(turnSheets) > 0 {
+		if err := t.addAdventureGameTurnSheetsToTeardown(turnSheets); err != nil {
+			return fmt.Errorf("adding adventure game turn sheet links to teardown: %w", err)
+		}
+	}
+	return nil
 }
 
 func (t *Testing) applyConfiguredScanData(ctx context.Context, turnCfg GameTurnConfig) (bool, error) {
