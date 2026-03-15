@@ -238,11 +238,11 @@ func TestRemoveGameAndDependents(t *testing.T) {
 
 	// Demo scenario may not create instances/subs (no AccountUserGameSubscriptionConfigs);
 	// we still verify they are gone after removal below.
-	instances, err := dm.GetManyGameInstanceRecs(&coresql.Options{
+	_, err = dm.GetManyGameInstanceRecs(&coresql.Options{
 		Params: []coresql.Param{{Col: game_record.FieldGameInstanceGameID, Val: gameID}},
 	})
 	require.NoError(t, err)
-	subs, err := dm.GetManyGameSubscriptionRecs(&coresql.Options{
+	_, err = dm.GetManyGameSubscriptionRecs(&coresql.Options{
 		Params: []coresql.Param{{Col: game_record.FieldGameSubscriptionGameID, Val: gameID}},
 	})
 	require.NoError(t, err)
@@ -278,13 +278,13 @@ func TestRemoveGameAndDependents(t *testing.T) {
 	require.NoError(t, err)
 	require.Empty(t, links, "links should be removed")
 
-	instances, err = dm.GetManyGameInstanceRecs(&coresql.Options{
+	instances, err := dm.GetManyGameInstanceRecs(&coresql.Options{
 		Params: []coresql.Param{{Col: game_record.FieldGameInstanceGameID, Val: gameID}},
 	})
 	require.NoError(t, err)
 	require.Empty(t, instances, "instances should be removed")
 
-	subs, err = dm.GetManyGameSubscriptionRecs(&coresql.Options{
+	subs, err := dm.GetManyGameSubscriptionRecs(&coresql.Options{
 		Params: []coresql.Param{{Col: game_record.FieldGameSubscriptionGameID, Val: gameID}},
 	})
 	require.NoError(t, err)

@@ -146,8 +146,8 @@ func (t *Testing) createGames() error {
 	var allGameRecs []*game_record.Game
 	var allGameImageRecs []*game_record.GameImage
 
-	for _, gameConfig := range t.DataConfig.GameConfigs {
-		gameRec, gameImageRecs, err := t.processGameConfig(gameConfig)
+	for i := range t.DataConfig.GameConfigs {
+		gameRec, gameImageRecs, err := t.processGameConfig(t.DataConfig.GameConfigs[i])
 		if err != nil {
 			l.Warn("failed processing game config >%v<", err)
 			return err
@@ -157,7 +157,7 @@ func (t *Testing) createGames() error {
 		allGameImageRecs = append(allGameImageRecs, gameImageRecs...)
 
 		// Process adventure game config
-		adventureGameRecs, err := t.processAdventureGameConfig(gameConfig, gameRec)
+		adventureGameRecs, err := t.processAdventureGameConfig(t.DataConfig.GameConfigs[i], gameRec)
 		if err != nil {
 			l.Warn("failed processing adventure game config >%v<", err)
 			return err
@@ -181,7 +181,8 @@ func (t *Testing) createGameInstances() error {
 	l := t.Logger("createGameInstances")
 
 	var count int
-	for _, subConfig := range t.DataConfig.AccountUserGameSubscriptionConfigs {
+	for i := range t.DataConfig.AccountUserGameSubscriptionConfigs {
+		subConfig := &t.DataConfig.AccountUserGameSubscriptionConfigs[i]
 		if subConfig.SubscriptionType != game_record.GameSubscriptionTypeManager || len(subConfig.GameInstanceConfigs) == 0 {
 			continue
 		}
