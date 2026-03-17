@@ -48,6 +48,10 @@ func (m *Domain) UpsertAccount(
 		accountUserRec.ID = existingAccountUserRec.ID
 		accountUserRec.AccountID = existingAccountUserRec.AccountID
 		accountUserRec.CreatedAt = existingAccountUserRec.CreatedAt
+		accountUserRec.SessionToken = existingAccountUserRec.SessionToken
+		accountUserRec.SessionTokenExpiresAt = existingAccountUserRec.SessionTokenExpiresAt
+		accountUserRec.VerificationToken = existingAccountUserRec.VerificationToken
+		accountUserRec.VerificationTokenExpiresAt = existingAccountUserRec.VerificationTokenExpiresAt
 		if accountUserRec, err = m.UpdateAccountUserRec(accountUserRec); err != nil {
 			l.Warn("failed to update account user >%v<", err)
 			return nil, nil, nil, nil, err

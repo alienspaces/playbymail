@@ -26,6 +26,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
 	"gitlab.com/alienspaces/playbymail/core/type/storer"
 	"gitlab.com/alienspaces/playbymail/internal/domain"
+	"gitlab.com/alienspaces/playbymail/internal/jobqueue"
 	"gitlab.com/alienspaces/playbymail/internal/jobworker/adventure_game"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 	"gitlab.com/alienspaces/playbymail/internal/utils/config"
@@ -44,6 +45,15 @@ type GameTurnProcessingWorkerArgs struct {
 }
 
 func (GameTurnProcessingWorkerArgs) Kind() string { return "game_turn_processing" }
+
+func (GameTurnProcessingWorkerArgs) InsertOpts() river.InsertOpts {
+	return river.InsertOpts{
+		Queue: jobqueue.QueueGame,
+		UniqueOpts: river.UniqueOpts{
+			ByArgs: true,
+		},
+	}
+}
 
 // GameTurnProcessor defines the interface for processing and generating turn sheets for different game types
 type GameTurnProcessor interface {
