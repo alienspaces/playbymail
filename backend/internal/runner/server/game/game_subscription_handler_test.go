@@ -156,11 +156,13 @@ func Test_gameSubscriptionHandler(t *testing.T) {
 				gameRec, _ := d.GetGameRecByRef(harness.GameOneRef)
 				accountRec, _ := d.GetAccountUserRecByRef(harness.AccountUserProManagerRef)
 				accountUserContactRec, _ := d.GetAccountUserContactRecByAccountUserID(accountRec.ID)
+				deliveryMethod := game_record.GameSubscriptionDeliveryMethodEmail
 				return game_schema.GameSubscriptionRequest{
 					GameID:               gameRec.ID,
 					AccountID:            accountRec.AccountID,
 					AccountUserContactID: &accountUserContactRec.ID,
 					SubscriptionType:     game_record.GameSubscriptionTypePlayer,
+					DeliveryMethod:       &deliveryMethod,
 				}
 			},
 			ResponseDecoder: singleDecoder,

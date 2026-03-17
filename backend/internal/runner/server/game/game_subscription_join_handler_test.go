@@ -101,6 +101,7 @@ func Test_submitJoinHandler(t *testing.T) {
 				return player_schema.JoinGameSubmitRequest{
 					Email:              "newplayer@example.com",
 					Name:               "New Player",
+					DeliveryMethod:     "post",
 					PostalAddressLine1: "123 Main St",
 					StateProvince:      "CA",
 					Country:            "US",

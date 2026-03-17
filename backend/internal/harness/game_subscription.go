@@ -142,10 +142,14 @@ func (t *Testing) applyGameSubscriptionRecDefaultValues(rec *game_record.GameSub
 		rec = &game_record.GameSubscription{}
 	}
 	if rec.SubscriptionType == "" {
-		rec.SubscriptionType = game_record.GameSubscriptionTypePlayer // Default subscription type
+		rec.SubscriptionType = game_record.GameSubscriptionTypePlayer
 	}
 	if rec.Status == "" {
 		rec.Status = game_record.GameSubscriptionStatusActive
+	}
+	// Player subscriptions require a delivery method.
+	if rec.SubscriptionType == game_record.GameSubscriptionTypePlayer && !rec.DeliveryMethod.Valid {
+		rec.DeliveryMethod = nullstring.FromString(game_record.GameSubscriptionDeliveryMethodEmail)
 	}
 	return rec
 }

@@ -281,6 +281,12 @@ func createGameSubscriptionHandler(w http.ResponseWriter, r *http.Request, pp ht
 		return err
 	}
 
+	// Player subscriptions require delivery_method to be supplied explicitly.
+	if rec.SubscriptionType == game_record.GameSubscriptionTypePlayer && !rec.DeliveryMethod.Valid {
+		l.Warn("delivery_method is required for player subscriptions")
+		return coreerror.NewInvalidDataError("delivery_method is required for player subscriptions")
+	}
+
 	// Set account and account user from authenticated account (self-subscription)
 	rec.AccountID = authenData.AccountUser.AccountID
 	rec.AccountUserID = authenData.AccountUser.ID

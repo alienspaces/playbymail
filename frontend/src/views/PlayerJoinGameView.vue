@@ -72,8 +72,6 @@ function extractFormData() {
     return el.value || ''
   }
 
-  const deliveryMethod = val('delivery_method')
-
   return {
     email: val('email'),
     name: val('name'),
@@ -83,9 +81,7 @@ function extractFormData() {
     state_province: val('state_province'),
     country: val('country'),
     postal_code: val('postal_code'),
-    delivery_email: deliveryMethod === 'email',
-    delivery_physical_local: deliveryMethod === 'local',
-    delivery_physical_post: deliveryMethod === 'post',
+    delivery_method: val('delivery_method'),
   }
 }
 
@@ -132,7 +128,7 @@ async function onSubmit() {
     return
   }
   // Postal address required only when player chose post delivery
-  if (data.delivery_physical_post) {
+  if (data.delivery_method === 'post') {
     if (!data.postal_address_line1 || !data.state_province || !data.country || !data.postal_code) {
       submitError.value = 'Please fill in all required fields on the turn sheet.'
       return

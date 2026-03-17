@@ -210,6 +210,7 @@ func Test_uploadTurnSheetHandler(t *testing.T) {
 								"state_province":       "VIC",
 								"country":              "Australia",
 								"postal_code":          "12345",
+								"delivery_method":      "email",
 							}
 							return json.Marshal(mockData)
 						},
@@ -276,6 +277,7 @@ func Test_uploadTurnSheetHandler(t *testing.T) {
 								"state_province":       "VIC",
 								"country":              "Australia",
 								"postal_code":          "12345",
+								"delivery_method":      "email",
 							}
 							return json.Marshal(mockData)
 						},

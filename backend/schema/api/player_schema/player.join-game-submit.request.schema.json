@@ -43,19 +43,15 @@
             "minLength": 0,
             "maxLength": 20
         },
-        "delivery_email": {
-            "type": "boolean"
-        },
-        "delivery_physical_post": {
-            "type": "boolean"
-        },
-        "delivery_physical_local": {
-            "type": "boolean"
+        "delivery_method": {
+            "type": "string",
+            "enum": ["email", "local", "post"]
         }
     },
     "required": [
         "email",
-        "name"
+        "name",
+        "delivery_method"
     ],
     "additionalProperties": false
 }

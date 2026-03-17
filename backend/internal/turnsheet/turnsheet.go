@@ -254,6 +254,53 @@ func (bp *BaseProcessor) ValidateBaseTemplateData(data *TurnSheetTemplateData) e
 	return nil
 }
 
+// DeliveryMethods holds which delivery methods are enabled for a game instance.
+type DeliveryMethods struct {
+	Email         bool `json:"delivery_email"`
+	PhysicalLocal bool `json:"delivery_physical_local"`
+	PhysicalPost  bool `json:"delivery_physical_post"`
+}
+
+// JoinGameData is the base data structure for join game turn sheets.
+type JoinGameData struct {
+	TurnSheetTemplateData
+
+	GameDescription          string          `json:"game_description,omitempty"`
+	AvailableDeliveryMethods DeliveryMethods `json:"available_delivery_methods"`
+	AccountEmail             string          `json:"account_email,omitempty"`
+}
+
+// HasDeliveryChoice returns true when more than one delivery method is available,
+// indicating that the player should be asked to choose their preferred method.
+func (d *JoinGameData) HasDeliveryChoice() bool {
+	count := 0
+	if d.AvailableDeliveryMethods.Email {
+		count++
+	}
+	if d.AvailableDeliveryMethods.PhysicalLocal {
+		count++
+	}
+	if d.AvailableDeliveryMethods.PhysicalPost {
+		count++
+	}
+	return count > 1
+}
+
+// DefaultDeliveryMethod returns the first available delivery method value,
+// following the same priority order as the template renders radio buttons.
+func (d *JoinGameData) DefaultDeliveryMethod() string {
+	if d.AvailableDeliveryMethods.Email {
+		return game_record.GameSubscriptionDeliveryMethodEmail
+	}
+	if d.AvailableDeliveryMethods.PhysicalLocal {
+		return game_record.GameSubscriptionDeliveryMethodLocal
+	}
+	if d.AvailableDeliveryMethods.PhysicalPost {
+		return game_record.GameSubscriptionDeliveryMethodPost
+	}
+	return ""
+}
+
 // JoinGameScanData captures the generic fields extracted from a scanned join game turn sheet
 // This includes email and contact information that is common across all game types
 type JoinGameScanData struct {
@@ -282,7 +329,7 @@ func (d *JoinGameScanData) Validate() error {
 		return fmt.Errorf("name is required")
 	}
 
-	if d.DeliveryMethod == "" || d.DeliveryMethod == "post" {
+	if d.DeliveryMethod == "" || d.DeliveryMethod == game_record.GameSubscriptionDeliveryMethodPost {
 		switch {
 		case d.PostalAddressLine1 == "":
 			return fmt.Errorf("postal address line 1 is required")

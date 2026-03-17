@@ -22,6 +22,7 @@ const (
 	FieldGameSubscriptionViewSubscriptionType     = "subscription_type"
 	FieldGameSubscriptionViewStatus               = "status"
 	FieldGameSubscriptionViewInstanceLimit        = "instance_limit"
+	FieldGameSubscriptionViewDeliveryMethod       = "delivery_method"
 	FieldGameSubscriptionViewGameInstanceIDs      = "game_instance_ids"
 	FieldGameSubscriptionViewCreatedAt            = "created_at"
 	FieldGameSubscriptionViewUpdatedAt            = "updated_at"
@@ -37,6 +38,7 @@ type GameSubscriptionView struct {
 	SubscriptionType     string         `db:"subscription_type"`
 	Status               string         `db:"status"`
 	InstanceLimit        sql.NullInt32  `db:"instance_limit"`
+	DeliveryMethod       sql.NullString `db:"delivery_method"`
 	GameInstanceIDs      []string       `db:"game_instance_ids"`
 }
 
@@ -49,6 +51,7 @@ func (r *GameSubscriptionView) ToNamedArgs() pgx.NamedArgs {
 	args[FieldGameSubscriptionViewSubscriptionType] = r.SubscriptionType
 	args[FieldGameSubscriptionViewStatus] = r.Status
 	args[FieldGameSubscriptionViewInstanceLimit] = r.InstanceLimit
+	args[FieldGameSubscriptionViewDeliveryMethod] = r.DeliveryMethod
 	args[FieldGameSubscriptionViewGameInstanceIDs] = r.GameInstanceIDs
 	return args
 }

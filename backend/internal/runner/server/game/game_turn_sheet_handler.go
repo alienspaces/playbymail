@@ -266,6 +266,28 @@ func handleJoinGameTurnSheetUpload(ctx context.Context, l logger.Logger, scanner
 		}
 	}
 
+	// Use the scanned delivery method. When OCR did not extract a value
+	// (e.g. a single-method game with a hidden input), derive the default
+	// from the delivery methods configured on the game instances.
+	deliveryMethod := joinGameScanData.DeliveryMethod
+	if deliveryMethod == "" {
+		instanceRecs, err := m.GetManyGameInstanceRecs(&coresql.Options{
+			Params: []coresql.Param{
+				{Col: game_record.FieldGameInstanceGameID, Val: gameRec.ID},
+			},
+		})
+		if err != nil {
+			l.Warn("failed to get game instances for delivery method fallback >%v<", err)
+		} else {
+			for _, inst := range instanceRecs {
+				joinGameData.AvailableDeliveryMethods.Email = joinGameData.AvailableDeliveryMethods.Email || inst.DeliveryEmail
+				joinGameData.AvailableDeliveryMethods.PhysicalPost = joinGameData.AvailableDeliveryMethods.PhysicalPost || inst.DeliveryPhysicalPost
+				joinGameData.AvailableDeliveryMethods.PhysicalLocal = joinGameData.AvailableDeliveryMethods.PhysicalLocal || inst.DeliveryPhysicalLocal
+			}
+		}
+		deliveryMethod = joinGameData.DefaultDeliveryMethod()
+	}
+
 	// Create or get pending game subscription for the join process (reuses existing only if still pending_approval)
 	subscriptionRec, err := m.CreateOrGetPendingGameSubscriptionForJoinProcess(&game_record.GameSubscription{
 		GameID:               gameRec.ID,
@@ -273,6 +295,7 @@ func handleJoinGameTurnSheetUpload(ctx context.Context, l logger.Logger, scanner
 		AccountUserID:        accountUserRec.ID,
 		AccountUserContactID: nullstring.FromString(accountUserContactRec.ID),
 		SubscriptionType:     game_record.GameSubscriptionTypePlayer,
+		DeliveryMethod:       nullstring.FromString(deliveryMethod),
 	})
 	if err != nil {
 		l.Warn("failed to upsert pending game subscription >%v<", err)

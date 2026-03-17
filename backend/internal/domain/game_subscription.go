@@ -196,6 +196,11 @@ func (m *Domain) CreateGameSubscriptionRec(rec *game_record.GameSubscription) (*
 
 	r := m.GameSubscriptionRepository()
 
+	// Player subscriptions require an explicit delivery method.
+	if rec.SubscriptionType == game_record.GameSubscriptionTypePlayer && !rec.DeliveryMethod.Valid {
+		return nil, coreerror.NewInvalidDataError("delivery_method is required for player subscriptions")
+	}
+
 	if err := m.validateGameSubscriptionRecForCreate(rec); err != nil {
 		l.Warn("failed to validate game_subscription record >%v<", err)
 		return nil, err

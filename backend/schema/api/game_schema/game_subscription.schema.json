@@ -50,6 +50,10 @@
             "items": {
                 "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
             }
+        },
+        "delivery_method": {
+            "enum": ["email", "local", "post"],
+            "type": "string"
         }
     },
     "required": [

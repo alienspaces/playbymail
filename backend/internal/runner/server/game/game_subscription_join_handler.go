@@ -365,7 +365,7 @@ func submitJoinHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Par
 		return coreerror.NewInvalidDataError("email is required")
 	}
 
-	if req.DeliveryPhysicalPost {
+	if req.DeliveryMethod == game_record.GameSubscriptionDeliveryMethodPost {
 		if req.PostalAddressLine1 == "" || req.StateProvince == "" || req.Country == "" || req.PostalCode == "" {
 			return coreerror.NewInvalidDataError("postal address is required for post delivery")
 		}
@@ -430,6 +430,7 @@ func submitJoinHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Par
 		AccountUserContactID: nullstring.FromString(accountUserContactRec.ID),
 		SubscriptionType:     game_record.GameSubscriptionTypePlayer,
 		Status:               game_record.GameSubscriptionStatusActive,
+		DeliveryMethod:       nullstring.FromString(req.DeliveryMethod),
 	})
 	if err != nil {
 		l.Warn("failed to create player game subscription >%v<", err)

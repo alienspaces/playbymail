@@ -15,38 +15,6 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/utils/turnsheetutil"
 )
 
-// DeliveryMethods holds which delivery methods are enabled for a game instance.
-type DeliveryMethods struct {
-	Email         bool `json:"delivery_email"`
-	PhysicalLocal bool `json:"delivery_physical_local"`
-	PhysicalPost  bool `json:"delivery_physical_post"`
-}
-
-// JoinGameData represents the data structure for joining an adventure game
-type JoinGameData struct {
-	TurnSheetTemplateData
-
-	GameDescription          string          `json:"game_description,omitempty"`
-	AvailableDeliveryMethods DeliveryMethods `json:"available_delivery_methods"`
-	AccountEmail             string          `json:"account_email,omitempty"`
-}
-
-// HasDeliveryChoice returns true when more than one delivery method is available,
-// indicating that the player should be asked to choose their preferred method.
-func (d *JoinGameData) HasDeliveryChoice() bool {
-	count := 0
-	if d.AvailableDeliveryMethods.Email {
-		count++
-	}
-	if d.AvailableDeliveryMethods.PhysicalLocal {
-		count++
-	}
-	if d.AvailableDeliveryMethods.PhysicalPost {
-		count++
-	}
-	return count > 1
-}
-
 const defaultJoinGameInstructions = "Fill out your account information and character name, then return this form to join the game."
 const joinGameTemplatePath = "turnsheet/adventure_game_join_game.template"
 

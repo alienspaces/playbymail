@@ -39,13 +39,14 @@ func (m *Domain) UpsertAccount(
 
 		// Update the existing account record
 		existingAccountRec.Name = accountRec.Name
-		if _, err = m.UpdateAccountRec(existingAccountRec); err != nil {
+		if accountRec, err = m.UpdateAccountRec(existingAccountRec); err != nil {
 			l.Warn("failed to update account >%v<", err)
 			return nil, nil, nil, nil, err
 		}
 
 		// Update the existing account user record
 		accountUserRec.ID = existingAccountUserRec.ID
+		accountUserRec.AccountID = existingAccountUserRec.AccountID
 		accountUserRec.CreatedAt = existingAccountUserRec.CreatedAt
 		if accountUserRec, err = m.UpdateAccountUserRec(accountUserRec); err != nil {
 			l.Warn("failed to update account user >%v<", err)
@@ -69,7 +70,7 @@ func (m *Domain) UpsertAccount(
 				existingAccountUserContactRec.Country = accountUserContactRec.Country
 				existingAccountUserContactRec.PostalCode = accountUserContactRec.PostalCode
 			}
-			if _, err = m.UpdateAccountUserContactRec(existingAccountUserContactRec); err != nil {
+			if accountUserContactRec, err = m.UpdateAccountUserContactRec(existingAccountUserContactRec); err != nil {
 				l.Warn("failed to update account user contact >%v<", err)
 				return nil, nil, nil, nil, err
 			}

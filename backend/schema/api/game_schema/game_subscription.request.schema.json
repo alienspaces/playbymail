@@ -27,6 +27,10 @@
         "instance_limit": {
             "type": "integer",
             "minimum": 1
+        },
+        "delivery_method": {
+            "enum": ["email", "local", "post"],
+            "type": "string"
         }
     },
     "required": [

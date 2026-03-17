@@ -24,17 +24,15 @@ type JoinGameInfoResponse struct {
 
 // JoinGameSubmitRequest is the request for POST /join.
 type JoinGameSubmitRequest struct {
-	Email                 string `json:"email"`
-	Name                  string `json:"name"`
-	CharacterName         string `json:"character_name,omitempty"`
-	PostalAddressLine1    string `json:"postal_address_line1"`
-	PostalAddressLine2    string `json:"postal_address_line2,omitempty"`
-	StateProvince         string `json:"state_province"`
-	Country               string `json:"country"`
-	PostalCode            string `json:"postal_code"`
-	DeliveryEmail         bool   `json:"delivery_email"`
-	DeliveryPhysicalPost  bool   `json:"delivery_physical_post"`
-	DeliveryPhysicalLocal bool   `json:"delivery_physical_local"`
+	Email              string `json:"email"`
+	Name               string `json:"name"`
+	CharacterName      string `json:"character_name,omitempty"`
+	PostalAddressLine1 string `json:"postal_address_line1"`
+	PostalAddressLine2 string `json:"postal_address_line2,omitempty"`
+	StateProvince      string `json:"state_province"`
+	Country            string `json:"country"`
+	PostalCode         string `json:"postal_code"`
+	DeliveryMethod     string `json:"delivery_method"`
 }
 
 // JoinGameSubmitResponseData is the data for the join submit response.

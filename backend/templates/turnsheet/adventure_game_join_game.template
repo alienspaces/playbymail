@@ -105,19 +105,19 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="delivery-options">
             {{- if .AvailableDeliveryMethods.Email -}}
             <label class="delivery-option">
-                <input type="radio" name="delivery_method" value="email" required>
+                <input type="radio" name="delivery_method" value="email"{{if eq .DefaultDeliveryMethod "email"}} checked{{end}} required>
                 By Email
             </label>
             {{- end -}}
             {{- if .AvailableDeliveryMethods.PhysicalLocal -}}
             <label class="delivery-option">
-                <input type="radio" name="delivery_method" value="local" required>
+                <input type="radio" name="delivery_method" value="local"{{if eq .DefaultDeliveryMethod "local"}} checked{{end}} required>
                 Local pickup
             </label>
             {{- end -}}
             {{- if .AvailableDeliveryMethods.PhysicalPost -}}
             <label class="delivery-option">
-                <input type="radio" name="delivery_method" value="post" required>
+                <input type="radio" name="delivery_method" value="post"{{if eq .DefaultDeliveryMethod "post"}} checked{{end}} required>
                 By Post
             </label>
             {{- end -}}
@@ -125,6 +125,8 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
 </div>
 <div class="section-divider"></div>
+{{- else if .DefaultDeliveryMethod -}}
+<input type="hidden" name="delivery_method" value="{{.DefaultDeliveryMethod}}">
 {{- end -}}
 
 <div class="account-info-section">

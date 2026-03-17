@@ -23,6 +23,7 @@ const (
 	FieldGameSubscriptionCreatedAt            = "created_at"
 	FieldGameSubscriptionStatus               = "status"
 	FieldGameSubscriptionInstanceLimit        = "instance_limit"
+	FieldGameSubscriptionDeliveryMethod       = "delivery_method"
 )
 
 const (
@@ -37,6 +38,12 @@ const (
 	GameSubscriptionStatusRevoked         = "revoked"
 )
 
+const (
+	GameSubscriptionDeliveryMethodEmail = "email"
+	GameSubscriptionDeliveryMethodLocal = "local"
+	GameSubscriptionDeliveryMethodPost  = "post"
+)
+
 // GameSubscription represents a subscription to a game (Player, Manager, Designer)
 type GameSubscription struct {
 	record.Record
@@ -47,6 +54,7 @@ type GameSubscription struct {
 	SubscriptionType     string         `db:"subscription_type"`
 	Status               string         `db:"status"`
 	InstanceLimit        sql.NullInt32  `db:"instance_limit"`
+	DeliveryMethod       sql.NullString `db:"delivery_method"`
 }
 
 func (r *GameSubscription) ToNamedArgs() pgx.NamedArgs {
@@ -58,5 +66,6 @@ func (r *GameSubscription) ToNamedArgs() pgx.NamedArgs {
 	args[FieldGameSubscriptionSubscriptionType] = r.SubscriptionType
 	args[FieldGameSubscriptionStatus] = r.Status
 	args[FieldGameSubscriptionInstanceLimit] = r.InstanceLimit
+	args[FieldGameSubscriptionDeliveryMethod] = r.DeliveryMethod
 	return args
 }

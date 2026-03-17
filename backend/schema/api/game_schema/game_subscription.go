@@ -9,6 +9,7 @@ type GameSubscriptionRequest struct {
 	AccountUserContactID *string `json:"account_user_contact_id,omitempty"`
 	SubscriptionType     string  `json:"subscription_type"`
 	InstanceLimit        *int32  `json:"instance_limit,omitempty"`
+	DeliveryMethod       *string `json:"delivery_method,omitempty"`
 }
 
 type GameSubscriptionResponseData struct {
@@ -20,6 +21,7 @@ type GameSubscriptionResponseData struct {
 	SubscriptionType string     `json:"subscription_type"`
 	InstanceLimit    *int32     `json:"instance_limit,omitempty"`
 	Status           string     `json:"status"`
+	DeliveryMethod   *string    `json:"delivery_method,omitempty"`
 	CreatedAt        time.Time  `json:"created_at"`
 	UpdatedAt        *time.Time `json:"updated_at,omitempty"`
 	DeletedAt        *time.Time `json:"deleted_at,omitempty"`

@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"gitlab.com/alienspaces/playbymail/core/nullint32"
+	"gitlab.com/alienspaces/playbymail/core/nullstring"
 	"gitlab.com/alienspaces/playbymail/core/nulltime"
 	"gitlab.com/alienspaces/playbymail/core/server"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
@@ -26,10 +27,16 @@ func GameSubscriptionRequestToRecord(l logger.Logger, r *http.Request, rec *game
 		rec.GameID = req.GameID
 		rec.SubscriptionType = req.SubscriptionType
 		rec.InstanceLimit = nullint32.FromInt32Ptr(req.InstanceLimit)
+		if req.DeliveryMethod != nil {
+			rec.DeliveryMethod = nullstring.FromString(*req.DeliveryMethod)
+		}
 	case server.HttpMethodPut, server.HttpMethodPatch:
 		rec.GameID = req.GameID
 		rec.SubscriptionType = req.SubscriptionType
 		rec.InstanceLimit = nullint32.FromInt32Ptr(req.InstanceLimit)
+		if req.DeliveryMethod != nil {
+			rec.DeliveryMethod = nullstring.FromString(*req.DeliveryMethod)
+		}
 	default:
 		return nil, fmt.Errorf("unsupported HTTP method")
 	}
@@ -40,6 +47,7 @@ func GameSubscriptionRequestToRecord(l logger.Logger, r *http.Request, rec *game
 func GameSubscriptionRecordToResponseData(l logger.Logger, rec *game_record.GameSubscription, instanceIDs []string) (*game_schema.GameSubscriptionResponseData, error) {
 	l.Debug("mapping game_subscription record to response data")
 	instanceLimitPtr, _ := nullint32.ToInt32Ptr(rec.InstanceLimit)
+	deliveryMethodPtr := nullstring.ToStringPtr(rec.DeliveryMethod)
 	return &game_schema.GameSubscriptionResponseData{
 		ID:               rec.ID,
 		GameID:           rec.GameID,
@@ -49,6 +57,7 @@ func GameSubscriptionRecordToResponseData(l logger.Logger, rec *game_record.Game
 		SubscriptionType: rec.SubscriptionType,
 		InstanceLimit:    instanceLimitPtr,
 		Status:           rec.Status,
+		DeliveryMethod:   deliveryMethodPtr,
 		CreatedAt:        rec.CreatedAt,
 		UpdatedAt:        nulltime.ToTimePtr(rec.UpdatedAt),
 		DeletedAt:        nulltime.ToTimePtr(rec.DeletedAt),
@@ -70,6 +79,7 @@ func GameSubscriptionViewRecordToResponseData(l logger.Logger, rec *game_record.
 	l.Debug("mapping game_subscription_view record to response data")
 
 	instanceLimitPtr, _ := nullint32.ToInt32Ptr(rec.InstanceLimit)
+	deliveryMethodPtr := nullstring.ToStringPtr(rec.DeliveryMethod)
 
 	return &game_schema.GameSubscriptionResponseData{
 		ID:               rec.ID,
@@ -80,6 +90,7 @@ func GameSubscriptionViewRecordToResponseData(l logger.Logger, rec *game_record.
 		SubscriptionType: rec.SubscriptionType,
 		InstanceLimit:    instanceLimitPtr,
 		Status:           rec.Status,
+		DeliveryMethod:   deliveryMethodPtr,
 		CreatedAt:        rec.CreatedAt,
 		UpdatedAt:        nulltime.ToTimePtr(rec.UpdatedAt),
 		DeletedAt:        nulltime.ToTimePtr(rec.DeletedAt),

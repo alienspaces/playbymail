@@ -251,6 +251,59 @@ func TestJoinGameProcessor_ScanTurnSheet(t *testing.T) {
 	}
 }
 
+func TestJoinGameData_DefaultDeliveryMethod(t *testing.T) {
+	tests := []struct {
+		name     string
+		methods  turnsheet.DeliveryMethods
+		expected string
+	}{
+		{
+			name:     "no delivery methods — empty string",
+			methods:  turnsheet.DeliveryMethods{},
+			expected: "",
+		},
+		{
+			name:     "email only — email",
+			methods:  turnsheet.DeliveryMethods{Email: true},
+			expected: "email",
+		},
+		{
+			name:     "local only — local",
+			methods:  turnsheet.DeliveryMethods{PhysicalLocal: true},
+			expected: "local",
+		},
+		{
+			name:     "post only — post",
+			methods:  turnsheet.DeliveryMethods{PhysicalPost: true},
+			expected: "post",
+		},
+		{
+			name:     "email and post — email (email has priority)",
+			methods:  turnsheet.DeliveryMethods{Email: true, PhysicalPost: true},
+			expected: "email",
+		},
+		{
+			name:     "local and post — local (local has priority over post)",
+			methods:  turnsheet.DeliveryMethods{PhysicalLocal: true, PhysicalPost: true},
+			expected: "local",
+		},
+		{
+			name:     "all three — email (email has highest priority)",
+			methods:  turnsheet.DeliveryMethods{Email: true, PhysicalLocal: true, PhysicalPost: true},
+			expected: "email",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			data := &turnsheet.JoinGameData{
+				AvailableDeliveryMethods: tt.methods,
+			}
+			require.Equal(t, tt.expected, data.DefaultDeliveryMethod())
+		})
+	}
+}
+
 func TestJoinGameData_HasDeliveryChoice(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -302,53 +355,61 @@ func TestJoinGameProcessor_GenerateTurnSheet_WithDeliveryMethods(t *testing.T) {
 	require.NoError(t, err)
 
 	tests := []struct {
-		name                string
-		deliveryMethods     turnsheet.DeliveryMethods
-		expectRadioButton   bool
-		expectAddressFields bool
-		expectToggleScript  bool
+		name                  string
+		deliveryMethods       turnsheet.DeliveryMethods
+		expectRadioButton     bool
+		expectAddressFields   bool
+		expectToggleScript    bool
+		expectCheckedMethod   string // value of the radio that should have checked attribute
+		expectHiddenMethod    string // value of the hidden input when no choice
 	}{
 		{
-			name:                "email only — no radio buttons, no address fields",
-			deliveryMethods:     turnsheet.DeliveryMethods{Email: true},
-			expectRadioButton:   false,
+			name:               "email only — hidden input, no address fields",
+			deliveryMethods:    turnsheet.DeliveryMethods{Email: true},
+			expectRadioButton:  false,
 			expectAddressFields: false,
-			expectToggleScript:  false,
+			expectToggleScript: false,
+			expectHiddenMethod: "email",
 		},
 		{
-			name:                "local only — no radio buttons, no address fields",
-			deliveryMethods:     turnsheet.DeliveryMethods{PhysicalLocal: true},
-			expectRadioButton:   false,
+			name:               "local only — hidden input, no address fields",
+			deliveryMethods:    turnsheet.DeliveryMethods{PhysicalLocal: true},
+			expectRadioButton:  false,
 			expectAddressFields: false,
-			expectToggleScript:  false,
+			expectToggleScript: false,
+			expectHiddenMethod: "local",
 		},
 		{
-			name:                "post only — no radio buttons, address fields shown",
-			deliveryMethods:     turnsheet.DeliveryMethods{PhysicalPost: true},
-			expectRadioButton:   false,
+			name:               "post only — hidden input, address fields shown",
+			deliveryMethods:    turnsheet.DeliveryMethods{PhysicalPost: true},
+			expectRadioButton:  false,
 			expectAddressFields: true,
-			expectToggleScript:  false,
+			expectToggleScript: false,
+			expectHiddenMethod: "post",
 		},
 		{
-			name:                "email and local — radio buttons, no address fields",
-			deliveryMethods:     turnsheet.DeliveryMethods{Email: true, PhysicalLocal: true},
-			expectRadioButton:   true,
+			name:               "email and local — radio buttons, email checked, no address fields",
+			deliveryMethods:    turnsheet.DeliveryMethods{Email: true, PhysicalLocal: true},
+			expectRadioButton:  true,
 			expectAddressFields: false,
-			expectToggleScript:  false,
+			expectToggleScript: false,
+			expectCheckedMethod: "email",
 		},
 		{
-			name:                "email and post — radio buttons, address fields, toggle script",
-			deliveryMethods:     turnsheet.DeliveryMethods{Email: true, PhysicalPost: true},
-			expectRadioButton:   true,
+			name:               "email and post — radio buttons, email checked, address fields, toggle script",
+			deliveryMethods:    turnsheet.DeliveryMethods{Email: true, PhysicalPost: true},
+			expectRadioButton:  true,
 			expectAddressFields: true,
-			expectToggleScript:  true,
+			expectToggleScript: true,
+			expectCheckedMethod: "email",
 		},
 		{
-			name:                "all three — radio buttons, address fields, toggle script",
-			deliveryMethods:     turnsheet.DeliveryMethods{Email: true, PhysicalLocal: true, PhysicalPost: true},
-			expectRadioButton:   true,
+			name:               "all three — radio buttons, email checked, address fields, toggle script",
+			deliveryMethods:    turnsheet.DeliveryMethods{Email: true, PhysicalLocal: true, PhysicalPost: true},
+			expectRadioButton:  true,
 			expectAddressFields: true,
-			expectToggleScript:  true,
+			expectToggleScript: true,
+			expectCheckedMethod: "email",
 		},
 	}
 
@@ -373,15 +434,27 @@ func TestJoinGameProcessor_GenerateTurnSheet_WithDeliveryMethods(t *testing.T) {
 
 			htmlStr := string(html)
 
-			hasRadio := strings.Contains(htmlStr, `name="delivery_method"`)
+			hasRadio := strings.Contains(htmlStr, `type="radio" name="delivery_method"`)
 			require.Equal(t, tt.expectRadioButton, hasRadio,
 				"expected radio button presence to be %v", tt.expectRadioButton)
+
+			if tt.expectCheckedMethod != "" {
+				checkedRadio := fmt.Sprintf(`value="%s" checked`, tt.expectCheckedMethod)
+				require.True(t, strings.Contains(htmlStr, checkedRadio),
+					"expected radio value=%q to have checked attribute", tt.expectCheckedMethod)
+			}
+
+			if tt.expectHiddenMethod != "" {
+				hiddenInput := fmt.Sprintf(`type="hidden" name="delivery_method" value="%s"`, tt.expectHiddenMethod)
+				require.True(t, strings.Contains(htmlStr, hiddenInput),
+					"expected hidden input with value=%q", tt.expectHiddenMethod)
+			}
 
 			hasAddress := strings.Contains(htmlStr, `id="postal-address-fields"`)
 			require.Equal(t, tt.expectAddressFields, hasAddress,
 				"expected address fields presence to be %v", tt.expectAddressFields)
 
-			hasScript := strings.Contains(htmlStr, `postal-address-fields`)&& strings.Contains(htmlStr, `<script>`)
+			hasScript := strings.Contains(htmlStr, `postal-address-fields`) && strings.Contains(htmlStr, `<script>`)
 			require.Equal(t, tt.expectToggleScript, hasScript,
 				"expected toggle script presence to be %v", tt.expectToggleScript)
 		})
