@@ -87,21 +87,15 @@ print_status "Starting backend (no live reload)"
 print_status "API will be available at http://localhost:${APP_SERVER_PORT:-8080}"
 
 # Start backend from project root
-./playbymail-server &
+LOG_FILE="backend/server.log"
+print_status "Logs writing to $LOG_FILE and stdout"
+print_status "Press Ctrl+C to stop the server"
+echo ""
 
-BACKEND_PID=$!
-echo $BACKEND_PID > backend/.backend.pid
+# Clean up PID file on exit
+trap 'rm -f backend/.backend.pid' EXIT
 
-# Wait a moment for startup
-sleep 2
-
-# Check if backend started successfully
-if kill -0 $BACKEND_PID 2>/dev/null; then
-    print_status "Backend started successfully (PID: $BACKEND_PID)"
-    print_status "API server running on port ${APP_SERVER_PORT:-8080}"
-else
-    echo "❌ Backend failed to start"
-    exit 1
-fi
-
-print_status "Backend startup complete!" 
+# Run in foreground with tee to both file and stdout
+# Note: exec replaces this shell, so we can't save PID here
+# The stop script will use port-based killing as fallback
+exec ./playbymail-server 2>&1 | tee "$LOG_FILE"

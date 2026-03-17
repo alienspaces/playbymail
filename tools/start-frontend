@@ -86,23 +86,15 @@ print_status "Frontend will be available at http://localhost:3000"
 print_status "API proxy configured to http://localhost:8080"
 
 # Start the dev server
-npm run dev &
-FRONTEND_PID=$!
-echo $FRONTEND_PID > .frontend.pid
+LOG_FILE="server.log"
+print_status "Logs writing to $(pwd)/$LOG_FILE and stdout"
+print_status "Press Ctrl+C to stop the server"
+echo ""
 
-# Wait a moment for startup
-sleep 3
+# Clean up PID file on exit
+trap 'rm -f .frontend.pid' EXIT
 
-# Check if frontend started successfully
-if kill -0 $FRONTEND_PID 2>/dev/null; then
-    print_status "Frontend started successfully (PID: $FRONTEND_PID)"
-    print_status "Development server running on port 3000"
-else
-    echo "❌ Frontend failed to start"
-    exit 1
-fi
-
-cd ..
-
-print_status "Frontend startup complete!"
-print_status "Open http://localhost:3000 in your browser" 
+# Run in foreground with tee to both file and stdout
+# Note: exec replaces this shell, so we can't save PID here
+# The stop script will use process name/port-based killing as fallback
+exec npm run dev 2>&1 | tee "$LOG_FILE"

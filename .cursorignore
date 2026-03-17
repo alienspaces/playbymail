@@ -8,3 +8,7 @@
 !.gitignore
 !.gitlab-ci.yml
 !.github/workflows/ci.yml
+
+# Server log files (gitignored by *.log, but Cursor needs to read them)
+!backend/server.log
+!frontend/server.log
