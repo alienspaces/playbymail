@@ -49,6 +49,8 @@ describe('PlayerTurnSheetView', () => {
     vi.clearAllMocks()
     routeParams = { game_subscription_instance_id: 'gsi-abc-123' }
     mockGetGameSubscriptionInstanceTurnSheetHTML.mockResolvedValue('<p>Turn sheet</p>')
+    mockSaveGameSubscriptionInstanceTurnSheet.mockResolvedValue({})
+    mockSubmitGameSubscriptionInstanceTurnSheets.mockResolvedValue({ submitted_count: 0, total_count: 0 })
   })
 
   describe('loading and auth states', () => {
@@ -131,30 +133,13 @@ describe('PlayerTurnSheetView', () => {
       expect(wrapper.find('[data-testid="ts-viewer-iframe"]').exists()).toBe(true)
     })
 
-    it('submit-all button is disabled when no sheets are marked ready', async () => {
+    it('submit-all button is enabled when sheets are loaded', async () => {
       mockGetGameSubscriptionInstanceTurnSheets.mockResolvedValue({ turn_sheets: mockSheets })
       const wrapper = mount(PlayerTurnSheetView)
       await flushPromises()
       const btn = wrapper.find('[data-testid="btn-submit-all"]')
       expect(btn.exists()).toBe(true)
-      expect(btn.attributes('disabled')).toBeDefined()
-    })
-
-    it('mark-ready toggles ready state', async () => {
-      mockGetGameSubscriptionInstanceTurnSheets.mockResolvedValue({ turn_sheets: mockSheets })
-      const wrapper = mount(PlayerTurnSheetView)
-      await flushPromises()
-
-      const markBtn = wrapper.find('[data-testid="btn-mark-ready"]')
-      expect(markBtn.text()).toBe('Mark Ready')
-
-      await markBtn.trigger('click')
-      await nextTick()
-      expect(wrapper.find('[data-testid="btn-mark-ready"]').text()).toBe('Unmark Ready')
-
-      await wrapper.find('[data-testid="btn-mark-ready"]').trigger('click')
-      await nextTick()
-      expect(wrapper.find('[data-testid="btn-mark-ready"]').text()).toBe('Mark Ready')
+      expect(btn.attributes('disabled')).toBeUndefined()
     })
 
     it('shows success state after submission', async () => {
@@ -162,13 +147,6 @@ describe('PlayerTurnSheetView', () => {
       mockSubmitGameSubscriptionInstanceTurnSheets.mockResolvedValue({ submitted_count: 2, total_count: 2 })
       const wrapper = mount(PlayerTurnSheetView)
       await flushPromises()
-
-      // Mark both sheets ready
-      await wrapper.find('[data-testid="btn-mark-ready"]').trigger('click')
-      await wrapper.find('[data-testid="ts-step-1"]').trigger('click')
-      await nextTick()
-      await wrapper.find('[data-testid="btn-mark-ready"]').trigger('click')
-      await nextTick()
 
       await wrapper.find('[data-testid="btn-submit-all"]').trigger('click')
       await flushPromises()
@@ -183,13 +161,6 @@ describe('PlayerTurnSheetView', () => {
       const wrapper = mount(PlayerTurnSheetView)
       await flushPromises()
 
-      // Mark both sheets ready
-      await wrapper.find('[data-testid="btn-mark-ready"]').trigger('click')
-      await wrapper.find('[data-testid="ts-step-1"]').trigger('click')
-      await nextTick()
-      await wrapper.find('[data-testid="btn-mark-ready"]').trigger('click')
-      await nextTick()
-
       await wrapper.find('[data-testid="btn-submit-all"]').trigger('click')
       await flushPromises()
 
@@ -197,16 +168,41 @@ describe('PlayerTurnSheetView', () => {
       expect(wrapper.text()).toContain('Server error')
     })
 
-    it('calls saveGameSubscriptionInstanceTurnSheet when save button is clicked', async () => {
-      mockGetGameSubscriptionInstanceTurnSheets.mockResolvedValue({ turn_sheets: mockSheets })
-      mockSaveGameSubscriptionInstanceTurnSheet.mockResolvedValue({})
+    it('saves all sheets with cached data to backend on submit', async () => {
+      const sheetsWithData = [
+        { id: 'ts-1', sheet_type: 'adventure_game_location_choice', turn_number: 1, is_completed: false, scanned_data: { location_choice: 'loc-a' } },
+        { id: 'ts-2', sheet_type: 'adventure_game_inventory_management', turn_number: 1, is_completed: false, scanned_data: null },
+      ]
+      mockGetGameSubscriptionInstanceTurnSheets.mockResolvedValue({ turn_sheets: sheetsWithData })
+      mockSubmitGameSubscriptionInstanceTurnSheets.mockResolvedValue({ submitted_count: 2, total_count: 2 })
       const wrapper = mount(PlayerTurnSheetView)
       await flushPromises()
 
-      await wrapper.find('[data-testid="btn-save-sheet"]').trigger('click')
+      await wrapper.find('[data-testid="btn-submit-all"]').trigger('click')
       await flushPromises()
 
+      // ts-1 has scanned_data pre-populated into cache; ts-2 does not
       expect(mockSaveGameSubscriptionInstanceTurnSheet).toHaveBeenCalledWith('gsi-abc-123', 'ts-1', expect.any(Object))
+      expect(mockSaveGameSubscriptionInstanceTurnSheet).not.toHaveBeenCalledWith('gsi-abc-123', 'ts-2', expect.anything())
+      expect(mockSubmitGameSubscriptionInstanceTurnSheets).toHaveBeenCalledWith('gsi-abc-123')
+    })
+
+    it('shows submit error when saving a sheet fails during submit', async () => {
+      const sheetsWithData = [
+        { id: 'ts-1', sheet_type: 'adventure_game_location_choice', turn_number: 1, is_completed: false, scanned_data: { location_choice: 'loc-a' } },
+      ]
+      mockGetGameSubscriptionInstanceTurnSheets.mockResolvedValue({ turn_sheets: sheetsWithData })
+      mockSaveGameSubscriptionInstanceTurnSheet.mockRejectedValue(new Error('Save failed'))
+      const wrapper = mount(PlayerTurnSheetView)
+      await flushPromises()
+
+      await wrapper.find('[data-testid="btn-submit-all"]').trigger('click')
+      await flushPromises()
+
+      expect(wrapper.find('[data-testid="submit-error"]').exists()).toBe(true)
+      expect(wrapper.text()).toContain('Save failed')
+      // Submit endpoint should NOT have been called since save failed
+      expect(mockSubmitGameSubscriptionInstanceTurnSheets).not.toHaveBeenCalled()
     })
 
     it('navigates between sheets with prev/next buttons', async () => {

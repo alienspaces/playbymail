@@ -61,8 +61,7 @@
           class="ts-step"
           :class="{
             'ts-step--active': idx === activeIndex,
-            'ts-step--ready': readySet.has(sheet.id),
-            'ts-step--saved': hasSavedData(sheet) && !readySet.has(sheet.id),
+            'ts-step--has-data': hasCachedData(sheet),
           }"
           :data-testid="`ts-step-${idx}`"
           @click="activeIndex = idx"
@@ -73,8 +72,7 @@
             class="ts-step-status"
             :data-testid="`ts-step-status-${idx}`"
           >
-            <span v-if="readySet.has(sheet.id)" class="status-dot status-ready" title="Ready"></span>
-            <span v-else-if="hasSavedData(sheet)" class="status-dot status-saved" title="Saved"></span>
+            <span v-if="hasCachedData(sheet)" class="status-dot status-has-data" title="Filled"></span>
             <span v-else class="status-dot status-empty" title="Not started"></span>
           </span>
         </button>
@@ -90,65 +88,42 @@
           data-testid="ts-viewer-iframe"
           sandbox="allow-forms allow-scripts allow-same-origin"
           ref="iframeRef"
+          @load="onIframeLoad"
         ></iframe>
         <div v-else class="ts-iframe-empty">Select a turn sheet to view.</div>
       </div>
 
-      <!-- Per-sheet actions -->
+      <!-- Navigation actions -->
       <div class="ts-sheet-actions">
-        <div class="ts-sheet-actions-left">
-          <button
-            class="secondary-button"
-            :disabled="saving"
-            data-testid="btn-save-sheet"
-            @click="onSaveSheet"
-          >
-            {{ saving ? 'Saving...' : 'Save' }}
-          </button>
-          <button
-            class="secondary-button"
-            :class="{ 'btn-ready': isActiveReady }"
-            data-testid="btn-mark-ready"
-            @click="onToggleReady"
-          >
-            {{ isActiveReady ? 'Unmark Ready' : 'Mark Ready' }}
-          </button>
-        </div>
-        <div class="ts-sheet-actions-right">
-          <button
-            class="secondary-button"
-            :disabled="activeIndex === 0"
-            data-testid="btn-prev-sheet"
-            @click="activeIndex--"
-          >
-            &larr; Prev
-          </button>
-          <button
-            class="secondary-button"
-            :disabled="activeIndex >= currentTurnSheets.length - 1"
-            data-testid="btn-next-sheet"
-            @click="activeIndex++"
-          >
-            Next &rarr;
-          </button>
-        </div>
+        <button
+          class="secondary-button"
+          :disabled="activeIndex === 0"
+          data-testid="btn-prev-sheet"
+          @click="activeIndex--"
+        >
+          &larr; Prev
+        </button>
+        <button
+          class="secondary-button"
+          :disabled="activeIndex >= currentTurnSheets.length - 1"
+          data-testid="btn-next-sheet"
+          @click="activeIndex++"
+        >
+          Next &rarr;
+        </button>
       </div>
-
-      <p v-if="saveMessage" class="success-inline" data-testid="save-message">{{ saveMessage }}</p>
-      <p v-if="saveError" class="error-message" data-testid="save-error">{{ saveError }}</p>
 
       <!-- Final submission -->
       <div class="ts-submit-section">
         <p v-if="submitError" class="error-message" data-testid="submit-error">{{ submitError }}</p>
         <button
           class="primary-button"
-          :disabled="!allReady || submitting"
+          :disabled="submitting"
           data-testid="btn-submit-all"
           @click="onSubmit"
         >
           {{ submitting ? 'Submitting...' : 'Submit All Turn Sheets' }}
         </button>
-        <p v-if="!allReady" class="ts-submit-hint">Mark all turn sheets as ready to enable submission.</p>
       </div>
     </div>
 
@@ -186,13 +161,12 @@ const requestLinkError = ref(null)
 
 // Stepper state
 const activeIndex = ref(0)
-const readySet = ref(new Set())
 const loadingHTML = ref(false)
 const activeHTML = ref('')
-const saving = ref(false)
-const saveMessage = ref(null)
-const saveError = ref(null)
 const iframeRef = ref(null)
+
+// In-memory form data cache: Map<sheetId, formData>
+const formDataCache = ref(new Map())
 
 // Derive current turn sheets (latest turn only)
 const currentTurnSheets = computed(() => {
@@ -202,11 +176,6 @@ const currentTurnSheets = computed(() => {
 })
 
 const activeSheet = computed(() => currentTurnSheets.value[activeIndex.value] || null)
-const isActiveReady = computed(() => activeSheet.value && readySet.value.has(activeSheet.value.id))
-const allReady = computed(() =>
-  currentTurnSheets.value.length > 0 &&
-  currentTurnSheets.value.every(s => readySet.value.has(s.id))
-)
 
 function formatSheetType(sheetType) {
   const labels = {
@@ -217,8 +186,8 @@ function formatSheetType(sheetType) {
   return labels[sheetType] ?? sheetType.replace(/_/g, ' ')
 }
 
-function hasSavedData(sheet) {
-  return sheet.scanned_data && Object.keys(sheet.scanned_data).length > 0
+function hasCachedData(sheet) {
+  return formDataCache.value.has(sheet.id)
 }
 
 async function authenticateWithToken() {
@@ -278,7 +247,6 @@ function extractFormData() {
   const formData = {}
   const doc = iframe.contentDocument
 
-  // Extract all input, select, textarea values
   doc.querySelectorAll('input, select, textarea').forEach(el => {
     const name = el.name || el.id
     if (!name) return
@@ -295,45 +263,51 @@ function extractFormData() {
     }
   })
 
+  // Remove empty arrays — an unchecked checkbox group sends [] which can
+  // fail oneOf schema validation (e.g. equip field in inventory management).
+  for (const key of Object.keys(formData)) {
+    if (Array.isArray(formData[key]) && formData[key].length === 0) {
+      delete formData[key]
+    }
+  }
+
   return formData
 }
 
-async function onSaveSheet() {
-  if (!activeSheet.value) return
-  saving.value = true
-  saveMessage.value = null
-  saveError.value = null
+// Restore saved form data into the iframe after it loads
+function applyFormData(data) {
+  const iframe = iframeRef.value
+  if (!iframe || !iframe.contentDocument || !data) return
 
-  try {
-    const formData = extractFormData()
-    const gameSubscriptionInstanceId = route.params.game_subscription_instance_id
-    await saveGameSubscriptionInstanceTurnSheet(gameSubscriptionInstanceId, activeSheet.value.id, formData || {})
+  const doc = iframe.contentDocument
 
-    // Update local sheet's scanned_data
-    const idx = turnSheets.value.findIndex(s => s.id === activeSheet.value.id)
-    if (idx !== -1) {
-      turnSheets.value[idx] = { ...turnSheets.value[idx], scanned_data: formData }
+  doc.querySelectorAll('input, select, textarea').forEach(el => {
+    const name = el.name || el.id
+    if (!name || !(name in data)) return
+    const value = data[name]
+
+    if (el.type === 'checkbox') {
+      el.checked = Array.isArray(value) ? value.includes(el.value) : el.value === value
+    } else if (el.type === 'radio') {
+      el.checked = el.value === value
+    } else if (el.tagName === 'SELECT' && el.multiple) {
+      const selected = Array.isArray(value) ? value : [value]
+      Array.from(el.options).forEach(opt => {
+        opt.selected = selected.includes(opt.value)
+      })
+    } else {
+      el.value = value ?? ''
     }
-
-    saveMessage.value = 'Turn sheet saved.'
-    setTimeout(() => { saveMessage.value = null }, 3000)
-  } catch (err) {
-    saveError.value = err.message || 'Failed to save turn sheet.'
-  } finally {
-    saving.value = false
-  }
+  })
 }
 
-function onToggleReady() {
+// Called when the iframe finishes loading — restore any cached form data
+function onIframeLoad() {
   if (!activeSheet.value) return
-  const id = activeSheet.value.id
-  const newSet = new Set(readySet.value)
-  if (newSet.has(id)) {
-    newSet.delete(id)
-  } else {
-    newSet.add(id)
+  const cached = formDataCache.value.get(activeSheet.value.id)
+  if (cached) {
+    applyFormData(cached)
   }
-  readySet.value = newSet
 }
 
 async function onRequestNewLink() {
@@ -353,8 +327,29 @@ async function onRequestNewLink() {
 async function onSubmit() {
   submitError.value = null
   submitting.value = true
+
   try {
-    await submitGameSubscriptionInstanceTurnSheets(route.params.game_subscription_instance_id)
+    // Cache the currently active sheet's form data before saving
+    if (activeSheet.value) {
+      const formData = extractFormData()
+      if (formData && Object.keys(formData).length > 0) {
+        const newCache = new Map(formDataCache.value)
+        newCache.set(activeSheet.value.id, formData)
+        formDataCache.value = newCache
+      }
+    }
+
+    // Save all sheets that have cached data to the backend
+    const gameSubscriptionInstanceId = route.params.game_subscription_instance_id
+    for (const sheet of currentTurnSheets.value) {
+      const cached = formDataCache.value.get(sheet.id)
+      if (cached) {
+        await saveGameSubscriptionInstanceTurnSheet(gameSubscriptionInstanceId, sheet.id, cached)
+      }
+    }
+
+    // Submit all turn sheets (backend marks all as completed, with or without scanned data)
+    await submitGameSubscriptionInstanceTurnSheets(gameSubscriptionInstanceId)
     submitted.value = true
   } catch (err) {
     submitError.value = err.message || 'Failed to submit. Please try again.'
@@ -363,17 +358,33 @@ async function onSubmit() {
   }
 }
 
-// Load HTML when active sheet changes
-watch(activeSheet, (sheet) => {
-  saveMessage.value = null
-  saveError.value = null
-  loadSheetHTML(sheet)
+// When the active sheet changes: cache outgoing sheet's form data, then load new sheet
+watch(activeSheet, (newSheet, oldSheet) => {
+  if (oldSheet) {
+    const formData = extractFormData()
+    if (formData && Object.keys(formData).length > 0) {
+      const newCache = new Map(formDataCache.value)
+      newCache.set(oldSheet.id, formData)
+      formDataCache.value = newCache
+    }
+  }
+  loadSheetHTML(newSheet)
 })
 
-// Load first sheet's HTML once current turn sheets are ready
+// When current turn sheets load, pre-populate cache from any backend-saved scanned_data
 watch(currentTurnSheets, (sheets) => {
-  if (sheets.length > 0 && activeIndex.value === 0) {
-    loadSheetHTML(sheets[0])
+  if (sheets.length > 0) {
+    const newCache = new Map(formDataCache.value)
+    for (const sheet of sheets) {
+      if (sheet.scanned_data && Object.keys(sheet.scanned_data).length > 0 && !newCache.has(sheet.id)) {
+        newCache.set(sheet.id, sheet.scanned_data)
+      }
+    }
+    formDataCache.value = newCache
+
+    if (activeIndex.value === 0) {
+      loadSheetHTML(sheets[0])
+    }
   }
 }, { immediate: false })
 
@@ -382,7 +393,7 @@ onMounted(loadTurnSheets)
 
 <style scoped>
 .turn-sheet-view {
-  max-width: 800px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 2rem 1rem;
 }
@@ -442,22 +453,13 @@ onMounted(loadTurnSheets)
   color: #006ecd;
 }
 
-.ts-step--ready {
+.ts-step--has-data {
   border-color: #059669;
   color: #059669;
 }
 
-.ts-step--ready.ts-step--active {
+.ts-step--has-data.ts-step--active {
   background: #d1fae5;
-}
-
-.ts-step--saved:not(.ts-step--ready) {
-  border-color: #d97706;
-  color: #d97706;
-}
-
-.ts-step--saved.ts-step--active:not(.ts-step--ready) {
-  background: #fef3c7;
 }
 
 .ts-step-number {
@@ -489,12 +491,8 @@ onMounted(loadTurnSheets)
   border-radius: 50%;
 }
 
-.status-ready {
+.status-has-data {
   background: #059669;
-}
-
-.status-saved {
-  background: #d97706;
 }
 
 .status-empty {
@@ -513,7 +511,8 @@ onMounted(loadTurnSheets)
 
 .ts-iframe {
   width: 100%;
-  height: 500px;
+  height: 80vh;
+  min-height: 600px;
   border: none;
 }
 
@@ -529,16 +528,18 @@ onMounted(loadTurnSheets)
 /* ---- Sheet actions ---- */
 .ts-sheet-actions {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
   gap: 0.75rem;
   margin-bottom: 0.75rem;
-  flex-wrap: wrap;
 }
 
-.ts-sheet-actions-left,
-.ts-sheet-actions-right {
+/* ---- Submit ---- */
+.ts-submit-section {
+  margin-top: 1.5rem;
   display: flex;
+  flex-direction: column;
+  align-items: flex-start;
   gap: 0.5rem;
 }
 
@@ -561,29 +562,6 @@ onMounted(loadTurnSheets)
 .secondary-button:disabled {
   opacity: 0.4;
   cursor: not-allowed;
-}
-
-.btn-ready {
-  border-color: #059669;
-  color: #059669;
-}
-
-.btn-ready:hover:not(:disabled) {
-  background: #d1fae5;
-}
-
-/* ---- Submit ---- */
-.ts-submit-section {
-  margin-top: 1.5rem;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.5rem;
-}
-
-.ts-submit-hint {
-  font-size: 0.8rem;
-  color: var(--color-text-muted, #6b7280);
 }
 
 .primary-button {

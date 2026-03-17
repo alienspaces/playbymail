@@ -188,7 +188,7 @@ test.describe('Desert Kingdom E2E Email Adventure', () => {
     await expect(page.locator('[data-testid="ts-viewer-iframe"]')).toBeVisible()
   })
 
-  test('Phase 2c: fill location choice — choose Ancient Ruins', async ({ page }) => {
+  test('Phase 2c: verify location choice sheet — background and form', async ({ page }) => {
     await setupTestBypassHeaders(page)
 
     const notifEmail = await waitForEmail(PLAYER_EMAIL, 'turn', { timeout: 30000 })
@@ -200,37 +200,25 @@ test.describe('Desert Kingdom E2E Email Adventure', () => {
     await waitForPageReady(page)
     await page.waitForSelector('[data-testid="ts-viewer-iframe"]', { timeout: 15000 })
 
-    // The first sheet (step 0) should be Location Choice
-    // Interact with the iframe form to select a destination
-    const iframe = page.frameLocator('[data-testid="ts-viewer-iframe"]')
-
     // Brief wait for iframe content to render
     await page.waitForTimeout(800)
 
-    // Select the first available location radio button
+    const iframe = page.frameLocator('[data-testid="ts-viewer-iframe"]')
+
+    // Verify the turn sheet has a background image
+    const bgImage = iframe.locator('img.background-image')
+    await expect(bgImage).toBeVisible({ timeout: 5000 })
+
+    // Verify location choice radio buttons are present
     const radioButtons = iframe.locator('input[type="radio"][name="location_choice"]')
     const radioCount = await radioButtons.count()
-    if (radioCount > 0) {
-      await radioButtons.first().check()
-    }
+    expect(radioCount).toBeGreaterThan(0)
 
-    // Save the sheet
-    await page.locator('[data-testid="btn-save-sheet"]').click()
-    await page.waitForTimeout(1000)
-
-    // Mark ready
-    await page.locator('[data-testid="btn-mark-ready"]').click()
-    await page.waitForTimeout(400)
-
-    // Verify step 0 shows ready status
-    const stepStatus = page.locator('[data-testid="ts-step-status-0"]')
-    await expect(stepStatus.locator('.status-ready')).toBeVisible()
-
-    // Submit-all should still be disabled (step 1 not ready)
-    await expect(page.locator('[data-testid="btn-submit-all"]')).toBeDisabled()
+    // Submit is always enabled (no mark-ready gate)
+    await expect(page.locator('[data-testid="btn-submit-all"]')).toBeEnabled()
   })
 
-  test('Phase 2d: fill inventory management — pick up compass and flask', async ({ page }) => {
+  test('Phase 2d: verify inventory management sheet — background and form', async ({ page }) => {
     await setupTestBypassHeaders(page)
 
     const notifEmail = await waitForEmail(PLAYER_EMAIL, 'turn', { timeout: 30000 })
@@ -251,32 +239,12 @@ test.describe('Desert Kingdom E2E Email Adventure', () => {
     const iframe = page.frameLocator('[data-testid="ts-viewer-iframe"]')
     await page.waitForTimeout(800)
 
-    // Try to interact with inventory form elements
-    try {
-      // Pick up items
-      const pickUpCheckboxes = iframe.locator('input[type="checkbox"][name*="pick_up"], input[type="checkbox"][value*="compass"], input[type="checkbox"][value*="flask"]')
-      const checkboxCount = await pickUpCheckboxes.count()
-      for (let i = 0; i < checkboxCount; i++) {
-        await pickUpCheckboxes.nth(i).check()
-      }
-    } catch {
-      // Form may have a different structure; proceed anyway
-    }
-
-    // Save the sheet
-    await page.locator('[data-testid="btn-save-sheet"]').click()
-    await page.waitForTimeout(1000)
-
-    // Mark ready
-    await page.locator('[data-testid="btn-mark-ready"]').click()
-    await page.waitForTimeout(400)
-
-    // Verify step 1 shows ready
-    const stepStatus = page.locator('[data-testid="ts-step-status-1"]')
-    await expect(stepStatus.locator('.status-ready')).toBeVisible()
+    // Verify the inventory turn sheet also has a background image
+    const bgImage = iframe.locator('img.background-image')
+    await expect(bgImage).toBeVisible({ timeout: 5000 })
   })
 
-  test('Phase 2e: submit all turn sheets for turn 1', async ({ page }) => {
+  test('Phase 2e: fill all turn sheets and submit turn 1', async ({ page }) => {
     await setupTestBypassHeaders(page)
 
     const notifEmail = await waitForEmail(PLAYER_EMAIL, 'turn', { timeout: 30000 })
@@ -288,30 +256,37 @@ test.describe('Desert Kingdom E2E Email Adventure', () => {
     await waitForPageReady(page)
     await page.waitForSelector('[data-testid="ts-stepper"]', { timeout: 15000 })
 
-    // Both steps should be ready from previous test steps
-    // Mark step 0 ready
+    // Step 0: fill location choice
     await page.locator('[data-testid="ts-step-0"]').click()
+    await page.waitForTimeout(800)
+    await page.waitForSelector('[data-testid="ts-viewer-iframe"]', { timeout: 10000 })
     await page.waitForTimeout(600)
-    const markReadyBtn0 = page.locator('[data-testid="btn-mark-ready"]')
-    if ((await markReadyBtn0.textContent()).includes('Mark Ready')) {
-      await markReadyBtn0.click()
-      await page.waitForTimeout(300)
+
+    const iframe0 = page.frameLocator('[data-testid="ts-viewer-iframe"]')
+    const radioButtons = iframe0.locator('input[type="radio"][name="location_choice"]')
+    if (await radioButtons.count() > 0) {
+      await radioButtons.first().check()
     }
 
-    // Mark step 1 ready
+    // Navigate to step 1 — this caches step 0's form data in memory
     await page.locator('[data-testid="ts-step-1"]').click()
+    await page.waitForTimeout(1000)
+    await page.waitForSelector('[data-testid="ts-viewer-iframe"]', { timeout: 10000 })
     await page.waitForTimeout(600)
-    const markReadyBtn1 = page.locator('[data-testid="btn-mark-ready"]')
-    if ((await markReadyBtn1.textContent()).includes('Mark Ready')) {
-      await markReadyBtn1.click()
-      await page.waitForTimeout(300)
+
+    // Step 1: fill inventory management — pick up available items
+    const iframe1 = page.frameLocator('[data-testid="ts-viewer-iframe"]')
+    const pickUpCheckboxes = iframe1.locator('input[type="checkbox"][name="pick_up"]')
+    const checkboxCount = await pickUpCheckboxes.count()
+    for (let i = 0; i < checkboxCount; i++) {
+      await pickUpCheckboxes.nth(i).check()
     }
 
-    // Submit all
+    // Submit all — caches the active sheet, saves all cached sheets, calls submit endpoint
     const submitBtn = page.locator('[data-testid="btn-submit-all"]')
     await expect(submitBtn).toBeEnabled({ timeout: 5000 })
     await submitBtn.click()
-    await page.waitForTimeout(1200)
+    await page.waitForTimeout(1500)
 
     // Verify success
     await expect(page.locator('[data-testid="ts-success"]')).toBeVisible({ timeout: 10000 })
@@ -330,7 +305,7 @@ test.describe('Desert Kingdom E2E Email Adventure', () => {
     expect(turn2Email).toBeTruthy()
   })
 
-  test('Phase 3b: verify turn 2 turn sheets are available', async ({ page }) => {
+  test('Phase 3b: verify turn 2 turn sheets are available and location choice was applied', async ({ page }) => {
     await setupTestBypassHeaders(page)
 
     const turn2Email = await waitForEmail(PLAYER_EMAIL, 'Turn 2', { timeout: 30000 })
@@ -352,6 +327,18 @@ test.describe('Desert Kingdom E2E Email Adventure', () => {
     // Verify the iframe loads the turn sheet content
     await page.waitForSelector('[data-testid="ts-viewer-iframe"]', { timeout: 10000 })
     await expect(page.locator('[data-testid="ts-viewer-iframe"]')).toBeVisible()
+    await page.waitForTimeout(800)
+
+    const iframe = page.frameLocator('[data-testid="ts-viewer-iframe"]')
+
+    // Verify turn 2 location choice turn sheet has a background image (regression check
+    // for the missing background image bug fixed in jobworker CreateNextTurnSheet).
+    const bgImage = iframe.locator('img.background-image')
+    await expect(bgImage).toBeVisible({ timeout: 5000 })
+
+    // Verify the turn sheet shows "Turn 2" in the header, confirming turn processing
+    // ran and generated new sheets (i.e. turn 1 choices were applied successfully).
+    await expect(iframe.locator('h2')).toContainText('Turn 2', { timeout: 5000 })
   })
 
   test('Phase 3c: fill and submit turn 2 sheets', async ({ page }) => {
@@ -366,30 +353,22 @@ test.describe('Desert Kingdom E2E Email Adventure', () => {
     await waitForPageReady(page)
     await page.waitForSelector('[data-testid="ts-stepper"]', { timeout: 15000 })
 
-    // Save + mark ready for each visible step (use button selector to exclude status spans)
+    // Fill each visible step, navigating between them so the in-memory cache is populated
     const stepCount = await page.locator('button[data-testid^="ts-step-"]').count()
 
     for (let i = 0; i < stepCount; i++) {
       await page.locator(`[data-testid="ts-step-${i}"]`).click()
       await page.waitForTimeout(1000)
-
-      // Save
-      await page.locator('[data-testid="btn-save-sheet"]').click()
-      await page.waitForTimeout(800)
-
-      // Mark ready
-      const markBtn = page.locator('[data-testid="btn-mark-ready"]')
-      if ((await markBtn.textContent()).includes('Mark Ready')) {
-        await markBtn.click()
-        await page.waitForTimeout(400)
-      }
+      await page.waitForSelector('[data-testid="ts-viewer-iframe"]', { timeout: 10000 })
+      await page.waitForTimeout(600)
+      // No explicit save — navigating to the next step caches the current one
     }
 
-    // Submit all
+    // Submit all — saves all cached sheets and calls submit endpoint
     const submitBtn = page.locator('[data-testid="btn-submit-all"]')
     await expect(submitBtn).toBeEnabled({ timeout: 5000 })
     await submitBtn.click()
-    await page.waitForTimeout(1200)
+    await page.waitForTimeout(1500)
 
     await expect(page.locator('[data-testid="ts-success"]')).toBeVisible({ timeout: 10000 })
   })

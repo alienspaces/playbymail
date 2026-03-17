@@ -197,6 +197,18 @@ func (p *AdventureGameLocationChoiceProcessor) CreateNextTurnSheet(ctx context.C
 		return nil, fmt.Errorf("failed to generate turn sheet code: %w", err)
 	}
 
+	// Step 8a: Load background image for this location (falls back to game-level image)
+	var backgroundImage *string
+	bgImageURL, err := p.Domain.GetAdventureGameLocationChoiceTurnSheetImageDataURL(gameRec.ID, locationInstanceRec.AdventureGameLocationID)
+	if err != nil {
+		l.Warn("failed to get turn sheet background image >%v<", err)
+	} else if bgImageURL != "" {
+		backgroundImage = &bgImageURL
+		l.Info("loaded background image for location choice turn sheet, length >%d<", len(bgImageURL))
+	} else {
+		l.Info("no background image found for location choice turn sheet")
+	}
+
 	// Step 9: Create sheet data with REAL game data
 	sheetData := turnsheet.LocationChoiceData{
 		TurnSheetTemplateData: turnsheet.TurnSheetTemplateData{
@@ -208,6 +220,7 @@ func (p *AdventureGameLocationChoiceProcessor) CreateNextTurnSheet(ctx context.C
 			TurnSheetDescription:  convert.Ptr(locationRec.Description),
 			TurnSheetInstructions: convert.Ptr(turnsheet.DefaultLocationChoiceInstructions()),
 			TurnSheetCode:         convert.Ptr(turnSheetCode),
+			BackgroundImage:       backgroundImage,
 		},
 		LocationName:        locationRec.Name,
 		LocationDescription: locationRec.Description,

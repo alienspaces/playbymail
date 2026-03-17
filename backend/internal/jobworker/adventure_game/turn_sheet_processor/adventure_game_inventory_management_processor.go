@@ -270,6 +270,18 @@ func (p *AdventureGameInventoryManagementProcessor) CreateNextTurnSheet(ctx cont
 		return nil, fmt.Errorf("failed to generate turn sheet code: %w", err)
 	}
 
+	// Step 10a: Load background image for inventory management (game-level image)
+	var backgroundImage *string
+	bgImageURL, err := p.Domain.GetAdventureGameInventoryTurnSheetImageDataURL(gameRec.ID)
+	if err != nil {
+		l.Warn("failed to get turn sheet background image >%v<", err)
+	} else if bgImageURL != "" {
+		backgroundImage = &bgImageURL
+		l.Info("loaded background image for inventory management turn sheet, length >%d<", len(bgImageURL))
+	} else {
+		l.Info("no background image found for inventory management turn sheet")
+	}
+
 	// Step 11: Create sheet data
 	sheetData := turnsheet.InventoryManagementData{
 		TurnSheetTemplateData: turnsheet.TurnSheetTemplateData{
@@ -281,6 +293,7 @@ func (p *AdventureGameInventoryManagementProcessor) CreateNextTurnSheet(ctx cont
 			TurnSheetDescription:  convert.Ptr(fmt.Sprintf("Manage your inventory and equipment. Carrying %d/%d items.", len(inventoryItemList), characterInstanceRec.InventoryCapacity)),
 			TurnSheetInstructions: convert.Ptr(turnsheet.DefaultInventoryManagementInstructions()),
 			TurnSheetCode:         convert.Ptr(turnSheetCode),
+			BackgroundImage:       backgroundImage,
 		},
 		CharacterName:       characterRec.Name,
 		CurrentLocationName: locationRec.Name,

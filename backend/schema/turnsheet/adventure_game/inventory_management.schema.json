@@ -25,6 +25,7 @@
                 {
                     "type": "array",
                     "items": { "type": "string" },
+                    "minItems": 1,
                     "description": "HTML form: item instance IDs to equip (backend assigns default slot)"
                 },
                 {
@@ -37,6 +38,7 @@
                         },
                         "required": [ "item_instance_id", "slot" ]
                     },
+                    "minItems": 1,
                     "description": "Full format: item instance ID and slot name"
                 }
             ]

@@ -491,4 +491,16 @@ func TestInventoryManagementScanData_UnmarshalHTMLFormEquip(t *testing.T) {
 		require.Equal(t, "item-b", scanData.Equip[1].ItemInstanceID)
 		require.Equal(t, "weapon", scanData.Equip[1].Slot)
 	})
+
+	t.Run("HTML form format: empty equip array when no items checked", func(t *testing.T) {
+		// An empty equip array is produced by extractFormData() when no equip checkboxes
+		// are checked. The backend must accept this without error; the frontend strips
+		// empty arrays before saving, but the backend should also be lenient.
+		raw := []byte(`{"pick_up":["item-1"],"equip":[]}`)
+		var scanData turnsheet.InventoryManagementScanData
+		err := json.Unmarshal(raw, &scanData)
+		require.NoError(t, err)
+		require.Len(t, scanData.Equip, 0)
+		require.Equal(t, []string{"item-1"}, scanData.PickUp)
+	})
 }
