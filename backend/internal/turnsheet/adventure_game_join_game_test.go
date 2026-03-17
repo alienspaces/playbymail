@@ -439,13 +439,13 @@ func TestJoinGameProcessor_GenerateTurnSheet_WithDeliveryMethods(t *testing.T) {
 				"expected radio button presence to be %v", tt.expectRadioButton)
 
 			if tt.expectCheckedMethod != "" {
-				checkedRadio := fmt.Sprintf(`value="%s" checked`, tt.expectCheckedMethod)
+				checkedRadio := fmt.Sprintf("value=%q checked", tt.expectCheckedMethod)
 				require.True(t, strings.Contains(htmlStr, checkedRadio),
 					"expected radio value=%q to have checked attribute", tt.expectCheckedMethod)
 			}
 
 			if tt.expectHiddenMethod != "" {
-				hiddenInput := fmt.Sprintf(`type="hidden" name="delivery_method" value="%s"`, tt.expectHiddenMethod)
+				hiddenInput := fmt.Sprintf(`type="hidden" name="delivery_method" value=%q`, tt.expectHiddenMethod)
 				require.True(t, strings.Contains(htmlStr, hiddenInput),
 					"expected hidden input with value=%q", tt.expectHiddenMethod)
 			}
