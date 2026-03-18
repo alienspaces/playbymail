@@ -1,6 +1,8 @@
 <template>
   <div id="player-app">
-    <router-view />
+    <main class="player-content">
+      <router-view />
+    </main>
     <PlayerSupportFooter />
   </div>
 </template>
@@ -15,5 +17,15 @@ console.log('[PlayerApp] mounted, current URL:', window.location.href)
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+}
+
+/*
+ * Block-level wrapper (no display: flex) so child views are in normal
+ * block flow. margin: auto centering on views works correctly here
+ * regardless of whether views explicitly set width: 100%.
+ */
+.player-content {
+  flex: 1;
+  width: 100%;
 }
 </style>
