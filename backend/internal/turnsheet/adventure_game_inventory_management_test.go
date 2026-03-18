@@ -504,3 +504,107 @@ func TestInventoryManagementScanData_UnmarshalHTMLFormEquip(t *testing.T) {
 		require.Equal(t, []string{"item-1"}, scanData.PickUp)
 	})
 }
+
+func TestValidateInventoryActions(t *testing.T) {
+	t.Parallel()
+
+	sheetData := &turnsheet.InventoryManagementData{
+		CurrentInventory: []turnsheet.InventoryItem{
+			{ItemInstanceID: "inv-1", ItemName: "Iron Sword", CanEquip: true},
+			{ItemInstanceID: "inv-2", ItemName: "Health Potion", CanEquip: false},
+		},
+		LocationItems: []turnsheet.LocationItem{
+			{ItemInstanceID: "loc-1", ItemName: "Desert Compass"},
+			{ItemInstanceID: "loc-2", ItemName: "Water Flask"},
+		},
+	}
+
+	tests := []struct {
+		name        string
+		scanData    *turnsheet.InventoryManagementScanData
+		expectError bool
+		errorContains string
+	}{
+		{
+			name: "equip inventory item passes",
+			scanData: &turnsheet.InventoryManagementScanData{
+				Equip: turnsheet.EquipPayload{{ItemInstanceID: "inv-1", Slot: "weapon"}},
+			},
+			expectError: false,
+		},
+		{
+			name: "equip location item passes",
+			scanData: &turnsheet.InventoryManagementScanData{
+				Equip: turnsheet.EquipPayload{{ItemInstanceID: "loc-1", Slot: "weapon"}},
+			},
+			expectError: false,
+		},
+		{
+			name: "equip unknown item fails",
+			scanData: &turnsheet.InventoryManagementScanData{
+				Equip: turnsheet.EquipPayload{{ItemInstanceID: "unknown-id", Slot: "weapon"}},
+			},
+			expectError:   true,
+			errorContains: "invalid item_instance_id for equip: unknown-id",
+		},
+		{
+			name: "equip with invalid slot fails",
+			scanData: &turnsheet.InventoryManagementScanData{
+				Equip: turnsheet.EquipPayload{{ItemInstanceID: "inv-1", Slot: "hat"}},
+			},
+			expectError:   true,
+			errorContains: "invalid equipment slot: hat",
+		},
+		{
+			name: "pick up location item passes",
+			scanData: &turnsheet.InventoryManagementScanData{
+				PickUp: []string{"loc-1"},
+			},
+			expectError: false,
+		},
+		{
+			name: "pick up inventory item fails",
+			scanData: &turnsheet.InventoryManagementScanData{
+				PickUp: []string{"inv-1"},
+			},
+			expectError:   true,
+			errorContains: "invalid item_instance_id for pick up: inv-1",
+		},
+		{
+			name: "drop inventory item passes",
+			scanData: &turnsheet.InventoryManagementScanData{
+				Drop: []string{"inv-1"},
+			},
+			expectError: false,
+		},
+		{
+			name: "drop location item fails",
+			scanData: &turnsheet.InventoryManagementScanData{
+				Drop: []string{"loc-1"},
+			},
+			expectError:   true,
+			errorContains: "invalid item_instance_id for drop: loc-1",
+		},
+		{
+			name: "nil scan data fails",
+			scanData:      nil,
+			expectError:   true,
+			errorContains: "no scan data provided",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			err := turnsheet.ValidateInventoryActions(sheetData, tt.scanData)
+			if tt.expectError {
+				require.Error(t, err)
+				if tt.errorContains != "" {
+					require.Contains(t, err.Error(), tt.errorContains)
+				}
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}

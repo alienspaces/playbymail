@@ -91,10 +91,27 @@ func (p *AdventureGameInventoryManagementProcessor) ProcessTurnSheetResponse(ctx
 		}
 	}
 
-	// Equip items last (after pick up, so items are in inventory)
+	// Equip items last (after pick up, so items are in inventory).
+	// If an equip action targets a location item (not yet in inventory), auto-pick it up first
+	// so the player can equip ground items in a single turn action.
 	for _, action := range scanData.Equip {
+		itemRec, err := p.Domain.GetAdventureGameItemInstanceRec(action.ItemInstanceID, nil)
+		if err != nil {
+			l.Warn("failed to get item instance >%s< >%v<", action.ItemInstanceID, err)
+			return fmt.Errorf("failed to get item instance %s: %w", action.ItemInstanceID, err)
+		}
+		if !itemRec.AdventureGameCharacterInstanceID.Valid &&
+			itemRec.AdventureGameLocationInstanceID.Valid &&
+			itemRec.AdventureGameLocationInstanceID.String == characterInstanceRec.AdventureGameLocationInstanceID {
+			l.Info("auto picking up location item >%s< before equip", action.ItemInstanceID)
+			_, err := p.Domain.PickUpAdventureGameItemInstanceRec(characterInstanceRec.ID, action.ItemInstanceID)
+			if err != nil {
+				l.Warn("failed to pick up item >%s< before equip >%v<", action.ItemInstanceID, err)
+				return fmt.Errorf("failed to pick up item %s before equip: %w", action.ItemInstanceID, err)
+			}
+		}
 		l.Info("equipping item >%s< to slot >%s<", action.ItemInstanceID, action.Slot)
-		_, err := p.Domain.EquipAdventureGameItemInstanceRec(characterInstanceRec.ID, action.ItemInstanceID, action.Slot)
+		_, err = p.Domain.EquipAdventureGameItemInstanceRec(characterInstanceRec.ID, action.ItemInstanceID, action.Slot)
 		if err != nil {
 			l.Warn("failed to equip item >%s< >%v<", action.ItemInstanceID, err)
 			return fmt.Errorf("failed to equip item %s: %w", action.ItemInstanceID, err)

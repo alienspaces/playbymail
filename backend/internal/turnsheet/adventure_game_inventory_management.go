@@ -377,6 +377,13 @@ func buildInventoryManagementContext(data *InventoryManagementData) []string {
 	return ctx
 }
 
+// ValidateInventoryActions validates the scanned inventory actions against the sheet data.
+// Equip actions are valid for both inventory items and location items; the processor will
+// auto-pick-up location items before equipping.
+func ValidateInventoryActions(sheetData *InventoryManagementData, scanData *InventoryManagementScanData) error {
+	return validateInventoryActions(sheetData, scanData)
+}
+
 // validateInventoryActions validates the scanned inventory actions
 func validateInventoryActions(sheetData *InventoryManagementData, scanData *InventoryManagementScanData) error {
 	if scanData == nil {
@@ -408,9 +415,10 @@ func validateInventoryActions(sheetData *InventoryManagementData, scanData *Inve
 		}
 	}
 
-	// Validate equip actions
+	// Validate equip actions — valid for both inventory items and location items
+	// (the processor auto-picks-up location items before equipping)
 	for _, action := range scanData.Equip {
-		if !inventoryItemIDs[action.ItemInstanceID] {
+		if !inventoryItemIDs[action.ItemInstanceID] && !locationItemIDs[action.ItemInstanceID] {
 			return fmt.Errorf("invalid item_instance_id for equip: %s", action.ItemInstanceID)
 		}
 		// Validate slot
