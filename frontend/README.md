@@ -61,9 +61,10 @@ The following test accounts are seeded when you run `./tools/start-backend`:
 
 | Email | Description |
 |-------|-------------|
-| `test-account-one@example.com` | Test Account One |
-| `test-account-two@example.com` | Test Account Two |
-| `test-account-three@example.com` | Test Account Three |
+| `test-player@example.com` | Standard account — player in Game One |
+| `test-pro-player@example.com` | Pro Player — player in Game One and Game Two |
+| `test-pro-designer@example.com` | Pro Designer — designer in Game One and Game Two |
+| `test-pro-manager@example.com` | Pro Manager — manages Game One and Game Two |
 
 ### Configuration
 

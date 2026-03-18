@@ -20,6 +20,10 @@
             "minLength": 1,
             "type": "string"
         },
+        "locked_description": {
+            "maxLength": 1024,
+            "type": "string"
+        },
         "from_adventure_game_location_id": {
             "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
         },

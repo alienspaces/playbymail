@@ -11,8 +11,11 @@ type AdventureGameLocationLinkRequirementResponseData struct {
 	ID                 string     `json:"id"`
 	GameID             string     `json:"game_id"`
 	GameLocationLinkID string     `json:"game_location_link_id"`
-	RequirementType    string     `json:"requirement_type"`
-	RequirementValue   string     `json:"requirement_value"`
+	GameItemID         string     `json:"game_item_id,omitempty"`
+	GameCreatureID     string     `json:"game_creature_id,omitempty"`
+	Purpose            string     `json:"purpose"`
+	Condition          string     `json:"condition"`
+	Quantity           int        `json:"quantity"`
 	CreatedAt          time.Time  `json:"created_at"`
 	UpdatedAt          *time.Time `json:"updated_at,omitempty"`
 	DeletedAt          *time.Time `json:"deleted_at,omitempty"`
@@ -33,6 +36,9 @@ type AdventureGameLocationLinkRequirementCollectionResponse struct {
 type AdventureGameLocationLinkRequirementRequest struct {
 	common_schema.Request
 	GameLocationLinkID string `json:"game_location_link_id"`
-	RequirementType    string `json:"requirement_type"`
-	RequirementValue   string `json:"requirement_value"`
+	GameItemID         string `json:"game_item_id,omitempty"`
+	GameCreatureID     string `json:"game_creature_id,omitempty"`
+	Purpose            string `json:"purpose"`
+	Condition          string `json:"condition"`
+	Quantity           int    `json:"quantity"`
 }

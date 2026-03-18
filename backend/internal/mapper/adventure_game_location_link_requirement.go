@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"gitlab.com/alienspaces/playbymail/core/nullstring"
 	"gitlab.com/alienspaces/playbymail/core/nulltime"
 	"gitlab.com/alienspaces/playbymail/core/server"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
@@ -11,7 +12,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/schema/api/adventure_game_schema"
 )
 
-// AdventureGameLocationLinkRequirementRequestToRecord maps a request to a record for consistency
+// AdventureGameLocationLinkRequirementRequestToRecord maps a request to a record
 func AdventureGameLocationLinkRequirementRequestToRecord(l logger.Logger, r *http.Request, rec *adventure_game_record.AdventureGameLocationLinkRequirement) (*adventure_game_record.AdventureGameLocationLinkRequirement, error) {
 	l.Debug("mapping adventure_game_location_link_requirement request to record")
 
@@ -23,9 +24,19 @@ func AdventureGameLocationLinkRequirementRequestToRecord(l logger.Logger, r *htt
 
 	switch server.HttpMethod(r.Method) {
 	case server.HttpMethodPost:
-		rec.AdventureGameLocationLinkID = req.GameLocationLinkID // Map new field name to old
+		rec.AdventureGameLocationLinkID = req.GameLocationLinkID
+		rec.AdventureGameItemID = nullstring.FromString(req.GameItemID)
+		rec.AdventureGameCreatureID = nullstring.FromString(req.GameCreatureID)
+		rec.Purpose = req.Purpose
+		rec.Condition = req.Condition
+		rec.Quantity = req.Quantity
 	case server.HttpMethodPut, server.HttpMethodPatch:
-		rec.AdventureGameLocationLinkID = req.GameLocationLinkID // Map new field name to old
+		rec.AdventureGameLocationLinkID = req.GameLocationLinkID
+		rec.AdventureGameItemID = nullstring.FromString(req.GameItemID)
+		rec.AdventureGameCreatureID = nullstring.FromString(req.GameCreatureID)
+		rec.Purpose = req.Purpose
+		rec.Condition = req.Condition
+		rec.Quantity = req.Quantity
 	default:
 		return nil, fmt.Errorf("unsupported HTTP method")
 	}
@@ -38,9 +49,12 @@ func AdventureGameLocationLinkRequirementRecordToResponseData(l logger.Logger, r
 	return &adventure_game_schema.AdventureGameLocationLinkRequirementResponseData{
 		ID:                 rec.ID,
 		GameID:             rec.GameID,
-		GameLocationLinkID: rec.AdventureGameLocationLinkID, // Map old field name to new
-		RequirementType:    "item", // RequirementType is always item for current schema; record has no type column yet.
-		RequirementValue:   rec.AdventureGameItemID,         // Map old field name to new
+		GameLocationLinkID: rec.AdventureGameLocationLinkID,
+		GameItemID:         nullstring.ToString(rec.AdventureGameItemID),
+		GameCreatureID:     nullstring.ToString(rec.AdventureGameCreatureID),
+		Purpose:            rec.Purpose,
+		Condition:          rec.Condition,
+		Quantity:           rec.Quantity,
 		CreatedAt:          rec.CreatedAt,
 		UpdatedAt:          nulltime.ToTimePtr(rec.UpdatedAt),
 		DeletedAt:          nulltime.ToTimePtr(rec.DeletedAt),

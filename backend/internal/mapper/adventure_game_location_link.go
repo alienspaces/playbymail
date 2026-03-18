@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"gitlab.com/alienspaces/playbymail/core/nullstring"
 	"gitlab.com/alienspaces/playbymail/core/nulltime"
 	"gitlab.com/alienspaces/playbymail/core/server"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
@@ -25,11 +26,13 @@ func AdventureGameLocationLinkRequestToRecord(l logger.Logger, r *http.Request, 
 	case server.HttpMethodPost:
 		rec.Name = req.Name
 		rec.Description = req.Description
+		rec.LockedDescription = nullstring.FromString(req.LockedDescription)
 		rec.FromAdventureGameLocationID = req.FromAdventureGameLocationID
 		rec.ToAdventureGameLocationID = req.ToAdventureGameLocationID
 	case server.HttpMethodPut, server.HttpMethodPatch:
 		rec.Name = req.Name
 		rec.Description = req.Description
+		rec.LockedDescription = nullstring.FromString(req.LockedDescription)
 		rec.FromAdventureGameLocationID = req.FromAdventureGameLocationID
 		rec.ToAdventureGameLocationID = req.ToAdventureGameLocationID
 	default:
@@ -46,8 +49,9 @@ func AdventureGameLocationLinkRecordToResponseData(l logger.Logger, rec *adventu
 		GameID:                      rec.GameID,
 		Name:                        rec.Name,
 		Description:                 rec.Description,
-		FromAdventureGameLocationID: rec.FromAdventureGameLocationID, // Map old field name to new
-		ToAdventureGameLocationID:   rec.ToAdventureGameLocationID,   // Map old field name to new
+		LockedDescription:           nullstring.ToString(rec.LockedDescription),
+		FromAdventureGameLocationID: rec.FromAdventureGameLocationID,
+		ToAdventureGameLocationID:   rec.ToAdventureGameLocationID,
 		CreatedAt:                   rec.CreatedAt,
 		UpdatedAt:                   nulltime.ToTimePtr(rec.UpdatedAt),
 		DeletedAt:                   nulltime.ToTimePtr(rec.DeletedAt),

@@ -87,7 +87,10 @@
  * @property {string} id
  * @property {string} game_id
  * @property {string} game_location_link_id
- * @property {string} game_item_id
+ * @property {string} [game_item_id]
+ * @property {string} [game_creature_id]
+ * @property {'traverse'|'visible'} purpose
+ * @property {'in_inventory'|'equipped'|'dead_at_location'|'none_alive_at_location'|'none_alive_in_game'} condition
  * @property {number} quantity
  * @property {string} created_at
  * @property {string} [updated_at]

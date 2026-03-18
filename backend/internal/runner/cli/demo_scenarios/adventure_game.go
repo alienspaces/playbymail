@@ -1,6 +1,7 @@
 package demo_scenarios
 
 import (
+		"gitlab.com/alienspaces/playbymail/core/nullstring"
 	"gitlab.com/alienspaces/playbymail/internal/harness"
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
@@ -226,23 +227,28 @@ func adventureGameConfigs() []harness.GameConfig {
 
 			// ── Location Links ─────────────────────────────────────────
 			AdventureGameLocationLinkConfigs: []harness.AdventureGameLocationLinkConfig{
-				// Grand Staircase -> Narrow Passage (requires Rusty Key)
-				{
-					Reference:       "demo-link-staircase-to-passage",
-					FromLocationRef: DemoLocGrandStaircaseRef,
-					ToLocationRef:   DemoLocNarrowPassageRef,
-					Record: &adventure_game_record.AdventureGameLocationLink{
-						Name:        "The Small Door",
-						Description: "A low wooden door beneath the staircase. The lock is stiff but yields to the right key.",
-					},
-					AdventureGameLocationLinkRequirementConfigs: []harness.AdventureGameLocationLinkRequirementConfig{
-						{
-							Reference:   "demo-link-req-staircase-to-passage",
-							GameItemRef: DemoItemRustyKeyRef,
-							Record:      &adventure_game_record.AdventureGameLocationLinkRequirement{Quantity: 1},
+			// Grand Staircase -> Narrow Passage (requires Rusty Key in inventory)
+			{
+				Reference:       "demo-link-staircase-to-passage",
+				FromLocationRef: DemoLocGrandStaircaseRef,
+				ToLocationRef:   DemoLocNarrowPassageRef,
+				Record: &adventure_game_record.AdventureGameLocationLink{
+					Name:              "The Small Door",
+					Description:       "A low wooden door beneath the staircase. The lock is stiff but yields to the right key.",
+					LockedDescription: nullstring.FromString("A low wooden door bound with iron is set beneath the staircase. It is firmly locked."),
+				},
+				AdventureGameLocationLinkRequirementConfigs: []harness.AdventureGameLocationLinkRequirementConfig{
+					{
+						Reference:   "demo-link-req-staircase-to-passage",
+						GameItemRef: DemoItemRustyKeyRef,
+						Record: &adventure_game_record.AdventureGameLocationLinkRequirement{
+							Purpose:   adventure_game_record.AdventureGameLocationLinkRequirementPurposeTraverse,
+							Condition: adventure_game_record.AdventureGameLocationLinkRequirementConditionInInventory,
+							Quantity:  1,
 						},
 					},
 				},
+			},
 				// Grand Staircase -> Herb Garden (no requirement)
 				{
 					Reference:       "demo-link-staircase-to-garden",
@@ -273,23 +279,37 @@ func adventureGameConfigs() []harness.GameConfig {
 						Description: "The small door leads back to the grand staircase.",
 					},
 				},
-				// Wine Cellar -> Crypt (requires Tallow Candle)
-				{
-					Reference:       "demo-link-cellar-to-crypt",
-					FromLocationRef: DemoLocWineCellarRef,
-					ToLocationRef:   DemoLocCryptRef,
-					Record: &adventure_game_record.AdventureGameLocationLink{
-						Name:        "The Dark Archway",
-						Description: "A low archway at the far end of the cellar leads into pitch darkness. Only a fool would enter without light.",
+			// Wine Cellar -> Crypt (requires Tallow Candle; hidden while Cellar Rat is alive)
+			{
+				Reference:       "demo-link-cellar-to-crypt",
+				FromLocationRef: DemoLocWineCellarRef,
+				ToLocationRef:   DemoLocCryptRef,
+				Record: &adventure_game_record.AdventureGameLocationLink{
+					Name:              "The Dark Archway",
+					Description:       "A low archway at the far end of the cellar leads into pitch darkness. Only a fool would enter without light.",
+					LockedDescription: nullstring.FromString("The archway ahead fades into absolute darkness. Without a light you dare not proceed."),
+				},
+				AdventureGameLocationLinkRequirementConfigs: []harness.AdventureGameLocationLinkRequirementConfig{
+					{
+						Reference:       "demo-link-req-cellar-rat-dead",
+						GameCreatureRef: DemoCreatureCellarRatRef,
+						Record: &adventure_game_record.AdventureGameLocationLinkRequirement{
+							Purpose:   adventure_game_record.AdventureGameLocationLinkRequirementPurposeVisible,
+							Condition: adventure_game_record.AdventureGameLocationLinkRequirementConditionNoneAliveAtLocation,
+							Quantity:  1,
+						},
 					},
-					AdventureGameLocationLinkRequirementConfigs: []harness.AdventureGameLocationLinkRequirementConfig{
-						{
-							Reference:   "demo-link-req-cellar-to-crypt",
-							GameItemRef: DemoItemTallowCandleRef,
-							Record:      &adventure_game_record.AdventureGameLocationLinkRequirement{Quantity: 1},
+					{
+						Reference:   "demo-link-req-cellar-to-crypt",
+						GameItemRef: DemoItemTallowCandleRef,
+						Record: &adventure_game_record.AdventureGameLocationLinkRequirement{
+							Purpose:   adventure_game_record.AdventureGameLocationLinkRequirementPurposeTraverse,
+							Condition: adventure_game_record.AdventureGameLocationLinkRequirementConditionInInventory,
+							Quantity:  1,
 						},
 					},
 				},
+			},
 				// Wine Cellar -> Narrow Passage (no requirement, return path)
 				{
 					Reference:       "demo-link-cellar-to-passage",
@@ -300,23 +320,28 @@ func adventureGameConfigs() []harness.GameConfig {
 						Description: "The steps climb back up to the narrow passage above.",
 					},
 				},
-				// Crypt -> Underground Chapel (requires Silver Cross)
-				{
-					Reference:       "demo-link-crypt-to-chapel",
-					FromLocationRef: DemoLocCryptRef,
-					ToLocationRef:   DemoLocUndergroundChapelRef,
-					Record: &adventure_game_record.AdventureGameLocationLink{
-						Name:        "The Warded Gate",
-						Description: "An iron gate covered in faded holy symbols. The cold intensifies near it. Something silver might grant safe passage.",
-					},
-					AdventureGameLocationLinkRequirementConfigs: []harness.AdventureGameLocationLinkRequirementConfig{
-						{
-							Reference:   "demo-link-req-crypt-to-chapel",
-							GameItemRef: DemoItemSilverCrossRef,
-							Record:      &adventure_game_record.AdventureGameLocationLinkRequirement{Quantity: 1},
+			// Crypt -> Underground Chapel (requires Silver Cross in inventory)
+			{
+				Reference:       "demo-link-crypt-to-chapel",
+				FromLocationRef: DemoLocCryptRef,
+				ToLocationRef:   DemoLocUndergroundChapelRef,
+				Record: &adventure_game_record.AdventureGameLocationLink{
+					Name:              "The Warded Gate",
+					Description:       "An iron gate covered in faded holy symbols. The cold intensifies near it. Something silver might grant safe passage.",
+					LockedDescription: nullstring.FromString("An iron gate engraved with religious symbols bars the way. Something about it unsettles you."),
+				},
+				AdventureGameLocationLinkRequirementConfigs: []harness.AdventureGameLocationLinkRequirementConfig{
+					{
+						Reference:   "demo-link-req-crypt-to-chapel",
+						GameItemRef: DemoItemSilverCrossRef,
+						Record: &adventure_game_record.AdventureGameLocationLinkRequirement{
+							Purpose:   adventure_game_record.AdventureGameLocationLinkRequirementPurposeTraverse,
+							Condition: adventure_game_record.AdventureGameLocationLinkRequirementConditionInInventory,
+							Quantity:  1,
 						},
 					},
 				},
+			},
 				// Crypt -> Wine Cellar (no requirement, return path)
 				{
 					Reference:       "demo-link-crypt-to-cellar",
@@ -327,23 +352,28 @@ func adventureGameConfigs() []harness.GameConfig {
 						Description: "The archway leads back into the wine cellar's dusty warmth.",
 					},
 				},
-				// Underground Chapel -> Flooded Corridor (requires Tallow Candle)
-				{
-					Reference:       "demo-link-chapel-to-flooded",
-					FromLocationRef: DemoLocUndergroundChapelRef,
-					ToLocationRef:   DemoLocFloodedCorridorRef,
-					Record: &adventure_game_record.AdventureGameLocationLink{
-						Name:        "The Broken Wall",
-						Description: "A gap in the chapel wall reveals a passage sloping downward. Water glints in the darkness ahead.",
-					},
-					AdventureGameLocationLinkRequirementConfigs: []harness.AdventureGameLocationLinkRequirementConfig{
-						{
-							Reference:   "demo-link-req-chapel-to-flooded",
-							GameItemRef: DemoItemTallowCandleRef,
-							Record:      &adventure_game_record.AdventureGameLocationLinkRequirement{Quantity: 1},
+			// Underground Chapel -> Flooded Corridor (requires Tallow Candle in inventory)
+			{
+				Reference:       "demo-link-chapel-to-flooded",
+				FromLocationRef: DemoLocUndergroundChapelRef,
+				ToLocationRef:   DemoLocFloodedCorridorRef,
+				Record: &adventure_game_record.AdventureGameLocationLink{
+					Name:              "The Broken Wall",
+					Description:       "A gap in the chapel wall reveals a passage sloping downward. Water glints in the darkness ahead.",
+					LockedDescription: nullstring.FromString("A gap in the chapel wall leads into darkness below. Without a light source, descending would be madness."),
+				},
+				AdventureGameLocationLinkRequirementConfigs: []harness.AdventureGameLocationLinkRequirementConfig{
+					{
+						Reference:   "demo-link-req-chapel-to-flooded",
+						GameItemRef: DemoItemTallowCandleRef,
+						Record: &adventure_game_record.AdventureGameLocationLinkRequirement{
+							Purpose:   adventure_game_record.AdventureGameLocationLinkRequirementPurposeTraverse,
+							Condition: adventure_game_record.AdventureGameLocationLinkRequirementConditionInInventory,
+							Quantity:  1,
 						},
 					},
 				},
+			},
 				// Underground Chapel -> Abbot's Study (no requirement)
 				{
 					Reference:       "demo-link-chapel-to-study",
@@ -354,23 +384,28 @@ func adventureGameConfigs() []harness.GameConfig {
 						Description: "A stone panel behind the altar slides aside to reveal a small room beyond.",
 					},
 				},
-				// Flooded Corridor -> Well Chamber (requires Coil of Rope)
-				{
-					Reference:       "demo-link-flooded-to-well",
-					FromLocationRef: DemoLocFloodedCorridorRef,
-					ToLocationRef:   DemoLocWellChamberRef,
-					Record: &adventure_game_record.AdventureGameLocationLink{
-						Name:        "The Submerged Ledge",
-						Description: "A narrow ledge runs along the flooded corridor to a shaft leading upward. Rope would make the climb possible.",
-					},
-					AdventureGameLocationLinkRequirementConfigs: []harness.AdventureGameLocationLinkRequirementConfig{
-						{
-							Reference:   "demo-link-req-flooded-to-well",
-							GameItemRef: DemoItemCoilOfRopeRef,
-							Record:      &adventure_game_record.AdventureGameLocationLinkRequirement{Quantity: 1},
+			// Flooded Corridor -> Well Chamber (requires Coil of Rope in inventory)
+			{
+				Reference:       "demo-link-flooded-to-well",
+				FromLocationRef: DemoLocFloodedCorridorRef,
+				ToLocationRef:   DemoLocWellChamberRef,
+				Record: &adventure_game_record.AdventureGameLocationLink{
+					Name:              "The Submerged Ledge",
+					Description:       "A narrow ledge runs along the flooded corridor to a shaft leading upward. Rope would make the climb possible.",
+					LockedDescription: nullstring.FromString("A submerged stone ledge leads deeper into the water. Without a rope, the descent looks fatal."),
+				},
+				AdventureGameLocationLinkRequirementConfigs: []harness.AdventureGameLocationLinkRequirementConfig{
+					{
+						Reference:   "demo-link-req-flooded-to-well",
+						GameItemRef: DemoItemCoilOfRopeRef,
+						Record: &adventure_game_record.AdventureGameLocationLinkRequirement{
+							Purpose:   adventure_game_record.AdventureGameLocationLinkRequirementPurposeTraverse,
+							Condition: adventure_game_record.AdventureGameLocationLinkRequirementConditionInInventory,
+							Quantity:  1,
 						},
 					},
 				},
+			},
 				// Well Chamber -> Bell Tower Vault (no requirement)
 				{
 					Reference:       "demo-link-well-to-vault",

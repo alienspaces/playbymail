@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 
+	"gitlab.com/alienspaces/playbymail/core/nullstring"
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/harness"
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
@@ -21,7 +22,7 @@ func TestCreateOne(t *testing.T) {
 		hasErr bool
 	}{
 		{
-			name: "valid",
+			name: "valid item requirement",
 			rec: func(data *harness.Data, t *testing.T) *adventure_game_record.AdventureGameLocationLinkRequirement {
 				game, err := data.GetGameRecByRef(harness.GameOneRef)
 				require.NoError(t, err)
@@ -32,7 +33,29 @@ func TestCreateOne(t *testing.T) {
 				return &adventure_game_record.AdventureGameLocationLinkRequirement{
 					GameID:                      game.ID,
 					AdventureGameLocationLinkID: link.ID,
-					AdventureGameItemID:         item.ID,
+					AdventureGameItemID:         nullstring.FromString(item.ID),
+					Purpose:                     adventure_game_record.AdventureGameLocationLinkRequirementPurposeTraverse,
+					Condition:                   adventure_game_record.AdventureGameLocationLinkRequirementConditionInInventory,
+					Quantity:                    1,
+				}
+			},
+			hasErr: false,
+		},
+		{
+			name: "valid creature requirement",
+			rec: func(data *harness.Data, t *testing.T) *adventure_game_record.AdventureGameLocationLinkRequirement {
+				game, err := data.GetGameRecByRef(harness.GameOneRef)
+				require.NoError(t, err)
+				link, err := data.GetAdventureGameLocationLinkRecByRef(harness.GameLocationLinkOneRef)
+				require.NoError(t, err)
+				creature, err := data.GetAdventureGameCreatureRecByRef(harness.GameCreatureOneRef)
+				require.NoError(t, err)
+				return &adventure_game_record.AdventureGameLocationLinkRequirement{
+					GameID:                      game.ID,
+					AdventureGameLocationLinkID: link.ID,
+					AdventureGameCreatureID:     nullstring.FromString(creature.ID),
+					Purpose:                     adventure_game_record.AdventureGameLocationLinkRequirementPurposeVisible,
+					Condition:                   adventure_game_record.AdventureGameLocationLinkRequirementConditionNoneAliveAtLocation,
 					Quantity:                    1,
 				}
 			},
@@ -44,7 +67,9 @@ func TestCreateOne(t *testing.T) {
 				return &adventure_game_record.AdventureGameLocationLinkRequirement{
 					GameID:                      uuid.NewString(),
 					AdventureGameLocationLinkID: uuid.NewString(),
-					AdventureGameItemID:         uuid.NewString(),
+					AdventureGameItemID:         nullstring.FromString(uuid.NewString()),
+					Purpose:                     adventure_game_record.AdventureGameLocationLinkRequirementPurposeTraverse,
+					Condition:                   adventure_game_record.AdventureGameLocationLinkRequirementConditionInInventory,
 					Quantity:                    1,
 				}
 			},
@@ -125,7 +150,7 @@ func TestUpdateOne(t *testing.T) {
 			rec: func(data *harness.Data, t *testing.T) *adventure_game_record.AdventureGameLocationLinkRequirement {
 				rec, err := data.GetAdventureGameLocationLinkRequirementRecByRef(harness.GameLocationLinkRequirementOneRef)
 				require.NoError(t, err)
-				rec.Quantity = 2 // simulate update
+				rec.Quantity = 2
 				return rec
 			},
 			hasErr: false,

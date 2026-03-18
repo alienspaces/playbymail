@@ -276,22 +276,7 @@ func (t *Testing) removeAdventureGameRecords() error {
 
 	l.Debug("removing adventure game records")
 
-	// Remove game creature records
-	l.Debug("removing >%d< game creature records", len(t.teardownData.AdventureGameCreatureRecs))
-	for _, creatureRec := range t.teardownData.AdventureGameCreatureRecs {
-		l.Debug("[teardown] game creature ID: >%s<", creatureRec.ID)
-		if creatureRec.ID == "" {
-			l.Warn("[teardown] skipping game creature with empty ID")
-			continue
-		}
-		err := t.Domain.(*domain.Domain).RemoveAdventureGameCreatureRec(creatureRec.ID)
-		if err != nil {
-			l.Warn("failed removing game creature record >%v<", err)
-			return err
-		}
-	}
-
-	// Remove game location link requirements
+	// Remove game location link requirements before creatures and items (requirements reference both)
 	l.Debug("removing >%d< game location link requirement records", len(t.teardownData.AdventureGameLocationLinkRequirementRecs))
 	for _, reqRec := range t.teardownData.AdventureGameLocationLinkRequirementRecs {
 		l.Debug("[teardown] game location link requirement ID: >%s<", reqRec.ID)
@@ -302,6 +287,21 @@ func (t *Testing) removeAdventureGameRecords() error {
 		err := t.Domain.(*domain.Domain).RemoveAdventureGameLocationLinkRequirementRec(reqRec.ID)
 		if err != nil {
 			l.Warn("failed removing game location link requirement record >%v<", err)
+			return err
+		}
+	}
+
+	// Remove game creature records (after requirements)
+	l.Debug("removing >%d< game creature records", len(t.teardownData.AdventureGameCreatureRecs))
+	for _, creatureRec := range t.teardownData.AdventureGameCreatureRecs {
+		l.Debug("[teardown] game creature ID: >%s<", creatureRec.ID)
+		if creatureRec.ID == "" {
+			l.Warn("[teardown] skipping game creature with empty ID")
+			continue
+		}
+		err := t.Domain.(*domain.Domain).RemoveAdventureGameCreatureRec(creatureRec.ID)
+		if err != nil {
+			l.Warn("failed removing game creature record >%v<", err)
 			return err
 		}
 	}

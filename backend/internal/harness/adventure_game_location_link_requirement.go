@@ -3,6 +3,7 @@ package harness
 import (
 	"fmt"
 
+	"gitlab.com/alienspaces/playbymail/core/nullstring"
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 )
@@ -14,8 +15,12 @@ func (t *Testing) createAdventureGameLocationLinkRequirementRec(cfg AdventureGam
 		return nil, fmt.Errorf("game location link record is nil for adventure game location link requirement record >%#v<", cfg)
 	}
 
-	if cfg.GameItemRef == "" {
-		return nil, fmt.Errorf("game item reference is required for adventure game location link requirement record >%#v<", cfg)
+	if cfg.GameItemRef == "" && cfg.GameCreatureRef == "" {
+		return nil, fmt.Errorf("one of GameItemRef or GameCreatureRef is required for adventure game location link requirement record >%#v<", cfg)
+	}
+
+	if cfg.GameItemRef != "" && cfg.GameCreatureRef != "" {
+		return nil, fmt.Errorf("only one of GameItemRef or GameCreatureRef may be set for adventure game location link requirement record >%#v<", cfg)
 	}
 
 	var rec *adventure_game_record.AdventureGameLocationLinkRequirement
@@ -31,12 +36,23 @@ func (t *Testing) createAdventureGameLocationLinkRequirementRec(cfg AdventureGam
 	rec.GameID = gameLocationLinkRec.GameID
 	rec.AdventureGameLocationLinkID = gameLocationLinkRec.ID
 
-	gameItemRec, err := t.Data.GetAdventureGameItemRecByRef(cfg.GameItemRef)
-	if err != nil {
-		l.Error("could not resolve GameItemRef >%s< to a valid game item ID", cfg.GameItemRef)
-		return nil, fmt.Errorf("could not resolve GameItemRef >%s< to a valid game item ID", cfg.GameItemRef)
+	if cfg.GameItemRef != "" {
+		gameItemRec, err := t.Data.GetAdventureGameItemRecByRef(cfg.GameItemRef)
+		if err != nil {
+			l.Error("could not resolve GameItemRef >%s< to a valid game item ID", cfg.GameItemRef)
+			return nil, fmt.Errorf("could not resolve GameItemRef >%s< to a valid game item ID", cfg.GameItemRef)
+		}
+		rec.AdventureGameItemID = nullstring.FromString(gameItemRec.ID)
 	}
-	rec.AdventureGameItemID = gameItemRec.ID
+
+	if cfg.GameCreatureRef != "" {
+		gameCreatureRec, err := t.Data.GetAdventureGameCreatureRecByRef(cfg.GameCreatureRef)
+		if err != nil {
+			l.Error("could not resolve GameCreatureRef >%s< to a valid game creature ID", cfg.GameCreatureRef)
+			return nil, fmt.Errorf("could not resolve GameCreatureRef >%s< to a valid game creature ID", cfg.GameCreatureRef)
+		}
+		rec.AdventureGameCreatureID = nullstring.FromString(gameCreatureRec.ID)
+	}
 
 	// Create record
 	l.Debug("creating adventure game location link requirement record >%#v<", rec)
@@ -68,6 +84,11 @@ func (t *Testing) applyAdventureGameLocationLinkRequirementRecDefaultValues(rec 
 	if rec.Quantity == 0 {
 		rec.Quantity = 1
 	}
-
+	if rec.Purpose == "" {
+		rec.Purpose = adventure_game_record.AdventureGameLocationLinkRequirementPurposeTraverse
+	}
+	if rec.Condition == "" {
+		rec.Condition = adventure_game_record.AdventureGameLocationLinkRequirementConditionInInventory
+	}
 	return rec
 }

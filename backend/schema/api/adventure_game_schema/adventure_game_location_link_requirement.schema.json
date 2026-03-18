@@ -4,29 +4,40 @@
     "title": "AdventureGameLocationLinkRequirement",
     "type": "object",
     "properties": {
-        "created_at": {
-            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/created_at"
-        },
-        "deleted_at": {
-            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/updated_at"
-        },
-        "game_id": {
+        "id": {
             "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
         },
-        "game_item_id": {
+        "game_id": {
             "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
         },
         "game_location_link_id": {
             "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
         },
-        "id": {
+        "game_item_id": {
             "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
+        },
+        "game_creature_id": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
+        },
+        "purpose": {
+            "type": "string",
+            "enum": ["traverse", "visible"]
+        },
+        "condition": {
+            "type": "string",
+            "enum": ["in_inventory", "equipped", "dead_at_location", "none_alive_at_location", "none_alive_in_game"]
         },
         "quantity": {
             "minimum": 1,
             "type": "integer"
         },
+        "created_at": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/created_at"
+        },
         "updated_at": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/updated_at"
+        },
+        "deleted_at": {
             "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/updated_at"
         }
     },
@@ -34,7 +45,8 @@
         "id",
         "game_id",
         "game_location_link_id",
-        "game_item_id",
+        "purpose",
+        "condition",
         "quantity",
         "created_at"
     ],

@@ -78,11 +78,11 @@ func (p *AdventureGameLocationChoiceProcessor) ProcessTurnSheetResponse(ctx cont
 		return fmt.Errorf("failed to parse sheet data: %w", err)
 	}
 
-	// Validate the choice is one of the available options
+	// Validate the choice is one of the available non-locked options
 	isValidChoice := false
 	var chosenLocationOption turnsheet.LocationOption
 	for _, option := range sheetData.LocationOptions {
-		if option.LocationID == chosenLocationID {
+		if option.LocationID == chosenLocationID && !option.IsLocked {
 			isValidChoice = true
 			chosenLocationOption = option
 			break
@@ -162,10 +162,10 @@ func (p *AdventureGameLocationChoiceProcessor) CreateNextTurnSheet(ctx context.C
 		return nil, fmt.Errorf("failed to get account: %w", err)
 	}
 
-	// Step 7: Build location options from links (these are the pathways!)
+	// Step 7: Build location options from links, evaluating requirements for each link
 	locationOptions := make([]turnsheet.LocationOption, 0, len(locationLinkRecs))
 	for _, locationLinkRec := range locationLinkRecs {
-		// Get the destination location's name
+		// Get the destination location definition
 		toLocationRec, err := p.Domain.GetAdventureGameLocationRec(locationLinkRec.ToAdventureGameLocationID, nil)
 		if err != nil {
 			l.Warn("failed to get destination location >%s< >%v<", locationLinkRec.ToAdventureGameLocationID, err)
@@ -179,15 +179,38 @@ func (p *AdventureGameLocationChoiceProcessor) CreateNextTurnSheet(ctx context.C
 			continue
 		}
 
-		// The link.Name is the pathway name (e.g., "The River of Blood")
-		// The link.Description is the pathway description (e.g., "A river of blood flows to the next location")
-		locationOptions = append(locationOptions, turnsheet.LocationOption{
-			LocationID:              toLocationInstanceRec.ID,
-			LocationLinkName:        locationLinkRec.Name,
-			LocationLinkDescription: locationLinkRec.Description,
-		})
+		// Evaluate requirements: visibility first, then traverse
+		isVisible, isTraversable, err := p.evaluateLinkRequirements(l, gameInstanceRec, characterInstanceRec, locationInstanceRec, locationLinkRec)
+		if err != nil {
+			l.Warn("failed to evaluate requirements for link >%s< >%v<", locationLinkRec.ID, err)
+			continue
+		}
 
-		l.Info("added location option: >%s< via >%s< (%s)", toLocationRec.Name, locationLinkRec.Name, locationLinkRec.Description)
+		if !isVisible {
+			// Link is entirely hidden — omit from turn sheet
+			l.Info("link >%s< to >%s< is hidden — omitting", locationLinkRec.Name, toLocationRec.Name)
+			continue
+		}
+
+		option := turnsheet.LocationOption{
+			LocationID:       toLocationInstanceRec.ID,
+			LocationLinkName: locationLinkRec.Name,
+		}
+
+		if isTraversable {
+			option.LocationLinkDescription = locationLinkRec.Description
+			l.Info("added accessible location option: >%s< via >%s<", toLocationRec.Name, locationLinkRec.Name)
+		} else {
+			option.IsLocked = true
+			if locationLinkRec.LockedDescription.Valid {
+				option.LockedDescription = locationLinkRec.LockedDescription.String
+			} else {
+				option.LockedDescription = locationLinkRec.Description
+			}
+			l.Info("added locked location option: >%s< via >%s<", toLocationRec.Name, locationLinkRec.Name)
+		}
+
+		locationOptions = append(locationOptions, option)
 	}
 
 	// Step 8: Generate turn sheet code for template rendering
@@ -271,6 +294,188 @@ func (p *AdventureGameLocationChoiceProcessor) CreateNextTurnSheet(ctx context.C
 		createdTurnSheetRec.ID, characterInstanceRec.ID, locationRec.Name, len(locationOptions))
 
 	return createdTurnSheetRec, nil
+}
+
+// evaluateLinkRequirements returns (isVisible, isTraversable, error) for a location link.
+// isVisible=false means the link must not appear on the sheet at all.
+// isVisible=true, isTraversable=false means it appears locked.
+// isVisible=true, isTraversable=true means it appears with a radio button.
+func (p *AdventureGameLocationChoiceProcessor) evaluateLinkRequirements(
+	l logger.Logger,
+	gameInstanceRec *game_record.GameInstance,
+	characterInstanceRec *adventure_game_record.AdventureGameCharacterInstance,
+	fromLocationInstanceRec *adventure_game_record.AdventureGameLocationInstance,
+	linkRec *adventure_game_record.AdventureGameLocationLink,
+) (isVisible bool, isTraversable bool, err error) {
+	requirements, err := p.Domain.GetManyAdventureGameLocationLinkRequirementRecs(&coresql.Options{
+		Params: []coresql.Param{
+			{
+				Col: adventure_game_record.FieldAdventureGameLocationLinkRequirementAdventureGameLocationLinkID,
+				Val: linkRec.ID,
+			},
+		},
+	})
+	if err != nil {
+		return false, false, fmt.Errorf("failed to get link requirements: %w", err)
+	}
+
+	// No requirements — link is always visible and traversable
+	if len(requirements) == 0 {
+		return true, true, nil
+	}
+
+	// Evaluate all visible requirements first (AND logic — all must pass)
+	for _, req := range requirements {
+		if req.Purpose != adventure_game_record.AdventureGameLocationLinkRequirementPurposeVisible {
+			continue
+		}
+		met, err := p.evaluateSingleRequirement(l, gameInstanceRec, characterInstanceRec, fromLocationInstanceRec, req)
+		if err != nil {
+			return false, false, err
+		}
+		if !met {
+			return false, false, nil // hidden
+		}
+	}
+
+	// Evaluate all traverse requirements (AND logic)
+	for _, req := range requirements {
+		if req.Purpose != adventure_game_record.AdventureGameLocationLinkRequirementPurposeTraverse {
+			continue
+		}
+		met, err := p.evaluateSingleRequirement(l, gameInstanceRec, characterInstanceRec, fromLocationInstanceRec, req)
+		if err != nil {
+			return true, false, err
+		}
+		if !met {
+			return true, false, nil // visible but locked
+		}
+	}
+
+	return true, true, nil
+}
+
+// evaluateSingleRequirement returns whether a single link requirement is satisfied.
+func (p *AdventureGameLocationChoiceProcessor) evaluateSingleRequirement(
+	l logger.Logger,
+	gameInstanceRec *game_record.GameInstance,
+	characterInstanceRec *adventure_game_record.AdventureGameCharacterInstance,
+	fromLocationInstanceRec *adventure_game_record.AdventureGameLocationInstance,
+	req *adventure_game_record.AdventureGameLocationLinkRequirement,
+) (bool, error) {
+	switch req.Condition {
+
+	// Item conditions
+	case adventure_game_record.AdventureGameLocationLinkRequirementConditionInInventory:
+		return p.characterHasItemInInventory(l, characterInstanceRec.ID, req.AdventureGameItemID.String, req.Quantity)
+
+	case adventure_game_record.AdventureGameLocationLinkRequirementConditionEquipped:
+		return p.characterHasItemEquipped(l, characterInstanceRec.ID, req.AdventureGameItemID.String)
+
+	// Creature conditions
+	case adventure_game_record.AdventureGameLocationLinkRequirementConditionDeadAtLocation:
+		return p.creatureDeadAtLocation(l, gameInstanceRec.ID, fromLocationInstanceRec.ID, req.AdventureGameCreatureID.String, req.Quantity)
+
+	case adventure_game_record.AdventureGameLocationLinkRequirementConditionNoneAliveAtLocation:
+		return p.noCreaturesAliveAtLocation(l, gameInstanceRec.ID, fromLocationInstanceRec.ID, req.AdventureGameCreatureID.String)
+
+	case adventure_game_record.AdventureGameLocationLinkRequirementConditionNoneAliveInGame:
+		return p.noCreaturesAliveInGame(l, gameInstanceRec.ID, req.AdventureGameCreatureID.String)
+
+	default:
+		l.Warn("unknown requirement condition >%s<", req.Condition)
+		return false, fmt.Errorf("unknown requirement condition: %s", req.Condition)
+	}
+}
+
+func (p *AdventureGameLocationChoiceProcessor) characterHasItemInInventory(l logger.Logger, characterInstanceID, itemID string, quantity int) (bool, error) {
+	itemInstances, err := p.Domain.GetManyAdventureGameItemInstanceRecs(&coresql.Options{
+		Params: []coresql.Param{
+			{Col: "adventure_game_character_instance_id", Val: characterInstanceID},
+			{Col: "adventure_game_item_id", Val: itemID},
+		},
+	})
+	if err != nil {
+		return false, fmt.Errorf("failed to query item instances: %w", err)
+	}
+	count := 0
+	for _, inst := range itemInstances {
+		if !inst.IsUsed {
+			count++
+		}
+	}
+	return count >= quantity, nil
+}
+
+func (p *AdventureGameLocationChoiceProcessor) characterHasItemEquipped(l logger.Logger, characterInstanceID, itemID string) (bool, error) {
+	itemInstances, err := p.Domain.GetManyAdventureGameItemInstanceRecs(&coresql.Options{
+		Params: []coresql.Param{
+			{Col: "adventure_game_character_instance_id", Val: characterInstanceID},
+			{Col: "adventure_game_item_id", Val: itemID},
+			{Col: "is_equipped", Val: true},
+		},
+	})
+	if err != nil {
+		return false, fmt.Errorf("failed to query equipped item instances: %w", err)
+	}
+	return len(itemInstances) > 0, nil
+}
+
+func (p *AdventureGameLocationChoiceProcessor) creatureDeadAtLocation(l logger.Logger, gameInstanceID, fromLocationInstanceID, creatureID string, quantity int) (bool, error) {
+	allInstances, err := p.Domain.GetManyAdventureGameCreatureInstanceRecs(&coresql.Options{
+		Params: []coresql.Param{
+			{Col: "game_instance_id", Val: gameInstanceID},
+			{Col: "adventure_game_creature_id", Val: creatureID},
+			{Col: "adventure_game_location_instance_id", Val: fromLocationInstanceID},
+		},
+	})
+	if err != nil {
+		return false, fmt.Errorf("failed to query creature instances: %w", err)
+	}
+	deadCount := 0
+	for _, inst := range allInstances {
+		if inst.Health <= 0 {
+			deadCount++
+		}
+	}
+	return deadCount >= quantity, nil
+}
+
+func (p *AdventureGameLocationChoiceProcessor) noCreaturesAliveAtLocation(l logger.Logger, gameInstanceID, fromLocationInstanceID, creatureID string) (bool, error) {
+	allInstances, err := p.Domain.GetManyAdventureGameCreatureInstanceRecs(&coresql.Options{
+		Params: []coresql.Param{
+			{Col: "game_instance_id", Val: gameInstanceID},
+			{Col: "adventure_game_creature_id", Val: creatureID},
+			{Col: "adventure_game_location_instance_id", Val: fromLocationInstanceID},
+		},
+	})
+	if err != nil {
+		return false, fmt.Errorf("failed to query creature instances: %w", err)
+	}
+	for _, inst := range allInstances {
+		if inst.Health > 0 {
+			return false, nil
+		}
+	}
+	return true, nil
+}
+
+func (p *AdventureGameLocationChoiceProcessor) noCreaturesAliveInGame(l logger.Logger, gameInstanceID, creatureID string) (bool, error) {
+	allInstances, err := p.Domain.GetManyAdventureGameCreatureInstanceRecs(&coresql.Options{
+		Params: []coresql.Param{
+			{Col: "game_instance_id", Val: gameInstanceID},
+			{Col: "adventure_game_creature_id", Val: creatureID},
+		},
+	})
+	if err != nil {
+		return false, fmt.Errorf("failed to query creature instances: %w", err)
+	}
+	for _, inst := range allInstances {
+		if inst.Health > 0 {
+			return false, nil
+		}
+	}
+	return true, nil
 }
 
 // getLocationInstanceForLocation finds the location instance ID for a given game and location

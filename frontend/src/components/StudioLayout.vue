@@ -58,6 +58,14 @@
             </router-link>
           </li>
           <li>
+            <router-link :to="`/studio/${selectedGame.id}/location-link-requirements`" active-class="active">
+              <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z" />
+              </svg>
+              Link Requirements
+            </router-link>
+          </li>
+          <li>
             <router-link :to="`/studio/${selectedGame.id}/items`" active-class="active">
               <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
                 <path

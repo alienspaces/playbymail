@@ -26,11 +26,15 @@ type LocationChoiceData struct {
 	LocationOptions []LocationOption `json:"location_options"`
 }
 
-// LocationOption represents a location choice option for the player
+// LocationOption represents a location choice option for the player.
+// Hidden links (failed visibility requirements) are never included in the slice.
+// Locked links are included with IsLocked=true and LockedDescription set.
 type LocationOption struct {
 	LocationID              string `json:"location_id"`
 	LocationLinkName        string `json:"location_link_name"`
 	LocationLinkDescription string `json:"location_link_description"`
+	IsLocked                bool   `json:"is_locked,omitempty"`
+	LockedDescription       string `json:"locked_description,omitempty"`
 }
 
 // LocationChoiceScanData represents the scanned data from a location choice turn sheet.
@@ -121,6 +125,12 @@ func (p *LocationChoiceProcessor) GeneratePreviewData(ctx context.Context, l log
 				LocationID:              "loc-3",
 				LocationLinkName:        "Return to Village",
 				LocationLinkDescription: "Head back to the safety of the village.",
+			},
+			{
+				LocationID:              "loc-4",
+				LocationLinkName:        "The Iron Gate",
+				IsLocked:                true,
+				LockedDescription:       "A rusted iron gate bars the path northward. Something heavy and cold presses against it from the other side.",
 			},
 		},
 	}
@@ -279,9 +289,10 @@ func validateLocationChoices(sheetData *LocationChoiceData, scanData *LocationCh
 		return fmt.Errorf("no scan data provided")
 	}
 
+	// Only non-locked options are valid choices
 	validIDs := make(map[string]bool)
 	for _, opt := range sheetData.LocationOptions {
-		if opt.LocationID != "" {
+		if opt.LocationID != "" && !opt.IsLocked {
 			validIDs[opt.LocationID] = true
 		}
 	}

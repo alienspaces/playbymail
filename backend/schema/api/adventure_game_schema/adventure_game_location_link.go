@@ -12,6 +12,7 @@ type AdventureGameLocationLinkResponseData struct {
 	GameID                      string     `json:"game_id"`
 	Name                        string     `json:"name"`
 	Description                 string     `json:"description"`
+	LockedDescription           string     `json:"locked_description,omitempty"`
 	FromAdventureGameLocationID string     `json:"from_adventure_game_location_id"`
 	ToAdventureGameLocationID   string     `json:"to_adventure_game_location_id"`
 	CreatedAt                   time.Time  `json:"created_at"`
@@ -35,6 +36,7 @@ type AdventureGameLocationLinkRequest struct {
 	common_schema.Request
 	Name                        string `json:"name"`
 	Description                 string `json:"description"`
+	LockedDescription           string `json:"locked_description,omitempty"`
 	FromAdventureGameLocationID string `json:"from_adventure_game_location_id"`
 	ToAdventureGameLocationID   string `json:"to_adventure_game_location_id"`
 }

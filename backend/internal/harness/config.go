@@ -267,8 +267,9 @@ type AdventureGameLocationLinkConfig struct {
 type AdventureGameLocationLinkRequirementConfig struct {
 	Reference string // Reference to the game_location_link_requirement record
 
-	// Must be assigned to an item
-	GameItemRef string // Reference to the game_item
+	// Exactly one of GameItemRef or GameCreatureRef must be set
+	GameItemRef     string // Reference to the game_item (for item-based conditions)
+	GameCreatureRef string // Reference to the game_creature (for creature-based conditions)
 
 	Record *adventure_game_record.AdventureGameLocationLinkRequirement
 }
@@ -588,15 +589,26 @@ func DefaultDataConfig() DataConfig {
 							Name:        UniqueName("The Red Door"),
 							Description: "Travel by boat to the swamp of the long forgotten Frog God",
 						},
-						AdventureGameLocationLinkRequirementConfigs: []AdventureGameLocationLinkRequirementConfig{
-							{
-								Reference:   GameLocationLinkRequirementOneRef,
-								GameItemRef: GameItemOneRef,
-								Record: &adventure_game_record.AdventureGameLocationLinkRequirement{
-									Quantity: 1,
-								},
+					AdventureGameLocationLinkRequirementConfigs: []AdventureGameLocationLinkRequirementConfig{
+						{
+							Reference:   GameLocationLinkRequirementOneRef,
+							GameItemRef: GameItemOneRef,
+							Record: &adventure_game_record.AdventureGameLocationLinkRequirement{
+								Purpose:   adventure_game_record.AdventureGameLocationLinkRequirementPurposeTraverse,
+								Condition: adventure_game_record.AdventureGameLocationLinkRequirementConditionInInventory,
+								Quantity:  1,
 							},
 						},
+						{
+							Reference:       GameLocationLinkRequirementTwoRef,
+							GameCreatureRef: GameCreatureOneRef,
+							Record: &adventure_game_record.AdventureGameLocationLinkRequirement{
+								Purpose:   adventure_game_record.AdventureGameLocationLinkRequirementPurposeVisible,
+								Condition: adventure_game_record.AdventureGameLocationLinkRequirementConditionNoneAliveAtLocation,
+								Quantity:  1,
+							},
+						},
+					},
 					},
 				},
 				AdventureGameCreatureConfigs: []AdventureGameCreatureConfig{

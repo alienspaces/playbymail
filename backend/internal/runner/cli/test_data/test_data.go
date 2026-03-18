@@ -46,9 +46,9 @@ func AccountConfig() []harness.AccountConfig {
 			AccountUserConfigs: []harness.AccountUserConfig{
 				{
 					Reference: harness.AccountUserStandardRef,
-					Record: &account_record.AccountUser{
-						Email: "test-account-one@example.com",
-					},
+				Record: &account_record.AccountUser{
+					Email: "test-player@example.com",
+				},
 				},
 			},
 		},
@@ -57,9 +57,9 @@ func AccountConfig() []harness.AccountConfig {
 			AccountUserConfigs: []harness.AccountUserConfig{
 				{
 					Reference: harness.AccountUserProPlayerRef,
-					Record: &account_record.AccountUser{
-						Email: "test-account-two@example.com",
-					},
+				Record: &account_record.AccountUser{
+					Email: "test-pro-player@example.com",
+				},
 				},
 			},
 		},
@@ -68,9 +68,9 @@ func AccountConfig() []harness.AccountConfig {
 			AccountUserConfigs: []harness.AccountUserConfig{
 				{
 					Reference: harness.AccountUserProDesignerRef,
-					Record: &account_record.AccountUser{
-						Email: "test-account-three@example.com",
-					},
+				Record: &account_record.AccountUser{
+					Email: "test-pro-designer@example.com",
+				},
 				},
 			},
 		},
@@ -79,9 +79,9 @@ func AccountConfig() []harness.AccountConfig {
 			AccountUserConfigs: []harness.AccountUserConfig{
 				{
 					Reference: harness.AccountUserProManagerRef,
-					Record: &account_record.AccountUser{
-						Email: "test-account-four@example.com",
-					},
+				Record: &account_record.AccountUser{
+					Email: "test-pro-manager@example.com",
+				},
 				},
 			},
 		},
@@ -703,64 +703,93 @@ func GameConfig() []harness.GameConfig {
 						Description: "Knotted ropes and iron spikes mark the climb back up to the oasis.",
 					},
 				},
-				// Ancient Ruins -> Hidden Temple (requires Ancient Scarab Key)
-				{
-					Reference:       "desert-link-ruins-to-temple",
-					FromLocationRef: "desert-location-ruins",
-					ToLocationRef:   "desert-location-temple",
-					Record: &adventure_game_record.AdventureGameLocationLink{
-						Name:        "The Sealed Passage",
-						Description: "A massive stone door blocks the way. Scarab-shaped indentations line its surface.",
+			// Ancient Ruins -> Hidden Temple
+			// traverse: Scarab Key must be equipped (item equipped condition)
+			// traverse: Temple Guardian must not be alive at ruins (creature none_alive_at_location condition) -- combined AND
+			{
+				Reference:       "desert-link-ruins-to-temple",
+				FromLocationRef: "desert-location-ruins",
+				ToLocationRef:   "desert-location-temple",
+				Record: &adventure_game_record.AdventureGameLocationLink{
+					Name:              "The Sealed Passage",
+					Description:       "A massive stone door blocks the way. Scarab-shaped indentations line its surface.",
+					LockedDescription: nullstring.FromString("The stone door is sealed fast. Scarab-shaped indentations line its surface, but without the right artefact it will not yield."),
+				},
+				AdventureGameLocationLinkRequirementConfigs: []harness.AdventureGameLocationLinkRequirementConfig{
+					{
+						Reference:   "desert-link-req-scarab-equipped",
+						GameItemRef: "desert-item-scarab-key",
+						Record: &adventure_game_record.AdventureGameLocationLinkRequirement{
+							Purpose:   adventure_game_record.AdventureGameLocationLinkRequirementPurposeTraverse,
+							Condition: adventure_game_record.AdventureGameLocationLinkRequirementConditionEquipped,
+							Quantity:  1,
+						},
 					},
-					AdventureGameLocationLinkRequirementConfigs: []harness.AdventureGameLocationLinkRequirementConfig{
-						{
-							Reference:   "desert-link-req-scarab",
-							GameItemRef: "desert-item-scarab-key",
-							Record: &adventure_game_record.AdventureGameLocationLinkRequirement{
-								Quantity: 1,
-							},
+					{
+						Reference:       "desert-link-req-guardian-dead",
+						GameCreatureRef: "desert-creature-guardian",
+						Record: &adventure_game_record.AdventureGameLocationLinkRequirement{
+							Purpose:   adventure_game_record.AdventureGameLocationLinkRequirementPurposeTraverse,
+							Condition: adventure_game_record.AdventureGameLocationLinkRequirementConditionNoneAliveAtLocation,
+							Quantity:  1,
 						},
 					},
 				},
-				// Hidden Temple -> Ancient Ruins (free)
-				{
-					Reference:       "desert-link-temple-to-ruins",
-					FromLocationRef: "desert-location-temple",
-					ToLocationRef:   "desert-location-ruins",
-					Record: &adventure_game_record.AdventureGameLocationLink{
-						Name:        "The Crumbling Steps",
-						Description: "Worn stone steps lead back out to the ruins.",
-					},
+			},
+			// Hidden Temple -> Ancient Ruins (free)
+			{
+				Reference:       "desert-link-temple-to-ruins",
+				FromLocationRef: "desert-location-temple",
+				ToLocationRef:   "desert-location-ruins",
+				Record: &adventure_game_record.AdventureGameLocationLink{
+					Name:        "The Crumbling Steps",
+					Description: "Worn stone steps lead back out to the ruins.",
 				},
-				// Sandstone Canyon -> Hidden Temple (requires Sand Cloak)
-				{
-					Reference:       "desert-link-canyon-to-temple",
-					FromLocationRef: "desert-location-canyon",
-					ToLocationRef:   "desert-location-temple",
-					Record: &adventure_game_record.AdventureGameLocationLink{
-						Name:        "The Shadow Path",
-						Description: "A hidden passage through the canyon wall, visible only to those cloaked in sand magic.",
+			},
+			// Sandstone Canyon -> Hidden Temple
+			// visible: Sand Serpent must be dead at the canyon (creature dead_at_location visibility condition)
+			// traverse: Sand Cloak must be in inventory (item in_inventory traverse condition)
+			// -- combined: link hidden while serpent lives; locked (without cloak) once serpent is dead
+			{
+				Reference:       "desert-link-canyon-to-temple",
+				FromLocationRef: "desert-location-canyon",
+				ToLocationRef:   "desert-location-temple",
+				Record: &adventure_game_record.AdventureGameLocationLink{
+					Name:              "The Shadow Path",
+					Description:       "A hidden passage through the canyon wall, visible only to those cloaked in sand magic.",
+					LockedDescription: nullstring.FromString("A faint outline of a passage shimmers in the canyon wall. Only one wrapped in desert silk could slip through."),
+				},
+				AdventureGameLocationLinkRequirementConfigs: []harness.AdventureGameLocationLinkRequirementConfig{
+					{
+						Reference:       "desert-link-req-serpent-dead",
+						GameCreatureRef: "desert-creature-serpent",
+						Record: &adventure_game_record.AdventureGameLocationLinkRequirement{
+							Purpose:   adventure_game_record.AdventureGameLocationLinkRequirementPurposeVisible,
+							Condition: adventure_game_record.AdventureGameLocationLinkRequirementConditionDeadAtLocation,
+							Quantity:  1,
+						},
 					},
-					AdventureGameLocationLinkRequirementConfigs: []harness.AdventureGameLocationLinkRequirementConfig{
-						{
-							Reference:   "desert-link-req-cloak",
-							GameItemRef: "desert-item-cloak",
-							Record: &adventure_game_record.AdventureGameLocationLinkRequirement{
-								Quantity: 1,
-							},
+					{
+						Reference:   "desert-link-req-cloak-inventory",
+						GameItemRef: "desert-item-cloak",
+						Record: &adventure_game_record.AdventureGameLocationLinkRequirement{
+							Purpose:   adventure_game_record.AdventureGameLocationLinkRequirementPurposeTraverse,
+							Condition: adventure_game_record.AdventureGameLocationLinkRequirementConditionInInventory,
+							Quantity:  1,
 						},
 					},
 				},
-				// Hidden Temple -> Sandstone Canyon (free)
-				{
-					Reference:       "desert-link-temple-to-canyon",
-					FromLocationRef: "desert-location-temple",
-					ToLocationRef:   "desert-location-canyon",
-					Record: &adventure_game_record.AdventureGameLocationLink{
-						Name:        "The Wind Tunnel",
-						Description: "A blast of dry wind funnels through a narrow tunnel back to the canyon.",
-					},
+			},
+			// Hidden Temple -> Sandstone Canyon (free)
+			{
+				Reference:       "desert-link-temple-to-canyon",
+				FromLocationRef: "desert-location-temple",
+				ToLocationRef:   "desert-location-canyon",
+				Record: &adventure_game_record.AdventureGameLocationLink{
+					Name:        "The Wind Tunnel",
+					Description: "A blast of dry wind funnels through a narrow tunnel back to the canyon.",
 				},
+			},
 			},
 		},
 	}
