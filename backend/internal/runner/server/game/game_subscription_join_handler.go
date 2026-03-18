@@ -28,10 +28,9 @@ import (
 )
 
 const (
-	GetJoinInfo   = "get-join-info"
-	GetJoinSheet  = "get-join-sheet"
-	SaveJoinSheet = "save-join-sheet"
-	SubmitJoin    = "submit-join"
+	GetJoinInfo  = "get-join-info"
+	GetJoinSheet = "get-join-sheet"
+	SubmitJoin   = "submit-join"
 )
 
 func gameSubscriptionJoinHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error) {
