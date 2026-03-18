@@ -240,7 +240,7 @@ func (p *AdventureGameLocationChoiceProcessor) CreateNextTurnSheet(ctx context.C
 		AccountUserID:    characterRec.AccountUserID,
 		TurnNumber:       gameInstanceRec.CurrentTurn,
 		SheetType:        adventure_game_record.AdventureGameTurnSheetTypeLocationChoice,
-		SheetOrder:       1,
+		SheetOrder:       adventure_game_record.AdventureGameSheetOrderForType(adventure_game_record.AdventureGameTurnSheetTypeLocationChoice),
 		SheetData:        json.RawMessage(sheetDataBytes),
 		IsCompleted:      false,
 		ProcessingStatus: game_record.TurnSheetProcessingStatusPending,

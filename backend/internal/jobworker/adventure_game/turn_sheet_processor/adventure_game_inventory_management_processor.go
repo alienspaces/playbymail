@@ -110,8 +110,22 @@ func (p *AdventureGameInventoryManagementProcessor) ProcessTurnSheetResponse(ctx
 				return fmt.Errorf("failed to pick up item %s before equip: %w", action.ItemInstanceID, err)
 			}
 		}
-		l.Info("equipping item >%s< to slot >%s<", action.ItemInstanceID, action.Slot)
-		_, err = p.Domain.EquipAdventureGameItemInstanceRec(characterInstanceRec.ID, action.ItemInstanceID, action.Slot)
+
+		// Resolve the correct equipment slot from the item definition.
+		// The HTML form sends every equip action with DefaultEquipSlot ("weapon"),
+		// but each item has its own defined slot (armor, jewelry, etc.).
+		slot := action.Slot
+		itemDef, err := p.Domain.GetAdventureGameItemRec(itemRec.AdventureGameItemID, nil)
+		if err != nil {
+			l.Warn("failed to get item definition >%s< >%v<", itemRec.AdventureGameItemID, err)
+			return fmt.Errorf("failed to get item definition for item %s: %w", action.ItemInstanceID, err)
+		}
+		if itemDef.EquipmentSlot != nil {
+			slot = *itemDef.EquipmentSlot
+		}
+
+		l.Info("equipping item >%s< to slot >%s<", action.ItemInstanceID, slot)
+		_, err = p.Domain.EquipAdventureGameItemInstanceRec(characterInstanceRec.ID, action.ItemInstanceID, slot)
 		if err != nil {
 			l.Warn("failed to equip item >%s< >%v<", action.ItemInstanceID, err)
 			return fmt.Errorf("failed to equip item %s: %w", action.ItemInstanceID, err)
@@ -276,6 +290,7 @@ func (p *AdventureGameInventoryManagementProcessor) CreateNextTurnSheet(ctx cont
 			ItemInstanceID:  itemInstance.ID,
 			ItemName:        itemDef.Name,
 			ItemDescription: itemDef.Description,
+			CanEquip:        itemDef.CanBeEquipped,
 		}
 		locationItemList = append(locationItemList, locationItem)
 	}
@@ -334,7 +349,7 @@ func (p *AdventureGameInventoryManagementProcessor) CreateNextTurnSheet(ctx cont
 		AccountUserID:    characterRec.AccountUserID,
 		TurnNumber:       gameInstanceRec.CurrentTurn,
 		SheetType:        adventure_game_record.AdventureGameTurnSheetTypeInventoryManagement,
-		SheetOrder:       1,
+		SheetOrder:       adventure_game_record.AdventureGameSheetOrderForType(adventure_game_record.AdventureGameTurnSheetTypeInventoryManagement),
 		SheetData:        json.RawMessage(sheetDataBytes),
 		IsCompleted:      false,
 		ProcessingStatus: game_record.TurnSheetProcessingStatusPending,

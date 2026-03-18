@@ -3,6 +3,7 @@ package adventure_game
 import (
 	"context"
 	"fmt"
+	"slices"
 
 	coresql "gitlab.com/alienspaces/playbymail/core/sql"
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
@@ -72,6 +73,12 @@ func (p *AdventureGame) processCharacterTurnSheets(ctx context.Context, gameInst
 		l.Info("no turn sheets found for character >%s< turn >%d<", characterInstance.ID, gameInstanceRec.CurrentTurn)
 		return nil
 	}
+
+	// Sort by SheetOrder so turn sheets are processed in the correct
+	// sequence (e.g. inventory management before location choice).
+	slices.SortFunc(turnSheetRecs, func(a, b *game_record.GameTurnSheet) int {
+		return a.SheetOrder - b.SheetOrder
+	})
 
 	// Process each turn sheet for this character
 	for _, turnSheet := range turnSheetRecs {

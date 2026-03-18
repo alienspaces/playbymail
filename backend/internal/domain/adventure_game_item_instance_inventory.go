@@ -188,7 +188,7 @@ func (m *Domain) EquipAdventureGameItemInstanceRec(characterInstanceID, itemInst
 	}
 
 	if !itemDef.CanBeEquipped {
-		return nil, InvalidField("item", itemRec.AdventureGameItemID, "item cannot be equipped")
+		return nil, InvalidField("item_instance", itemInstanceID, "item cannot be equipped")
 	}
 
 	// Validate equipment slot matches item's equipment slot

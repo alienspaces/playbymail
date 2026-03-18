@@ -420,11 +420,13 @@ func TestGenerateInventoryManagementFormatsForPrinting(t *testing.T) {
 				ItemInstanceID:  "item-6",
 				ItemName:        "Shadow Cloak",
 				ItemDescription: "A dark cloak that seems to blend with shadows",
+				CanEquip:        true,
 			},
 			{
 				ItemInstanceID:  "item-7",
 				ItemName:        "Wind Charm",
 				ItemDescription: "A small charm that whispers with the wind",
+				CanEquip:        false,
 			},
 		},
 	}

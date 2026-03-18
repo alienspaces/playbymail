@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"slices"
 	"strings"
 	"time"
 
@@ -22,6 +23,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/jobworker"
 	"gitlab.com/alienspaces/playbymail/internal/mapper"
+	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 	"gitlab.com/alienspaces/playbymail/internal/runner/server/handler_auth"
 	"gitlab.com/alienspaces/playbymail/internal/turnsheet"
@@ -315,6 +317,17 @@ func getGameSubscriptionInstanceTurnSheetListHandler(w http.ResponseWriter, r *h
 		l.Warn("failed to get turn sheets >%v<", err)
 		return err
 	}
+
+	// Re-sort within each turn by presentation order, which differs from the
+	// processing order stored in sheet_order. Players see location choice first
+	// (where am I going?) then inventory (what do I take?).
+	slices.SortStableFunc(turnSheetRecs, func(a, b *game_record.GameTurnSheet) int {
+		if a.TurnNumber != b.TurnNumber {
+			return a.TurnNumber - b.TurnNumber
+		}
+		return adventure_game_record.AdventureGameSheetPresentationOrderForType(a.SheetType) -
+			adventure_game_record.AdventureGameSheetPresentationOrderForType(b.SheetType)
+	})
 
 	l.Info("returning turn sheet list for game subscription instance >%s<", gameSubscriptionInstanceRec.ID)
 

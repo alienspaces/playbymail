@@ -65,6 +65,7 @@ type LocationItem struct {
 	ItemInstanceID  string `json:"item_instance_id"`
 	ItemName        string `json:"item_name"`
 	ItemDescription string `json:"item_description,omitempty"`
+	CanEquip        bool   `json:"can_equip"`
 }
 
 // DefaultEquipSlot is used when the HTML form sends equip as an array of item IDs (no slot chosen).

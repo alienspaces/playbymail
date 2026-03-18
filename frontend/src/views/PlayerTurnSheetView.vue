@@ -263,6 +263,40 @@ function extractFormData() {
     }
   })
 
+  // Convert per-item radio groups (inv_*, loc_*) into action arrays expected by backend.
+  // Radio buttons are named inv_<itemId> for inventory items and loc_<itemId> for location
+  // items, with the action as the value (equip, drop, unequip, pick_up).
+  const equip = []
+  const drop = []
+  const pick_up = []
+  const unequip = []
+
+  for (const key of Object.keys(formData)) {
+    if (key.startsWith('inv_')) {
+      const itemId = key.slice(4)
+      const action = formData[key]
+      if (action === 'equip') equip.push(itemId)
+      else if (action === 'drop') drop.push(itemId)
+      else if (action === 'unequip') unequip.push(itemId)
+      delete formData[key]
+    } else if (key.startsWith('loc_')) {
+      const itemId = key.slice(4)
+      const action = formData[key]
+      if (action === 'equip') equip.push(itemId)
+      else if (action === 'pick_up') pick_up.push(itemId)
+      delete formData[key]
+    }
+  }
+
+  // Merge checkbox-based drop/pick_up (non-equippable items) with radio-derived arrays.
+  if (formData.drop) { drop.push(...formData.drop); delete formData.drop }
+  if (formData.pick_up) { pick_up.push(...formData.pick_up); delete formData.pick_up }
+
+  if (equip.length) formData.equip = equip
+  if (drop.length) formData.drop = drop
+  if (pick_up.length) formData.pick_up = pick_up
+  if (unequip.length) formData.unequip = unequip
+
   // Remove empty arrays — an unchecked checkbox group sends [] which can
   // fail oneOf schema validation (e.g. equip field in inventory management).
   for (const key of Object.keys(formData)) {
@@ -281,6 +315,8 @@ function applyFormData(data) {
 
   const doc = iframe.contentDocument
 
+  // Restore standard inputs (text, select, plain checkboxes).
+  // Per-item radio groups (inv_*, loc_*) are handled separately below.
   doc.querySelectorAll('input, select, textarea').forEach(el => {
     const name = el.name || el.id
     if (!name || !(name in data)) return
@@ -299,10 +335,38 @@ function applyFormData(data) {
       el.value = value ?? ''
     }
   })
+
+  // Restore per-item radio groups from action arrays.
+  // Inventory item radios are named inv_<itemId>; location item radios are named loc_<itemId>.
+  const radioMappings = [
+    { dataKey: 'equip',   namePrefix: 'inv_', radioValue: 'equip' },
+    { dataKey: 'equip',   namePrefix: 'loc_', radioValue: 'equip' },
+    { dataKey: 'drop',    namePrefix: 'inv_', radioValue: 'drop' },
+    { dataKey: 'pick_up', namePrefix: 'loc_', radioValue: 'pick_up' },
+    { dataKey: 'unequip', namePrefix: 'inv_', radioValue: 'unequip' },
+  ]
+
+  for (const { dataKey, namePrefix, radioValue } of radioMappings) {
+    const ids = data[dataKey]
+    if (!Array.isArray(ids)) continue
+    for (const itemId of ids) {
+      const radio = doc.querySelector(
+        `input[type="radio"][name="${namePrefix}${itemId}"][value="${radioValue}"]`
+      )
+      if (radio) radio.checked = true
+    }
+  }
 }
 
-// Called when the iframe finishes loading — restore any cached form data
+// Called when the iframe finishes loading — size to content, then restore cached form data
 function onIframeLoad() {
+  const iframe = iframeRef.value
+  if (iframe && iframe.contentDocument) {
+    const docEl = iframe.contentDocument.documentElement
+    const body = iframe.contentDocument.body
+    const height = (docEl && docEl.scrollHeight) || (body && body.scrollHeight)
+    if (height) iframe.style.height = height + 'px'
+  }
   if (!activeSheet.value) return
   const cached = formDataCache.value.get(activeSheet.value.id)
   if (cached) {
@@ -513,9 +577,10 @@ onMounted(loadTurnSheets)
 
 .ts-iframe {
   width: 100%;
-  height: 80vh;
-  min-height: 600px;
+  height: auto;
+  min-height: 400px;
   border: none;
+  display: block;
 }
 
 .ts-iframe-loading,
