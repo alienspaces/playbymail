@@ -8,9 +8,68 @@ Here's what's been happening with Play by Mail — from the early foundations in
 
 ## 🎯 What's Next
 
-- End-to-end player game joining and turn submission
-- Real-time turn processing
-- A brand new game type!
+- Monster encounters and combat system
+- Environmental location actions
+- End-game win conditions
+
+---
+
+## 🗓️ March 2026
+
+**Theme**: Player Game Experience & Adventure Game Foundations
+
+### 🎯 Major Features
+
+**Public Game Catalog**
+- Players can now browse all published games from a dedicated catalog page
+- Join a game directly from the catalog with a single click
+
+**Player App & Turn Sheet Viewer**
+- A dedicated player experience for viewing and completing turn sheets
+- Access your turn sheets securely via a link in your notification email — no password required
+- Navigate between sheets, fill them in, and submit — all from the browser
+
+**Join Game Flow**
+- Players sign in and complete a join game turn sheet to enter a game
+- Choose your preferred delivery method (email or post) when joining
+
+**Unified Link Requirements**
+- Game designers can now control which paths players can see and traverse, based on items they carry, items they have equipped, or creatures they have defeated
+- Locked paths display an atmospheric description so players know something blocks the way — without revealing exactly what
+- Hidden paths are omitted from the turn sheet entirely until conditions are met
+
+**Link Requirements Studio UI**
+- New view in the Game Designer Studio for creating and editing link requirements
+- Supports item-based and creature-based conditions for both visibility and traversal
+
+### 🎨 Improvements
+
+**Simplified Turn Sheet UI**
+- Form data is now cached automatically as you move between sheets
+- A single Submit button saves and submits all sheets at once — no manual Save or Mark Ready steps
+
+**Delivery Method Selection**
+- Players choose how they receive future turn sheets (email or post) during the join flow
+- Games configured with a single delivery method skip the choice automatically
+
+**Turn Sheet Ordering**
+- Adventure game sheets now appear in a consistent order: location choice first, then inventory management
+- Combat sheets will appear in the correct place once the monster encounter feature launches
+
+**Equipment & Inventory**
+- Items at a location are now auto-picked-up before equipping, matching the intent of the turn sheet
+- Item actions on the inventory sheet use radio buttons instead of checkboxes, making choices mutually exclusive
+
+**Account Contacts**
+- Contact detail fields (address, phone) are now optional unless you choose postal delivery
+
+### 🐛 Bug Fixes
+
+- Fixed equipment slot errors when equipping non-weapon items (e.g. armour)
+- Fixed turn sheet background images missing from location choice and inventory sheets
+- Fixed duplicate turn processing jobs being queued for the same game instance
+- Fixed the player turn sheet view being too narrow on some screens
+- Fixed join game submission failing due to a missing account ID
 
 ---
 
