@@ -40,8 +40,8 @@ func TestHarnessSetupTeardown_DefaultDataConfig(t *testing.T) {
 	require.Len(t, h.Data.AccountUserContactRecs, 4, "Should have exactly 4 account user contact records")
 	// Games: 2 (GameOneRef, GameDraftRef)
 	require.Len(t, h.Data.GameRecs, 2, "Should have exactly 2 game records")
-	// Locations: 2 (GameLocationOneRef, GameLocationTwoRef)
-	require.Len(t, h.Data.AdventureGameLocationRecs, 2, "Should have exactly 2 adventure game location records")
+	// Locations: 3 (GameLocationOneRef, GameLocationTwoRef, GameLocationThreeRef)
+	require.Len(t, h.Data.AdventureGameLocationRecs, 3, "Should have exactly 3 adventure game location records")
 	// Location links: 2 (GameLocationLinkOneRef, GameLocationLinkTwoRef return path)
 	require.Len(t, h.Data.AdventureGameLocationLinkRecs, 2, "Should have exactly 2 adventure game location link records")
 	// Location link requirements: 2 (GameLocationLinkRequirementOneRef item, GameLocationLinkRequirementTwoRef creature)
@@ -52,8 +52,8 @@ func TestHarnessSetupTeardown_DefaultDataConfig(t *testing.T) {
 	require.Len(t, h.Data.AdventureGameCreatureRecs, 2, "Should have exactly 2 adventure game creature records")
 	// Items: 2 (GameItemOneRef, GameItemTwoRef)
 	require.Len(t, h.Data.AdventureGameItemRecs, 2, "Should have exactly 2 adventure game item records")
-	// Location instances: 2 locations * 2 game instances = 4 (auto-generated for each game instance)
-	require.Len(t, h.Data.AdventureGameLocationInstanceRecs, 4, "Should have exactly 4 adventure game location instance records (2 locations * 2 game instances)")
+	// Location instances: 3 locations * 2 player subscriptions = 6 (auto-generated per player subscription)
+	require.Len(t, h.Data.AdventureGameLocationInstanceRecs, 6, "Should have exactly 6 adventure game location instance records (3 locations * 2 player subscriptions)")
 	// Character instances: 1 (GameCharacterInstanceOneRef) - only for GameInstanceOneRef
 	require.Len(t, h.Data.AdventureGameCharacterInstanceRecs, 1, "Should have exactly 1 adventure game character instance record")
 	// Creature instances: 1 (GameCreatureInstanceOneRef) - only for GameInstanceOneRef

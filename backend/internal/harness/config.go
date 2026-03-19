@@ -566,23 +566,30 @@ func DefaultDataConfig() DataConfig {
 						},
 					},
 				},
-				AdventureGameLocationConfigs: []AdventureGameLocationConfig{
-					{
-						Reference: GameLocationOneRef,
-						Record: &adventure_game_record.AdventureGameLocation{
-							Name:               UniqueName("Default Location One"),
-							Description:        "Default location one for handler tests",
-							IsStartingLocation: true,
-						},
-					},
-					{
-						Reference: GameLocationTwoRef,
-						Record: &adventure_game_record.AdventureGameLocation{
-							Name:        UniqueName("Default Location Two"),
-							Description: "Default location two for handler tests",
-						},
+			AdventureGameLocationConfigs: []AdventureGameLocationConfig{
+				{
+					Reference: GameLocationOneRef,
+					Record: &adventure_game_record.AdventureGameLocation{
+						Name:               UniqueName("Default Location One"),
+						Description:        "Default location one for handler tests",
+						IsStartingLocation: true,
 					},
 				},
+				{
+					Reference: GameLocationTwoRef,
+					Record: &adventure_game_record.AdventureGameLocation{
+						Name:        UniqueName("Default Location Two"),
+						Description: "Default location two for handler tests",
+					},
+				},
+				{
+					Reference: GameLocationThreeRef,
+					Record: &adventure_game_record.AdventureGameLocation{
+						Name:        UniqueName("Default Location Three"),
+						Description: "Default location three for handler tests",
+					},
+				},
+			},
 				AdventureGameLocationLinkConfigs: []AdventureGameLocationLinkConfig{
 					{
 						Reference:       GameLocationLinkOneRef,
