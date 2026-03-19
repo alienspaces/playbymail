@@ -118,6 +118,14 @@ func validateGameInstanceRecForUpdate(args *validateGameInstanceArgs) error {
 		)
 	}
 
+	if rec.TurnDurationHours != currRec.TurnDurationHours && currRec.Status != game_record.GameInstanceStatusCreated {
+		return InvalidField(
+			game_record.FieldGameInstanceTurnDurationHours,
+			fmt.Sprintf("%d", rec.TurnDurationHours),
+			"turn_duration_hours can only be changed while the instance is in 'created' status",
+		)
+	}
+
 	return nil
 }
 
@@ -174,6 +182,14 @@ func validateGameInstanceRec(args *validateGameInstanceArgs, requireID bool) err
 			game_record.FieldGameInstanceRequiredPlayerCount,
 			fmt.Sprintf("%d", rec.RequiredPlayerCount),
 			"required_player_count must be 0 or greater",
+		)
+	}
+
+	if rec.TurnDurationHours < 0 {
+		return InvalidField(
+			game_record.FieldGameInstanceTurnDurationHours,
+			fmt.Sprintf("%d", rec.TurnDurationHours),
+			"turn_duration_hours must be 0 or greater",
 		)
 	}
 

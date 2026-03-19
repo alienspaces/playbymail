@@ -73,6 +73,31 @@
               {{ instance.is_closed_testing ? 'Enabled' : 'Disabled' }}
             </span>
           </div>
+          <div class="info-item">
+            <span class="label">Turn Duration</span>
+            <span v-if="!editingTurnDuration" class="value">
+              {{ formatTurnDuration(instance.turn_duration_hours) }}
+              <button
+                v-if="instance.status === 'created'"
+                @click="startEditTurnDuration"
+                class="edit-inline-btn"
+                title="Edit turn duration"
+              >✎</button>
+            </span>
+            <span v-else class="value turn-duration-edit">
+              <input
+                v-model.number="turnDurationEdit"
+                type="number"
+                min="0"
+                step="1"
+                class="turn-duration-input"
+              />
+              <button @click="saveTurnDuration" class="save-inline-btn" :disabled="savingTurnDuration">
+                {{ savingTurnDuration ? '…' : '✓' }}
+              </button>
+              <button @click="cancelEditTurnDuration" class="cancel-inline-btn">✕</button>
+            </span>
+          </div>
           <div class="info-item" v-if="instance.next_turn_due_at">
             <span class="label">Next Turn Due</span>
             <span class="value">{{ formatDeadline(instance.next_turn_due_at) }}</span>
@@ -307,6 +332,11 @@ const inviteLoading = ref(false);
 const inviteError = ref('');
 const inviteSuccess = ref(false);
 
+// Turn duration inline edit state
+const editingTurnDuration = ref(false);
+const turnDurationEdit = ref(0);
+const savingTurnDuration = ref(false);
+
 // Computed: Check if game can be started
 const canStartGame = computed(() => {
   if (!instance.value) return false;
@@ -426,6 +456,44 @@ const getStatusLabel = (status) => {
 const formatDate = (dateString) => {
   if (!dateString) return 'N/A';
   return new Date(dateString).toLocaleString();
+};
+
+const formatTurnDuration = (hours) => {
+  if (!hours) return '0 hours (immediate)';
+  if (hours % (24 * 7) === 0) {
+    const weeks = hours / (24 * 7);
+    return `${weeks} week${weeks === 1 ? '' : 's'}`;
+  }
+  if (hours % 24 === 0) {
+    const days = hours / 24;
+    return `${days} day${days === 1 ? '' : 's'}`;
+  }
+  return `${hours} hour${hours === 1 ? '' : 's'}`;
+};
+
+const startEditTurnDuration = () => {
+  turnDurationEdit.value = instance.value.turn_duration_hours || 0;
+  editingTurnDuration.value = true;
+};
+
+const cancelEditTurnDuration = () => {
+  editingTurnDuration.value = false;
+};
+
+const saveTurnDuration = async () => {
+  savingTurnDuration.value = true;
+  try {
+    await gameInstancesStore.updateGameInstance(gameId.value, instanceId.value, {
+      game_id: instance.value.game_id,
+      turn_duration_hours: turnDurationEdit.value,
+    });
+    await loadInstance();
+    editingTurnDuration.value = false;
+  } catch (err) {
+    error.value = err.message || 'Failed to update turn duration';
+  } finally {
+    savingTurnDuration.value = false;
+  }
 };
 
 const formatDeadline = (deadlineString) => {
@@ -1257,5 +1325,42 @@ const getEditingParameterDefault = () => {
   color: var(--color-success);
   font-size: var(--font-size-sm);
   margin-top: var(--space-xs);
+}
+
+.edit-inline-btn,
+.save-inline-btn,
+.cancel-inline-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0 var(--space-xs);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  line-height: 1;
+}
+
+.edit-inline-btn:hover { color: var(--color-primary); }
+.save-inline-btn:hover { color: var(--color-success); }
+.cancel-inline-btn:hover { color: var(--color-danger); }
+
+.turn-duration-edit {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.turn-duration-input {
+  width: 80px;
+  padding: 2px var(--space-xs);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  background: var(--color-bg);
+}
+
+.turn-duration-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
 }
 </style>

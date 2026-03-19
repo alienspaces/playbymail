@@ -309,9 +309,38 @@
         }
         
          
+        .sheet-columns {
+            display: table;
+            table-layout: fixed;
+            width: 100%;
+        }
+
+        .sheet-col-content {
+            display: table-cell;
+            width: 65%;
+            vertical-align: top;
+            padding: 2mm 16px;
+            box-sizing: border-box;
+            background-color: rgba(255, 255, 255, 0.75);
+            border-radius: 8px;
+        }
+
+        .sheet-col-log {
+            display: table-cell;
+            width: 35%;
+            vertical-align: top;
+            padding-left: 8px;
+            box-sizing: border-box;
+        }
+
+         
         .narrative-content {
             background-color: rgba(255, 248, 230, 0.92);
             border-left: 3px solid #b8860b;
+            border-radius: 8px;
+            padding: 2mm 10px;
+            box-sizing: border-box;
+            height: 100%;
         }
 
         .narrative-title {
@@ -322,23 +351,32 @@
         }
 
         .narrative-event {
-            display: flex;
-            align-items: flex-start;
-            gap: 6px;
+            display: table;
+            width: 100%;
             padding: 2px 0;
-            font-size: 12px;
+            font-size: 11px;
             color: #3d2b00;
             line-height: 1.4;
         }
 
         .narrative-icon {
-            flex-shrink: 0;
-            font-size: 14px;
+            display: table-cell;
+            width: 18px;
+            vertical-align: top;
+            font-size: 12px;
             line-height: 1.2;
         }
 
         .narrative-message {
-            flex: 1;
+            display: table-cell;
+            vertical-align: top;
+        }
+
+        .narrative-empty {
+            font-size: 11px;
+            color: #9a7a3a;
+            font-style: italic;
+            margin-top: 4px;
         }
 
         @media print {
@@ -383,6 +421,12 @@
                 width: 168mm;
                 margin: 0;
                 padding: 4mm 2mm;
+            }
+
+             
+            .sheet-columns {
+                height: 185mm;
+                overflow: hidden;
             }
         }
     </style>
@@ -493,11 +537,10 @@
                 
 
                 
-                
-
-                
-                <div class="content-section main-content debug-main">
-                    <div class="account-info-section">
+                <div class="content-section main-content debug-main" style="padding: 0; background-color: transparent;">
+                    <div class="sheet-columns">
+                        <div class="sheet-col-content">
+                            <div class="account-info-section">
     <h3 class="content-section-title">Your PlayByMail Account</h3>
     <div class="account-details">
         <div class="form-group">
@@ -522,6 +565,16 @@
     </div>
 </div>
 
+                        </div>
+                        <div class="sheet-col-log">
+                            <div class="narrative-content">
+                                <h3 class="narrative-title">What Happened</h3>
+                                
+                                <p class="narrative-empty">Nothing to report this turn.</p>
+                                
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -533,7 +586,7 @@
             
             <div class="footer-content-item">
                 <div class="footer-content-label">Turn Sheet Deadline:</div>
-                <div class="footer-content-value">2026-03-20 22:51:59.679923167 &#43;0000 UTC</div>
+                <div class="footer-content-value">2026-03-21 05:42:37.690162332 &#43;0000 UTC</div>
             </div>
             
 

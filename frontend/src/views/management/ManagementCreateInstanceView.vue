@@ -41,6 +41,21 @@
           <p class="section-description">
             Basic instance settings. Game-specific parameters can be configured after the instance is created.
           </p>
+          <div class="form-group">
+            <label for="turn-duration-hours">Turn Duration (hours)</label>
+            <input
+              id="turn-duration-hours"
+              v-model.number="turnDurationHours"
+              type="number"
+              min="0"
+              step="1"
+              placeholder="Enter hours per turn (0 = process immediately)"
+            />
+            <p class="help-text">
+              How many hours players have to submit their turn. 0 means turns are processed immediately.
+              Defaults to the game's setting ({{ formatTurnDuration(selectedGame?.turn_duration_hours) }}).
+            </p>
+          </div>
           <!-- TODO: (agent) Add optional instance name/description fields when the create-instance API supports them; include in instanceData in createInstance() and ensure backend/mapper accept and persist them. -->
         </div>
 
@@ -89,6 +104,14 @@ const selectedGame = computed(() => gamesStore.games.find(g => g.id === gameId.v
 
 const loading = ref(false);
 const error = ref('');
+const turnDurationHours = ref(0);
+
+// Pre-fill turn duration from the game once it's available
+const initTurnDuration = () => {
+  if (selectedGame.value?.turn_duration_hours) {
+    turnDurationHours.value = selectedGame.value.turn_duration_hours;
+  }
+};
 
 // Removed: const form = ref({
 //   // Basic instance configuration
@@ -117,6 +140,7 @@ onMounted(async () => {
   if (!selectedGame.value) {
     await gamesStore.fetchGames();
   }
+  initTurnDuration();
 });
 
 const createInstance = async () => {
@@ -131,6 +155,7 @@ const createInstance = async () => {
   try {
     const instanceData = {
       game_id: gameId.value,
+      turn_duration_hours: turnDurationHours.value,
     };
 
     const createdInstance = await gameInstancesStore.createGameInstance(gameId.value, instanceData);

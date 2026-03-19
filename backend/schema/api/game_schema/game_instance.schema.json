@@ -59,6 +59,10 @@
         "is_closed_testing": {
             "type": "boolean"
         },
+        "turn_duration_hours": {
+            "minimum": 0,
+            "type": "integer"
+        },
         "game_subscription_instance_id": {
             "type": [
                 "string",
@@ -83,6 +87,7 @@
         "game_id",
         "status",
         "current_turn",
+        "turn_duration_hours",
         "delivery_physical_post",
         "delivery_physical_local",
         "delivery_email",

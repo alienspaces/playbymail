@@ -26,6 +26,7 @@ func GameInstanceRequestToRecord(l logger.Logger, r *http.Request, rec *game_rec
 		l.Debug("mapping POST request: delivery_physical_post=%v, delivery_physical_local=%v, delivery_email=%v",
 			req.DeliveryPhysicalPost, req.DeliveryPhysicalLocal, req.DeliveryEmail)
 		rec.GameID = req.GameID
+		rec.TurnDurationHours = req.TurnDurationHours
 		rec.Status = req.Status
 		rec.CurrentTurn = req.CurrentTurn
 		rec.LastTurnProcessedAt = nulltime.FromTimePtr(req.LastTurnProcessedAt)
@@ -42,6 +43,9 @@ func GameInstanceRequestToRecord(l logger.Logger, r *http.Request, rec *game_rec
 		}
 		rec.IsClosedTesting = req.IsClosedTesting
 	case server.HttpMethodPut, server.HttpMethodPatch:
+		if req.TurnDurationHours != 0 {
+			rec.TurnDurationHours = req.TurnDurationHours
+		}
 		if req.Status != "" {
 			rec.Status = req.Status
 		}
@@ -75,6 +79,7 @@ func GameInstanceRecordToResponseData(l logger.Logger, rec *game_record.GameInst
 		ID:                                rec.ID,
 		GameID:                            rec.GameID,
 		GameSubscriptionInstanceID:        gameSubscriptionInstanceID,
+		TurnDurationHours:                 rec.TurnDurationHours,
 		Status:                            rec.Status,
 		CurrentTurn:                       rec.CurrentTurn,
 		LastTurnProcessedAt:               nulltime.ToTimePtr(rec.LastTurnProcessedAt),

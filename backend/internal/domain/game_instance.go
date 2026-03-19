@@ -76,15 +76,22 @@ func (m *Domain) CreateGameInstanceRec(rec *game_record.GameInstance) (*game_rec
 		rec.DeliveryPhysicalPost = true
 	}
 
-	// Draft games: default closed testing and email delivery when not already set
+	// Default turn_duration_hours and draft-specific settings from the parent game
 	if rec.GameID != "" {
 		gameRec, getErr := m.GetGameRec(rec.GameID, nil)
-		if getErr == nil && gameRec != nil && gameRec.Status == game_record.GameStatusDraft {
-			if !rec.IsClosedTesting {
-				rec.IsClosedTesting = true
+		if getErr == nil && gameRec != nil {
+			// Inherit the game's turn duration when the caller did not supply one
+			if rec.TurnDurationHours == 0 {
+				rec.TurnDurationHours = gameRec.TurnDurationHours
 			}
-			if !rec.DeliveryEmail {
-				rec.DeliveryEmail = true
+			// Draft games default to closed testing with email delivery
+			if gameRec.Status == game_record.GameStatusDraft {
+				if !rec.IsClosedTesting {
+					rec.IsClosedTesting = true
+				}
+				if !rec.DeliveryEmail {
+					rec.DeliveryEmail = true
+				}
 			}
 		}
 	}
@@ -279,8 +286,9 @@ func (m *Domain) CompleteTurn(instanceID string) (*game_record.GameInstance, err
 			gameInstanceRec.NextTurnDueAt = sql.NullTime{}
 			l.Info("advanced game instance >%s< to turn >%d< (process-when-all-submitted; awaiting player)", instanceID, gameInstanceRec.CurrentTurn)
 		} else {
-			gameInstanceRec.NextTurnDueAt = record.NewRecordNullTimestamp()
-			l.Info("advanced game instance >%s< to turn >%d<", instanceID, gameInstanceRec.CurrentTurn)
+			nextTurn := time.Now().UTC().Add(time.Duration(gameInstanceRec.TurnDurationHours) * time.Hour)
+			gameInstanceRec.NextTurnDueAt = nulltime.FromTime(nextTurn)
+			l.Info("advanced game instance >%s< to turn >%d< (next turn due at >%s<)", instanceID, gameInstanceRec.CurrentTurn, nextTurn.Format(time.RFC3339))
 		}
 	}
 

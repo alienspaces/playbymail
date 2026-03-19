@@ -10,6 +10,7 @@ type GameInstanceResponseData struct {
 	ID                                string     `json:"id"`
 	GameID                            string     `json:"game_id"`
 	GameSubscriptionInstanceID        *string    `json:"game_subscription_instance_id,omitempty"`
+	TurnDurationHours                 int        `json:"turn_duration_hours"`
 	Status                            string     `json:"status"`
 	CurrentTurn                       int        `json:"current_turn"`
 	LastTurnProcessedAt               *time.Time `json:"last_turn_processed_at,omitempty"`
@@ -43,6 +44,7 @@ type GameInstanceCollectionResponse struct {
 type GameInstanceRequest struct {
 	common_schema.Request
 	GameID                string     `json:"game_id"`
+	TurnDurationHours     int        `json:"turn_duration_hours,omitempty"`
 	Status                string     `json:"status,omitempty"`
 	CurrentTurn           int        `json:"current_turn,omitempty"`
 	LastTurnProcessedAt   *time.Time `json:"last_turn_processed_at,omitempty"`
