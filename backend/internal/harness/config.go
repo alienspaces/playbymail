@@ -1,3 +1,4 @@
+// Package harness provides test data setup and teardown utilities.
 package harness
 
 import (
