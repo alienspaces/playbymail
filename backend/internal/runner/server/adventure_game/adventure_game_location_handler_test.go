@@ -65,7 +65,7 @@ func Test_getGameLocationHandler(t *testing.T) {
 				ResponseCode:    http.StatusOK,
 			},
 			collectionRequest:     true,
-			collectionRecordCount: 2,
+			collectionRecordCount: 3,
 		},
 		{
 			TestCase: testutil.TestCase{
