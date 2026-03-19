@@ -30,10 +30,10 @@ func Test_adventureGameCreaturePlacementHandler(t *testing.T) {
 	gameRec, err := th.Data.GetGameRecByRef(harness.GameOneRef)
 	require.NoError(t, err, "GetGameRecByRef returns without error")
 
-	creatureRec, err := th.Data.GetAdventureGameCreatureRecByRef(harness.GameCreatureOneRef)
+	creatureRec, err := th.Data.GetAdventureGameCreatureRecByRef(harness.GameCreatureTwoRef)
 	require.NoError(t, err, "GetGameCreatureRecByRef returns without error")
 
-	locationRec, err := th.Data.GetAdventureGameLocationRecByRef(harness.GameLocationOneRef)
+	locationRec, err := th.Data.GetAdventureGameLocationRecByRef(harness.GameLocationTwoRef)
 	require.NoError(t, err, "GetGameLocationRecByRef returns without error")
 
 	testCaseCollectionResponseDecoder := testutil.TestCaseResponseDecoderGeneric[adventure_game_schema.AdventureGameCreaturePlacementCollectionResponse]

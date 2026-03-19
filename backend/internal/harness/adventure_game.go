@@ -360,26 +360,45 @@ func (t *Testing) removeAdventureGameRecords() error {
 		}
 	}
 
-	// Remove creature and item placements before the creatures/items they reference
-	l.Debug("removing >%d< adventure game creature placement records", len(t.teardownData.AdventureGameCreaturePlacementRecs))
-	for _, placementRec := range t.teardownData.AdventureGameCreaturePlacementRecs {
-		if placementRec.ID == "" {
+	// Remove ALL creature and item placements for each game before removing creatures/items.
+	// This includes both harness-created placements (tracked in teardownData) and any additional
+	// placements created by API handlers during tests, which would cause FK violations if left behind.
+	for _, gameRec := range t.teardownData.GameRecs {
+		if gameRec.ID == "" {
 			continue
 		}
-		if err := t.Domain.(*domain.Domain).RemoveAdventureGameCreaturePlacementRec(placementRec.ID); err != nil {
-			l.Warn("failed removing adventure game creature placement record >%v<", err)
+		creaturePlacements, err := t.Domain.(*domain.Domain).GetManyAdventureGameCreaturePlacementRecs(&coresql.Options{
+			Params: []coresql.Param{
+				{Col: adventure_game_record.FieldAdventureGameCreaturePlacementGameID, Val: gameRec.ID},
+			},
+		})
+		if err != nil {
+			l.Warn("failed fetching creature placements for game >%s< >%v<", gameRec.ID, err)
 			return err
 		}
-	}
+		l.Debug("removing >%d< adventure game creature placement records for game >%s<", len(creaturePlacements), gameRec.ID)
+		for _, placementRec := range creaturePlacements {
+			if err := t.Domain.(*domain.Domain).RemoveAdventureGameCreaturePlacementRec(placementRec.ID); err != nil {
+				l.Warn("failed removing adventure game creature placement record >%v<", err)
+				return err
+			}
+		}
 
-	l.Debug("removing >%d< adventure game item placement records", len(t.teardownData.AdventureGameItemPlacementRecs))
-	for _, placementRec := range t.teardownData.AdventureGameItemPlacementRecs {
-		if placementRec.ID == "" {
-			continue
-		}
-		if err := t.Domain.(*domain.Domain).RemoveAdventureGameItemPlacementRec(placementRec.ID); err != nil {
-			l.Warn("failed removing adventure game item placement record >%v<", err)
+		itemPlacements, err := t.Domain.(*domain.Domain).GetManyAdventureGameItemPlacementRecs(&coresql.Options{
+			Params: []coresql.Param{
+				{Col: adventure_game_record.FieldAdventureGameItemPlacementGameID, Val: gameRec.ID},
+			},
+		})
+		if err != nil {
+			l.Warn("failed fetching item placements for game >%s< >%v<", gameRec.ID, err)
 			return err
+		}
+		l.Debug("removing >%d< adventure game item placement records for game >%s<", len(itemPlacements), gameRec.ID)
+		for _, placementRec := range itemPlacements {
+			if err := t.Domain.(*domain.Domain).RemoveAdventureGameItemPlacementRec(placementRec.ID); err != nil {
+				l.Warn("failed removing adventure game item placement record >%v<", err)
+				return err
+			}
 		}
 	}
 
