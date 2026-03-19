@@ -203,7 +203,7 @@ func (w *GameTurnQueueingWorker) autoStartFullInstances(m *domain.Domain) error 
 		}
 
 		// Instance is full — start it
-		instance, err := m.StartGameInstance(rec.ID)
+		instance, _, err := m.StartGameInstance(rec.ID)
 		if err != nil {
 			l.Warn("failed to auto-start instance >%s< >%v<", rec.ID, err)
 			continue

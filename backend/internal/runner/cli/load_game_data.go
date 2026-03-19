@@ -378,6 +378,28 @@ func (rnr *Runner) removeGameAndDependents(dm *domain.Domain, gameID string) err
 		}
 	}
 
+	// 7a. Adventure game location object effects (must precede objects and locations)
+	objEffects, err := dm.GetManyAdventureGameLocationObjectEffectRecs(byGame)
+	if err != nil {
+		return fmt.Errorf("failed getting location object effects: %w", err)
+	}
+	for _, rec := range objEffects {
+		if err := dm.RemoveAdventureGameLocationObjectEffectRec(rec.ID); err != nil {
+			return fmt.Errorf("failed removing location object effect >%s<: %w", rec.ID, err)
+		}
+	}
+
+	// 7b. Adventure game location objects (must precede locations)
+	objs, err := dm.GetManyAdventureGameLocationObjectRecs(byGame)
+	if err != nil {
+		return fmt.Errorf("failed getting location objects: %w", err)
+	}
+	for _, rec := range objs {
+		if err := dm.RemoveAdventureGameLocationObjectRec(rec.ID); err != nil {
+			return fmt.Errorf("failed removing location object >%s<: %w", rec.ID, err)
+		}
+	}
+
 	// 8. Adventure game locations
 	locs, err := dm.GetManyAdventureGameLocationRecs(byGame)
 	if err != nil {
@@ -499,6 +521,17 @@ func (rnr *Runner) removeGameInstanceDependents(dm *domain.Domain, instanceID st
 	for _, rec := range itemInsts {
 		if err := dm.RemoveAdventureGameItemInstanceRec(rec.ID); err != nil {
 			return fmt.Errorf("failed removing item instance >%s<: %w", rec.ID, err)
+		}
+	}
+
+	// Adventure game location object instances (must precede location instances)
+	objInsts, err := dm.GetManyAdventureGameLocationObjectInstanceRecs(byInstance)
+	if err != nil {
+		return fmt.Errorf("failed getting location object instances: %w", err)
+	}
+	for _, rec := range objInsts {
+		if err := dm.RemoveAdventureGameLocationObjectInstanceRec(rec.ID); err != nil {
+			return fmt.Errorf("failed removing location object instance >%s<: %w", rec.ID, err)
 		}
 	}
 

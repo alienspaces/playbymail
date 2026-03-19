@@ -320,8 +320,7 @@ func (p *AdventureGameSubscriptionProcessingProcessor) getStartingLocationInstan
 
 	if len(startingLocationRecs) == 0 {
 		l.Warn("no starting locations found for game ID >%s<", gameID)
-		// Return empty string - location is nullable
-		return "", nil
+		return "", fmt.Errorf("no starting locations found for game >%s<", gameID)
 	}
 
 	startingLocationID := startingLocationRecs[0].ID
@@ -342,8 +341,7 @@ func (p *AdventureGameSubscriptionProcessingProcessor) getStartingLocationInstan
 
 	if len(locationInstanceRecs) == 0 {
 		l.Warn("no location instance found for starting location ID >%s< in game instance ID >%s<", startingLocationID, gameInstanceID)
-		// Return empty string - location is nullable
-		return "", nil
+		return "", fmt.Errorf("no location instance found for starting location >%s< in game instance >%s<", startingLocationID, gameInstanceID)
 	}
 
 	l.Info("found starting location instance ID >%s< for game instance ID >%s<", locationInstanceRecs[0].ID, gameInstanceID)

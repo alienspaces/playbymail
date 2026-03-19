@@ -222,7 +222,7 @@ func (t *Testing) createAdventureGameInstanceRecords(gameConfig GameConfig, game
 	instanceRec := gameInstanceRec
 	if instanceRec.Status != game_record.GameInstanceStatusStarted {
 		var err error
-		instanceRec, err = t.Domain.(*domain.Domain).StartGameInstance(gameInstanceRec.ID)
+		instanceRec, _, err = t.Domain.(*domain.Domain).StartGameInstance(gameInstanceRec.ID)
 		if err != nil {
 			l.Warn("failed starting game instance >%v<", err)
 			return err

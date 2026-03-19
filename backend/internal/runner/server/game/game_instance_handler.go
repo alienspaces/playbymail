@@ -702,7 +702,7 @@ func startGameInstanceHandler(w http.ResponseWriter, r *http.Request, pp httprou
 	}
 
 	// Start the game instance
-	instance, err := mm.StartGameInstance(instanceID)
+	instance, _, err := mm.StartGameInstance(instanceID)
 	if err != nil {
 		l.Warn("failed to start game instance >%v<", err)
 		return err

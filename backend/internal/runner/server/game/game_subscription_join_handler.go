@@ -436,7 +436,8 @@ func submitJoinHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Par
 		return err
 	}
 
-	// For adventure games, create the character and character instance so turn sheets can be generated.
+	// For adventure games, create the character definition so it is linked to this player.
+	// The character instance is created later by StartGameInstance when the game begins.
 	gameRec, err := mm.GetGameRec(gameSubscriptionRec.GameID, nil)
 	if err != nil {
 		l.Warn("failed to get game record >%v<", err)
@@ -461,29 +462,7 @@ func submitJoinHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Par
 			return err
 		}
 
-		startingLocationInstanceID := findStartingLocationInstance(l, mm, gameRec.ID, gameInstanceRec.ID)
-
-		characterInstanceRec := &adventure_game_record.AdventureGameCharacterInstance{
-			GameID:                          gameRec.ID,
-			GameInstanceID:                  gameInstanceRec.ID,
-			AdventureGameCharacterID:        characterRec.ID,
-			AdventureGameLocationInstanceID: startingLocationInstanceID,
-			Health:                          100,
-			InventoryCapacity:               10,
-			LastTurnEvents:                  []byte("[]"),
-		}
-		characterInstanceRec, err = mm.CreateAdventureGameCharacterInstanceRec(characterInstanceRec)
-		if err != nil {
-			l.Warn("failed to create character instance >%v<", err)
-			return err
-		}
-
-		if err := mm.AssignStartingItemsToCharacterInstance(characterInstanceRec); err != nil {
-			l.Warn("failed to assign starting items >%v<", err)
-			return err
-		}
-
-		l.Info("created adventure game character >%s< and instance >%s<", characterRec.ID, characterInstanceRec.ID)
+		l.Info("created adventure game character >%s< for player >%s<", characterRec.ID, accountUserRec.ID)
 	}
 
 	// Link the player subscription to the game instance so the instance can auto-start and
@@ -507,35 +486,3 @@ func submitJoinHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Par
 	return server.WriteResponse(l, w, http.StatusCreated, res)
 }
 
-// findStartingLocationInstance finds the starting location instance for a game instance.
-// Returns empty string if none found (location is nullable on the character instance).
-func findStartingLocationInstance(l logger.Logger, mm *domain.Domain, gameID, gameInstanceID string) string {
-	locationRecs, err := mm.GetManyAdventureGameLocationRecs(&coresql.Options{
-		Params: []coresql.Param{
-			{Col: adventure_game_record.FieldAdventureGameLocationGameID, Val: gameID},
-			{Col: adventure_game_record.FieldAdventureGameLocationIsStartingLocation, Val: true},
-		},
-		Limit: 1,
-		OrderBy: []coresql.OrderBy{
-			{Col: record.FieldCreatedAt, Direction: coresql.OrderDirectionASC},
-		},
-	})
-	if err != nil || len(locationRecs) == 0 {
-		return ""
-	}
-
-	instanceRecs, err := mm.GetManyAdventureGameLocationInstanceRecs(&coresql.Options{
-		Params: []coresql.Param{
-			{Col: adventure_game_record.FieldAdventureGameLocationInstanceGameInstanceID, Val: gameInstanceID},
-			{Col: adventure_game_record.FieldAdventureGameLocationInstanceAdventureGameLocationID, Val: locationRecs[0].ID},
-		},
-		Limit: 1,
-	})
-	if err != nil || len(instanceRecs) == 0 {
-		return ""
-	}
-
-	l.Info("found starting location instance >%s< for game instance >%s<", instanceRecs[0].ID, gameInstanceID)
-
-	return instanceRecs[0].ID
-}

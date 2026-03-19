@@ -190,17 +190,17 @@ func (m *Domain) RemoveGameInstanceRec(recID string) error {
 
 // Game Runtime Management Functions
 
-// StartGameInstance starts a game instance and sets up the first turn
-func (m *Domain) StartGameInstance(instanceID string) (*game_record.GameInstance, error) {
+// StartGameInstance starts a game instance: populates all world and player data then transitions status to started.
+func (m *Domain) StartGameInstance(instanceID string) (*game_record.GameInstance, *AdventureGameInstanceData, error) {
 	l := m.Logger("StartGameInstance")
 
 	instance, err := m.GetGameInstanceRec(instanceID, coresql.ForUpdateNoWait)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	if instance.Status != game_record.GameInstanceStatusCreated {
-		return nil, fmt.Errorf("game instance must be in 'created' status to start")
+		return nil, nil, fmt.Errorf("game instance must be in 'created' status to start")
 	}
 
 	// Check player count meets required count (only if required_player_count > 0)
@@ -208,11 +208,26 @@ func (m *Domain) StartGameInstance(instanceID string) (*game_record.GameInstance
 		playerCount, err := m.GetPlayerCountForGameInstance(instanceID)
 		if err != nil {
 			l.Warn("failed to get player count for game instance >%s< >%v<", instanceID, err)
-			return nil, err
+			return nil, nil, err
 		}
 
 		if playerCount < instance.RequiredPlayerCount {
-			return nil, fmt.Errorf("insufficient players: have %d, need %d", playerCount, instance.RequiredPlayerCount)
+			return nil, nil, fmt.Errorf("insufficient players: have %d, need %d", playerCount, instance.RequiredPlayerCount)
+		}
+	}
+
+	// Populate all world and player instance data before transitioning status
+	gameRec, err := m.GetGameRec(instance.GameID, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var instanceData *AdventureGameInstanceData
+	if gameRec.GameType == game_record.GameTypeAdventure {
+		instanceData, err = m.PopulateAdventureGameInstanceData(instanceID)
+		if err != nil {
+			l.Warn("failed to populate adventure game instance data >%v<", err)
+			return nil, nil, err
 		}
 	}
 
@@ -226,12 +241,12 @@ func (m *Domain) StartGameInstance(instanceID string) (*game_record.GameInstance
 	instance, err = m.UpdateGameInstanceRec(instance)
 	if err != nil {
 		l.Warn("failed updating game instance to starting status >%v<", err)
-		return nil, err
+		return nil, nil, err
 	}
 
 	l.Info("started game instance >%s<", instanceID)
 
-	return instance, nil
+	return instance, instanceData, nil
 }
 
 // BeginTurnProcessing starts processing the current turn
@@ -775,6 +790,437 @@ func (m *Domain) ResetGameInstance(instanceID string) (*game_record.GameInstance
 	l.Info("reset game instance >%s< to initial state", instanceID)
 
 	return instance, nil
+}
+
+// AdventureGameInstanceData holds all instance records created when a game instance starts.
+type AdventureGameInstanceData struct {
+	LocationInstances       []*adventure_game_record.AdventureGameLocationInstance
+	CreatureInstances       []*adventure_game_record.AdventureGameCreatureInstance
+	LocationObjectInstances []*adventure_game_record.AdventureGameLocationObjectInstance
+	ItemInstances           []*adventure_game_record.AdventureGameItemInstance
+	CharacterInstances      []*adventure_game_record.AdventureGameCharacterInstance
+}
+
+// PopulateAdventureGameInstanceData creates all instance records (locations, creatures, objects,
+// items, characters) for an adventure game instance from its definitions and player subscriptions.
+func (m *Domain) PopulateAdventureGameInstanceData(instanceID string) (*AdventureGameInstanceData, error) {
+	l := m.Logger("PopulateAdventureGameInstanceData")
+
+	l.Info("populating adventure game instance data for instance >%s<", instanceID)
+
+	instanceRec, err := m.GetGameInstanceRec(instanceID, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	gameID := instanceRec.GameID
+	out := &AdventureGameInstanceData{}
+
+	// 1. Create location instances and build locationID -> locationInstanceID map
+	locationRecs, err := m.GetManyAdventureGameLocationRecs(&coresql.Options{
+		Params: []coresql.Param{
+			{Col: adventure_game_record.FieldAdventureGameLocationGameID, Val: gameID},
+		},
+	})
+	if err != nil {
+		l.Warn("failed to get adventure game locations >%v<", err)
+		return nil, err
+	}
+
+	locationIDToInstanceID := make(map[string]string, len(locationRecs))
+	var startingLocationInstanceID string
+
+	for _, loc := range locationRecs {
+		locInst, err := m.CreateAdventureGameLocationInstanceRec(&adventure_game_record.AdventureGameLocationInstance{
+			GameID:                  gameID,
+			GameInstanceID:          instanceID,
+			AdventureGameLocationID: loc.ID,
+		})
+		if err != nil {
+			l.Warn("failed to create location instance for location >%s< >%v<", loc.ID, err)
+			return nil, err
+		}
+		locationIDToInstanceID[loc.ID] = locInst.ID
+		out.LocationInstances = append(out.LocationInstances, locInst)
+		if loc.IsStartingLocation && startingLocationInstanceID == "" {
+			startingLocationInstanceID = locInst.ID
+		}
+	}
+
+	if startingLocationInstanceID == "" && len(locationRecs) > 0 {
+		return nil, fmt.Errorf("no starting location found for game >%s<: at least one location must have is_starting_location = true", gameID)
+	}
+
+	// 2. Create creature instances from creature placements
+	creaturePlacements, err := m.GetManyAdventureGameCreaturePlacementRecs(&coresql.Options{
+		Params: []coresql.Param{
+			{Col: adventure_game_record.FieldAdventureGameCreaturePlacementGameID, Val: gameID},
+		},
+	})
+	if err != nil {
+		l.Warn("failed to get creature placements >%v<", err)
+		return nil, err
+	}
+
+	for _, placement := range creaturePlacements {
+		locationInstanceID, ok := locationIDToInstanceID[placement.AdventureGameLocationID]
+		if !ok {
+			l.Warn("no location instance found for creature placement location >%s< - skipping", placement.AdventureGameLocationID)
+			continue
+		}
+
+		creatureDef, err := m.GetAdventureGameCreatureRec(placement.AdventureGameCreatureID, nil)
+		if err != nil {
+			l.Warn("failed to get creature definition >%s< >%v<", placement.AdventureGameCreatureID, err)
+			return nil, err
+		}
+
+		count := placement.InitialCount
+		if count <= 0 {
+			count = 1
+		}
+		for i := 0; i < count; i++ {
+			creatureInst, err := m.CreateAdventureGameCreatureInstanceRec(&adventure_game_record.AdventureGameCreatureInstance{
+				GameID:                          gameID,
+				GameInstanceID:                  instanceID,
+				AdventureGameCreatureID:         placement.AdventureGameCreatureID,
+				AdventureGameLocationInstanceID: locationInstanceID,
+				Health:                          creatureDef.MaxHealth,
+			})
+			if err != nil {
+				l.Warn("failed to create creature instance >%v<", err)
+				return nil, err
+			}
+			out.CreatureInstances = append(out.CreatureInstances, creatureInst)
+		}
+	}
+
+	// 3. Create location object instances
+	objectRecs, err := m.GetManyAdventureGameLocationObjectRecs(&coresql.Options{
+		Params: []coresql.Param{
+			{Col: adventure_game_record.FieldAdventureGameLocationObjectGameID, Val: gameID},
+		},
+	})
+	if err != nil {
+		l.Warn("failed to get location objects >%v<", err)
+		return nil, err
+	}
+
+	for _, obj := range objectRecs {
+		locationInstanceID, ok := locationIDToInstanceID[obj.AdventureGameLocationID]
+		if !ok {
+			l.Warn("no location instance found for object >%s< location >%s< - skipping", obj.ID, obj.AdventureGameLocationID)
+			continue
+		}
+		objInst, err := m.CreateAdventureGameLocationObjectInstanceRec(&adventure_game_record.AdventureGameLocationObjectInstance{
+			GameID:                          gameID,
+			GameInstanceID:                  instanceID,
+			AdventureGameLocationObjectID:   obj.ID,
+			AdventureGameLocationInstanceID: locationInstanceID,
+			CurrentState:                    obj.InitialState,
+			IsVisible:                       !obj.IsHidden,
+		})
+		if err != nil {
+			l.Warn("failed to create location object instance >%v<", err)
+			return nil, err
+		}
+		out.LocationObjectInstances = append(out.LocationObjectInstances, objInst)
+	}
+
+	// 4. Create item instances from item placements
+	itemPlacements, err := m.GetManyAdventureGameItemPlacementRecs(&coresql.Options{
+		Params: []coresql.Param{
+			{Col: adventure_game_record.FieldAdventureGameItemPlacementGameID, Val: gameID},
+		},
+	})
+	if err != nil {
+		l.Warn("failed to get item placements >%v<", err)
+		return nil, err
+	}
+
+	for _, placement := range itemPlacements {
+		locationInstanceID, ok := locationIDToInstanceID[placement.AdventureGameLocationID]
+		if !ok {
+			l.Warn("no location instance found for item placement location >%s< - skipping", placement.AdventureGameLocationID)
+			continue
+		}
+
+		count := placement.InitialCount
+		if count <= 0 {
+			count = 1
+		}
+		for i := 0; i < count; i++ {
+			itemInst, err := m.CreateAdventureGameItemInstanceRec(&adventure_game_record.AdventureGameItemInstance{
+				GameID:                          gameID,
+				GameInstanceID:                  instanceID,
+				AdventureGameItemID:             placement.AdventureGameItemID,
+				AdventureGameLocationInstanceID: nullstring.FromString(locationInstanceID),
+			})
+			if err != nil {
+				l.Warn("failed to create item instance >%v<", err)
+				return nil, err
+			}
+			out.ItemInstances = append(out.ItemInstances, itemInst)
+		}
+	}
+
+	// 5. Create character instances for all subscribed players
+	subscriptionInstances, err := m.GetManyGameSubscriptionInstanceRecs(&coresql.Options{
+		Params: []coresql.Param{
+			{Col: game_record.FieldGameSubscriptionInstanceGameInstanceID, Val: instanceID},
+		},
+	})
+	if err != nil {
+		l.Warn("failed to get subscription instances >%v<", err)
+		return nil, err
+	}
+
+	for _, subInst := range subscriptionInstances {
+		// Get game subscription to find account_user_id
+		subRecs, err := m.GetManyGameSubscriptionRecs(&coresql.Options{
+			Params: []coresql.Param{
+				{Col: game_record.FieldGameSubscriptionID, Val: subInst.GameSubscriptionID},
+			},
+			Limit: 1,
+		})
+		if err != nil || len(subRecs) == 0 {
+			l.Warn("failed to get game subscription >%s< >%v<", subInst.GameSubscriptionID, err)
+			continue
+		}
+		sub := subRecs[0]
+
+		// Skip non-player subscriptions
+		if sub.SubscriptionType != game_record.GameSubscriptionTypePlayer {
+			continue
+		}
+
+		// Find the adventure game character for this player
+		charRecs, err := m.GetManyAdventureGameCharacterRecs(&coresql.Options{
+			Params: []coresql.Param{
+				{Col: adventure_game_record.FieldAdventureGameCharacterGameID, Val: gameID},
+				{Col: adventure_game_record.FieldAdventureGameCharacterAccountUserID, Val: sub.AccountUserID},
+			},
+			Limit: 1,
+		})
+		if err != nil || len(charRecs) == 0 {
+			l.Warn("no adventure game character found for account_user_id >%s< game >%s< - skipping", sub.AccountUserID, gameID)
+			continue
+		}
+
+		if startingLocationInstanceID == "" {
+			l.Warn("no starting location instance found for game >%s< - cannot create character instance", gameID)
+			return nil, fmt.Errorf("no starting location instance found for game >%s<", gameID)
+		}
+
+		charInst, err := m.CreateAdventureGameCharacterInstanceRec(&adventure_game_record.AdventureGameCharacterInstance{
+			GameID:                          gameID,
+			GameInstanceID:                  instanceID,
+			AdventureGameCharacterID:        charRecs[0].ID,
+			AdventureGameLocationInstanceID: startingLocationInstanceID,
+			Health:                          100,
+			InventoryCapacity:               10,
+			LastTurnEvents:                  []byte("[]"),
+		})
+		if err != nil {
+			l.Warn("failed to create character instance for character >%s< >%v<", charRecs[0].ID, err)
+			return nil, err
+		}
+		out.CharacterInstances = append(out.CharacterInstances, charInst)
+
+		if err := m.AssignStartingItemsToCharacterInstance(charInst); err != nil {
+			l.Warn("failed to assign starting items to character instance >%s< >%v<", charInst.ID, err)
+			return nil, err
+		}
+
+		l.Info("created character instance >%s< for character >%s< at location >%s<", charInst.ID, charRecs[0].ID, startingLocationInstanceID)
+	}
+
+	l.Info("populated adventure game instance data: locations=%d creatures=%d objects=%d items=%d characters=%d",
+		len(out.LocationInstances), len(out.CreatureInstances), len(out.LocationObjectInstances),
+		len(out.ItemInstances), len(out.CharacterInstances))
+
+	return out, nil
+}
+
+// DeleteGameInstance permanently removes a game instance and all associated data.
+func (m *Domain) DeleteGameInstance(instanceID string) error {
+	l := m.Logger("DeleteGameInstance")
+
+	l.Info("deleting game instance >%s< and all associated data", instanceID)
+
+	// Reuse reset cleanup logic for instance data, then delete the instance record itself.
+	// We get the instance to confirm it exists before deletion.
+	_, err := m.GetGameInstanceRec(instanceID, coresql.ForUpdateNoWait)
+	if err != nil {
+		return err
+	}
+
+	// Delete adventure_game_turn_sheet records (linked via character instance)
+	charInstances, err := m.GetManyAdventureGameCharacterInstanceRecs(&coresql.Options{
+		Params: []coresql.Param{
+			{Col: adventure_game_record.FieldAdventureGameCharacterInstanceGameInstanceID, Val: instanceID},
+		},
+	})
+	if err != nil {
+		l.Warn("failed to get character instances >%v<", err)
+		return databaseError(err)
+	}
+
+	for _, charInst := range charInstances {
+		turnSheets, err := m.GetManyAdventureGameTurnSheetRecs(&coresql.Options{
+			Params: []coresql.Param{
+				{Col: adventure_game_record.FieldAdventureGameTurnSheetAdventureGameCharacterInstanceID, Val: charInst.ID},
+			},
+		})
+		if err != nil {
+			l.Warn("failed to get turn sheets for character instance >%s< >%v<", charInst.ID, err)
+			return databaseError(err)
+		}
+		for _, ts := range turnSheets {
+			if err := m.AdventureGameTurnSheetRepository().DeleteOne(ts.ID); err != nil {
+				l.Warn("failed to delete adventure turn sheet >%s< >%v<", ts.ID, err)
+				return databaseError(err)
+			}
+		}
+	}
+
+	// Delete game_turn_sheet records
+	gameTurnSheetRepo := m.GameTurnSheetRepository()
+	gameTurnSheets, err := gameTurnSheetRepo.GetMany(&coresql.Options{
+		Params: []coresql.Param{
+			{Col: game_record.FieldGameTurnSheetGameInstanceID, Val: instanceID},
+		},
+	})
+	if err != nil {
+		l.Warn("failed to get game turn sheets >%v<", err)
+		return databaseError(err)
+	}
+	for _, ts := range gameTurnSheets {
+		if err := gameTurnSheetRepo.DeleteOne(ts.ID); err != nil {
+			l.Warn("failed to delete game turn sheet >%s< >%v<", ts.ID, err)
+			return databaseError(err)
+		}
+	}
+
+	// Delete item instances
+	itemInstances, err := m.GetManyAdventureGameItemInstanceRecs(&coresql.Options{
+		Params: []coresql.Param{
+			{Col: adventure_game_record.FieldAdventureGameItemInstanceGameInstanceID, Val: instanceID},
+		},
+	})
+	if err != nil {
+		l.Warn("failed to get item instances >%v<", err)
+		return databaseError(err)
+	}
+	for _, item := range itemInstances {
+		if err := m.AdventureGameItemInstanceRepository().DeleteOne(item.ID); err != nil {
+			l.Warn("failed to delete item instance >%s< >%v<", item.ID, err)
+			return databaseError(err)
+		}
+	}
+
+	// Delete creature instances
+	creatureInstances, err := m.GetManyAdventureGameCreatureInstanceRecs(&coresql.Options{
+		Params: []coresql.Param{
+			{Col: adventure_game_record.FieldAdventureGameCreatureInstanceGameInstanceID, Val: instanceID},
+		},
+	})
+	if err != nil {
+		l.Warn("failed to get creature instances >%v<", err)
+		return databaseError(err)
+	}
+	for _, creature := range creatureInstances {
+		if err := m.AdventureGameCreatureInstanceRepository().DeleteOne(creature.ID); err != nil {
+			l.Warn("failed to delete creature instance >%s< >%v<", creature.ID, err)
+			return databaseError(err)
+		}
+	}
+
+	// Delete character instances
+	for _, charInst := range charInstances {
+		if err := m.AdventureGameCharacterInstanceRepository().DeleteOne(charInst.ID); err != nil {
+			l.Warn("failed to delete character instance >%s< >%v<", charInst.ID, err)
+			return databaseError(err)
+		}
+	}
+
+	// Delete location object instances
+	locationObjectInstances, err := m.GetManyAdventureGameLocationObjectInstanceRecs(&coresql.Options{
+		Params: []coresql.Param{
+			{Col: adventure_game_record.FieldAdventureGameLocationObjectInstanceGameInstanceID, Val: instanceID},
+		},
+	})
+	if err != nil {
+		l.Warn("failed to get location object instances >%v<", err)
+		return databaseError(err)
+	}
+	for _, objInst := range locationObjectInstances {
+		if err := m.AdventureGameLocationObjectInstanceRepository().DeleteOne(objInst.ID); err != nil {
+			l.Warn("failed to delete location object instance >%s< >%v<", objInst.ID, err)
+			return databaseError(err)
+		}
+	}
+
+	// Delete location instances
+	locationInstances, err := m.GetManyAdventureGameLocationInstanceRecs(&coresql.Options{
+		Params: []coresql.Param{
+			{Col: adventure_game_record.FieldAdventureGameLocationInstanceGameInstanceID, Val: instanceID},
+		},
+	})
+	if err != nil {
+		l.Warn("failed to get location instances >%v<", err)
+		return databaseError(err)
+	}
+	for _, loc := range locationInstances {
+		if err := m.AdventureGameLocationInstanceRepository().DeleteOne(loc.ID); err != nil {
+			l.Warn("failed to delete location instance >%s< >%v<", loc.ID, err)
+			return databaseError(err)
+		}
+	}
+
+	// Delete game instance parameters
+	params, err := m.GetManyGameInstanceParameterRecs(&coresql.Options{
+		Params: []coresql.Param{
+			{Col: game_record.FieldGameInstanceParameterGameInstanceID, Val: instanceID},
+		},
+	})
+	if err != nil {
+		l.Warn("failed to get instance parameters >%v<", err)
+		return databaseError(err)
+	}
+	for _, p := range params {
+		if err := m.GameInstanceParameterRepository().DeleteOne(p.ID); err != nil {
+			l.Warn("failed to delete instance parameter >%s< >%v<", p.ID, err)
+			return databaseError(err)
+		}
+	}
+
+	// Delete game_subscription_instance links
+	subscriptionInstances, err := m.GetManyGameSubscriptionInstanceRecs(&coresql.Options{
+		Params: []coresql.Param{
+			{Col: game_record.FieldGameSubscriptionInstanceGameInstanceID, Val: instanceID},
+		},
+	})
+	if err != nil {
+		l.Warn("failed to get subscription instances >%v<", err)
+		return databaseError(err)
+	}
+	for _, subInst := range subscriptionInstances {
+		if err := m.GameSubscriptionInstanceRepository().DeleteOne(subInst.ID); err != nil {
+			l.Warn("failed to delete subscription instance >%s< >%v<", subInst.ID, err)
+			return databaseError(err)
+		}
+	}
+
+	// Finally delete the game instance record itself
+	if err := m.RemoveGameInstanceRec(instanceID); err != nil {
+		l.Warn("failed to delete game instance record >%s< >%v<", instanceID, err)
+		return err
+	}
+
+	l.Info("deleted game instance >%s< and all associated data", instanceID)
+
+	return nil
 }
 
 // generateUUID generates a UUID string
