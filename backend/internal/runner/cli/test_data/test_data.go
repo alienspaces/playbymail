@@ -2,6 +2,7 @@ package test_data
 
 import (
 	"gitlab.com/alienspaces/playbymail/core/convert"
+	"gitlab.com/alienspaces/playbymail/core/nullint32"
 	"gitlab.com/alienspaces/playbymail/core/nullstring"
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/harness"
@@ -685,28 +686,21 @@ func GameConfig() []harness.GameConfig {
 				InitialCount:    1,
 				Record:          &adventure_game_record.AdventureGameItemPlacement{},
 			},
-			{
-				Reference:       "desert-item-placement-flask",
-				GameItemRef:     "desert-item-flask",
-				GameLocationRef: "desert-location-oasis",
-				InitialCount:    1,
-				Record:          &adventure_game_record.AdventureGameItemPlacement{},
-			},
-			{
-				Reference:       "desert-item-placement-cloak",
-				GameItemRef:     "desert-item-cloak",
-				GameLocationRef: "desert-location-ruins",
-				InitialCount:    1,
-				Record:          &adventure_game_record.AdventureGameItemPlacement{},
-			},
-			{
-				Reference:       "desert-item-placement-scarab",
-				GameItemRef:     "desert-item-scarab-key",
-				GameLocationRef: "desert-location-canyon",
-				InitialCount:    1,
-				Record:          &adventure_game_record.AdventureGameItemPlacement{},
-			},
+		{
+			Reference:       "desert-item-placement-flask",
+			GameItemRef:     "desert-item-flask",
+			GameLocationRef: "desert-location-oasis",
+			InitialCount:    1,
+			Record:          &adventure_game_record.AdventureGameItemPlacement{},
 		},
+		{
+			Reference:       "desert-item-placement-cloak",
+			GameItemRef:     "desert-item-cloak",
+			GameLocationRef: "desert-location-ruins",
+			InitialCount:    1,
+			Record:          &adventure_game_record.AdventureGameItemPlacement{},
+		},
+	},
 		// Location links — bidirectional, some with item requirements
 		AdventureGameLocationLinkConfigs: []harness.AdventureGameLocationLinkConfig{
 			// Oasis Village <-> Ancient Ruins (free)
@@ -955,18 +949,19 @@ func GameConfig() []harness.GameConfig {
 							IsRepeatable:      false,
 						},
 					},
-					{
-						Reference:        "desert-obj-effect-obelisk-read",
-						RequiredStateRef: "desert-obj-obelisk-state-glowing",
-						ResultItemRef:    "desert-item-flask",
-						Record: &adventure_game_record.AdventureGameLocationObjectEffect{
-							ActionType:        adventure_game_record.AdventureGameLocationObjectEffectActionTypeRead,
-							ResultDescription: "As you trace the glowing symbols, a hidden compartment opens, revealing a flask.",
-							EffectType:        adventure_game_record.AdventureGameLocationObjectEffectEffectTypeGiveItem,
-							IsRepeatable:      false,
-						},
-					},
+			{
+				Reference:        "desert-obj-effect-obelisk-read",
+				RequiredStateRef: "desert-obj-obelisk-state-glowing",
+				Record: &adventure_game_record.AdventureGameLocationObjectEffect{
+					ActionType:        adventure_game_record.AdventureGameLocationObjectEffectActionTypeRead,
+					ResultDescription: "As you trace the glowing symbols a surge of ancient energy courses through you, burning your hand and leaving a searing mark.",
+					EffectType:        adventure_game_record.AdventureGameLocationObjectEffectEffectTypeDamage,
+					ResultValueMin:    nullint32.FromInt32(10),
+					ResultValueMax:    nullint32.FromInt32(20),
+					IsRepeatable:      false,
 				},
+			},
+		},
 			},
 		},
 	},

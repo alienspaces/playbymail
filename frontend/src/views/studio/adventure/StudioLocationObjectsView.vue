@@ -49,6 +49,11 @@
         <div class="states-panel-header">
           <h3>States for "{{ statesPanelObject?.name }}"</h3>
           <button class="btn-secondary btn-sm" @click="openCreateState">Add State</button>
+          <button
+            v-if="locationObjectStatesStore.states.length >= 2"
+            class="btn-secondary btn-sm"
+            @click="openFlowChart"
+          >State Flow</button>
           <button class="btn-text btn-sm" @click="closeStatesPanel">Close</button>
         </div>
         <div v-if="locationObjectStatesStore.loading" class="loading-text">Loading states…</div>
@@ -109,6 +114,16 @@
         @confirm="confirmDeleteStateAction"
         @cancel="closeDeleteStateConfirm"
       />
+
+      <!-- State flow chart modal -->
+      <ObjectStateFlowModal
+        :visible="showFlowChart"
+        :objectName="statesPanelObject?.name || ''"
+        :states="locationObjectStatesStore.states"
+        :effects="flowChartEffects"
+        :initialStateId="statesPanelObject?.initial_adventure_game_location_object_state_id || null"
+        @close="closeFlowChart"
+      />
     </div>
   </div>
 </template>
@@ -118,11 +133,13 @@ import { ref, watch, computed } from 'vue';
 import { useLocationsStore } from '../../../stores/locations';
 import { useLocationObjectsStore } from '../../../stores/locationObjects';
 import { useLocationObjectStatesStore } from '../../../stores/locationObjectStates';
+import { useLocationObjectEffectsStore } from '../../../stores/locationObjectEffects';
 import { useGamesStore } from '../../../stores/games';
 import { storeToRefs } from 'pinia';
 import ResourceTable from '../../../components/ResourceTable.vue';
 import ResourceModalForm from '../../../components/ResourceModalForm.vue';
 import ConfirmationModal from '../../../components/ConfirmationModal.vue';
+import ObjectStateFlowModal from '../../../components/ObjectStateFlowModal.vue';
 import PageHeader from '../../../components/PageHeader.vue';
 import GameContext from '../../../components/GameContext.vue';
 import TableActions from '../../../components/TableActions.vue';
@@ -130,6 +147,7 @@ import TableActions from '../../../components/TableActions.vue';
 const locationsStore = useLocationsStore();
 const locationObjectsStore = useLocationObjectsStore();
 const locationObjectStatesStore = useLocationObjectStatesStore();
+const locationObjectEffectsStore = useLocationObjectEffectsStore();
 const gamesStore = useGamesStore();
 const { selectedGame } = storeToRefs(gamesStore);
 
@@ -225,6 +243,25 @@ function closeStatesPanel() {
   locationObjectStatesStore.clearStates();
 }
 
+// ── State flow chart ──────────────────────────────────────────────────────────
+
+const showFlowChart = ref(false);
+
+const flowChartEffects = computed(() => {
+  if (!statesPanelObject.value) return [];
+  return locationObjectEffectsStore.locationObjectEffects.filter(
+    (e) => e.adventure_game_location_object_id === statesPanelObject.value.id
+  );
+});
+
+function openFlowChart() {
+  showFlowChart.value = true;
+}
+
+function closeFlowChart() {
+  showFlowChart.value = false;
+}
+
 // ── State form ───────────────────────────────────────────────────────────────
 
 const stateFields = [
@@ -301,6 +338,7 @@ watch(
     if (newGame) {
       locationsStore.fetchLocations(newGame.id);
       locationObjectsStore.fetchLocationObjects(newGame.id);
+      locationObjectEffectsStore.fetchLocationObjectEffects(newGame.id);
     }
   },
   { immediate: true }
