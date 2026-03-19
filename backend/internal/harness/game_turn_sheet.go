@@ -77,12 +77,6 @@ func (t *Testing) GenerateTurnSheetsForGameInstance(ctx context.Context, gameIns
 		t.teardownData.AddGameTurnSheetRec(rec)
 	}
 
-	if len(turnSheetRecs) > 0 {
-		if err := t.assignTurnSheetReferencesForTurnNumber(gameInstanceRef, turnSheetRecs[0].TurnNumber, turnSheetRecs); err != nil {
-			return nil, err
-		}
-	}
-
 	if err := tx.Commit(ctx); err != nil {
 		l.Warn("failed to commit turn sheet generation transaction >%v<", err)
 		return nil, fmt.Errorf("failed to commit turn sheet generation: %w", err)
@@ -118,109 +112,15 @@ func (t *Testing) generateTurnSheetsForGameInstanceInTx(ctx context.Context, gam
 		t.teardownData.AddGameTurnSheetRec(rec)
 	}
 
-	if err := t.assignTurnSheetReferencesForTurnNumber(gameInstanceRef, turnSheetRecs[0].TurnNumber, turnSheetRecs); err != nil {
-		return nil, err
-	}
-
 	l.Info("created %d turn sheets for game instance >%s< in current transaction", len(turnSheetRecs), gameInstanceRef)
 
 	return turnSheetRecs, nil
 }
 
-func (t *Testing) processGameTurnForInstanceInTx(ctx context.Context, gameInstanceID string) error {
-	l := t.Logger("processGameTurnForInstanceInTx")
-
-	dom := t.Domain.(*domain.Domain)
-
-	processor, err := adventure_game.NewAdventureGame(t.Log, dom)
-	if err != nil {
-		l.Warn("failed to create adventure game processor >%v<", err)
-		return fmt.Errorf("failed to create adventure game processor: %w", err)
-	}
-
-	instanceRec, err := dom.BeginTurnProcessing(gameInstanceID)
-	if err != nil {
-		l.Warn("failed to begin turn processing >%v<", err)
-		return fmt.Errorf("failed to begin turn processing: %w", err)
-	}
-
-	if err := processor.ProcessTurnSheets(ctx, instanceRec); err != nil {
-		l.Warn("failed to process turn sheets >%v<", err)
-		return fmt.Errorf("failed to process turn sheets: %w", err)
-	}
-
-	instanceRec, err = dom.CompleteTurn(gameInstanceID)
-	if err != nil {
-		l.Warn("failed to complete turn >%v<", err)
-		return fmt.Errorf("failed to complete turn: %w", err)
-	}
-
-	turnSheetRecs, err := processor.CreateTurnSheets(ctx, instanceRec)
-	if err != nil {
-		l.Warn("failed to create next turn sheets >%v<", err)
-		return fmt.Errorf("failed to create next turn sheets: %w", err)
-	}
-	for _, rec := range turnSheetRecs {
-		t.Data.AddGameTurnSheetRec(rec)
-		t.teardownData.AddGameTurnSheetRec(rec)
-	}
-	if len(turnSheetRecs) > 0 {
-		if err := t.addAdventureGameTurnSheetsToTeardown(turnSheetRecs); err != nil {
-			l.Warn("failed adding turn sheet links to teardown after CreateTurnSheets >%v<", err)
-		}
-	}
-
-	l.Info("processed turn for game instance >%s< turn >%d<", gameInstanceID, instanceRec.CurrentTurn)
-
-	return nil
-}
-
-func (t *Testing) assignTurnSheetReferencesForTurnNumber(gameInstanceRef string, turnNumber int, turnSheetRecs []*game_record.GameTurnSheet) error {
-	if len(turnSheetRecs) == 0 || turnNumber == 0 {
-		return nil
-	}
-	turnCfg, err := t.DataConfig.findGameTurnConfig(gameInstanceRef, turnNumber)
-	if err != nil {
-		return err
-	}
-	if turnCfg == nil {
-		return nil
-	}
-	return t.assignTurnSheetReferencesForTurn(*turnCfg, turnSheetRecs)
-}
-
-// addAdventureGameTurnSheetsToTeardown ensures adventure_game_turn_sheet link records for the
-// given turn sheets are in teardownData so they are removed before character instances on teardown.
-// Looks up by game_turn_sheet_id; turn sheets with no link (e.g. join-game before processing) are skipped.
-func (t *Testing) addAdventureGameTurnSheetsToTeardown(turnSheetRecs []*game_record.GameTurnSheet) error {
-
-	dom := t.Domain.(*domain.Domain)
-
-	for _, rec := range turnSheetRecs {
-
-		linkRecs, err := dom.GetManyAdventureGameTurnSheetRecs(&coresql.Options{
-			Params: []coresql.Param{
-				{
-					Col: adventure_game_record.FieldAdventureGameTurnSheetGameTurnSheetID,
-					Val: rec.ID,
-				},
-			},
-		})
-		if err != nil {
-			return fmt.Errorf("failed to lookup adventure game turn sheet for turn sheet ID %s: %w", rec.ID, err)
-		}
-
-		for _, linkRec := range linkRecs {
-			t.Data.AddAdventureGameTurnSheetRec(linkRec)
-			t.teardownData.AddAdventureGameTurnSheetRec(linkRec)
-		}
-	}
-
-	return nil
-}
-
-func (t *Testing) assignTurnSheetReferencesForTurn(turnCfg GameTurnConfig, turnSheetRecs []*game_record.GameTurnSheet) error {
-	if len(turnCfg.AdventureGameTurnSheetConfigs) == 0 {
+// assignTurnSheetRefs maps turn sheet references to their IDs by looking up which character instance
+// owns each turn sheet, then matching against TurnSheetRefConfigs.
+func (t *Testing) assignTurnSheetRefs(refConfigs []TurnSheetRefConfig, turnSheetRecs []*game_record.GameTurnSheet) error {
+	if len(refConfigs) == 0 {
 		return nil
 	}
 
@@ -245,12 +145,10 @@ func (t *Testing) assignTurnSheetReferencesForTurn(turnCfg GameTurnConfig, turnS
 		}
 		linkRec := linkRecs[0]
 		characterTurnSheetMap[linkRec.AdventureGameCharacterInstanceID] = linkRec.GameTurnSheetID
-		t.Data.AddAdventureGameTurnSheetRec(linkRec)
-		t.teardownData.AddAdventureGameTurnSheetRec(linkRec)
 	}
 
-	for _, cfg := range turnCfg.AdventureGameTurnSheetConfigs {
-		if cfg.GameTurnSheetConfig.Reference == "" || cfg.GameCharacterInstanceRef == "" {
+	for _, cfg := range refConfigs {
+		if cfg.Reference == "" || cfg.GameCharacterInstanceRef == "" {
 			continue
 		}
 		characterInstanceID, ok := t.Data.Refs.AdventureGameCharacterInstanceRefs[cfg.GameCharacterInstanceRef]
@@ -259,9 +157,9 @@ func (t *Testing) assignTurnSheetReferencesForTurn(turnCfg GameTurnConfig, turnS
 		}
 		gameTurnSheetID, ok := characterTurnSheetMap[characterInstanceID]
 		if !ok {
-			return fmt.Errorf("no turn sheet found for character ref >%s< on turn %d", cfg.GameCharacterInstanceRef, turnCfg.TurnNumber)
+			return fmt.Errorf("no turn sheet found for character ref >%s<", cfg.GameCharacterInstanceRef)
 		}
-		t.Data.Refs.GameTurnSheetRefs[cfg.GameTurnSheetConfig.Reference] = gameTurnSheetID
+		t.Data.Refs.GameTurnSheetRefs[cfg.Reference] = gameTurnSheetID
 	}
 
 	return nil
@@ -452,115 +350,4 @@ func (t *Testing) processJoinGameSubscriptionInSetup(ctx context.Context, subscr
 	l.Info("processed join game subscription >%s<", subscriptionRec.ID)
 
 	return createdTurnSheetRec, nil
-}
-
-func (t *Testing) getTurnSheetsForTurn(gameInstanceID string, turnNumber int) ([]*game_record.GameTurnSheet, error) {
-	dom := t.Domain.(*domain.Domain)
-	turnSheets, err := dom.GetGameTurnSheetRecsByGameInstance(gameInstanceID, turnNumber)
-	if err != nil {
-		return nil, err
-	}
-	if len(turnSheets) == 0 {
-		return nil, fmt.Errorf("no turn sheets found for game instance >%s< turn >%d<", gameInstanceID, turnNumber)
-	}
-	for _, rec := range turnSheets {
-		t.Data.AddGameTurnSheetRec(rec)
-		t.teardownData.AddGameTurnSheetRec(rec)
-	}
-	return turnSheets, nil
-}
-
-// EnsureGameTurnSheetsInTeardownForInstance queries all game_turn_sheet rows that reference the
-// given game instance and adds them (and their adventure_game_turn_sheet links) to teardownData
-// so they are removed in the correct order on teardown. Call after setup or after any flow that
-// may create turn sheets for an instance (e.g. so tests that use the instance don't hit FK on teardown).
-func (t *Testing) EnsureGameTurnSheetsInTeardownForInstance(gameInstanceID string) error {
-	if gameInstanceID == "" {
-		return nil
-	}
-	dom := t.Domain.(*domain.Domain)
-	turnSheets, err := dom.GetManyGameTurnSheetRecs(&coresql.Options{
-		Params: []coresql.Param{
-			{Col: game_record.FieldGameTurnSheetGameInstanceID, Val: gameInstanceID},
-		},
-	})
-	if err != nil {
-		return fmt.Errorf("getting game turn sheets for instance %s: %w", gameInstanceID, err)
-	}
-	for _, rec := range turnSheets {
-		t.Data.AddGameTurnSheetRec(rec)
-		t.teardownData.AddGameTurnSheetRec(rec)
-	}
-	if len(turnSheets) > 0 {
-		if err := t.addAdventureGameTurnSheetsToTeardown(turnSheets); err != nil {
-			return fmt.Errorf("adding adventure game turn sheet links to teardown: %w", err)
-		}
-	}
-	return nil
-}
-
-func (t *Testing) applyConfiguredScanData(ctx context.Context, turnCfg GameTurnConfig) (bool, error) {
-	if len(turnCfg.AdventureGameTurnSheetConfigs) == 0 {
-		return false, nil
-	}
-
-	shouldProcess := true
-
-	for _, cfg := range turnCfg.AdventureGameTurnSheetConfigs {
-		ref := cfg.GameTurnSheetConfig.Reference
-		if cfg.GameTurnSheetConfig.ScanDataConfig == nil {
-			shouldProcess = false
-			continue
-		}
-		if ref == "" {
-			return false, fmt.Errorf("turn %d has scan data but missing turn sheet reference", turnCfg.TurnNumber)
-		}
-		turnSheetID, ok := t.Data.Refs.GameTurnSheetRefs[ref]
-		if !ok {
-			return false, fmt.Errorf("turn sheet reference >%s< not found for turn %d", ref, turnCfg.TurnNumber)
-		}
-		if err := t.applyScanDataToTurnSheet(ctx, turnSheetID, cfg.GameTurnSheetConfig.ScanDataConfig); err != nil {
-			return false, err
-		}
-	}
-
-	return shouldProcess, nil
-}
-
-func (t *Testing) applyScanDataToTurnSheet(_ context.Context, turnSheetID string, scanDataConfig any) error {
-	l := t.Logger("applyScanDataToTurnSheet")
-
-	m := t.Domain.(*domain.Domain)
-
-	turnSheetRec, err := m.GetGameTurnSheetRec(turnSheetID, nil)
-	if err != nil {
-		l.Warn("failed to get turn sheet >%s< >%v<", turnSheetID, err)
-		return fmt.Errorf("failed to get turn sheet: %w", err)
-	}
-
-	var scanDataBytes []byte
-	switch turnSheetRec.SheetType {
-	case adventure_game_record.AdventureGameTurnSheetTypeLocationChoice:
-		locationChoiceScanData, ok := scanDataConfig.(*turnsheet.LocationChoiceScanData)
-		if !ok {
-			l.Warn("invalid scan data type for location choice turn sheet, expected *turnsheet.LocationChoiceScanData")
-			return fmt.Errorf("invalid scan data type for location choice turn sheet")
-		}
-		scanDataBytes, err = json.Marshal(locationChoiceScanData)
-		if err != nil {
-			l.Warn("failed to marshal location choice scan data >%v<", err)
-			return fmt.Errorf("failed to marshal location choice scan data: %w", err)
-		}
-	default:
-		return fmt.Errorf("unsupported sheet type: %s", turnSheetRec.SheetType)
-	}
-
-	if err := m.MarkGameTurnSheetAsCompleted(turnSheetRec.ID, scanDataBytes); err != nil {
-		l.Warn("failed to mark turn sheet as completed >%v<", err)
-		return fmt.Errorf("failed to mark turn sheet as completed: %w", err)
-	}
-
-	l.Info("applied scan data to turn sheet >%s<", turnSheetRec.ID)
-
-	return nil
 }

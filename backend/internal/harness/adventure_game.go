@@ -13,11 +13,11 @@ import (
 // AdventureGameRecords holds all adventure game records created by processAdventureGameConfig.
 type AdventureGameRecords struct {
 	Items                    []*adventure_game_record.AdventureGameItem
-	Locations                 []*adventure_game_record.AdventureGameLocation
-	Creatures                 []*adventure_game_record.AdventureGameCreature
-	LocationLinks             []*adventure_game_record.AdventureGameLocationLink
+	Locations                []*adventure_game_record.AdventureGameLocation
+	Creatures                []*adventure_game_record.AdventureGameCreature
+	LocationLinks            []*adventure_game_record.AdventureGameLocationLink
 	LocationLinkRequirements []*adventure_game_record.AdventureGameLocationLinkRequirement
-	Characters                []*adventure_game_record.AdventureGameCharacter
+	Characters               []*adventure_game_record.AdventureGameCharacter
 }
 
 // processAdventureGameConfig creates adventure game records from config and returns all created records.
@@ -140,19 +140,18 @@ func (t *Testing) processAdventureGameConfig(gameConfig GameConfig, gameRec *gam
 	return out, nil
 }
 
-// createAdventureGameInstanceRecords creates the adventure game instance records for a game instance.
-// Instance records (locations, creatures, items, characters) are created by StartGameInstance via
-// PopulateAdventureGameInstanceData. This function only calls StartGameInstance when turn configs are
-// present; otherwise the instance stays in "created" status with no instance records.
-func (t *Testing) createAdventureGameInstanceRecords(gameConfig GameConfig, gameInstanceConfig GameInstanceConfig, gameInstanceRec *game_record.GameInstance) error {
+// createAdventureGameInstanceRecords starts the game instance and creates initial turn sheets when
+// ShouldStartGameInstance is true. Instance records (locations, creatures, items, characters) are
+// created by StartGameInstance via PopulateAdventureGameInstanceData.
+func (t *Testing) createAdventureGameInstanceRecords(gameInstanceConfig GameInstanceConfig, gameInstanceRec *game_record.GameInstance) error {
 	l := t.Logger("createAdventureGameInstanceRecords")
 
-	if len(gameInstanceConfig.GameTurnConfigs) == 0 {
+	if !gameInstanceConfig.ShouldStartGameInstance {
 		return nil
 	}
 
 	if gameInstanceConfig.Reference == "" {
-		return fmt.Errorf("game_instance config must have a reference when configuring turns")
+		return fmt.Errorf("game_instance config must have a reference when ShouldStartGameInstance is true")
 	}
 
 	instanceRec := gameInstanceRec
@@ -170,8 +169,6 @@ func (t *Testing) createAdventureGameInstanceRecords(gameConfig GameConfig, game
 		}
 	}
 
-	turnConfigs := normalizeTurnConfigs(gameInstanceConfig.GameTurnConfigs)
-
 	ctx := context.Background()
 
 	turnSheets, err := t.generateTurnSheetsForGameInstanceInTx(ctx, instanceRec, gameInstanceConfig.Reference)
@@ -180,80 +177,11 @@ func (t *Testing) createAdventureGameInstanceRecords(gameConfig GameConfig, game
 		return err
 	}
 
-	turnSheetsCache := map[int][]*game_record.GameTurnSheet{}
-	if len(turnSheets) > 0 {
-		turnSheetsCache[turnSheets[0].TurnNumber] = turnSheets
-	}
-
-	// If the first configured turn is after the initial turn (0), process earlier turns so those sheets exist.
-	firstConfiguredTurn := turnConfigs[0].TurnNumber
-	for turn := 0; turn < firstConfiguredTurn; turn++ {
-		if err := t.processGameTurnForInstanceInTx(ctx, instanceRec.ID); err != nil {
-			l.Warn("failed processing turn >%d< to create sheets for configured turn >%d< >%v<", turn, firstConfiguredTurn, err)
+	if len(gameInstanceConfig.TurnSheetRefConfigs) > 0 {
+		if err := t.assignTurnSheetRefs(gameInstanceConfig.TurnSheetRefConfigs, turnSheets); err != nil {
+			l.Warn("failed assigning turn sheet refs for instance >%s< >%v<", gameInstanceConfig.Reference, err)
 			return err
 		}
-		// Prime cache with the turn we just created so the next iteration can use it
-		nextTurn := turn + 1
-		nextSheets, err := t.getTurnSheetsForTurn(instanceRec.ID, nextTurn)
-		if err != nil {
-			l.Warn("failed fetching turn sheets after processing >%v<", err)
-			return err
-		}
-		turnSheetsCache[nextTurn] = nextSheets
-	}
-
-	for idx, turnCfg := range turnConfigs {
-		turnSheetsForConfig, ok := turnSheetsCache[turnCfg.TurnNumber]
-		if !ok {
-			turnSheetsForConfig, err = t.getTurnSheetsForTurn(instanceRec.ID, turnCfg.TurnNumber)
-			if err != nil {
-				l.Warn("failed fetching turn sheets for turn >%d< >%v<", turnCfg.TurnNumber, err)
-				return err
-			}
-			turnSheetsCache[turnCfg.TurnNumber] = turnSheetsForConfig
-		}
-
-		if err := t.assignTurnSheetReferencesForTurn(turnCfg, turnSheetsForConfig); err != nil {
-			l.Warn("failed assigning turn sheet refs for turn >%d< >%v<", turnCfg.TurnNumber, err)
-			return err
-		}
-
-		readyForProcessing, err := t.applyConfiguredScanData(ctx, turnCfg)
-		if err != nil {
-			l.Warn("failed applying scan data for turn >%d< >%v<", turnCfg.TurnNumber, err)
-			return err
-		}
-
-		isLastTurn := idx == len(turnConfigs)-1
-		if !readyForProcessing {
-			if !isLastTurn {
-				return fmt.Errorf("turn %d is missing scan data but subsequent turns are configured", turnCfg.TurnNumber)
-			}
-			continue
-		}
-
-		if err := t.processGameTurnForInstanceInTx(ctx, instanceRec.ID); err != nil {
-			l.Warn("failed processing turn >%d< for instance >%s< >%v<", turnCfg.TurnNumber, instanceRec.ID, err)
-			return err
-		}
-
-		// Only fetch next turn sheets when there may be a subsequent config that needs them.
-		// Next turn sheets are created by processGameTurnForInstanceInTx above.
-		if !isLastTurn {
-			nextTurn := turnCfg.TurnNumber + 1
-			nextSheets, err := t.getTurnSheetsForTurn(instanceRec.ID, nextTurn)
-			if err != nil {
-				l.Warn("failed fetching next turn sheets >%v<", err)
-				return err
-			}
-			turnSheetsCache[nextTurn] = nextSheets
-		}
-	}
-
-	// Ensure all turn sheets for this instance are in teardown (catches any created by turn processing or other paths).
-	if err := t.EnsureGameTurnSheetsInTeardownForInstance(gameInstanceRec.ID); err != nil {
-		l.Warn("failed ensuring game turn sheets in teardown for instance >%s< >%v<", gameInstanceRec.ID, err)
-		return err
 	}
 
 	return nil
@@ -481,121 +409,3 @@ func (t *Testing) removeAdventureGameRecords() error {
 	return nil
 }
 
-// removeAdventureGameInstanceRecords removes the adventure game instance records for a game instance
-func (t *Testing) removeAdventureGameInstanceRecords() error {
-	l := t.Logger("removeAdventureGameInstanceRecords")
-
-	l.Debug("removing adventure game instance records")
-
-	// Remove adventure game turn sheet records first (they reference character instances)
-	l.Debug("removing >%d< adventure game turn sheet records", len(t.teardownData.AdventureGameTurnSheetRecs))
-	for _, turnSheetRec := range t.teardownData.AdventureGameTurnSheetRecs {
-		l.Debug("[teardown] adventure game turn sheet ID: >%s<", turnSheetRec.ID)
-		if turnSheetRec.ID == "" {
-			l.Warn("[teardown] skipping adventure game turn sheet with empty ID")
-			continue
-		}
-		err := t.Domain.(*domain.Domain).RemoveAdventureGameTurnSheetRec(turnSheetRec.ID)
-		if err != nil {
-			l.Warn("failed removing adventure game turn sheet record >%v<", err)
-			return err
-		}
-	}
-
-	// Remove any remaining adventure_game_turn_sheet links that reference our character instances
-	// (in case some were created but not added to teardown, e.g. by turn processing)
-	dom := t.Domain.(*domain.Domain)
-	for _, characterInstanceRec := range t.teardownData.AdventureGameCharacterInstanceRecs {
-		if characterInstanceRec.ID == "" {
-			continue
-		}
-		linkRecs, err := dom.GetManyAdventureGameTurnSheetRecs(&coresql.Options{
-			Params: []coresql.Param{
-				{Col: adventure_game_record.FieldAdventureGameTurnSheetAdventureGameCharacterInstanceID, Val: characterInstanceRec.ID},
-			},
-		})
-		if err != nil {
-			l.Warn("failed getting adventure game turn sheet links for character instance >%s< >%v<", characterInstanceRec.ID, err)
-			continue
-		}
-		for _, linkRec := range linkRecs {
-			if err := dom.RemoveAdventureGameTurnSheetRec(linkRec.ID); err != nil {
-				l.Warn("failed removing adventure game turn sheet link >%s< >%v<", linkRec.ID, err)
-			}
-		}
-	}
-
-	// Remove adventure game creature instances
-	l.Debug("removing >%d< adventure game creature instance records", len(t.teardownData.AdventureGameCreatureInstanceRecs))
-	for _, creatureInstanceRec := range t.teardownData.AdventureGameCreatureInstanceRecs {
-		l.Debug("[teardown] adventure game creature instance ID: >%s<", creatureInstanceRec.ID)
-		if creatureInstanceRec.ID == "" {
-			l.Warn("[teardown] skipping adventure game creature instance with empty ID")
-			continue
-		}
-		err := t.Domain.(*domain.Domain).RemoveAdventureGameCreatureInstanceRec(creatureInstanceRec.ID)
-		if err != nil {
-			l.Warn("failed removing game creature instance record >%v<", err)
-			return err
-		}
-	}
-
-	// Remove adventure game character instances
-	l.Debug("removing >%d< adventure game character instance records", len(t.teardownData.AdventureGameCharacterInstanceRecs))
-	for _, characterInstanceRec := range t.teardownData.AdventureGameCharacterInstanceRecs {
-		l.Debug("[teardown] adventure game character instance ID: >%s<", characterInstanceRec.ID)
-		if characterInstanceRec.ID == "" {
-			l.Warn("[teardown] skipping adventure game character instance with empty ID")
-			continue
-		}
-		err := t.Domain.(*domain.Domain).RemoveAdventureGameCharacterInstanceRec(characterInstanceRec.ID)
-		if err != nil {
-			l.Warn("failed removing game character instance record >%v<", err)
-			return err
-		}
-	}
-
-	// Remove adventure game item instances
-	l.Debug("removing >%d< adventure game item instance records", len(t.teardownData.AdventureGameItemInstanceRecs))
-	for _, itemInstanceRec := range t.teardownData.AdventureGameItemInstanceRecs {
-		l.Debug("[teardown] adventure game item instance ID: >%s<", itemInstanceRec.ID)
-		if itemInstanceRec.ID == "" {
-			l.Warn("[teardown] skipping adventure game item instance with empty ID")
-			continue
-		}
-		err := t.Domain.(*domain.Domain).RemoveAdventureGameItemInstanceRec(itemInstanceRec.ID)
-		if err != nil {
-			l.Warn("failed removing adventure game item instance record >%v<", err)
-			return err
-		}
-	}
-
-	// Remove adventure game location object instances
-	l.Debug("removing >%d< adventure game location object instance records", len(t.teardownData.AdventureGameLocationObjectInstanceRecs))
-	for _, objInstRec := range t.teardownData.AdventureGameLocationObjectInstanceRecs {
-		if objInstRec.ID == "" {
-			continue
-		}
-		if err := t.Domain.(*domain.Domain).RemoveAdventureGameLocationObjectInstanceRec(objInstRec.ID); err != nil {
-			l.Warn("failed removing adventure game location object instance record >%v<", err)
-			return err
-		}
-	}
-
-	// Remove adventure game location instances
-	l.Debug("removing >%d< adventure game location instance records", len(t.teardownData.AdventureGameLocationInstanceRecs))
-	for _, locationInstanceRec := range t.teardownData.AdventureGameLocationInstanceRecs {
-		l.Debug("[teardown] adventure game location instance ID: >%s<", locationInstanceRec.ID)
-		if locationInstanceRec.ID == "" {
-			l.Warn("[teardown] skipping adventure game location instance with empty ID")
-			continue
-		}
-		err := t.Domain.(*domain.Domain).RemoveAdventureGameLocationInstanceRec(locationInstanceRec.ID)
-		if err != nil {
-			l.Warn("failed removing adventure game location instance record >%v<", err)
-			return err
-		}
-	}
-
-	return nil
-}

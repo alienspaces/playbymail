@@ -205,11 +205,9 @@ func (t *Testing) createGameInstances() error {
 			return fmt.Errorf("game config for ref >%s< not found", subConfig.GameRef)
 		}
 
-		for j := range subConfig.GameInstanceConfigs {
+		for _, gameInstanceConfig := range subConfig.GameInstanceConfigs {
 
-			gameInstanceConfig := &subConfig.GameInstanceConfigs[j]
-
-			gameInstanceRec, err := t.createGameInstanceRec(*gameInstanceConfig, gameRec)
+			gameInstanceRec, err := t.createGameInstanceRec(gameInstanceConfig, gameRec)
 			if err != nil {
 				l.Warn("failed creating game_instance record >%v<", err)
 				return err
@@ -245,7 +243,7 @@ func (t *Testing) createGameInstances() error {
 				}
 			}
 
-			if err = t.createAdventureGameInstanceRecords(*gameConfig, *gameInstanceConfig, gameInstanceRec); err != nil {
+			if err = t.createAdventureGameInstanceRecords(gameInstanceConfig, gameInstanceRec); err != nil {
 				l.Warn("failed creating adventure game instance records >%v<", err)
 				return err
 			}
@@ -275,74 +273,24 @@ func (t *Testing) findGameConfigByRef(gameRef string) *GameConfig {
 func (t *Testing) RemoveData() error {
 	l := t.Logger("RemoveData")
 
-	// ------------------------------------------------------------
-	// Adventure game specific instance records
-	// ------------------------------------------------------------
+	dom := t.Domain.(*domain.Domain)
 
-	err := t.removeAdventureGameInstanceRecords()
-	if err != nil {
-		l.Warn("failed removing adventure game instance records >%v<", err)
-		return err
-	}
-	l.Debug("removed adventure game instance records")
-
-	// Query and add any turn sheets for our instances to teardown so they are removed before game_instance.
+	// Remove each game instance and all its associated data (turn sheets, instance records,
+	// parameters, subscription instance links) via RemoveGameInstance.
+	l.Debug("removing >%d< game instance records", len(t.teardownData.GameInstanceRecs))
 	for _, instanceRec := range t.teardownData.GameInstanceRecs {
+		l.Debug("[teardown] game instance ID: >%s<", instanceRec.ID)
 		if instanceRec.ID == "" {
+			l.Warn("[teardown] skipping game instance with empty ID")
 			continue
 		}
-		if err := t.EnsureGameTurnSheetsInTeardownForInstance(instanceRec.ID); err != nil {
-			l.Warn("failed ensuring game turn sheets in teardown for instance >%s< >%v<", instanceRec.ID, err)
-		}
-	}
-
-	// Remove game turn sheet records first (they reference game instances)
-	l.Debug("removing >%d< game turn sheet records", len(t.teardownData.GameTurnSheetRecs))
-	for _, turnSheetRec := range t.teardownData.GameTurnSheetRecs {
-		l.Debug("[teardown] game turn sheet ID: >%s<", turnSheetRec.ID)
-		if turnSheetRec.ID == "" {
-			l.Warn("[teardown] skipping game turn sheet with empty ID")
-			continue
-		}
-		err := t.Domain.(*domain.Domain).RemoveGameTurnSheetRec(turnSheetRec.ID)
-		if err != nil {
-			l.Warn("failed removing game turn sheet record >%v<", err)
+		if err := dom.RemoveGameInstance(instanceRec.ID); err != nil {
+			l.Warn("failed removing game instance >%s< >%v<", instanceRec.ID, err)
 			return err
 		}
 	}
 
-	// Remove game instance parameter records
-	l.Debug("removing >%d< game instance parameter records", len(t.teardownData.GameInstanceParameterRecs))
-	for _, parameterRec := range t.teardownData.GameInstanceParameterRecs {
-		l.Debug("[teardown] game instance parameter ID: >%s<", parameterRec.ID)
-		if parameterRec.ID == "" {
-			l.Warn("[teardown] skipping game instance parameter with empty ID")
-			continue
-		}
-		err := t.Domain.(*domain.Domain).RemoveGameInstanceParameterRec(parameterRec.ID)
-		if err != nil {
-			l.Warn("failed removing game instance parameter record >%v<", err)
-			return err
-		}
-	}
-
-	// Remove game subscription records BEFORE game instances
-	// (game_subscription_instance links subscriptions to instances)
-	// Remove game subscription instance records (before subscriptions)
-	l.Debug("removing >%d< game subscription instance records", len(t.teardownData.GameSubscriptionInstanceRecs))
-	for _, instanceLinkRec := range t.teardownData.GameSubscriptionInstanceRecs {
-		l.Debug("[teardown] game subscription instance ID: >%s<", instanceLinkRec.ID)
-		if instanceLinkRec.ID == "" {
-			l.Warn("[teardown] skipping game subscription instance with empty ID")
-			continue
-		}
-		err := t.Domain.(*domain.Domain).RemoveGameSubscriptionInstanceRec(instanceLinkRec.ID)
-		if err != nil {
-			l.Warn("failed removing game subscription instance record >%v<", err)
-			// Don't return error - continue with other records
-		}
-	}
-
+	// Remove game subscription records (subscription_instance links are removed by RemoveGameInstance above)
 	l.Debug("removing >%d< game subscription records", len(t.teardownData.GameSubscriptionRecs))
 	for _, subscriptionRec := range t.teardownData.GameSubscriptionRecs {
 		l.Debug("[teardown] game subscription ID: >%s<", subscriptionRec.ID)
@@ -350,8 +298,7 @@ func (t *Testing) RemoveData() error {
 			l.Warn("[teardown] skipping game subscription with empty ID")
 			continue
 		}
-		err := t.Domain.(*domain.Domain).RemoveGameSubscriptionRec(subscriptionRec.ID)
-		if err != nil {
+		if err := dom.RemoveGameSubscriptionRec(subscriptionRec.ID); err != nil {
 			l.Warn("failed removing game subscription record >%v<", err)
 			return err
 		}
@@ -361,27 +308,11 @@ func (t *Testing) RemoveData() error {
 	// Adventure game specific records
 	// ------------------------------------------------------------
 
-	err = t.removeAdventureGameRecords()
-	if err != nil {
+	if err := t.removeAdventureGameRecords(); err != nil {
 		l.Warn("failed removing adventure game records >%v<", err)
 		return err
 	}
 	l.Debug("removed adventure game records")
-
-	// Remove game instance records
-	l.Debug("removing >%d< game instance records", len(t.teardownData.GameInstanceRecs))
-	for _, instanceRec := range t.teardownData.GameInstanceRecs {
-		l.Debug("[teardown] game instance ID: >%s<", instanceRec.ID)
-		if instanceRec.ID == "" {
-			l.Warn("[teardown] skipping game instance with empty ID")
-			continue
-		}
-		err := t.Domain.(*domain.Domain).RemoveGameInstanceRec(instanceRec.ID)
-		if err != nil {
-			l.Warn("failed removing game instance record >%v<", err)
-			return err
-		}
-	}
 
 	// Remove game image records
 	l.Debug("removing >%d< game image records", len(t.teardownData.GameImageRecs))

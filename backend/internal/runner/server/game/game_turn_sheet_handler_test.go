@@ -34,25 +34,15 @@ func Test_uploadTurnSheetHandler(t *testing.T) {
 	// Create a custom harness config
 	testDataConfig := harness.DefaultDataConfig()
 
-	// Configure expected turn sheets so references can be resolved after job workers run.
-	// Use TurnNumber 0 because the harness creates turn 0 sheets when the instance is started.
-	err := testDataConfig.ReplaceGameTurnConfigs(harness.GameInstanceOneRef, []harness.GameTurnConfig{
+	// Configure turn sheet refs so the test can look up the turn sheet by reference.
+	// The harness starts the instance (ShouldStartGameInstance: true) and creates turn 0 sheets.
+	err := testDataConfig.SetTurnSheetRefConfigs(harness.GameInstanceOneRef, []harness.TurnSheetRefConfig{
 		{
-			TurnNumber: 0,
-			AdventureGameTurnSheetConfigs: []harness.AdventureGameTurnSheetConfig{
-				{
-					GameTurnSheetConfig: harness.GameTurnSheetConfig{
-						Reference:        harness.GameTurnSheetOneRef,
-						AccountRef:       harness.AccountUserStandardRef,
-						SheetType:        adventure_game_record.AdventureGameTurnSheetTypeLocationChoice,
-						ProcessingStatus: game_record.TurnSheetProcessingStatusPending,
-					},
-					GameCharacterInstanceRef: harness.GameCharacterInstanceOneRef,
-				},
-			},
+			Reference:                harness.GameTurnSheetOneRef,
+			GameCharacterInstanceRef: harness.GameCharacterInstanceOneRef,
 		},
 	})
-	require.NoError(t, err, "ReplaceAdventureGameTurnSheetConfigs returns without error")
+	require.NoError(t, err, "SetTurnSheetRefConfigs returns without error")
 
 	// Add a second game instance with "started" status for join game test with started game
 	now := time.Now()

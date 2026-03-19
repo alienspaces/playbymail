@@ -1231,6 +1231,186 @@ func (m *Domain) DeleteGameInstance(instanceID string) error {
 	return nil
 }
 
+// RemoveGameInstance physically removes (hard delete) a game instance and all its associated data.
+// Unlike DeleteGameInstance which sets deleted_at, this permanently removes all rows from the database.
+// Used by the test harness for teardown.
+func (m *Domain) RemoveGameInstance(instanceID string) error {
+	l := m.Logger("RemoveGameInstance")
+
+	l.Info("removing game instance >%s< and all associated data", instanceID)
+
+	_, err := m.GetGameInstanceRec(instanceID, coresql.ForUpdateNoWait)
+	if err != nil {
+		return err
+	}
+
+	// Remove adventure_game_turn_sheet records (linked via character instance)
+	charInstances, err := m.GetManyAdventureGameCharacterInstanceRecs(&coresql.Options{
+		Params: []coresql.Param{
+			{Col: adventure_game_record.FieldAdventureGameCharacterInstanceGameInstanceID, Val: instanceID},
+		},
+	})
+	if err != nil {
+		l.Warn("failed to get character instances >%v<", err)
+		return databaseError(err)
+	}
+
+	for _, charInst := range charInstances {
+		turnSheets, err := m.GetManyAdventureGameTurnSheetRecs(&coresql.Options{
+			Params: []coresql.Param{
+				{Col: adventure_game_record.FieldAdventureGameTurnSheetAdventureGameCharacterInstanceID, Val: charInst.ID},
+			},
+		})
+		if err != nil {
+			l.Warn("failed to get turn sheets for character instance >%s< >%v<", charInst.ID, err)
+			return databaseError(err)
+		}
+		for _, ts := range turnSheets {
+			if err := m.RemoveAdventureGameTurnSheetRec(ts.ID); err != nil {
+				l.Warn("failed to remove adventure turn sheet >%s< >%v<", ts.ID, err)
+				return err
+			}
+		}
+	}
+
+	// Remove game_turn_sheet records
+	gameTurnSheets, err := m.GetManyGameTurnSheetRecs(&coresql.Options{
+		Params: []coresql.Param{
+			{Col: game_record.FieldGameTurnSheetGameInstanceID, Val: instanceID},
+		},
+	})
+	if err != nil {
+		l.Warn("failed to get game turn sheets >%v<", err)
+		return databaseError(err)
+	}
+	for _, ts := range gameTurnSheets {
+		if err := m.RemoveGameTurnSheetRec(ts.ID); err != nil {
+			l.Warn("failed to remove game turn sheet >%s< >%v<", ts.ID, err)
+			return err
+		}
+	}
+
+	// Remove item instances
+	itemInstances, err := m.GetManyAdventureGameItemInstanceRecs(&coresql.Options{
+		Params: []coresql.Param{
+			{Col: adventure_game_record.FieldAdventureGameItemInstanceGameInstanceID, Val: instanceID},
+		},
+	})
+	if err != nil {
+		l.Warn("failed to get item instances >%v<", err)
+		return databaseError(err)
+	}
+	for _, item := range itemInstances {
+		if err := m.RemoveAdventureGameItemInstanceRec(item.ID); err != nil {
+			l.Warn("failed to remove item instance >%s< >%v<", item.ID, err)
+			return err
+		}
+	}
+
+	// Remove creature instances
+	creatureInstances, err := m.GetManyAdventureGameCreatureInstanceRecs(&coresql.Options{
+		Params: []coresql.Param{
+			{Col: adventure_game_record.FieldAdventureGameCreatureInstanceGameInstanceID, Val: instanceID},
+		},
+	})
+	if err != nil {
+		l.Warn("failed to get creature instances >%v<", err)
+		return databaseError(err)
+	}
+	for _, creature := range creatureInstances {
+		if err := m.RemoveAdventureGameCreatureInstanceRec(creature.ID); err != nil {
+			l.Warn("failed to remove creature instance >%s< >%v<", creature.ID, err)
+			return err
+		}
+	}
+
+	// Remove character instances
+	for _, charInst := range charInstances {
+		if err := m.RemoveAdventureGameCharacterInstanceRec(charInst.ID); err != nil {
+			l.Warn("failed to remove character instance >%s< >%v<", charInst.ID, err)
+			return err
+		}
+	}
+
+	// Remove location object instances
+	locationObjectInstances, err := m.GetManyAdventureGameLocationObjectInstanceRecs(&coresql.Options{
+		Params: []coresql.Param{
+			{Col: adventure_game_record.FieldAdventureGameLocationObjectInstanceGameInstanceID, Val: instanceID},
+		},
+	})
+	if err != nil {
+		l.Warn("failed to get location object instances >%v<", err)
+		return databaseError(err)
+	}
+	for _, objInst := range locationObjectInstances {
+		if err := m.RemoveAdventureGameLocationObjectInstanceRec(objInst.ID); err != nil {
+			l.Warn("failed to remove location object instance >%s< >%v<", objInst.ID, err)
+			return err
+		}
+	}
+
+	// Remove location instances
+	locationInstances, err := m.GetManyAdventureGameLocationInstanceRecs(&coresql.Options{
+		Params: []coresql.Param{
+			{Col: adventure_game_record.FieldAdventureGameLocationInstanceGameInstanceID, Val: instanceID},
+		},
+	})
+	if err != nil {
+		l.Warn("failed to get location instances >%v<", err)
+		return databaseError(err)
+	}
+	for _, loc := range locationInstances {
+		if err := m.RemoveAdventureGameLocationInstanceRec(loc.ID); err != nil {
+			l.Warn("failed to remove location instance >%s< >%v<", loc.ID, err)
+			return err
+		}
+	}
+
+	// Remove game instance parameters
+	params, err := m.GetManyGameInstanceParameterRecs(&coresql.Options{
+		Params: []coresql.Param{
+			{Col: game_record.FieldGameInstanceParameterGameInstanceID, Val: instanceID},
+		},
+	})
+	if err != nil {
+		l.Warn("failed to get instance parameters >%v<", err)
+		return databaseError(err)
+	}
+	for _, p := range params {
+		if err := m.RemoveGameInstanceParameterRec(p.ID); err != nil {
+			l.Warn("failed to remove instance parameter >%s< >%v<", p.ID, err)
+			return err
+		}
+	}
+
+	// Remove game_subscription_instance links
+	subscriptionInstances, err := m.GetManyGameSubscriptionInstanceRecs(&coresql.Options{
+		Params: []coresql.Param{
+			{Col: game_record.FieldGameSubscriptionInstanceGameInstanceID, Val: instanceID},
+		},
+	})
+	if err != nil {
+		l.Warn("failed to get subscription instances >%v<", err)
+		return databaseError(err)
+	}
+	for _, subInst := range subscriptionInstances {
+		if err := m.RemoveGameSubscriptionInstanceRec(subInst.ID); err != nil {
+			l.Warn("failed to remove subscription instance >%s< >%v<", subInst.ID, err)
+			return err
+		}
+	}
+
+	// Finally remove the game instance record itself
+	if err := m.RemoveGameInstanceRec(instanceID); err != nil {
+		l.Warn("failed to remove game instance record >%s< >%v<", instanceID, err)
+		return err
+	}
+
+	l.Info("removed game instance >%s< and all associated data", instanceID)
+
+	return nil
+}
+
 // generateUUID generates a UUID string
 func generateUUID() (string, error) {
 	uuidVal := uuid.New()

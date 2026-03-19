@@ -389,15 +389,15 @@ func GameConfig() []harness.GameConfig {
 						},
 					},
 				},
-				{
-					Reference:       "location-link-caverns-to-grove",
-					FromLocationRef: harness.GameLocationTwoRef,
-					ToLocationRef:   harness.GameLocationOneRef,
-					Record: &adventure_game_record.AdventureGameLocationLink{
-						Name:        "The Glowing Passage",
-						Description: "Crystal-lit tunnels that wind back up to the mystic grove.",
-					},
+			{
+				Reference:       "location-link-caverns-to-grove",
+				FromLocationRef: harness.GameLocationTwoRef,
+				ToLocationRef:   harness.GameLocationOneRef,
+				Record: &adventure_game_record.AdventureGameLocationLink{
+					Name:        "The Crystal Path",
+					Description: "The crystal-lined path winds back up from the caverns to the mystic grove.",
 				},
+			},
 				{
 					Reference:       "location-link-caverns-to-shadow",
 					FromLocationRef: harness.GameLocationTwoRef,
@@ -435,33 +435,33 @@ func GameConfig() []harness.GameConfig {
 						},
 					},
 				},
-				{
-					Reference:       "location-link-islands-to-grove",
-					FromLocationRef: harness.GameLocationThreeRef,
-					ToLocationRef:   harness.GameLocationOneRef,
-					Record: &adventure_game_record.AdventureGameLocationLink{
-						Name:        "The Feather Fall",
-						Description: "Enchanted feathers allow a gentle descent from the islands to the grove below.",
-					},
+			{
+				Reference:       "location-link-islands-to-grove",
+				FromLocationRef: harness.GameLocationThreeRef,
+				ToLocationRef:   harness.GameLocationOneRef,
+				Record: &adventure_game_record.AdventureGameLocationLink{
+					Name:        "The Sky Vine",
+					Description: "The massive enchanted vine provides a path down from the islands to the grove below.",
 				},
-				{
-					Reference:       "location-link-islands-to-caverns",
-					FromLocationRef: harness.GameLocationThreeRef,
-					ToLocationRef:   harness.GameLocationTwoRef,
-					Record: &adventure_game_record.AdventureGameLocationLink{
-						Name:        "The Crystal Chute",
-						Description: "A smooth crystal slide that spirals down into the caverns.",
-					},
+			},
+			{
+				Reference:       "location-link-islands-to-caverns",
+				FromLocationRef: harness.GameLocationThreeRef,
+				ToLocationRef:   harness.GameLocationTwoRef,
+				Record: &adventure_game_record.AdventureGameLocationLink{
+					Name:        "The Wind Lift",
+					Description: "The magical wind lift descends from the islands back down into the crystal caverns.",
 				},
+			},
 				// From Shadow Valley
-				{
-					Reference:       harness.GameLocationLinkFourRef,
-					FromLocationRef: harness.GameLocationFourRef,
-					ToLocationRef:   harness.GameLocationOneRef,
-					Record: &adventure_game_record.AdventureGameLocationLink{
-						Name:        "The Return Portal",
-						Description: "A magical portal that allows quick return to the mystic grove.",
-					},
+			{
+				Reference:       harness.GameLocationLinkFourRef,
+				FromLocationRef: harness.GameLocationFourRef,
+				ToLocationRef:   harness.GameLocationOneRef,
+				Record: &adventure_game_record.AdventureGameLocationLink{
+					Name:        "The Dark Tunnel",
+					Description: "The hidden tunnel beneath ancient roots leads back through the darkness to the mystic grove.",
+				},
 					AdventureGameLocationLinkRequirementConfigs: []harness.AdventureGameLocationLinkRequirementConfig{
 						{
 							Reference:   harness.GameLocationLinkRequirementFourRef,
@@ -472,23 +472,23 @@ func GameConfig() []harness.GameConfig {
 						},
 					},
 				},
-				{
-					Reference:       "location-link-shadow-to-caverns",
-					FromLocationRef: harness.GameLocationFourRef,
-					ToLocationRef:   harness.GameLocationTwoRef,
-					Record: &adventure_game_record.AdventureGameLocationLink{
-						Name:        "The Echoing Stairs",
-						Description: "Ancient stone stairs that climb from the valley up to the crystal caverns.",
-					},
+			{
+				Reference:       "location-link-shadow-to-caverns",
+				FromLocationRef: harness.GameLocationFourRef,
+				ToLocationRef:   harness.GameLocationTwoRef,
+				Record: &adventure_game_record.AdventureGameLocationLink{
+					Name:        "The Deep Descent",
+					Description: "The steep path climbs from the shadow valley back up to the crystal caverns.",
 				},
-				{
-					Reference:       "location-link-shadow-to-islands",
-					FromLocationRef: harness.GameLocationFourRef,
-					ToLocationRef:   harness.GameLocationThreeRef,
-					Record: &adventure_game_record.AdventureGameLocationLink{
-						Name:        "The Shadow Ascent",
-						Description: "Dark tendrils of shadow that can lift travelers to the floating islands.",
-					},
+			},
+			{
+				Reference:       "location-link-shadow-to-islands",
+				FromLocationRef: harness.GameLocationFourRef,
+				ToLocationRef:   harness.GameLocationThreeRef,
+				Record: &adventure_game_record.AdventureGameLocationLink{
+					Name:        "The Shadow Bridge",
+					Description: "The bridge of pure darkness stretches from the valley up to the floating islands.",
+				},
 					AdventureGameLocationLinkRequirementConfigs: []harness.AdventureGameLocationLinkRequirementConfig{
 						{
 							Reference:   "link-req-shadow-to-islands",
@@ -719,25 +719,25 @@ func GameConfig() []harness.GameConfig {
 						Description: "A well-worn trail leads east through the dunes toward the ancient ruins.",
 					},
 				},
-				{
-					Reference:       "desert-link-ruins-to-oasis",
-					FromLocationRef: "desert-location-ruins",
-					ToLocationRef:   "desert-location-oasis",
-					Record: &adventure_game_record.AdventureGameLocationLink{
-						Name:        "The Trade Road",
-						Description: "The main road west winds back to the oasis village.",
-					},
+			{
+				Reference:       "desert-link-ruins-to-oasis",
+				FromLocationRef: "desert-location-ruins",
+				ToLocationRef:   "desert-location-oasis",
+				Record: &adventure_game_record.AdventureGameLocationLink{
+					Name:        "The Dusty Trail",
+					Description: "A well-worn trail leads west through the dunes back to the oasis village.",
 				},
+			},
 				// Oasis Village <-> Sandstone Canyon (free)
-				{
-					Reference:       "desert-link-oasis-to-canyon",
-					FromLocationRef: "desert-location-oasis",
-					ToLocationRef:   "desert-location-canyon",
-					Record: &adventure_game_record.AdventureGameLocationLink{
-						Name:        "The Canyon Descent",
-						Description: "A narrow switchback path descends south into the sandstone canyon.",
-					},
+			{
+				Reference:       "desert-link-oasis-to-canyon",
+				FromLocationRef: "desert-location-oasis",
+				ToLocationRef:   "desert-location-canyon",
+				Record: &adventure_game_record.AdventureGameLocationLink{
+					Name:        "The Rope Climb",
+					Description: "Knotted ropes and iron spikes mark the way down into the sandstone canyon.",
 				},
+			},
 				{
 					Reference:       "desert-link-canyon-to-oasis",
 					FromLocationRef: "desert-location-canyon",
@@ -780,29 +780,29 @@ func GameConfig() []harness.GameConfig {
 					},
 				},
 			},
-			// Hidden Temple -> Ancient Ruins (free)
-			{
-				Reference:       "desert-link-temple-to-ruins",
-				FromLocationRef: "desert-location-temple",
-				ToLocationRef:   "desert-location-ruins",
-				Record: &adventure_game_record.AdventureGameLocationLink{
-					Name:        "The Crumbling Steps",
-					Description: "Worn stone steps lead back out to the ruins.",
-				},
+		// Hidden Temple -> Ancient Ruins (free)
+		{
+			Reference:       "desert-link-temple-to-ruins",
+			FromLocationRef: "desert-location-temple",
+			ToLocationRef:   "desert-location-ruins",
+			Record: &adventure_game_record.AdventureGameLocationLink{
+				Name:        "The Sealed Passage",
+				Description: "The great stone door opens from this side, revealing a passage back to the ruins.",
 			},
+		},
 			// Sandstone Canyon -> Hidden Temple
 			// visible: Sand Serpent must be dead at the canyon (creature dead_at_location visibility condition)
 			// traverse: Sand Cloak must be in inventory (item in_inventory traverse condition)
 			// -- combined: link hidden while serpent lives; locked (without cloak) once serpent is dead
 			{
-				Reference:       "desert-link-canyon-to-temple",
-				FromLocationRef: "desert-location-canyon",
-				ToLocationRef:   "desert-location-temple",
-				Record: &adventure_game_record.AdventureGameLocationLink{
-					Name:              "The Shadow Path",
-					Description:       "A hidden passage through the canyon wall, visible only to those cloaked in sand magic.",
-					LockedDescription: nullstring.FromString("A faint outline of a passage shimmers in the canyon wall. Only one wrapped in desert silk could slip through."),
-				},
+			Reference:       "desert-link-canyon-to-temple",
+			FromLocationRef: "desert-location-canyon",
+			ToLocationRef:   "desert-location-temple",
+			Record: &adventure_game_record.AdventureGameLocationLink{
+				Name:              "The Wind Tunnel",
+				Description:       "A narrow tunnel carved by wind connects the canyon to the hidden temple. Those cloaked in sand magic can slip through.",
+				LockedDescription: nullstring.FromString("A faint outline of a passage shimmers in the canyon wall. Only one wrapped in desert silk could slip through."),
+			},
 				AdventureGameLocationLinkRequirementConfigs: []harness.AdventureGameLocationLinkRequirementConfig{
 					{
 						Reference:       "desert-link-req-serpent-dead",

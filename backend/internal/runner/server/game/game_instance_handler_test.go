@@ -237,15 +237,15 @@ func Test_getOneGameInstanceHandler(t *testing.T) {
 				ResponseDecoder: testutil.TestCaseResponseDecoderGeneric[game_schema.GameInstanceResponse],
 				ResponseCode:    http.StatusOK,
 			},
-			expectResponse: func(d harness.Data) game_schema.GameInstanceResponse {
-				// GameInstanceOneRef has GameTurnConfigs so harness starts it and processes turn 0 → status "started", CurrentTurn 1
-				return game_schema.GameInstanceResponse{
-					Data: &game_schema.GameInstanceResponseData{
-						Status:      "started",
-						CurrentTurn: 1,
-					},
-				}
-			},
+		expectResponse: func(d harness.Data) game_schema.GameInstanceResponse {
+			// GameInstanceOneRef has ShouldStartGameInstance true so harness starts it → status "started", CurrentTurn 0
+			return game_schema.GameInstanceResponse{
+				Data: &game_schema.GameInstanceResponseData{
+					Status:      "started",
+					CurrentTurn: 0,
+				},
+			}
+		},
 		},
 	}
 
@@ -397,9 +397,9 @@ func Test_updateOneGameInstanceHandler(t *testing.T) {
 				ResponseDecoder: testutil.TestCaseResponseDecoderGeneric[game_schema.GameInstanceResponse],
 				ResponseCode:    http.StatusOK,
 			},
-			expectResponse: func(d harness.Data, req game_schema.GameInstanceRequest) game_schema.GameInstanceResponse {
-				// GameInstanceOneRef has GameTurnConfigs so harness starts it → status "started"
-				return game_schema.GameInstanceResponse{
+		expectResponse: func(d harness.Data, req game_schema.GameInstanceRequest) game_schema.GameInstanceResponse {
+			// GameInstanceOneRef has ShouldStartGameInstance true so harness starts it → status "started"
+			return game_schema.GameInstanceResponse{
 					Data: &game_schema.GameInstanceResponseData{
 						GameID:      req.GameID,
 						Status:      "started",
@@ -454,7 +454,7 @@ func Test_deleteOneGameInstanceHandler(t *testing.T) {
 	require.NoError(t, err, "GetGameInstanceRecByRef returns without error")
 
 	// Cancel the instance so it can be deleted; only cancelled instances may be deleted.
-	// GameInstanceOneRef has GameTurnConfigs so harness starts it → status "started".
+	// GameInstanceOneRef has ShouldStartGameInstance true so harness starts it → status "started".
 	tx, err := th.Store.BeginTx()
 	require.NoError(t, err, "BeginTx returns without error")
 	mm := th.Domain.(*domain.Domain)
@@ -513,7 +513,7 @@ func Test_startGameInstanceHandler(t *testing.T) {
 		require.NoError(t, err, "Test data teardown returns without error")
 	}()
 
-	// Use GameInstanceCleanRef: no GameTurnConfigs so it stays "created"; test can start it
+	// Use GameInstanceCleanRef: ShouldStartGameInstance is false so it stays "created"; test can start it
 	gameRec, err := th.Data.GetGameRecByRef(harness.GameOneRef)
 	require.NoError(t, err, "GetGameRecByRef returns without error")
 
@@ -586,7 +586,7 @@ func Test_pauseGameInstanceHandler(t *testing.T) {
 		require.NoError(t, err, "Test data teardown returns without error")
 	}()
 
-	// Use GameInstanceCleanRef: no GameTurnConfigs so it stays "created"; test expects error when pausing non-started
+	// Use GameInstanceCleanRef: ShouldStartGameInstance is false so it stays "created"; test expects error when pausing non-started
 	gameRec, err := th.Data.GetGameRecByRef(harness.GameOneRef)
 	require.NoError(t, err, "GetGameRecByRef returns without error")
 
@@ -736,15 +736,15 @@ func Test_cancelGameInstanceHandler(t *testing.T) {
 				ResponseDecoder: testutil.TestCaseResponseDecoderGeneric[game_schema.GameInstanceResponse],
 				ResponseCode:    http.StatusOK,
 			},
-			expectResponse: func(d harness.Data) game_schema.GameInstanceResponse {
-				// GameInstanceOneRef was started (CurrentTurn 1); cancel does not reset current_turn
-				return game_schema.GameInstanceResponse{
-					Data: &game_schema.GameInstanceResponseData{
-						Status:      "cancelled",
-						CurrentTurn: 1,
-					},
-				}
-			},
+		expectResponse: func(d harness.Data) game_schema.GameInstanceResponse {
+			// GameInstanceOneRef was started (CurrentTurn 0); cancel does not reset current_turn
+			return game_schema.GameInstanceResponse{
+				Data: &game_schema.GameInstanceResponseData{
+					Status:      "cancelled",
+					CurrentTurn: 0,
+				},
+			}
+		},
 		},
 	}
 
