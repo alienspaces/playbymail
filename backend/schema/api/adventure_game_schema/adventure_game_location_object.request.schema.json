@@ -15,10 +15,8 @@
         "description": {
             "type": "string"
         },
-        "initial_state": {
-            "minLength": 1,
-            "maxLength": 100,
-            "type": "string"
+        "initial_adventure_game_location_object_state_id": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
         },
         "is_hidden": {
             "type": "boolean"

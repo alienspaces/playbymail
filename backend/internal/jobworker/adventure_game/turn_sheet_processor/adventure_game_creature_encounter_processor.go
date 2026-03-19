@@ -3,6 +3,7 @@ package turn_sheet_processor
 import (
 	"context"
 	"database/sql"
+	"gitlab.com/alienspaces/playbymail/core/nullstring"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -445,7 +446,7 @@ func (p *AdventureGameCreatureEncounterProcessor) CreateNextTurnSheet(
 		IsCompleted:      false,
 		ProcessingStatus: game_record.TurnSheetProcessingStatusPending,
 	}
-	turnSheetRec.GameInstanceID = sql.NullString{String: gameInstanceRec.ID, Valid: true}
+	turnSheetRec.GameInstanceID = nullstring.FromString(gameInstanceRec.ID)
 
 	createdTurnSheetRec, err := p.Domain.CreateGameTurnSheetRec(turnSheetRec)
 	if err != nil {
@@ -571,7 +572,7 @@ func (p *AdventureGameCreatureEncounterProcessor) moveCreatureItemsToLocation(l 
 			droppedNames = append(droppedNames, itemDef.Name)
 		}
 		item.AdventureGameCreatureInstanceID = sql.NullString{}
-		item.AdventureGameLocationInstanceID = sql.NullString{String: locationInstanceID, Valid: true}
+		item.AdventureGameLocationInstanceID = nullstring.FromString(locationInstanceID)
 		item.IsEquipped = false
 		item.EquipmentSlot = sql.NullString{}
 		_, err = p.Domain.UpdateAdventureGameItemInstanceRec(item)

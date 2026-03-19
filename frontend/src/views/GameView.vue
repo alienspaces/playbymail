@@ -41,8 +41,7 @@
 
     <!-- Confirm publish dialog -->
     <ConfirmationModal :visible="showPublishConfirm" title="Publish Game"
-      :message="`Are you sure you want to publish '${publishTarget?.name}'? Once published, the game cannot be modified.`"
-      warning="Published games are immutable. To make changes, you'll need to create a new version."
+      :message="`Are you sure you want to publish '${publishTarget?.name}'?`"
       :error="publishError" @confirm="publishGame" @cancel="closePublish" />
   </div>
 </template>
@@ -179,12 +178,6 @@ export default {
       };
     },
     openEdit(game) {
-      // Prevent editing published games
-      if (game.status === 'published') {
-        this.modalError = 'Published games cannot be modified. Create a new version to make changes.';
-        return;
-      }
-
       this.modalMode = 'edit'
       this.modalForm = {
         id: game.id,
@@ -257,13 +250,14 @@ export default {
         }
       ];
 
-      // Only allow edit/delete for draft games
+      actions.push({
+        key: 'edit',
+        label: 'Edit',
+        handler: () => this.openEdit(game)
+      });
+
+      // Only allow delete for draft games
       if (game.status !== 'published') {
-        actions.push({
-          key: 'edit',
-          label: 'Edit',
-          handler: () => this.openEdit(game)
-        });
         actions.push({
           key: 'delete',
           label: 'Delete',

@@ -1,7 +1,7 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
-    "$id": "http://playbymail.games/schema/adventure_game_schema/adventure_game_location_object.schema.json",
-    "title": "AdventureGameLocationObject",
+    "$id": "http://playbymail.games/schema/adventure_game_schema/adventure_game_location_object_state.schema.json",
+    "title": "AdventureGameLocationObjectState",
     "type": "object",
     "properties": {
         "id": {
@@ -10,25 +10,19 @@
         "game_id": {
             "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
         },
-        "adventure_game_location_id": {
+        "adventure_game_location_object_id": {
             "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
         },
         "name": {
             "minLength": 1,
-            "maxLength": 255,
+            "maxLength": 100,
             "type": "string"
         },
         "description": {
             "type": "string"
         },
-        "initial_adventure_game_location_object_state_id": {
-            "oneOf": [
-                {"$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"},
-                {"type": "null"}
-            ]
-        },
-        "is_hidden": {
-            "type": "boolean"
+        "sort_order": {
+            "type": "integer"
         },
         "created_at": {
             "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/created_at"
@@ -43,10 +37,8 @@
     "required": [
         "id",
         "game_id",
-        "adventure_game_location_id",
+        "adventure_game_location_object_id",
         "name",
-        "description",
-        "is_hidden",
         "created_at"
     ],
     "additionalProperties": false

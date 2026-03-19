@@ -13,16 +13,16 @@ import (
 func AdventureGameLocationObjectInstanceRecordToResponseData(l logger.Logger, rec *adventure_game_record.AdventureGameLocationObjectInstance) (*adventure_game_schema.AdventureGameLocationObjectInstanceResponseData, error) {
 	l.Debug("mapping adventure_game_location_object_instance record to response data")
 	return &adventure_game_schema.AdventureGameLocationObjectInstanceResponseData{
-		ID:                              rec.ID,
-		GameID:                          rec.GameID,
-		GameInstanceID:                  rec.GameInstanceID,
-		AdventureGameLocationObjectID:   rec.AdventureGameLocationObjectID,
-		AdventureGameLocationInstanceID: rec.AdventureGameLocationInstanceID,
-		CurrentState:                    rec.CurrentState,
-		IsVisible:                       rec.IsVisible,
-		CreatedAt:                       rec.CreatedAt,
-		UpdatedAt:                       nulltime.ToTimePtr(rec.UpdatedAt),
-		DeletedAt:                       nulltime.ToTimePtr(rec.DeletedAt),
+		ID:                                           rec.ID,
+		GameID:                                       rec.GameID,
+		GameInstanceID:                               rec.GameInstanceID,
+		AdventureGameLocationObjectID:                rec.AdventureGameLocationObjectID,
+		AdventureGameLocationInstanceID:              rec.AdventureGameLocationInstanceID,
+		CurrentAdventureGameLocationObjectStateID:    rec.CurrentAdventureGameLocationObjectStateID,
+		IsVisible:                                    rec.IsVisible,
+		CreatedAt:                                    rec.CreatedAt,
+		UpdatedAt:                                    nulltime.ToTimePtr(rec.UpdatedAt),
+		DeletedAt:                                    nulltime.ToTimePtr(rec.DeletedAt),
 	}, nil
 }
 

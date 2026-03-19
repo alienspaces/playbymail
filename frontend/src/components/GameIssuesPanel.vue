@@ -62,6 +62,7 @@ const fieldToRoute = {
   locations: 'locations',
   starting_location: 'locations',
   location_links: 'location-links',
+  location_objects: 'location-objects',
   items: 'items',
   item_placements: 'item-placements',
   creatures: 'creatures',

@@ -85,6 +85,123 @@ func (m *Domain) validateAdventureGameReadyForInstance(gameID string) ([]GameVal
 		})
 	}
 
+	stateIssues, err := m.validateAdventureGameObjectStateGraph(gameID)
+	if err != nil {
+		return nil, err
+	}
+	issues = append(issues, stateIssues...)
+
+	return issues, nil
+}
+
+// validateAdventureGameObjectStateGraph checks the state transition graph for each
+// location object and emits warnings for designer-configuration problems:
+//   - Objects with states defined but no initial state set
+//   - States that can never be reached (not the initial state, not a result of any effect)
+//   - States that are dead-ends (no effects require this state, so once reached nothing changes)
+func (m *Domain) validateAdventureGameObjectStateGraph(gameID string) ([]GameValidationIssue, error) {
+	var issues []GameValidationIssue
+
+	// Load all objects for this game.
+	objectRecs, err := m.GetManyAdventureGameLocationObjectRecs(&coresql.Options{
+		Params: []coresql.Param{
+			{Col: adventure_game_record.FieldAdventureGameLocationObjectGameID, Val: gameID},
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+	if len(objectRecs) == 0 {
+		return nil, nil
+	}
+
+	// Load all states for this game.
+	allStateRecs, err := m.GetManyAdventureGameLocationObjectStateRecs(&coresql.Options{
+		Params: []coresql.Param{
+			{Col: adventure_game_record.FieldAdventureGameLocationObjectStateGameID, Val: gameID},
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	// Load all effects for this game.
+	allEffectRecs, err := m.GetManyAdventureGameLocationObjectEffectRecs(&coresql.Options{
+		Params: []coresql.Param{
+			{Col: adventure_game_record.FieldAdventureGameLocationObjectEffectGameID, Val: gameID},
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	// Index states and effects by object ID for efficient lookup.
+	statesByObjectID := make(map[string][]*adventure_game_record.AdventureGameLocationObjectState)
+	for _, s := range allStateRecs {
+		statesByObjectID[s.AdventureGameLocationObjectID] = append(statesByObjectID[s.AdventureGameLocationObjectID], s)
+	}
+
+	effectsByObjectID := make(map[string][]*adventure_game_record.AdventureGameLocationObjectEffect)
+	for _, e := range allEffectRecs {
+		effectsByObjectID[e.AdventureGameLocationObjectID] = append(effectsByObjectID[e.AdventureGameLocationObjectID], e)
+	}
+
+	for _, obj := range objectRecs {
+		states := statesByObjectID[obj.ID]
+		if len(states) == 0 {
+			continue
+		}
+
+		effects := effectsByObjectID[obj.ID]
+
+		// Check: object has states but no initial state.
+		if !obj.InitialAdventureGameLocationObjectStateID.Valid {
+			issues = append(issues, GameValidationIssue{
+				Field:    "location_objects",
+				Message:  fmt.Sprintf("Object \"%s\" has states defined but no initial state is set", obj.Name),
+				Severity: ValidationSeverityWarning,
+			})
+		}
+
+		// Build sets of IDs referenced in effects.
+		reachableStateIDs := make(map[string]bool) // result of any effect
+		requiredStateIDs := make(map[string]bool)   // required by any effect
+		if obj.InitialAdventureGameLocationObjectStateID.Valid {
+			reachableStateIDs[obj.InitialAdventureGameLocationObjectStateID.String] = true
+		}
+		for _, e := range effects {
+			if e.ResultAdventureGameLocationObjectStateID.Valid {
+				reachableStateIDs[e.ResultAdventureGameLocationObjectStateID.String] = true
+			}
+			if e.RequiredAdventureGameLocationObjectStateID.Valid {
+				requiredStateIDs[e.RequiredAdventureGameLocationObjectStateID.String] = true
+			}
+		}
+
+		for _, s := range states {
+			// Warn about unreachable states (not initial, not a result of any effect).
+			if !reachableStateIDs[s.ID] {
+				issues = append(issues, GameValidationIssue{
+					Field:    "location_objects",
+					Message:  fmt.Sprintf("Object \"%s\" state \"%s\" is unreachable: it is not the initial state and no effect produces it", obj.Name, s.Name),
+					Severity: ValidationSeverityWarning,
+				})
+			}
+
+			// Warn about dead-end states (no effects require this state, meaning
+			// once an object reaches this state no further effects can be triggered).
+			// Only warn if there are effects at all and at least one has a required state,
+			// so we don't spam on simple objects with unconditional effects.
+			if len(requiredStateIDs) > 0 && !requiredStateIDs[s.ID] {
+				issues = append(issues, GameValidationIssue{
+					Field:    "location_objects",
+					Message:  fmt.Sprintf("Object \"%s\" state \"%s\" is a dead-end: no effects require it, so players cannot interact further once the object reaches this state", obj.Name, s.Name),
+					Severity: ValidationSeverityWarning,
+				})
+			}
+		}
+	}
+
 	return issues, nil
 }
 
@@ -148,22 +265,9 @@ func validateGameRecForUpdate(args *validateGameArgs) error {
 	currRec := args.currRec
 	nextRec := args.nextRec
 
-	// Prevent modifications to published games (except status changes)
-	if currRec.Status == game_record.GameStatusPublished {
-		// Allow status change from published to published (no-op)
-		if nextRec.Status == game_record.GameStatusPublished {
-			// Check if any other fields changed
-			if currRec.Name != nextRec.Name ||
-				currRec.Description != nextRec.Description ||
-				currRec.GameType != nextRec.GameType ||
-				currRec.TurnDurationHours != nextRec.TurnDurationHours {
-				return InvalidField(game_record.FieldGameStatus, currRec.Status, "published games cannot be modified")
-			}
-			// No changes, allow the update
-			return nil
-		}
-		// Cannot change status from published to draft
-		return InvalidField(game_record.FieldGameStatus, currRec.Status, "published games cannot be modified")
+	// Prevent status from being changed back to draft once published
+	if currRec.Status == game_record.GameStatusPublished && nextRec.Status != game_record.GameStatusPublished {
+		return InvalidField(game_record.FieldGameStatus, currRec.Status, "published game status cannot be changed")
 	}
 
 	// Validate status transitions

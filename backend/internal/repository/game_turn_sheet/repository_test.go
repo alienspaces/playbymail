@@ -1,7 +1,7 @@
 package game_turn_sheet_test
 
 import (
-	"database/sql"
+	"gitlab.com/alienspaces/playbymail/core/nullstring"
 	"encoding/json"
 	"testing"
 
@@ -54,7 +54,7 @@ func TestCreateOne(t *testing.T) {
 					IsCompleted:      false,
 					ProcessingStatus: "pending",
 				}
-				rec.GameInstanceID = sql.NullString{String: gameInstanceRec.ID, Valid: true}
+				rec.GameInstanceID = nullstring.FromString(gameInstanceRec.ID)
 				return rec
 			},
 			hasErr: false,
@@ -89,7 +89,7 @@ func TestCreateOne(t *testing.T) {
 					IsCompleted:      false,
 					ProcessingStatus: "pending",
 				}
-				rec.GameInstanceID = sql.NullString{String: gameInstanceRec.ID, Valid: true}
+				rec.GameInstanceID = nullstring.FromString(gameInstanceRec.ID)
 				id, _ := uuid.NewRandom()
 				rec.ID = id.String()
 				return rec
@@ -165,7 +165,7 @@ func TestGetOne(t *testing.T) {
 					IsCompleted:      false,
 					ProcessingStatus: "pending",
 				}
-				rec.GameInstanceID = sql.NullString{String: gameInstanceRec.ID, Valid: true}
+				rec.GameInstanceID = nullstring.FromString(gameInstanceRec.ID)
 
 				r := h.Domain.(*domain.Domain).GameTurnSheetRepository()
 				_, err = r.CreateOne(rec)
@@ -251,7 +251,7 @@ func TestUpdateOne(t *testing.T) {
 					IsCompleted:      false,
 					ProcessingStatus: "pending",
 				}
-				rec.GameInstanceID = sql.NullString{String: gameInstanceRec.ID, Valid: true}
+				rec.GameInstanceID = nullstring.FromString(gameInstanceRec.ID)
 
 				r := h.Domain.(*domain.Domain).GameTurnSheetRepository()
 				_, err = r.CreateOne(rec)
@@ -341,7 +341,7 @@ func TestDeleteOne(t *testing.T) {
 					IsCompleted:      false,
 					ProcessingStatus: "pending",
 				}
-				rec.GameInstanceID = sql.NullString{String: gameInstanceRec.ID, Valid: true}
+				rec.GameInstanceID = nullstring.FromString(gameInstanceRec.ID)
 
 				r := h.Domain.(*domain.Domain).GameTurnSheetRepository()
 				_, err = r.CreateOne(rec)

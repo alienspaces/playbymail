@@ -86,19 +86,19 @@ func validateAdventureGameLocationObjectEffectRec(args *validateAdventureGameLoc
 	// Conditional validation based on effect_type
 	switch rec.EffectType {
 	case adventure_game_record.AdventureGameLocationObjectEffectEffectTypeChangeState:
-		if !rec.ResultState.Valid || rec.ResultState.String == "" {
+		if !rec.ResultAdventureGameLocationObjectStateID.Valid || rec.ResultAdventureGameLocationObjectStateID.String == "" {
 			return InvalidField(
-				adventure_game_record.FieldAdventureGameLocationObjectEffectResultState,
+				adventure_game_record.FieldAdventureGameLocationObjectEffectResultAdventureGameLocationObjectStateID,
 				"",
-				fmt.Sprintf("result_state is required for effect_type %q", rec.EffectType),
+				fmt.Sprintf("result_adventure_game_location_object_state_id is required for effect_type %q", rec.EffectType),
 			)
 		}
 	case adventure_game_record.AdventureGameLocationObjectEffectEffectTypeChangeObjectState:
-		if !rec.ResultState.Valid || rec.ResultState.String == "" {
+		if !rec.ResultAdventureGameLocationObjectStateID.Valid || rec.ResultAdventureGameLocationObjectStateID.String == "" {
 			return InvalidField(
-				adventure_game_record.FieldAdventureGameLocationObjectEffectResultState,
+				adventure_game_record.FieldAdventureGameLocationObjectEffectResultAdventureGameLocationObjectStateID,
 				"",
-				fmt.Sprintf("result_state is required for effect_type %q", rec.EffectType),
+				fmt.Sprintf("result_adventure_game_location_object_state_id is required for effect_type %q", rec.EffectType),
 			)
 		}
 		if !rec.ResultAdventureGameLocationObjectID.Valid || rec.ResultAdventureGameLocationObjectID.String == "" {

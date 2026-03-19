@@ -1,13 +1,13 @@
 #!/usr/bin/env sh
 
-# CI-only E2E test runner (Playwright).
+# CI-only Playwright test runner.
 # Called by .gitlab-ci.yml after services (DB, backend, frontend) are already started.
-# For local development, use ./tools/test-e2e instead.
+# For local development, use ./tools/test-playwright instead.
 
 set -e
 
 if [ -z "$CI" ]; then
-    echo "❌ This script is intended for CI only. Use ./tools/test-e2e for local development."
+    echo "❌ This script is intended for CI only. Use ./tools/test-playwright for local development."
     exit 1
 fi
 

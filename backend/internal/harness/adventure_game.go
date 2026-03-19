@@ -2,6 +2,7 @@ package harness
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 
 	coresql "gitlab.com/alienspaces/playbymail/core/sql"
@@ -262,6 +263,37 @@ func (t *Testing) removeAdventureGameRecords() error {
 		}
 	}
 
+	// Objects and states have a circular FK dependency:
+	//   state.adventure_game_location_object_id → object.id
+	//   object.initial_adventure_game_location_object_state_id → state.id
+	// Break the cycle by clearing initial_state_id on every object before deleting states.
+	l.Debug("clearing initial state IDs on >%d< adventure game location object records", len(t.teardownData.AdventureGameLocationObjectRecs))
+	for _, objectRec := range t.teardownData.AdventureGameLocationObjectRecs {
+		if objectRec.ID == "" {
+			continue
+		}
+		if objectRec.InitialAdventureGameLocationObjectStateID.Valid {
+			objectRec.InitialAdventureGameLocationObjectStateID = sql.NullString{}
+			if _, err := t.Domain.(*domain.Domain).UpdateAdventureGameLocationObjectRec(objectRec); err != nil {
+				l.Warn("failed clearing initial state on adventure game location object record >%v<", err)
+				return err
+			}
+		}
+	}
+
+	// Now delete state records (objects no longer reference them via FK).
+	l.Debug("removing >%d< adventure game location object state records", len(t.teardownData.AdventureGameLocationObjectStateRecs))
+	for _, stateRec := range t.teardownData.AdventureGameLocationObjectStateRecs {
+		if stateRec.ID == "" {
+			continue
+		}
+		if err := t.Domain.(*domain.Domain).RemoveAdventureGameLocationObjectStateRec(stateRec.ID); err != nil {
+			l.Warn("failed removing adventure game location object state record >%v<", err)
+			return err
+		}
+	}
+
+	// Now delete objects (states no longer reference them via FK).
 	l.Debug("removing >%d< adventure game location object records", len(t.teardownData.AdventureGameLocationObjectRecs))
 	for _, objectRec := range t.teardownData.AdventureGameLocationObjectRecs {
 		if objectRec.ID == "" {

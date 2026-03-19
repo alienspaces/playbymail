@@ -105,7 +105,7 @@ build-frontend:
     paths:
       - frontend/dist
 
-test-e2e:
+test-playwright:
   variables:
     TZ: "UTC"
     POSTGRES_DB: playbymail
@@ -166,7 +166,7 @@ test-e2e:
     - echo "Testing frontend endpoint..."
     - curl -v http://localhost:3000 || echo "Frontend check failed"
     - npx wait-on http-get://localhost:8080/healthz http-get://localhost:3000 --timeout 60000 --verbose
-    - ./tools/test-e2e-ci
+    - ./tools/test-playwright-ci
   artifacts:
     when: on_failure
     paths:

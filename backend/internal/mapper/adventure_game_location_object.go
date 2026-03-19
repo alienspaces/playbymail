@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"gitlab.com/alienspaces/playbymail/core/nullstring"
 	"gitlab.com/alienspaces/playbymail/core/nulltime"
 	"gitlab.com/alienspaces/playbymail/core/server"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
@@ -26,19 +27,13 @@ func AdventureGameLocationObjectRequestToRecord(l logger.Logger, r *http.Request
 		rec.AdventureGameLocationID = req.AdventureGameLocationID
 		rec.Name = req.Name
 		rec.Description = req.Description
-		if req.InitialState != "" {
-			rec.InitialState = req.InitialState
-		} else {
-			rec.InitialState = "intact"
-		}
+		rec.InitialAdventureGameLocationObjectStateID = nullstring.FromString(req.InitialAdventureGameLocationObjectStateID)
 		rec.IsHidden = req.IsHidden
 	case server.HttpMethodPut, server.HttpMethodPatch:
 		rec.AdventureGameLocationID = req.AdventureGameLocationID
 		rec.Name = req.Name
 		rec.Description = req.Description
-		if req.InitialState != "" {
-			rec.InitialState = req.InitialState
-		}
+		rec.InitialAdventureGameLocationObjectStateID = nullstring.FromString(req.InitialAdventureGameLocationObjectStateID)
 		rec.IsHidden = req.IsHidden
 	default:
 		return nil, fmt.Errorf("unsupported HTTP method")
@@ -50,16 +45,16 @@ func AdventureGameLocationObjectRequestToRecord(l logger.Logger, r *http.Request
 func AdventureGameLocationObjectRecordToResponseData(l logger.Logger, rec *adventure_game_record.AdventureGameLocationObject) (*adventure_game_schema.AdventureGameLocationObjectResponseData, error) {
 	l.Debug("mapping adventure_game_location_object record to response data")
 	return &adventure_game_schema.AdventureGameLocationObjectResponseData{
-		ID:                      rec.ID,
-		GameID:                  rec.GameID,
-		AdventureGameLocationID: rec.AdventureGameLocationID,
-		Name:                    rec.Name,
-		Description:             rec.Description,
-		InitialState:            rec.InitialState,
-		IsHidden:                rec.IsHidden,
-		CreatedAt:               rec.CreatedAt,
-		UpdatedAt:               nulltime.ToTimePtr(rec.UpdatedAt),
-		DeletedAt:               nulltime.ToTimePtr(rec.DeletedAt),
+		ID:                                          rec.ID,
+		GameID:                                      rec.GameID,
+		AdventureGameLocationID:                     rec.AdventureGameLocationID,
+		Name:                                        rec.Name,
+		Description:                                 rec.Description,
+		InitialAdventureGameLocationObjectStateID:   nullstring.ToStringPtr(rec.InitialAdventureGameLocationObjectStateID),
+		IsHidden:                                    rec.IsHidden,
+		CreatedAt:                                   rec.CreatedAt,
+		UpdatedAt:                                   nulltime.ToTimePtr(rec.UpdatedAt),
+		DeletedAt:                                   nulltime.ToTimePtr(rec.DeletedAt),
 	}, nil
 }
 

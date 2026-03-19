@@ -165,10 +165,10 @@ func (m *Domain) AssignStartingItemsToCharacterInstance(characterInstanceRec *ad
 			GameInstanceID:                   characterInstanceRec.GameInstanceID,
 			AdventureGameItemID:              item.ID,
 			AdventureGameCharacterInstanceID:  nullstring.FromString(characterInstanceRec.ID),
-			AdventureGameLocationInstanceID:  sql.NullString{Valid: false},
-			AdventureGameCreatureInstanceID:   sql.NullString{Valid: false},
+			AdventureGameLocationInstanceID:  sql.NullString{},
+			AdventureGameCreatureInstanceID:   sql.NullString{},
 			IsEquipped:                       false,
-			EquipmentSlot:                    sql.NullString{Valid: false},
+			EquipmentSlot:                    sql.NullString{},
 			IsUsed:                           false,
 			UsesRemaining:                    0,
 		}

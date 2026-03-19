@@ -142,13 +142,26 @@
  */
 
 /**
+ * @typedef {Object} GameLocationObjectState
+ * @property {string} id
+ * @property {string} game_id
+ * @property {string} adventure_game_location_object_id
+ * @property {string} name
+ * @property {string} description
+ * @property {number} sort_order
+ * @property {string} created_at
+ * @property {string} [updated_at]
+ * @property {string} [deleted_at]
+ */
+
+/**
  * @typedef {Object} GameLocationObject
  * @property {string} id
  * @property {string} game_id
  * @property {string} adventure_game_location_id
  * @property {string} name
  * @property {string} description
- * @property {string} initial_state
+ * @property {string} [initial_adventure_game_location_object_state_id]
  * @property {boolean} is_hidden
  * @property {string} created_at
  * @property {string} [updated_at]
@@ -161,11 +174,11 @@
  * @property {string} game_id
  * @property {string} adventure_game_location_object_id
  * @property {string} action_type
- * @property {string} [required_state]
+ * @property {string} [required_adventure_game_location_object_state_id]
  * @property {string} [required_adventure_game_item_id]
  * @property {string} result_description
  * @property {string} effect_type
- * @property {string} [result_state]
+ * @property {string} [result_adventure_game_location_object_state_id]
  * @property {string} [result_adventure_game_item_id]
  * @property {string} [result_adventure_game_location_link_id]
  * @property {string} [result_adventure_game_creature_id]

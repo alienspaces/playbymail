@@ -835,16 +835,33 @@ func GameConfig() []harness.GameConfig {
 			},
 		},
 		},
-		// Sealed Sarcophagus is created first so the Sand-Carved Obelisk can reference it (no forward refs needed here, but good practice)
 		AdventureGameLocationObjectConfigs: []harness.AdventureGameLocationObjectConfig{
 			{
-				Reference:   "desert-obj-sarcophagus",
-				LocationRef: "desert-location-ruins",
+				Reference:       "desert-obj-sarcophagus",
+				LocationRef:     "desert-location-ruins",
+				InitialStateRef: "desert-obj-sarcophagus-state-sealed",
 				Record: &adventure_game_record.AdventureGameLocationObject{
-					Name:         "Sealed Sarcophagus",
-					Description:  "A massive stone sarcophagus covered in hieroglyphs. The lid appears to be movable.",
-					InitialState: "sealed",
-					IsHidden:     false,
+					Name:        "Sealed Sarcophagus",
+					Description: "A massive stone sarcophagus covered in hieroglyphs. The lid appears to be movable.",
+					IsHidden:    false,
+				},
+				AdventureGameLocationObjectStateConfigs: []harness.AdventureGameLocationObjectStateConfig{
+					{
+						Reference: "desert-obj-sarcophagus-state-sealed",
+						Record: &adventure_game_record.AdventureGameLocationObjectState{
+							Name:        "sealed",
+							Description: "The sarcophagus is sealed shut.",
+							SortOrder:   0,
+						},
+					},
+					{
+						Reference: "desert-obj-sarcophagus-state-open",
+						Record: &adventure_game_record.AdventureGameLocationObjectState{
+							Name:        "open",
+							Description: "The sarcophagus lid has been removed.",
+							SortOrder:   1,
+						},
+					},
 				},
 				AdventureGameLocationObjectEffectConfigs: []harness.AdventureGameLocationObjectEffectConfig{
 					{
@@ -857,47 +874,65 @@ func GameConfig() []harness.GameConfig {
 						},
 					},
 					{
-						Reference:     "desert-obj-effect-sarcophagus-open",
-						ResultItemRef: "desert-item-scarab-key",
+						Reference:        "desert-obj-effect-sarcophagus-open",
+						RequiredStateRef: "desert-obj-sarcophagus-state-sealed",
+						ResultItemRef:    "desert-item-scarab-key",
 						Record: &adventure_game_record.AdventureGameLocationObjectEffect{
 							ActionType:        adventure_game_record.AdventureGameLocationObjectEffectActionTypeOpen,
 							ResultDescription: "The lid grinds open revealing a golden scarab key resting on dusty linen.",
 							EffectType:        adventure_game_record.AdventureGameLocationObjectEffectEffectTypeGiveItem,
-							RequiredState:     nullstring.FromString("sealed"),
 							IsRepeatable:      false,
 						},
 					},
 					{
-						Reference: "desert-obj-effect-sarcophagus-open-state",
+						Reference:        "desert-obj-effect-sarcophagus-open-state",
+						RequiredStateRef: "desert-obj-sarcophagus-state-sealed",
+						ResultStateRef:   "desert-obj-sarcophagus-state-open",
 						Record: &adventure_game_record.AdventureGameLocationObjectEffect{
 							ActionType:        adventure_game_record.AdventureGameLocationObjectEffectActionTypeOpen,
 							ResultDescription: "",
 							EffectType:        adventure_game_record.AdventureGameLocationObjectEffectEffectTypeChangeState,
-							RequiredState:     nullstring.FromString("sealed"),
-							ResultState:       nullstring.FromString("open"),
 							IsRepeatable:      false,
 						},
 					},
 					{
-						Reference: "desert-obj-effect-sarcophagus-search",
+						Reference:        "desert-obj-effect-sarcophagus-search",
+						RequiredStateRef: "desert-obj-sarcophagus-state-open",
 						Record: &adventure_game_record.AdventureGameLocationObjectEffect{
 							ActionType:        adventure_game_record.AdventureGameLocationObjectEffectActionTypeSearch,
 							ResultDescription: "Nothing remains inside but dust and scraps of ancient linen.",
 							EffectType:        adventure_game_record.AdventureGameLocationObjectEffectEffectTypeInfo,
-							RequiredState:     nullstring.FromString("open"),
 							IsRepeatable:      true,
 						},
 					},
 				},
 			},
 			{
-				Reference:   "desert-obj-obelisk",
-				LocationRef: "desert-location-oasis",
+				Reference:       "desert-obj-obelisk",
+				LocationRef:     "desert-location-oasis",
+				InitialStateRef: "desert-obj-obelisk-state-intact",
 				Record: &adventure_game_record.AdventureGameLocationObject{
-					Name:         "Sand-Carved Obelisk",
-					Description:  "A towering obelisk carved from desert sandstone, covered in ancient symbols.",
-					InitialState: "intact",
-					IsHidden:     false,
+					Name:        "Sand-Carved Obelisk",
+					Description: "A towering obelisk carved from desert sandstone, covered in ancient symbols.",
+					IsHidden:    false,
+				},
+				AdventureGameLocationObjectStateConfigs: []harness.AdventureGameLocationObjectStateConfig{
+					{
+						Reference: "desert-obj-obelisk-state-intact",
+						Record: &adventure_game_record.AdventureGameLocationObjectState{
+							Name:        "intact",
+							Description: "The obelisk stands as it has for millennia.",
+							SortOrder:   0,
+						},
+					},
+					{
+						Reference: "desert-obj-obelisk-state-glowing",
+						Record: &adventure_game_record.AdventureGameLocationObjectState{
+							Name:        "glowing",
+							Description: "Ancient symbols glow with warm golden light.",
+							SortOrder:   1,
+						},
+					},
 				},
 				AdventureGameLocationObjectEffectConfigs: []harness.AdventureGameLocationObjectEffectConfig{
 					{
@@ -910,24 +945,24 @@ func GameConfig() []harness.GameConfig {
 						},
 					},
 					{
-						Reference: "desert-obj-effect-obelisk-touch",
+						Reference:        "desert-obj-effect-obelisk-touch",
+						RequiredStateRef: "desert-obj-obelisk-state-intact",
+						ResultStateRef:   "desert-obj-obelisk-state-glowing",
 						Record: &adventure_game_record.AdventureGameLocationObjectEffect{
 							ActionType:        adventure_game_record.AdventureGameLocationObjectEffectActionTypeTouch,
 							ResultDescription: "The symbols begin to glow with a warm golden light.",
 							EffectType:        adventure_game_record.AdventureGameLocationObjectEffectEffectTypeChangeState,
-							RequiredState:     nullstring.FromString("intact"),
-							ResultState:       nullstring.FromString("glowing"),
 							IsRepeatable:      false,
 						},
 					},
 					{
-						Reference:     "desert-obj-effect-obelisk-read",
-						ResultItemRef: "desert-item-flask",
+						Reference:        "desert-obj-effect-obelisk-read",
+						RequiredStateRef: "desert-obj-obelisk-state-glowing",
+						ResultItemRef:    "desert-item-flask",
 						Record: &adventure_game_record.AdventureGameLocationObjectEffect{
 							ActionType:        adventure_game_record.AdventureGameLocationObjectEffectActionTypeRead,
 							ResultDescription: "As you trace the glowing symbols, a hidden compartment opens, revealing a flask.",
 							EffectType:        adventure_game_record.AdventureGameLocationObjectEffectEffectTypeGiveItem,
-							RequiredState:     nullstring.FromString("glowing"),
 							IsRepeatable:      false,
 						},
 					},

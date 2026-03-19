@@ -1,0 +1,23 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "http://playbymail.games/schema/adventure_game_schema/adventure_game_location_object_state.request.schema.json",
+    "title": "AdventureGameLocationObjectStateRequest",
+    "type": "object",
+    "properties": {
+        "name": {
+            "minLength": 1,
+            "maxLength": 100,
+            "type": "string"
+        },
+        "description": {
+            "type": "string"
+        },
+        "sort_order": {
+            "type": "integer"
+        }
+    },
+    "required": [
+        "name"
+    ],
+    "additionalProperties": false
+}

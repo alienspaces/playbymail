@@ -3,6 +3,7 @@ package turn_sheet_processor_test
 import (
 	"context"
 	"database/sql"
+	"gitlab.com/alienspaces/playbymail/core/nullstring"
 	"encoding/json"
 	"fmt"
 	"testing"
@@ -79,7 +80,7 @@ func buildMonsterTurnSheet(t *testing.T, gameInstanceRec *game_record.GameInstan
 
 	return &game_record.GameTurnSheet{
 		GameID:           gameInstanceRec.GameID,
-		GameInstanceID:   sql.NullString{String: gameInstanceRec.ID, Valid: true},
+		GameInstanceID:   nullstring.FromString(gameInstanceRec.ID),
 		TurnNumber:       gameInstanceRec.CurrentTurn,
 		SheetType:        adventure_game_record.AdventureGameTurnSheetTypeCreatureEncounter,
 		SheetData:        json.RawMessage(`{}`),
@@ -296,7 +297,7 @@ func TestAdventureGameCreatureEncounterProcessor_CreateNextTurnSheet_NoAnotherAd
 	// Create a game_turn_sheet for turn 1 (the "previous" turn).
 	prevGameTurnSheet, err := m.CreateGameTurnSheetRec(&game_record.GameTurnSheet{
 		GameID:           gameInstanceRec.GameID,
-		GameInstanceID:   sql.NullString{String: gameInstanceRec.ID, Valid: true},
+		GameInstanceID:   nullstring.FromString(gameInstanceRec.ID),
 		AccountID:        accountUserRec.AccountID,
 		AccountUserID:    accountUserRec.ID,
 		TurnNumber:       1,
@@ -450,7 +451,7 @@ func TestAdventureGameCreatureEncounterProcessor_ProcessTurnSheetResponse_FlatSc
 
 	turnSheet := &game_record.GameTurnSheet{
 		GameID:           gameInstanceRec.GameID,
-		GameInstanceID:   sql.NullString{String: gameInstanceRec.ID, Valid: true},
+		GameInstanceID:   nullstring.FromString(gameInstanceRec.ID),
 		TurnNumber:       gameInstanceRec.CurrentTurn,
 		SheetType:        adventure_game_record.AdventureGameTurnSheetTypeCreatureEncounter,
 		SheetData:        json.RawMessage(`{}`),

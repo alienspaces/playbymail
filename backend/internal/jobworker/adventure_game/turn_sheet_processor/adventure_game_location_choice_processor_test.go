@@ -2,7 +2,7 @@ package turn_sheet_processor_test
 
 import (
 	"context"
-	"database/sql"
+	"gitlab.com/alienspaces/playbymail/core/nullstring"
 	"encoding/json"
 	"testing"
 
@@ -52,7 +52,7 @@ func buildLocationChoiceTurnSheet(t *testing.T, gameInstanceRec *game_record.Gam
 
 	return &game_record.GameTurnSheet{
 		GameID:           gameInstanceRec.GameID,
-		GameInstanceID:   sql.NullString{String: gameInstanceRec.ID, Valid: true},
+		GameInstanceID:   nullstring.FromString(gameInstanceRec.ID),
 		TurnNumber:       gameInstanceRec.CurrentTurn,
 		SheetType:        adventure_game_record.AdventureGameTurnSheetTypeLocationChoice,
 		SheetData:        json.RawMessage(`{}`),
@@ -62,6 +62,15 @@ func buildLocationChoiceTurnSheet(t *testing.T, gameInstanceRec *game_record.Gam
 }
 
 // TestAdventureGameLocationChoiceProcessor_ProcessObjectChoice_Info verifies that an
+// stateID is a test helper that looks up a state record by its harness reference and
+// returns its ID, failing the test immediately if the lookup fails.
+func stateID(t *testing.T, th *harness.Testing, stateRef string) string {
+	t.Helper()
+	stateRec, err := th.Data.GetAdventureGameLocationObjectStateRecByRef(stateRef)
+	require.NoError(t, err, "GetAdventureGameLocationObjectStateRecByRef(%s)", stateRef)
+	return stateRec.ID
+}
+
 // info effect returns without modifying any persistent state.
 func TestAdventureGameLocationChoiceProcessor_ProcessObjectChoice_Info(t *testing.T) {
 	th := objectHarness(t)
@@ -80,7 +89,8 @@ func TestAdventureGameLocationChoiceProcessor_ProcessObjectChoice_Info(t *testin
 	objectInstance, err := th.Data.GetAdventureGameLocationObjectInstanceByObjectRef(harness.GameLocationObjectOneRef)
 	require.NoError(t, err)
 
-	objectInstance.CurrentState = "intact"
+	intactStateID := stateID(t, th, harness.GameLocationObjectOneStateIntactRef)
+	objectInstance.CurrentAdventureGameLocationObjectStateID = intactStateID
 	_, err = m.UpdateAdventureGameLocationObjectInstanceRec(objectInstance)
 	require.NoError(t, err)
 
@@ -95,7 +105,7 @@ func TestAdventureGameLocationChoiceProcessor_ProcessObjectChoice_Info(t *testin
 	// Object state should be unchanged (info effects don't change state)
 	refreshed, err := m.GetAdventureGameLocationObjectInstanceRec(objectInstance.ID, nil)
 	require.NoError(t, err)
-	require.Equal(t, "intact", refreshed.CurrentState, "info effect should not change object state")
+	require.Equal(t, intactStateID, refreshed.CurrentAdventureGameLocationObjectStateID, "info effect should not change object state")
 }
 
 // TestAdventureGameLocationChoiceProcessor_ProcessObjectChoice_ChangeState verifies that a
@@ -117,7 +127,9 @@ func TestAdventureGameLocationChoiceProcessor_ProcessObjectChoice_ChangeState(t 
 	objectInstance, err := th.Data.GetAdventureGameLocationObjectInstanceByObjectRef(harness.GameLocationObjectOneRef)
 	require.NoError(t, err)
 
-	objectInstance.CurrentState = "intact"
+	intactStateID := stateID(t, th, harness.GameLocationObjectOneStateIntactRef)
+	activatedStateID := stateID(t, th, harness.GameLocationObjectOneStateActivatedRef)
+	objectInstance.CurrentAdventureGameLocationObjectStateID = intactStateID
 	_, err = m.UpdateAdventureGameLocationObjectInstanceRec(objectInstance)
 	require.NoError(t, err)
 
@@ -131,7 +143,7 @@ func TestAdventureGameLocationChoiceProcessor_ProcessObjectChoice_ChangeState(t 
 
 	refreshed, err := m.GetAdventureGameLocationObjectInstanceRec(objectInstance.ID, nil)
 	require.NoError(t, err)
-	require.Equal(t, "activated", refreshed.CurrentState, "change_state effect should transition object to activated")
+	require.Equal(t, activatedStateID, refreshed.CurrentAdventureGameLocationObjectStateID, "change_state effect should transition object to activated")
 }
 
 // TestAdventureGameLocationChoiceProcessor_ProcessObjectChoice_GiveItem verifies that a
@@ -153,7 +165,7 @@ func TestAdventureGameLocationChoiceProcessor_ProcessObjectChoice_GiveItem(t *te
 	objectInstance, err := th.Data.GetAdventureGameLocationObjectInstanceByObjectRef(harness.GameLocationObjectOneRef)
 	require.NoError(t, err)
 
-	objectInstance.CurrentState = "activated"
+	objectInstance.CurrentAdventureGameLocationObjectStateID = stateID(t, th, harness.GameLocationObjectOneStateActivatedRef)
 	_, err = m.UpdateAdventureGameLocationObjectInstanceRec(objectInstance)
 	require.NoError(t, err)
 
@@ -209,7 +221,7 @@ func TestAdventureGameLocationChoiceProcessor_ProcessObjectChoice_Damage(t *test
 	objectInstance, err := th.Data.GetAdventureGameLocationObjectInstanceByObjectRef(harness.GameLocationObjectOneRef)
 	require.NoError(t, err)
 
-	objectInstance.CurrentState = "intact"
+	objectInstance.CurrentAdventureGameLocationObjectStateID = stateID(t, th, harness.GameLocationObjectOneStateIntactRef)
 	_, err = m.UpdateAdventureGameLocationObjectInstanceRec(objectInstance)
 	require.NoError(t, err)
 
@@ -250,7 +262,7 @@ func TestAdventureGameLocationChoiceProcessor_ProcessObjectChoice_Heal(t *testin
 	objectInstance, err := th.Data.GetAdventureGameLocationObjectInstanceByObjectRef(harness.GameLocationObjectOneRef)
 	require.NoError(t, err)
 
-	objectInstance.CurrentState = "activated"
+	objectInstance.CurrentAdventureGameLocationObjectStateID = stateID(t, th, harness.GameLocationObjectOneStateActivatedRef)
 	_, err = m.UpdateAdventureGameLocationObjectInstanceRec(objectInstance)
 	require.NoError(t, err)
 
@@ -291,7 +303,7 @@ func TestAdventureGameLocationChoiceProcessor_ProcessObjectChoice_RevealObject(t
 	shrineInstance, err := th.Data.GetAdventureGameLocationObjectInstanceByObjectRef(harness.GameLocationObjectOneRef)
 	require.NoError(t, err)
 
-	shrineInstance.CurrentState = "intact"
+	shrineInstance.CurrentAdventureGameLocationObjectStateID = stateID(t, th, harness.GameLocationObjectOneStateIntactRef)
 	_, err = m.UpdateAdventureGameLocationObjectInstanceRec(shrineInstance)
 	require.NoError(t, err)
 
@@ -335,7 +347,8 @@ func TestAdventureGameLocationChoiceProcessor_ProcessObjectChoice_WrongState(t *
 	objectInstance, err := th.Data.GetAdventureGameLocationObjectInstanceByObjectRef(harness.GameLocationObjectOneRef)
 	require.NoError(t, err)
 
-	objectInstance.CurrentState = "intact"
+	intactStateID := stateID(t, th, harness.GameLocationObjectOneStateIntactRef)
+	objectInstance.CurrentAdventureGameLocationObjectStateID = intactStateID
 	_, err = m.UpdateAdventureGameLocationObjectInstanceRec(objectInstance)
 	require.NoError(t, err)
 
@@ -357,7 +370,7 @@ func TestAdventureGameLocationChoiceProcessor_ProcessObjectChoice_WrongState(t *
 	// Object state should remain intact
 	refreshed, err := m.GetAdventureGameLocationObjectInstanceRec(objectInstance.ID, nil)
 	require.NoError(t, err)
-	require.Equal(t, "intact", refreshed.CurrentState, "state should remain intact when no effects match")
+	require.Equal(t, intactStateID, refreshed.CurrentAdventureGameLocationObjectStateID, "state should remain intact when no effects match")
 }
 
 // TestAdventureGameLocationChoiceProcessor_ProcessObjectChoice_NoObjectChoiceIsLocationChoice

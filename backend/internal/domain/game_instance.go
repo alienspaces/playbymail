@@ -913,12 +913,12 @@ func (m *Domain) PopulateAdventureGameInstanceData(instanceID string) (*Adventur
 			continue
 		}
 		objInst, err := m.CreateAdventureGameLocationObjectInstanceRec(&adventure_game_record.AdventureGameLocationObjectInstance{
-			GameID:                          gameID,
-			GameInstanceID:                  instanceID,
-			AdventureGameLocationObjectID:   obj.ID,
-			AdventureGameLocationInstanceID: locationInstanceID,
-			CurrentState:                    obj.InitialState,
-			IsVisible:                       !obj.IsHidden,
+			GameID:                                       gameID,
+			GameInstanceID:                               instanceID,
+			AdventureGameLocationObjectID:                obj.ID,
+			AdventureGameLocationInstanceID:              locationInstanceID,
+			CurrentAdventureGameLocationObjectStateID:    obj.InitialAdventureGameLocationObjectStateID.String,
+			IsVisible:                                    !obj.IsHidden,
 		})
 		if err != nil {
 			l.Warn("failed to create location object instance >%v<", err)

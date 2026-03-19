@@ -1,0 +1,21 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "http://playbymail.games/schema/adventure_game_schema/adventure_game_location_object_state.collection.response.schema.json",
+    "title": "AdventureGameLocationObjectStateCollectionResponse",
+    "type": "object",
+    "properties": {
+        "data": {
+            "type": "array",
+            "items": {
+                "$ref": "http://playbymail.games/schema/adventure_game_schema/adventure_game_location_object_state.schema.json"
+            }
+        },
+        "error": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/response_error"
+        },
+        "pagination": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/response_pagination"
+        }
+    },
+    "additionalProperties": false
+}

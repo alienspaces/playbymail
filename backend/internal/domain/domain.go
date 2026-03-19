@@ -28,6 +28,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/repository/adventure_game_location_object"
 	"gitlab.com/alienspaces/playbymail/internal/repository/adventure_game_location_object_effect"
 	"gitlab.com/alienspaces/playbymail/internal/repository/adventure_game_location_object_instance"
+	"gitlab.com/alienspaces/playbymail/internal/repository/adventure_game_location_object_state"
 	"gitlab.com/alienspaces/playbymail/internal/repository/adventure_game_turn_sheet"
 	"gitlab.com/alienspaces/playbymail/internal/repository/catalog_game_instance_view"
 	"gitlab.com/alienspaces/playbymail/internal/repository/game"
@@ -94,6 +95,7 @@ func NewDomain(l logger.Logger, cfg config.Config) (*Domain, error) {
 		adventure_game_location_object.NewRepository,
 		adventure_game_location_object_effect.NewRepository,
 		adventure_game_location_object_instance.NewRepository,
+		adventure_game_location_object_state.NewRepository,
 	}
 
 	cd, err := domain.NewDomain(l, repositoryConstructors)
@@ -264,6 +266,11 @@ func (m *Domain) AdventureGameLocationObjectEffectRepository() *repository.Gener
 // AdventureGameLocationObjectInstanceRepository -
 func (m *Domain) AdventureGameLocationObjectInstanceRepository() *repository.Generic[adventure_game_record.AdventureGameLocationObjectInstance, *adventure_game_record.AdventureGameLocationObjectInstance] {
 	return m.Repositories[adventure_game_location_object_instance.TableName].(*repository.Generic[adventure_game_record.AdventureGameLocationObjectInstance, *adventure_game_record.AdventureGameLocationObjectInstance])
+}
+
+// AdventureGameLocationObjectStateRepository -
+func (m *Domain) AdventureGameLocationObjectStateRepository() *repository.Generic[adventure_game_record.AdventureGameLocationObjectState, *adventure_game_record.AdventureGameLocationObjectState] {
+	return m.Repositories[adventure_game_location_object_state.TableName].(*repository.Generic[adventure_game_record.AdventureGameLocationObjectState, *adventure_game_record.AdventureGameLocationObjectState])
 }
 
 // Logger - Returns a logger with package context and provided function context

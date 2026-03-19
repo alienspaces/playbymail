@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-# Local E2E test runner (Playwright). Run from project root: ./tools/test-e2e
+# Local Playwright test runner. Run from project root: ./tools/test-playwright
 #
 # Sets up everything needed and runs the tests in one command:
 #   - Database (Docker + migrations + seed data)
@@ -10,19 +10,19 @@
 #   - Playwright browsers (install if missing)
 #
 # Services are left running after tests. Use ./tools/stop to clean up.
-# For CI, use ./tools/test-e2e-ci instead.
+# For CI, use ./tools/test-playwright-ci instead.
 #
 # Usage:
-#   ./tools/test-e2e                    # Run all tests (chromium)
-#   ./tools/test-e2e --ui               # Interactive Playwright UI
-#   ./tools/test-e2e --headed           # Visible browser
-#   ./tools/test-e2e --grep 'auth'      # Filter by test name
-#   ./tools/test-e2e playwright/core/   # Run one directory
+#   ./tools/test-playwright                    # Run all tests (chromium)
+#   ./tools/test-playwright --ui               # Interactive Playwright UI
+#   ./tools/test-playwright --headed           # Visible browser
+#   ./tools/test-playwright --grep 'auth'      # Filter by test name
+#   ./tools/test-playwright playwright/core/   # Run one directory
 
 set -e
 
 if [ -n "$CI" ]; then
-    echo "❌ This script is for local development. Use ./tools/test-e2e-ci in CI."
+    echo "❌ This script is for local development. Use ./tools/test-playwright-ci in CI."
     exit 1
 fi
 

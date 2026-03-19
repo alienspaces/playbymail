@@ -72,8 +72,10 @@ func validateAdventureGameLocationObjectRec(args *validateAdventureGameLocationO
 		return err
 	}
 
-	if err := domain.ValidateStringField(adventure_game_record.FieldAdventureGameLocationObjectInitialState, rec.InitialState); err != nil {
-		return err
+	if rec.InitialAdventureGameLocationObjectStateID.Valid {
+		if err := domain.ValidateUUIDField(adventure_game_record.FieldAdventureGameLocationObjectInitialAdventureGameLocationObjectStateID, rec.InitialAdventureGameLocationObjectStateID.String); err != nil {
+			return err
+		}
 	}
 
 	return nil

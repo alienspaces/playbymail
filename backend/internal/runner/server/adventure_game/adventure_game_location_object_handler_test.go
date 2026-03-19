@@ -103,15 +103,14 @@ func Test_adventureGameLocationObjectHandler(t *testing.T) {
 					return rnr.GetHandlerConfig()[adventure_game.CreateOneAdventureGameLocationObject]
 				},
 				RequestHeaders: testutil.AuthHeaderProDesigner,
-				RequestBody: func(d harness.Data) any {
-					return adventure_game_schema.AdventureGameLocationObjectRequest{
-						AdventureGameLocationID: locationRec.ID,
-						Name:                    "Test Object",
-						Description:             "A test object for handler tests",
-						InitialState:            "intact",
-						IsHidden:                false,
-					}
-				},
+			RequestBody: func(d harness.Data) any {
+				return adventure_game_schema.AdventureGameLocationObjectRequest{
+					AdventureGameLocationID: locationRec.ID,
+					Name:                    "Test Object",
+					Description:             "A test object for handler tests",
+					IsHidden:                false,
+				}
+			},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{":game_id": gameRec.ID}
 				},
@@ -126,15 +125,14 @@ func Test_adventureGameLocationObjectHandler(t *testing.T) {
 					return rnr.GetHandlerConfig()[adventure_game.UpdateOneAdventureGameLocationObject]
 				},
 				RequestHeaders: testutil.AuthHeaderProDesigner,
-				RequestBody: func(d harness.Data) any {
-					return adventure_game_schema.AdventureGameLocationObjectRequest{
-						AdventureGameLocationID: locationRec.ID,
-						Name:                    "Updated Object",
-						Description:             "An updated object description",
-						InitialState:            "closed",
-						IsHidden:                true,
-					}
-				},
+			RequestBody: func(d harness.Data) any {
+				return adventure_game_schema.AdventureGameLocationObjectRequest{
+					AdventureGameLocationID: locationRec.ID,
+					Name:                    "Updated Object",
+					Description:             "An updated object description",
+					IsHidden:                true,
+				}
+			},
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
 						":game_id":            gameRec.ID,

@@ -2,7 +2,7 @@ package turn_sheet_processor
 
 import (
 	"context"
-	"database/sql"
+	"gitlab.com/alienspaces/playbymail/core/nullstring"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -474,7 +474,7 @@ func (p *AdventureGameInventoryManagementProcessor) CreateNextTurnSheet(ctx cont
 		IsCompleted:      false,
 		ProcessingStatus: game_record.TurnSheetProcessingStatusPending,
 	}
-	turnSheet.GameInstanceID = sql.NullString{String: gameInstanceRec.ID, Valid: true}
+	turnSheet.GameInstanceID = nullstring.FromString(gameInstanceRec.ID)
 
 	// Create the turn sheet record
 	createdTurnSheetRec, err := p.Domain.CreateGameTurnSheetRec(turnSheet)

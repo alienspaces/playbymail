@@ -31,10 +31,10 @@
         :visible="showModal"
         :mode="modalMode"
         title="Object Effect"
-        :fields="fields"
+        :fields="effectFields"
         :modelValue="modalForm"
         :error="modalError"
-        :options="fieldOptions"
+        :options="effectFieldOptions"
         data-testid="location-object-effect-form"
         @submit="handleSubmit"
         @cancel="closeModal"
@@ -56,10 +56,12 @@ import { ref, watch, computed } from 'vue';
 import { useLocationsStore } from '../../../stores/locations';
 import { useLocationObjectsStore } from '../../../stores/locationObjects';
 import { useLocationObjectEffectsStore } from '../../../stores/locationObjectEffects';
+import { useLocationObjectStatesStore } from '../../../stores/locationObjectStates';
 import { useItemsStore } from '../../../stores/items';
 import { useCreaturesStore } from '../../../stores/creatures';
 import { useLocationLinksStore } from '../../../stores/locationLinks';
 import { useGamesStore } from '../../../stores/games';
+import { fetchLocationObjectStates } from '../../../api/locationObjectStates';
 import { storeToRefs } from 'pinia';
 import ResourceTable from '../../../components/ResourceTable.vue';
 import ResourceModalForm from '../../../components/ResourceModalForm.vue';
@@ -71,30 +73,73 @@ import TableActions from '../../../components/TableActions.vue';
 const locationsStore = useLocationsStore();
 const locationObjectsStore = useLocationObjectsStore();
 const locationObjectEffectsStore = useLocationObjectEffectsStore();
+const locationObjectStatesStore = useLocationObjectStatesStore();
 const itemsStore = useItemsStore();
 const creaturesStore = useCreaturesStore();
 const locationLinksStore = useLocationLinksStore();
 const gamesStore = useGamesStore();
 const { selectedGame } = storeToRefs(gamesStore);
 
+// ── Per-effect states cache (keyed by objectId) ──────────────────────────────
+
+/** @type {import('vue').Ref<Record<string, import('../../../types').GameLocationObjectState[]>>} */
+const statesByObjectId = ref({});
+
+async function loadStatesForObject(objectId) {
+  if (!selectedGame.value || !objectId || statesByObjectId.value[objectId]) return;
+  try {
+    const states = await fetchLocationObjectStates(selectedGame.value.id, objectId);
+    statesByObjectId.value = { ...statesByObjectId.value, [objectId]: states };
+  } catch {
+    // ignore fetch errors silently
+  }
+}
+
+// ── Enhanced rows ─────────────────────────────────────────────────────────────
+
+/**
+ * Flat map of all known states from the per-effect cache.
+ */
+const allStatesById = computed(() => {
+  const map = {};
+  for (const states of Object.values(statesByObjectId.value)) {
+    for (const s of states) {
+      map[s.id] = s;
+    }
+  }
+  // Also include states loaded via the shared store (e.g. when editing).
+  for (const s of locationObjectStatesStore.states) {
+    map[s.id] = s;
+  }
+  return map;
+});
+
 const enhancedEffects = computed(() =>
   locationObjectEffectsStore.locationObjectEffects.map((effect) => {
     const obj = locationObjectsStore.locationObjects.find((o) => o.id === effect.adventure_game_location_object_id);
+    const reqState = effect.required_adventure_game_location_object_state_id
+      ? allStatesById.value[effect.required_adventure_game_location_object_state_id]
+      : null;
     return {
       ...effect,
       object_name: obj?.name || 'Unknown Object',
+      required_state_name: reqState?.name || '',
     };
   })
 );
+
+// ── Table columns ─────────────────────────────────────────────────────────────
 
 const columns = [
   { key: 'object_name', label: 'Object' },
   { key: 'action_type', label: 'Action' },
   { key: 'effect_type', label: 'Effect' },
-  { key: 'required_state', label: 'Required State' },
+  { key: 'required_state_name', label: 'Required State' },
   { key: 'result_description', label: 'Description' },
   { key: 'is_repeatable', label: 'Repeatable' },
 ];
+
+// ── Field definitions ─────────────────────────────────────────────────────────
 
 const ACTION_TYPES = [
   'inspect', 'touch', 'open', 'close', 'lock', 'unlock', 'search',
@@ -108,29 +153,50 @@ const EFFECT_TYPES = [
   'heal', 'summon_creature', 'teleport', 'nothing', 'remove_object',
 ];
 
-const fields = [
-  { key: 'adventure_game_location_object_id', label: 'Object', type: 'select', required: true, placeholder: 'Select an object...' },
-  { key: 'action_type', label: 'Action Type', type: 'select', required: true, placeholder: 'Select action type...' },
-  { key: 'effect_type', label: 'Effect Type', type: 'select', required: true, placeholder: 'Select effect type...' },
+const effectFields = [
+  { key: 'adventure_game_location_object_id', label: 'Object', type: 'select', required: true, placeholder: 'Select an object…' },
+  { key: 'action_type', label: 'Action Type', type: 'select', required: true, placeholder: 'Select action type…' },
+  { key: 'effect_type', label: 'Effect Type', type: 'select', required: true, placeholder: 'Select effect type…' },
   { key: 'result_description', label: 'Result Description', type: 'textarea', required: true, placeholder: 'What the player sees' },
-  { key: 'required_state', label: 'Required State', type: 'text', placeholder: 'e.g. intact (leave blank for any state)' },
-  { key: 'required_adventure_game_item_id', label: 'Required Item', type: 'select', placeholder: 'Optional required item...' },
-  { key: 'result_state', label: 'Result State', type: 'text', placeholder: 'New state after effect (if applicable)' },
-  { key: 'result_adventure_game_item_id', label: 'Result Item', type: 'select', placeholder: 'Item to give/remove...' },
-  { key: 'result_adventure_game_location_link_id', label: 'Result Link', type: 'select', placeholder: 'Link to open/close...' },
-  { key: 'result_adventure_game_creature_id', label: 'Result Creature', type: 'select', placeholder: 'Creature to summon...' },
-  { key: 'result_adventure_game_location_object_id', label: 'Result Object', type: 'select', placeholder: 'Object to reveal/hide/change...' },
-  { key: 'result_adventure_game_location_id', label: 'Result Location', type: 'select', placeholder: 'Location to teleport to...' },
+  { key: 'required_adventure_game_location_object_state_id', label: 'Required State', type: 'select', placeholder: '— any state —' },
+  { key: 'required_adventure_game_item_id', label: 'Required Item', type: 'select', placeholder: 'Optional required item…' },
+  { key: 'result_adventure_game_location_object_state_id', label: 'Result State', type: 'select', placeholder: '— no state change —' },
+  { key: 'result_adventure_game_item_id', label: 'Result Item', type: 'select', placeholder: 'Item to give/remove…' },
+  { key: 'result_adventure_game_location_link_id', label: 'Result Link', type: 'select', placeholder: 'Link to open/close…' },
+  { key: 'result_adventure_game_creature_id', label: 'Result Creature', type: 'select', placeholder: 'Creature to summon…' },
+  { key: 'result_adventure_game_location_object_id', label: 'Result Object', type: 'select', placeholder: 'Object to reveal/hide/change…' },
+  { key: 'result_adventure_game_location_id', label: 'Result Location', type: 'select', placeholder: 'Location to teleport to…' },
   { key: 'result_value_min', label: 'Min Value', type: 'number', placeholder: 'e.g. 5 (damage/heal amount)' },
   { key: 'result_value_max', label: 'Max Value', type: 'number', placeholder: 'e.g. 10 (damage/heal amount)' },
   { key: 'is_repeatable', label: 'Repeatable', type: 'checkbox' },
 ];
 
-const fieldOptions = computed(() => ({
+// ── States for the currently selected source and result objects ───────────────
+
+const sourceObjectStates = computed(() => {
+  const objectId = modalForm.value.adventure_game_location_object_id;
+  return objectId ? (statesByObjectId.value[objectId] || locationObjectStatesStore.states) : [];
+});
+
+const resultObjectStates = computed(() => {
+  const objectId = modalForm.value.result_adventure_game_location_object_id;
+  return objectId ? (statesByObjectId.value[objectId] || []) : sourceObjectStates.value;
+});
+
+const stateSelectOptions = (states) => [
+  { value: '', label: '— none —' },
+  ...states.map((s) => ({ value: s.id, label: s.name })),
+];
+
+// ── Field options ─────────────────────────────────────────────────────────────
+
+const effectFieldOptions = computed(() => ({
   adventure_game_location_object_id: locationObjectsStore.locationObjects.map((o) => ({ value: o.id, label: o.name })),
   action_type: ACTION_TYPES.map((t) => ({ value: t, label: t })),
   effect_type: EFFECT_TYPES.map((t) => ({ value: t, label: t })),
+  required_adventure_game_location_object_state_id: stateSelectOptions(sourceObjectStates.value),
   required_adventure_game_item_id: [{ value: '', label: '— none —' }, ...itemsStore.items.map((i) => ({ value: i.id, label: i.name }))],
+  result_adventure_game_location_object_state_id: stateSelectOptions(resultObjectStates.value),
   result_adventure_game_item_id: [{ value: '', label: '— none —' }, ...itemsStore.items.map((i) => ({ value: i.id, label: i.name }))],
   result_adventure_game_location_link_id: [{ value: '', label: '— none —' }, ...locationLinksStore.locationLinks.map((l) => ({ value: l.id, label: l.name }))],
   result_adventure_game_creature_id: [{ value: '', label: '— none —' }, ...creaturesStore.creatures.map((c) => ({ value: c.id, label: c.name }))],
@@ -138,16 +204,19 @@ const fieldOptions = computed(() => ({
   result_adventure_game_location_id: [{ value: '', label: '— none —' }, ...locationsStore.locations.map((l) => ({ value: l.id, label: l.name }))],
 }));
 
+// ── Modal state ───────────────────────────────────────────────────────────────
+
 const showModal = ref(false);
 const modalMode = ref('create');
+
 const defaultForm = () => ({
   adventure_game_location_object_id: '',
   action_type: '',
   effect_type: '',
   result_description: '',
-  required_state: '',
+  required_adventure_game_location_object_state_id: '',
   required_adventure_game_item_id: '',
-  result_state: '',
+  result_adventure_game_location_object_state_id: '',
   result_adventure_game_item_id: '',
   result_adventure_game_location_link_id: '',
   result_adventure_game_creature_id: '',
@@ -157,10 +226,13 @@ const defaultForm = () => ({
   result_value_max: null,
   is_repeatable: false,
 });
+
 const modalForm = ref(defaultForm());
 const modalError = ref('');
 const showDeleteConfirm = ref(false);
 const deleteTarget = ref(null);
+
+// ── Watchers ──────────────────────────────────────────────────────────────────
 
 watch(
   () => selectedGame.value,
@@ -177,16 +249,57 @@ watch(
   { immediate: true }
 );
 
+// When objects finish loading, pre-fetch their states for the table display.
+watch(
+  () => locationObjectsStore.locationObjects,
+  (objs) => {
+    for (const obj of objs) {
+      loadStatesForObject(obj.id);
+    }
+  }
+);
+
+// When the source object changes in the form, load its states.
+watch(
+  () => modalForm.value.adventure_game_location_object_id,
+  (objectId) => {
+    if (objectId && selectedGame.value) {
+      loadStatesForObject(objectId);
+      locationObjectStatesStore.fetchStates(selectedGame.value.id, objectId);
+    } else {
+      locationObjectStatesStore.clearStates();
+    }
+  }
+);
+
+// When the result object changes in the form, load its states.
+watch(
+  () => modalForm.value.result_adventure_game_location_object_id,
+  (objectId) => {
+    if (objectId && selectedGame.value) {
+      loadStatesForObject(objectId);
+    }
+  }
+);
+
+// ── Modal actions ─────────────────────────────────────────────────────────────
+
 function openCreate() {
   modalMode.value = 'create';
   modalForm.value = defaultForm();
   modalError.value = '';
+  locationObjectStatesStore.clearStates();
   showModal.value = true;
 }
 
 function openEdit(row) {
   modalMode.value = 'edit';
-  modalForm.value = { ...defaultForm(), ...row };
+  modalForm.value = {
+    ...defaultForm(),
+    ...row,
+    required_adventure_game_location_object_state_id: row.required_adventure_game_location_object_state_id || '',
+    result_adventure_game_location_object_state_id: row.result_adventure_game_location_object_state_id || '',
+  };
   modalError.value = '';
   showModal.value = true;
 }
@@ -199,11 +312,14 @@ function closeModal() {
 async function handleSubmit(form) {
   modalError.value = '';
   const payload = { ...form };
-  // Strip empty optional string fields so they are omitted from the request
   const optionalFields = [
-    'required_state', 'required_adventure_game_item_id', 'result_state',
-    'result_adventure_game_item_id', 'result_adventure_game_location_link_id',
-    'result_adventure_game_creature_id', 'result_adventure_game_location_object_id',
+    'required_adventure_game_location_object_state_id',
+    'required_adventure_game_item_id',
+    'result_adventure_game_location_object_state_id',
+    'result_adventure_game_item_id',
+    'result_adventure_game_location_link_id',
+    'result_adventure_game_creature_id',
+    'result_adventure_game_location_object_id',
     'result_adventure_game_location_id',
   ];
   optionalFields.forEach((f) => {

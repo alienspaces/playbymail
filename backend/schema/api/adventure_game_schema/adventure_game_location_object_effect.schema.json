@@ -21,7 +21,7 @@
                 "insert", "pour", "disarm", "climb", "use"
             ]
         },
-        "required_state": {
+        "required_adventure_game_location_object_state_id": {
             "type": "string"
         },
         "required_adventure_game_item_id": {
@@ -38,7 +38,7 @@
                 "heal", "summon_creature", "teleport", "nothing", "remove_object"
             ]
         },
-        "result_state": {
+        "result_adventure_game_location_object_state_id": {
             "type": "string"
         },
         "result_adventure_game_item_id": {

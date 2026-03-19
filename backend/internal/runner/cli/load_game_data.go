@@ -424,10 +424,33 @@ func (rnr *Runner) removeAdventureGameLocationObjects(dm *domain.Domain, byGame 
 		}
 	}
 
+	// Objects and states have a circular FK dependency:
+	//   state.adventure_game_location_object_id → object.id
+	//   object.initial_adventure_game_location_object_state_id → state.id
+	// Break the cycle by clearing the initial_state_id FK on every object before deleting states.
 	objs, err := dm.GetManyAdventureGameLocationObjectRecs(byGame)
 	if err != nil {
 		return fmt.Errorf("failed getting location objects: %w", err)
 	}
+	for _, rec := range objs {
+		if rec.InitialAdventureGameLocationObjectStateID.Valid {
+			rec.InitialAdventureGameLocationObjectStateID = adventure_game_record.AdventureGameLocationObject{}.InitialAdventureGameLocationObjectStateID
+			if _, err := dm.UpdateAdventureGameLocationObjectRec(rec); err != nil {
+				return fmt.Errorf("failed clearing initial state on location object >%s<: %w", rec.ID, err)
+			}
+		}
+	}
+
+	states, err := dm.GetManyAdventureGameLocationObjectStateRecs(byGame)
+	if err != nil {
+		return fmt.Errorf("failed getting location object states: %w", err)
+	}
+	for _, rec := range states {
+		if err := dm.RemoveAdventureGameLocationObjectStateRec(rec.ID); err != nil {
+			return fmt.Errorf("failed removing location object state >%s<: %w", rec.ID, err)
+		}
+	}
+
 	for _, rec := range objs {
 		if err := dm.RemoveAdventureGameLocationObjectRec(rec.ID); err != nil {
 			return fmt.Errorf("failed removing location object >%s<: %w", rec.ID, err)

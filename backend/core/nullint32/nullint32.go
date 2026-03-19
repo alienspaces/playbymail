@@ -40,6 +40,14 @@ func ToInt32Ptr(ns sql.NullInt32) (*int32, error) {
 	return &ns.Int32, nil
 }
 
+// ToInt32PtrOrNil returns a pointer to the int32 value if valid, or nil if not.
+func ToInt32PtrOrNil(ns sql.NullInt32) *int32 {
+	if !ns.Valid {
+		return nil
+	}
+	return &ns.Int32
+}
+
 func IsValid(ns sql.NullInt32) bool {
 	return ns.Valid
 }

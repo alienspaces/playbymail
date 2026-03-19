@@ -1,10 +1,11 @@
 package mapper
 
 import (
-	"database/sql"
 	"fmt"
 	"net/http"
 
+	"gitlab.com/alienspaces/playbymail/core/nullint32"
+	"gitlab.com/alienspaces/playbymail/core/nullstring"
 	"gitlab.com/alienspaces/playbymail/core/nulltime"
 	"gitlab.com/alienspaces/playbymail/core/server"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
@@ -24,38 +25,18 @@ func AdventureGameLocationObjectEffectRequestToRecord(l logger.Logger, r *http.R
 	applyEffectRequest := func() {
 		rec.AdventureGameLocationObjectID = req.AdventureGameLocationObjectID
 		rec.ActionType = req.ActionType
-		if req.RequiredState != nil {
-			rec.RequiredState = sql.NullString{String: *req.RequiredState, Valid: true}
-		}
-		if req.RequiredAdventureGameItemID != nil {
-			rec.RequiredAdventureGameItemID = sql.NullString{String: *req.RequiredAdventureGameItemID, Valid: true}
-		}
+		rec.RequiredAdventureGameLocationObjectStateID = nullstring.FromStringPtr(req.RequiredAdventureGameLocationObjectStateID)
+		rec.RequiredAdventureGameItemID = nullstring.FromStringPtr(req.RequiredAdventureGameItemID)
 		rec.ResultDescription = req.ResultDescription
 		rec.EffectType = req.EffectType
-		if req.ResultState != nil {
-			rec.ResultState = sql.NullString{String: *req.ResultState, Valid: true}
-		}
-		if req.ResultAdventureGameItemID != nil {
-			rec.ResultAdventureGameItemID = sql.NullString{String: *req.ResultAdventureGameItemID, Valid: true}
-		}
-		if req.ResultAdventureGameLocationLinkID != nil {
-			rec.ResultAdventureGameLocationLinkID = sql.NullString{String: *req.ResultAdventureGameLocationLinkID, Valid: true}
-		}
-		if req.ResultAdventureGameCreatureID != nil {
-			rec.ResultAdventureGameCreatureID = sql.NullString{String: *req.ResultAdventureGameCreatureID, Valid: true}
-		}
-		if req.ResultAdventureGameLocationObjectID != nil {
-			rec.ResultAdventureGameLocationObjectID = sql.NullString{String: *req.ResultAdventureGameLocationObjectID, Valid: true}
-		}
-		if req.ResultAdventureGameLocationID != nil {
-			rec.ResultAdventureGameLocationID = sql.NullString{String: *req.ResultAdventureGameLocationID, Valid: true}
-		}
-		if req.ResultValueMin != nil {
-			rec.ResultValueMin = sql.NullInt32{Int32: *req.ResultValueMin, Valid: true}
-		}
-		if req.ResultValueMax != nil {
-			rec.ResultValueMax = sql.NullInt32{Int32: *req.ResultValueMax, Valid: true}
-		}
+		rec.ResultAdventureGameLocationObjectStateID = nullstring.FromStringPtr(req.ResultAdventureGameLocationObjectStateID)
+		rec.ResultAdventureGameItemID = nullstring.FromStringPtr(req.ResultAdventureGameItemID)
+		rec.ResultAdventureGameLocationLinkID = nullstring.FromStringPtr(req.ResultAdventureGameLocationLinkID)
+		rec.ResultAdventureGameCreatureID = nullstring.FromStringPtr(req.ResultAdventureGameCreatureID)
+		rec.ResultAdventureGameLocationObjectID = nullstring.FromStringPtr(req.ResultAdventureGameLocationObjectID)
+		rec.ResultAdventureGameLocationID = nullstring.FromStringPtr(req.ResultAdventureGameLocationID)
+		rec.ResultValueMin = nullint32.FromInt32Ptr(req.ResultValueMin)
+		rec.ResultValueMax = nullint32.FromInt32Ptr(req.ResultValueMax)
 		rec.IsRepeatable = req.IsRepeatable
 	}
 
@@ -72,40 +53,27 @@ func AdventureGameLocationObjectEffectRequestToRecord(l logger.Logger, r *http.R
 func AdventureGameLocationObjectEffectRecordToResponseData(l logger.Logger, rec *adventure_game_record.AdventureGameLocationObjectEffect) (*adventure_game_schema.AdventureGameLocationObjectEffectResponseData, error) {
 	l.Debug("mapping adventure_game_location_object_effect record to response data")
 
-	nullStringPtr := func(ns sql.NullString) *string {
-		if ns.Valid {
-			return &ns.String
-		}
-		return nil
-	}
-	nullInt32Ptr := func(ni sql.NullInt32) *int32 {
-		if ni.Valid {
-			return &ni.Int32
-		}
-		return nil
-	}
-
 	return &adventure_game_schema.AdventureGameLocationObjectEffectResponseData{
-		ID:                                  rec.ID,
-		GameID:                              rec.GameID,
-		AdventureGameLocationObjectID:       rec.AdventureGameLocationObjectID,
-		ActionType:                          rec.ActionType,
-		RequiredState:                       nullStringPtr(rec.RequiredState),
-		RequiredAdventureGameItemID:         nullStringPtr(rec.RequiredAdventureGameItemID),
-		ResultDescription:                   rec.ResultDescription,
-		EffectType:                          rec.EffectType,
-		ResultState:                         nullStringPtr(rec.ResultState),
-		ResultAdventureGameItemID:           nullStringPtr(rec.ResultAdventureGameItemID),
-		ResultAdventureGameLocationLinkID:   nullStringPtr(rec.ResultAdventureGameLocationLinkID),
-		ResultAdventureGameCreatureID:       nullStringPtr(rec.ResultAdventureGameCreatureID),
-		ResultAdventureGameLocationObjectID: nullStringPtr(rec.ResultAdventureGameLocationObjectID),
-		ResultAdventureGameLocationID:       nullStringPtr(rec.ResultAdventureGameLocationID),
-		ResultValueMin:                      nullInt32Ptr(rec.ResultValueMin),
-		ResultValueMax:                      nullInt32Ptr(rec.ResultValueMax),
-		IsRepeatable:                        rec.IsRepeatable,
-		CreatedAt:                           rec.CreatedAt,
-		UpdatedAt:                           nulltime.ToTimePtr(rec.UpdatedAt),
-		DeletedAt:                           nulltime.ToTimePtr(rec.DeletedAt),
+		ID:                                              rec.ID,
+		GameID:                                          rec.GameID,
+		AdventureGameLocationObjectID:                   rec.AdventureGameLocationObjectID,
+		ActionType:                                      rec.ActionType,
+		RequiredAdventureGameLocationObjectStateID:      nullstring.ToStringPtr(rec.RequiredAdventureGameLocationObjectStateID),
+		RequiredAdventureGameItemID:                     nullstring.ToStringPtr(rec.RequiredAdventureGameItemID),
+		ResultDescription:                               rec.ResultDescription,
+		EffectType:                                      rec.EffectType,
+		ResultAdventureGameLocationObjectStateID:        nullstring.ToStringPtr(rec.ResultAdventureGameLocationObjectStateID),
+		ResultAdventureGameItemID:                       nullstring.ToStringPtr(rec.ResultAdventureGameItemID),
+		ResultAdventureGameLocationLinkID:               nullstring.ToStringPtr(rec.ResultAdventureGameLocationLinkID),
+		ResultAdventureGameCreatureID:                   nullstring.ToStringPtr(rec.ResultAdventureGameCreatureID),
+		ResultAdventureGameLocationObjectID:             nullstring.ToStringPtr(rec.ResultAdventureGameLocationObjectID),
+		ResultAdventureGameLocationID:                   nullstring.ToStringPtr(rec.ResultAdventureGameLocationID),
+		ResultValueMin:                                  nullint32.ToInt32PtrOrNil(rec.ResultValueMin),
+		ResultValueMax:                                  nullint32.ToInt32PtrOrNil(rec.ResultValueMax),
+		IsRepeatable:                                    rec.IsRepeatable,
+		CreatedAt:                                       rec.CreatedAt,
+		UpdatedAt:                                       nulltime.ToTimePtr(rec.UpdatedAt),
+		DeletedAt:                                       nulltime.ToTimePtr(rec.DeletedAt),
 	}, nil
 }
 

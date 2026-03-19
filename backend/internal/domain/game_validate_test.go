@@ -252,7 +252,7 @@ func TestUpdateGameRec_StatusTransitions(t *testing.T) {
 		require.Equal(t, game_record.GameStatusPublished, rec.Status)
 	})
 
-	t.Run("prevents modification of published game", func(t *testing.T) {
+	t.Run("allows modification of published game", func(t *testing.T) {
 		updateRec := &game_record.Game{
 			Name:              harness.UniqueName("Changed Name"),
 			GameType:          game_record.GameTypeAdventure,
@@ -262,8 +262,10 @@ func TestUpdateGameRec_StatusTransitions(t *testing.T) {
 		}
 		updateRec.ID = publishedGame.ID
 
-		_, err := m.UpdateGameRec(updateRec)
-		require.Error(t, err)
+		rec, err := m.UpdateGameRec(updateRec)
+		require.NoError(t, err)
+		require.NotNil(t, rec)
+		require.Equal(t, game_record.GameStatusPublished, rec.Status)
 	})
 }
 

@@ -36,6 +36,7 @@ type Data struct {
 	AdventureGameCharacterInstanceRecs       []*adventure_game_record.AdventureGameCharacterInstance
 	AdventureGameTurnSheetRecs                    []*adventure_game_record.AdventureGameTurnSheet
 	AdventureGameLocationObjectRecs               []*adventure_game_record.AdventureGameLocationObject
+	AdventureGameLocationObjectStateRecs          []*adventure_game_record.AdventureGameLocationObjectState
 	AdventureGameLocationObjectEffectRecs         []*adventure_game_record.AdventureGameLocationObjectEffect
 	AdventureGameLocationObjectInstanceRecs       []*adventure_game_record.AdventureGameLocationObjectInstance
 	// Session tokens by account ID
@@ -71,6 +72,7 @@ type DataRefs struct {
 	AdventureGameCreatureInstanceRefs        map[string]string // Map of adventure game creature instance refs to adventure game creature instance records
 	AdventureGameCharacterInstanceRefs       map[string]string // Map of adventure game character instance refs to adventure game character instance records
 	AdventureGameLocationObjectRefs          map[string]string // Map of adventure game location object refs to adventure game location object records
+	AdventureGameLocationObjectStateRefs     map[string]string // Map of adventure game location object state refs to records
 	AdventureGameLocationObjectEffectRefs    map[string]string // Map of adventure game location object effect refs to records
 	AdventureGameLocationObjectInstanceRefs  map[string]string // Map of adventure game location object instance refs to records
 }
@@ -103,9 +105,10 @@ func initialiseDataStores() Data {
 			AdventureGameItemInstanceRefs:            map[string]string{},
 			AdventureGameCreatureInstanceRefs:        map[string]string{},
 			AdventureGameCharacterInstanceRefs:       map[string]string{},
-			AdventureGameLocationObjectRefs:          map[string]string{},
-			AdventureGameLocationObjectEffectRefs:    map[string]string{},
-			AdventureGameLocationObjectInstanceRefs:  map[string]string{},
+		AdventureGameLocationObjectRefs:          map[string]string{},
+		AdventureGameLocationObjectStateRefs:     map[string]string{},
+		AdventureGameLocationObjectEffectRefs:    map[string]string{},
+		AdventureGameLocationObjectInstanceRefs:  map[string]string{},
 		},
 	}
 }
@@ -888,6 +891,30 @@ func (d *Data) GetAdventureGameLocationObjectRecByRef(ref string) (*adventure_ga
 		}
 	}
 	return nil, fmt.Errorf("failed getting adventure game location object with id >%s< for ref >%s<", id, ref)
+}
+
+// AdventureGameLocationObjectState
+func (d *Data) AddAdventureGameLocationObjectStateRec(rec *adventure_game_record.AdventureGameLocationObjectState) {
+	for idx := range d.AdventureGameLocationObjectStateRecs {
+		if d.AdventureGameLocationObjectStateRecs[idx].ID == rec.ID {
+			d.AdventureGameLocationObjectStateRecs[idx] = rec
+			return
+		}
+	}
+	d.AdventureGameLocationObjectStateRecs = append(d.AdventureGameLocationObjectStateRecs, rec)
+}
+
+func (d *Data) GetAdventureGameLocationObjectStateRecByRef(ref string) (*adventure_game_record.AdventureGameLocationObjectState, error) {
+	id, ok := d.Refs.AdventureGameLocationObjectStateRefs[ref]
+	if !ok {
+		return nil, fmt.Errorf("failed getting adventure game location object state with ref >%s<", ref)
+	}
+	for _, rec := range d.AdventureGameLocationObjectStateRecs {
+		if rec.ID == id {
+			return rec, nil
+		}
+	}
+	return nil, fmt.Errorf("failed getting adventure game location object state with id >%s< for ref >%s<", id, ref)
 }
 
 // AdventureGameLocationObjectEffect

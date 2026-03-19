@@ -9,6 +9,7 @@ import (
 
 	"gitlab.com/alienspaces/playbymail/core/domain"
 	coreerror "gitlab.com/alienspaces/playbymail/core/error"
+	"gitlab.com/alienspaces/playbymail/core/nullstring"
 	coresql "gitlab.com/alienspaces/playbymail/core/sql"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 )
@@ -198,7 +199,7 @@ func (m *Domain) MarkGameTurnSheetAsScanned(turnSheetID string, scannedBy string
 
 	now := time.Now()
 	rec.ScannedAt = sql.NullTime{Time: now, Valid: true}
-	rec.ScannedBy = sql.NullString{String: scannedBy, Valid: true}
+	rec.ScannedBy = nullstring.FromString(scannedBy)
 	rec.ProcessingStatus = "scanned"
 
 	_, err = m.UpdateGameTurnSheetRec(rec)
@@ -238,7 +239,7 @@ func (m *Domain) MarkGameTurnSheetAsError(turnSheetID string, errorMessage strin
 	}
 
 	rec.ProcessingStatus = "error"
-	rec.ErrorMessage = sql.NullString{String: errorMessage, Valid: true}
+	rec.ErrorMessage = nullstring.FromString(errorMessage)
 
 	_, err = m.UpdateGameTurnSheetRec(rec)
 	return err

@@ -2,7 +2,7 @@ package turn_sheet_processor
 
 import (
 	"context"
-	"database/sql"
+	"gitlab.com/alienspaces/playbymail/core/nullstring"
 	"encoding/json"
 	"fmt"
 	"math/rand"
@@ -459,7 +459,7 @@ func (p *AdventureGameLocationChoiceProcessor) CreateNextTurnSheet(ctx context.C
 		IsCompleted:      false,
 		ProcessingStatus: game_record.TurnSheetProcessingStatusPending,
 	}
-	turnSheet.GameInstanceID = sql.NullString{String: gameInstanceRec.ID, Valid: true}
+	turnSheet.GameInstanceID = nullstring.FromString(gameInstanceRec.ID)
 
 	// Create the turn sheet record
 	createdTurnSheetRec, err := p.Domain.CreateGameTurnSheetRec(turnSheet)
@@ -712,7 +712,7 @@ func (p *AdventureGameLocationChoiceProcessor) buildLocationObjects(
 		// Collect unique action types available in the current state
 		actionMap := map[string]*turnsheet.LocationObjectActionOption{}
 		for _, effect := range allEffects {
-			if effect.RequiredState.Valid && effect.RequiredState.String != inst.CurrentState {
+			if effect.RequiredAdventureGameLocationObjectStateID.Valid && effect.RequiredAdventureGameLocationObjectStateID.String != inst.CurrentAdventureGameLocationObjectStateID {
 				continue
 			}
 			at := effect.ActionType
@@ -745,11 +745,21 @@ func (p *AdventureGameLocationChoiceProcessor) buildLocationObjects(
 			actions = append(actions, *action)
 		}
 
+		// Resolve state ID to display name
+		currentStateName := inst.CurrentAdventureGameLocationObjectStateID
+		if inst.CurrentAdventureGameLocationObjectStateID != "" {
+			if stateRec, err := p.Domain.GetAdventureGameLocationObjectStateRec(inst.CurrentAdventureGameLocationObjectStateID, nil); err == nil {
+				currentStateName = stateRec.Name
+			} else {
+				l.Warn("failed to resolve state ID >%s< to name: %v", inst.CurrentAdventureGameLocationObjectStateID, err)
+			}
+		}
+
 		result = append(result, turnsheet.LocationObjectOption{
 			ObjectInstanceID: inst.ID,
 			Name:             objectDef.Name,
 			Description:      objectDef.Description,
-			CurrentState:     inst.CurrentState,
+			CurrentState:     currentStateName,
 			Actions:          actions,
 		})
 	}
@@ -818,14 +828,14 @@ func (p *AdventureGameLocationChoiceProcessor) processObjectChoice(
 	// Filter effects matching current state
 	var matchingEffects []*adventure_game_record.AdventureGameLocationObjectEffect
 	for _, effect := range allEffects {
-		if effect.RequiredState.Valid && effect.RequiredState.String != objectInstance.CurrentState {
+		if effect.RequiredAdventureGameLocationObjectStateID.Valid && effect.RequiredAdventureGameLocationObjectStateID.String != objectInstance.CurrentAdventureGameLocationObjectStateID {
 			continue
 		}
 		matchingEffects = append(matchingEffects, effect)
 	}
 
 	if len(matchingEffects) == 0 {
-		l.Info("no matching effects for object >%s< action >%s< state >%s<", instanceID, actionType, objectInstance.CurrentState)
+		l.Info("no matching effects for object >%s< action >%s< state >%s<", instanceID, actionType, objectInstance.CurrentAdventureGameLocationObjectStateID)
 		return nil
 	}
 
@@ -927,19 +937,19 @@ func (p *AdventureGameLocationChoiceProcessor) applyObjectStateEffect(
 ) error {
 	switch effect.EffectType {
 	case adventure_game_record.AdventureGameLocationObjectEffectEffectTypeChangeState:
-		if !effect.ResultState.Valid || effect.ResultState.String == "" {
+		if !effect.ResultAdventureGameLocationObjectStateID.Valid || effect.ResultAdventureGameLocationObjectStateID.String == "" {
 			return nil
 		}
-		objectInstance.CurrentState = effect.ResultState.String
+		objectInstance.CurrentAdventureGameLocationObjectStateID = effect.ResultAdventureGameLocationObjectStateID.String
 		updatedInst, err := p.Domain.UpdateAdventureGameLocationObjectInstanceRec(objectInstance)
 		if err != nil {
 			return fmt.Errorf("failed to update object instance state: %w", err)
 		}
 		*objectInstance = *updatedInst
-		l.Info("object instance >%s< state changed to >%s<", objectInstance.ID, objectInstance.CurrentState)
+		l.Info("object instance >%s< state changed to >%s<", objectInstance.ID, objectInstance.CurrentAdventureGameLocationObjectStateID)
 
 	case adventure_game_record.AdventureGameLocationObjectEffectEffectTypeChangeObjectState:
-		if !effect.ResultAdventureGameLocationObjectID.Valid || !effect.ResultState.Valid {
+		if !effect.ResultAdventureGameLocationObjectID.Valid || !effect.ResultAdventureGameLocationObjectStateID.Valid {
 			return nil
 		}
 		targets, err := p.getTargetObjectInstances(gameInstanceRec.ID, effect.ResultAdventureGameLocationObjectID.String)
@@ -947,11 +957,11 @@ func (p *AdventureGameLocationChoiceProcessor) applyObjectStateEffect(
 			return fmt.Errorf("failed to get target object instances: %w", err)
 		}
 		for _, t := range targets {
-			t.CurrentState = effect.ResultState.String
+			t.CurrentAdventureGameLocationObjectStateID = effect.ResultAdventureGameLocationObjectStateID.String
 			if _, err := p.Domain.UpdateAdventureGameLocationObjectInstanceRec(t); err != nil {
 				l.Warn("failed to update target object instance state >%v<", err)
 			}
-			l.Info("target object instance >%s< state changed to >%s<", t.ID, t.CurrentState)
+			l.Info("target object instance >%s< state changed to >%s<", t.ID, t.CurrentAdventureGameLocationObjectStateID)
 		}
 
 	case adventure_game_record.AdventureGameLocationObjectEffectEffectTypeRevealObject:
@@ -1002,7 +1012,7 @@ func (p *AdventureGameLocationChoiceProcessor) applyObjectInventoryEffect(
 			GameID:                           gameInstanceRec.GameID,
 			GameInstanceID:                   gameInstanceRec.ID,
 			AdventureGameItemID:              effect.ResultAdventureGameItemID.String,
-			AdventureGameCharacterInstanceID: sql.NullString{String: characterInstanceRec.ID, Valid: true},
+			AdventureGameCharacterInstanceID: nullstring.FromString(characterInstanceRec.ID),
 		}
 		if _, err := p.Domain.CreateAdventureGameItemInstanceRec(itemInstance); err != nil {
 			return fmt.Errorf("failed to give item: %w", err)

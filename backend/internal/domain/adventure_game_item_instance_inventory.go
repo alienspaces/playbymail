@@ -90,7 +90,7 @@ func (m *Domain) PickUpAdventureGameItemInstanceRec(characterInstanceID, itemIns
 
 	// Move item to character inventory
 	itemRec.AdventureGameCharacterInstanceID = nullstring.FromString(characterInstanceID)
-	itemRec.AdventureGameLocationInstanceID = sql.NullString{Valid: false}
+	itemRec.AdventureGameLocationInstanceID = sql.NullString{}
 
 	updatedRec, err := m.UpdateAdventureGameItemInstanceRec(itemRec)
 	if err != nil {
@@ -138,12 +138,12 @@ func (m *Domain) DropAdventureGameItemInstanceRec(characterInstanceID, itemInsta
 	// If equipped, unequip first
 	if itemRec.IsEquipped {
 		itemRec.IsEquipped = false
-		itemRec.EquipmentSlot = sql.NullString{Valid: false}
+		itemRec.EquipmentSlot = sql.NullString{}
 	}
 
 	// Move item to location
 	itemRec.AdventureGameLocationInstanceID = nullstring.FromString(characterRec.AdventureGameLocationInstanceID)
-	itemRec.AdventureGameCharacterInstanceID = sql.NullString{Valid: false}
+	itemRec.AdventureGameCharacterInstanceID = sql.NullString{}
 
 	updatedRec, err := m.UpdateAdventureGameItemInstanceRec(itemRec)
 	if err != nil {
@@ -224,7 +224,7 @@ func (m *Domain) EquipAdventureGameItemInstanceRec(characterInstanceID, itemInst
 	if len(slotOccupiedItems) > 0 {
 		for _, equippedItem := range slotOccupiedItems {
 			equippedItem.IsEquipped = false
-			equippedItem.EquipmentSlot = sql.NullString{Valid: false}
+			equippedItem.EquipmentSlot = sql.NullString{}
 			_, err := m.UpdateAdventureGameItemInstanceRec(equippedItem)
 			if err != nil {
 				return nil, err
@@ -276,7 +276,7 @@ func (m *Domain) UnequipAdventureGameItemInstanceRec(characterInstanceID, itemIn
 
 	// Unequip the item
 	itemRec.IsEquipped = false
-	itemRec.EquipmentSlot = sql.NullString{Valid: false}
+	itemRec.EquipmentSlot = sql.NullString{}
 
 	updatedRec, err := m.UpdateAdventureGameItemInstanceRec(itemRec)
 	if err != nil {

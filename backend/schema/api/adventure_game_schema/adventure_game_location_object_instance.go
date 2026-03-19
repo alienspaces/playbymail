@@ -8,16 +8,16 @@ import (
 
 // AdventureGameLocationObjectInstanceResponseData -
 type AdventureGameLocationObjectInstanceResponseData struct {
-	ID                              string     `json:"id"`
-	GameID                          string     `json:"game_id"`
-	GameInstanceID                  string     `json:"game_instance_id"`
-	AdventureGameLocationObjectID   string     `json:"adventure_game_location_object_id"`
-	AdventureGameLocationInstanceID string     `json:"adventure_game_location_instance_id"`
-	CurrentState                    string     `json:"current_state"`
-	IsVisible                       bool       `json:"is_visible"`
-	CreatedAt                       time.Time  `json:"created_at"`
-	UpdatedAt                       *time.Time `json:"updated_at,omitempty"`
-	DeletedAt                       *time.Time `json:"deleted_at,omitempty"`
+	ID                                           string     `json:"id"`
+	GameID                                       string     `json:"game_id"`
+	GameInstanceID                               string     `json:"game_instance_id"`
+	AdventureGameLocationObjectID                string     `json:"adventure_game_location_object_id"`
+	AdventureGameLocationInstanceID              string     `json:"adventure_game_location_instance_id"`
+	CurrentAdventureGameLocationObjectStateID    string     `json:"current_adventure_game_location_object_state_id"`
+	IsVisible                                    bool       `json:"is_visible"`
+	CreatedAt                                    time.Time  `json:"created_at"`
+	UpdatedAt                                    *time.Time `json:"updated_at,omitempty"`
+	DeletedAt                                    *time.Time `json:"deleted_at,omitempty"`
 }
 
 type AdventureGameLocationObjectInstanceResponse struct {
