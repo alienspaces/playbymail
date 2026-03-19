@@ -59,6 +59,12 @@
         "is_closed_testing": {
             "type": "boolean"
         },
+        "game_subscription_instance_id": {
+            "type": [
+                "string",
+                "null"
+            ]
+        },
         "join_game_key": {
             "type": [
                 "string",

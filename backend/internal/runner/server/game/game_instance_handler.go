@@ -510,7 +510,7 @@ func getOneGameInstanceHandler(w http.ResponseWriter, r *http.Request, pp httpro
 		playerCount = 0
 	}
 
-	res, err := mapper.GameInstanceRecordToResponse(l, rec, playerCount)
+	res, err := mapper.GameInstanceRecordToResponse(l, rec, playerCount, nil)
 	if err != nil {
 		return err
 	}
@@ -542,7 +542,7 @@ func createOneGameInstanceHandler(w http.ResponseWriter, r *http.Request, pp htt
 	mm := m.(*domain.Domain)
 
 	// Verify account has manager subscription for this game (required for creating instances)
-	_, err := mm.GetGameSubscriptionRecByAccountAndGame(
+	managerSubRec, err := mm.GetGameSubscriptionRecByAccountAndGame(
 		authenData.AccountUser.AccountID,
 		gameID,
 		game_record.GameSubscriptionTypeManager,
@@ -574,13 +574,25 @@ func createOneGameInstanceHandler(w http.ResponseWriter, r *http.Request, pp htt
 		return err
 	}
 
+	// Link the manager subscription to the new instance so it appears in the game catalog.
+	subInstanceRec, err := mm.CreateGameSubscriptionInstanceRec(&game_record.GameSubscriptionInstance{
+		AccountID:          managerSubRec.AccountID,
+		AccountUserID:      managerSubRec.AccountUserID,
+		GameSubscriptionID: managerSubRec.ID,
+		GameInstanceID:     rec.ID,
+	})
+	if err != nil {
+		l.Warn("failed linking manager subscription >%s< to game instance >%s< >%v<", managerSubRec.ID, rec.ID, err)
+		return err
+	}
+
 	playerCount, err := mm.GetPlayerCountForGameInstance(rec.ID)
 	if err != nil {
 		l.Warn("failed to get player count for game instance >%s< >%v<", rec.ID, err)
 		playerCount = 0
 	}
 
-	res, err := mapper.GameInstanceRecordToResponse(l, rec, playerCount)
+	res, err := mapper.GameInstanceRecordToResponse(l, rec, playerCount, &subInstanceRec.ID)
 	if err != nil {
 		return err
 	}
@@ -629,7 +641,7 @@ func updateOneGameInstanceHandler(w http.ResponseWriter, r *http.Request, pp htt
 		playerCount = 0
 	}
 
-	res, err := mapper.GameInstanceRecordToResponse(l, rec, playerCount)
+	res, err := mapper.GameInstanceRecordToResponse(l, rec, playerCount, nil)
 	if err != nil {
 		return err
 	}
@@ -707,7 +719,7 @@ func startGameInstanceHandler(w http.ResponseWriter, r *http.Request, pp httprou
 	}
 
 	// Convert to response
-	res, err := mapper.GameInstanceRecordToResponse(l, instance, playerCount)
+	res, err := mapper.GameInstanceRecordToResponse(l, instance, playerCount, nil)
 	if err != nil {
 		return err
 	}
@@ -751,7 +763,7 @@ func pauseGameInstanceHandler(w http.ResponseWriter, r *http.Request, pp httprou
 	}
 
 	// Convert to response
-	res, err := mapper.GameInstanceRecordToResponse(l, instance, playerCount)
+	res, err := mapper.GameInstanceRecordToResponse(l, instance, playerCount, nil)
 	if err != nil {
 		return err
 	}
@@ -795,7 +807,7 @@ func resumeGameInstanceHandler(w http.ResponseWriter, r *http.Request, pp httpro
 	}
 
 	// Convert to response
-	res, err := mapper.GameInstanceRecordToResponse(l, instance, playerCount)
+	res, err := mapper.GameInstanceRecordToResponse(l, instance, playerCount, nil)
 	if err != nil {
 		return err
 	}
@@ -839,7 +851,7 @@ func cancelGameInstanceHandler(w http.ResponseWriter, r *http.Request, pp httpro
 	}
 
 	// Convert to response
-	res, err := mapper.GameInstanceRecordToResponse(l, instance, playerCount)
+	res, err := mapper.GameInstanceRecordToResponse(l, instance, playerCount, nil)
 	if err != nil {
 		return err
 	}
@@ -1013,7 +1025,7 @@ func resetOneGameInstanceHandler(w http.ResponseWriter, r *http.Request, pp http
 		playerCount = 0
 	}
 
-	res, err := mapper.GameInstanceRecordToResponse(l, instance, playerCount)
+	res, err := mapper.GameInstanceRecordToResponse(l, instance, playerCount, nil)
 	if err != nil {
 		return err
 	}

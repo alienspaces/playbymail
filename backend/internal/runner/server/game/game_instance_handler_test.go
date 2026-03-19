@@ -341,6 +341,7 @@ func Test_createOneGameInstanceHandler(t *testing.T) {
 				require.Equal(t, xResp.CurrentTurn, aResp.CurrentTurn, "Current turn equals expected")
 				require.NotEmpty(t, aResp.ID, "Instance ID is not empty")
 				require.False(t, aResp.CreatedAt.IsZero(), "Instance CreatedAt is not zero")
+				require.NotEmpty(t, aResp.GameSubscriptionInstanceID, "GameSubscriptionInstanceID is not empty")
 			}
 
 			testutil.RunTestCase(t, th, &testCase.TestCase, testFunc)

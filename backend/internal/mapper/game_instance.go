@@ -69,11 +69,12 @@ func GameInstanceRequestToRecord(l logger.Logger, r *http.Request, rec *game_rec
 	return rec, nil
 }
 
-func GameInstanceRecordToResponseData(l logger.Logger, rec *game_record.GameInstance, playerCount int) (*game_schema.GameInstanceResponseData, error) {
+func GameInstanceRecordToResponseData(l logger.Logger, rec *game_record.GameInstance, playerCount int, gameSubscriptionInstanceID *string) (*game_schema.GameInstanceResponseData, error) {
 	l.Debug("mapping game_instance record to response data")
 	return &game_schema.GameInstanceResponseData{
 		ID:                                rec.ID,
 		GameID:                            rec.GameID,
+		GameSubscriptionInstanceID:        gameSubscriptionInstanceID,
 		Status:                            rec.Status,
 		CurrentTurn:                       rec.CurrentTurn,
 		LastTurnProcessedAt:               nulltime.ToTimePtr(rec.LastTurnProcessedAt),
@@ -93,9 +94,9 @@ func GameInstanceRecordToResponseData(l logger.Logger, rec *game_record.GameInst
 	}, nil
 }
 
-func GameInstanceRecordToResponse(l logger.Logger, rec *game_record.GameInstance, playerCount int) (*game_schema.GameInstanceResponse, error) {
+func GameInstanceRecordToResponse(l logger.Logger, rec *game_record.GameInstance, playerCount int, gameSubscriptionInstanceID *string) (*game_schema.GameInstanceResponse, error) {
 	l.Debug("mapping game_instance record to response")
-	data, err := GameInstanceRecordToResponseData(l, rec, playerCount)
+	data, err := GameInstanceRecordToResponseData(l, rec, playerCount, gameSubscriptionInstanceID)
 	if err != nil {
 		return nil, err
 	}
@@ -118,7 +119,7 @@ func GameInstanceRecordsToCollectionResponse(l logger.Logger, recs []*game_recor
 				playerCount = count
 			}
 		}
-		d, err := GameInstanceRecordToResponseData(l, rec, playerCount)
+		d, err := GameInstanceRecordToResponseData(l, rec, playerCount, nil)
 		if err != nil {
 			return game_schema.GameInstanceCollectionResponse{}, err
 		}
