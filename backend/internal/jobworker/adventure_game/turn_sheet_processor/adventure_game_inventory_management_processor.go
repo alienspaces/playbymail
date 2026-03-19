@@ -126,7 +126,7 @@ func (p *AdventureGameInventoryManagementProcessor) ProcessTurnSheetResponse(ctx
 		}
 		if !itemRec.AdventureGameCharacterInstanceID.Valid &&
 			itemRec.AdventureGameLocationInstanceID.Valid &&
-			itemRec.AdventureGameLocationInstanceID.String == characterInstanceRec.AdventureGameLocationInstanceID.String {
+			itemRec.AdventureGameLocationInstanceID.String == characterInstanceRec.AdventureGameLocationInstanceID {
 			l.Info("auto picking up location item >%s< before equip", action.ItemInstanceID)
 			_, err := p.Domain.PickUpAdventureGameItemInstanceRec(characterInstanceRec.ID, action.ItemInstanceID)
 			if err != nil {
@@ -248,7 +248,7 @@ func (p *AdventureGameInventoryManagementProcessor) CreateNextTurnSheet(ctx cont
 	l.Info("creating inventory management turn sheet for character >%s<", characterInstanceRec.ID)
 
 	// Step 1: Get character's current location instance
-	locationInstanceRec, err := p.Domain.GetAdventureGameLocationInstanceRec(characterInstanceRec.AdventureGameLocationInstanceID.String, nil)
+	locationInstanceRec, err := p.Domain.GetAdventureGameLocationInstanceRec(characterInstanceRec.AdventureGameLocationInstanceID, nil)
 	if err != nil {
 		l.Warn("failed to get character's current location >%v<", err)
 		return nil, fmt.Errorf("failed to get character's current location: %w", err)

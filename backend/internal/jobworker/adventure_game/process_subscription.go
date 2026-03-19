@@ -2,7 +2,6 @@ package adventure_game
 
 import (
 	"context"
-	"database/sql"
 	"encoding/json"
 	"fmt"
 
@@ -132,7 +131,7 @@ func (p *AdventureGameSubscriptionProcessingProcessor) ProcessGameSubscriptionPr
 		GameID:                          subscriptionRec.GameID,
 		GameInstanceID:                  gameInstanceRec.ID,
 		AdventureGameCharacterID:        characterRec.ID,
-		AdventureGameLocationInstanceID: sql.NullString{String: startingLocationInstanceID, Valid: true},
+		AdventureGameLocationInstanceID: startingLocationInstanceID,
 		Health:                          100,
 		LastTurnEvents:                  []byte("[]"),
 	}

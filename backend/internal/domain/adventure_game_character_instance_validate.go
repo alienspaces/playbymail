@@ -5,7 +5,6 @@ import (
 
 	coreerror "gitlab.com/alienspaces/playbymail/core/error"
 	"gitlab.com/alienspaces/playbymail/core/domain"
-	"gitlab.com/alienspaces/playbymail/core/nullstring"
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 )
 
@@ -71,8 +70,8 @@ func validateAdventureGameCharacterInstanceRec(args *validateAdventureGameCharac
 		return err
 	}
 
-	if nullstring.IsValid(rec.AdventureGameLocationInstanceID) {
-		if err := domain.ValidateNullUUIDField(adventure_game_record.FieldAdventureGameCharacterInstanceAdventureGameLocationInstanceID, rec.AdventureGameLocationInstanceID); err != nil {
+	if rec.AdventureGameLocationInstanceID != "" {
+		if err := domain.ValidateUUIDField(adventure_game_record.FieldAdventureGameCharacterInstanceAdventureGameLocationInstanceID, rec.AdventureGameLocationInstanceID); err != nil {
 			return err
 		}
 	}

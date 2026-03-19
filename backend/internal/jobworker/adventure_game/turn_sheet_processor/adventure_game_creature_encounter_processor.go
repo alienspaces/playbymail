@@ -168,7 +168,7 @@ func (p *AdventureGameCreatureEncounterProcessor) ProcessTurnSheetResponse(
 				})
 
 				// Move creature's item instances to the location, collecting names for narrative.
-				droppedItems, err := p.moveCreatureItemsToLocation(l, creatureInstance, characterInstanceRec.AdventureGameLocationInstanceID.String)
+				droppedItems, err := p.moveCreatureItemsToLocation(l, creatureInstance, characterInstanceRec.AdventureGameLocationInstanceID)
 				if err != nil {
 					l.Warn("failed to move creature items to location >%v<", err)
 				}
@@ -257,7 +257,7 @@ func (p *AdventureGameCreatureEncounterProcessor) CreateNextTurnSheet(
 	creatureInstances, err := p.Domain.GetManyAdventureGameCreatureInstanceRecs(&coresql.Options{
 		Params: []coresql.Param{
 			{Col: adventure_game_record.FieldAdventureGameCreatureInstanceGameInstanceID, Val: gameInstanceRec.ID},
-			{Col: adventure_game_record.FieldAdventureGameCreatureInstanceAdventureGameLocationInstanceID, Val: characterInstanceRec.AdventureGameLocationInstanceID.String},
+			{Col: adventure_game_record.FieldAdventureGameCreatureInstanceAdventureGameLocationInstanceID, Val: characterInstanceRec.AdventureGameLocationInstanceID},
 		},
 	})
 	if err != nil {
@@ -376,7 +376,7 @@ func (p *AdventureGameCreatureEncounterProcessor) CreateNextTurnSheet(
 
 	// Step 5: Load background image (same as location choice sheet).
 	var backgroundImage *string
-	locationInstanceRec, err := p.Domain.GetAdventureGameLocationInstanceRec(characterInstanceRec.AdventureGameLocationInstanceID.String, nil)
+	locationInstanceRec, err := p.Domain.GetAdventureGameLocationInstanceRec(characterInstanceRec.AdventureGameLocationInstanceID, nil)
 	if err != nil {
 		l.Warn("failed to get location instance >%v<", err)
 	} else {
@@ -705,7 +705,7 @@ func (p *AdventureGameCreatureEncounterProcessor) resetDeadCharacter(l logger.Lo
 			continue
 		}
 		if locationRec.IsStartingLocation {
-			characterInstanceRec.AdventureGameLocationInstanceID = sql.NullString{String: li.ID, Valid: true}
+			characterInstanceRec.AdventureGameLocationInstanceID = li.ID
 			characterInstanceRec.Health = characterStartingHealth
 			if startingLocationName != nil {
 				*startingLocationName = locationRec.Name

@@ -108,7 +108,7 @@ func (p *AdventureGameLocationChoiceProcessor) ProcessTurnSheetResponse(ctx cont
 
 	// Step 3: Apply flee penalty from aggressive creatures at the character's CURRENT location.
 	// This happens before moving the character so we can check their current location.
-	currentLocationInstanceID := characterInstanceRec.AdventureGameLocationInstanceID.String
+	currentLocationInstanceID := characterInstanceRec.AdventureGameLocationInstanceID
 	isMoving := currentLocationInstanceID != chosenLocationID
 
 	// Resolve traversal description for narrative.
@@ -145,7 +145,7 @@ func (p *AdventureGameLocationChoiceProcessor) ProcessTurnSheetResponse(ctx cont
 	}
 
 	// Step 4: Update character's location.
-	characterInstanceRec.AdventureGameLocationInstanceID = sql.NullString{String: chosenLocationID, Valid: true}
+	characterInstanceRec.AdventureGameLocationInstanceID = chosenLocationID
 	characterInstanceRec, err := p.Domain.UpdateAdventureGameCharacterInstanceRec(characterInstanceRec)
 	if err != nil {
 		l.Warn("failed to update character location >%v<", err)
@@ -272,7 +272,7 @@ func (p *AdventureGameLocationChoiceProcessor) CreateNextTurnSheet(ctx context.C
 	l.Info("creating location choice turn sheet for character >%s<", characterInstanceRec.ID)
 
 	// Step 1: Get character's current location instance
-	locationInstanceRec, err := p.Domain.GetAdventureGameLocationInstanceRec(characterInstanceRec.AdventureGameLocationInstanceID.String, nil)
+	locationInstanceRec, err := p.Domain.GetAdventureGameLocationInstanceRec(characterInstanceRec.AdventureGameLocationInstanceID, nil)
 	if err != nil {
 		l.Warn("failed to get character's current location >%v<", err)
 		return nil, fmt.Errorf("failed to get character's current location: %w", err)
@@ -1110,7 +1110,7 @@ func (p *AdventureGameLocationChoiceProcessor) applyObjectWorldEffect(
 		if err != nil {
 			return fmt.Errorf("failed to get destination location instance: %w", err)
 		}
-		characterInstanceRec.AdventureGameLocationInstanceID = sql.NullString{String: destLocInst.ID, Valid: true}
+		characterInstanceRec.AdventureGameLocationInstanceID = destLocInst.ID
 		updatedChar, err := p.Domain.UpdateAdventureGameCharacterInstanceRec(characterInstanceRec)
 		if err != nil {
 			return fmt.Errorf("failed to teleport character: %w", err)

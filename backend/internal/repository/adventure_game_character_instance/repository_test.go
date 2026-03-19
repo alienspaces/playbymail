@@ -1,7 +1,6 @@
 package adventure_game_character_instance_test
 
 import (
-	"database/sql"
 	"testing"
 
 	"github.com/google/uuid"
@@ -34,7 +33,7 @@ func TestCreateOne(t *testing.T) {
 				GameID:                          gameInstanceRec.GameID,
 				GameInstanceID:                  gameInstanceRec.ID,
 				AdventureGameCharacterID:        charRec.ID,
-				AdventureGameLocationInstanceID: sql.NullString{String: locationInstanceRec.ID, Valid: true},
+				AdventureGameLocationInstanceID: locationInstanceRec.ID,
 				Health:                          100,
 				InventoryCapacity:               10,
 				LastTurnEvents:                  []byte("[]"),
@@ -55,7 +54,7 @@ func TestCreateOne(t *testing.T) {
 				GameID:                          gameInstanceRec.GameID,
 				GameInstanceID:                  gameInstanceRec.ID,
 				AdventureGameCharacterID:        charRec.ID,
-				AdventureGameLocationInstanceID: sql.NullString{String: locationInstanceRec.ID, Valid: true},
+				AdventureGameLocationInstanceID: locationInstanceRec.ID,
 				Health:                          100,
 				InventoryCapacity:               10,
 				LastTurnEvents:                  []byte("[]"),

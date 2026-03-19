@@ -74,9 +74,6 @@ func validateAdventureGameLocationObjectEffectRec(args *validateAdventureGameLoc
 		return err
 	}
 
-	if err := domain.ValidateStringField(adventure_game_record.FieldAdventureGameLocationObjectEffectResultDescription, rec.ResultDescription); err != nil {
-		return err
-	}
 
 	if err := domain.ValidateEnumField(
 		adventure_game_record.FieldAdventureGameLocationObjectEffectEffectType,

@@ -120,7 +120,7 @@ func (m *Domain) DropAdventureGameItemInstanceRec(characterInstanceID, itemInsta
 		return nil, err
 	}
 
-	if !characterRec.AdventureGameLocationInstanceID.Valid || characterRec.AdventureGameLocationInstanceID.String == "" {
+	if characterRec.AdventureGameLocationInstanceID == "" {
 		return nil, InvalidField("character_instance", characterInstanceID, "character is not at a location")
 	}
 
@@ -142,7 +142,7 @@ func (m *Domain) DropAdventureGameItemInstanceRec(characterInstanceID, itemInsta
 	}
 
 	// Move item to location
-	itemRec.AdventureGameLocationInstanceID = characterRec.AdventureGameLocationInstanceID
+	itemRec.AdventureGameLocationInstanceID = nullstring.FromString(characterRec.AdventureGameLocationInstanceID)
 	itemRec.AdventureGameCharacterInstanceID = sql.NullString{Valid: false}
 
 	updatedRec, err := m.UpdateAdventureGameItemInstanceRec(itemRec)
