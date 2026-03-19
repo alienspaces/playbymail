@@ -613,6 +613,16 @@ func DefaultDataConfig() DataConfig {
 							},
 						},
 					},
+				// Location Two -> Location One (return path, same link name)
+				{
+					Reference:       GameLocationLinkTwoRef,
+					FromLocationRef: GameLocationTwoRef,
+					ToLocationRef:   GameLocationOneRef,
+					Record: &adventure_game_record.AdventureGameLocationLink{
+						Name:        UniqueName("The Red Door"),
+						Description: "Return through the red door from the swamp back to the start.",
+					},
+				},
 				},
 				AdventureGameCreatureConfigs: []AdventureGameCreatureConfig{
 					{

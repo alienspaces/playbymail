@@ -6,7 +6,7 @@
         <h2>{{ mode === 'create' ? `Create ${title}` : `Edit ${title}` }}</h2>
         <form @submit.prevent="handleSubmit" class="modal-form">
           <div v-for="field in fields" :key="field.key" class="form-group">
-            <label v-if="field.type !== 'checkbox' && field.type !== 'info'" :for="field.key">
+            <label v-if="field.type !== 'checkbox' && field.type !== 'info' && field.type !== 'preview'" :for="field.key">
               {{ field.label }}<span v-if="field.required" class="required"> *</span>
             </label>
             <slot name="field" :field="field" :value="form[field.key]" :update="val => form[field.key] = val">
@@ -32,6 +32,12 @@
               <!-- Render informational notice -->
               <div v-else-if="field.type === 'info'" class="info-notice">
                 <p>{{ field.text }}</p>
+              </div>
+              <!-- Render turn sheet preview -->
+              <div v-else-if="field.type === 'preview'" class="preview-notice">
+                <p class="preview-label">Turn sheet preview</p>
+                <p v-if="getPreviewText(field)" class="preview-text">{{ getPreviewText(field) }}</p>
+                <p v-else class="preview-placeholder">{{ field.placeholder || 'Fill in the fields above to see a preview.' }}</p>
               </div>
               <!-- Render input for other types -->
               <input v-else v-model="form[field.key]" :id="field.key" :type="field.type || 'text'"
@@ -90,6 +96,13 @@ watch(
   }
 );
 
+function getPreviewText(field) {
+  if (typeof field.render === 'function') {
+    return field.render(form, props.options || {});
+  }
+  return null;
+}
+
 function getFieldOptions(field) {
   if (field.options) {
     return field.options;
@@ -143,6 +156,40 @@ function handleSubmit() {
 }
 
 .info-notice p {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}
+
+.preview-notice {
+  background: var(--color-bg-light);
+  border-left: 3px solid var(--color-primary, #6c63ff);
+  border-radius: var(--radius-sm);
+  padding: var(--space-sm) var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.preview-label {
+  margin: 0;
+  font-size: var(--font-size-xs, 0.75rem);
+  font-weight: var(--font-weight-semibold, 600);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.preview-text {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  font-style: italic;
+  line-height: 1.5;
+}
+
+.preview-placeholder {
   margin: 0;
   font-size: var(--font-size-sm);
   color: var(--color-text-muted);

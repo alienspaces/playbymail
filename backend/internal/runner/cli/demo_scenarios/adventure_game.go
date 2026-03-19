@@ -282,28 +282,28 @@ func adventureGameConfigs() []harness.GameConfig {
 						TraversalDescription: nullstring.FromString("You push through the weathered door and step into the walled herb garden. The scent of rosemary and thyme fills the air."),
 					},
 				},
-				// Narrow Passage -> Wine Cellar (no requirement)
-				{
-					Reference:       "demo-link-passage-to-cellar",
-					FromLocationRef: DemoLocNarrowPassageRef,
-					ToLocationRef:   DemoLocWineCellarRef,
-					Record: &adventure_game_record.AdventureGameLocationLink{
-						Name:                 "Cellar Steps",
-						Description:          "Worn stone steps descend from the passage into the wine cellar below.",
-						TraversalDescription: nullstring.FromString("You descend the worn stone steps carefully, one hand trailing along the damp wall. The smell of old wine and earth surrounds you."),
-					},
+			// Narrow Passage -> Wine Cellar (no requirement)
+			{
+				Reference:       "demo-link-passage-to-cellar",
+				FromLocationRef: DemoLocNarrowPassageRef,
+				ToLocationRef:   DemoLocWineCellarRef,
+				Record: &adventure_game_record.AdventureGameLocationLink{
+					Name:                 "The Cellar Steps",
+					Description:          "Worn stone steps descend from the passage into the wine cellar below.",
+					TraversalDescription: nullstring.FromString("You descend the worn stone steps carefully, one hand trailing along the damp wall. The smell of old wine and earth surrounds you."),
 				},
-				// Narrow Passage -> Grand Staircase (no requirement, return path)
-				{
-					Reference:       "demo-link-passage-to-staircase",
-					FromLocationRef: DemoLocNarrowPassageRef,
-					ToLocationRef:   DemoLocGrandStaircaseRef,
-					Record: &adventure_game_record.AdventureGameLocationLink{
-						Name:                 "Back Through the Door",
-						Description:          "The small door leads back to the grand staircase.",
-						TraversalDescription: nullstring.FromString("You duck back through the small door and climb the narrow staircase into the entrance hall."),
-					},
+			},
+			// Narrow Passage -> Grand Staircase (no requirement, return path)
+			{
+				Reference:       "demo-link-passage-to-staircase",
+				FromLocationRef: DemoLocNarrowPassageRef,
+				ToLocationRef:   DemoLocGrandStaircaseRef,
+				Record: &adventure_game_record.AdventureGameLocationLink{
+					Name:                 "The Small Door",
+					Description:          "The small door opens back onto the foot of the grand staircase.",
+					TraversalDescription: nullstring.FromString("You duck back through the small door and climb the narrow staircase into the entrance hall."),
 				},
+			},
 				// Wine Cellar -> Crypt (requires Tallow Candle; hidden while Cellar Rat is alive)
 				{
 					Reference:       "demo-link-cellar-to-crypt",
@@ -336,16 +336,17 @@ func adventureGameConfigs() []harness.GameConfig {
 						},
 					},
 				},
-				// Wine Cellar -> Narrow Passage (no requirement, return path)
-				{
-					Reference:       "demo-link-cellar-to-passage",
-					FromLocationRef: DemoLocWineCellarRef,
-					ToLocationRef:   DemoLocNarrowPassageRef,
-					Record: &adventure_game_record.AdventureGameLocationLink{
-						Name:        "Stone Steps Up",
-						Description: "The steps climb back up to the narrow passage above.",
-					},
+			// Wine Cellar -> Narrow Passage (no requirement, return path)
+			{
+				Reference:       "demo-link-cellar-to-passage",
+				FromLocationRef: DemoLocWineCellarRef,
+				ToLocationRef:   DemoLocNarrowPassageRef,
+				Record: &adventure_game_record.AdventureGameLocationLink{
+					Name:                 "The Cellar Steps",
+					Description:          "The worn stone steps climb back up to the narrow passage above.",
+					TraversalDescription: nullstring.FromString("You climb the worn stone steps back up into the narrow passage, leaving the earthy smell of the cellar behind."),
 				},
+			},
 				// Crypt -> Underground Chapel (requires Silver Cross in inventory)
 				{
 					Reference:       "demo-link-crypt-to-chapel",
@@ -368,16 +369,28 @@ func adventureGameConfigs() []harness.GameConfig {
 						},
 					},
 				},
-				// Crypt -> Wine Cellar (no requirement, return path)
-				{
-					Reference:       "demo-link-crypt-to-cellar",
-					FromLocationRef: DemoLocCryptRef,
-					ToLocationRef:   DemoLocWineCellarRef,
-					Record: &adventure_game_record.AdventureGameLocationLink{
-						Name:        "Back to the Cellar",
-						Description: "The archway leads back into the wine cellar's dusty warmth.",
-					},
+			// Underground Chapel -> Crypt (no requirement, return path)
+			{
+				Reference:       "demo-link-chapel-to-crypt",
+				FromLocationRef: DemoLocUndergroundChapelRef,
+				ToLocationRef:   DemoLocCryptRef,
+				Record: &adventure_game_record.AdventureGameLocationLink{
+					Name:                 "The Warded Gate",
+					Description:          "The iron gate bearing holy symbols leads back into the cold silence of the crypt.",
+					TraversalDescription: nullstring.FromString("You pass back through the warded gate into the crypt, its chill settling around you once more."),
 				},
+			},
+			// Crypt -> Wine Cellar (no requirement, return path)
+			{
+				Reference:       "demo-link-crypt-to-cellar",
+				FromLocationRef: DemoLocCryptRef,
+				ToLocationRef:   DemoLocWineCellarRef,
+				Record: &adventure_game_record.AdventureGameLocationLink{
+					Name:                 "The Dark Archway",
+					Description:          "The dark archway leads back into the dusty warmth of the wine cellar.",
+					TraversalDescription: nullstring.FromString("You pass back through the dark archway and ascend into the wine cellar's dusty warmth, grateful to leave the cold silence behind."),
+				},
+			},
 				// Underground Chapel -> Flooded Corridor (requires Tallow Candle in inventory)
 				{
 					Reference:       "demo-link-chapel-to-flooded",
@@ -400,9 +413,20 @@ func adventureGameConfigs() []harness.GameConfig {
 						},
 					},
 				},
-				// Underground Chapel -> Abbot's Study (no requirement)
-				{
-					Reference:       "demo-link-chapel-to-study",
+			// Flooded Corridor -> Underground Chapel (no requirement, return path)
+			{
+				Reference:       "demo-link-flooded-to-chapel",
+				FromLocationRef: DemoLocFloodedCorridorRef,
+				ToLocationRef:   DemoLocUndergroundChapelRef,
+				Record: &adventure_game_record.AdventureGameLocationLink{
+					Name:                 "The Broken Wall",
+					Description:          "The gap in the broken wall leads back up to the underground chapel above.",
+					TraversalDescription: nullstring.FromString("You clamber back up through the gap in the broken wall and into the chapel's flickering quiet."),
+				},
+			},
+			// Underground Chapel -> Abbot's Study (no requirement)
+			{
+				Reference:       "demo-link-chapel-to-study",
 					FromLocationRef: DemoLocUndergroundChapelRef,
 					ToLocationRef:   DemoLocAbbotsStudyRef,
 					Record: &adventure_game_record.AdventureGameLocationLink{
@@ -410,9 +434,20 @@ func adventureGameConfigs() []harness.GameConfig {
 						Description: "A stone panel behind the altar slides aside to reveal a small room beyond.",
 					},
 				},
-				// Flooded Corridor -> Well Chamber (requires Coil of Rope in inventory)
-				{
-					Reference:       "demo-link-flooded-to-well",
+			// Abbot's Study -> Underground Chapel (no requirement, return path)
+			{
+				Reference:       "demo-link-study-to-chapel",
+				FromLocationRef: DemoLocAbbotsStudyRef,
+				ToLocationRef:   DemoLocUndergroundChapelRef,
+				Record: &adventure_game_record.AdventureGameLocationLink{
+					Name:                 "The Hidden Panel",
+					Description:          "The stone panel slides aside to reveal the underground chapel beyond.",
+					TraversalDescription: nullstring.FromString("You press the stone panel and step back through into the underground chapel."),
+				},
+			},
+			// Flooded Corridor -> Well Chamber (requires Coil of Rope in inventory)
+			{
+				Reference:       "demo-link-flooded-to-well",
 					FromLocationRef: DemoLocFloodedCorridorRef,
 					ToLocationRef:   DemoLocWellChamberRef,
 					Record: &adventure_game_record.AdventureGameLocationLink{
@@ -432,9 +467,20 @@ func adventureGameConfigs() []harness.GameConfig {
 						},
 					},
 				},
-				// Well Chamber -> Bell Tower Vault (no requirement)
-				{
-					Reference:       "demo-link-well-to-vault",
+			// Well Chamber -> Flooded Corridor (no requirement, return path)
+			{
+				Reference:       "demo-link-well-to-flooded",
+				FromLocationRef: DemoLocWellChamberRef,
+				ToLocationRef:   DemoLocFloodedCorridorRef,
+				Record: &adventure_game_record.AdventureGameLocationLink{
+					Name:                 "The Submerged Ledge",
+					Description:          "The submerged stone ledge leads back down into the flooded corridor below.",
+					TraversalDescription: nullstring.FromString("You lower yourself back along the submerged ledge into the flooded corridor, cold water rising around you."),
+				},
+			},
+			// Well Chamber -> Bell Tower Vault (no requirement)
+			{
+				Reference:       "demo-link-well-to-vault",
 					FromLocationRef: DemoLocWellChamberRef,
 					ToLocationRef:   DemoLocBellTowerVaultRef,
 					Record: &adventure_game_record.AdventureGameLocationLink{
@@ -442,26 +488,28 @@ func adventureGameConfigs() []harness.GameConfig {
 						Description: "Behind a loose stone in the well chamber, a narrow staircase spirals upward into the bell tower.",
 					},
 				},
-				// Herb Garden -> Grand Staircase (no requirement, return path)
-				{
-					Reference:       "demo-link-garden-to-staircase",
-					FromLocationRef: DemoLocHerbGardenRef,
-					ToLocationRef:   DemoLocGrandStaircaseRef,
-					Record: &adventure_game_record.AdventureGameLocationLink{
-						Name:        "Back Inside",
-						Description: "The side door leads back into the abbey's entrance hall.",
-					},
+			// Herb Garden -> Grand Staircase (no requirement, return path)
+			{
+				Reference:       "demo-link-garden-to-staircase",
+				FromLocationRef: DemoLocHerbGardenRef,
+				ToLocationRef:   DemoLocGrandStaircaseRef,
+				Record: &adventure_game_record.AdventureGameLocationLink{
+					Name:                 "The Side Door",
+					Description:          "The weathered side door leads back into the abbey's entrance hall.",
+					TraversalDescription: nullstring.FromString("You push back through the weathered door into the cool stone entrance hall."),
 				},
-				// Bell Tower Vault -> Well Chamber (no requirement, return path)
-				{
-					Reference:       "demo-link-vault-to-well",
-					FromLocationRef: DemoLocBellTowerVaultRef,
-					ToLocationRef:   DemoLocWellChamberRef,
-					Record: &adventure_game_record.AdventureGameLocationLink{
-						Name:        "The Spiral Stair Down",
-						Description: "The narrow staircase winds back down to the well chamber.",
-					},
+			},
+			// Bell Tower Vault -> Well Chamber (no requirement, return path)
+			{
+				Reference:       "demo-link-vault-to-well",
+				FromLocationRef: DemoLocBellTowerVaultRef,
+				ToLocationRef:   DemoLocWellChamberRef,
+				Record: &adventure_game_record.AdventureGameLocationLink{
+					Name:                 "The Hidden Stair",
+					Description:          "The hidden staircase winds back down through the stone to the well chamber below.",
+					TraversalDescription: nullstring.FromString("You descend the narrow spiral stair, the bell tower's cold air following you down into the well chamber."),
 				},
+			},
 			},
 		},
 	}

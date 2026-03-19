@@ -64,7 +64,19 @@ const columns = [
 const locationLinkFields = [
   { key: 'from_adventure_game_location_id', label: 'From Location', type: 'select', required: true, placeholder: 'Select a location...' },
   { key: 'to_adventure_game_location_id', label: 'To Location', type: 'select', required: true, placeholder: 'Select a location...' },
-  { key: 'name', label: 'Link Name', type: 'text', required: true, maxlength: 64, placeholder: 'e.g., North Path, Secret Door' },
+  { key: 'name', label: 'Link Name', type: 'text', required: true, maxlength: 64, placeholder: 'e.g., The Small Door, The Stone Steps' },
+  {
+    key: '_travel_log_preview',
+    type: 'preview',
+    placeholder: 'Enter a name and select a destination to preview the travel log entry.',
+    render: (form, options) => {
+      const name = form.name?.trim();
+      const dest = (options.to_adventure_game_location_id || [])
+        .find(o => o.value === form.to_adventure_game_location_id)?.label;
+      if (!name || !dest) return null;
+      return `"You took ${name} to ${dest}."`;
+    }
+  },
   { key: 'description', label: 'Description', type: 'textarea', required: true, maxlength: 255, placeholder: 'Describe the link between locations...', rows: 3 },
   { key: 'locked_description', label: 'Locked Description', type: 'textarea', required: false, maxlength: 1024, placeholder: 'Shown when the player cannot traverse this link (atmospheric, no spoilers)...', rows: 3 },
   { key: 'traversal_description', label: 'Traversal Description', type: 'textarea', required: false, maxlength: 1024, placeholder: 'Narrative text describing the experience of travelling through this link, e.g. "You push open the small door and descend into darkness."', rows: 3 }
