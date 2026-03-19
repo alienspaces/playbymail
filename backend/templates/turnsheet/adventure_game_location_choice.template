@@ -156,6 +156,95 @@
     .flee-warning strong {
         color: #c0392b;
     }
+
+    .objects-section {
+        margin-bottom: 12px;
+    }
+
+    .object-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .object-entry {
+        border: 1px solid #c5b87a;
+        border-radius: 4px;
+        padding: 10px 14px;
+        background-color: rgba(255, 252, 235, 0.85);
+    }
+
+    .object-entry-name {
+        font-weight: 600;
+        font-size: 14px;
+        color: #3d2b00;
+    }
+
+    .object-entry-state {
+        font-size: 11px;
+        font-style: italic;
+        color: #7a6030;
+        margin-left: 6px;
+    }
+
+    .object-entry-description {
+        font-size: 12px;
+        color: #555;
+        margin-top: 3px;
+        margin-bottom: 6px;
+    }
+
+    .object-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        margin-top: 4px;
+    }
+
+    .object-action {
+        display: table;
+        table-layout: fixed;
+        width: 100%;
+    }
+
+    .object-action .object-action-radio {
+        display: table-cell;
+        width: 28px;
+        vertical-align: middle;
+        padding-right: 10px;
+    }
+
+    .object-action .object-action-content {
+        display: table-cell;
+        vertical-align: middle;
+        font-size: 13px;
+        line-height: 1.3;
+    }
+
+    .object-action-unavailable {
+        display: table;
+        table-layout: fixed;
+        width: 100%;
+        opacity: 0.55;
+    }
+
+    .object-action-unavailable .object-action-icon {
+        display: table-cell;
+        width: 28px;
+        vertical-align: middle;
+        padding-right: 10px;
+        font-size: 0.85em;
+        color: #888;
+    }
+
+    .object-action-unavailable .object-action-content {
+        display: table-cell;
+        vertical-align: middle;
+        font-size: 13px;
+        color: #888;
+        font-style: italic;
+        line-height: 1.3;
+    }
 </style>
 {{end}}
 
@@ -218,6 +307,50 @@
 {{else}}
 <div class="no-options">
     <p>No available paths from this location.</p>
+</div>
+{{end}}
+
+{{if .LocationObjects}}
+<h3 class="content-section-title">Objects Here</h3>
+<p class="content-section-subtitle">You may interact with one of the following objects instead of moving:</p>
+<div class="objects-section">
+    <div class="object-list">
+        {{range .LocationObjects}}
+        {{$obj := .}}
+        <div class="object-entry">
+            <div>
+                <span class="object-entry-name">{{.Name}}</span>
+                <span class="object-entry-state">({{.CurrentState}})</span>
+            </div>
+            <div class="object-entry-description">{{.Description}}</div>
+            {{if .Actions}}
+            <div class="object-actions">
+                {{range .Actions}}
+                {{if .IsAvailable}}
+                <label class="object-action">
+                    <div class="object-action-radio">
+                        <input type="radio" name="object_choice" value="{{$obj.ObjectInstanceID}}:{{.ActionType}}">
+                    </div>
+                    <div class="object-action-content">
+                        {{.ActionType}}
+                        {{if .RequiredItemName}}<span style="font-size:11px;color:#888;">(requires: {{.RequiredItemName}})</span>{{end}}
+                    </div>
+                </label>
+                {{else}}
+                <div class="object-action-unavailable">
+                    <div class="object-action-icon">&#x26D4;</div>
+                    <div class="object-action-content">
+                        {{.ActionType}}
+                        {{if .RequiredItemName}} &mdash; requires: {{.RequiredItemName}}{{end}}
+                    </div>
+                </div>
+                {{end}}
+                {{end}}
+            </div>
+            {{end}}
+        </div>
+        {{end}}
+    </div>
 </div>
 {{end}}
 {{end}}

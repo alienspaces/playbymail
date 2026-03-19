@@ -25,6 +25,9 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/repository/adventure_game_location_instance"
 	"gitlab.com/alienspaces/playbymail/internal/repository/adventure_game_location_link"
 	"gitlab.com/alienspaces/playbymail/internal/repository/adventure_game_location_link_requirement"
+	"gitlab.com/alienspaces/playbymail/internal/repository/adventure_game_location_object"
+	"gitlab.com/alienspaces/playbymail/internal/repository/adventure_game_location_object_effect"
+	"gitlab.com/alienspaces/playbymail/internal/repository/adventure_game_location_object_instance"
 	"gitlab.com/alienspaces/playbymail/internal/repository/adventure_game_turn_sheet"
 	"gitlab.com/alienspaces/playbymail/internal/repository/catalog_game_instance_view"
 	"gitlab.com/alienspaces/playbymail/internal/repository/game"
@@ -88,6 +91,9 @@ func NewDomain(l logger.Logger, cfg config.Config) (*Domain, error) {
 		adventure_game_creature_instance.NewRepository,
 		adventure_game_character_instance.NewRepository,
 		adventure_game_turn_sheet.NewRepository,
+		adventure_game_location_object.NewRepository,
+		adventure_game_location_object_effect.NewRepository,
+		adventure_game_location_object_instance.NewRepository,
 	}
 
 	cd, err := domain.NewDomain(l, repositoryConstructors)
@@ -243,6 +249,21 @@ func (m *Domain) AdventureGameTurnSheetRepository() *repository.Generic[adventur
 // GameImageRepository -
 func (m *Domain) GameImageRepository() *repository.Generic[game_record.GameImage, *game_record.GameImage] {
 	return m.Repositories[game_image.TableName].(*repository.Generic[game_record.GameImage, *game_record.GameImage])
+}
+
+// AdventureGameLocationObjectRepository -
+func (m *Domain) AdventureGameLocationObjectRepository() *repository.Generic[adventure_game_record.AdventureGameLocationObject, *adventure_game_record.AdventureGameLocationObject] {
+	return m.Repositories[adventure_game_location_object.TableName].(*repository.Generic[adventure_game_record.AdventureGameLocationObject, *adventure_game_record.AdventureGameLocationObject])
+}
+
+// AdventureGameLocationObjectEffectRepository -
+func (m *Domain) AdventureGameLocationObjectEffectRepository() *repository.Generic[adventure_game_record.AdventureGameLocationObjectEffect, *adventure_game_record.AdventureGameLocationObjectEffect] {
+	return m.Repositories[adventure_game_location_object_effect.TableName].(*repository.Generic[adventure_game_record.AdventureGameLocationObjectEffect, *adventure_game_record.AdventureGameLocationObjectEffect])
+}
+
+// AdventureGameLocationObjectInstanceRepository -
+func (m *Domain) AdventureGameLocationObjectInstanceRepository() *repository.Generic[adventure_game_record.AdventureGameLocationObjectInstance, *adventure_game_record.AdventureGameLocationObjectInstance] {
+	return m.Repositories[adventure_game_location_object_instance.TableName].(*repository.Generic[adventure_game_record.AdventureGameLocationObjectInstance, *adventure_game_record.AdventureGameLocationObjectInstance])
 }
 
 // Logger - Returns a logger with package context and provided function context

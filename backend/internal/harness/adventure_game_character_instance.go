@@ -1,6 +1,7 @@
 package harness
 
 import (
+	"database/sql"
 	"fmt"
 
 	"gitlab.com/alienspaces/playbymail/internal/domain"
@@ -44,7 +45,7 @@ func (t *Testing) createAdventureGameCharacterInstanceRec(cfg AdventureGameChara
 		l.Error("could not resolve GameLocationRef >%s< to a valid game location instance ID for game instance >%s<", cfg.GameLocationRef, gameInstanceRec.ID)
 		return nil, fmt.Errorf("could not resolve GameLocationRef >%s< to a valid game location instance ID for game instance >%s<", cfg.GameLocationRef, gameInstanceRec.ID)
 	}
-	rec.AdventureGameLocationInstanceID = locationInstanceRec.ID
+	rec.AdventureGameLocationInstanceID = sql.NullString{String: locationInstanceRec.ID, Valid: true}
 
 	// Create record
 	l.Debug("creating game_character_instance record >%#v<", rec)

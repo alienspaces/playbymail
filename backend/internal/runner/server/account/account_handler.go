@@ -249,18 +249,20 @@ func getManyAccountsHandler(w http.ResponseWriter, r *http.Request, pp httproute
 
 	l.Info("querying many account records with params >%#v<", qp)
 
+	authenData, err := authorizeAccountRead(l, r)
+	if err != nil {
+		return err
+	}
+
 	mm := m.(*domain.Domain)
 
 	opts := queryparam.ToSQLOptionsWithDefaults(qp)
 
-	// Filter by authenticated account ID if present
-	authData := server.GetRequestAuthenData(l, r)
-	if authData != nil {
-		opts.Params = append(opts.Params, coresql.Param{
-			Col: "id",
-			Val: authData.AccountUser.AccountID,
-		})
-	}
+	// Filter to the authenticated user's own account
+	opts.Params = append(opts.Params, coresql.Param{
+		Col: "id",
+		Val: authenData.AccountUser.AccountID,
+	})
 
 	recs, err := mm.GetManyAccountRecs(opts)
 	if err != nil {
@@ -291,6 +293,11 @@ func getAccountHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Par
 		l.Warn("account ID is empty")
 		return coreerror.RequiredPathParameter("account_id")
 	}
+
+	if _, err := authorizeAccountMember(l, r, accountID); err != nil {
+		return err
+	}
+
 	l.Info("querying account record with account_id >%s<", accountID)
 
 	mm := m.(*domain.Domain)
@@ -371,13 +378,17 @@ func updateAccountHandler(w http.ResponseWriter, r *http.Request, pp httprouter.
 
 	l.Info("updating account record with path params >%#v<", pp)
 
-	mm := m.(*domain.Domain)
-
 	accountID := pp.ByName("account_id")
 	if accountID == "" {
 		l.Warn("account ID is empty")
 		return coreerror.RequiredPathParameter("account_id")
 	}
+
+	if _, err := authorizeAccountMember(l, r, accountID); err != nil {
+		return err
+	}
+
+	mm := m.(*domain.Domain)
 
 	rec, err := mm.GetAccountRec(accountID, coresql.ForUpdateNoWait)
 	if err != nil {
@@ -480,6 +491,10 @@ func refreshSessionHandler(w http.ResponseWriter, r *http.Request, pp httprouter
 	l = logging.LoggerWithFunctionContext(l, packageName, "refreshSessionHandler")
 
 	l.Info("refreshing session")
+
+	if _, err := authorizeAccountRead(l, r); err != nil {
+		return err
+	}
 
 	mm := m.(*domain.Domain)
 

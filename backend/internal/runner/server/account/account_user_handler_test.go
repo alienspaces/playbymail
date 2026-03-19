@@ -62,6 +62,15 @@ func Test_getAccountUserHandler(t *testing.T) {
 		},
 		{
 			TestCase: testutil.TestCase{
+				Name: "unauthenticated request when get many account users then returns unauthorized",
+				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
+					return rnr.GetHandlerConfig()[account.GetManyAccountUsers]
+				},
+				ResponseCode: http.StatusUnauthorized,
+			},
+		},
+		{
+			TestCase: testutil.TestCase{
 				Name: "authenticated user when get many account users by account then returns expected account users",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()["get-many-account-users-by-account"]
@@ -86,6 +95,21 @@ func Test_getAccountUserHandler(t *testing.T) {
 		},
 		{
 			TestCase: testutil.TestCase{
+				Name: "different account when get many account users by account then returns forbidden",
+				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
+					return rnr.GetHandlerConfig()["get-many-account-users-by-account"]
+				},
+				RequestHeaders: testutil.AuthHeaderProPlayer,
+				RequestPathParams: func(d harness.Data) map[string]string {
+					return map[string]string{
+						":account_id": accountUserRec.AccountID,
+					}
+				},
+				ResponseCode: http.StatusForbidden,
+			},
+		},
+		{
+			TestCase: testutil.TestCase{
 				Name: "authenticated user when get one account user with valid IDs then returns expected account user",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[account.GetOneAccountUser]
@@ -101,6 +125,37 @@ func Test_getAccountUserHandler(t *testing.T) {
 				ResponseCode:    http.StatusOK,
 			},
 			collectionRequest: false,
+		},
+		{
+			TestCase: testutil.TestCase{
+				Name: "unauthenticated request when get one account user then returns unauthorized",
+				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
+					return rnr.GetHandlerConfig()[account.GetOneAccountUser]
+				},
+				RequestPathParams: func(d harness.Data) map[string]string {
+					return map[string]string{
+						":account_id":      accountUserRec.AccountID,
+						":account_user_id": accountUserRec.ID,
+					}
+				},
+				ResponseCode: http.StatusUnauthorized,
+			},
+		},
+		{
+			TestCase: testutil.TestCase{
+				Name: "different account when get one account user then returns forbidden",
+				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
+					return rnr.GetHandlerConfig()[account.GetOneAccountUser]
+				},
+				RequestHeaders: testutil.AuthHeaderProPlayer,
+				RequestPathParams: func(d harness.Data) map[string]string {
+					return map[string]string{
+						":account_id":      accountUserRec.AccountID,
+						":account_user_id": accountUserRec.ID,
+					}
+				},
+				ResponseCode: http.StatusForbidden,
+			},
 		},
 	}
 
@@ -252,6 +307,51 @@ func Test_createUpdateDeleteAccountUserHandler(t *testing.T) {
 			},
 			expectResponse: nil,
 		},
+		{
+			TestCase: testutil.TestCase{
+				Name: "unauthenticated request when update account user then returns unauthorized",
+				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
+					return rnr.GetHandlerConfig()[account.UpdateOneAccountUser]
+				},
+				RequestPathParams: func(d harness.Data) map[string]string {
+					return map[string]string{
+						":account_id":      accountUserRec.AccountID,
+						":account_user_id": accountUserRec.ID,
+					}
+				},
+				RequestBody: func(d harness.Data) any {
+					s := "disabled"
+					return account_schema.AccountUserRequest{
+						Status: &s,
+					}
+				},
+				ResponseCode: http.StatusUnauthorized,
+			},
+			expectResponse: nil,
+		},
+		{
+			TestCase: testutil.TestCase{
+				Name: "different account when update account user then returns forbidden",
+				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
+					return rnr.GetHandlerConfig()[account.UpdateOneAccountUser]
+				},
+				RequestHeaders: testutil.AuthHeaderProPlayer,
+				RequestPathParams: func(d harness.Data) map[string]string {
+					return map[string]string{
+						":account_id":      accountUserRec.AccountID,
+						":account_user_id": accountUserRec.ID,
+					}
+				},
+				RequestBody: func(d harness.Data) any {
+					s := "disabled"
+					return account_schema.AccountUserRequest{
+						Status: &s,
+					}
+				},
+				ResponseCode: http.StatusForbidden,
+			},
+			expectResponse: nil,
+		},
 	}
 
 	for _, testCase := range testCases {
@@ -259,7 +359,8 @@ func Test_createUpdateDeleteAccountUserHandler(t *testing.T) {
 
 		t.Run(testCase.Name, func(t *testing.T) {
 			testFunc := func(method string, body any) {
-				if testCase.TestResponseCode() == http.StatusNoContent {
+				rc := testCase.TestResponseCode()
+				if rc == http.StatusNoContent || rc == http.StatusUnauthorized || rc == http.StatusForbidden {
 					return
 				}
 

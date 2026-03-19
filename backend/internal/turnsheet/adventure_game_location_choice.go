@@ -30,6 +30,26 @@ type LocationChoiceData struct {
 
 	// Available location options
 	LocationOptions []LocationOption `json:"location_options"`
+
+	// Interactive objects at this location
+	LocationObjects []LocationObjectOption `json:"location_objects,omitempty"`
+}
+
+// LocationObjectOption represents an interactive object visible to the player at their current location.
+type LocationObjectOption struct {
+	ObjectInstanceID string                      `json:"object_instance_id"`
+	Name             string                      `json:"name"`
+	Description      string                      `json:"description"`
+	CurrentState     string                      `json:"current_state"`
+	Actions          []LocationObjectActionOption `json:"actions,omitempty"`
+}
+
+// LocationObjectActionOption represents an action that can be performed on an object.
+type LocationObjectActionOption struct {
+	ActionType       string `json:"action_type"`
+	RequiredItemName string `json:"required_item_name,omitempty"`
+	HasRequiredItem  bool   `json:"has_required_item"`
+	IsAvailable      bool   `json:"is_available"`
 }
 
 // LocationCreature represents a creature visible to the player at their current location.
@@ -53,9 +73,11 @@ type LocationOption struct {
 // LocationChoiceScanData represents the scanned data from a location choice turn sheet.
 // Accepts both the programmatic format {"choices":["id"]} and the HTML form format
 // {"location_choice":"id"} produced by the in-browser turn sheet form.
+// Also accepts {"object_choice":"instanceID:action_type"} for object interactions.
 type LocationChoiceScanData struct {
-	Choices        []string `json:"choices"`
-	LocationChoice string   `json:"location_choice"`
+	Choices       []string `json:"choices"`
+	LocationChoice string  `json:"location_choice"`
+	ObjectChoice  string   `json:"object_choice"` // format: "{object_instance_id}:{action_type}"
 }
 
 // GetChoices returns the chosen location IDs, normalising both input formats.

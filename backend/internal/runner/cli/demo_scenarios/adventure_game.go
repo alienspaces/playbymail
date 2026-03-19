@@ -1,6 +1,7 @@
 package demo_scenarios
 
 import (
+	"gitlab.com/alienspaces/playbymail/core/nullint32"
 	"gitlab.com/alienspaces/playbymail/core/nullstring"
 	"gitlab.com/alienspaces/playbymail/internal/harness"
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
@@ -28,6 +29,15 @@ const (
 
 	DemoCreatureShadowMonkRef = "demo-creature-shadow-monk"
 	DemoCreatureCellarRatRef  = "demo-creature-cellar-rat"
+
+	// Location object references
+	DemoObjAncientWellRef     = "demo-obj-ancient-well"
+	DemoObjStoneAltarRef      = "demo-obj-stone-altar"
+	DemoObjManuscriptsRef     = "demo-obj-manuscripts"
+	DemoObjIronChestRef       = "demo-obj-iron-chest"
+	DemoObjRustedGateRef      = "demo-obj-rusted-gate"
+	DemoObjLeverRef           = "demo-obj-lever"
+	DemoObjHiddenDoorRef      = "demo-obj-hidden-door"
 
 	DemoInstanceOneRef      = "demo-instance-one"
 	DemoInstanceParamOneRef = "demo-instance-param-one"
@@ -499,18 +509,451 @@ func adventureGameConfigs() []harness.GameConfig {
 					TraversalDescription: nullstring.FromString("You push back through the weathered door into the cool stone entrance hall."),
 				},
 			},
-			// Bell Tower Vault -> Well Chamber (no requirement, return path)
-			{
-				Reference:       "demo-link-vault-to-well",
-				FromLocationRef: DemoLocBellTowerVaultRef,
-				ToLocationRef:   DemoLocWellChamberRef,
-				Record: &adventure_game_record.AdventureGameLocationLink{
-					Name:                 "The Hidden Stair",
-					Description:          "The hidden staircase winds back down through the stone to the well chamber below.",
-					TraversalDescription: nullstring.FromString("You descend the narrow spiral stair, the bell tower's cold air following you down into the well chamber."),
-				},
-			},
+		// Bell Tower Vault -> Well Chamber (no requirement, return path)
+		{
+			Reference:       "demo-link-vault-to-well",
+			FromLocationRef: DemoLocBellTowerVaultRef,
+			ToLocationRef:   DemoLocWellChamberRef,
+			Record: &adventure_game_record.AdventureGameLocationLink{
+				Name:                 "The Hidden Stair",
+				Description:          "The hidden staircase winds back down through the stone to the well chamber below.",
+				TraversalDescription: nullstring.FromString("You descend the narrow spiral stair, the bell tower's cold air following you down into the well chamber."),
 			},
 		},
-	}
+		},
+
+		// ── Location Objects ───────────────────────────────────────
+		AdventureGameLocationObjectConfigs: []harness.AdventureGameLocationObjectConfig{
+
+			// ── Hidden Door (created first so the Lever can reference it) ──
+			{
+				Reference:   DemoObjHiddenDoorRef,
+				LocationRef: DemoLocUndergroundChapelRef,
+				Record: &adventure_game_record.AdventureGameLocationObject{
+					Name:         "Hidden Door",
+					Description:  "A section of the chapel wall that seems to blend perfectly with the surrounding stonework. There is something off about the mortar lines.",
+					InitialState: "hidden",
+					IsHidden:     true,
+				},
+				AdventureGameLocationObjectEffectConfigs: []harness.AdventureGameLocationObjectEffectConfig{
+					// inspect (any state) → info
+					{
+						Reference: "demo-obj-effect-hidden-door-inspect",
+						Record: &adventure_game_record.AdventureGameLocationObjectEffect{
+							ActionType:        adventure_game_record.AdventureGameLocationObjectEffectActionTypeInspect,
+							EffectType:        adventure_game_record.AdventureGameLocationObjectEffectEffectTypeInfo,
+							ResultDescription: "The door's stone face is cold and utterly silent. Whatever mechanism opens it is not obvious from this side.",
+							IsRepeatable:      true,
+						},
+					},
+					// push (state=revealed) → change_state to open
+					{
+						Reference: "demo-obj-effect-hidden-door-push",
+						Record: &adventure_game_record.AdventureGameLocationObjectEffect{
+							ActionType:        adventure_game_record.AdventureGameLocationObjectEffectActionTypePush,
+							RequiredState:     nullstring.FromString("revealed"),
+							EffectType:        adventure_game_record.AdventureGameLocationObjectEffectEffectTypeChangeState,
+							ResultState:       nullstring.FromString("open"),
+							ResultDescription: "The hidden door swings inward on well-balanced pivots, revealing a dark shaft beyond.",
+							IsRepeatable:      false,
+						},
+					},
+				},
+			},
+
+			// ── Ancient Well (Well Chamber) ──
+			{
+				Reference:   DemoObjAncientWellRef,
+				LocationRef: DemoLocWellChamberRef,
+				Record: &adventure_game_record.AdventureGameLocationObject{
+					Name:         "Ancient Well",
+					Description:  "A circular stone well of great age. A frayed rope hangs into the darkness below. Water glints faintly far down.",
+					InitialState: "intact",
+				},
+				AdventureGameLocationObjectEffectConfigs: []harness.AdventureGameLocationObjectEffectConfig{
+					// inspect → info
+					{
+						Reference: "demo-obj-effect-well-inspect",
+						Record: &adventure_game_record.AdventureGameLocationObjectEffect{
+							ActionType:        adventure_game_record.AdventureGameLocationObjectEffectActionTypeInspect,
+							EffectType:        adventure_game_record.AdventureGameLocationObjectEffectEffectTypeInfo,
+							ResultDescription: "The well plunges into darkness. Cold air rises from below. The rope looks old, but the knots are tight.",
+							IsRepeatable:      true,
+						},
+					},
+					// listen → info
+					{
+						Reference: "demo-obj-effect-well-listen",
+						Record: &adventure_game_record.AdventureGameLocationObjectEffect{
+							ActionType:        adventure_game_record.AdventureGameLocationObjectEffectActionTypeListen,
+							EffectType:        adventure_game_record.AdventureGameLocationObjectEffectEffectTypeInfo,
+							ResultDescription: "Faint dripping echoes rise from the well's depths, slow and rhythmic, like a heartbeat in stone.",
+							IsRepeatable:      true,
+						},
+					},
+					// search (state=intact) → give_item: Abbot's Journal, change_state to searched
+					{
+						Reference:   "demo-obj-effect-well-search-give",
+						ResultItemRef: DemoItemAbbotsJournalRef,
+						Record: &adventure_game_record.AdventureGameLocationObjectEffect{
+							ActionType:        adventure_game_record.AdventureGameLocationObjectEffectActionTypeSearch,
+							RequiredState:     nullstring.FromString("intact"),
+							EffectType:        adventure_game_record.AdventureGameLocationObjectEffectEffectTypeGiveItem,
+							ResultDescription: "Wedged beneath a loose stone on the well's inner rim, you find a cracked leather journal — the Abbot's Journal.",
+							IsRepeatable:      false,
+						},
+					},
+					{
+						Reference: "demo-obj-effect-well-search-state",
+						Record: &adventure_game_record.AdventureGameLocationObjectEffect{
+							ActionType:        adventure_game_record.AdventureGameLocationObjectEffectActionTypeSearch,
+							RequiredState:     nullstring.FromString("intact"),
+							EffectType:        adventure_game_record.AdventureGameLocationObjectEffectEffectTypeChangeState,
+							ResultState:       nullstring.FromString("searched"),
+							ResultDescription: "",
+							IsRepeatable:      false,
+						},
+					},
+					// search (state=searched) → info
+					{
+						Reference: "demo-obj-effect-well-searched",
+						Record: &adventure_game_record.AdventureGameLocationObjectEffect{
+							ActionType:        adventure_game_record.AdventureGameLocationObjectEffectActionTypeSearch,
+							RequiredState:     nullstring.FromString("searched"),
+							EffectType:        adventure_game_record.AdventureGameLocationObjectEffectEffectTypeInfo,
+							ResultDescription: "You have already searched the well thoroughly. Nothing remains.",
+							IsRepeatable:      true,
+						},
+					},
+				},
+			},
+
+			// ── Stone Altar (Underground Chapel) ──
+			{
+				Reference:   DemoObjStoneAltarRef,
+				LocationRef: DemoLocUndergroundChapelRef,
+				Record: &adventure_game_record.AdventureGameLocationObject{
+					Name:         "Stone Altar",
+					Description:  "A low cracked altar of dark stone. Wax trails from ancient candles cross its surface. A shallow depression sits at its centre.",
+					InitialState: "bare",
+				},
+				AdventureGameLocationObjectEffectConfigs: []harness.AdventureGameLocationObjectEffectConfig{
+					// inspect → info
+					{
+						Reference: "demo-obj-effect-altar-inspect",
+						Record: &adventure_game_record.AdventureGameLocationObjectEffect{
+							ActionType:        adventure_game_record.AdventureGameLocationObjectEffectActionTypeInspect,
+							EffectType:        adventure_game_record.AdventureGameLocationObjectEffectEffectTypeInfo,
+							ResultDescription: "The altar bears a shallow depression, perfectly shaped to hold a cross or similar offering. Faint words are carved around its rim in a language you do not know.",
+							IsRepeatable:      true,
+						},
+					},
+					// use with silver cross (state=bare) → change_state to blessed, reveal_object: Hidden Door
+					{
+						Reference:       "demo-obj-effect-altar-use-state",
+						RequiredItemRef: DemoItemSilverCrossRef,
+						Record: &adventure_game_record.AdventureGameLocationObjectEffect{
+							ActionType:        adventure_game_record.AdventureGameLocationObjectEffectActionTypeUse,
+							RequiredState:     nullstring.FromString("bare"),
+							EffectType:        adventure_game_record.AdventureGameLocationObjectEffectEffectTypeChangeState,
+							ResultState:       nullstring.FromString("blessed"),
+							ResultDescription: "You place the silver cross in the depression. The altar shudders. A low grinding resonates through the stone.",
+							IsRepeatable:      false,
+						},
+					},
+					{
+						Reference:       "demo-obj-effect-altar-use-reveal",
+						RequiredItemRef: DemoItemSilverCrossRef,
+						ResultObjectRef:  DemoObjHiddenDoorRef,
+						Record: &adventure_game_record.AdventureGameLocationObjectEffect{
+							ActionType:        adventure_game_record.AdventureGameLocationObjectEffectActionTypeUse,
+							RequiredState:     nullstring.FromString("bare"),
+							EffectType:        adventure_game_record.AdventureGameLocationObjectEffectEffectTypeRevealObject,
+							ResultDescription: "A section of the chapel wall shifts, revealing what appears to be a hidden door.",
+							IsRepeatable:      false,
+						},
+					},
+					// use (state=blessed) → info
+					{
+						Reference: "demo-obj-effect-altar-use-blessed",
+						Record: &adventure_game_record.AdventureGameLocationObjectEffect{
+							ActionType:        adventure_game_record.AdventureGameLocationObjectEffectActionTypeUse,
+							RequiredState:     nullstring.FromString("blessed"),
+							EffectType:        adventure_game_record.AdventureGameLocationObjectEffectEffectTypeInfo,
+							ResultDescription: "The silver cross rests in the altar's depression, glowing faintly. Its work is done.",
+							IsRepeatable:      true,
+						},
+					},
+				},
+			},
+
+			// ── Bundle of Manuscripts (Abbot's Study) ──
+			{
+				Reference:   DemoObjManuscriptsRef,
+				LocationRef: DemoLocAbbotsStudyRef,
+				Record: &adventure_game_record.AdventureGameLocationObject{
+					Name:         "Bundle of Manuscripts",
+					Description:  "A stack of aged parchments tied with twine. The writing is cramped and faded, but still legible in places.",
+					InitialState: "unread",
+				},
+				AdventureGameLocationObjectEffectConfigs: []harness.AdventureGameLocationObjectEffectConfig{
+					// inspect → info (repeatable)
+					{
+						Reference: "demo-obj-effect-manuscripts-inspect",
+						Record: &adventure_game_record.AdventureGameLocationObjectEffect{
+							ActionType:        adventure_game_record.AdventureGameLocationObjectEffectActionTypeInspect,
+							EffectType:        adventure_game_record.AdventureGameLocationObjectEffectEffectTypeInfo,
+							ResultDescription: "Tightly wound parchment scrolls, covered in cramped script. The ink has faded in places but much remains legible.",
+							IsRepeatable:      true,
+						},
+					},
+					// read (state=unread) → change_state to read
+					{
+						Reference: "demo-obj-effect-manuscripts-read-state",
+						Record: &adventure_game_record.AdventureGameLocationObjectEffect{
+							ActionType:        adventure_game_record.AdventureGameLocationObjectEffectActionTypeRead,
+							RequiredState:     nullstring.FromString("unread"),
+							EffectType:        adventure_game_record.AdventureGameLocationObjectEffectEffectTypeChangeState,
+							ResultState:       nullstring.FromString("read"),
+							ResultDescription: "You read through the manuscripts carefully. They describe a ritual of sealing, performed beneath the chapel floor. The key, they say, is \"faith made solid\" — placed upon the altar.",
+							IsRepeatable:      false,
+						},
+					},
+					// read (state=read) → info (repeatable)
+					{
+						Reference: "demo-obj-effect-manuscripts-reread",
+						Record: &adventure_game_record.AdventureGameLocationObjectEffect{
+							ActionType:        adventure_game_record.AdventureGameLocationObjectEffectActionTypeRead,
+							RequiredState:     nullstring.FromString("read"),
+							EffectType:        adventure_game_record.AdventureGameLocationObjectEffectEffectTypeInfo,
+							ResultDescription: "You reread the manuscripts. The ritual of sealing requires \"faith made solid\" placed upon the altar. The words do not change.",
+							IsRepeatable:      true,
+						},
+					},
+				},
+			},
+
+			// ── Iron-Bound Chest (Bell Tower Vault) ──
+			{
+				Reference:   DemoObjIronChestRef,
+				LocationRef: DemoLocBellTowerVaultRef,
+				Record: &adventure_game_record.AdventureGameLocationObject{
+					Name:         "Iron-Bound Chest",
+					Description:  "A heavy oak chest reinforced with iron bands. A large padlock seals it shut.",
+					InitialState: "locked",
+				},
+				AdventureGameLocationObjectEffectConfigs: []harness.AdventureGameLocationObjectEffectConfig{
+					// inspect → info
+					{
+						Reference: "demo-obj-effect-chest-inspect",
+						Record: &adventure_game_record.AdventureGameLocationObjectEffect{
+							ActionType:        adventure_game_record.AdventureGameLocationObjectEffectActionTypeInspect,
+							EffectType:        adventure_game_record.AdventureGameLocationObjectEffectEffectTypeInfo,
+							ResultDescription: "A heavy iron padlock secures the chest's hasp. The lock looks old but solid. You might need a key.",
+							IsRepeatable:      true,
+						},
+					},
+					// unlock with rusty key (state=locked) → change_state to unlocked
+					{
+						Reference:       "demo-obj-effect-chest-unlock",
+						RequiredItemRef: DemoItemRustyKeyRef,
+						Record: &adventure_game_record.AdventureGameLocationObjectEffect{
+							ActionType:        adventure_game_record.AdventureGameLocationObjectEffectActionTypeUnlock,
+							RequiredState:     nullstring.FromString("locked"),
+							EffectType:        adventure_game_record.AdventureGameLocationObjectEffectEffectTypeChangeState,
+							ResultState:       nullstring.FromString("unlocked"),
+							ResultDescription: "The rusty key grates in the lock, then catches. With a clunk the padlock falls open.",
+							IsRepeatable:      false,
+						},
+					},
+					// open (state=unlocked) → give_item: Silver Cross, change_state to open
+					{
+						Reference:   "demo-obj-effect-chest-open-give",
+						ResultItemRef: DemoItemSilverCrossRef,
+						Record: &adventure_game_record.AdventureGameLocationObjectEffect{
+							ActionType:        adventure_game_record.AdventureGameLocationObjectEffectActionTypeOpen,
+							RequiredState:     nullstring.FromString("unlocked"),
+							EffectType:        adventure_game_record.AdventureGameLocationObjectEffectEffectTypeGiveItem,
+							ResultDescription: "You lift the heavy lid. Inside, resting on rotted velvet, is a silver cross on a tarnished chain.",
+							IsRepeatable:      false,
+						},
+					},
+					{
+						Reference: "demo-obj-effect-chest-open-state",
+						Record: &adventure_game_record.AdventureGameLocationObjectEffect{
+							ActionType:        adventure_game_record.AdventureGameLocationObjectEffectActionTypeOpen,
+							RequiredState:     nullstring.FromString("unlocked"),
+							EffectType:        adventure_game_record.AdventureGameLocationObjectEffectEffectTypeChangeState,
+							ResultState:       nullstring.FromString("open"),
+							ResultDescription: "",
+							IsRepeatable:      false,
+						},
+					},
+					// inspect (state=open) → info
+					{
+						Reference: "demo-obj-effect-chest-inspect-open",
+						Record: &adventure_game_record.AdventureGameLocationObjectEffect{
+							ActionType:        adventure_game_record.AdventureGameLocationObjectEffectActionTypeInspect,
+							RequiredState:     nullstring.FromString("open"),
+							EffectType:        adventure_game_record.AdventureGameLocationObjectEffectEffectTypeInfo,
+							ResultDescription: "The chest stands open and empty, its velvet lining rotted away. Nothing more remains inside.",
+							IsRepeatable:      true,
+						},
+					},
+				},
+			},
+
+			// ── Rusted Gate (Crypt) ──
+			{
+				Reference:   DemoObjRustedGateRef,
+				LocationRef: DemoLocCryptRef,
+				Record: &adventure_game_record.AdventureGameLocationObject{
+					Name:         "Rusted Gate",
+					Description:  "A heavy iron gate bars an alcove at the far end of the crypt. Rust has welded the hinges solid.",
+					InitialState: "closed",
+				},
+				AdventureGameLocationObjectEffectConfigs: []harness.AdventureGameLocationObjectEffectConfig{
+					// inspect → info
+					{
+						Reference: "demo-obj-effect-gate-inspect",
+						Record: &adventure_game_record.AdventureGameLocationObjectEffect{
+							ActionType:        adventure_game_record.AdventureGameLocationObjectEffectActionTypeInspect,
+							EffectType:        adventure_game_record.AdventureGameLocationObjectEffectEffectTypeInfo,
+							ResultDescription: "The iron gate is solid and immovable. Rust has fused the hinges to the stone frame. Brute force might break it.",
+							IsRepeatable:      true,
+						},
+					},
+					// break (state=closed) → change_state to broken, damage character
+					{
+						Reference: "demo-obj-effect-gate-break-state",
+						Record: &adventure_game_record.AdventureGameLocationObjectEffect{
+							ActionType:        adventure_game_record.AdventureGameLocationObjectEffectActionTypeBreak,
+							RequiredState:     nullstring.FromString("closed"),
+							EffectType:        adventure_game_record.AdventureGameLocationObjectEffectEffectTypeChangeState,
+							ResultState:       nullstring.FromString("broken"),
+							ResultDescription: "You hurl yourself against the gate. With a shriek of tortured metal it tears free from the stone, but the jagged edge catches you as it falls.",
+							IsRepeatable:      false,
+						},
+					},
+					{
+						Reference: "demo-obj-effect-gate-break-damage",
+						Record: &adventure_game_record.AdventureGameLocationObjectEffect{
+							ActionType:        adventure_game_record.AdventureGameLocationObjectEffectActionTypeBreak,
+							RequiredState:     nullstring.FromString("closed"),
+							EffectType:        adventure_game_record.AdventureGameLocationObjectEffectEffectTypeDamage,
+							ResultDescription: "The gate's jagged edge opens a cut across your arm.",
+							ResultValueMin:    nullint32.FromInt32(5),
+							ResultValueMax:    nullint32.FromInt32(10),
+							IsRepeatable:      false,
+						},
+					},
+					// inspect (state=broken) → info
+					{
+						Reference: "demo-obj-effect-gate-inspect-broken",
+						Record: &adventure_game_record.AdventureGameLocationObjectEffect{
+							ActionType:        adventure_game_record.AdventureGameLocationObjectEffectActionTypeInspect,
+							RequiredState:     nullstring.FromString("broken"),
+							EffectType:        adventure_game_record.AdventureGameLocationObjectEffectEffectTypeInfo,
+							ResultDescription: "The rusted gate lies twisted on the crypt floor. The alcove beyond it is now open.",
+							IsRepeatable:      true,
+						},
+					},
+				},
+			},
+
+			// ── Lever on the Wall (Well Chamber) — demonstrates cross-object reveal ──
+			{
+				Reference:   DemoObjLeverRef,
+				LocationRef: DemoLocWellChamberRef,
+				Record: &adventure_game_record.AdventureGameLocationObject{
+					Name:         "Lever on the Wall",
+					Description:  "An iron lever set into the chamber wall, its purpose obscure. It is in the UP position.",
+					InitialState: "up",
+				},
+				AdventureGameLocationObjectEffectConfigs: []harness.AdventureGameLocationObjectEffectConfig{
+					// inspect → info
+					{
+						Reference: "demo-obj-effect-lever-inspect",
+						Record: &adventure_game_record.AdventureGameLocationObjectEffect{
+							ActionType:        adventure_game_record.AdventureGameLocationObjectEffectActionTypeInspect,
+							EffectType:        adventure_game_record.AdventureGameLocationObjectEffectEffectTypeInfo,
+							ResultDescription: "A heavy iron lever, cold to the touch. It is currently UP. Pulling it down might do something.",
+							IsRepeatable:      true,
+						},
+					},
+					// pull (state=up) → change_state to down, change_object_state: Hidden Door → revealed, reveal_object: Hidden Door
+					{
+						Reference: "demo-obj-effect-lever-pull-self",
+						Record: &adventure_game_record.AdventureGameLocationObjectEffect{
+							ActionType:        adventure_game_record.AdventureGameLocationObjectEffectActionTypePull,
+							RequiredState:     nullstring.FromString("up"),
+							EffectType:        adventure_game_record.AdventureGameLocationObjectEffectEffectTypeChangeState,
+							ResultState:       nullstring.FromString("down"),
+							ResultDescription: "You pull the lever down. A deep mechanical rumble travels through the stone walls.",
+							IsRepeatable:      false,
+						},
+					},
+					{
+						Reference:       "demo-obj-effect-lever-pull-change-door-state",
+						ResultObjectRef: DemoObjHiddenDoorRef,
+						Record: &adventure_game_record.AdventureGameLocationObjectEffect{
+							ActionType:        adventure_game_record.AdventureGameLocationObjectEffectActionTypePull,
+							RequiredState:     nullstring.FromString("up"),
+							EffectType:        adventure_game_record.AdventureGameLocationObjectEffectEffectTypeChangeObjectState,
+							ResultState:       nullstring.FromString("revealed"),
+							ResultDescription: "Somewhere above, a section of the chapel wall shifts with a grinding of old stone.",
+							IsRepeatable:      false,
+						},
+					},
+					{
+						Reference:       "demo-obj-effect-lever-pull-reveal-door",
+						ResultObjectRef: DemoObjHiddenDoorRef,
+						Record: &adventure_game_record.AdventureGameLocationObjectEffect{
+							ActionType:        adventure_game_record.AdventureGameLocationObjectEffectActionTypePull,
+							RequiredState:     nullstring.FromString("up"),
+							EffectType:        adventure_game_record.AdventureGameLocationObjectEffectEffectTypeRevealObject,
+							ResultDescription: "",
+							IsRepeatable:      false,
+						},
+					},
+					// push (state=down) → change_state to up, change_object_state: Hidden Door → hidden, hide_object: Hidden Door
+					{
+						Reference: "demo-obj-effect-lever-push-self",
+						Record: &adventure_game_record.AdventureGameLocationObjectEffect{
+							ActionType:        adventure_game_record.AdventureGameLocationObjectEffectActionTypePush,
+							RequiredState:     nullstring.FromString("down"),
+							EffectType:        adventure_game_record.AdventureGameLocationObjectEffectEffectTypeChangeState,
+							ResultState:       nullstring.FromString("up"),
+							ResultDescription: "You push the lever back up. The grinding rumble returns and then silence.",
+							IsRepeatable:      false,
+						},
+					},
+					{
+						Reference:       "demo-obj-effect-lever-push-hide-door-state",
+						ResultObjectRef: DemoObjHiddenDoorRef,
+						Record: &adventure_game_record.AdventureGameLocationObjectEffect{
+							ActionType:        adventure_game_record.AdventureGameLocationObjectEffectActionTypePush,
+							RequiredState:     nullstring.FromString("down"),
+							EffectType:        adventure_game_record.AdventureGameLocationObjectEffectEffectTypeChangeObjectState,
+							ResultState:       nullstring.FromString("hidden"),
+							ResultDescription: "The section of chapel wall slides back into place.",
+							IsRepeatable:      false,
+						},
+					},
+					{
+						Reference:       "demo-obj-effect-lever-push-hide-door",
+						ResultObjectRef: DemoObjHiddenDoorRef,
+						Record: &adventure_game_record.AdventureGameLocationObjectEffect{
+							ActionType:        adventure_game_record.AdventureGameLocationObjectEffectActionTypePush,
+							RequiredState:     nullstring.FromString("down"),
+							EffectType:        adventure_game_record.AdventureGameLocationObjectEffectEffectTypeHideObject,
+							ResultDescription: "",
+							IsRepeatable:      false,
+						},
+					},
+				},
+			},
+		},
+	},
+}
 }

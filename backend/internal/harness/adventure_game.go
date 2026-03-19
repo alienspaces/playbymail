@@ -113,6 +113,14 @@ func (t *Testing) processAdventureGameConfig(gameConfig GameConfig, gameRec *gam
 		l.Debug("created game_character record for game >%s<", gameRec.ID)
 	}
 
+	for _, objectConfig := range gameConfig.AdventureGameLocationObjectConfigs {
+		_, err := t.createAdventureGameLocationObjectRec(objectConfig, gameRec)
+		if err != nil {
+			l.Warn("failed creating adventure_game_location_object record >%v<", err)
+			return nil, err
+		}
+	}
+
 	return out, nil
 }
 
@@ -173,6 +181,34 @@ func (t *Testing) createAdventureGameInstanceRecords(gameConfig GameConfig, game
 			return err
 		}
 		l.Debug("created adventure game item instance record ID >%s<", itemInstanceRec.ID)
+	}
+
+	// Auto-create location object instances for all defined objects in this game.
+	// For each object, find the location instance that corresponds to its location
+	// and create an object instance with current_state = initial_state, is_visible = !is_hidden.
+	for _, objectRec := range t.Data.AdventureGameLocationObjectRecs {
+		if objectRec.GameID != gameInstanceRec.GameID {
+			continue
+		}
+		// Find the location instance for this object's location in this game instance
+		var locationInstanceRec *adventure_game_record.AdventureGameLocationInstance
+		for _, locInst := range t.Data.AdventureGameLocationInstanceRecs {
+			if locInst.GameInstanceID == gameInstanceRec.ID &&
+				locInst.AdventureGameLocationID == objectRec.AdventureGameLocationID {
+				locationInstanceRec = locInst
+				break
+			}
+		}
+		if locationInstanceRec == nil {
+			l.Warn("no location instance found for object >%s< location >%s< in game instance >%s< — skipping",
+				objectRec.ID, objectRec.AdventureGameLocationID, gameInstanceRec.ID)
+			continue
+		}
+		_, err := t.createAdventureGameLocationObjectInstanceRec(objectRec, locationInstanceRec, gameInstanceRec)
+		if err != nil {
+			l.Warn("failed creating adventure game location object instance record >%v<", err)
+			return err
+		}
 	}
 
 	if len(gameInstanceConfig.GameTurnConfigs) == 0 {
@@ -287,6 +323,29 @@ func (t *Testing) removeAdventureGameRecords() error {
 	l := t.Logger("removeAdventureGameRecords")
 
 	l.Debug("removing adventure game records")
+
+	// Remove location object records before location link requirements and locations
+	l.Debug("removing >%d< adventure game location object effect records", len(t.teardownData.AdventureGameLocationObjectEffectRecs))
+	for _, effectRec := range t.teardownData.AdventureGameLocationObjectEffectRecs {
+		if effectRec.ID == "" {
+			continue
+		}
+		if err := t.Domain.(*domain.Domain).RemoveAdventureGameLocationObjectEffectRec(effectRec.ID); err != nil {
+			l.Warn("failed removing adventure game location object effect record >%v<", err)
+			return err
+		}
+	}
+
+	l.Debug("removing >%d< adventure game location object records", len(t.teardownData.AdventureGameLocationObjectRecs))
+	for _, objectRec := range t.teardownData.AdventureGameLocationObjectRecs {
+		if objectRec.ID == "" {
+			continue
+		}
+		if err := t.Domain.(*domain.Domain).RemoveAdventureGameLocationObjectRec(objectRec.ID); err != nil {
+			l.Warn("failed removing adventure game location object record >%v<", err)
+			return err
+		}
+	}
 
 	// Remove game location link requirements before creatures and items (requirements reference both)
 	l.Debug("removing >%d< game location link requirement records", len(t.teardownData.AdventureGameLocationLinkRequirementRecs))
@@ -467,6 +526,18 @@ func (t *Testing) removeAdventureGameInstanceRecords() error {
 		err := t.Domain.(*domain.Domain).RemoveAdventureGameItemInstanceRec(itemInstanceRec.ID)
 		if err != nil {
 			l.Warn("failed removing adventure game item instance record >%v<", err)
+			return err
+		}
+	}
+
+	// Remove adventure game location object instances
+	l.Debug("removing >%d< adventure game location object instance records", len(t.teardownData.AdventureGameLocationObjectInstanceRecs))
+	for _, objInstRec := range t.teardownData.AdventureGameLocationObjectInstanceRecs {
+		if objInstRec.ID == "" {
+			continue
+		}
+		if err := t.Domain.(*domain.Domain).RemoveAdventureGameLocationObjectInstanceRec(objInstRec.ID); err != nil {
+			l.Warn("failed removing adventure game location object instance record >%v<", err)
 			return err
 		}
 	}

@@ -1,6 +1,7 @@
 package adventure_game_character_instance_test
 
 import (
+	"database/sql"
 	"testing"
 
 	"github.com/google/uuid"
@@ -29,15 +30,15 @@ func TestCreateOne(t *testing.T) {
 				require.NoError(t, err)
 				locationInstanceRec, err := d.GetAdventureGameLocationInstanceRecByGameInstanceAndLocationRef(harness.GameInstanceOneRef, harness.GameLocationOneRef)
 				require.NoError(t, err)
-				return &adventure_game_record.AdventureGameCharacterInstance{
-					GameID:                          gameInstanceRec.GameID,
-					GameInstanceID:                  gameInstanceRec.ID,
-					AdventureGameCharacterID:        charRec.ID,
-					AdventureGameLocationInstanceID: locationInstanceRec.ID,
-					Health:                          100,
-					InventoryCapacity:               10,
-					LastTurnEvents:                  []byte("[]"),
-				}
+			return &adventure_game_record.AdventureGameCharacterInstance{
+				GameID:                          gameInstanceRec.GameID,
+				GameInstanceID:                  gameInstanceRec.ID,
+				AdventureGameCharacterID:        charRec.ID,
+				AdventureGameLocationInstanceID: sql.NullString{String: locationInstanceRec.ID, Valid: true},
+				Health:                          100,
+				InventoryCapacity:               10,
+				LastTurnEvents:                  []byte("[]"),
+			}
 			},
 			hasErr: false,
 		},
@@ -50,15 +51,15 @@ func TestCreateOne(t *testing.T) {
 				require.NoError(t, err)
 				locationInstanceRec, err := d.GetAdventureGameLocationInstanceRecByGameInstanceAndLocationRef(harness.GameInstanceOneRef, harness.GameLocationOneRef)
 				require.NoError(t, err)
-				rec := &adventure_game_record.AdventureGameCharacterInstance{
-					GameID:                          gameInstanceRec.GameID,
-					GameInstanceID:                  gameInstanceRec.ID,
-					AdventureGameCharacterID:        charRec.ID,
-					AdventureGameLocationInstanceID: locationInstanceRec.ID,
-					Health:                          100,
-					InventoryCapacity:               10,
-					LastTurnEvents:                  []byte("[]"),
-				}
+			rec := &adventure_game_record.AdventureGameCharacterInstance{
+				GameID:                          gameInstanceRec.GameID,
+				GameInstanceID:                  gameInstanceRec.ID,
+				AdventureGameCharacterID:        charRec.ID,
+				AdventureGameLocationInstanceID: sql.NullString{String: locationInstanceRec.ID, Valid: true},
+				Health:                          100,
+				InventoryCapacity:               10,
+				LastTurnEvents:                  []byte("[]"),
+			}
 				id, _ := uuid.NewRandom()
 				rec.ID = id.String()
 				return rec

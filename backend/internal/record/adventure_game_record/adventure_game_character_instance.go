@@ -1,6 +1,7 @@
 package adventure_game_record
 
 import (
+	"database/sql"
 	"encoding/json"
 
 	"github.com/jackc/pgx/v5"
@@ -31,7 +32,7 @@ type AdventureGameCharacterInstance struct {
 	GameID                          string          `db:"game_id"`
 	GameInstanceID                  string          `db:"game_instance_id"`
 	AdventureGameCharacterID        string          `db:"adventure_game_character_id"`
-	AdventureGameLocationInstanceID string          `db:"adventure_game_location_instance_id"`
+	AdventureGameLocationInstanceID sql.NullString  `db:"adventure_game_location_instance_id"`
 	Health                          int             `db:"health"`
 	InventoryCapacity               int             `db:"inventory_capacity"`
 	LastTurnEvents                  json.RawMessage `db:"last_turn_events"`

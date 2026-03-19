@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"math/rand"
+	"strings"
 
 	"gitlab.com/alienspaces/playbymail/core/convert"
 	"gitlab.com/alienspaces/playbymail/core/record"
@@ -61,6 +63,16 @@ func (p *AdventureGameLocationChoiceProcessor) ProcessTurnSheetResponse(ctx cont
 		return fmt.Errorf("failed to parse scanned data: %w", err)
 	}
 
+	// Handle object interaction if present (mutually exclusive with location choice)
+	if scanData.ObjectChoice != "" {
+		l.Info("player chose object action >%s<", scanData.ObjectChoice)
+		if err := p.processObjectChoice(l, gameInstanceRec, characterInstanceRec, scanData.ObjectChoice); err != nil {
+			l.Warn("failed to process object choice >%v<", err)
+			return fmt.Errorf("failed to process object choice: %w", err)
+		}
+		return nil
+	}
+
 	choices := scanData.GetChoices()
 	if len(choices) == 0 {
 		l.Info("no location choice in scanned data — character stays at current location")
@@ -96,7 +108,7 @@ func (p *AdventureGameLocationChoiceProcessor) ProcessTurnSheetResponse(ctx cont
 
 	// Step 3: Apply flee penalty from aggressive creatures at the character's CURRENT location.
 	// This happens before moving the character so we can check their current location.
-	currentLocationInstanceID := characterInstanceRec.AdventureGameLocationInstanceID
+	currentLocationInstanceID := characterInstanceRec.AdventureGameLocationInstanceID.String
 	isMoving := currentLocationInstanceID != chosenLocationID
 
 	// Resolve traversal description for narrative.
@@ -133,7 +145,7 @@ func (p *AdventureGameLocationChoiceProcessor) ProcessTurnSheetResponse(ctx cont
 	}
 
 	// Step 4: Update character's location.
-	characterInstanceRec.AdventureGameLocationInstanceID = chosenLocationID
+	characterInstanceRec.AdventureGameLocationInstanceID = sql.NullString{String: chosenLocationID, Valid: true}
 	characterInstanceRec, err := p.Domain.UpdateAdventureGameCharacterInstanceRec(characterInstanceRec)
 	if err != nil {
 		l.Warn("failed to update character location >%v<", err)
@@ -260,7 +272,7 @@ func (p *AdventureGameLocationChoiceProcessor) CreateNextTurnSheet(ctx context.C
 	l.Info("creating location choice turn sheet for character >%s<", characterInstanceRec.ID)
 
 	// Step 1: Get character's current location instance
-	locationInstanceRec, err := p.Domain.GetAdventureGameLocationInstanceRec(characterInstanceRec.AdventureGameLocationInstanceID, nil)
+	locationInstanceRec, err := p.Domain.GetAdventureGameLocationInstanceRec(characterInstanceRec.AdventureGameLocationInstanceID.String, nil)
 	if err != nil {
 		l.Warn("failed to get character's current location >%v<", err)
 		return nil, fmt.Errorf("failed to get character's current location: %w", err)
@@ -393,6 +405,13 @@ func (p *AdventureGameLocationChoiceProcessor) CreateNextTurnSheet(ctx context.C
 		}
 	}
 
+	// Step 8c: Load visible object instances at this location and build LocationObjects
+	locationObjects, err := p.buildLocationObjects(l, gameInstanceRec.ID, characterInstanceRec.ID, locationInstanceRec.ID)
+	if err != nil {
+		l.Warn("failed to build location objects >%v<", err)
+		locationObjects = nil
+	}
+
 	// Step 9: Read movement, flee, and world events for this sheet. Events are cleared after all processors run.
 	displayEvents := ReadTurnEventsForCategories(l, p.Domain, characterInstanceRec,
 		turnsheet.TurnEventCategoryMovement,
@@ -419,6 +438,7 @@ func (p *AdventureGameLocationChoiceProcessor) CreateNextTurnSheet(ctx context.C
 		Creatures:              creatures,
 		HasAggressiveCreatures: hasAggressiveCreatures,
 		LocationOptions:        locationOptions,
+		LocationObjects:        locationObjects,
 	}
 
 	sheetDataBytes, err := json.Marshal(sheetData)
@@ -647,6 +667,415 @@ func (p *AdventureGameLocationChoiceProcessor) noCreaturesAliveInGame(gameInstan
 		}
 	}
 	return true, nil
+}
+
+// buildLocationObjects queries visible object instances at a location and builds the LocationObjectOption slice.
+func (p *AdventureGameLocationChoiceProcessor) buildLocationObjects(
+	l logger.Logger,
+	gameInstanceID, characterInstanceID, locationInstanceID string,
+) ([]turnsheet.LocationObjectOption, error) {
+	l = l.WithFunctionContext("buildLocationObjects")
+
+	objectInstances, err := p.Domain.GetManyAdventureGameLocationObjectInstanceRecs(&coresql.Options{
+		Params: []coresql.Param{
+			{Col: adventure_game_record.FieldAdventureGameLocationObjectInstanceGameInstanceID, Val: gameInstanceID},
+			{Col: adventure_game_record.FieldAdventureGameLocationObjectInstanceAdventureGameLocationInstanceID, Val: locationInstanceID},
+		},
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to get object instances: %w", err)
+	}
+
+	var result []turnsheet.LocationObjectOption
+	for _, inst := range objectInstances {
+		if !inst.IsVisible {
+			continue
+		}
+
+		objectDef, err := p.Domain.GetAdventureGameLocationObjectRec(inst.AdventureGameLocationObjectID, nil)
+		if err != nil {
+			l.Warn("failed to get object definition >%s< >%v<", inst.AdventureGameLocationObjectID, err)
+			continue
+		}
+
+		// Load effects that match current state (required_state = current_state OR required_state IS NULL)
+		allEffects, err := p.Domain.GetManyAdventureGameLocationObjectEffectRecs(&coresql.Options{
+			Params: []coresql.Param{
+				{Col: adventure_game_record.FieldAdventureGameLocationObjectEffectAdventureGameLocationObjectID, Val: objectDef.ID},
+			},
+		})
+		if err != nil {
+			l.Warn("failed to get object effects >%v<", err)
+			continue
+		}
+
+		// Collect unique action types available in the current state
+		actionMap := map[string]*turnsheet.LocationObjectActionOption{}
+		for _, effect := range allEffects {
+			if effect.RequiredState.Valid && effect.RequiredState.String != inst.CurrentState {
+				continue
+			}
+			at := effect.ActionType
+			if _, exists := actionMap[at]; exists {
+				continue
+			}
+
+			action := &turnsheet.LocationObjectActionOption{
+				ActionType:      at,
+				IsAvailable:     true,
+				HasRequiredItem: true,
+			}
+
+			if effect.RequiredAdventureGameItemID.Valid && effect.RequiredAdventureGameItemID.String != "" {
+				hasItem, itemName, err := p.characterHasItemForEffect(characterInstanceID, effect.RequiredAdventureGameItemID.String)
+				if err != nil {
+					l.Warn("failed to check required item >%v<", err)
+				}
+				action.RequiredItemName = itemName
+				action.HasRequiredItem = hasItem
+				action.IsAvailable = hasItem
+			}
+
+			actionMap[at] = action
+		}
+
+		// Convert map to ordered slice
+		var actions []turnsheet.LocationObjectActionOption
+		for _, action := range actionMap {
+			actions = append(actions, *action)
+		}
+
+		result = append(result, turnsheet.LocationObjectOption{
+			ObjectInstanceID: inst.ID,
+			Name:             objectDef.Name,
+			Description:      objectDef.Description,
+			CurrentState:     inst.CurrentState,
+			Actions:          actions,
+		})
+	}
+
+	return result, nil
+}
+
+// characterHasItemForEffect returns (hasItem, itemName, error).
+func (p *AdventureGameLocationChoiceProcessor) characterHasItemForEffect(characterInstanceID, itemID string) (bool, string, error) {
+	itemDef, err := p.Domain.GetAdventureGameItemRec(itemID, nil)
+	if err != nil {
+		return false, "", fmt.Errorf("failed to get item definition: %w", err)
+	}
+
+	itemInstances, err := p.Domain.GetManyAdventureGameItemInstanceRecs(&coresql.Options{
+		Params: []coresql.Param{
+			{Col: adventure_game_record.FieldAdventureGameItemInstanceAdventureGameCharacterInstanceID, Val: characterInstanceID},
+			{Col: adventure_game_record.FieldAdventureGameItemInstanceAdventureGameItemID, Val: itemID},
+		},
+	})
+	if err != nil {
+		return false, itemDef.Name, fmt.Errorf("failed to query item instances: %w", err)
+	}
+
+	for _, inst := range itemInstances {
+		if !inst.IsUsed {
+			return true, itemDef.Name, nil
+		}
+	}
+	return false, itemDef.Name, nil
+}
+
+// processObjectChoice parses "{instance_id}:{action_type}", loads all matching effects, and applies them atomically.
+func (p *AdventureGameLocationChoiceProcessor) processObjectChoice(
+	l logger.Logger,
+	gameInstanceRec *game_record.GameInstance,
+	characterInstanceRec *adventure_game_record.AdventureGameCharacterInstance,
+	objectChoice string,
+) error {
+	l = l.WithFunctionContext("processObjectChoice")
+
+	parts := strings.SplitN(objectChoice, ":", 2)
+	if len(parts) != 2 {
+		return fmt.Errorf("invalid object_choice format: %q", objectChoice)
+	}
+	instanceID := parts[0]
+	actionType := parts[1]
+
+	// Load object instance
+	objectInstance, err := p.Domain.GetAdventureGameLocationObjectInstanceRec(instanceID, nil)
+	if err != nil {
+		return fmt.Errorf("failed to get object instance >%s<: %w", instanceID, err)
+	}
+
+	// Load all effects for this object
+	allEffects, err := p.Domain.GetManyAdventureGameLocationObjectEffectRecs(&coresql.Options{
+		Params: []coresql.Param{
+			{Col: adventure_game_record.FieldAdventureGameLocationObjectEffectAdventureGameLocationObjectID, Val: objectInstance.AdventureGameLocationObjectID},
+			{Col: adventure_game_record.FieldAdventureGameLocationObjectEffectActionType, Val: actionType},
+		},
+	})
+	if err != nil {
+		return fmt.Errorf("failed to get effects for object: %w", err)
+	}
+
+	// Filter effects matching current state
+	var matchingEffects []*adventure_game_record.AdventureGameLocationObjectEffect
+	for _, effect := range allEffects {
+		if effect.RequiredState.Valid && effect.RequiredState.String != objectInstance.CurrentState {
+			continue
+		}
+		matchingEffects = append(matchingEffects, effect)
+	}
+
+	if len(matchingEffects) == 0 {
+		l.Info("no matching effects for object >%s< action >%s< state >%s<", instanceID, actionType, objectInstance.CurrentState)
+		return nil
+	}
+
+	// Validate required items — any effect's required item blocks all effects
+	for _, effect := range matchingEffects {
+		if !effect.RequiredAdventureGameItemID.Valid || effect.RequiredAdventureGameItemID.String == "" {
+			continue
+		}
+		hasItem, _, err := p.characterHasItemForEffect(characterInstanceRec.ID, effect.RequiredAdventureGameItemID.String)
+		if err != nil {
+			return fmt.Errorf("failed to check required item: %w", err)
+		}
+		if !hasItem {
+			l.Info("character does not have required item for object interaction")
+			return fmt.Errorf("required item not in inventory")
+		}
+	}
+
+	// Apply all matching effects atomically
+	var resultDescriptions []string
+	for _, effect := range matchingEffects {
+		desc, err := p.applyObjectEffect(l, gameInstanceRec, characterInstanceRec, objectInstance, effect)
+		if err != nil {
+			l.Warn("failed to apply effect >%s< >%v<", effect.ID, err)
+			return fmt.Errorf("failed to apply object effect: %w", err)
+		}
+		if desc != "" {
+			resultDescriptions = append(resultDescriptions, desc)
+		}
+	}
+
+	// Append a combined world event with all result descriptions
+	if len(resultDescriptions) > 0 {
+		_ = turnsheet.AppendTurnEvent(characterInstanceRec, turnsheet.TurnEvent{
+			Category: turnsheet.TurnEventCategoryWorld,
+			Icon:     turnsheet.TurnEventIconWorld,
+			Message:  strings.Join(resultDescriptions, " "),
+		})
+		if _, saveErr := p.Domain.UpdateAdventureGameCharacterInstanceRec(characterInstanceRec); saveErr != nil {
+			l.Warn("failed to save object interaction events >%v<", saveErr)
+		}
+	}
+
+	return nil
+}
+
+// applyObjectEffect applies a single effect and returns its result_description.
+func (p *AdventureGameLocationChoiceProcessor) applyObjectEffect(
+	l logger.Logger,
+	gameInstanceRec *game_record.GameInstance,
+	characterInstanceRec *adventure_game_record.AdventureGameCharacterInstance,
+	objectInstance *adventure_game_record.AdventureGameLocationObjectInstance,
+	effect *adventure_game_record.AdventureGameLocationObjectEffect,
+) (string, error) {
+	l = l.WithFunctionContext("applyObjectEffect")
+	l.Info("applying effect >%s< type >%s<", effect.ID, effect.EffectType)
+
+	switch effect.EffectType {
+	case adventure_game_record.AdventureGameLocationObjectEffectEffectTypeInfo,
+		adventure_game_record.AdventureGameLocationObjectEffectEffectTypeNothing:
+		// No state change — just return the description
+
+	case adventure_game_record.AdventureGameLocationObjectEffectEffectTypeChangeState:
+		if effect.ResultState.Valid && effect.ResultState.String != "" {
+			objectInstance.CurrentState = effect.ResultState.String
+			updatedInst, err := p.Domain.UpdateAdventureGameLocationObjectInstanceRec(objectInstance)
+			if err != nil {
+				return "", fmt.Errorf("failed to update object instance state: %w", err)
+			}
+			*objectInstance = *updatedInst
+			l.Info("object instance >%s< state changed to >%s<", objectInstance.ID, objectInstance.CurrentState)
+		}
+
+	case adventure_game_record.AdventureGameLocationObjectEffectEffectTypeChangeObjectState:
+		if effect.ResultAdventureGameLocationObjectID.Valid && effect.ResultState.Valid {
+			targetInstances, err := p.Domain.GetManyAdventureGameLocationObjectInstanceRecs(&coresql.Options{
+				Params: []coresql.Param{
+					{Col: adventure_game_record.FieldAdventureGameLocationObjectInstanceGameInstanceID, Val: gameInstanceRec.ID},
+					{Col: adventure_game_record.FieldAdventureGameLocationObjectInstanceAdventureGameLocationObjectID, Val: effect.ResultAdventureGameLocationObjectID.String},
+				},
+			})
+			if err != nil {
+				return "", fmt.Errorf("failed to get target object instances: %w", err)
+			}
+			for _, targetInst := range targetInstances {
+				targetInst.CurrentState = effect.ResultState.String
+				if _, err := p.Domain.UpdateAdventureGameLocationObjectInstanceRec(targetInst); err != nil {
+					l.Warn("failed to update target object instance state >%v<", err)
+				}
+				l.Info("target object instance >%s< state changed to >%s<", targetInst.ID, targetInst.CurrentState)
+			}
+		}
+
+	case adventure_game_record.AdventureGameLocationObjectEffectEffectTypeRevealObject:
+		if effect.ResultAdventureGameLocationObjectID.Valid {
+			targetInstances, err := p.Domain.GetManyAdventureGameLocationObjectInstanceRecs(&coresql.Options{
+				Params: []coresql.Param{
+					{Col: adventure_game_record.FieldAdventureGameLocationObjectInstanceGameInstanceID, Val: gameInstanceRec.ID},
+					{Col: adventure_game_record.FieldAdventureGameLocationObjectInstanceAdventureGameLocationObjectID, Val: effect.ResultAdventureGameLocationObjectID.String},
+				},
+			})
+			if err != nil {
+				return "", fmt.Errorf("failed to get target object instances: %w", err)
+			}
+			for _, targetInst := range targetInstances {
+				targetInst.IsVisible = true
+				if _, err := p.Domain.UpdateAdventureGameLocationObjectInstanceRec(targetInst); err != nil {
+					l.Warn("failed to reveal target object instance >%v<", err)
+				}
+			}
+		}
+
+	case adventure_game_record.AdventureGameLocationObjectEffectEffectTypeHideObject:
+		if effect.ResultAdventureGameLocationObjectID.Valid {
+			targetInstances, err := p.Domain.GetManyAdventureGameLocationObjectInstanceRecs(&coresql.Options{
+				Params: []coresql.Param{
+					{Col: adventure_game_record.FieldAdventureGameLocationObjectInstanceGameInstanceID, Val: gameInstanceRec.ID},
+					{Col: adventure_game_record.FieldAdventureGameLocationObjectInstanceAdventureGameLocationObjectID, Val: effect.ResultAdventureGameLocationObjectID.String},
+				},
+			})
+			if err != nil {
+				return "", fmt.Errorf("failed to get target object instances: %w", err)
+			}
+			for _, targetInst := range targetInstances {
+				targetInst.IsVisible = false
+				if _, err := p.Domain.UpdateAdventureGameLocationObjectInstanceRec(targetInst); err != nil {
+					l.Warn("failed to hide target object instance >%v<", err)
+				}
+			}
+		}
+
+	case adventure_game_record.AdventureGameLocationObjectEffectEffectTypeGiveItem:
+		if effect.ResultAdventureGameItemID.Valid && effect.ResultAdventureGameItemID.String != "" {
+			itemInstance := &adventure_game_record.AdventureGameItemInstance{
+				GameID:                         gameInstanceRec.GameID,
+				GameInstanceID:                 gameInstanceRec.ID,
+				AdventureGameItemID:            effect.ResultAdventureGameItemID.String,
+				AdventureGameCharacterInstanceID: sql.NullString{String: characterInstanceRec.ID, Valid: true},
+			}
+			if _, err := p.Domain.CreateAdventureGameItemInstanceRec(itemInstance); err != nil {
+				return "", fmt.Errorf("failed to give item: %w", err)
+			}
+			l.Info("gave item >%s< to character >%s<", effect.ResultAdventureGameItemID.String, characterInstanceRec.ID)
+		}
+
+	case adventure_game_record.AdventureGameLocationObjectEffectEffectTypeRemoveItem:
+		if effect.ResultAdventureGameItemID.Valid && effect.ResultAdventureGameItemID.String != "" {
+			itemInstances, err := p.Domain.GetManyAdventureGameItemInstanceRecs(&coresql.Options{
+				Params: []coresql.Param{
+					{Col: adventure_game_record.FieldAdventureGameItemInstanceAdventureGameCharacterInstanceID, Val: characterInstanceRec.ID},
+					{Col: adventure_game_record.FieldAdventureGameItemInstanceAdventureGameItemID, Val: effect.ResultAdventureGameItemID.String},
+				},
+			})
+			if err != nil {
+				return "", fmt.Errorf("failed to query item instances: %w", err)
+			}
+			for _, inst := range itemInstances {
+				if !inst.IsUsed {
+					if err := p.Domain.DeleteAdventureGameItemInstanceRec(inst.ID); err != nil {
+						l.Warn("failed to remove item instance >%v<", err)
+					}
+					break
+				}
+			}
+		}
+
+	case adventure_game_record.AdventureGameLocationObjectEffectEffectTypeOpenLink:
+		if effect.ResultAdventureGameLocationLinkID.Valid && effect.ResultAdventureGameLocationLinkID.String != "" {
+			// Remove all requirements for this link (making it traversable)
+			requirements, err := p.Domain.GetManyAdventureGameLocationLinkRequirementRecs(&coresql.Options{
+				Params: []coresql.Param{
+					{Col: adventure_game_record.FieldAdventureGameLocationLinkRequirementAdventureGameLocationLinkID, Val: effect.ResultAdventureGameLocationLinkID.String},
+					{Col: adventure_game_record.FieldAdventureGameLocationLinkRequirementPurpose, Val: adventure_game_record.AdventureGameLocationLinkRequirementPurposeTraverse},
+				},
+			})
+			if err != nil {
+				return "", fmt.Errorf("failed to get link requirements: %w", err)
+			}
+			for _, req := range requirements {
+				if err := p.Domain.DeleteAdventureGameLocationLinkRequirementRec(req.ID); err != nil {
+					l.Warn("failed to remove link requirement >%v<", err)
+				}
+			}
+		}
+
+	case adventure_game_record.AdventureGameLocationObjectEffectEffectTypeDamage:
+		if effect.ResultValueMin.Valid && effect.ResultValueMax.Valid {
+			minDmg := int(effect.ResultValueMin.Int32)
+			maxDmg := int(effect.ResultValueMax.Int32)
+			damage := minDmg
+			if maxDmg > minDmg {
+				damage = minDmg + rand.Intn(maxDmg-minDmg+1)
+			}
+			characterInstanceRec.Health -= damage
+			if characterInstanceRec.Health < 0 {
+				characterInstanceRec.Health = 0
+			}
+			l.Info("object dealt %d damage to character >%s< (health now %d)", damage, characterInstanceRec.ID, characterInstanceRec.Health)
+		}
+
+	case adventure_game_record.AdventureGameLocationObjectEffectEffectTypeHeal:
+		if effect.ResultValueMin.Valid && effect.ResultValueMax.Valid {
+			minHeal := int(effect.ResultValueMin.Int32)
+			maxHeal := int(effect.ResultValueMax.Int32)
+			heal := minHeal
+			if maxHeal > minHeal {
+				heal = minHeal + rand.Intn(maxHeal-minHeal+1)
+			}
+			characterInstanceRec.Health += heal
+			l.Info("object healed %d for character >%s< (health now %d)", heal, characterInstanceRec.ID, characterInstanceRec.Health)
+		}
+
+	case adventure_game_record.AdventureGameLocationObjectEffectEffectTypeSummonCreature:
+		if effect.ResultAdventureGameCreatureID.Valid && effect.ResultAdventureGameCreatureID.String != "" {
+			creatureInstance := &adventure_game_record.AdventureGameCreatureInstance{
+				GameID:                          gameInstanceRec.GameID,
+				GameInstanceID:                  gameInstanceRec.ID,
+				AdventureGameCreatureID:         effect.ResultAdventureGameCreatureID.String,
+				AdventureGameLocationInstanceID: objectInstance.AdventureGameLocationInstanceID,
+				Health:                          100,
+			}
+			if _, err := p.Domain.CreateAdventureGameCreatureInstanceRec(creatureInstance); err != nil {
+				return "", fmt.Errorf("failed to summon creature: %w", err)
+			}
+			l.Info("summoned creature >%s< at location >%s<", effect.ResultAdventureGameCreatureID.String, objectInstance.AdventureGameLocationInstanceID)
+		}
+
+	case adventure_game_record.AdventureGameLocationObjectEffectEffectTypeTeleport:
+		if effect.ResultAdventureGameLocationID.Valid && effect.ResultAdventureGameLocationID.String != "" {
+			destLocInst, err := p.getLocationInstanceForLocation(gameInstanceRec.ID, effect.ResultAdventureGameLocationID.String)
+			if err != nil {
+				return "", fmt.Errorf("failed to get destination location instance: %w", err)
+			}
+			characterInstanceRec.AdventureGameLocationInstanceID = sql.NullString{String: destLocInst.ID, Valid: true}
+			updatedChar, err := p.Domain.UpdateAdventureGameCharacterInstanceRec(characterInstanceRec)
+			if err != nil {
+				return "", fmt.Errorf("failed to teleport character: %w", err)
+			}
+			*characterInstanceRec = *updatedChar
+			l.Info("teleported character >%s< to location instance >%s<", characterInstanceRec.ID, destLocInst.ID)
+		}
+
+	case adventure_game_record.AdventureGameLocationObjectEffectEffectTypeRemoveObject:
+		if err := p.Domain.DeleteAdventureGameLocationObjectInstanceRec(objectInstance.ID); err != nil {
+			return "", fmt.Errorf("failed to remove object instance: %w", err)
+		}
+		l.Info("removed object instance >%s<", objectInstance.ID)
+	}
+
+	return effect.ResultDescription, nil
 }
 
 // getLocationInstanceForLocation finds the location instance ID for a given game and location

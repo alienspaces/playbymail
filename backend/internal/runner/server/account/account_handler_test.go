@@ -58,6 +58,15 @@ func Test_getAccountHandler(t *testing.T) {
 		},
 		{
 			TestCase: testutil.TestCase{
+				Name: "unauthenticated request when get many accounts then returns unauthorized",
+				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
+					return rnr.GetHandlerConfig()[account.GetManyAccounts]
+				},
+				ResponseCode: http.StatusUnauthorized,
+			},
+		},
+		{
+			TestCase: testutil.TestCase{
 				Name: "authenticated user when get one account with valid account ID then returns expected account",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[account.GetOneAccount]
@@ -75,6 +84,39 @@ func Test_getAccountHandler(t *testing.T) {
 				ResponseCode:    http.StatusOK,
 			},
 			collectionRequest: false,
+		},
+		{
+			TestCase: testutil.TestCase{
+				Name: "unauthenticated request when get one account then returns unauthorized",
+				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
+					return rnr.GetHandlerConfig()[account.GetOneAccount]
+				},
+				RequestPathParams: func(d harness.Data) map[string]string {
+					accountRec, err := d.GetAccountUserRecByRef(harness.AccountUserStandardRef)
+					require.NoError(t, err, "GetAccountUserRecByRef returns without error")
+					return map[string]string{
+						":account_id": accountRec.AccountID,
+					}
+				},
+				ResponseCode: http.StatusUnauthorized,
+			},
+		},
+		{
+			TestCase: testutil.TestCase{
+				Name: "different account when get one account then returns forbidden",
+				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
+					return rnr.GetHandlerConfig()[account.GetOneAccount]
+				},
+				RequestHeaders: testutil.AuthHeaderProPlayer,
+				RequestPathParams: func(d harness.Data) map[string]string {
+					accountRec, err := d.GetAccountUserRecByRef(harness.AccountUserStandardRef)
+					require.NoError(t, err, "GetAccountUserRecByRef returns without error")
+					return map[string]string{
+						":account_id": accountRec.AccountID,
+					}
+				},
+				ResponseCode: http.StatusForbidden,
+			},
 		},
 	}
 
@@ -194,6 +236,53 @@ func Test_createUpdateAccountHandler(t *testing.T) {
 				}
 			},
 		},
+		{
+			TestCase: testutil.TestCase{
+				Name: "unauthenticated request when update account then returns unauthorized",
+				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
+					return rnr.GetHandlerConfig()[account.UpdateOneAccount]
+				},
+				RequestPathParams: func(d harness.Data) map[string]string {
+					accountRec, err := d.GetAccountUserRecByRef(harness.AccountUserStandardRef)
+					require.NoError(t, err, "GetAccountUserRecByRef returns without error")
+					return map[string]string{
+						":account_id": accountRec.AccountID,
+					}
+				},
+				RequestBody: func(d harness.Data) any {
+					name := gofakeit.Company()
+					return account_schema.AccountRequest{
+						Name: &name,
+					}
+				},
+				ResponseCode: http.StatusUnauthorized,
+			},
+			expectResponse: nil,
+		},
+		{
+			TestCase: testutil.TestCase{
+				Name: "different account when update account then returns forbidden",
+				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
+					return rnr.GetHandlerConfig()[account.UpdateOneAccount]
+				},
+				RequestHeaders: testutil.AuthHeaderProPlayer,
+				RequestPathParams: func(d harness.Data) map[string]string {
+					accountRec, err := d.GetAccountUserRecByRef(harness.AccountUserStandardRef)
+					require.NoError(t, err, "GetAccountUserRecByRef returns without error")
+					return map[string]string{
+						":account_id": accountRec.AccountID,
+					}
+				},
+				RequestBody: func(d harness.Data) any {
+					name := gofakeit.Company()
+					return account_schema.AccountRequest{
+						Name: &name,
+					}
+				},
+				ResponseCode: http.StatusForbidden,
+			},
+			expectResponse: nil,
+		},
 	}
 
 	for _, testCase := range testCases {
@@ -201,7 +290,8 @@ func Test_createUpdateAccountHandler(t *testing.T) {
 
 		t.Run(testCase.Name, func(t *testing.T) {
 			testFunc := func(method string, body any) {
-				if testCase.TestResponseCode() == http.StatusNoContent {
+				rc := testCase.TestResponseCode()
+				if rc == http.StatusNoContent || rc == http.StatusUnauthorized || rc == http.StatusForbidden {
 					return
 				}
 

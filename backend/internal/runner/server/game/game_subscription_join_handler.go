@@ -467,7 +467,7 @@ func submitJoinHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Par
 			GameID:                          gameRec.ID,
 			GameInstanceID:                  gameInstanceRec.ID,
 			AdventureGameCharacterID:        characterRec.ID,
-			AdventureGameLocationInstanceID: startingLocationInstanceID,
+			AdventureGameLocationInstanceID: nullstring.FromString(startingLocationInstanceID),
 			Health:                          100,
 			InventoryCapacity:               10,
 			LastTurnEvents:                  []byte("[]"),

@@ -72,6 +72,22 @@ func Test_getAccountUserContactHandler(t *testing.T) {
 		},
 		{
 			TestCase: testutil.TestCase{
+				Name: "different account when get many account contacts by user path then returns forbidden",
+				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
+					return rnr.GetHandlerConfig()["get-many-account-user-contacts-by-user"]
+				},
+				RequestHeaders: testutil.AuthHeaderProPlayer,
+				RequestPathParams: func(d harness.Data) map[string]string {
+					return map[string]string{
+						":account_id":      accountRec.AccountID,
+						":account_user_id": accountRec.ID,
+					}
+				},
+				ResponseCode: http.StatusForbidden,
+			},
+		},
+		{
+			TestCase: testutil.TestCase{
 				Name: "authenticated user when get many account contacts without user path then returns only own contacts",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[account.GetManyAccountUserContacts]
@@ -88,6 +104,15 @@ func Test_getAccountUserContactHandler(t *testing.T) {
 			},
 			collectionRequest:     true,
 			collectionRecordCount: 1,
+		},
+		{
+			TestCase: testutil.TestCase{
+				Name: "unauthenticated request when get many account contacts then returns unauthorized",
+				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
+					return rnr.GetHandlerConfig()[account.GetManyAccountUserContacts]
+				},
+				ResponseCode: http.StatusUnauthorized,
+			},
 		},
 		{
 			TestCase: testutil.TestCase{
@@ -108,6 +133,39 @@ func Test_getAccountUserContactHandler(t *testing.T) {
 				ResponseCode:    http.StatusOK,
 			},
 			collectionRequest: false,
+		},
+		{
+			TestCase: testutil.TestCase{
+				Name: "unauthenticated request when get one account contact then returns unauthorized",
+				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
+					return rnr.GetHandlerConfig()[account.GetOneAccountUserContact]
+				},
+				RequestPathParams: func(d harness.Data) map[string]string {
+					return map[string]string{
+						":account_id":              accountRec.AccountID,
+						":account_user_id":         accountRec.ID,
+						":account_user_contact_id": accountUserContactRec.ID,
+					}
+				},
+				ResponseCode: http.StatusUnauthorized,
+			},
+		},
+		{
+			TestCase: testutil.TestCase{
+				Name: "different account when get one account contact then returns forbidden",
+				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
+					return rnr.GetHandlerConfig()[account.GetOneAccountUserContact]
+				},
+				RequestHeaders: testutil.AuthHeaderProPlayer,
+				RequestPathParams: func(d harness.Data) map[string]string {
+					return map[string]string{
+						":account_id":              accountRec.AccountID,
+						":account_user_id":         accountRec.ID,
+						":account_user_contact_id": accountUserContactRec.ID,
+					}
+				},
+				ResponseCode: http.StatusForbidden,
+			},
 		},
 	}
 
@@ -283,6 +341,51 @@ func Test_createUpdateDeleteAccountUserContactHandler(t *testing.T) {
 			},
 			expectResponse: nil,
 		},
+		{
+			TestCase: testutil.TestCase{
+				Name: "unauthenticated request when update account contact then returns unauthorized",
+				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
+					return rnr.GetHandlerConfig()[account.UpdateOneAccountUserContact]
+				},
+				RequestPathParams: func(d harness.Data) map[string]string {
+					return map[string]string{
+						":account_id":              accountRec.AccountID,
+						":account_user_id":         accountRec.ID,
+						":account_user_contact_id": accountUserContactRec.ID,
+					}
+				},
+				RequestBody: func(d harness.Data) any {
+					return account_schema.AccountContactRequest{
+						Name: gofakeit.Name(),
+					}
+				},
+				ResponseCode: http.StatusUnauthorized,
+			},
+			expectResponse: nil,
+		},
+		{
+			TestCase: testutil.TestCase{
+				Name: "different account when update account contact then returns forbidden",
+				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
+					return rnr.GetHandlerConfig()[account.UpdateOneAccountUserContact]
+				},
+				RequestHeaders: testutil.AuthHeaderProPlayer,
+				RequestPathParams: func(d harness.Data) map[string]string {
+					return map[string]string{
+						":account_id":              accountRec.AccountID,
+						":account_user_id":         accountRec.ID,
+						":account_user_contact_id": accountUserContactRec.ID,
+					}
+				},
+				RequestBody: func(d harness.Data) any {
+					return account_schema.AccountContactRequest{
+						Name: gofakeit.Name(),
+					}
+				},
+				ResponseCode: http.StatusForbidden,
+			},
+			expectResponse: nil,
+		},
 	}
 
 	for _, testCase := range testCases {
@@ -290,8 +393,8 @@ func Test_createUpdateDeleteAccountUserContactHandler(t *testing.T) {
 
 		t.Run(testCase.Name, func(t *testing.T) {
 			testFunc := func(method string, body any) {
-				if testCase.TestResponseCode() == http.StatusNoContent {
-					// No content expected
+				rc := testCase.TestResponseCode()
+				if rc == http.StatusNoContent || rc == http.StatusUnauthorized || rc == http.StatusForbidden {
 					return
 				}
 

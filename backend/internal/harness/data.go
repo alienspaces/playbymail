@@ -32,7 +32,10 @@ type Data struct {
 	AdventureGameItemInstanceRecs            []*adventure_game_record.AdventureGameItemInstance
 	AdventureGameCreatureInstanceRecs        []*adventure_game_record.AdventureGameCreatureInstance
 	AdventureGameCharacterInstanceRecs       []*adventure_game_record.AdventureGameCharacterInstance
-	AdventureGameTurnSheetRecs               []*adventure_game_record.AdventureGameTurnSheet
+	AdventureGameTurnSheetRecs                    []*adventure_game_record.AdventureGameTurnSheet
+	AdventureGameLocationObjectRecs               []*adventure_game_record.AdventureGameLocationObject
+	AdventureGameLocationObjectEffectRecs         []*adventure_game_record.AdventureGameLocationObjectEffect
+	AdventureGameLocationObjectInstanceRecs       []*adventure_game_record.AdventureGameLocationObjectInstance
 	// Session tokens by account ID
 	AccountSessionTokens map[string]string
 	// Data references
@@ -62,7 +65,10 @@ type DataRefs struct {
 	AdventureGameItemRefs                    map[string]string // Map of adventure game item refs to adventure game item records
 	AdventureGameItemInstanceRefs            map[string]string // Map of adventure game item instance refs to adventure game item instance records
 	AdventureGameCreatureInstanceRefs        map[string]string // Map of adventure game creature instance refs to adventure game creature instance records
-	AdventureGameCharacterInstanceRefs       map[string]string // Map of adventure game character instance refs to adventure game character instance records
+	AdventureGameCharacterInstanceRefs            map[string]string // Map of adventure game character instance refs to adventure game character instance records
+	AdventureGameLocationObjectRefs               map[string]string // Map of adventure game location object refs to adventure game location object records
+	AdventureGameLocationObjectEffectRefs         map[string]string // Map of adventure game location object effect refs to records
+	AdventureGameLocationObjectInstanceRefs       map[string]string // Map of adventure game location object instance refs to records
 }
 
 // initialiseDataStores - Data is required to maintain data references and
@@ -89,8 +95,11 @@ func initialiseDataStores() Data {
 			AdventureGameCreatureRefs:                map[string]string{},
 			AdventureGameItemRefs:                    map[string]string{},
 			AdventureGameItemInstanceRefs:            map[string]string{},
-			AdventureGameCreatureInstanceRefs:        map[string]string{},
-			AdventureGameCharacterInstanceRefs:       map[string]string{},
+			AdventureGameCreatureInstanceRefs:            map[string]string{},
+			AdventureGameCharacterInstanceRefs:            map[string]string{},
+			AdventureGameLocationObjectRefs:               map[string]string{},
+			AdventureGameLocationObjectEffectRefs:         map[string]string{},
+			AdventureGameLocationObjectInstanceRefs:       map[string]string{},
 		},
 	}
 }
@@ -801,6 +810,52 @@ func (d *Data) GetAdventureGameCharacterInstanceRecByRef(ref string) (*adventure
 		return nil, fmt.Errorf("failed getting adventure game character instance with ref >%s<", ref)
 	}
 	return d.GetAdventureGameCharacterInstanceRecByID(id)
+}
+
+// AdventureGameLocationObject
+func (d *Data) AddAdventureGameLocationObjectRec(rec *adventure_game_record.AdventureGameLocationObject) {
+	for idx := range d.AdventureGameLocationObjectRecs {
+		if d.AdventureGameLocationObjectRecs[idx].ID == rec.ID {
+			d.AdventureGameLocationObjectRecs[idx] = rec
+			return
+		}
+	}
+	d.AdventureGameLocationObjectRecs = append(d.AdventureGameLocationObjectRecs, rec)
+}
+
+func (d *Data) GetAdventureGameLocationObjectRecByRef(ref string) (*adventure_game_record.AdventureGameLocationObject, error) {
+	id, ok := d.Refs.AdventureGameLocationObjectRefs[ref]
+	if !ok {
+		return nil, fmt.Errorf("failed getting adventure game location object with ref >%s<", ref)
+	}
+	for _, rec := range d.AdventureGameLocationObjectRecs {
+		if rec.ID == id {
+			return rec, nil
+		}
+	}
+	return nil, fmt.Errorf("failed getting adventure game location object with id >%s< for ref >%s<", id, ref)
+}
+
+// AdventureGameLocationObjectEffect
+func (d *Data) AddAdventureGameLocationObjectEffectRec(rec *adventure_game_record.AdventureGameLocationObjectEffect) {
+	for idx := range d.AdventureGameLocationObjectEffectRecs {
+		if d.AdventureGameLocationObjectEffectRecs[idx].ID == rec.ID {
+			d.AdventureGameLocationObjectEffectRecs[idx] = rec
+			return
+		}
+	}
+	d.AdventureGameLocationObjectEffectRecs = append(d.AdventureGameLocationObjectEffectRecs, rec)
+}
+
+// AdventureGameLocationObjectInstance
+func (d *Data) AddAdventureGameLocationObjectInstanceRec(rec *adventure_game_record.AdventureGameLocationObjectInstance) {
+	for idx := range d.AdventureGameLocationObjectInstanceRecs {
+		if d.AdventureGameLocationObjectInstanceRecs[idx].ID == rec.ID {
+			d.AdventureGameLocationObjectInstanceRecs[idx] = rec
+			return
+		}
+	}
+	d.AdventureGameLocationObjectInstanceRecs = append(d.AdventureGameLocationObjectInstanceRecs, rec)
 }
 
 // AdventureGameTurnSheet

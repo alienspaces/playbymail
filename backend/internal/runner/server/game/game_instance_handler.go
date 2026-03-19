@@ -393,10 +393,9 @@ func gameInstanceHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig
 func getManyManagerGameInstancesHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = logging.LoggerWithFunctionContext(l, packageName, "getManyManagerGameInstancesHandler")
 
-	authenData := server.GetRequestAuthenData(l, r)
-	if authenData == nil || authenData.AccountUser.ID == "" {
-		l.Warn("authenticated account is required")
-		return coreerror.NewUnauthorizedError()
+	authenData, err := authorizeGameInstanceRead(l, r)
+	if err != nil {
+		return err
 	}
 
 	accountID := authenData.AccountUser.AccountID
@@ -441,6 +440,10 @@ func getManyManagerGameInstancesHandler(w http.ResponseWriter, r *http.Request, 
 func getManyGameInstancesHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = logging.LoggerWithFunctionContext(l, packageName, "getManyGameInstancesHandler")
 
+	if _, err := authorizeGameInstanceRead(l, r); err != nil {
+		return err
+	}
+
 	gameID := pp.ByName("game_id")
 	if gameID == "" {
 		l.Warn("game id is required")
@@ -479,6 +482,10 @@ func getManyGameInstancesHandler(w http.ResponseWriter, r *http.Request, pp http
 
 func getOneGameInstanceHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = logging.LoggerWithFunctionContext(l, packageName, "getOneGameInstanceHandler")
+
+	if _, err := authorizeGameInstanceRead(l, r); err != nil {
+		return err
+	}
 
 	gameID := pp.ByName("game_id")
 	instanceID := pp.ByName("instance_id")
@@ -532,25 +539,11 @@ func createOneGameInstanceHandler(w http.ResponseWriter, r *http.Request, pp htt
 		return coreerror.RequiredPathParameter("game_id")
 	}
 
-	// Get authenticated account ID
-	authenData := server.GetRequestAuthenData(l, r)
-	if authenData == nil || authenData.AccountUser.ID == "" {
-		l.Warn("authenticated account is required to create game instance")
-		return coreerror.NewUnauthorizedError()
-	}
-
 	mm := m.(*domain.Domain)
 
-	// Verify account has manager subscription for this game (required for creating instances)
-	managerSubRec, err := mm.GetGameSubscriptionRecByAccountAndGame(
-		authenData.AccountUser.AccountID,
-		gameID,
-		game_record.GameSubscriptionTypeManager,
-	)
+	_, managerSubRec, err := authorizeGameInstanceCreate(l, r, mm, gameID)
 	if err != nil {
-		l.Warn("failed to find manager subscription for account >%s< and game >%s<: %v",
-			authenData.AccountUser.AccountID, gameID, err)
-		return coreerror.NewUnauthorizedError()
+		return err
 	}
 
 	// Create record with GameID
@@ -616,6 +609,11 @@ func updateOneGameInstanceHandler(w http.ResponseWriter, r *http.Request, pp htt
 	}
 
 	mm := m.(*domain.Domain)
+
+	if _, err := authorizeGameInstanceModify(l, r, mm, gameID, instanceID); err != nil {
+		return err
+	}
+
 	rec, err := mm.GetGameInstanceRec(instanceID, nil)
 	if err != nil {
 		return err
@@ -665,19 +663,9 @@ func deleteOneGameInstanceHandler(w http.ResponseWriter, r *http.Request, pp htt
 	}
 
 	mm := m.(*domain.Domain)
-	rec, err := mm.GetGameInstanceRec(instanceID, nil)
-	if err != nil {
+
+	if _, err := authorizeGameInstanceModify(l, r, mm, gameID, instanceID); err != nil {
 		return err
-	}
-
-	if rec.GameID != gameID {
-		l.Warn("instance does not belong to specified game >%s< != >%s<", rec.GameID, gameID)
-		return coreerror.NewNotFoundError("game instance", instanceID)
-	}
-
-	if rec.Status != game_record.GameInstanceStatusCancelled {
-		l.Warn("game instance cannot be deleted in status >%s<, must be cancelled", rec.Status)
-		return coreerror.NewInvalidActionError("delete", "game instance can only be deleted when cancelled")
 	}
 
 	if err := mm.DeleteGameInstanceRec(instanceID); err != nil {
@@ -699,7 +687,6 @@ func startGameInstanceHandler(w http.ResponseWriter, r *http.Request, pp httprou
 
 	l.Info("starting game instance")
 
-	// Get path parameters
 	gameID := pp.ByName("game_id")
 	instanceID := pp.ByName("instance_id")
 
@@ -709,6 +696,10 @@ func startGameInstanceHandler(w http.ResponseWriter, r *http.Request, pp httprou
 	}
 
 	mm := m.(*domain.Domain)
+
+	if _, err := authorizeGameInstanceModify(l, r, mm, gameID, instanceID); err != nil {
+		return err
+	}
 
 	// Start the game instance
 	instance, err := mm.StartGameInstance(instanceID)
@@ -743,7 +734,6 @@ func pauseGameInstanceHandler(w http.ResponseWriter, r *http.Request, pp httprou
 
 	l.Info("pausing game instance")
 
-	// Get path parameters
 	gameID := pp.ByName("game_id")
 	instanceID := pp.ByName("instance_id")
 
@@ -753,6 +743,10 @@ func pauseGameInstanceHandler(w http.ResponseWriter, r *http.Request, pp httprou
 	}
 
 	mm := m.(*domain.Domain)
+
+	if _, err := authorizeGameInstanceModify(l, r, mm, gameID, instanceID); err != nil {
+		return err
+	}
 
 	// Pause the game instance
 	instance, err := mm.PauseGameInstance(instanceID)
@@ -787,7 +781,6 @@ func resumeGameInstanceHandler(w http.ResponseWriter, r *http.Request, pp httpro
 
 	l.Info("resuming game instance")
 
-	// Get path parameters
 	gameID := pp.ByName("game_id")
 	instanceID := pp.ByName("instance_id")
 
@@ -797,6 +790,10 @@ func resumeGameInstanceHandler(w http.ResponseWriter, r *http.Request, pp httpro
 	}
 
 	mm := m.(*domain.Domain)
+
+	if _, err := authorizeGameInstanceModify(l, r, mm, gameID, instanceID); err != nil {
+		return err
+	}
 
 	// Resume the game instance
 	instance, err := mm.ResumeGameInstance(instanceID)
@@ -831,7 +828,6 @@ func cancelGameInstanceHandler(w http.ResponseWriter, r *http.Request, pp httpro
 
 	l.Info("canceling game instance")
 
-	// Get path parameters
 	gameID := pp.ByName("game_id")
 	instanceID := pp.ByName("instance_id")
 
@@ -841,6 +837,10 @@ func cancelGameInstanceHandler(w http.ResponseWriter, r *http.Request, pp httpro
 	}
 
 	mm := m.(*domain.Domain)
+
+	if _, err := authorizeGameInstanceModify(l, r, mm, gameID, instanceID); err != nil {
+		return err
+	}
 
 	// Cancel the game instance
 	instance, err := mm.CancelGameInstance(instanceID)
@@ -875,7 +875,6 @@ func getJoinGameLinkHandler(w http.ResponseWriter, r *http.Request, pp httproute
 
 	l.Info("getting join game link")
 
-	// Get path parameters
 	gameID := pp.ByName("game_id")
 	instanceID := pp.ByName("instance_id")
 
@@ -885,6 +884,10 @@ func getJoinGameLinkHandler(w http.ResponseWriter, r *http.Request, pp httproute
 	}
 
 	mm := m.(*domain.Domain)
+
+	if _, err := authorizeGameInstanceModify(l, r, mm, gameID, instanceID); err != nil {
+		return err
+	}
 
 	// Get the game instance
 	instance, err := mm.GetGameInstanceRec(instanceID, nil)
@@ -937,7 +940,6 @@ func inviteTesterHandler(w http.ResponseWriter, r *http.Request, pp httprouter.P
 
 	l.Info("inviting tester")
 
-	// Get path parameters
 	gameID := pp.ByName("game_id")
 	instanceID := pp.ByName("instance_id")
 
@@ -947,6 +949,10 @@ func inviteTesterHandler(w http.ResponseWriter, r *http.Request, pp httprouter.P
 	}
 
 	mm := m.(*domain.Domain)
+
+	if _, err := authorizeGameInstanceModify(l, r, mm, gameID, instanceID); err != nil {
+		return err
+	}
 
 	// Get the game instance
 	instance, err := mm.GetGameInstanceRec(instanceID, nil)
@@ -1017,6 +1023,10 @@ func resetOneGameInstanceHandler(w http.ResponseWriter, r *http.Request, pp http
 	}
 
 	mm := m.(*domain.Domain)
+
+	if _, err := authorizeGameInstanceModify(l, r, mm, gameID, instanceID); err != nil {
+		return err
+	}
 
 	instance, err := mm.ResetGameInstance(instanceID)
 	if err != nil {

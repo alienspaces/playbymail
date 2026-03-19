@@ -198,15 +198,14 @@ func getMeHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, 
 
 	l.Info("querying authenticated account user")
 
-	mm := m.(*domain.Domain)
-
-	authData := server.GetRequestAuthenData(l, r)
-	if authData == nil {
-		l.Warn("failed getting authenticated account data")
-		return server.WriteResponse(l, w, http.StatusUnauthorized, nil)
+	authenData, err := authorizeAccountRead(l, r)
+	if err != nil {
+		return err
 	}
 
-	rec, err := mm.GetAccountUserRec(authData.AccountUser.ID, nil)
+	mm := m.(*domain.Domain)
+
+	rec, err := mm.GetAccountUserRec(authenData.AccountUser.ID, nil)
 	if err != nil {
 		l.Warn("failed getting account user record >%v<", err)
 		return err
@@ -226,17 +225,29 @@ func getMeHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, 
 func getManyAccountUsersHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = logging.LoggerWithFunctionContext(l, packageName, "getManyAccountUsersHandler")
 
-	mm := m.(*domain.Domain)
-
 	opts := queryparam.ToSQLOptionsWithDefaults(qp)
 
 	accountID := pp.ByName("account_id")
 	if accountID != "" {
+		if _, err := authorizeAccountMember(l, r, accountID); err != nil {
+			return err
+		}
 		opts.Params = append(opts.Params, coresql.Param{
 			Col: account_record.FieldAccountUserAccountID,
 			Val: accountID,
 		})
+	} else {
+		authenData, err := authorizeAccountRead(l, r)
+		if err != nil {
+			return err
+		}
+		opts.Params = append(opts.Params, coresql.Param{
+			Col: account_record.FieldAccountUserAccountID,
+			Val: authenData.AccountUser.AccountID,
+		})
 	}
+
+	mm := m.(*domain.Domain)
 
 	// Default ordering
 	if len(opts.OrderBy) == 0 {
@@ -273,6 +284,10 @@ func getAccountUserHandler(w http.ResponseWriter, r *http.Request, pp httprouter
 		return coreerror.NewInvalidDataError("account_id is required")
 	}
 
+	if _, err := authorizeAccountUserSelf(l, r, accountID, accountUserID); err != nil {
+		return err
+	}
+
 	mm := m.(*domain.Domain)
 
 	rec, err := mm.GetAccountUserRec(accountUserID, nil)
@@ -301,6 +316,10 @@ func createAccountUserHandler(w http.ResponseWriter, r *http.Request, pp httprou
 	accountID := pp.ByName("account_id")
 	if accountID == "" {
 		return coreerror.NewInvalidDataError("account_id is required")
+	}
+
+	if _, err := authorizeAccountMember(l, r, accountID); err != nil {
+		return err
 	}
 
 	mm := m.(*domain.Domain)
@@ -341,6 +360,10 @@ func updateAccountUserHandler(w http.ResponseWriter, r *http.Request, pp httprou
 	accountID := pp.ByName("account_id")
 	if accountID == "" {
 		return coreerror.NewInvalidDataError("account_id is required")
+	}
+
+	if _, err := authorizeAccountUserSelf(l, r, accountID, accountUserID); err != nil {
+		return err
 	}
 
 	mm := m.(*domain.Domain)
@@ -388,6 +411,10 @@ func deleteAccountUserHandler(w http.ResponseWriter, r *http.Request, pp httprou
 	accountID := pp.ByName("account_id")
 	if accountID == "" {
 		return coreerror.NewInvalidDataError("account_id is required")
+	}
+
+	if _, err := authorizeAccountUserSelf(l, r, accountID, accountUserID); err != nil {
+		return err
 	}
 
 	mm := m.(*domain.Domain)

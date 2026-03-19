@@ -176,23 +176,31 @@ func accountUserContactHandlerConfig(l logger.Logger) (map[string]server.Handler
 func getManyAccountUserContactsHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = logging.LoggerWithFunctionContext(l, packageName, "getManyAccountUserContactsHandler")
 
-	mm := m.(*domain.Domain)
-
 	opts := queryparam.ToSQLOptionsWithDefaults(qp)
 
 	accountUserID := pp.ByName("account_user_id")
-	if accountUserID == "" {
-		authData := server.GetRequestAuthenData(l, r)
-		if authData == nil || authData.AccountUser.ID == "" {
-			l.Warn("failed getting authenticated account data")
-			return server.WriteResponse(l, w, http.StatusUnauthorized, nil)
+	if accountUserID != "" {
+		accountID := pp.ByName("account_id")
+		if accountID == "" {
+			return coreerror.NewInvalidDataError("account_id is required")
 		}
-		accountUserID = authData.AccountUser.ID
+		if _, err := authorizeAccountUserSelf(l, r, accountID, accountUserID); err != nil {
+			return err
+		}
+	} else {
+		authenData, err := authorizeAccountRead(l, r)
+		if err != nil {
+			return err
+		}
+		accountUserID = authenData.AccountUser.ID
 	}
+
 	opts.Params = append(opts.Params, coresql.Param{
 		Col: account_record.FieldAccountUserContactAccountUserID,
 		Val: accountUserID,
 	})
+
+	mm := m.(*domain.Domain)
 
 	// Override default ordering to use created_at descending
 	opts.OrderBy = []coresql.OrderBy{
@@ -227,6 +235,15 @@ func getAccountUserContactHandler(w http.ResponseWriter, r *http.Request, pp htt
 		return coreerror.NewInvalidDataError("account_user_id is required")
 	}
 
+	accountID := pp.ByName("account_id")
+	if accountID == "" {
+		return coreerror.NewInvalidDataError("account_id is required")
+	}
+
+	if _, err := authorizeAccountUserSelf(l, r, accountID, accountUserID); err != nil {
+		return err
+	}
+
 	mm := m.(*domain.Domain)
 
 	rec, err := mm.GetAccountUserContactRec(accountUserContactID, nil)
@@ -255,6 +272,15 @@ func createAccountUserContactHandler(w http.ResponseWriter, r *http.Request, pp 
 	accountUserID := pp.ByName("account_user_id")
 	if accountUserID == "" {
 		return coreerror.NewInvalidDataError("account_user_id is required")
+	}
+
+	accountID := pp.ByName("account_id")
+	if accountID == "" {
+		return coreerror.NewInvalidDataError("account_id is required")
+	}
+
+	if _, err := authorizeAccountUserSelf(l, r, accountID, accountUserID); err != nil {
+		return err
 	}
 
 	mm := m.(*domain.Domain)
@@ -297,6 +323,15 @@ func updateAccountUserContactHandler(w http.ResponseWriter, r *http.Request, pp 
 		return coreerror.NewInvalidDataError("account_user_id is required")
 	}
 
+	accountID := pp.ByName("account_id")
+	if accountID == "" {
+		return coreerror.NewInvalidDataError("account_id is required")
+	}
+
+	if _, err := authorizeAccountUserSelf(l, r, accountID, accountUserID); err != nil {
+		return err
+	}
+
 	mm := m.(*domain.Domain)
 
 	rec := &account_record.AccountUserContact{
@@ -336,6 +371,15 @@ func deleteAccountUserContactHandler(w http.ResponseWriter, r *http.Request, pp 
 	accountUserID := pp.ByName("account_user_id")
 	if accountUserID == "" {
 		return coreerror.NewInvalidDataError("account_user_id is required")
+	}
+
+	accountID := pp.ByName("account_id")
+	if accountID == "" {
+		return coreerror.NewInvalidDataError("account_id is required")
+	}
+
+	if _, err := authorizeAccountUserSelf(l, r, accountID, accountUserID); err != nil {
+		return err
 	}
 
 	mm := m.(*domain.Domain)

@@ -2,7 +2,7 @@
     "$schema": "http://json-schema.org/draft-07/schema#",
     "$id": "http://playbymail.games/schema/turnsheet/adventure_game/location_choice.schema.json",
     "title": "ScannedDataAdventureGameLocationChoice",
-    "description": "scanned_data shape for turn sheet type adventure_game_location_choice. Accepts programmatic format (choices) and HTML form format (location_choice).",
+    "description": "scanned_data shape for turn sheet type adventure_game_location_choice. Accepts programmatic format (choices), HTML form location format (location_choice), or HTML form object format (object_choice).",
     "type": "object",
     "properties": {
         "choices": {
@@ -13,6 +13,10 @@
         "location_choice": {
             "type": "string",
             "description": "HTML form format: single chosen location_id from radio input"
+        },
+        "object_choice": {
+            "type": "string",
+            "description": "HTML form format: object interaction in the form '{object_instance_id}:{action_type}'"
         }
     },
     "additionalProperties": true

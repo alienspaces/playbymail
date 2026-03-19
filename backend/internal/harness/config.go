@@ -118,11 +118,12 @@ type GameConfig struct {
 	GameImageConfigs []GameImageConfig // Game images for turn sheet backgrounds
 
 	// Adventure game specific configurations
-	AdventureGameLocationConfigs     []AdventureGameLocationConfig
-	AdventureGameLocationLinkConfigs []AdventureGameLocationLinkConfig
-	AdventureGameItemConfigs         []AdventureGameItemConfig
-	AdventureGameCreatureConfigs     []AdventureGameCreatureConfig
-	AdventureGameCharacterConfigs    []AdventureGameCharacterConfig // Characters associated with this game
+	AdventureGameLocationConfigs       []AdventureGameLocationConfig
+	AdventureGameLocationLinkConfigs   []AdventureGameLocationLinkConfig
+	AdventureGameItemConfigs           []AdventureGameItemConfig
+	AdventureGameCreatureConfigs       []AdventureGameCreatureConfig
+	AdventureGameCharacterConfigs      []AdventureGameCharacterConfig // Characters associated with this game
+	AdventureGameLocationObjectConfigs []AdventureGameLocationObjectConfig
 }
 
 type GameImageConfig struct {
@@ -304,6 +305,32 @@ type AdventureGameCharacterInstanceConfig struct {
 	GameLocationRef  string // Reference to the game_location (required)
 
 	Record *adventure_game_record.AdventureGameCharacterInstance
+}
+
+type AdventureGameLocationObjectEffectConfig struct {
+	Reference string // Reference to the effect record
+	Record    *adventure_game_record.AdventureGameLocationObjectEffect
+	// ResultObjectRef is an optional reference to another location object whose ID should
+	// be resolved and set on result_adventure_game_location_object_id before creation.
+	ResultObjectRef string
+	// ResultItemRef is an optional reference to an item whose ID should be set on result_adventure_game_item_id.
+	ResultItemRef string
+	// ResultLocationRef is an optional reference to a location whose ID should be set on result_adventure_game_location_id.
+	ResultLocationRef string
+	// ResultLinkRef is an optional reference to a location link whose ID should be set on result_adventure_game_location_link_id.
+	ResultLinkRef string
+	// ResultCreatureRef is an optional reference to a creature whose ID should be set on result_adventure_game_creature_id.
+	ResultCreatureRef string
+	// RequiredItemRef is an optional reference to an item whose ID should be set on required_adventure_game_item_id.
+	RequiredItemRef string
+}
+
+type AdventureGameLocationObjectConfig struct {
+	Reference  string // Reference to the object record
+	LocationRef string // Reference to the location this object belongs to
+	Record     *adventure_game_record.AdventureGameLocationObject
+	// Effects attached to this object
+	AdventureGameLocationObjectEffectConfigs []AdventureGameLocationObjectEffectConfig
 }
 
 type AdventureGameItemInstanceConfig struct {

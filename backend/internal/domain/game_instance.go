@@ -154,9 +154,14 @@ func (m *Domain) DeleteGameInstanceRec(recID string) error {
 
 	l.Debug("deleting game_instance record ID >%s<", recID)
 
-	_, err := m.GetGameInstanceRec(recID, coresql.ForUpdateNoWait)
+	rec, err := m.GetGameInstanceRec(recID, coresql.ForUpdateNoWait)
 	if err != nil {
 		return err
+	}
+
+	if rec.Status != game_record.GameInstanceStatusCancelled {
+		l.Warn("game instance cannot be deleted in status >%s<, must be cancelled", rec.Status)
+		return coreerror.NewInvalidActionError("delete", "game instance can only be deleted when cancelled")
 	}
 
 	r := m.GameInstanceRepository()

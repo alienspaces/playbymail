@@ -73,19 +73,17 @@ func getMyAccountSubscriptionsHandler(w http.ResponseWriter, r *http.Request, pp
 
 	l.Info("getting authenticated user account subscriptions")
 
-	mm := m.(*domain.Domain)
-
-	// Get the authenticated account from the request context
-	authData := server.GetRequestAuthenData(l, r)
-	if authData == nil {
-		l.Warn("failed getting authenticated account data")
-		return server.WriteResponse(l, w, http.StatusUnauthorized, nil)
+	authenData, err := authorizeAccountRead(l, r)
+	if err != nil {
+		return err
 	}
+
+	mm := m.(*domain.Domain)
 
 	opts := queryparam.ToSQLOptionsWithDefaults(qp)
 	opts.Params = append(opts.Params, coresql.Param{
 		Col: account_record.FieldAccountSubscriptionAccountID,
-		Val: authData.AccountUser.AccountID,
+		Val: authenData.AccountUser.AccountID,
 	})
 	// Order by created_at descending
 	opts.OrderBy = []coresql.OrderBy{
