@@ -1,0 +1,264 @@
+<template>
+  <div>
+    <div v-if="!selectedGame">
+      <p>Please select or create a game to manage location object effects.</p>
+    </div>
+    <div v-else class="game-table-section">
+      <GameContext :gameName="selectedGame.name" />
+      <PageHeader
+        title="Object Effects"
+        actionText="Create Object Effect"
+        :showIcon="false"
+        titleLevel="h2"
+        @action="openCreate"
+      />
+      <ResourceTable
+        :columns="columns"
+        :rows="enhancedEffects"
+        :loading="locationObjectEffectsStore.loading"
+        :error="locationObjectEffectsStore.error"
+        data-testid="location-object-effects-table"
+      >
+        <template #cell-action_type="{ row }">
+          <a href="#" class="edit-link" @click.prevent="openEdit(row)">{{ row.action_type }}</a>
+        </template>
+        <template #actions="{ row }">
+          <TableActions :actions="getActions(row)" />
+        </template>
+      </ResourceTable>
+
+      <ResourceModalForm
+        :visible="showModal"
+        :mode="modalMode"
+        title="Object Effect"
+        :fields="fields"
+        :modelValue="modalForm"
+        :error="modalError"
+        :options="fieldOptions"
+        data-testid="location-object-effect-form"
+        @submit="handleSubmit"
+        @cancel="closeModal"
+      />
+
+      <ConfirmationModal
+        :visible="showDeleteConfirm"
+        title="Delete Object Effect"
+        message="Are you sure you want to delete this object effect?"
+        @confirm="confirmDelete"
+        @cancel="closeDeleteConfirm"
+      />
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, watch, computed } from 'vue';
+import { useLocationsStore } from '../../../stores/locations';
+import { useLocationObjectsStore } from '../../../stores/locationObjects';
+import { useLocationObjectEffectsStore } from '../../../stores/locationObjectEffects';
+import { useItemsStore } from '../../../stores/items';
+import { useCreaturesStore } from '../../../stores/creatures';
+import { useLocationLinksStore } from '../../../stores/locationLinks';
+import { useGamesStore } from '../../../stores/games';
+import { storeToRefs } from 'pinia';
+import ResourceTable from '../../../components/ResourceTable.vue';
+import ResourceModalForm from '../../../components/ResourceModalForm.vue';
+import ConfirmationModal from '../../../components/ConfirmationModal.vue';
+import PageHeader from '../../../components/PageHeader.vue';
+import GameContext from '../../../components/GameContext.vue';
+import TableActions from '../../../components/TableActions.vue';
+
+const locationsStore = useLocationsStore();
+const locationObjectsStore = useLocationObjectsStore();
+const locationObjectEffectsStore = useLocationObjectEffectsStore();
+const itemsStore = useItemsStore();
+const creaturesStore = useCreaturesStore();
+const locationLinksStore = useLocationLinksStore();
+const gamesStore = useGamesStore();
+const { selectedGame } = storeToRefs(gamesStore);
+
+const enhancedEffects = computed(() =>
+  locationObjectEffectsStore.locationObjectEffects.map((effect) => {
+    const obj = locationObjectsStore.locationObjects.find((o) => o.id === effect.adventure_game_location_object_id);
+    return {
+      ...effect,
+      object_name: obj?.name || 'Unknown Object',
+    };
+  })
+);
+
+const columns = [
+  { key: 'object_name', label: 'Object' },
+  { key: 'action_type', label: 'Action' },
+  { key: 'effect_type', label: 'Effect' },
+  { key: 'required_state', label: 'Required State' },
+  { key: 'result_description', label: 'Description' },
+  { key: 'is_repeatable', label: 'Repeatable' },
+];
+
+const ACTION_TYPES = [
+  'inspect', 'touch', 'open', 'close', 'lock', 'unlock', 'search',
+  'break', 'push', 'pull', 'move', 'burn', 'read', 'take', 'listen',
+  'insert', 'pour', 'disarm', 'climb', 'use',
+];
+
+const EFFECT_TYPES = [
+  'info', 'change_state', 'change_object_state', 'give_item', 'remove_item',
+  'open_link', 'close_link', 'reveal_object', 'hide_object', 'damage',
+  'heal', 'summon_creature', 'teleport', 'nothing', 'remove_object',
+];
+
+const fields = [
+  { key: 'adventure_game_location_object_id', label: 'Object', type: 'select', required: true, placeholder: 'Select an object...' },
+  { key: 'action_type', label: 'Action Type', type: 'select', required: true, placeholder: 'Select action type...' },
+  { key: 'effect_type', label: 'Effect Type', type: 'select', required: true, placeholder: 'Select effect type...' },
+  { key: 'result_description', label: 'Result Description', type: 'textarea', required: true, placeholder: 'What the player sees' },
+  { key: 'required_state', label: 'Required State', type: 'text', placeholder: 'e.g. intact (leave blank for any state)' },
+  { key: 'required_adventure_game_item_id', label: 'Required Item', type: 'select', placeholder: 'Optional required item...' },
+  { key: 'result_state', label: 'Result State', type: 'text', placeholder: 'New state after effect (if applicable)' },
+  { key: 'result_adventure_game_item_id', label: 'Result Item', type: 'select', placeholder: 'Item to give/remove...' },
+  { key: 'result_adventure_game_location_link_id', label: 'Result Link', type: 'select', placeholder: 'Link to open/close...' },
+  { key: 'result_adventure_game_creature_id', label: 'Result Creature', type: 'select', placeholder: 'Creature to summon...' },
+  { key: 'result_adventure_game_location_object_id', label: 'Result Object', type: 'select', placeholder: 'Object to reveal/hide/change...' },
+  { key: 'result_adventure_game_location_id', label: 'Result Location', type: 'select', placeholder: 'Location to teleport to...' },
+  { key: 'result_value_min', label: 'Min Value', type: 'number', placeholder: 'e.g. 5 (damage/heal amount)' },
+  { key: 'result_value_max', label: 'Max Value', type: 'number', placeholder: 'e.g. 10 (damage/heal amount)' },
+  { key: 'is_repeatable', label: 'Repeatable', type: 'checkbox' },
+];
+
+const fieldOptions = computed(() => ({
+  adventure_game_location_object_id: locationObjectsStore.locationObjects.map((o) => ({ value: o.id, label: o.name })),
+  action_type: ACTION_TYPES.map((t) => ({ value: t, label: t })),
+  effect_type: EFFECT_TYPES.map((t) => ({ value: t, label: t })),
+  required_adventure_game_item_id: [{ value: '', label: '— none —' }, ...itemsStore.items.map((i) => ({ value: i.id, label: i.name }))],
+  result_adventure_game_item_id: [{ value: '', label: '— none —' }, ...itemsStore.items.map((i) => ({ value: i.id, label: i.name }))],
+  result_adventure_game_location_link_id: [{ value: '', label: '— none —' }, ...locationLinksStore.locationLinks.map((l) => ({ value: l.id, label: l.name }))],
+  result_adventure_game_creature_id: [{ value: '', label: '— none —' }, ...creaturesStore.creatures.map((c) => ({ value: c.id, label: c.name }))],
+  result_adventure_game_location_object_id: [{ value: '', label: '— none —' }, ...locationObjectsStore.locationObjects.map((o) => ({ value: o.id, label: o.name }))],
+  result_adventure_game_location_id: [{ value: '', label: '— none —' }, ...locationsStore.locations.map((l) => ({ value: l.id, label: l.name }))],
+}));
+
+const showModal = ref(false);
+const modalMode = ref('create');
+const defaultForm = () => ({
+  adventure_game_location_object_id: '',
+  action_type: '',
+  effect_type: '',
+  result_description: '',
+  required_state: '',
+  required_adventure_game_item_id: '',
+  result_state: '',
+  result_adventure_game_item_id: '',
+  result_adventure_game_location_link_id: '',
+  result_adventure_game_creature_id: '',
+  result_adventure_game_location_object_id: '',
+  result_adventure_game_location_id: '',
+  result_value_min: null,
+  result_value_max: null,
+  is_repeatable: false,
+});
+const modalForm = ref(defaultForm());
+const modalError = ref('');
+const showDeleteConfirm = ref(false);
+const deleteTarget = ref(null);
+
+watch(
+  () => selectedGame.value,
+  (newGame) => {
+    if (newGame) {
+      locationsStore.fetchLocations(newGame.id);
+      locationObjectsStore.fetchLocationObjects(newGame.id);
+      locationObjectEffectsStore.fetchLocationObjectEffects(newGame.id);
+      itemsStore.fetchItems(newGame.id);
+      creaturesStore.fetchCreatures(newGame.id);
+      locationLinksStore.fetchLocationLinks(newGame.id);
+    }
+  },
+  { immediate: true }
+);
+
+function openCreate() {
+  modalMode.value = 'create';
+  modalForm.value = defaultForm();
+  modalError.value = '';
+  showModal.value = true;
+}
+
+function openEdit(row) {
+  modalMode.value = 'edit';
+  modalForm.value = { ...defaultForm(), ...row };
+  modalError.value = '';
+  showModal.value = true;
+}
+
+function closeModal() {
+  showModal.value = false;
+  modalError.value = '';
+}
+
+async function handleSubmit(form) {
+  modalError.value = '';
+  const payload = { ...form };
+  // Strip empty optional string fields so they are omitted from the request
+  const optionalFields = [
+    'required_state', 'required_adventure_game_item_id', 'result_state',
+    'result_adventure_game_item_id', 'result_adventure_game_location_link_id',
+    'result_adventure_game_creature_id', 'result_adventure_game_location_object_id',
+    'result_adventure_game_location_id',
+  ];
+  optionalFields.forEach((f) => {
+    if (payload[f] === '' || payload[f] === null) delete payload[f];
+  });
+  if (!payload.result_value_min && payload.result_value_min !== 0) delete payload.result_value_min;
+  if (!payload.result_value_max && payload.result_value_max !== 0) delete payload.result_value_max;
+
+  try {
+    if (modalMode.value === 'create') {
+      await locationObjectEffectsStore.createLocationObjectEffect(payload);
+    } else {
+      await locationObjectEffectsStore.updateLocationObjectEffect(modalForm.value.id, payload);
+    }
+    closeModal();
+  } catch (err) {
+    modalError.value = err.message || 'Failed to save.';
+  }
+}
+
+function confirmDeleteOpen(row) {
+  deleteTarget.value = row;
+  showDeleteConfirm.value = true;
+}
+
+function closeDeleteConfirm() {
+  showDeleteConfirm.value = false;
+  deleteTarget.value = null;
+}
+
+async function confirmDelete() {
+  if (!deleteTarget.value) return;
+  try {
+    await locationObjectEffectsStore.deleteLocationObjectEffect(deleteTarget.value.id);
+    closeDeleteConfirm();
+  } catch (err) {
+    console.error('Failed to delete object effect:', err);
+  }
+}
+
+function getActions(row) {
+  return [
+    { key: 'edit', label: 'Edit', handler: () => openEdit(row) },
+    { key: 'delete', label: 'Delete', danger: true, handler: () => confirmDeleteOpen(row) },
+  ];
+}
+</script>
+
+<style scoped>
+.edit-link {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.edit-link:hover {
+  text-decoration: underline;
+}
+</style>

@@ -278,7 +278,8 @@ func (p *LocationChoiceProcessor) ScanTurnSheet(ctx context.Context, l logger.Lo
 	}
 
 	expected := map[string]any{
-		"choices": []string{},
+		"choices":        []string{},
+		"object_choice":  "",
 	}
 
 	req := scanner.StructuredScanRequest{
@@ -312,9 +313,10 @@ func (p *LocationChoiceProcessor) ScanTurnSheet(ctx context.Context, l logger.Lo
 func buildLocationChoiceInstructions() string {
 	return `Compare the blank template image with the completed turn sheet.
 Determine which checkbox/circle is marked by the player.
-Respond with JSON containing a "choices" array of location_id values (strings).
-Use the provided reference list to map the printed location names to their ids.
-If no boxes are marked, return an empty array.`
+There are two mutually exclusive choice types:
+1. Location choice: the player marked a location radio button. Respond with JSON containing a "choices" array of location_id values (strings). Use the provided reference list to map printed location names to their ids. If no location boxes are marked, return an empty array.
+2. Object interaction choice: the player marked an object action radio button. Respond with JSON containing an "object_choice" field formatted as "{object_instance_id}:{action_type}" (e.g. "abc123:inspect"). Use the provided reference list to map object names and actions to their ids.
+Only one of these should be set in the response. If neither is marked, return empty choices array and empty object_choice string.`
 }
 
 // These are the additional context provided to the AI driven OCR service.
@@ -328,6 +330,17 @@ func buildLocationChoiceContext(data *LocationChoiceData) []string {
 				strings.TrimSpace(option.LocationLinkDescription),
 			))
 		}
+		for _, obj := range data.LocationObjects {
+			for _, action := range obj.Actions {
+				ctx = append(ctx, fmt.Sprintf("object_instance_id=%s object_name=%s action_type=%s object_choice_value=%s:%s",
+					obj.ObjectInstanceID,
+					strings.TrimSpace(obj.Name),
+					action.ActionType,
+					obj.ObjectInstanceID,
+					action.ActionType,
+				))
+			}
+		}
 	}
 	return ctx
 }
@@ -337,17 +350,49 @@ func validateLocationChoices(sheetData *LocationChoiceData, scanData *LocationCh
 		return fmt.Errorf("no scan data provided")
 	}
 
-	// Only non-locked options are valid choices
-	validIDs := make(map[string]bool)
+	hasLocationChoice := len(scanData.GetChoices()) > 0 || scanData.LocationChoice != ""
+	hasObjectChoice := scanData.ObjectChoice != ""
+
+	// Enforce mutual exclusivity between location and object choices
+	if hasLocationChoice && hasObjectChoice {
+		return fmt.Errorf("location choice and object choice are mutually exclusive")
+	}
+
+	// Only non-locked options are valid location choices
+	validLocationIDs := make(map[string]bool)
 	for _, opt := range sheetData.LocationOptions {
 		if opt.LocationID != "" && !opt.IsLocked {
-			validIDs[opt.LocationID] = true
+			validLocationIDs[opt.LocationID] = true
 		}
 	}
 
 	for _, choice := range scanData.GetChoices() {
-		if !validIDs[choice] {
+		if !validLocationIDs[choice] {
 			return fmt.Errorf("invalid location_id returned: %s", choice)
+		}
+	}
+
+	// Validate object_choice format and that it corresponds to a known object+action
+	if hasObjectChoice {
+		parts := strings.SplitN(scanData.ObjectChoice, ":", 2)
+		if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+			return fmt.Errorf("invalid object_choice format: expected {instance_id}:{action_type}, got %q", scanData.ObjectChoice)
+		}
+		instanceID, actionType := parts[0], parts[1]
+		validObjectChoice := false
+		for _, obj := range sheetData.LocationObjects {
+			if obj.ObjectInstanceID != instanceID {
+				continue
+			}
+			for _, action := range obj.Actions {
+				if action.ActionType == actionType {
+					validObjectChoice = true
+					break
+				}
+			}
+		}
+		if !validObjectChoice {
+			return fmt.Errorf("invalid object_choice: no visible object with instance_id=%q and action_type=%q", instanceID, actionType)
 		}
 	}
 

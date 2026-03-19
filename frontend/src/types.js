@@ -140,3 +140,41 @@
  * @property {string} [updated_at]
  * @property {string} [deleted_at]
  */
+
+/**
+ * @typedef {Object} GameLocationObject
+ * @property {string} id
+ * @property {string} game_id
+ * @property {string} adventure_game_location_id
+ * @property {string} name
+ * @property {string} description
+ * @property {string} initial_state
+ * @property {boolean} is_hidden
+ * @property {string} created_at
+ * @property {string} [updated_at]
+ * @property {string} [deleted_at]
+ */
+
+/**
+ * @typedef {Object} GameLocationObjectEffect
+ * @property {string} id
+ * @property {string} game_id
+ * @property {string} adventure_game_location_object_id
+ * @property {string} action_type
+ * @property {string} [required_state]
+ * @property {string} [required_adventure_game_item_id]
+ * @property {string} result_description
+ * @property {string} effect_type
+ * @property {string} [result_state]
+ * @property {string} [result_adventure_game_item_id]
+ * @property {string} [result_adventure_game_location_link_id]
+ * @property {string} [result_adventure_game_creature_id]
+ * @property {string} [result_adventure_game_location_object_id]
+ * @property {string} [result_adventure_game_location_id]
+ * @property {number} [result_value_min]
+ * @property {number} [result_value_max]
+ * @property {boolean} is_repeatable
+ * @property {string} created_at
+ * @property {string} [updated_at]
+ * @property {string} [deleted_at]
+ */

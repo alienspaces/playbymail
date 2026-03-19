@@ -901,6 +901,32 @@ func (d *Data) AddAdventureGameLocationObjectEffectRec(rec *adventure_game_recor
 	d.AdventureGameLocationObjectEffectRecs = append(d.AdventureGameLocationObjectEffectRecs, rec)
 }
 
+func (d *Data) GetAdventureGameLocationObjectEffectRecByRef(ref string) (*adventure_game_record.AdventureGameLocationObjectEffect, error) {
+	id, ok := d.Refs.AdventureGameLocationObjectEffectRefs[ref]
+	if !ok {
+		return nil, fmt.Errorf("failed getting adventure game location object effect with ref >%s<", ref)
+	}
+	for _, rec := range d.AdventureGameLocationObjectEffectRecs {
+		if rec.ID == id {
+			return rec, nil
+		}
+	}
+	return nil, fmt.Errorf("failed getting adventure game location object effect with id >%s< for ref >%s<", id, ref)
+}
+
+func (d *Data) GetAdventureGameLocationObjectInstanceByObjectRef(objectRef string) (*adventure_game_record.AdventureGameLocationObjectInstance, error) {
+	objectRec, err := d.GetAdventureGameLocationObjectRecByRef(objectRef)
+	if err != nil {
+		return nil, err
+	}
+	for _, rec := range d.AdventureGameLocationObjectInstanceRecs {
+		if rec.AdventureGameLocationObjectID == objectRec.ID {
+			return rec, nil
+		}
+	}
+	return nil, fmt.Errorf("failed getting adventure game location object instance for object ref >%s<", objectRef)
+}
+
 // AdventureGameLocationObjectInstance
 func (d *Data) AddAdventureGameLocationObjectInstanceRec(rec *adventure_game_record.AdventureGameLocationObjectInstance) {
 	for idx := range d.AdventureGameLocationObjectInstanceRecs {

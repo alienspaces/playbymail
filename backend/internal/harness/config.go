@@ -4,6 +4,7 @@ package harness
 import (
 	"fmt"
 
+	"gitlab.com/alienspaces/playbymail/core/nullint32"
 	"gitlab.com/alienspaces/playbymail/core/nullstring"
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/record/account_record"
@@ -62,6 +63,16 @@ const (
 
 	GameCreaturePlacementOneRef = "game-creature-placement-one"
 	GameItemPlacementOneRef     = "game-item-placement-one"
+
+	GameLocationObjectOneRef = "game-location-object-one"
+	GameLocationObjectTwoRef = "game-location-object-two"
+
+	GameLocationObjectEffectOneRef   = "game-location-object-effect-one"
+	GameLocationObjectEffectTwoRef   = "game-location-object-effect-two"
+	GameLocationObjectEffectThreeRef = "game-location-object-effect-three"
+	GameLocationObjectEffectFourRef  = "game-location-object-effect-four"
+	GameLocationObjectEffectFiveRef  = "game-location-object-effect-five"
+	GameLocationObjectEffectSixRef   = "game-location-object-effect-six"
 
 	GameItemInstanceOneRef = "game-item-instance-one"
 
@@ -554,16 +565,118 @@ func DefaultDataConfig() DataConfig {
 						Record:          &adventure_game_record.AdventureGameCreaturePlacement{},
 					},
 				},
-				AdventureGameItemPlacementConfigs: []AdventureGameItemPlacementConfig{
-					{
-						Reference:       GameItemPlacementOneRef,
-						GameItemRef:     GameItemOneRef,
-						GameLocationRef: GameLocationOneRef,
-						InitialCount:    1,
-						Record:          &adventure_game_record.AdventureGameItemPlacement{},
+			AdventureGameItemPlacementConfigs: []AdventureGameItemPlacementConfig{
+				{
+					Reference:       GameItemPlacementOneRef,
+					GameItemRef:     GameItemOneRef,
+					GameLocationRef: GameLocationOneRef,
+					InitialCount:    1,
+					Record:          &adventure_game_record.AdventureGameItemPlacement{},
+				},
+			},
+			AdventureGameLocationObjectConfigs: []AdventureGameLocationObjectConfig{
+				// Object Two is created first so Object One's effects can reference it
+				{
+					Reference:   GameLocationObjectTwoRef,
+					LocationRef: GameLocationOneRef,
+					Record: &adventure_game_record.AdventureGameLocationObject{
+						Name:         UniqueName("Hidden Passage"),
+						Description:  "A concealed passage behind the shrine.",
+						InitialState: "sealed",
+						IsHidden:     true,
+					},
+					AdventureGameLocationObjectEffectConfigs: []AdventureGameLocationObjectEffectConfig{
+						{
+							Reference: "game-location-object-two-effect-one",
+							Record: &adventure_game_record.AdventureGameLocationObjectEffect{
+								ActionType:        adventure_game_record.AdventureGameLocationObjectEffectActionTypeOpen,
+								ResultDescription: "The passage opens, revealing a dark tunnel.",
+								EffectType:        adventure_game_record.AdventureGameLocationObjectEffectEffectTypeChangeState,
+								RequiredState:     nullstring.FromString("sealed"),
+								ResultState:       nullstring.FromString("open"),
+								IsRepeatable:      false,
+							},
+						},
+					},
+				},
+				{
+					Reference:   GameLocationObjectOneRef,
+					LocationRef: GameLocationOneRef,
+					Record: &adventure_game_record.AdventureGameLocationObject{
+						Name:         UniqueName("Ancient Shrine"),
+						Description:  "A weathered stone shrine covered in moss.",
+						InitialState: "intact",
+						IsHidden:     false,
+					},
+					AdventureGameLocationObjectEffectConfigs: []AdventureGameLocationObjectEffectConfig{
+						{
+							Reference: GameLocationObjectEffectOneRef,
+							Record: &adventure_game_record.AdventureGameLocationObjectEffect{
+								ActionType:        adventure_game_record.AdventureGameLocationObjectEffectActionTypeInspect,
+								ResultDescription: "The shrine glows faintly with ancient power.",
+								EffectType:        adventure_game_record.AdventureGameLocationObjectEffectEffectTypeInfo,
+								IsRepeatable:      true,
+							},
+						},
+						{
+							Reference: GameLocationObjectEffectTwoRef,
+							Record: &adventure_game_record.AdventureGameLocationObjectEffect{
+								ActionType:        adventure_game_record.AdventureGameLocationObjectEffectActionTypeTouch,
+								ResultDescription: "The shrine hums with power as you touch it.",
+								EffectType:        adventure_game_record.AdventureGameLocationObjectEffectEffectTypeChangeState,
+								RequiredState:     nullstring.FromString("intact"),
+								ResultState:       nullstring.FromString("activated"),
+								IsRepeatable:      false,
+							},
+						},
+						{
+							Reference:     GameLocationObjectEffectThreeRef,
+							ResultItemRef: GameItemTwoRef,
+							Record: &adventure_game_record.AdventureGameLocationObjectEffect{
+								ActionType:        adventure_game_record.AdventureGameLocationObjectEffectActionTypeSearch,
+								ResultDescription: "A hidden item appears from within the shrine.",
+								EffectType:        adventure_game_record.AdventureGameLocationObjectEffectEffectTypeGiveItem,
+								RequiredState:     nullstring.FromString("activated"),
+								IsRepeatable:      false,
+							},
+						},
+						{
+							Reference: GameLocationObjectEffectFourRef,
+							Record: &adventure_game_record.AdventureGameLocationObjectEffect{
+								ActionType:        adventure_game_record.AdventureGameLocationObjectEffectActionTypeBreak,
+								ResultDescription: "Shards fly out cutting you.",
+								EffectType:        adventure_game_record.AdventureGameLocationObjectEffectEffectTypeDamage,
+								ResultValueMin:    nullint32.FromInt32(5),
+								ResultValueMax:    nullint32.FromInt32(5),
+								IsRepeatable:      true,
+							},
+						},
+						{
+							Reference:       GameLocationObjectEffectFiveRef,
+							ResultObjectRef: GameLocationObjectTwoRef,
+							Record: &adventure_game_record.AdventureGameLocationObjectEffect{
+								ActionType:        adventure_game_record.AdventureGameLocationObjectEffectActionTypeUse,
+								ResultDescription: "A hidden passage is revealed.",
+								EffectType:        adventure_game_record.AdventureGameLocationObjectEffectEffectTypeRevealObject,
+								IsRepeatable:      false,
+							},
+						},
+						{
+							Reference: GameLocationObjectEffectSixRef,
+							Record: &adventure_game_record.AdventureGameLocationObjectEffect{
+								ActionType:        adventure_game_record.AdventureGameLocationObjectEffectActionTypeTouch,
+								ResultDescription: "Warmth flows through you.",
+								EffectType:        adventure_game_record.AdventureGameLocationObjectEffectEffectTypeHeal,
+								RequiredState:     nullstring.FromString("activated"),
+								ResultValueMin:    nullint32.FromInt32(10),
+								ResultValueMax:    nullint32.FromInt32(10),
+								IsRepeatable:      true,
+							},
+						},
 					},
 				},
 			},
+		},
 			// Minimal draft game for testing update operations
 			{
 				Reference: GameDraftRef,

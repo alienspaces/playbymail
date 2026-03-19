@@ -1,0 +1,70 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "http://playbymail.games/schema/adventure_game_schema/adventure_game_location_object_effect.request.schema.json",
+    "title": "AdventureGameLocationObjectEffectRequest",
+    "type": "object",
+    "properties": {
+        "adventure_game_location_object_id": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
+        },
+        "action_type": {
+            "type": "string",
+            "enum": [
+                "inspect", "touch", "open", "close", "lock", "unlock", "search",
+                "break", "push", "pull", "move", "burn", "read", "take", "listen",
+                "insert", "pour", "disarm", "climb", "use"
+            ]
+        },
+        "required_state": {
+            "type": "string"
+        },
+        "required_adventure_game_item_id": {
+            "type": "string"
+        },
+        "result_description": {
+            "type": "string"
+        },
+        "effect_type": {
+            "type": "string",
+            "enum": [
+                "info", "change_state", "change_object_state", "give_item", "remove_item",
+                "open_link", "close_link", "reveal_object", "hide_object", "damage",
+                "heal", "summon_creature", "teleport", "nothing", "remove_object"
+            ]
+        },
+        "result_state": {
+            "type": "string"
+        },
+        "result_adventure_game_item_id": {
+            "type": "string"
+        },
+        "result_adventure_game_location_link_id": {
+            "type": "string"
+        },
+        "result_adventure_game_creature_id": {
+            "type": "string"
+        },
+        "result_adventure_game_location_object_id": {
+            "type": "string"
+        },
+        "result_adventure_game_location_id": {
+            "type": "string"
+        },
+        "result_value_min": {
+            "type": "integer"
+        },
+        "result_value_max": {
+            "type": "integer"
+        },
+        "is_repeatable": {
+            "type": "boolean"
+        }
+    },
+    "required": [
+        "adventure_game_location_object_id",
+        "action_type",
+        "result_description",
+        "effect_type"
+    ],
+    "additionalProperties": false
+}

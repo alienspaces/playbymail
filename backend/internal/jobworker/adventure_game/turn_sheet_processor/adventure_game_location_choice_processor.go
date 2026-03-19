@@ -898,7 +898,8 @@ func (p *AdventureGameLocationChoiceProcessor) applyObjectEffect(
 
 	case adventure_game_record.AdventureGameLocationObjectEffectEffectTypeGiveItem,
 		adventure_game_record.AdventureGameLocationObjectEffectEffectTypeRemoveItem,
-		adventure_game_record.AdventureGameLocationObjectEffectEffectTypeOpenLink:
+		adventure_game_record.AdventureGameLocationObjectEffectEffectTypeOpenLink,
+		adventure_game_record.AdventureGameLocationObjectEffectEffectTypeCloseLink:
 		if err := p.applyObjectInventoryEffect(l, gameInstanceRec, characterInstanceRec, effect); err != nil {
 			return "", err
 		}
@@ -1048,6 +1049,49 @@ func (p *AdventureGameLocationChoiceProcessor) applyObjectInventoryEffect(
 				l.Warn("failed to remove link requirement >%v<", err)
 			}
 		}
+
+	case adventure_game_record.AdventureGameLocationObjectEffectEffectTypeCloseLink:
+		if !effect.ResultAdventureGameLocationLinkID.Valid || effect.ResultAdventureGameLocationLinkID.String == "" {
+			return nil
+		}
+		linkID := effect.ResultAdventureGameLocationLinkID.String
+
+		// Retrieve the link record to get its game_id
+		linkRec, err := p.Domain.GetAdventureGameLocationLinkRec(linkID, nil)
+		if err != nil {
+			return fmt.Errorf("failed to get link record for close_link: %w", err)
+		}
+
+		// Build the new requirement based on whichever result reference is specified.
+		// If an item is provided, the link now requires it to be in-inventory to traverse.
+		// If a creature is provided, the link now requires the creature to be dead to traverse.
+		req := &adventure_game_record.AdventureGameLocationLinkRequirement{
+			GameID:                      linkRec.GameID,
+			AdventureGameLocationLinkID: linkID,
+			Purpose:                     adventure_game_record.AdventureGameLocationLinkRequirementPurposeTraverse,
+			Quantity:                    1,
+		}
+
+		hasItem := effect.ResultAdventureGameItemID.Valid && effect.ResultAdventureGameItemID.String != ""
+		hasCreature := effect.ResultAdventureGameCreatureID.Valid && effect.ResultAdventureGameCreatureID.String != ""
+
+		switch {
+		case hasItem:
+			req.AdventureGameItemID = effect.ResultAdventureGameItemID
+			req.Condition = adventure_game_record.AdventureGameLocationLinkRequirementConditionInInventory
+		case hasCreature:
+			req.AdventureGameCreatureID = effect.ResultAdventureGameCreatureID
+			req.Condition = adventure_game_record.AdventureGameLocationLinkRequirementConditionNoneAliveInGame
+		default:
+			// No item or creature specified — cannot create a valid requirement; skip
+			l.Warn("close_link effect >%s< has no result item or creature — link cannot be locked", effect.ID)
+			return nil
+		}
+
+		if _, err := p.Domain.CreateAdventureGameLocationLinkRequirementRec(req); err != nil {
+			return fmt.Errorf("failed to create link requirement for close_link: %w", err)
+		}
+		l.Info("link >%s< closed via requirement (item=%v creature=%v)", linkID, hasItem, hasCreature)
 	}
 	return nil
 }
