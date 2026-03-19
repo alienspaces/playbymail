@@ -14,7 +14,7 @@ Here's what's been happening with Play by Mail — from the early foundations in
 
 ---
 
-## 🗓️ March 2026 (late)
+## 🗓️ 20 March 2026
 
 **Theme**: Interactive Location Objects & Game Instance Controls
 
@@ -56,7 +56,7 @@ Here's what's been happening with Play by Mail — from the early foundations in
 
 ---
 
-## 🗓️ March 2026
+## 🗓️ 18 March 2026
 
 **Theme**: Player Game Experience & Adventure Game Foundations
 
@@ -115,7 +115,7 @@ Here's what's been happening with Play by Mail — from the early foundations in
 
 ---
 
-## 🗓️ December 2025 – February 2026
+## 🗓️ 28 February 2026
 
 **Theme**: Accounts, Subscriptions & Permissions
 
@@ -173,7 +173,7 @@ Here's what's been happening with Play by Mail — from the early foundations in
 
 ---
 
-## 🗓️ November 2025
+## 🗓️ 30 November 2025
 
 **Theme**: Turn Sheet Art & Game Subscriptions
 
@@ -215,7 +215,7 @@ Here's what's been happening with Play by Mail — from the early foundations in
 
 ---
 
-## 🗓️ October 2025
+## 🗓️ 29 October 2025
 
 **Theme**: Turn Sheet Scanning & Production Launch
 
@@ -243,7 +243,7 @@ Here's what's been happening with Play by Mail — from the early foundations in
 
 ---
 
-## 🗓️ September 2025
+## 🗓️ 30 September 2025
 
 **Theme**: Getting Started
 
