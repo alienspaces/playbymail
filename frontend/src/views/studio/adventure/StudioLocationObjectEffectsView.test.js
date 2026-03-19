@@ -145,7 +145,7 @@ describe('StudioLocationObjectEffectsView', () => {
       { key: 'object_name', label: 'Object' },
       { key: 'action_type', label: 'Action' },
       { key: 'effect_type', label: 'Effect' },
-      { key: 'required_state', label: 'Required State' },
+      { key: 'required_state_name', label: 'Required State' },
       { key: 'result_description', label: 'Description' },
       { key: 'is_repeatable', label: 'Repeatable' },
     ])

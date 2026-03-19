@@ -105,7 +105,7 @@ describe('StudioLocationObjectsView', () => {
     expect(resourceTable.props('columns')).toEqual([
       { key: 'name', label: 'Name' },
       { key: 'location_name', label: 'Location' },
-      { key: 'initial_state', label: 'Initial State' },
+      { key: 'initial_state_name', label: 'Initial State' },
       { key: 'is_hidden', label: 'Hidden' },
       { key: 'created_at', label: 'Created' },
     ])

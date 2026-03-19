@@ -8,9 +8,51 @@ Here's what's been happening with Play by Mail — from the early foundations in
 
 ## 🎯 What's Next
 
-- Monster encounters and combat system
-- Environmental location actions
-- End-game win conditions
+- End-game win conditions (defeat a creature, retrieve an item, or reach a location)
+- Closed testing tester invite flow
+- Additional demo game content
+
+---
+
+## 🗓️ March 2026 (late)
+
+**Theme**: Interactive Location Objects & Game Instance Controls
+
+### 🎯 Major Features
+
+**Interactive Location Objects**
+- Locations can now contain interactive objects — chests, levers, altars, wells, gates, and more
+- Each object supports a set of actions (inspect, touch, open, break, pull, and many others)
+- Interacting with an object can change its state, give you an item, damage or heal your character, reveal hidden objects, or unlock blocked paths
+- Objects with multiple states (e.g. locked → unlocked → open) respond differently depending on their current condition
+- Available objects and their actions appear on your location choice turn sheet alongside paths — choosing an action means you stay in place and interact rather than move
+- Objects can be hidden until triggered by another effect elsewhere in the game
+
+### 🎨 Improvements
+
+**Per-Instance Turn Duration**
+- Game managers can now set a turn duration (in hours) when creating a game instance, controlling how long players have between turns
+- Turn duration can be edited inline while the instance is still in the 'created' state
+
+**Delete Cancelled Game Instances**
+- Game managers can now permanently delete instances that have been cancelled
+- A delete button appears in the completed instances table for cancelled instances
+
+**Edit Published Games**
+- Game designers can now edit a published game directly from the Studio without needing to unpublish it first
+
+**Location Link Travel Log Preview**
+- The Studio location links view now shows a live preview of how the travel log entry will read for a link, including traversal description
+
+**Creature Encounter Turn Sheet**
+- The character panel in combat sheets now shows your attack and defence stats, along with the name of your equipped weapon and armour
+- Creature health is now correctly capped at its maximum value
+
+### 🐛 Bug Fixes
+
+- Fixed location link return paths having different names to their forward-direction counterparts
+- Fixed creature health displaying above the creature's maximum health value
+- Fixed action radio button labels appearing below the button instead of beside it in encounter sheets
 
 ---
 
