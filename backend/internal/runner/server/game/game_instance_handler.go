@@ -675,6 +675,11 @@ func deleteOneGameInstanceHandler(w http.ResponseWriter, r *http.Request, pp htt
 		return coreerror.NewNotFoundError("game instance", instanceID)
 	}
 
+	if rec.Status != game_record.GameInstanceStatusCancelled {
+		l.Warn("game instance cannot be deleted in status >%s<, must be cancelled", rec.Status)
+		return coreerror.NewInvalidActionError("delete", "game instance can only be deleted when cancelled")
+	}
+
 	if err := mm.DeleteGameInstanceRec(instanceID); err != nil {
 		l.Warn("failed deleting game instance record >%v<", err)
 		return err

@@ -402,6 +402,17 @@ const cancelInstance = async (instance) => {
   }
 };
 
+const deleteInstance = async (instance) => {
+  if (!confirm(`Are you sure you want to delete this game instance? This cannot be undone.`)) return;
+
+  try {
+    await gameInstancesStore.deleteGameInstance(gameId.value, instance.id);
+    await loadGameInstances();
+  } catch (error) {
+    console.error('Failed to delete instance:', error);
+  }
+};
+
 const getActiveInstanceActions = (instance) => {
   const actions = [
     { key: 'view', label: 'View Details', handler: () => viewInstance(instance) }
@@ -423,9 +434,13 @@ const getActiveInstanceActions = (instance) => {
 };
 
 const getCompletedInstanceActions = (instance) => {
-  return [
+  const actions = [
     { key: 'view', label: 'View Details', handler: () => viewInstance(instance) }
   ];
+  if (instance.status === 'cancelled') {
+    actions.push({ key: 'delete', label: 'Delete', danger: true, handler: () => deleteInstance(instance) });
+  }
+  return actions;
 };
 </script>
 

@@ -1,6 +1,7 @@
 package game_test
 
 import (
+	"context"
 	"net/http"
 	"testing"
 
@@ -12,6 +13,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/server"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
 	"gitlab.com/alienspaces/playbymail/core/type/storer"
+	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/harness"
 	"gitlab.com/alienspaces/playbymail/internal/runner/server/game"
 	"gitlab.com/alienspaces/playbymail/internal/turnsheet"
@@ -450,6 +452,18 @@ func Test_deleteOneGameInstanceHandler(t *testing.T) {
 
 	gameInstanceRec, err := th.Data.GetGameInstanceRecByRef(harness.GameInstanceOneRef)
 	require.NoError(t, err, "GetGameInstanceRecByRef returns without error")
+
+	// Cancel the instance so it can be deleted; only cancelled instances may be deleted.
+	// GameInstanceOneRef has GameTurnConfigs so harness starts it → status "started".
+	tx, err := th.Store.BeginTx()
+	require.NoError(t, err, "BeginTx returns without error")
+	mm := th.Domain.(*domain.Domain)
+	err = mm.Init(tx)
+	require.NoError(t, err, "Domain init returns without error")
+	_, err = mm.CancelGameInstance(gameInstanceRec.ID)
+	require.NoError(t, err, "CancelGameInstance returns without error")
+	err = tx.Commit(context.TODO())
+	require.NoError(t, err, "Commit returns without error")
 
 	testCases := []struct {
 		testutil.TestCase
