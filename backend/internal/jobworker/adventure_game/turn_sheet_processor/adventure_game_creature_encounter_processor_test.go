@@ -355,7 +355,7 @@ func TestAdventureGameCreatureEncounterProcessor_CreateNextTurnSheet_NoAnotherAd
 	var sheetData turnsheet.MonsterEncounterData
 	require.NoError(t, json.Unmarshal(sheet.SheetData, &sheetData))
 
-	for _, e := range sheetData.TurnSheetTemplateData.TurnEvents {
+	for _, e := range sheetData.TurnEvents {
 		if e.Category == turnsheet.TurnEventCategoryWorld {
 			require.NotContains(t, e.Message, "another adventurer",
 				"should not emit 'another adventurer' event when the player dealt the damage")
@@ -400,7 +400,7 @@ func TestAdventureGameCreatureEncounterProcessor_CreateNextTurnSheet_EventCatego
 	var sheetData turnsheet.MonsterEncounterData
 	require.NoError(t, json.Unmarshal(sheet.SheetData, &sheetData))
 
-	events := sheetData.TurnSheetTemplateData.TurnEvents
+	events := sheetData.TurnEvents
 
 	// Exactly one combat event should be present.
 	var combatCount int

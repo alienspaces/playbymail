@@ -161,8 +161,6 @@ func NewMonsterEncounterProcessor(l logger.Logger, cfg config.Config) (*MonsterE
 
 // GeneratePreviewData generates dummy data for a monster encounter turn sheet preview.
 func (p *MonsterEncounterProcessor) GeneratePreviewData(ctx context.Context, l logger.Logger, gameRec *game_record.Game, backgroundImage *string) ([]byte, error) {
-	l = l.WithFunctionContext("MonsterEncounterProcessor/GeneratePreviewData")
-
 	turnSheetCode, err := turnsheetutil.GeneratePlayGameTurnSheetCode(record.NewRecordID())
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate turn sheet code: %w", err)
@@ -226,8 +224,6 @@ func (p *MonsterEncounterProcessor) GeneratePreviewData(ctx context.Context, l l
 
 // GenerateTurnSheet generates a monster encounter turn sheet document.
 func (p *MonsterEncounterProcessor) GenerateTurnSheet(ctx context.Context, l logger.Logger, format DocumentFormat, sheetData []byte) ([]byte, error) {
-	l = l.WithFunctionContext("MonsterEncounterProcessor/GenerateTurnSheet")
-
 	var data MonsterEncounterData
 	if err := json.Unmarshal(sheetData, &data); err != nil {
 		return nil, fmt.Errorf("failed to parse sheet data: %w", err)
@@ -264,8 +260,6 @@ func (p *MonsterEncounterProcessor) GenerateTurnSheet(ctx context.Context, l log
 
 // ScanTurnSheet scans a monster encounter turn sheet and extracts combat actions using OCR.
 func (p *MonsterEncounterProcessor) ScanTurnSheet(ctx context.Context, l logger.Logger, sheetData []byte, imageData []byte) ([]byte, error) {
-	l = l.WithFunctionContext("MonsterEncounterProcessor/ScanTurnSheet")
-
 	if len(imageData) == 0 {
 		return nil, fmt.Errorf("empty image data provided")
 	}
