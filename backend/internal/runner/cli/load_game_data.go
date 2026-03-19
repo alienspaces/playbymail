@@ -288,7 +288,6 @@ func (rnr *Runner) removeGameAndDependents(dm *domain.Domain, gameID string) err
 	if err != nil {
 		return fmt.Errorf("failed getting adventure game turn sheets: %w", err)
 	}
-
 	for _, rec := range agts {
 		if err := dm.RemoveAdventureGameTurnSheetRec(rec.ID); err != nil {
 			return fmt.Errorf("failed removing adventure game turn sheet >%s<: %w", rec.ID, err)
@@ -302,7 +301,6 @@ func (rnr *Runner) removeGameAndDependents(dm *domain.Domain, gameID string) err
 	if err != nil {
 		return fmt.Errorf("failed getting game instances: %w", err)
 	}
-
 	for _, inst := range instances {
 		if err := rnr.removeGameInstanceDependents(dm, inst.ID); err != nil {
 			return err
@@ -320,7 +318,6 @@ func (rnr *Runner) removeGameAndDependents(dm *domain.Domain, gameID string) err
 	if err != nil {
 		return fmt.Errorf("failed getting game subscriptions: %w", err)
 	}
-
 	for _, sub := range subs {
 		l.Info("removing game subscription >%s<", sub.ID)
 		if err := dm.RemoveGameSubscriptionRec(sub.ID); err != nil {
@@ -328,124 +325,9 @@ func (rnr *Runner) removeGameAndDependents(dm *domain.Domain, gameID string) err
 		}
 	}
 
-	// 4. Adventure game item placements
-	itemPlacements, err := dm.GetManyAdventureGameItemPlacementRecs(byGame)
-	if err != nil {
-		return fmt.Errorf("failed getting item placements: %w", err)
-	}
-
-	for _, rec := range itemPlacements {
-		if err := dm.RemoveAdventureGameItemPlacementRec(rec.ID); err != nil {
-			return fmt.Errorf("failed removing item placement >%s<: %w", rec.ID, err)
-		}
-	}
-
-	// 5. Adventure game creature placements
-	creaturePlacements, err := dm.GetManyAdventureGameCreaturePlacementRecs(byGame)
-	if err != nil {
-		return fmt.Errorf("failed getting creature placements: %w", err)
-	}
-
-	for _, rec := range creaturePlacements {
-		if err := dm.RemoveAdventureGameCreaturePlacementRec(rec.ID); err != nil {
-			return fmt.Errorf("failed removing creature placement >%s<: %w", rec.ID, err)
-		}
-	}
-
-	// 6. Adventure game location link requirements
-	linkReqs, err := dm.GetManyAdventureGameLocationLinkRequirementRecs(byGame)
-	if err != nil {
-		return fmt.Errorf("failed getting link requirements: %w", err)
-	}
-
-	for _, rec := range linkReqs {
-		if err := dm.RemoveAdventureGameLocationLinkRequirementRec(rec.ID); err != nil {
-			return fmt.Errorf("failed removing link requirement >%s<: %w", rec.ID, err)
-		}
-	}
-
-	// 7. Adventure game location links
-	links, err := dm.GetManyAdventureGameLocationLinkRecs(&coresql.Options{
-		Params: []coresql.Param{{Col: adventure_game_record.FieldAdventureGameLocationLinkGameID, Val: gameID}},
-	})
-	if err != nil {
-		return fmt.Errorf("failed getting location links: %w", err)
-	}
-
-	for _, rec := range links {
-		if err := dm.RemoveAdventureGameLocationLinkRec(rec.ID); err != nil {
-			return fmt.Errorf("failed removing location link >%s<: %w", rec.ID, err)
-		}
-	}
-
-	// 7a. Adventure game location object effects (must precede objects and locations)
-	objEffects, err := dm.GetManyAdventureGameLocationObjectEffectRecs(byGame)
-	if err != nil {
-		return fmt.Errorf("failed getting location object effects: %w", err)
-	}
-	for _, rec := range objEffects {
-		if err := dm.RemoveAdventureGameLocationObjectEffectRec(rec.ID); err != nil {
-			return fmt.Errorf("failed removing location object effect >%s<: %w", rec.ID, err)
-		}
-	}
-
-	// 7b. Adventure game location objects (must precede locations)
-	objs, err := dm.GetManyAdventureGameLocationObjectRecs(byGame)
-	if err != nil {
-		return fmt.Errorf("failed getting location objects: %w", err)
-	}
-	for _, rec := range objs {
-		if err := dm.RemoveAdventureGameLocationObjectRec(rec.ID); err != nil {
-			return fmt.Errorf("failed removing location object >%s<: %w", rec.ID, err)
-		}
-	}
-
-	// 8. Adventure game locations
-	locs, err := dm.GetManyAdventureGameLocationRecs(byGame)
-	if err != nil {
-		return fmt.Errorf("failed getting locations: %w", err)
-	}
-
-	for _, rec := range locs {
-		if err := dm.RemoveAdventureGameLocationRec(rec.ID); err != nil {
-			return fmt.Errorf("failed removing location >%s<: %w", rec.ID, err)
-		}
-	}
-
-	// 9. Adventure game items
-	items, err := dm.GetManyAdventureGameItemRecs(byGame)
-	if err != nil {
-		return fmt.Errorf("failed getting items: %w", err)
-	}
-
-	for _, rec := range items {
-		if err := dm.RemoveAdventureGameItemRec(rec.ID); err != nil {
-			return fmt.Errorf("failed removing item >%s<: %w", rec.ID, err)
-		}
-	}
-
-	// 10. Adventure game creatures
-	creatures, err := dm.GetManyAdventureGameCreatureRecs(byGame)
-	if err != nil {
-		return fmt.Errorf("failed getting creatures: %w", err)
-	}
-
-	for _, rec := range creatures {
-		if err := dm.RemoveAdventureGameCreatureRec(rec.ID); err != nil {
-			return fmt.Errorf("failed removing creature >%s<: %w", rec.ID, err)
-		}
-	}
-
-	// 11. Adventure game characters
-	chars, err := dm.GetManyAdventureGameCharacterRecs(byGame)
-	if err != nil {
-		return fmt.Errorf("failed getting characters: %w", err)
-	}
-
-	for _, rec := range chars {
-		if err := dm.RemoveAdventureGameCharacterRec(rec.ID); err != nil {
-			return fmt.Errorf("failed removing character >%s<: %w", rec.ID, err)
-		}
+	// 4–11. Adventure game definition data (placements, links, objects, locations, etc.)
+	if err := rnr.removeAdventureGameDefinitionData(dm, gameID); err != nil {
+		return err
 	}
 
 	// 12. Game images
@@ -455,7 +337,6 @@ func (rnr *Runner) removeGameAndDependents(dm *domain.Domain, gameID string) err
 	if err != nil {
 		return fmt.Errorf("failed getting game images: %w", err)
 	}
-
 	for _, rec := range images {
 		if err := dm.RemoveGameImageRec(rec.ID); err != nil {
 			return fmt.Errorf("failed removing game image >%s<: %w", rec.ID, err)
@@ -468,6 +349,133 @@ func (rnr *Runner) removeGameAndDependents(dm *domain.Domain, gameID string) err
 		return fmt.Errorf("failed removing game >%s<: %w", gameID, err)
 	}
 
+	return nil
+}
+
+// removeAdventureGameDefinitionData removes adventure-game-specific definition
+// records (placements, links, objects, locations, items, creatures, characters)
+// in FK-safe order.
+func (rnr *Runner) removeAdventureGameDefinitionData(dm *domain.Domain, gameID string) error {
+	byGame := &coresql.Options{
+		Params: []coresql.Param{{Col: "game_id", Val: gameID}},
+	}
+
+	// Placements
+	itemPlacements, err := dm.GetManyAdventureGameItemPlacementRecs(byGame)
+	if err != nil {
+		return fmt.Errorf("failed getting item placements: %w", err)
+	}
+	for _, rec := range itemPlacements {
+		if err := dm.RemoveAdventureGameItemPlacementRec(rec.ID); err != nil {
+			return fmt.Errorf("failed removing item placement >%s<: %w", rec.ID, err)
+		}
+	}
+
+	creaturePlacements, err := dm.GetManyAdventureGameCreaturePlacementRecs(byGame)
+	if err != nil {
+		return fmt.Errorf("failed getting creature placements: %w", err)
+	}
+	for _, rec := range creaturePlacements {
+		if err := dm.RemoveAdventureGameCreaturePlacementRec(rec.ID); err != nil {
+			return fmt.Errorf("failed removing creature placement >%s<: %w", rec.ID, err)
+		}
+	}
+
+	// Location links and requirements
+	linkReqs, err := dm.GetManyAdventureGameLocationLinkRequirementRecs(byGame)
+	if err != nil {
+		return fmt.Errorf("failed getting link requirements: %w", err)
+	}
+	for _, rec := range linkReqs {
+		if err := dm.RemoveAdventureGameLocationLinkRequirementRec(rec.ID); err != nil {
+			return fmt.Errorf("failed removing link requirement >%s<: %w", rec.ID, err)
+		}
+	}
+
+	links, err := dm.GetManyAdventureGameLocationLinkRecs(&coresql.Options{
+		Params: []coresql.Param{{Col: adventure_game_record.FieldAdventureGameLocationLinkGameID, Val: gameID}},
+	})
+	if err != nil {
+		return fmt.Errorf("failed getting location links: %w", err)
+	}
+	for _, rec := range links {
+		if err := dm.RemoveAdventureGameLocationLinkRec(rec.ID); err != nil {
+			return fmt.Errorf("failed removing location link >%s<: %w", rec.ID, err)
+		}
+	}
+
+	// Location objects (effects first, then objects, then locations)
+	if err := rnr.removeAdventureGameLocationObjects(dm, byGame); err != nil {
+		return err
+	}
+
+	// Locations, items, creatures, characters
+	return rnr.removeAdventureGameEntities(dm, byGame)
+}
+
+func (rnr *Runner) removeAdventureGameLocationObjects(dm *domain.Domain, byGame *coresql.Options) error {
+	objEffects, err := dm.GetManyAdventureGameLocationObjectEffectRecs(byGame)
+	if err != nil {
+		return fmt.Errorf("failed getting location object effects: %w", err)
+	}
+	for _, rec := range objEffects {
+		if err := dm.RemoveAdventureGameLocationObjectEffectRec(rec.ID); err != nil {
+			return fmt.Errorf("failed removing location object effect >%s<: %w", rec.ID, err)
+		}
+	}
+
+	objs, err := dm.GetManyAdventureGameLocationObjectRecs(byGame)
+	if err != nil {
+		return fmt.Errorf("failed getting location objects: %w", err)
+	}
+	for _, rec := range objs {
+		if err := dm.RemoveAdventureGameLocationObjectRec(rec.ID); err != nil {
+			return fmt.Errorf("failed removing location object >%s<: %w", rec.ID, err)
+		}
+	}
+	return nil
+}
+
+func (rnr *Runner) removeAdventureGameEntities(dm *domain.Domain, byGame *coresql.Options) error {
+	locs, err := dm.GetManyAdventureGameLocationRecs(byGame)
+	if err != nil {
+		return fmt.Errorf("failed getting locations: %w", err)
+	}
+	for _, rec := range locs {
+		if err := dm.RemoveAdventureGameLocationRec(rec.ID); err != nil {
+			return fmt.Errorf("failed removing location >%s<: %w", rec.ID, err)
+		}
+	}
+
+	items, err := dm.GetManyAdventureGameItemRecs(byGame)
+	if err != nil {
+		return fmt.Errorf("failed getting items: %w", err)
+	}
+	for _, rec := range items {
+		if err := dm.RemoveAdventureGameItemRec(rec.ID); err != nil {
+			return fmt.Errorf("failed removing item >%s<: %w", rec.ID, err)
+		}
+	}
+
+	creatures, err := dm.GetManyAdventureGameCreatureRecs(byGame)
+	if err != nil {
+		return fmt.Errorf("failed getting creatures: %w", err)
+	}
+	for _, rec := range creatures {
+		if err := dm.RemoveAdventureGameCreatureRec(rec.ID); err != nil {
+			return fmt.Errorf("failed removing creature >%s<: %w", rec.ID, err)
+		}
+	}
+
+	chars, err := dm.GetManyAdventureGameCharacterRecs(byGame)
+	if err != nil {
+		return fmt.Errorf("failed getting characters: %w", err)
+	}
+	for _, rec := range chars {
+		if err := dm.RemoveAdventureGameCharacterRec(rec.ID); err != nil {
+			return fmt.Errorf("failed removing character >%s<: %w", rec.ID, err)
+		}
+	}
 	return nil
 }
 

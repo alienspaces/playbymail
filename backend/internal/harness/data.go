@@ -28,6 +28,8 @@ type Data struct {
 	AdventureGameCreatureRecs                []*adventure_game_record.AdventureGameCreature
 	AdventureGameItemRecs                    []*adventure_game_record.AdventureGameItem
 	AdventureGameLocationLinkRequirementRecs []*adventure_game_record.AdventureGameLocationLinkRequirement
+	AdventureGameCreaturePlacementRecs       []*adventure_game_record.AdventureGameCreaturePlacement
+	AdventureGameItemPlacementRecs           []*adventure_game_record.AdventureGameItemPlacement
 	AdventureGameLocationInstanceRecs        []*adventure_game_record.AdventureGameLocationInstance
 	AdventureGameItemInstanceRecs            []*adventure_game_record.AdventureGameItemInstance
 	AdventureGameCreatureInstanceRecs        []*adventure_game_record.AdventureGameCreatureInstance
@@ -59,16 +61,18 @@ type DataRefs struct {
 	AdventureGameLocationRefs                map[string]string // Map of adventure game location refs to adventure game location records
 	AdventureGameLocationLinkRefs            map[string]string // Map of adventure game location link refs to adventure game location link records
 	AdventureGameLocationLinkRequirementRefs map[string]string // Map of adventure game location link requirement refs to adventure game location link requirement records
+	AdventureGameCreaturePlacementRefs       map[string]string // Map of adventure game creature placement refs to records
+	AdventureGameItemPlacementRefs           map[string]string // Map of adventure game item placement refs to records
 	AdventureGameLocationInstanceRefs        map[string]string // Map of adventure game location instance refs to adventure game location instance records
 	AdventureGameCharacterRefs               map[string]string // Map of adventure game character refs to adventure game character records
 	AdventureGameCreatureRefs                map[string]string // Map of adventure game creature refs to adventure game creature records
 	AdventureGameItemRefs                    map[string]string // Map of adventure game item refs to adventure game item records
 	AdventureGameItemInstanceRefs            map[string]string // Map of adventure game item instance refs to adventure game item instance records
 	AdventureGameCreatureInstanceRefs        map[string]string // Map of adventure game creature instance refs to adventure game creature instance records
-	AdventureGameCharacterInstanceRefs            map[string]string // Map of adventure game character instance refs to adventure game character instance records
-	AdventureGameLocationObjectRefs               map[string]string // Map of adventure game location object refs to adventure game location object records
-	AdventureGameLocationObjectEffectRefs         map[string]string // Map of adventure game location object effect refs to records
-	AdventureGameLocationObjectInstanceRefs       map[string]string // Map of adventure game location object instance refs to records
+	AdventureGameCharacterInstanceRefs       map[string]string // Map of adventure game character instance refs to adventure game character instance records
+	AdventureGameLocationObjectRefs          map[string]string // Map of adventure game location object refs to adventure game location object records
+	AdventureGameLocationObjectEffectRefs    map[string]string // Map of adventure game location object effect refs to records
+	AdventureGameLocationObjectInstanceRefs  map[string]string // Map of adventure game location object instance refs to records
 }
 
 // initialiseDataStores - Data is required to maintain data references and
@@ -90,16 +94,18 @@ func initialiseDataStores() Data {
 			AdventureGameLocationRefs:                map[string]string{},
 			AdventureGameLocationLinkRefs:            map[string]string{},
 			AdventureGameLocationLinkRequirementRefs: map[string]string{},
+			AdventureGameCreaturePlacementRefs:       map[string]string{},
+			AdventureGameItemPlacementRefs:           map[string]string{},
 			AdventureGameLocationInstanceRefs:        map[string]string{},
 			AdventureGameCharacterRefs:               map[string]string{},
 			AdventureGameCreatureRefs:                map[string]string{},
 			AdventureGameItemRefs:                    map[string]string{},
 			AdventureGameItemInstanceRefs:            map[string]string{},
-			AdventureGameCreatureInstanceRefs:            map[string]string{},
-			AdventureGameCharacterInstanceRefs:            map[string]string{},
-			AdventureGameLocationObjectRefs:               map[string]string{},
-			AdventureGameLocationObjectEffectRefs:         map[string]string{},
-			AdventureGameLocationObjectInstanceRefs:       map[string]string{},
+			AdventureGameCreatureInstanceRefs:        map[string]string{},
+			AdventureGameCharacterInstanceRefs:       map[string]string{},
+			AdventureGameLocationObjectRefs:          map[string]string{},
+			AdventureGameLocationObjectEffectRefs:    map[string]string{},
+			AdventureGameLocationObjectInstanceRefs:  map[string]string{},
 		},
 	}
 }
@@ -610,6 +616,54 @@ func (d *Data) GetAdventureGameLocationLinkRequirementRecByRef(ref string) (*adv
 		return nil, fmt.Errorf("failed getting adventure game location link requirement with ref >%s<", ref)
 	}
 	return d.GetAdventureGameLocationLinkRequirementRecByID(id)
+}
+
+// AdventureGameCreaturePlacement
+func (d *Data) AddAdventureGameCreaturePlacementRec(rec *adventure_game_record.AdventureGameCreaturePlacement) {
+	for idx := range d.AdventureGameCreaturePlacementRecs {
+		if d.AdventureGameCreaturePlacementRecs[idx].ID == rec.ID {
+			d.AdventureGameCreaturePlacementRecs[idx] = rec
+			return
+		}
+	}
+	d.AdventureGameCreaturePlacementRecs = append(d.AdventureGameCreaturePlacementRecs, rec)
+}
+
+func (d *Data) GetAdventureGameCreaturePlacementRecByRef(ref string) (*adventure_game_record.AdventureGameCreaturePlacement, error) {
+	id, ok := d.Refs.AdventureGameCreaturePlacementRefs[ref]
+	if !ok {
+		return nil, fmt.Errorf("failed getting adventure game creature placement with ref >%s<", ref)
+	}
+	for _, rec := range d.AdventureGameCreaturePlacementRecs {
+		if rec.ID == id {
+			return rec, nil
+		}
+	}
+	return nil, fmt.Errorf("failed getting adventure game creature placement with ref >%s< (id >%s<)", ref, id)
+}
+
+// AdventureGameItemPlacement
+func (d *Data) AddAdventureGameItemPlacementRec(rec *adventure_game_record.AdventureGameItemPlacement) {
+	for idx := range d.AdventureGameItemPlacementRecs {
+		if d.AdventureGameItemPlacementRecs[idx].ID == rec.ID {
+			d.AdventureGameItemPlacementRecs[idx] = rec
+			return
+		}
+	}
+	d.AdventureGameItemPlacementRecs = append(d.AdventureGameItemPlacementRecs, rec)
+}
+
+func (d *Data) GetAdventureGameItemPlacementRecByRef(ref string) (*adventure_game_record.AdventureGameItemPlacement, error) {
+	id, ok := d.Refs.AdventureGameItemPlacementRefs[ref]
+	if !ok {
+		return nil, fmt.Errorf("failed getting adventure game item placement with ref >%s<", ref)
+	}
+	for _, rec := range d.AdventureGameItemPlacementRecs {
+		if rec.ID == id {
+			return rec, nil
+		}
+	}
+	return nil, fmt.Errorf("failed getting adventure game item placement with ref >%s< (id >%s<)", ref, id)
 }
 
 // AdventureGameLocationInstance

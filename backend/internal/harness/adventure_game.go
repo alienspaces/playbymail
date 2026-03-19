@@ -121,95 +121,31 @@ func (t *Testing) processAdventureGameConfig(gameConfig GameConfig, gameRec *gam
 		}
 	}
 
+	for _, placementConfig := range gameConfig.AdventureGameCreaturePlacementConfigs {
+		_, err := t.createAdventureGameCreaturePlacementRec(placementConfig, gameRec)
+		if err != nil {
+			l.Warn("failed creating adventure_game_creature_placement record >%v<", err)
+			return nil, err
+		}
+	}
+
+	for _, placementConfig := range gameConfig.AdventureGameItemPlacementConfigs {
+		_, err := t.createAdventureGameItemPlacementRec(placementConfig, gameRec)
+		if err != nil {
+			l.Warn("failed creating adventure_game_item_placement record >%v<", err)
+			return nil, err
+		}
+	}
+
 	return out, nil
 }
 
-// createAdventureGameInstanceRecords creates the adventure game instance records for a game instance
+// createAdventureGameInstanceRecords creates the adventure game instance records for a game instance.
+// Instance records (locations, creatures, items, characters) are created by StartGameInstance via
+// PopulateAdventureGameInstanceData. This function only calls StartGameInstance when turn configs are
+// present; otherwise the instance stays in "created" status with no instance records.
 func (t *Testing) createAdventureGameInstanceRecords(gameConfig GameConfig, gameInstanceConfig GameInstanceConfig, gameInstanceRec *game_record.GameInstance) error {
 	l := t.Logger("createAdventureGameInstanceRecords")
-
-	// Create game location instance records for this game instance
-	// If no location instances are explicitly configured, automatically create instances for all game locations
-	locationInstanceConfigs := gameInstanceConfig.AdventureGameLocationInstanceConfigs
-	if len(locationInstanceConfigs) == 0 {
-		// Auto-generate location instances for all locations in the game
-		for _, locationConfig := range gameConfig.AdventureGameLocationConfigs {
-			// Create a reference name based on the location reference for test lookup
-			locationInstanceRef := fmt.Sprintf("%s-instance", locationConfig.Reference)
-			locationInstanceConfigs = append(locationInstanceConfigs, AdventureGameLocationInstanceConfig{
-				Reference:       locationInstanceRef,
-				GameLocationRef: locationConfig.Reference,
-				Record:          &adventure_game_record.AdventureGameLocationInstance{},
-			})
-		}
-	}
-
-	for _, locationInstanceConfig := range locationInstanceConfigs {
-		locationInstanceRec, err := t.createAdventureGameLocationInstanceRec(locationInstanceConfig, gameInstanceRec)
-		if err != nil {
-			l.Warn("failed creating adventure game location instance record >%v<", err)
-			return err
-		}
-		l.Debug("created adventure game location instance record ID >%s<", locationInstanceRec.ID)
-	}
-
-	// Create game creature instance records for this game instance
-	for _, creatureInstanceConfig := range gameInstanceConfig.AdventureGameCreatureInstanceConfigs {
-		creatureInstanceRec, err := t.createAdventureGameCreatureInstanceRec(creatureInstanceConfig, gameInstanceRec)
-		if err != nil {
-			l.Warn("failed creating adventure game creature instance record >%v<", err)
-			return err
-		}
-		l.Debug("created adventure game creature instance record ID >%s<", creatureInstanceRec.ID)
-	}
-
-	// Create game character instance records for this game instance
-	for _, characterInstanceConfig := range gameInstanceConfig.AdventureGameCharacterInstanceConfigs {
-		characterInstanceRec, err := t.createAdventureGameCharacterInstanceRec(characterInstanceConfig, gameInstanceRec)
-		if err != nil {
-			l.Warn("failed creating adventure game character instance record >%v<", err)
-			return err
-		}
-		l.Debug("created adventure game character instance record ID >%s<", characterInstanceRec.ID)
-	}
-
-	// Create game item instance records for this game instance
-	for _, itemInstanceConfig := range gameInstanceConfig.AdventureGameItemInstanceConfigs {
-		itemInstanceRec, err := t.createAdventureGameItemInstanceRec(itemInstanceConfig, gameInstanceRec)
-		if err != nil {
-			l.Warn("failed creating adventure game item instance record >%v<", err)
-			return err
-		}
-		l.Debug("created adventure game item instance record ID >%s<", itemInstanceRec.ID)
-	}
-
-	// Auto-create location object instances for all defined objects in this game.
-	// For each object, find the location instance that corresponds to its location
-	// and create an object instance with current_state = initial_state, is_visible = !is_hidden.
-	for _, objectRec := range t.Data.AdventureGameLocationObjectRecs {
-		if objectRec.GameID != gameInstanceRec.GameID {
-			continue
-		}
-		// Find the location instance for this object's location in this game instance
-		var locationInstanceRec *adventure_game_record.AdventureGameLocationInstance
-		for _, locInst := range t.Data.AdventureGameLocationInstanceRecs {
-			if locInst.GameInstanceID == gameInstanceRec.ID &&
-				locInst.AdventureGameLocationID == objectRec.AdventureGameLocationID {
-				locationInstanceRec = locInst
-				break
-			}
-		}
-		if locationInstanceRec == nil {
-			l.Warn("no location instance found for object >%s< location >%s< in game instance >%s< — skipping",
-				objectRec.ID, objectRec.AdventureGameLocationID, gameInstanceRec.ID)
-			continue
-		}
-		_, err := t.createAdventureGameLocationObjectInstanceRec(objectRec, locationInstanceRec, gameInstanceRec)
-		if err != nil {
-			l.Warn("failed creating adventure game location object instance record >%v<", err)
-			return err
-		}
-	}
 
 	if len(gameInstanceConfig.GameTurnConfigs) == 0 {
 		return nil
@@ -221,11 +157,16 @@ func (t *Testing) createAdventureGameInstanceRecords(gameConfig GameConfig, game
 
 	instanceRec := gameInstanceRec
 	if instanceRec.Status != game_record.GameInstanceStatusStarted {
+		var instanceData *domain.AdventureGameInstanceData
 		var err error
-		instanceRec, _, err = t.Domain.(*domain.Domain).StartGameInstance(gameInstanceRec.ID)
+		instanceRec, instanceData, err = t.Domain.(*domain.Domain).StartGameInstance(gameInstanceRec.ID)
 		if err != nil {
 			l.Warn("failed starting game instance >%v<", err)
 			return err
+		}
+
+		if instanceData != nil {
+			t.addAdventureGameInstanceDataToStores(instanceData, gameInstanceRec.ID)
 		}
 	}
 
@@ -318,6 +259,63 @@ func (t *Testing) createAdventureGameInstanceRecords(gameConfig GameConfig, game
 	return nil
 }
 
+// addAdventureGameInstanceDataToStores adds instance records returned by StartGameInstance to the
+// harness data and teardown stores, and maps the first record of each type to its canonical ref.
+func (t *Testing) addAdventureGameInstanceDataToStores(instanceData *domain.AdventureGameInstanceData, gameInstanceID string) {
+	l := t.Logger("addAdventureGameInstanceDataToStores")
+
+	for i, rec := range instanceData.LocationInstances {
+		t.Data.AddAdventureGameLocationInstanceRec(rec)
+		t.teardownData.AddAdventureGameLocationInstanceRec(rec)
+		switch i {
+		case 0:
+			t.Data.Refs.AdventureGameLocationInstanceRefs[GameLocationInstanceOneRef] = rec.ID
+		case 1:
+			t.Data.Refs.AdventureGameLocationInstanceRefs[GameLocationInstanceTwoRef] = rec.ID
+		}
+	}
+
+	for i, rec := range instanceData.CreatureInstances {
+		t.Data.AddAdventureGameCreatureInstanceRec(rec)
+		t.teardownData.AddAdventureGameCreatureInstanceRec(rec)
+		if i == 0 {
+			t.Data.Refs.AdventureGameCreatureInstanceRefs[GameCreatureInstanceOneRef] = rec.ID
+		}
+	}
+
+	for _, rec := range instanceData.LocationObjectInstances {
+		t.Data.AddAdventureGameLocationObjectInstanceRec(rec)
+		t.teardownData.AddAdventureGameLocationObjectInstanceRec(rec)
+	}
+
+	for i, rec := range instanceData.ItemInstances {
+		t.Data.AddAdventureGameItemInstanceRec(rec)
+		t.teardownData.AddAdventureGameItemInstanceRec(rec)
+		if i == 0 {
+			t.Data.Refs.AdventureGameItemInstanceRefs[GameItemInstanceOneRef] = rec.ID
+		}
+	}
+
+	for i, rec := range instanceData.CharacterInstances {
+		t.Data.AddAdventureGameCharacterInstanceRec(rec)
+		t.teardownData.AddAdventureGameCharacterInstanceRec(rec)
+		switch i {
+		case 0:
+			t.Data.Refs.AdventureGameCharacterInstanceRefs[GameCharacterInstanceOneRef] = rec.ID
+		case 1:
+			t.Data.Refs.AdventureGameCharacterInstanceRefs[GameCharacterInstanceTwoRef] = rec.ID
+		}
+	}
+
+	l.Debug("added adventure game instance data to stores for game instance >%s<: locations=%d creatures=%d objects=%d items=%d characters=%d",
+		gameInstanceID,
+		len(instanceData.LocationInstances),
+		len(instanceData.CreatureInstances),
+		len(instanceData.LocationObjectInstances),
+		len(instanceData.ItemInstances),
+		len(instanceData.CharacterInstances))
+}
+
 // removeAdventureGameRecords removes the adventure game records for a game
 func (t *Testing) removeAdventureGameRecords() error {
 	l := t.Logger("removeAdventureGameRecords")
@@ -358,6 +356,29 @@ func (t *Testing) removeAdventureGameRecords() error {
 		err := t.Domain.(*domain.Domain).RemoveAdventureGameLocationLinkRequirementRec(reqRec.ID)
 		if err != nil {
 			l.Warn("failed removing game location link requirement record >%v<", err)
+			return err
+		}
+	}
+
+	// Remove creature and item placements before the creatures/items they reference
+	l.Debug("removing >%d< adventure game creature placement records", len(t.teardownData.AdventureGameCreaturePlacementRecs))
+	for _, placementRec := range t.teardownData.AdventureGameCreaturePlacementRecs {
+		if placementRec.ID == "" {
+			continue
+		}
+		if err := t.Domain.(*domain.Domain).RemoveAdventureGameCreaturePlacementRec(placementRec.ID); err != nil {
+			l.Warn("failed removing adventure game creature placement record >%v<", err)
+			return err
+		}
+	}
+
+	l.Debug("removing >%d< adventure game item placement records", len(t.teardownData.AdventureGameItemPlacementRecs))
+	for _, placementRec := range t.teardownData.AdventureGameItemPlacementRecs {
+		if placementRec.ID == "" {
+			continue
+		}
+		if err := t.Domain.(*domain.Domain).RemoveAdventureGameItemPlacementRec(placementRec.ID); err != nil {
+			l.Warn("failed removing adventure game item placement record >%v<", err)
 			return err
 		}
 	}
