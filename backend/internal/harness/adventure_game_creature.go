@@ -61,6 +61,18 @@ func (t *Testing) applyAdventureGameCreatureRecDefaultValues(rec *adventure_game
 	if rec.Description == "" {
 		rec.Description = gofakeit.Sentence(10)
 	}
+	if rec.Disposition == "" {
+		rec.Disposition = adventure_game_record.AdventureGameCreatureDispositionAggressive
+	}
+	if rec.AttackMethod == "" {
+		rec.AttackMethod = adventure_game_record.AdventureGameCreatureAttackMethodClaws
+	}
+	if rec.MaxHealth == 0 {
+		rec.MaxHealth = 50
+	}
+	if rec.BodyDecayTurns == 0 {
+		rec.BodyDecayTurns = 3
+	}
 
 	return rec
 }

@@ -159,7 +159,6 @@ func (d *Data) AddAccountUserContactRec(rec *account_record.AccountUserContact) 
 	d.AccountUserContactRecs = append(d.AccountUserContactRecs, rec)
 }
 
-
 // AddAccountSessionToken stores a session token for an account by account ID
 func (d *Data) AddAccountSessionToken(accountID, sessionToken string) {
 	if d.AccountSessionTokens == nil {
@@ -669,6 +668,22 @@ func (d *Data) GetAdventureGameLocationInstanceRecByLocationRef(ref string) (*ad
 		}
 	}
 	return nil, fmt.Errorf("failed getting adventure game location instance with location ID >%s<", id)
+}
+
+// GetAdventureGameLocationInstanceRecByLocationRefAndGameInstanceID looks up a location instance
+// scoped to a specific game instance. Use this instead of GetAdventureGameLocationInstanceRecByLocationRef
+// when multiple game instances share the same location definitions to avoid ambiguous lookups.
+func (d *Data) GetAdventureGameLocationInstanceRecByLocationRefAndGameInstanceID(locationRef, gameInstanceID string) (*adventure_game_record.AdventureGameLocationInstance, error) {
+	locationID, ok := d.Refs.AdventureGameLocationRefs[locationRef]
+	if !ok {
+		return nil, fmt.Errorf("failed getting adventure game location instance with ref >%s<", locationRef)
+	}
+	for _, rec := range d.AdventureGameLocationInstanceRecs {
+		if rec.AdventureGameLocationID == locationID && rec.GameInstanceID == gameInstanceID {
+			return rec, nil
+		}
+	}
+	return nil, fmt.Errorf("failed getting adventure game location instance with location ref >%s< and game instance ID >%s<", locationRef, gameInstanceID)
 }
 
 func (d *Data) GetAdventureGameLocationInstanceRecByLocationID(locationID string) []*adventure_game_record.AdventureGameLocationInstance {

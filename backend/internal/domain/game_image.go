@@ -339,6 +339,24 @@ func (m *Domain) GetAdventureGameInventoryTurnSheetImageDataURL(gameID string) (
 	return m.GetGameTurnSheetImageDataURL(gameID, turnSheetType)
 }
 
+// GetAdventureGameCreatureImageDataURL retrieves the portrait image for a creature as a base64 data URL.
+// Returns an empty string (no error) when no image has been uploaded for the creature.
+func (m *Domain) GetAdventureGameCreatureImageDataURL(gameID, creatureID string) (string, error) {
+	l := m.Logger("GetAdventureGameCreatureImageDataURL")
+	l.Debug("getting creature portrait image data URL for creature >%s< in game >%s<", creatureID, gameID)
+
+	recordID := nullstring.FromString(creatureID)
+	img, err := m.GetGameImageRecByGameAndType(gameID, recordID, game_record.GameImageTypeAsset, "")
+	if err != nil {
+		return "", err
+	}
+	if img == nil {
+		return "", nil
+	}
+
+	return imageToBase64DataURL(img.ImageData, img.MimeType), nil
+}
+
 // imageToBase64DataURL converts image data to a base64-encoded data URL
 func imageToBase64DataURL(imageData []byte, mimeType string) string {
 	if len(imageData) == 0 {

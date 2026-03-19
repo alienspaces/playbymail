@@ -133,6 +133,7 @@ func (p *AdventureGameSubscriptionProcessingProcessor) ProcessGameSubscriptionPr
 		AdventureGameCharacterID:        characterRec.ID,
 		AdventureGameLocationInstanceID: startingLocationInstanceID,
 		Health:                          100,
+		LastTurnEvents:                  []byte("[]"),
 	}
 
 	characterInstanceRec, err = p.Domain.CreateAdventureGameCharacterInstanceRec(characterInstanceRec)

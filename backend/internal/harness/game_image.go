@@ -73,6 +73,58 @@ func (t *Testing) processGameImageConfig(config GameImageConfig, gameRec *game_r
 	return rec, nil
 }
 
+// processCreaturePortraitImageConfig creates a game_image record (type asset) for a creature portrait.
+func (t *Testing) processCreaturePortraitImageConfig(config GameImageConfig, gameRec *game_record.Game) (*game_record.GameImage, error) {
+	l := t.Logger("processCreaturePortraitImageConfig")
+
+	if gameRec == nil {
+		return nil, fmt.Errorf("gameRec is required")
+	}
+
+	if config.ImagePath == "" {
+		return nil, fmt.Errorf("config.ImagePath is required")
+	}
+
+	l.Info("loading creature portrait from path >%s<", config.ImagePath)
+
+	imageData, mimeType, width, height, err := t.loadImageFromPath(config.ImagePath)
+	if err != nil {
+		l.Warn("failed loading image from path >%s<: >%v<", config.ImagePath, err)
+		return nil, err
+	}
+
+	rec := &game_record.GameImage{
+		GameID:    gameRec.ID,
+		RecordID:  nullstring.FromString(config.RecordID),
+		Type:      game_record.GameImageTypeAsset,
+		ImageData: imageData,
+		MimeType:  mimeType,
+		FileSize:  len(imageData),
+		Width:     width,
+		Height:    height,
+	}
+
+	l.Info("creating creature portrait image record: gameID >%s< recordID >%s< mimeType >%s< width >%d< height >%d<",
+		gameRec.ID, config.RecordID, rec.MimeType, rec.Width, rec.Height)
+
+	rec, err = t.Domain.(*domain.Domain).UpsertGameImageRec(rec)
+	if err != nil {
+		l.Warn("failed creating creature portrait image record >%v<", err)
+		return nil, err
+	}
+
+	l.Info("created creature portrait image record ID >%s<", rec.ID)
+
+	t.Data.AddGameImageRec(rec)
+	t.teardownData.AddGameImageRec(rec)
+
+	if config.Reference != "" {
+		t.Data.Refs.GameImageRefs[config.Reference] = rec.ID
+	}
+
+	return rec, nil
+}
+
 // AddGameImageRecToTeardown adds a game image record to the teardown data store
 // so it will be cleaned up during teardown. This is useful for test cases that
 // create images in separate transactions.

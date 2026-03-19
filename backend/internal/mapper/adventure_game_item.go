@@ -21,14 +21,25 @@ func AdventureGameItemRequestToRecord(l logger.Logger, r *http.Request, rec *adv
 	}
 
 	switch server.HttpMethod(r.Method) {
-	case server.HttpMethodPost:
+	case server.HttpMethodPost, server.HttpMethodPut, server.HttpMethodPatch:
 		rec.Name = req.Name
 		rec.Description = req.Description
+		rec.CanBeEquipped = req.CanBeEquipped
 		rec.IsStartingItem = req.IsStartingItem
-	case server.HttpMethodPut, server.HttpMethodPatch:
-		rec.Name = req.Name
-		rec.Description = req.Description
-		rec.IsStartingItem = req.IsStartingItem
+		rec.CanBeUsed = req.CanBeUsed
+		rec.Damage = req.Damage
+		rec.Defense = req.Defense
+		rec.HealAmount = req.HealAmount
+		if req.ItemCategory != "" {
+			rec.ItemCategory = &req.ItemCategory
+		} else {
+			rec.ItemCategory = nil
+		}
+		if req.EquipmentSlot != "" {
+			rec.EquipmentSlot = &req.EquipmentSlot
+		} else {
+			rec.EquipmentSlot = nil
+		}
 	default:
 		return nil, fmt.Errorf("unsupported HTTP method")
 	}
@@ -38,12 +49,29 @@ func AdventureGameItemRequestToRecord(l logger.Logger, r *http.Request, rec *adv
 
 func AdventureGameItemRecordToResponseData(l logger.Logger, rec *adventure_game_record.AdventureGameItem) (*adventure_game_schema.AdventureGameItemResponseData, error) {
 	l.Debug("mapping adventure_game_item record to response data")
+
+	itemCategory := ""
+	if rec.ItemCategory != nil {
+		itemCategory = *rec.ItemCategory
+	}
+	equipmentSlot := ""
+	if rec.EquipmentSlot != nil {
+		equipmentSlot = *rec.EquipmentSlot
+	}
+
 	return &adventure_game_schema.AdventureGameItemResponseData{
 		ID:             rec.ID,
 		GameID:         rec.GameID,
 		Name:           rec.Name,
 		Description:    rec.Description,
+		CanBeEquipped:  rec.CanBeEquipped,
+		ItemCategory:   itemCategory,
+		EquipmentSlot:  equipmentSlot,
 		IsStartingItem: rec.IsStartingItem,
+		CanBeUsed:      rec.CanBeUsed,
+		Damage:         rec.Damage,
+		Defense:        rec.Defense,
+		HealAmount:     rec.HealAmount,
 		CreatedAt:      rec.CreatedAt,
 		UpdatedAt:      nulltime.ToTimePtr(rec.UpdatedAt),
 		DeletedAt:      nulltime.ToTimePtr(rec.DeletedAt),

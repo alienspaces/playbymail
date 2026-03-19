@@ -2,6 +2,71 @@
 
 {{define "styles"}}
 <style>
+    .creatures-section {
+        margin-bottom: 12px;
+    }
+
+    .creature-list {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .creature-entry {
+        display: table;
+        table-layout: fixed;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        padding: 8px 12px;
+        width: 100%;
+        box-sizing: border-box;
+        background-color: rgba(255, 255, 255, 0.75);
+    }
+
+    .creature-entry-indicator {
+        display: table-cell;
+        width: 22px;
+        vertical-align: middle;
+        padding-right: 8px;
+        font-size: 1em;
+    }
+
+    .creature-entry-content {
+        display: table-cell;
+        vertical-align: top;
+        line-height: 1.3;
+    }
+
+    .creature-entry-name {
+        font-weight: 600;
+        font-size: 14px;
+        color: #2c3e50;
+    }
+
+    .creature-entry-disposition {
+        font-size: 12px;
+        font-style: italic;
+        margin-left: 6px;
+    }
+
+    .creature-entry-disposition-aggressive {
+        color: #c0392b;
+    }
+
+    .creature-entry-disposition-inquisitive {
+        color: #d35400;
+    }
+
+    .creature-entry-disposition-indifferent {
+        color: #7f8c8d;
+    }
+
+    .creature-entry-description {
+        font-size: 12px;
+        color: #555;
+        margin-top: 2px;
+    }
+
     .location-options {
         display: flex;
         flex-direction: column;
@@ -75,10 +140,54 @@
         color: #999;
         font-style: italic;
     }
+
+    .flee-warning {
+        border: 1px solid #e57373;
+        border-left: 4px solid #c0392b;
+        border-radius: 4px;
+        padding: 8px 12px;
+        margin-bottom: 10px;
+        background-color: rgba(255, 235, 235, 0.85);
+        font-size: 12px;
+        color: #7b1a1a;
+        line-height: 1.4;
+    }
+
+    .flee-warning strong {
+        color: #c0392b;
+    }
 </style>
 {{end}}
 
 {{define "content"}}
+{{if .Creatures}}
+<div class="creatures-section">
+    <h3 class="content-section-title">Creatures Present</h3>
+    <div class="creature-list">
+        {{range .Creatures}}
+        <div class="creature-entry">
+            <div class="creature-entry-indicator">
+                {{if eq .Disposition "aggressive"}}&#x2620;{{else if eq .Disposition "inquisitive"}}&#x1F441;{{else}}&#x25CB;{{end}}
+            </div>
+            <div class="creature-entry-content">
+                <div>
+                    <span class="creature-entry-name">{{.Name}}</span>
+                    {{if eq .Disposition "aggressive"}}<span class="creature-entry-disposition creature-entry-disposition-aggressive">hostile</span>{{else if eq .Disposition "inquisitive"}}<span class="creature-entry-disposition creature-entry-disposition-inquisitive">curious</span>{{else}}<span class="creature-entry-disposition creature-entry-disposition-indifferent">disinterested</span>{{end}}
+                </div>
+                <div class="creature-entry-description">{{.Description}}</div>
+            </div>
+        </div>
+        {{end}}
+    </div>
+</div>
+{{end}}
+
+{{if .HasAggressiveCreatures}}
+<div class="flee-warning">
+    <strong>Warning:</strong> Hostile creatures are present! Choosing a new location means fleeing combat &mdash; aggressive creatures will attack you as you retreat.
+</div>
+{{end}}
+
 <h3 class="content-section-title">Choose Your Next Location</h3>
 <p class="content-section-subtitle">Select where you would like to go next from the available paths:</p>
 

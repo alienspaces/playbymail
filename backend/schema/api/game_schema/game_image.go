@@ -58,3 +58,16 @@ type LocationTurnSheetImageData struct {
 	LocationID string                 `json:"location_id"`
 	Background *GameImageResponseData `json:"background,omitempty"`
 }
+
+// CreatureImageResponse returns the portrait image for a creature
+type CreatureImageResponse struct {
+	Data       *CreatureImageData                `json:"data"`
+	Error      *common_schema.ResponseError      `json:"error,omitempty"`
+	Pagination *common_schema.ResponsePagination `json:"pagination,omitempty"`
+}
+
+type CreatureImageData struct {
+	GameID     string                 `json:"game_id"`
+	CreatureID string                 `json:"creature_id"`
+	Portrait   *GameImageResponseData `json:"portrait,omitempty"`
+}

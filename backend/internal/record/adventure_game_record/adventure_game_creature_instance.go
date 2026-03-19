@@ -1,6 +1,8 @@
 package adventure_game_record
 
 import (
+	"database/sql"
+
 	"github.com/jackc/pgx/v5"
 	"gitlab.com/alienspaces/playbymail/core/record"
 )
@@ -14,6 +16,7 @@ const (
 	FieldAdventureGameCreatureInstanceAdventureGameCreatureID         = "adventure_game_creature_id"
 	FieldAdventureGameCreatureInstanceAdventureGameLocationInstanceID = "adventure_game_location_instance_id"
 	FieldAdventureGameCreatureInstanceHealth                          = "health"
+	FieldAdventureGameCreatureInstanceDiedAtTurn                      = "died_at_turn"
 	FieldAdventureGameCreatureInstanceCreatedAt                       = "created_at"
 	FieldAdventureGameCreatureInstanceUpdatedAt                       = "updated_at"
 	FieldAdventureGameCreatureInstanceDeletedAt                       = "deleted_at"
@@ -21,11 +24,12 @@ const (
 
 type AdventureGameCreatureInstance struct {
 	record.Record
-	GameID                          string `db:"game_id"`
-	GameInstanceID                  string `db:"game_instance_id"`
-	AdventureGameCreatureID         string `db:"adventure_game_creature_id"`
-	AdventureGameLocationInstanceID string `db:"adventure_game_location_instance_id"`
-	Health                          int    `db:"health"`
+	GameID                          string        `db:"game_id"`
+	GameInstanceID                  string        `db:"game_instance_id"`
+	AdventureGameCreatureID         string        `db:"adventure_game_creature_id"`
+	AdventureGameLocationInstanceID string        `db:"adventure_game_location_instance_id"`
+	Health                          int           `db:"health"`
+	DiedAtTurn                      sql.NullInt64 `db:"died_at_turn"`
 }
 
 func (r *AdventureGameCreatureInstance) ToNamedArgs() pgx.NamedArgs {
@@ -35,5 +39,6 @@ func (r *AdventureGameCreatureInstance) ToNamedArgs() pgx.NamedArgs {
 	args[FieldAdventureGameCreatureInstanceAdventureGameCreatureID] = r.AdventureGameCreatureID
 	args[FieldAdventureGameCreatureInstanceAdventureGameLocationInstanceID] = r.AdventureGameLocationInstanceID
 	args[FieldAdventureGameCreatureInstanceHealth] = r.Health
+	args[FieldAdventureGameCreatureInstanceDiedAtTurn] = r.DiedAtTurn
 	return args
 }

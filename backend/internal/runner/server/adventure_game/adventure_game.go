@@ -45,6 +45,7 @@ func AdventureGameHandlerConfig(cfg config.Config, l logger.Logger, scnr turnshe
 		adventureGameItemInstanceHandlerConfig,
 		adventureGameLocationLinkRequirementHandlerConfig,
 		adventureGameLocationTurnSheetImageHandlerConfig,
+		adventureGameCreatureImageHandlerConfig,
 	}
 
 	for _, fn := range handlerConfigFuncs {

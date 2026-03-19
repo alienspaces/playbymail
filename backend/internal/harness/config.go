@@ -245,6 +245,9 @@ type AdventureGameItemConfig struct {
 type AdventureGameCreatureConfig struct {
 	Reference string // Reference to the game_creature record
 	Record    *adventure_game_record.AdventureGameCreature
+	// PortraitImage if set, creates a game_image (asset) for this creature's portrait.
+	// Only ImagePath (and optionally Reference) need to be set; RecordID is set at runtime.
+	PortraitImage *GameImageConfig
 }
 
 type AdventureGameLocationConfig struct {
@@ -589,26 +592,26 @@ func DefaultDataConfig() DataConfig {
 							Name:        UniqueName("The Red Door"),
 							Description: "Travel by boat to the swamp of the long forgotten Frog God",
 						},
-					AdventureGameLocationLinkRequirementConfigs: []AdventureGameLocationLinkRequirementConfig{
-						{
-							Reference:   GameLocationLinkRequirementOneRef,
-							GameItemRef: GameItemOneRef,
-							Record: &adventure_game_record.AdventureGameLocationLinkRequirement{
-								Purpose:   adventure_game_record.AdventureGameLocationLinkRequirementPurposeTraverse,
-								Condition: adventure_game_record.AdventureGameLocationLinkRequirementConditionInInventory,
-								Quantity:  1,
+						AdventureGameLocationLinkRequirementConfigs: []AdventureGameLocationLinkRequirementConfig{
+							{
+								Reference:   GameLocationLinkRequirementOneRef,
+								GameItemRef: GameItemOneRef,
+								Record: &adventure_game_record.AdventureGameLocationLinkRequirement{
+									Purpose:   adventure_game_record.AdventureGameLocationLinkRequirementPurposeTraverse,
+									Condition: adventure_game_record.AdventureGameLocationLinkRequirementConditionInInventory,
+									Quantity:  1,
+								},
+							},
+							{
+								Reference:       GameLocationLinkRequirementTwoRef,
+								GameCreatureRef: GameCreatureOneRef,
+								Record: &adventure_game_record.AdventureGameLocationLinkRequirement{
+									Purpose:   adventure_game_record.AdventureGameLocationLinkRequirementPurposeVisible,
+									Condition: adventure_game_record.AdventureGameLocationLinkRequirementConditionNoneAliveAtLocation,
+									Quantity:  1,
+								},
 							},
 						},
-						{
-							Reference:       GameLocationLinkRequirementTwoRef,
-							GameCreatureRef: GameCreatureOneRef,
-							Record: &adventure_game_record.AdventureGameLocationLinkRequirement{
-								Purpose:   adventure_game_record.AdventureGameLocationLinkRequirementPurposeVisible,
-								Condition: adventure_game_record.AdventureGameLocationLinkRequirementConditionNoneAliveAtLocation,
-								Quantity:  1,
-							},
-						},
-					},
 					},
 				},
 				AdventureGameCreatureConfigs: []AdventureGameCreatureConfig{
@@ -664,20 +667,20 @@ func DefaultDataConfig() DataConfig {
 				Record:           &game_record.GameSubscription{},
 			},
 			{
-				Reference:                          GameSubscriptionPlayerThreeRef,
-				AccountUserRef:                     AccountUserStandardRef,
-				GameRef:                            GameOneRef,
-				SubscriptionType:                   game_record.GameSubscriptionTypePlayer,
+				Reference:                             GameSubscriptionPlayerThreeRef,
+				AccountUserRef:                        AccountUserStandardRef,
+				GameRef:                               GameOneRef,
+				SubscriptionType:                      game_record.GameSubscriptionTypePlayer,
 				AccountUserManagerGameSubscriptionRef: GameSubscriptionManagerOneRef,
-				Record:                             &game_record.GameSubscription{},
+				Record:                                &game_record.GameSubscription{},
 			},
 			{
-				Reference:                          GameSubscriptionPlayerOneRef,
-				AccountUserRef:                     AccountUserStandardRef,
-				GameRef:                            GameOneRef,
-				SubscriptionType:                   game_record.GameSubscriptionTypePlayer,
+				Reference:                             GameSubscriptionPlayerOneRef,
+				AccountUserRef:                        AccountUserStandardRef,
+				GameRef:                               GameOneRef,
+				SubscriptionType:                      game_record.GameSubscriptionTypePlayer,
 				AccountUserManagerGameSubscriptionRef: GameSubscriptionManagerOneRef,
-				Record:                             &game_record.GameSubscription{},
+				Record:                                &game_record.GameSubscription{},
 			},
 			{
 				Reference:        GameSubscriptionDesignerOneRef,
@@ -694,9 +697,9 @@ func DefaultDataConfig() DataConfig {
 				Record:           &game_record.GameSubscription{},
 				GameInstanceConfigs: []GameInstanceConfig{
 					{
-						Reference: GameInstanceOneRef,
-						Record:    &game_record.GameInstance{},
-						PlayerSubscriptionRefs:      []string{GameSubscriptionPlayerOneRef, GameSubscriptionPlayerThreeRef},
+						Reference:              GameInstanceOneRef,
+						Record:                 &game_record.GameInstance{},
+						PlayerSubscriptionRefs: []string{GameSubscriptionPlayerOneRef, GameSubscriptionPlayerThreeRef},
 						GameInstanceParameterConfigs: []GameInstanceParameterConfig{
 							{
 								Reference: GameInstanceParameterOneRef,

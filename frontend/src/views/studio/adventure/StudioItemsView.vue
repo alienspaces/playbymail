@@ -49,25 +49,63 @@ const { selectedGame } = storeToRefs(gamesStore);
 const formattedItems = computed(() => {
   return itemsStore.items.map(item => ({
     ...item,
-    is_starting_item: item.is_starting_item ? 'Yes' : 'No'
+    is_starting_item: item.is_starting_item ? 'Yes' : 'No',
+    can_be_equipped: item.can_be_equipped ? 'Yes' : 'No',
+    can_be_used: item.can_be_used ? 'Yes' : 'No'
   }));
 });
 
 const columns = [
   { key: 'name', label: 'Name' },
   { key: 'description', label: 'Description' },
-  { key: 'is_starting_item', label: 'Starting Item' }
+  { key: 'is_starting_item', label: 'Starting Item' },
+  { key: 'can_be_equipped', label: 'Equippable' },
+  { key: 'can_be_used', label: 'Usable' }
 ];
 
 const fields = [
   { key: 'name', label: 'Name', required: true, maxlength: 1024 },
   { key: 'description', label: 'Description', required: true, maxlength: 4096, type: 'textarea' },
-  { key: 'is_starting_item', label: 'Starting Item', type: 'checkbox', help: 'If checked, this item will be automatically assigned to characters when they join the game' }
+  { key: 'is_starting_item', label: 'Starting Item', type: 'checkbox', help: 'Automatically assigned to characters when they join the game' },
+  { key: 'can_be_equipped', label: 'Can Be Equipped', type: 'checkbox', help: 'Player can equip this item to gain its stats' },
+  {
+    key: 'item_category',
+    label: 'Item Category',
+    type: 'select',
+    placeholder: 'Select category',
+    options: [
+      { value: '', label: '— None —' },
+      { value: 'weapon', label: 'Weapon' },
+      { value: 'armor', label: 'Armor' },
+      { value: 'clothing', label: 'Clothing' },
+      { value: 'jewelry', label: 'Jewelry' },
+      { value: 'consumable', label: 'Consumable' },
+      { value: 'misc', label: 'Miscellaneous' }
+    ]
+  },
+  { key: 'equipment_slot', label: 'Equipment Slot', placeholder: 'e.g. weapon, armor_chest', help: 'Slot name used when equipping (leave blank for default)' },
+  { key: 'damage', label: 'Damage', type: 'number', min: 0, max: 999, help: 'Damage dealt per attack when this weapon is equipped' },
+  { key: 'defense', label: 'Defense', type: 'number', min: 0, max: 999, help: 'Damage reduction when this armor is equipped' },
+  { key: 'can_be_used', label: 'Can Be Used', type: 'checkbox', help: 'Player can activate this item (e.g. potion, scroll)' },
+  { key: 'heal_amount', label: 'Heal Amount', type: 'number', min: 0, max: 999, help: 'Health restored when this item is used' }
 ];
+
+const defaultItemForm = () => ({
+  name: '',
+  description: '',
+  is_starting_item: false,
+  can_be_equipped: false,
+  item_category: '',
+  equipment_slot: '',
+  damage: 0,
+  defense: 0,
+  can_be_used: false,
+  heal_amount: 0
+});
 
 const showModal = ref(false);
 const modalMode = ref('create');
-const modalForm = ref({ name: '', description: '', is_starting_item: false });
+const modalForm = ref(defaultItemForm());
 const modalError = ref('');
 const showDeleteModal = ref(false);
 const itemToDelete = ref(null);
@@ -85,7 +123,7 @@ watch(
 
 function openCreate() {
   modalMode.value = 'create';
-  modalForm.value = { name: '', description: '', is_starting_item: false };
+  modalForm.value = defaultItemForm();
   modalError.value = '';
   showModal.value = true;
 }
@@ -120,7 +158,7 @@ function getActions(row) {
 
 function closeModal() {
   showModal.value = false;
-  modalForm.value = { name: '', description: '', is_starting_item: false };
+  modalForm.value = defaultItemForm();
   modalError.value = '';
 }
 

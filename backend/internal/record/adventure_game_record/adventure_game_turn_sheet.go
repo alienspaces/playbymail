@@ -27,7 +27,7 @@ const (
 	AdventureGameTurnSheetTypeInventoryManagement = "adventure_game_inventory_management"
 	AdventureGameTurnSheetTypeCombat              = "adventure_game_combat"
 	AdventureGameTurnSheetTypePuzzle              = "adventure_game_puzzle"
-	AdventureGameTurnSheetTypeMonster             = "adventure_game_monster"
+	AdventureGameTurnSheetTypeCreatureEncounter   = "adventure_game_monster"
 )
 
 // AdventureGameTurnSheetProcessingOrder defines the order in which
@@ -36,8 +36,9 @@ const (
 // The join game sheet is excluded; it is handled through the
 // subscription workflow, not turn processing.
 var AdventureGameTurnSheetProcessingOrder = []string{
-	AdventureGameTurnSheetTypeInventoryManagement, // 1 - manage items at current location before moving
-	AdventureGameTurnSheetTypeLocationChoice,      // 2 - move to a new location
+	AdventureGameTurnSheetTypeInventoryManagement, // 1 - manage items first; forfeits combat if actions taken
+	AdventureGameTurnSheetTypeCreatureEncounter,   // 2 - resolve combat (skipped if inventory had actions)
+	AdventureGameTurnSheetTypeLocationChoice,      // 3 - move to a new location (flee penalty applied here)
 }
 
 // AdventureGameSheetOrderForType returns the 1-indexed processing order
@@ -54,11 +55,12 @@ func AdventureGameSheetOrderForType(sheetType string) int {
 
 // AdventureGameTurnSheetPresentationOrder defines the order in which
 // adventure game turn sheets are presented to the player in the UI.
-// This is intentionally different from the processing order: players
-// see location choice first (where am I going?) then inventory (what do I take?).
+// Players see the encounter first (see what you're facing), then decide
+// whether to use items or fight, then choose where to move.
 var AdventureGameTurnSheetPresentationOrder = []string{
-	AdventureGameTurnSheetTypeLocationChoice,      // 1 - shown first: choose where to go
-	AdventureGameTurnSheetTypeInventoryManagement, // 2 - shown second: manage items for the turn
+	AdventureGameTurnSheetTypeCreatureEncounter,   // 1 - shown first: see what you're fighting
+	AdventureGameTurnSheetTypeInventoryManagement, // 2 - shown second: fight or manage items?
+	AdventureGameTurnSheetTypeLocationChoice,      // 3 - shown last: choose where to go
 }
 
 // AdventureGameSheetPresentationOrderForType returns the 1-indexed presentation
@@ -80,7 +82,7 @@ var AdventureGameSheetTypes = set.New(
 	AdventureGameTurnSheetTypeInventoryManagement,
 	AdventureGameTurnSheetTypeCombat,
 	AdventureGameTurnSheetTypePuzzle,
-	AdventureGameTurnSheetTypeMonster,
+	AdventureGameTurnSheetTypeCreatureEncounter,
 )
 
 type AdventureGameTurnSheet struct {

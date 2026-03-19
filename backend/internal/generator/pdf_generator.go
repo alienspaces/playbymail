@@ -166,6 +166,14 @@ func (g *PDFGenerator) loadTemplate(templatePath string) (*template.Template, er
 		"sub": func(a, b int) int { return a - b },
 		"mul": func(a, b int) int { return a * b },
 		"div": func(a, b int) int { return a / b },
+		// seq returns a slice of ints [0, n) for use with range
+		"seq": func(n int) []int {
+			s := make([]int, n)
+			for i := range s {
+				s[i] = i
+			}
+			return s
+		},
 		// safeURL marks a string as safe for use in URL contexts (e.g., data: URLs)
 		"safeURL": func(s string) template.URL { return template.URL(s) },
 	})

@@ -94,7 +94,45 @@ func (p *AdventureGameLocationChoiceProcessor) ProcessTurnSheetResponse(ctx cont
 		return fmt.Errorf("invalid location choice: %s is not an available option", chosenLocationID)
 	}
 
-	// Step 3: Update character's location
+	// Step 3: Apply flee penalty from aggressive creatures at the character's CURRENT location.
+	// This happens before moving the character so we can check their current location.
+	currentLocationInstanceID := characterInstanceRec.AdventureGameLocationInstanceID
+	isMoving := currentLocationInstanceID != chosenLocationID
+
+	// Resolve traversal description for narrative.
+	var traversalDescription string
+	if isMoving {
+		// Resolve the current location instance to its definition ID before querying links,
+		// since from_adventure_game_location_id stores definition IDs, not instance IDs.
+		currentLocInstanceRec, err := p.Domain.GetAdventureGameLocationInstanceRec(currentLocationInstanceID, nil)
+		if err == nil {
+			locationLinks, err := p.Domain.GetManyAdventureGameLocationLinkRecs(&coresql.Options{
+				Params: []coresql.Param{
+					{Col: adventure_game_record.FieldAdventureGameLocationLinkFromAdventureGameLocationID, Val: currentLocInstanceRec.AdventureGameLocationID},
+				},
+			})
+			if err == nil {
+				for _, lnk := range locationLinks {
+					// Find the link whose destination matches.
+					destInst, err := p.getLocationInstanceForLocation(gameInstanceRec.ID, lnk.ToAdventureGameLocationID)
+					if err == nil && destInst.ID == chosenLocationID {
+						if lnk.TraversalDescription.Valid {
+							traversalDescription = lnk.TraversalDescription.String
+						}
+						break
+					}
+				}
+			}
+		}
+
+		// Apply flee penalty.
+		if err := p.applyFleePenalty(l, gameInstanceRec, characterInstanceRec, currentLocationInstanceID); err != nil {
+			l.Warn("failed to apply flee penalty >%v<", err)
+			// Non-fatal: continue with movement.
+		}
+	}
+
+	// Step 4: Update character's location.
 	characterInstanceRec.AdventureGameLocationInstanceID = chosenLocationID
 	characterInstanceRec, err := p.Domain.UpdateAdventureGameCharacterInstanceRec(characterInstanceRec)
 	if err != nil {
@@ -102,7 +140,115 @@ func (p *AdventureGameLocationChoiceProcessor) ProcessTurnSheetResponse(ctx cont
 		return fmt.Errorf("failed to update character location: %w", err)
 	}
 
+	// Step 5: Generate movement narrative event.
+	if isMoving {
+		// Resolve destination location name.
+		destLocInstanceRec, err := p.Domain.GetAdventureGameLocationInstanceRec(chosenLocationID, nil)
+		var destLocationName string
+		if err == nil {
+			destLocRec, err := p.Domain.GetAdventureGameLocationRec(destLocInstanceRec.AdventureGameLocationID, nil)
+			if err == nil {
+				destLocationName = destLocRec.Name
+			}
+		}
+
+		linkName := chosenLocationOption.LocationLinkName
+		var movementMsg string
+		if traversalDescription != "" {
+			movementMsg = fmt.Sprintf("You took %s to %s. %s", linkName, destLocationName, traversalDescription)
+		} else {
+			movementMsg = fmt.Sprintf("You took %s to %s.", linkName, destLocationName)
+		}
+		_ = turnsheet.AppendTurnEvent(characterInstanceRec, turnsheet.TurnEvent{
+			Category: turnsheet.TurnEventCategoryMovement,
+			Icon:     turnsheet.TurnEventIconMovement,
+			Message:  movementMsg,
+		})
+
+		// Persist events.
+		if _, saveErr := p.Domain.UpdateAdventureGameCharacterInstanceRec(characterInstanceRec); saveErr != nil {
+			l.Warn("failed to save movement narrative event >%v<", saveErr)
+		}
+	}
+
 	l.Info("successfully updated character >%s< to location >%s< via pathway >%s<", characterInstanceRec.ID, chosenLocationID, chosenLocationOption.LocationLinkName)
+
+	return nil
+}
+
+// applyFleePenalty inflicts free attacks from aggressive creatures on a character who is moving away.
+func (p *AdventureGameLocationChoiceProcessor) applyFleePenalty(
+	l logger.Logger,
+	gameInstanceRec *game_record.GameInstance,
+	characterInstanceRec *adventure_game_record.AdventureGameCharacterInstance,
+	locationInstanceID string,
+) error {
+	l = l.WithFunctionContext("applyFleePenalty")
+	l.Info("applying flee penalty for character >%s< at location >%s<", characterInstanceRec.ID, locationInstanceID)
+
+	creatureInstances, err := p.Domain.GetManyAdventureGameCreatureInstanceRecs(&coresql.Options{
+		Params: []coresql.Param{
+			{Col: adventure_game_record.FieldAdventureGameCreatureInstanceGameInstanceID, Val: gameInstanceRec.ID},
+			{Col: adventure_game_record.FieldAdventureGameCreatureInstanceAdventureGameLocationInstanceID, Val: locationInstanceID},
+		},
+	})
+	if err != nil {
+		return fmt.Errorf("failed to get creature instances: %w", err)
+	}
+
+	// Determine character's armor defense.
+	_, armorDefense, err := ResolveEquipmentStats(l, p.Domain, characterInstanceRec.ID)
+	if err != nil {
+		return fmt.Errorf("failed to resolve equipment stats for flee penalty: %w", err)
+	}
+
+	totalFleeDamage := 0
+	for _, ci := range creatureInstances {
+		if ci.Health <= 0 {
+			l.Info("creature >%s< is dead — skipping", ci.AdventureGameCreatureID)
+			continue
+		}
+
+		creatureDef, err := p.Domain.GetAdventureGameCreatureRec(ci.AdventureGameCreatureID, nil)
+		if err != nil {
+			return fmt.Errorf("failed to get creature definition >%s< for flee penalty: %w", ci.AdventureGameCreatureID, err)
+		}
+
+		// Only aggressive creatures get a free attack on flee.
+		if creatureDef.Disposition != adventure_game_record.AdventureGameCreatureDispositionAggressive {
+			l.Info("creature >%s< is not aggressive — skipping", ci.AdventureGameCreatureID)
+			continue
+		}
+
+		damage := creatureDef.AttackDamage - armorDefense
+		if damage < 1 {
+			l.Info("creature >%s< attack damage < 1 — setting to 1", ci.AdventureGameCreatureID)
+			damage = 1
+		}
+		totalFleeDamage += damage
+
+		// Generate flee narrative event per creature.
+		attackDesc := creatureDef.AttackDescription
+		if attackDesc == "" {
+			attackDesc = "attacks you"
+		}
+		_ = turnsheet.AppendTurnEvent(characterInstanceRec, turnsheet.TurnEvent{
+			Category: turnsheet.TurnEventCategoryFlee,
+			Icon:     turnsheet.TurnEventIconFlee,
+			Message:  fmt.Sprintf("As you fled, the %s %s for %d damage.", creatureDef.Name, attackDesc, damage),
+		})
+
+		l.Info("aggressive creature >%s< attacks fleeing character for %d damage", creatureDef.Name, damage)
+	}
+
+	if totalFleeDamage > 0 {
+		characterInstanceRec.Health -= totalFleeDamage
+		if characterInstanceRec.Health < 0 {
+			characterInstanceRec.Health = 0
+		}
+		l.Info("flee penalty applied: character >%s< takes %d damage (health now %d)",
+			characterInstanceRec.ID, totalFleeDamage, characterInstanceRec.Health)
+	}
 
 	return nil
 }
@@ -232,7 +378,29 @@ func (p *AdventureGameLocationChoiceProcessor) CreateNextTurnSheet(ctx context.C
 		l.Info("no background image found for location choice turn sheet")
 	}
 
-	// Step 9: Create sheet data with REAL game data
+	// Step 8b: Load creatures present at this location
+	creatures, err := GetAliveCreaturesAtLocation(l, p.Domain, gameInstanceRec.ID, locationInstanceRec.ID)
+	if err != nil {
+		l.Warn("failed to get creatures at location >%v<", err)
+		creatures = nil
+	}
+
+	hasAggressiveCreatures := false
+	for _, c := range creatures {
+		if c.Disposition == adventure_game_record.AdventureGameCreatureDispositionAggressive {
+			hasAggressiveCreatures = true
+			break
+		}
+	}
+
+	// Step 9: Read movement, flee, and world events for this sheet. Events are cleared after all processors run.
+	displayEvents := ReadTurnEventsForCategories(l, p.Domain, characterInstanceRec,
+		turnsheet.TurnEventCategoryMovement,
+		turnsheet.TurnEventCategoryFlee,
+		turnsheet.TurnEventCategoryWorld,
+	)
+
+	// Step 10: Create sheet data with REAL game data
 	sheetData := turnsheet.LocationChoiceData{
 		TurnSheetTemplateData: turnsheet.TurnSheetTemplateData{
 			GameName:              convert.Ptr(gameRec.Name),
@@ -244,10 +412,13 @@ func (p *AdventureGameLocationChoiceProcessor) CreateNextTurnSheet(ctx context.C
 			TurnSheetInstructions: convert.Ptr(turnsheet.DefaultLocationChoiceInstructions()),
 			TurnSheetCode:         convert.Ptr(turnSheetCode),
 			BackgroundImage:       backgroundImage,
+			TurnEvents:            displayEvents,
 		},
-		LocationName:        locationRec.Name,
-		LocationDescription: locationRec.Description,
-		LocationOptions:     locationOptions,
+		LocationName:           locationRec.Name,
+		LocationDescription:    locationRec.Description,
+		Creatures:              creatures,
+		HasAggressiveCreatures: hasAggressiveCreatures,
+		LocationOptions:        locationOptions,
 	}
 
 	sheetDataBytes, err := json.Marshal(sheetData)
@@ -256,7 +427,7 @@ func (p *AdventureGameLocationChoiceProcessor) CreateNextTurnSheet(ctx context.C
 		return nil, fmt.Errorf("failed to marshal sheet data: %w", err)
 	}
 
-	// Step 9: Create turn sheet record
+	// Step 11: Create turn sheet record
 	turnSheet := &game_record.GameTurnSheet{
 		GameID:           gameInstanceRec.GameID,
 		AccountID:        accountUserRec.AccountID,
@@ -367,20 +538,20 @@ func (p *AdventureGameLocationChoiceProcessor) evaluateSingleRequirement(
 
 	// Item conditions
 	case adventure_game_record.AdventureGameLocationLinkRequirementConditionInInventory:
-		return p.characterHasItemInInventory(l, characterInstanceRec.ID, req.AdventureGameItemID.String, req.Quantity)
+		return p.characterHasItemInInventory(characterInstanceRec.ID, req.AdventureGameItemID.String, req.Quantity)
 
 	case adventure_game_record.AdventureGameLocationLinkRequirementConditionEquipped:
-		return p.characterHasItemEquipped(l, characterInstanceRec.ID, req.AdventureGameItemID.String)
+		return p.characterHasItemEquipped(characterInstanceRec.ID, req.AdventureGameItemID.String)
 
 	// Creature conditions
 	case adventure_game_record.AdventureGameLocationLinkRequirementConditionDeadAtLocation:
-		return p.creatureDeadAtLocation(l, gameInstanceRec.ID, fromLocationInstanceRec.ID, req.AdventureGameCreatureID.String, req.Quantity)
+		return p.creatureDeadAtLocation(gameInstanceRec.ID, fromLocationInstanceRec.ID, req.AdventureGameCreatureID.String, req.Quantity)
 
 	case adventure_game_record.AdventureGameLocationLinkRequirementConditionNoneAliveAtLocation:
-		return p.noCreaturesAliveAtLocation(l, gameInstanceRec.ID, fromLocationInstanceRec.ID, req.AdventureGameCreatureID.String)
+		return p.noCreaturesAliveAtLocation(gameInstanceRec.ID, fromLocationInstanceRec.ID, req.AdventureGameCreatureID.String)
 
 	case adventure_game_record.AdventureGameLocationLinkRequirementConditionNoneAliveInGame:
-		return p.noCreaturesAliveInGame(l, gameInstanceRec.ID, req.AdventureGameCreatureID.String)
+		return p.noCreaturesAliveInGame(gameInstanceRec.ID, req.AdventureGameCreatureID.String)
 
 	default:
 		l.Warn("unknown requirement condition >%s<", req.Condition)
@@ -388,11 +559,11 @@ func (p *AdventureGameLocationChoiceProcessor) evaluateSingleRequirement(
 	}
 }
 
-func (p *AdventureGameLocationChoiceProcessor) characterHasItemInInventory(l logger.Logger, characterInstanceID, itemID string, quantity int) (bool, error) {
+func (p *AdventureGameLocationChoiceProcessor) characterHasItemInInventory(characterInstanceID, itemID string, quantity int) (bool, error) {
 	itemInstances, err := p.Domain.GetManyAdventureGameItemInstanceRecs(&coresql.Options{
 		Params: []coresql.Param{
-			{Col: "adventure_game_character_instance_id", Val: characterInstanceID},
-			{Col: "adventure_game_item_id", Val: itemID},
+			{Col: adventure_game_record.FieldAdventureGameItemInstanceAdventureGameCharacterInstanceID, Val: characterInstanceID},
+			{Col: adventure_game_record.FieldAdventureGameItemInstanceAdventureGameItemID, Val: itemID},
 		},
 	})
 	if err != nil {
@@ -407,12 +578,12 @@ func (p *AdventureGameLocationChoiceProcessor) characterHasItemInInventory(l log
 	return count >= quantity, nil
 }
 
-func (p *AdventureGameLocationChoiceProcessor) characterHasItemEquipped(l logger.Logger, characterInstanceID, itemID string) (bool, error) {
+func (p *AdventureGameLocationChoiceProcessor) characterHasItemEquipped(characterInstanceID, itemID string) (bool, error) {
 	itemInstances, err := p.Domain.GetManyAdventureGameItemInstanceRecs(&coresql.Options{
 		Params: []coresql.Param{
-			{Col: "adventure_game_character_instance_id", Val: characterInstanceID},
-			{Col: "adventure_game_item_id", Val: itemID},
-			{Col: "is_equipped", Val: true},
+			{Col: adventure_game_record.FieldAdventureGameItemInstanceAdventureGameCharacterInstanceID, Val: characterInstanceID},
+			{Col: adventure_game_record.FieldAdventureGameItemInstanceAdventureGameItemID, Val: itemID},
+			{Col: adventure_game_record.FieldAdventureGameItemInstanceIsEquipped, Val: true},
 		},
 	})
 	if err != nil {
@@ -421,12 +592,12 @@ func (p *AdventureGameLocationChoiceProcessor) characterHasItemEquipped(l logger
 	return len(itemInstances) > 0, nil
 }
 
-func (p *AdventureGameLocationChoiceProcessor) creatureDeadAtLocation(l logger.Logger, gameInstanceID, fromLocationInstanceID, creatureID string, quantity int) (bool, error) {
+func (p *AdventureGameLocationChoiceProcessor) creatureDeadAtLocation(gameInstanceID, fromLocationInstanceID, creatureID string, quantity int) (bool, error) {
 	allInstances, err := p.Domain.GetManyAdventureGameCreatureInstanceRecs(&coresql.Options{
 		Params: []coresql.Param{
-			{Col: "game_instance_id", Val: gameInstanceID},
-			{Col: "adventure_game_creature_id", Val: creatureID},
-			{Col: "adventure_game_location_instance_id", Val: fromLocationInstanceID},
+			{Col: adventure_game_record.FieldAdventureGameCreatureInstanceGameInstanceID, Val: gameInstanceID},
+			{Col: adventure_game_record.FieldAdventureGameCreatureInstanceAdventureGameCreatureID, Val: creatureID},
+			{Col: adventure_game_record.FieldAdventureGameCreatureInstanceAdventureGameLocationInstanceID, Val: fromLocationInstanceID},
 		},
 	})
 	if err != nil {
@@ -441,12 +612,12 @@ func (p *AdventureGameLocationChoiceProcessor) creatureDeadAtLocation(l logger.L
 	return deadCount >= quantity, nil
 }
 
-func (p *AdventureGameLocationChoiceProcessor) noCreaturesAliveAtLocation(l logger.Logger, gameInstanceID, fromLocationInstanceID, creatureID string) (bool, error) {
+func (p *AdventureGameLocationChoiceProcessor) noCreaturesAliveAtLocation(gameInstanceID, fromLocationInstanceID, creatureID string) (bool, error) {
 	allInstances, err := p.Domain.GetManyAdventureGameCreatureInstanceRecs(&coresql.Options{
 		Params: []coresql.Param{
-			{Col: "game_instance_id", Val: gameInstanceID},
-			{Col: "adventure_game_creature_id", Val: creatureID},
-			{Col: "adventure_game_location_instance_id", Val: fromLocationInstanceID},
+			{Col: adventure_game_record.FieldAdventureGameCreatureInstanceGameInstanceID, Val: gameInstanceID},
+			{Col: adventure_game_record.FieldAdventureGameCreatureInstanceAdventureGameCreatureID, Val: creatureID},
+			{Col: adventure_game_record.FieldAdventureGameCreatureInstanceAdventureGameLocationInstanceID, Val: fromLocationInstanceID},
 		},
 	})
 	if err != nil {
@@ -460,11 +631,11 @@ func (p *AdventureGameLocationChoiceProcessor) noCreaturesAliveAtLocation(l logg
 	return true, nil
 }
 
-func (p *AdventureGameLocationChoiceProcessor) noCreaturesAliveInGame(l logger.Logger, gameInstanceID, creatureID string) (bool, error) {
+func (p *AdventureGameLocationChoiceProcessor) noCreaturesAliveInGame(gameInstanceID, creatureID string) (bool, error) {
 	allInstances, err := p.Domain.GetManyAdventureGameCreatureInstanceRecs(&coresql.Options{
 		Params: []coresql.Param{
-			{Col: "game_instance_id", Val: gameInstanceID},
-			{Col: "adventure_game_creature_id", Val: creatureID},
+			{Col: adventure_game_record.FieldAdventureGameCreatureInstanceGameInstanceID, Val: gameInstanceID},
+			{Col: adventure_game_record.FieldAdventureGameCreatureInstanceAdventureGameCreatureID, Val: creatureID},
 		},
 	})
 	if err != nil {
@@ -482,14 +653,8 @@ func (p *AdventureGameLocationChoiceProcessor) noCreaturesAliveInGame(l logger.L
 func (p *AdventureGameLocationChoiceProcessor) getLocationInstanceForLocation(gameInstanceID, locationID string) (*adventure_game_record.AdventureGameLocationInstance, error) {
 	locationInstances, err := p.Domain.GetManyAdventureGameLocationInstanceRecs(&coresql.Options{
 		Params: []coresql.Param{
-			{
-				Col: "game_instance_id",
-				Val: gameInstanceID,
-			},
-			{
-				Col: "adventure_game_location_id",
-				Val: locationID,
-			},
+			{Col: adventure_game_record.FieldAdventureGameLocationInstanceGameInstanceID, Val: gameInstanceID},
+			{Col: adventure_game_record.FieldAdventureGameLocationInstanceAdventureGameLocationID, Val: locationID},
 		},
 	})
 	if err != nil {

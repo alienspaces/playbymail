@@ -308,6 +308,39 @@
             box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
         }
         
+         
+        .narrative-content {
+            background-color: rgba(255, 248, 230, 0.92);
+            border-left: 3px solid #b8860b;
+        }
+
+        .narrative-title {
+            color: #6b4c11;
+            font-size: 15px;
+            font-weight: 700;
+            margin: 0 0 6px 0;
+        }
+
+        .narrative-event {
+            display: flex;
+            align-items: flex-start;
+            gap: 6px;
+            padding: 2px 0;
+            font-size: 12px;
+            color: #3d2b00;
+            line-height: 1.4;
+        }
+
+        .narrative-icon {
+            flex-shrink: 0;
+            font-size: 14px;
+            line-height: 1.2;
+        }
+
+        .narrative-message {
+            flex: 1;
+        }
+
         @media print {
             body {
                 background-color: white;
@@ -357,6 +390,71 @@
     
     
 <style>
+    .creatures-section {
+        margin-bottom: 12px;
+    }
+
+    .creature-list {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .creature-entry {
+        display: table;
+        table-layout: fixed;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        padding: 8px 12px;
+        width: 100%;
+        box-sizing: border-box;
+        background-color: rgba(255, 255, 255, 0.75);
+    }
+
+    .creature-entry-indicator {
+        display: table-cell;
+        width: 22px;
+        vertical-align: middle;
+        padding-right: 8px;
+        font-size: 1em;
+    }
+
+    .creature-entry-content {
+        display: table-cell;
+        vertical-align: top;
+        line-height: 1.3;
+    }
+
+    .creature-entry-name {
+        font-weight: 600;
+        font-size: 11px;
+        color: #2c3e50;
+    }
+
+    .creature-entry-disposition {
+        font-size: 9px;
+        font-style: italic;
+        margin-left: 6px;
+    }
+
+    .creature-entry-disposition-aggressive {
+        color: #c0392b;
+    }
+
+    .creature-entry-disposition-inquisitive {
+        color: #d35400;
+    }
+
+    .creature-entry-disposition-indifferent {
+        color: #7f8c8d;
+    }
+
+    .creature-entry-description {
+        font-size: 9px;
+        color: #555;
+        margin-top: 2px;
+    }
+
     .location-options {
         display: flex;
         flex-direction: column;
@@ -466,8 +564,13 @@
                 
 
                 
+                
+
+                
                 <div class="content-section main-content debug-main">
                     
+
+
 <h3 class="content-section-title">Choose Your Next Location</h3>
 <p class="content-section-subtitle">Select where you would like to go next from the available paths:</p>
 
@@ -536,7 +639,7 @@
             
             <div class="footer-content-item">
                 <div class="footer-content-label">Turn Sheet Deadline:</div>
-                <div class="footer-content-value">2026-03-19 08:41:07.964262073 &#43;0000 UTC</div>
+                <div class="footer-content-value">2026-03-19 22:52:19.110178024 &#43;0000 UTC</div>
             </div>
             
 

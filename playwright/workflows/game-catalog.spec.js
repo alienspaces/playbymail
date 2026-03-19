@@ -53,10 +53,11 @@ test.describe('Join Game Turn Sheet', () => {
     const catalogGames = page.locator('[data-testid="catalog-games"]')
     await expect(catalogGames).toBeVisible({ timeout: 10000 })
 
-    // Find The Desert Kingdom card (it has email + post delivery options)
+    // Find The Desert Kingdom card (it has email + post delivery options).
+    // Use .first() since multiple instances may exist in seed data.
     const desertCard = catalogGames.locator('.catalog-game', {
       has: page.locator('.game-name', { hasText: 'The Desert Kingdom' })
-    })
+    }).first()
     await expect(desertCard).toBeVisible()
 
     // Click its Join Game link

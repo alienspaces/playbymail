@@ -41,12 +41,12 @@ func (t *Testing) createAdventureGameItemInstanceRec(cfg AdventureGameItemInstan
 	}
 	rec.AdventureGameItemID = gameItemRec.ID
 
-	// The game location instance the item is attached to is retrieved by reference
+	// The game location instance the item is attached to is retrieved by reference, scoped to this game instance
 	if cfg.GameLocationRef != "" {
-		gameLocationInstanceRec, err := t.Data.GetAdventureGameLocationInstanceRecByLocationRef(cfg.GameLocationRef)
+		gameLocationInstanceRec, err := t.Data.GetAdventureGameLocationInstanceRecByLocationRefAndGameInstanceID(cfg.GameLocationRef, gameInstanceRec.ID)
 		if err != nil {
-			l.Error("could not resolve GameLocationRef >%s< to a valid game location ID", cfg.GameLocationRef)
-			return nil, fmt.Errorf("could not resolve GameLocationRef >%s< to a valid game location ID", cfg.GameLocationRef)
+			l.Error("could not resolve GameLocationRef >%s< to a valid game location ID for game instance >%s<", cfg.GameLocationRef, gameInstanceRec.ID)
+			return nil, fmt.Errorf("could not resolve GameLocationRef >%s< to a valid game location ID for game instance >%s<", cfg.GameLocationRef, gameInstanceRec.ID)
 		}
 		rec.AdventureGameLocationInstanceID = nullstring.FromString(gameLocationInstanceRec.ID)
 	}

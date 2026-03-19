@@ -21,12 +21,26 @@ func AdventureGameCreatureRequestToRecord(l logger.Logger, r *http.Request, rec 
 	}
 
 	switch server.HttpMethod(r.Method) {
-	case server.HttpMethodPost:
+	case server.HttpMethodPost, server.HttpMethodPut, server.HttpMethodPatch:
 		rec.Name = req.Name
 		rec.Description = req.Description
-	case server.HttpMethodPut, server.HttpMethodPatch:
-		rec.Name = req.Name
-		rec.Description = req.Description
+		rec.AttackDamage = req.AttackDamage
+		rec.Defense = req.Defense
+		rec.MaxHealth = req.MaxHealth
+		rec.Disposition = req.Disposition
+		if rec.Disposition == "" {
+			rec.Disposition = adventure_game_record.AdventureGameCreatureDispositionAggressive
+		}
+		rec.AttackMethod = req.AttackMethod
+		if rec.AttackMethod == "" {
+			rec.AttackMethod = adventure_game_record.AdventureGameCreatureAttackMethodClaws
+		}
+		rec.AttackDescription = req.AttackDescription
+		rec.BodyDecayTurns = req.BodyDecayTurns
+		if rec.BodyDecayTurns == 0 {
+			rec.BodyDecayTurns = 3
+		}
+		rec.RespawnTurns = req.RespawnTurns
 	default:
 		return nil, fmt.Errorf("unsupported HTTP method")
 	}
@@ -37,13 +51,21 @@ func AdventureGameCreatureRequestToRecord(l logger.Logger, r *http.Request, rec 
 func AdventureGameCreatureRecordToResponseData(l logger.Logger, rec *adventure_game_record.AdventureGameCreature) (*adventure_game_schema.AdventureGameCreatureResponseData, error) {
 	l.Debug("mapping adventure_game_creature record to response data")
 	return &adventure_game_schema.AdventureGameCreatureResponseData{
-		ID:          rec.ID,
-		GameID:      rec.GameID,
-		Name:        rec.Name,
-		Description: rec.Description,
-		CreatedAt:   rec.CreatedAt,
-		UpdatedAt:   nulltime.ToTimePtr(rec.UpdatedAt),
-		DeletedAt:   nulltime.ToTimePtr(rec.DeletedAt),
+		ID:                rec.ID,
+		GameID:            rec.GameID,
+		Name:              rec.Name,
+		Description:       rec.Description,
+		AttackDamage:      rec.AttackDamage,
+		Defense:           rec.Defense,
+		MaxHealth:         rec.MaxHealth,
+		Disposition:       rec.Disposition,
+		AttackMethod:      rec.AttackMethod,
+		AttackDescription: rec.AttackDescription,
+		BodyDecayTurns:    rec.BodyDecayTurns,
+		RespawnTurns:      rec.RespawnTurns,
+		CreatedAt:         rec.CreatedAt,
+		UpdatedAt:         nulltime.ToTimePtr(rec.UpdatedAt),
+		DeletedAt:         nulltime.ToTimePtr(rec.DeletedAt),
 	}, nil
 }
 

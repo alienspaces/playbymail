@@ -66,7 +66,8 @@ const locationLinkFields = [
   { key: 'to_adventure_game_location_id', label: 'To Location', type: 'select', required: true, placeholder: 'Select a location...' },
   { key: 'name', label: 'Link Name', type: 'text', required: true, maxlength: 64, placeholder: 'e.g., North Path, Secret Door' },
   { key: 'description', label: 'Description', type: 'textarea', required: true, maxlength: 255, placeholder: 'Describe the link between locations...', rows: 3 },
-  { key: 'locked_description', label: 'Locked Description', type: 'textarea', required: false, maxlength: 1024, placeholder: 'Shown when the player cannot traverse this link (atmospheric, no spoilers)...', rows: 3 }
+  { key: 'locked_description', label: 'Locked Description', type: 'textarea', required: false, maxlength: 1024, placeholder: 'Shown when the player cannot traverse this link (atmospheric, no spoilers)...', rows: 3 },
+  { key: 'traversal_description', label: 'Traversal Description', type: 'textarea', required: false, maxlength: 1024, placeholder: 'Narrative text describing the experience of travelling through this link, e.g. "You push open the small door and descend into darkness."', rows: 3 }
 ];
 
 // Options for select fields
@@ -120,7 +121,8 @@ function openCreate() {
     to_adventure_game_location_id: '',
     name: '',
     description: '',
-    locked_description: ''
+    locked_description: '',
+    traversal_description: ''
   };
   modalError.value = '';
   showModal.value = true;
@@ -134,7 +136,8 @@ function openEdit(row) {
     to_adventure_game_location_id: row.to_adventure_game_location_id,
     name: row.name,
     description: row.description || '',
-    locked_description: row.locked_description || ''
+    locked_description: row.locked_description || '',
+    traversal_description: row.traversal_description || ''
   };
   modalError.value = '';
   showModal.value = true;

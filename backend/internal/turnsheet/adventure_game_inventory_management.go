@@ -31,8 +31,11 @@ type InventoryManagementData struct {
 	// Equipment slots (simplified to 4 slots for turn sheet display)
 	EquipmentSlots EquipmentSlots `json:"equipment_slots"`
 
-	// Items available at current location
+	// Items available at current location (empty when aggressive creatures are present)
 	LocationItems []LocationItem `json:"location_items"`
+
+	// When true, location items are guarded by hostile creatures and cannot be accessed
+	HasAggressiveCreatures bool `json:"has_aggressive_creatures,omitempty"`
 }
 
 // InventoryItem represents an item in the character's inventory
@@ -43,6 +46,8 @@ type InventoryItem struct {
 	IsEquipped      bool   `json:"is_equipped"`
 	EquipmentSlot   string `json:"equipment_slot,omitempty"`
 	CanEquip        bool   `json:"can_equip"`
+	CanUse          bool   `json:"can_use"`
+	UsesRemaining   int    `json:"uses_remaining"`
 }
 
 // EquipmentSlots represents the equipped items in simplified slots
@@ -79,6 +84,7 @@ type InventoryManagementScanData struct {
 	Drop    []string     `json:"drop,omitempty"`
 	Equip   EquipPayload `json:"equip,omitempty"`
 	Unequip []string     `json:"unequip,omitempty"`
+	Use     []string     `json:"use,omitempty"` // item_instance_ids of usable items to activate
 }
 
 // InventoryManagementScannedDataSchemaName is the filename of the JSON schema for inventory management scanned_data (under schema/turnsheet/adventure_game/).

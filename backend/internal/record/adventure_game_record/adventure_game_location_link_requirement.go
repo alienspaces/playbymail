@@ -25,8 +25,8 @@ const (
 // Condition values for creature-based requirements
 const (
 	AdventureGameLocationLinkRequirementConditionDeadAtLocation      = "dead_at_location"
-	AdventureGameLocationLinkRequirementConditionNoneAliveAtLocation  = "none_alive_at_location"
-	AdventureGameLocationLinkRequirementConditionNoneAliveInGame      = "none_alive_in_game"
+	AdventureGameLocationLinkRequirementConditionNoneAliveAtLocation = "none_alive_at_location"
+	AdventureGameLocationLinkRequirementConditionNoneAliveInGame     = "none_alive_in_game"
 )
 
 const (

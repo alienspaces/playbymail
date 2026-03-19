@@ -69,6 +69,18 @@ func (t *Testing) processAdventureGameConfig(gameConfig GameConfig, gameRec *gam
 		}
 		out.Creatures = append(out.Creatures, creatureRec)
 		l.Debug("created game creature record ID >%s< Name >%s<", creatureRec.ID, creatureRec.Name)
+
+		// Create portrait image for creature if specified
+		if creatureConfig.PortraitImage != nil {
+			cfg := *creatureConfig.PortraitImage
+			cfg.RecordID = creatureRec.ID
+			_, err = t.processCreaturePortraitImageConfig(cfg, gameRec)
+			if err != nil {
+				l.Warn("failed creating creature portrait image >%v<", err)
+				return nil, err
+			}
+			l.Debug("created creature portrait image for creature >%s<", creatureRec.ID)
+		}
 	}
 
 	for _, linkConfig := range gameConfig.AdventureGameLocationLinkConfigs {

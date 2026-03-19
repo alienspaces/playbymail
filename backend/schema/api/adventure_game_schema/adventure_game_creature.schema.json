@@ -26,6 +26,32 @@
         },
         "updated_at": {
             "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/updated_at"
+        },
+        "attack_damage": {
+            "type": "integer"
+        },
+        "defense": {
+            "type": "integer"
+        },
+        "max_health": {
+            "type": "integer"
+        },
+        "disposition": {
+            "type": "string",
+            "enum": ["aggressive", "inquisitive", "indifferent"]
+        },
+        "attack_method": {
+            "type": "string",
+            "enum": ["claws", "bite", "sting", "weapon", "spell", "slam", "touch", "breath", "gaze"]
+        },
+        "attack_description": {
+            "type": "string"
+        },
+        "body_decay_turns": {
+            "type": "integer"
+        },
+        "respawn_turns": {
+            "type": "integer"
         }
     },
     "required": [
@@ -33,6 +59,14 @@
         "game_id",
         "name",
         "description",
+        "attack_damage",
+        "defense",
+        "max_health",
+        "disposition",
+        "attack_method",
+        "attack_description",
+        "body_decay_turns",
+        "respawn_turns",
         "created_at"
     ],
     "additionalProperties": false

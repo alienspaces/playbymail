@@ -11,7 +11,7 @@ import {
 } from '../../../test-utils/studio-resource-helpers';
 
 const mockCreatures = [
-  { id: 1, name: 'Goblin', description: 'Small and green', created_at: '2024-07-10T12:00:00Z' }
+  { id: 1, name: 'Goblin', description: 'Small and green', max_health: 30, attack_damage: 5, defense: 2, created_at: '2024-07-10T12:00:00Z' }
 ];
 
 vi.mock('../../../api/creatures', () => ({
@@ -44,12 +44,18 @@ describe('StudioCreaturesView', () => {
     const headerTexts = ths.map(th => th.text());
     expect(headerTexts).toContain('Name');
     expect(headerTexts).toContain('Description');
+    expect(headerTexts).toContain('HP');
+    expect(headerTexts).toContain('ATK');
+    expect(headerTexts).toContain('DEF');
     expect(headerTexts).toContain('Created');
 
     const tds = wrapper.findAll('td');
     const cellTexts = tds.map(td => td.text());
     expect(cellTexts).toContain('Goblin');
     expect(cellTexts).toContain('Small and green');
+    expect(cellTexts).toContain('30');
+    expect(cellTexts).toContain('5');
+    expect(cellTexts).toContain('2');
   });
 
   it('shows loading state', async () => {

@@ -13,6 +13,7 @@ const ScannedDataSchemaLocation = "turnsheet/adventure_game"
 var scannedDataSchemaNameBySheetType = map[string]string{
 	adventure_game_record.AdventureGameTurnSheetTypeLocationChoice:      LocationChoiceScannedDataSchemaName,
 	adventure_game_record.AdventureGameTurnSheetTypeInventoryManagement: InventoryManagementScannedDataSchemaName,
+	adventure_game_record.AdventureGameTurnSheetTypeCreatureEncounter:   MonsterEncounterScannedDataSchemaName,
 }
 
 // ScannedDataSchemaName returns the JSON schema filename for the given sheet type's scanned_data,

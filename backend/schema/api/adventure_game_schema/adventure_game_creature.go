@@ -8,13 +8,21 @@ import (
 
 // AdventureGameCreatureResponseData -
 type AdventureGameCreatureResponseData struct {
-	ID          string     `json:"id"`
-	GameID      string     `json:"game_id"`
-	Name        string     `json:"name"`
-	Description string     `json:"description"`
-	CreatedAt   time.Time  `json:"created_at"`
-	UpdatedAt   *time.Time `json:"updated_at,omitempty"`
-	DeletedAt   *time.Time `json:"deleted_at,omitempty"`
+	ID                string     `json:"id"`
+	GameID            string     `json:"game_id"`
+	Name              string     `json:"name"`
+	Description       string     `json:"description"`
+	AttackDamage      int        `json:"attack_damage"`
+	Defense           int        `json:"defense"`
+	MaxHealth         int        `json:"max_health"`
+	Disposition       string     `json:"disposition"`
+	AttackMethod      string     `json:"attack_method"`
+	AttackDescription string     `json:"attack_description"`
+	BodyDecayTurns    int        `json:"body_decay_turns"`
+	RespawnTurns      int        `json:"respawn_turns"`
+	CreatedAt         time.Time  `json:"created_at"`
+	UpdatedAt         *time.Time `json:"updated_at,omitempty"`
+	DeletedAt         *time.Time `json:"deleted_at,omitempty"`
 }
 
 type AdventureGameCreatureResponse struct {
@@ -31,8 +39,16 @@ type AdventureGameCreatureCollectionResponse struct {
 
 type AdventureGameCreatureRequest struct {
 	common_schema.Request
-	Name        string `json:"name"`
-	Description string `json:"description"`
+	Name              string `json:"name"`
+	Description       string `json:"description"`
+	AttackDamage      int    `json:"attack_damage,omitempty"`
+	Defense           int    `json:"defense,omitempty"`
+	MaxHealth         int    `json:"max_health,omitempty"`
+	Disposition       string `json:"disposition,omitempty"`
+	AttackMethod      string `json:"attack_method,omitempty"`
+	AttackDescription string `json:"attack_description,omitempty"`
+	BodyDecayTurns    int    `json:"body_decay_turns,omitempty"`
+	RespawnTurns      int    `json:"respawn_turns,omitempty"`
 }
 
 type AdventureGameCreatureQueryParams struct {

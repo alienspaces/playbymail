@@ -59,10 +59,10 @@ test.describe('Turn Sheet Equip E2E', () => {
     const catalogGames = page.locator('[data-testid="catalog-games"]')
     await expect(catalogGames).toBeVisible({ timeout: 10000 })
 
-    // Find The Desert Kingdom card
+    // Find The Desert Kingdom card. Use .first() since multiple instances may exist.
     const desertCard = catalogGames.locator('.catalog-game', {
       has: page.locator('.game-name', { hasText: 'The Desert Kingdom' }),
-    })
+    }).first()
     await expect(desertCard).toBeVisible({ timeout: 5000 })
 
     const joinHref = await desertCard.locator('.join-button').getAttribute('href')

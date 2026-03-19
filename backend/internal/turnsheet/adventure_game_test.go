@@ -14,7 +14,7 @@ import (
 // Common test utilities for adventure game turn sheet tests.
 // This file provides shared functions and test scaffolding that can be used
 // across all adventure game turn sheet test files (join game, location choice,
-// combat, inventory, etc.). As new turn sheet types are added, common patterns
+// creature encounter, inventory, etc.). As new turn sheet types are added, common patterns
 // should be extracted here to maintain consistency and reduce duplication.
 
 // Test IDs for generating deterministic turn sheet codes

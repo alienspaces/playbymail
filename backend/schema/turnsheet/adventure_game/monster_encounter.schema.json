@@ -1,0 +1,31 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "http://playbymail.games/schema/turnsheet/adventure_game/monster_encounter.schema.json",
+    "title": "ScannedDataAdventureGameMonsterEncounter",
+    "description": "scanned_data shape for turn sheet type adventure_game_monster. Array of up to 3 combat actions.",
+    "type": "object",
+    "properties": {
+        "actions": {
+            "type": "array",
+            "maxItems": 3,
+            "items": {
+                "type": "object",
+                "properties": {
+                    "action_type": {
+                        "type": "string",
+                        "enum": ["do_nothing", "attack"],
+                        "description": "The type of combat action"
+                    },
+                    "target_creature_instance_id": {
+                        "type": "string",
+                        "description": "The creature instance ID to attack (required when action_type is attack)"
+                    }
+                },
+                "required": ["action_type"],
+                "additionalProperties": false
+            },
+            "description": "Ordered list of combat actions for this turn (up to 3)"
+        }
+    },
+    "additionalProperties": true
+}

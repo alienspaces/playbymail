@@ -21,11 +21,20 @@
         },
         "purpose": {
             "type": "string",
-            "enum": ["traverse", "visible"]
+            "enum": [
+                "traverse",
+                "visible"
+            ]
         },
         "condition": {
             "type": "string",
-            "enum": ["in_inventory", "equipped", "dead_at_location", "none_alive_at_location", "none_alive_in_game"]
+            "enum": [
+                "in_inventory",
+                "equipped",
+                "dead_at_location",
+                "none_alive_at_location",
+                "none_alive_in_game"
+            ]
         },
         "quantity": {
             "minimum": 1,

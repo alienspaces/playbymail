@@ -16,6 +16,7 @@ const (
 	FieldAdventureGameLocationLinkToAdventureGameLocationID   = "to_adventure_game_location_id"
 	FieldAdventureGameLocationLinkDescription                 = "description"
 	FieldAdventureGameLocationLinkLockedDescription           = "locked_description"
+	FieldAdventureGameLocationLinkTraversalDescription        = "traversal_description"
 	FieldAdventureGameLocationLinkName                        = "name"
 	FieldAdventureGameLocationLinkCreatedAt                   = "created_at"
 	FieldAdventureGameLocationLinkUpdatedAt                   = "updated_at"
@@ -26,9 +27,10 @@ type AdventureGameLocationLink struct {
 	GameID                      string         `db:"game_id"`
 	FromAdventureGameLocationID string         `db:"from_adventure_game_location_id"`
 	ToAdventureGameLocationID   string         `db:"to_adventure_game_location_id"`
+	Name                        string         `db:"name"`
 	Description                 string         `db:"description"`
 	LockedDescription           sql.NullString `db:"locked_description"`
-	Name                        string         `db:"name"`
+	TraversalDescription        sql.NullString `db:"traversal_description"`
 }
 
 func (r *AdventureGameLocationLink) ToNamedArgs() pgx.NamedArgs {
@@ -36,8 +38,9 @@ func (r *AdventureGameLocationLink) ToNamedArgs() pgx.NamedArgs {
 	args[FieldAdventureGameLocationLinkGameID] = r.GameID
 	args[FieldAdventureGameLocationLinkFromAdventureGameLocationID] = r.FromAdventureGameLocationID
 	args[FieldAdventureGameLocationLinkToAdventureGameLocationID] = r.ToAdventureGameLocationID
+	args[FieldAdventureGameLocationLinkName] = r.Name
 	args[FieldAdventureGameLocationLinkDescription] = r.Description
 	args[FieldAdventureGameLocationLinkLockedDescription] = r.LockedDescription
-	args[FieldAdventureGameLocationLinkName] = r.Name
+	args[FieldAdventureGameLocationLinkTraversalDescription] = r.TraversalDescription
 	return args
 }

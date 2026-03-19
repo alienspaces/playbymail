@@ -1,0 +1,296 @@
+<template>
+    <div class="creature-portrait-upload">
+        <h3 class="upload-title">Creature Portrait Image</h3>
+        <p class="upload-description">
+            Upload a portrait image for this creature. The portrait will appear on the monster encounter
+            turn sheet. Accepts WebP, PNG, or JPEG format, max 1MB.
+        </p>
+
+        <div class="image-section">
+            <div class="image-preview-container">
+                <div v-if="image" class="image-preview">
+                    <div class="image-info">
+                        <span class="image-dimensions">
+                            {{ image.width }} × {{ image.height }}px
+                        </span>
+                        <span class="image-size">
+                            {{ formatFileSize(image.file_size) }}
+                        </span>
+                    </div>
+                    <button class="remove-btn" @click="removeImage" :disabled="loading">
+                        ✕
+                    </button>
+                </div>
+                <div v-else class="image-placeholder">
+                    <span class="placeholder-text">No portrait image uploaded</span>
+                </div>
+            </div>
+
+            <div class="upload-controls">
+                <input :id="fileInputId" type="file" accept="image/webp,image/png,image/jpeg" class="file-input"
+                    @change="handleFileSelect" :disabled="loading" />
+                <label :for="fileInputId" class="upload-btn">
+                    {{ loading ? 'Uploading...' : (image ? 'Replace' : 'Upload') }}
+                </label>
+            </div>
+
+            <div v-if="error" class="error-message">
+                {{ error }}
+            </div>
+        </div>
+    </div>
+</template>
+
+<script setup>
+import { ref, computed, onMounted, watch } from 'vue';
+import {
+    uploadCreatureImage,
+    getCreatureImage,
+    deleteCreatureImage
+} from '../api/creatureImages';
+
+defineOptions({
+    name: 'CreaturePortraitUpload'
+});
+
+const props = defineProps({
+    gameId: {
+        type: String,
+        required: true
+    },
+    creatureId: {
+        type: String,
+        required: true
+    }
+});
+
+const emit = defineEmits(['imageUpdated', 'loadingChanged']);
+
+const image = ref(null);
+const loading = ref(false);
+const error = ref(null);
+
+const fileInputId = computed(() => `file-creature-${props.creatureId}`);
+
+const isUploading = computed(() => loading.value);
+
+watch(isUploading, (newValue) => {
+    emit('loadingChanged', newValue);
+});
+
+defineExpose({ isUploading });
+
+async function loadImage() {
+    if (!props.gameId || !props.creatureId) return;
+
+    try {
+        const response = await getCreatureImage(props.gameId, props.creatureId);
+        if (response.data && response.data.portrait) {
+            image.value = response.data.portrait;
+        } else {
+            image.value = null;
+        }
+    } catch (err) {
+        console.error('Failed to load creature portrait image:', err);
+        image.value = null;
+    }
+}
+
+async function handleFileSelect(event) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    error.value = null;
+
+    const validTypes = ['image/webp', 'image/png', 'image/jpeg'];
+    if (!validTypes.includes(file.type)) {
+        error.value = 'Invalid file type. Please use WebP, PNG, or JPEG.';
+        event.target.value = '';
+        return;
+    }
+
+    if (file.size > 1048576) {
+        error.value = 'File too large. Maximum size is 1MB.';
+        event.target.value = '';
+        return;
+    }
+
+    loading.value = true;
+    emit('loadingChanged', true);
+
+    try {
+        const response = await uploadCreatureImage(props.gameId, props.creatureId, file);
+        if (response.data) {
+            image.value = response.data;
+            emit('imageUpdated');
+        }
+    } catch (err) {
+        console.error('Failed to upload creature portrait:', err);
+        error.value = err.message || 'Failed to upload image';
+    } finally {
+        loading.value = false;
+        emit('loadingChanged', false);
+        event.target.value = '';
+    }
+}
+
+async function removeImage() {
+    if (!image.value) return;
+
+    loading.value = true;
+    error.value = null;
+    emit('loadingChanged', true);
+
+    try {
+        await deleteCreatureImage(props.gameId, props.creatureId);
+        image.value = null;
+        emit('imageUpdated');
+    } catch (err) {
+        error.value = err.message || 'Failed to delete image';
+    } finally {
+        loading.value = false;
+        emit('loadingChanged', false);
+    }
+}
+
+function formatFileSize(bytes) {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+}
+
+onMounted(() => {
+    loadImage();
+});
+
+watch(() => [props.gameId, props.creatureId], () => {
+    loadImage();
+});
+</script>
+
+<style scoped>
+.creature-portrait-upload {
+    padding: var(--space-md);
+    background: var(--color-bg-light);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border);
+}
+
+.upload-title {
+    margin: 0 0 var(--space-xs) 0;
+    font-size: var(--font-size-md);
+    color: var(--color-text);
+}
+
+.upload-description {
+    margin: 0 0 var(--space-md) 0;
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+}
+
+.image-section {
+    padding: var(--space-sm);
+    background: var(--color-bg);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-border-light);
+}
+
+.image-preview-container {
+    margin-bottom: var(--space-sm);
+}
+
+.image-preview {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-sm);
+    background: var(--color-success-light, #e8f5e9);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-success, #4caf50);
+}
+
+.image-info {
+    display: flex;
+    gap: var(--space-md);
+    font-size: var(--font-size-sm);
+    color: var(--color-text);
+}
+
+.image-dimensions {
+    font-weight: var(--font-weight-bold);
+}
+
+.image-size {
+    color: var(--color-text-muted);
+}
+
+.remove-btn {
+    background: var(--color-danger);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    font-size: var(--font-size-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.remove-btn:hover:not(:disabled) {
+    background: var(--color-danger-dark);
+}
+
+.remove-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.image-placeholder {
+    padding: var(--space-sm);
+    background: var(--color-bg-light);
+    border-radius: var(--radius-sm);
+    border: 1px dashed var(--color-border);
+    text-align: center;
+}
+
+.placeholder-text {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+}
+
+.upload-controls {
+    display: flex;
+    gap: var(--space-sm);
+}
+
+.file-input {
+    display: none;
+}
+
+.upload-btn {
+    display: inline-block;
+    padding: var(--space-xs) var(--space-sm);
+    background: var(--color-button);
+    color: var(--color-text-light);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-bold);
+    transition: background 0.2s ease;
+}
+
+.upload-btn:hover {
+    background: var(--color-button-hover);
+}
+
+.error-message {
+    margin-top: var(--space-xs);
+    padding: var(--space-xs) var(--space-sm);
+    background: var(--color-danger-light, #ffebee);
+    color: var(--color-danger);
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-sm);
+}
+</style>

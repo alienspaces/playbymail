@@ -26,8 +26,6 @@ func (t *Testing) createAdventureGameCreatureInstanceRec(cfg AdventureGameCreatu
 		rec = &adventure_game_record.AdventureGameCreatureInstance{}
 	}
 
-	rec = t.applyAdventureGameCreatureInstanceRecDefaultValues(rec)
-
 	rec.GameID = gameInstanceRec.GameID
 	rec.GameInstanceID = gameInstanceRec.ID
 
@@ -39,10 +37,15 @@ func (t *Testing) createAdventureGameCreatureInstanceRec(cfg AdventureGameCreatu
 	}
 	rec.AdventureGameCreatureID = creatureRec.ID
 
-	locationInstanceRec, err := t.Data.GetAdventureGameLocationInstanceRecByLocationRef(cfg.GameLocationRef)
+	// Default starting health to the creature definition's max_health.
+	if rec.Health == 0 {
+		rec.Health = creatureRec.MaxHealth
+	}
+
+	locationInstanceRec, err := t.Data.GetAdventureGameLocationInstanceRecByLocationRefAndGameInstanceID(cfg.GameLocationRef, gameInstanceRec.ID)
 	if err != nil {
-		l.Error("could not resolve GameLocationRef >%s< to a valid game location instance ID", cfg.GameLocationRef)
-		return nil, fmt.Errorf("could not resolve GameLocationRef >%s< to a valid game location instance ID", cfg.GameLocationRef)
+		l.Error("could not resolve GameLocationRef >%s< to a valid game location instance ID for game instance >%s<", cfg.GameLocationRef, gameInstanceRec.ID)
+		return nil, fmt.Errorf("could not resolve GameLocationRef >%s< to a valid game location instance ID for game instance >%s<", cfg.GameLocationRef, gameInstanceRec.ID)
 	}
 	rec.AdventureGameLocationInstanceID = locationInstanceRec.ID
 
@@ -67,13 +70,4 @@ func (t *Testing) createAdventureGameCreatureInstanceRec(cfg AdventureGameCreatu
 	}
 
 	return createdRec, nil
-}
-
-func (t *Testing) applyAdventureGameCreatureInstanceRecDefaultValues(rec *adventure_game_record.AdventureGameCreatureInstance) *adventure_game_record.AdventureGameCreatureInstance {
-	if rec == nil {
-		rec = &adventure_game_record.AdventureGameCreatureInstance{}
-	}
-	rec.Health = 100
-
-	return rec
 }

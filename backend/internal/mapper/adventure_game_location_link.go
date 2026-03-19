@@ -23,16 +23,11 @@ func AdventureGameLocationLinkRequestToRecord(l logger.Logger, r *http.Request, 
 	}
 
 	switch server.HttpMethod(r.Method) {
-	case server.HttpMethodPost:
+	case server.HttpMethodPost, server.HttpMethodPut, server.HttpMethodPatch:
 		rec.Name = req.Name
 		rec.Description = req.Description
 		rec.LockedDescription = nullstring.FromString(req.LockedDescription)
-		rec.FromAdventureGameLocationID = req.FromAdventureGameLocationID
-		rec.ToAdventureGameLocationID = req.ToAdventureGameLocationID
-	case server.HttpMethodPut, server.HttpMethodPatch:
-		rec.Name = req.Name
-		rec.Description = req.Description
-		rec.LockedDescription = nullstring.FromString(req.LockedDescription)
+		rec.TraversalDescription = nullstring.FromString(req.TraversalDescription)
 		rec.FromAdventureGameLocationID = req.FromAdventureGameLocationID
 		rec.ToAdventureGameLocationID = req.ToAdventureGameLocationID
 	default:
@@ -50,6 +45,7 @@ func AdventureGameLocationLinkRecordToResponseData(l logger.Logger, rec *adventu
 		Name:                        rec.Name,
 		Description:                 rec.Description,
 		LockedDescription:           nullstring.ToString(rec.LockedDescription),
+		TraversalDescription:        nullstring.ToString(rec.TraversalDescription),
 		FromAdventureGameLocationID: rec.FromAdventureGameLocationID,
 		ToAdventureGameLocationID:   rec.ToAdventureGameLocationID,
 		CreatedAt:                   rec.CreatedAt,

@@ -39,10 +39,10 @@ func (t *Testing) createAdventureGameCharacterInstanceRec(cfg AdventureGameChara
 	}
 	rec.AdventureGameCharacterID = characterRec.ID
 
-	locationInstanceRec, err := t.Data.GetAdventureGameLocationInstanceRecByLocationRef(cfg.GameLocationRef)
+	locationInstanceRec, err := t.Data.GetAdventureGameLocationInstanceRecByLocationRefAndGameInstanceID(cfg.GameLocationRef, gameInstanceRec.ID)
 	if err != nil {
-		l.Error("could not resolve GameLocationRef >%s< to a valid game location instance ID", cfg.GameLocationRef)
-		return nil, fmt.Errorf("could not resolve GameLocationRef >%s< to a valid game location instance ID", cfg.GameLocationRef)
+		l.Error("could not resolve GameLocationRef >%s< to a valid game location instance ID for game instance >%s<", cfg.GameLocationRef, gameInstanceRec.ID)
+		return nil, fmt.Errorf("could not resolve GameLocationRef >%s< to a valid game location instance ID for game instance >%s<", cfg.GameLocationRef, gameInstanceRec.ID)
 	}
 	rec.AdventureGameLocationInstanceID = locationInstanceRec.ID
 
@@ -76,6 +76,9 @@ func (t *Testing) applyAdventureGameCharacterInstanceRecDefaultValues(rec *adven
 	rec.Health = 100
 	if rec.InventoryCapacity == 0 {
 		rec.InventoryCapacity = 10
+	}
+	if len(rec.LastTurnEvents) == 0 {
+		rec.LastTurnEvents = []byte("[]")
 	}
 	return rec
 }

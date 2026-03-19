@@ -26,8 +26,11 @@ func TestCreateOne(t *testing.T) {
 				gameRec, err := d.GetGameRecByRef(harness.GameOneRef)
 				require.NoError(t, err, "GetGameRecByRef returns without error")
 				return &adventure_game_record.AdventureGameCreature{
-					Name:   harness.UniqueName(gofakeit.Name()),
-					GameID: gameRec.ID,
+					Name:         harness.UniqueName(gofakeit.Name()),
+					GameID:       gameRec.ID,
+					Disposition:  adventure_game_record.AdventureGameCreatureDispositionAggressive,
+					AttackMethod: adventure_game_record.AdventureGameCreatureAttackMethodClaws,
+					BodyDecayTurns: 3,
 				}
 			},
 			hasErr: false,
@@ -38,8 +41,11 @@ func TestCreateOne(t *testing.T) {
 				gameRec, err := d.GetGameRecByRef(harness.GameOneRef)
 				require.NoError(t, err, "GetGameRecByRef returns without error")
 				rec := &adventure_game_record.AdventureGameCreature{
-					Name:   harness.UniqueName(gofakeit.Name()),
-					GameID: gameRec.ID,
+					Name:           harness.UniqueName(gofakeit.Name()),
+					GameID:         gameRec.ID,
+					Disposition:    adventure_game_record.AdventureGameCreatureDispositionAggressive,
+					AttackMethod:   adventure_game_record.AdventureGameCreatureAttackMethodClaws,
+					BodyDecayTurns: 3,
 				}
 				id, _ := uuid.NewRandom()
 				rec.ID = id.String()

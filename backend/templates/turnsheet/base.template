@@ -324,6 +324,81 @@
             box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
         }
         
+        /*
+         * Two-column layout for main content + event log.
+         * Uses display:table so both columns stretch to the same height.
+         * Avoids CSS Grid/Flexbox per html-templates rule for broad compatibility.
+         */
+        .sheet-columns {
+            display: table;
+            table-layout: fixed;
+            width: 100%;
+        }
+
+        .sheet-col-content {
+            display: table-cell;
+            width: 65%;
+            vertical-align: top;
+            padding: 2mm 16px;
+            box-sizing: border-box;
+            background-color: rgba(255, 255, 255, 0.75);
+            border-radius: 8px;
+        }
+
+        .sheet-col-log {
+            display: table-cell;
+            width: 35%;
+            vertical-align: top;
+            padding-left: 8px;
+            box-sizing: border-box;
+        }
+
+        /* Narrative "What Happened" section */
+        .narrative-content {
+            background-color: rgba(255, 248, 230, 0.92);
+            border-left: 3px solid #b8860b;
+            border-radius: 8px;
+            padding: 2mm 10px;
+            box-sizing: border-box;
+            height: 100%;
+        }
+
+        .narrative-title {
+            color: #6b4c11;
+            font-size: 15px;
+            font-weight: 700;
+            margin: 0 0 6px 0;
+        }
+
+        .narrative-event {
+            display: table;
+            width: 100%;
+            padding: 2px 0;
+            font-size: 11px;
+            color: #3d2b00;
+            line-height: 1.4;
+        }
+
+        .narrative-icon {
+            display: table-cell;
+            width: 18px;
+            vertical-align: top;
+            font-size: 12px;
+            line-height: 1.2;
+        }
+
+        .narrative-message {
+            display: table-cell;
+            vertical-align: top;
+        }
+
+        .narrative-empty {
+            font-size: 11px;
+            color: #9a7a3a;
+            font-style: italic;
+            margin-top: 4px;
+        }
+
         @media print {
             body {
                 background-color: white;
@@ -367,6 +442,16 @@
                 margin: 0;
                 padding: 4mm 2mm;
             }
+
+            /*
+             * Fix the two-column area to a consistent height so print output
+             * always fills the available A4 space (page minus header ~46mm,
+             * instructions ~10mm, footer ~12mm, margins ~12mm ≈ 217mm remaining).
+             */
+            .sheet-columns {
+                height: 185mm;
+                overflow: hidden;
+            }
         }
     </style>
     
@@ -407,9 +492,28 @@
                 <div class="content-section instruction-content instruction-content--empty"></div>
                 {{end}}
 
-                <!-- Main content area -->
-                <div class="content-section main-content debug-main">
-                    {{template "content" .}}
+                <!-- Main content area: always two columns — left for actions, right for event log -->
+                <div class="content-section main-content debug-main" style="padding: 0; background-color: transparent;">
+                    <div class="sheet-columns">
+                        <div class="sheet-col-content">
+                            {{template "content" .}}
+                        </div>
+                        <div class="sheet-col-log">
+                            <div class="narrative-content">
+                                <h3 class="narrative-title">What Happened</h3>
+                                {{if .TurnEvents}}
+                                {{range .TurnEvents}}
+                                <div class="narrative-event">
+                                    <span class="narrative-icon">{{.Icon}}</span>
+                                    <span class="narrative-message">{{.Message}}</span>
+                                </div>
+                                {{end}}
+                                {{else}}
+                                <p class="narrative-empty">Nothing to report this turn.</p>
+                                {{end}}
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

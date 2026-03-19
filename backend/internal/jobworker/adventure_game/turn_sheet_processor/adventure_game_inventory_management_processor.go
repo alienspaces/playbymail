@@ -59,36 +59,60 @@ func (p *AdventureGameInventoryManagementProcessor) ProcessTurnSheetResponse(ctx
 	}
 
 	// Step 2: Process actions in order: unequip → drop → pick up → equip
-	// This ensures items are properly moved before equipping
+	// This ensures items are properly moved before equipping.
+	// charNeedsUpdate is set whenever the character record is mutated (health change or turn event
+	// appended) so we only issue one UpdateAdventureGameCharacterInstanceRec at the end.
+	charNeedsUpdate := false
 
 	// Unequip items first
 	for _, itemInstanceID := range scanData.Unequip {
 		l.Info("unequipping item >%s<", itemInstanceID)
+		name := p.resolveItemName(l, itemInstanceID)
 		_, err := p.Domain.UnequipAdventureGameItemInstanceRec(characterInstanceRec.ID, itemInstanceID)
 		if err != nil {
 			l.Warn("failed to unequip item >%s< >%v<", itemInstanceID, err)
 			return fmt.Errorf("failed to unequip item %s: %w", itemInstanceID, err)
 		}
+		_ = turnsheet.AppendTurnEvent(characterInstanceRec, turnsheet.TurnEvent{
+			Category: turnsheet.TurnEventCategoryInventory,
+			Icon:     turnsheet.TurnEventIconInventory,
+			Message:  fmt.Sprintf("You moved %s to your backpack.", name),
+		})
+		charNeedsUpdate = true
 	}
 
 	// Drop items
 	for _, itemInstanceID := range scanData.Drop {
 		l.Info("dropping item >%s<", itemInstanceID)
+		name := p.resolveItemName(l, itemInstanceID)
 		_, err := p.Domain.DropAdventureGameItemInstanceRec(characterInstanceRec.ID, itemInstanceID)
 		if err != nil {
 			l.Warn("failed to drop item >%s< >%v<", itemInstanceID, err)
 			return fmt.Errorf("failed to drop item %s: %w", itemInstanceID, err)
 		}
+		_ = turnsheet.AppendTurnEvent(characterInstanceRec, turnsheet.TurnEvent{
+			Category: turnsheet.TurnEventCategoryInventory,
+			Icon:     turnsheet.TurnEventIconInventory,
+			Message:  fmt.Sprintf("You dropped %s.", name),
+		})
+		charNeedsUpdate = true
 	}
 
 	// Pick up items
 	for _, itemInstanceID := range scanData.PickUp {
 		l.Info("picking up item >%s<", itemInstanceID)
+		name := p.resolveItemName(l, itemInstanceID)
 		_, err := p.Domain.PickUpAdventureGameItemInstanceRec(characterInstanceRec.ID, itemInstanceID)
 		if err != nil {
 			l.Warn("failed to pick up item >%s< >%v<", itemInstanceID, err)
 			return fmt.Errorf("failed to pick up item %s: %w", itemInstanceID, err)
 		}
+		_ = turnsheet.AppendTurnEvent(characterInstanceRec, turnsheet.TurnEvent{
+			Category: turnsheet.TurnEventCategoryInventory,
+			Icon:     turnsheet.TurnEventIconInventory,
+			Message:  fmt.Sprintf("You picked up %s.", name),
+		})
+		charNeedsUpdate = true
 	}
 
 	// Equip items last (after pick up, so items are in inventory).
@@ -130,11 +154,91 @@ func (p *AdventureGameInventoryManagementProcessor) ProcessTurnSheetResponse(ctx
 			l.Warn("failed to equip item >%s< >%v<", action.ItemInstanceID, err)
 			return fmt.Errorf("failed to equip item %s: %w", action.ItemInstanceID, err)
 		}
+		_ = turnsheet.AppendTurnEvent(characterInstanceRec, turnsheet.TurnEvent{
+			Category: turnsheet.TurnEventCategoryInventory,
+			Icon:     turnsheet.TurnEventIconInventory,
+			Message:  fmt.Sprintf("You equipped %s.", itemDef.Name),
+		})
+		charNeedsUpdate = true
+	}
+
+	// Process Use item actions.
+	for _, itemInstanceID := range scanData.Use {
+		l.Info("using item >%s<", itemInstanceID)
+
+		itemInstance, err := p.Domain.GetAdventureGameItemInstanceRec(itemInstanceID, nil)
+		if err != nil {
+			l.Warn("failed to get item instance >%s< >%v<", itemInstanceID, err)
+			return fmt.Errorf("failed to get item instance %s: %w", itemInstanceID, err)
+		}
+
+		itemDef, err := p.Domain.GetAdventureGameItemRec(itemInstance.AdventureGameItemID, nil)
+		if err != nil {
+			l.Warn("failed to get item definition >%s< >%v<", itemInstance.AdventureGameItemID, err)
+			return fmt.Errorf("failed to get item definition %s: %w", itemInstanceID, err)
+		}
+
+		if !itemDef.CanBeUsed {
+			l.Warn("item >%s< is not usable — skipping", itemInstanceID)
+			continue
+		}
+		if itemInstance.UsesRemaining <= 0 {
+			l.Warn("item >%s< has no uses remaining — skipping", itemInstanceID)
+			continue
+		}
+
+		// Apply heal effect to character.
+		if itemDef.HealAmount > 0 {
+			characterInstanceRec.Health += itemDef.HealAmount
+			if characterInstanceRec.Health > 100 {
+				characterInstanceRec.Health = 100
+			}
+			l.Info("item >%s< healed character for >%d< (health now %d)", itemDef.Name, itemDef.HealAmount, characterInstanceRec.Health)
+			_ = turnsheet.AppendTurnEvent(characterInstanceRec, turnsheet.TurnEvent{
+				Category: turnsheet.TurnEventCategoryInventory,
+				Icon:     turnsheet.TurnEventIconHeal,
+				Message:  fmt.Sprintf("You used a %s and recovered %d health.", itemDef.Name, itemDef.HealAmount),
+			})
+		}
+
+		// Decrement uses and mark as used when exhausted.
+		itemInstance.UsesRemaining--
+		if itemInstance.UsesRemaining <= 0 {
+			itemInstance.IsUsed = true
+		}
+		if _, err := p.Domain.UpdateAdventureGameItemInstanceRec(itemInstance); err != nil {
+			l.Warn("failed to update item instance after use >%v<", err)
+		}
+		charNeedsUpdate = true
+	}
+
+	// Persist character record if health or turn events changed.
+	if charNeedsUpdate {
+		_, err := p.Domain.UpdateAdventureGameCharacterInstanceRec(characterInstanceRec)
+		if err != nil {
+			return fmt.Errorf("failed to save character instance after inventory actions: %w", err)
+		}
 	}
 
 	l.Info("successfully processed inventory management actions for character >%s<", characterInstanceRec.ID)
 
 	return nil
+}
+
+// resolveItemName looks up the item definition name for a given item instance ID.
+// Returns "an item" as a fallback if the lookup fails, so event generation is non-fatal.
+func (p *AdventureGameInventoryManagementProcessor) resolveItemName(l logger.Logger, itemInstanceID string) string {
+	itemRec, err := p.Domain.GetAdventureGameItemInstanceRec(itemInstanceID, nil)
+	if err != nil {
+		l.Warn("resolveItemName: failed to get item instance >%s< >%v<", itemInstanceID, err)
+		return "an item"
+	}
+	itemDef, err := p.Domain.GetAdventureGameItemRec(itemRec.AdventureGameItemID, nil)
+	if err != nil {
+		l.Warn("resolveItemName: failed to get item definition >%s< >%v<", itemRec.AdventureGameItemID, err)
+		return "an item"
+	}
+	return itemDef.Name
 }
 
 // CreateNextTurnSheet creates a new inventory management turn sheet for a character (implements TurnSheetProcessor interface)
@@ -185,11 +289,20 @@ func (p *AdventureGameInventoryManagementProcessor) CreateNextTurnSheet(ctx cont
 		return nil, fmt.Errorf("failed to get character inventory: %w", err)
 	}
 
-	// Step 7: Get items at current location
-	locationItems, err := p.Domain.GetAdventureGameItemInstanceRecsByLocationInstance(locationInstanceRec.ID)
+	// Step 7: Check for aggressive creatures at the current location.
+	hasAggressiveCreatures, err := HasAggressiveCreaturesAtLocation(p.Domain, gameInstanceRec.ID, locationInstanceRec.ID)
 	if err != nil {
-		l.Warn("failed to get location items >%v<", err)
-		return nil, fmt.Errorf("failed to get location items: %w", err)
+		l.Warn("failed to check for creatures at location >%v<", err)
+	}
+
+	// Step 7a: Get items at current location (empty if aggressive creatures are present).
+	var locationItems []*adventure_game_record.AdventureGameItemInstance
+	if !hasAggressiveCreatures {
+		locationItems, err = p.Domain.GetAdventureGameItemInstanceRecsByLocationInstance(locationInstanceRec.ID)
+		if err != nil {
+			l.Warn("failed to get location items >%v<", err)
+			return nil, fmt.Errorf("failed to get location items: %w", err)
+		}
 	}
 
 	// Step 8: Build inventory items list with item definitions
@@ -210,14 +323,14 @@ func (p *AdventureGameInventoryManagementProcessor) CreateNextTurnSheet(ctx cont
 			slot := itemInstance.EquipmentSlot.String
 			// Map specific slots to display slots
 			switch {
-			case slot == "weapon":
-				displaySlot = "weapon"
-			case strings.HasPrefix(slot, "armor_"):
-				displaySlot = "armor"
-			case strings.HasPrefix(slot, "clothing_"):
-				displaySlot = "clothing"
-			case strings.HasPrefix(slot, "jewelry_"):
-				displaySlot = "jewelry"
+			case slot == adventure_game_record.AdventureGameItemEquipmentSlotWeapon:
+				displaySlot = adventure_game_record.AdventureGameItemEquipmentSlotWeapon
+			case strings.HasPrefix(slot, "armor_"), slot == adventure_game_record.AdventureGameItemEquipmentSlotArmor:
+				displaySlot = adventure_game_record.AdventureGameItemEquipmentSlotArmor
+			case strings.HasPrefix(slot, "clothing_"), slot == adventure_game_record.AdventureGameItemEquipmentSlotClothing:
+				displaySlot = adventure_game_record.AdventureGameItemEquipmentSlotClothing
+			case strings.HasPrefix(slot, "jewelry_"), slot == adventure_game_record.AdventureGameItemEquipmentSlotJewelry:
+				displaySlot = adventure_game_record.AdventureGameItemEquipmentSlotJewelry
 			default:
 				displaySlot = slot
 			}
@@ -230,6 +343,8 @@ func (p *AdventureGameInventoryManagementProcessor) CreateNextTurnSheet(ctx cont
 			IsEquipped:      itemInstance.IsEquipped,
 			EquipmentSlot:   displaySlot,
 			CanEquip:        itemDef.CanBeEquipped,
+			CanUse:          itemDef.CanBeUsed,
+			UsesRemaining:   itemInstance.UsesRemaining,
 		}
 		inventoryItemList = append(inventoryItemList, inventoryItem)
 	}
@@ -240,10 +355,10 @@ func (p *AdventureGameInventoryManagementProcessor) CreateNextTurnSheet(ctx cont
 
 	// Define slot priority for sorting equipped items
 	slotPriority := map[string]int{
-		"weapon":   1,
-		"armor":    2,
-		"clothing": 3,
-		"jewelry":  4,
+		adventure_game_record.AdventureGameItemEquipmentSlotWeapon:   1,
+		adventure_game_record.AdventureGameItemEquipmentSlotArmor:    2,
+		adventure_game_record.AdventureGameItemEquipmentSlotClothing: 3,
+		adventure_game_record.AdventureGameItemEquipmentSlotJewelry:  4,
 	}
 
 	for _, item := range inventoryItemList {
@@ -314,7 +429,10 @@ func (p *AdventureGameInventoryManagementProcessor) CreateNextTurnSheet(ctx cont
 		l.Info("no background image found for inventory management turn sheet")
 	}
 
-	// Step 11: Create sheet data
+	// Step 11: Read inventory events for this sheet. Events are cleared after all processors run.
+	displayEvents := ReadTurnEventsForCategories(l, p.Domain, characterInstanceRec, turnsheet.TurnEventCategoryInventory)
+
+	// Step 12: Create sheet data
 	sheetData := turnsheet.InventoryManagementData{
 		TurnSheetTemplateData: turnsheet.TurnSheetTemplateData{
 			GameName:              convert.Ptr(gameRec.Name),
@@ -326,14 +444,16 @@ func (p *AdventureGameInventoryManagementProcessor) CreateNextTurnSheet(ctx cont
 			TurnSheetInstructions: convert.Ptr(turnsheet.DefaultInventoryManagementInstructions()),
 			TurnSheetCode:         convert.Ptr(turnSheetCode),
 			BackgroundImage:       backgroundImage,
+			TurnEvents:            displayEvents,
 		},
-		CharacterName:       characterRec.Name,
-		CurrentLocationName: locationRec.Name,
-		InventoryCapacity:   characterInstanceRec.InventoryCapacity,
-		InventoryCount:      len(inventoryItemList),
-		CurrentInventory:    inventoryItemList,
-		EquipmentSlots:      equipmentSlots,
-		LocationItems:       locationItemList,
+		CharacterName:          characterRec.Name,
+		CurrentLocationName:    locationRec.Name,
+		InventoryCapacity:      characterInstanceRec.InventoryCapacity,
+		InventoryCount:         len(inventoryItemList),
+		CurrentInventory:       inventoryItemList,
+		EquipmentSlots:         equipmentSlots,
+		LocationItems:          locationItemList,
+		HasAggressiveCreatures: hasAggressiveCreatures,
 	}
 
 	sheetDataBytes, err := json.Marshal(sheetData)
@@ -342,7 +462,7 @@ func (p *AdventureGameInventoryManagementProcessor) CreateNextTurnSheet(ctx cont
 		return nil, fmt.Errorf("failed to marshal sheet data: %w", err)
 	}
 
-	// Step 11: Create turn sheet record
+	// Step 13: Create turn sheet record
 	turnSheet := &game_record.GameTurnSheet{
 		GameID:           gameInstanceRec.GameID,
 		AccountID:        accountUserRec.AccountID,

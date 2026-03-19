@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"gitlab.com/alienspaces/playbymail/internal/jobworker/adventure_game/turn_sheet_processor"
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 )
@@ -13,6 +14,12 @@ func (p *AdventureGame) CreateTurnSheets(ctx context.Context, gameInstanceRec *g
 	l := p.Logger.WithFunctionContext("AdventureGame/CreateTurnSheets")
 
 	l.Info("creating adventure game turn sheets for instance >%s< turn >%d<", gameInstanceRec.ID, gameInstanceRec.CurrentTurn)
+
+	// Run creature lifecycle before creating turn sheets so decay and respawn are applied first.
+	if err := p.RunCreatureLifecycle(ctx, gameInstanceRec); err != nil {
+		l.Warn("creature lifecycle step failed — continuing with turn sheet creation >%v<", err)
+		// Non-fatal: continue with turn sheet creation.
+	}
 
 	// Get all character instances for this game instance
 	characterInstanceRecs, err := p.getCharacterInstancesForGameInstance(ctx, gameInstanceRec)
@@ -78,9 +85,19 @@ func (p *AdventureGame) createCharacterTurnSheets(ctx context.Context, gameInsta
 			return nil, err
 		}
 
+		// Processors may return nil when no sheet is needed for the current game state
+		// (e.g. no creatures at the location for a monster encounter sheet).
+		if turnSheetRec == nil {
+			l.Debug("no turn sheet generated for type >%s< character instance ID >%s< — skipping", turnSheetType, characterInstance.ID)
+			continue
+		}
+
 		l.Debug("created turn sheet >%s< for character instance ID >%s< turn sheet type >%s< turn number >%d<", turnSheetRec.ID, characterInstance.ID, turnSheetType, gameInstanceRec.CurrentTurn)
 		createdTurnSheets = append(createdTurnSheets, turnSheetRec)
 	}
+
+	// Clear turn events now that all processors have read their relevant events.
+	turn_sheet_processor.ClearTurnEvents(l, p.Domain, characterInstance)
 
 	return createdTurnSheets, nil
 }

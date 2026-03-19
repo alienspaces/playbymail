@@ -79,7 +79,13 @@ func (p *AdventureGame) initializeTurnSheetProcessors() (map[string]TurnSheetPro
 	}
 	processors[adventure_game_record.AdventureGameTurnSheetTypeInventoryManagement] = inventoryManagementProcessor
 
-	// TODO: (agent) When adding a new adventure game turn sheet type: implement the turn_sheet_processor interface, register in initializeProcessors (e.g. processors[adventure_game_record.AdventureGameTurnSheetTypeX] = xProcessor), and add constants in adventure_game_turn_sheet.go if new.
+	// Register monster encounter processor
+	monsterEncounterProcessor, err := turn_sheet_processor.NewAdventureGameCreatureEncounterProcessor(l, p.Domain)
+	if err != nil {
+		l.Warn("failed to initialize monster encounter processor >%v<", err)
+		return nil, err
+	}
+	processors[adventure_game_record.AdventureGameTurnSheetTypeCreatureEncounter] = monsterEncounterProcessor
 
 	return processors, nil
 }

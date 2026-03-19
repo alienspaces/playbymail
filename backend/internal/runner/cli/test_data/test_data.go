@@ -213,6 +213,43 @@ func AccountUserGameSubscriptionConfig() []harness.AccountUserGameSubscriptionCo
 						{Reference: "desert-creature-inst-guardian", GameCreatureRef: "desert-creature-guardian", GameLocationRef: "desert-location-temple", Record: &adventure_game_record.AdventureGameCreatureInstance{}},
 					},
 				},
+				// Second instance so parallel E2E tests each get their own isolated game world.
+				// Each instance has its own set of location, item, and creature instances so that
+				// the equip E2E test works regardless of which instance the player joins.
+				{
+					Reference: "game-instance-desert-b",
+					Record: &game_record.GameInstance{
+						DeliveryEmail:           true,
+						DeliveryPhysicalPost:    true,
+						RequiredPlayerCount:     1,
+						ProcessWhenAllSubmitted: true,
+					},
+					GameInstanceParameterConfigs: []harness.GameInstanceParameterConfig{
+						{
+							Reference: "desert-b-instance-param-lives",
+							Record: &game_record.GameInstanceParameter{
+								ParameterKey:   domain.AdventureGameParameterCharacterLives,
+								ParameterValue: nullstring.FromString("5"),
+							},
+						},
+					},
+					AdventureGameLocationInstanceConfigs: []harness.AdventureGameLocationInstanceConfig{
+						{Reference: "desert-b-loc-inst-oasis", GameLocationRef: "desert-location-oasis", Record: &adventure_game_record.AdventureGameLocationInstance{}},
+						{Reference: "desert-b-loc-inst-ruins", GameLocationRef: "desert-location-ruins", Record: &adventure_game_record.AdventureGameLocationInstance{}},
+						{Reference: "desert-b-loc-inst-canyon", GameLocationRef: "desert-location-canyon", Record: &adventure_game_record.AdventureGameLocationInstance{}},
+						{Reference: "desert-b-loc-inst-temple", GameLocationRef: "desert-location-temple", Record: &adventure_game_record.AdventureGameLocationInstance{}},
+					},
+					AdventureGameItemInstanceConfigs: []harness.AdventureGameItemInstanceConfig{
+						{Reference: "desert-b-item-inst-compass", GameItemRef: "desert-item-compass", GameLocationRef: "desert-location-oasis", Record: &adventure_game_record.AdventureGameItemInstance{}},
+						{Reference: "desert-b-item-inst-flask", GameItemRef: "desert-item-flask", GameLocationRef: "desert-location-oasis", Record: &adventure_game_record.AdventureGameItemInstance{}},
+						{Reference: "desert-b-item-inst-cloak", GameItemRef: "desert-item-cloak", GameLocationRef: "desert-location-ruins", Record: &adventure_game_record.AdventureGameItemInstance{}},
+						{Reference: "desert-b-item-inst-scarab", GameItemRef: "desert-item-scarab-key", GameLocationRef: "desert-location-canyon", Record: &adventure_game_record.AdventureGameItemInstance{}},
+					},
+					AdventureGameCreatureInstanceConfigs: []harness.AdventureGameCreatureInstanceConfig{
+						{Reference: "desert-b-creature-inst-serpent", GameCreatureRef: "desert-creature-serpent", GameLocationRef: "desert-location-canyon", Record: &adventure_game_record.AdventureGameCreatureInstance{}},
+						{Reference: "desert-b-creature-inst-guardian", GameCreatureRef: "desert-creature-guardian", GameLocationRef: "desert-location-temple", Record: &adventure_game_record.AdventureGameCreatureInstance{}},
+					},
+				},
 			},
 		},
 		{

@@ -55,23 +55,13 @@
 
       <!-- Stepper navigation bar -->
       <div class="ts-stepper" data-testid="ts-stepper">
-        <button
-          v-for="(sheet, idx) in currentTurnSheets"
-          :key="sheet.id"
-          class="ts-step"
-          :class="{
-            'ts-step--active': idx === activeIndex,
-            'ts-step--has-data': hasCachedData(sheet),
-          }"
-          :data-testid="`ts-step-${idx}`"
-          @click="activeIndex = idx"
-        >
+        <button v-for="(sheet, idx) in currentTurnSheets" :key="sheet.id" class="ts-step" :class="{
+          'ts-step--active': idx === activeIndex,
+          'ts-step--has-data': hasCachedData(sheet),
+        }" :data-testid="`ts-step-${idx}`" @click="activeIndex = idx">
           <span class="ts-step-number">{{ idx + 1 }}</span>
           <span class="ts-step-label">{{ formatSheetType(sheet.sheet_type) }}</span>
-          <span
-            class="ts-step-status"
-            :data-testid="`ts-step-status-${idx}`"
-          >
+          <span class="ts-step-status" :data-testid="`ts-step-status-${idx}`">
             <span v-if="hasCachedData(sheet)" class="status-dot status-has-data" title="Filled"></span>
             <span v-else class="status-dot status-empty" title="Not started"></span>
           </span>
@@ -81,34 +71,19 @@
       <!-- Inline turn sheet viewer -->
       <div class="ts-iframe-container" data-testid="ts-iframe-container">
         <div v-if="loadingHTML" class="ts-iframe-loading">Loading turn sheet...</div>
-        <iframe
-          v-else-if="activeHTML"
-          :srcdoc="activeHTML"
-          class="ts-iframe"
-          data-testid="ts-viewer-iframe"
-          sandbox="allow-forms allow-scripts allow-same-origin"
-          ref="iframeRef"
-          @load="onIframeLoad"
-        ></iframe>
+        <iframe v-else-if="activeHTML" :srcdoc="activeHTML" class="ts-iframe" data-testid="ts-viewer-iframe"
+          sandbox="allow-forms allow-scripts allow-same-origin" ref="iframeRef" @load="onIframeLoad"></iframe>
         <div v-else class="ts-iframe-empty">Select a turn sheet to view.</div>
       </div>
 
       <!-- Navigation actions -->
       <div class="ts-sheet-actions">
-        <button
-          class="secondary-button"
-          :disabled="activeIndex === 0"
-          data-testid="btn-prev-sheet"
-          @click="activeIndex--"
-        >
+        <button class="secondary-button" :disabled="activeIndex === 0" data-testid="btn-prev-sheet"
+          @click="activeIndex--">
           &larr; Prev
         </button>
-        <button
-          class="secondary-button"
-          :disabled="activeIndex >= currentTurnSheets.length - 1"
-          data-testid="btn-next-sheet"
-          @click="activeIndex++"
-        >
+        <button class="secondary-button" :disabled="activeIndex >= currentTurnSheets.length - 1"
+          data-testid="btn-next-sheet" @click="activeIndex++">
           Next &rarr;
         </button>
       </div>
@@ -116,12 +91,7 @@
       <!-- Final submission -->
       <div class="ts-submit-section">
         <p v-if="submitError" class="error-message" data-testid="submit-error">{{ submitError }}</p>
-        <button
-          class="primary-button"
-          :disabled="submitting"
-          data-testid="btn-submit-all"
-          @click="onSubmit"
-        >
+        <button class="primary-button" :disabled="submitting" data-testid="btn-submit-all" @click="onSubmit">
           {{ submitting ? 'Submitting...' : 'Submit All Turn Sheets' }}
         </button>
       </div>
@@ -168,11 +138,26 @@ const iframeRef = ref(null)
 // In-memory form data cache: Map<sheetId, formData>
 const formDataCache = ref(new Map())
 
-// Derive current turn sheets (latest turn only)
+// Canonical presentation order for turn sheet types.
+const SHEET_PRESENTATION_ORDER = [
+  'adventure_game_join_game',
+  'adventure_game_location_choice',
+  'adventure_game_inventory_management',
+  'adventure_game_monster',
+]
+
+// Derive current turn sheets (latest turn only), sorted by canonical presentation order.
 const currentTurnSheets = computed(() => {
   if (turnSheets.value.length === 0) return []
   const maxTurn = Math.max(...turnSheets.value.map(s => s.turn_number))
-  return turnSheets.value.filter(s => s.turn_number === maxTurn && !s.is_completed)
+  const sheets = turnSheets.value.filter(s => s.turn_number === maxTurn && !s.is_completed)
+  return [...sheets].sort((a, b) => {
+    const ai = SHEET_PRESENTATION_ORDER.indexOf(a.sheet_type)
+    const bi = SHEET_PRESENTATION_ORDER.indexOf(b.sheet_type)
+    const aOrder = ai === -1 ? 999 : ai
+    const bOrder = bi === -1 ? 999 : bi
+    return aOrder - bOrder
+  })
 })
 
 const activeSheet = computed(() => currentTurnSheets.value[activeIndex.value] || null)
@@ -182,6 +167,7 @@ function formatSheetType(sheetType) {
     adventure_game_join_game: 'Join Game',
     adventure_game_location_choice: 'Location Choice',
     adventure_game_inventory_management: 'Inventory Management',
+    adventure_game_monster: 'Creature Encounter',
   }
   return labels[sheetType] ?? sheetType.replace(/_/g, ' ')
 }
@@ -297,6 +283,32 @@ function extractFormData() {
   if (pick_up.length) formData.pick_up = pick_up
   if (unequip.length) formData.unequip = unequip
 
+  // Convert action_N / action_N_target flat fields into the structured actions array
+  // expected by the monster encounter backend processor.
+  const actions = []
+  let actionIndex = 0
+  while (`action_${actionIndex}` in formData) {
+    const actionType = formData[`action_${actionIndex}`]
+    const target = formData[`action_${actionIndex}_target`] || ''
+    const action = { action_type: actionType }
+    if (actionType === 'attack' && target) {
+      action.target_creature_instance_id = target
+    }
+    actions.push(action)
+    delete formData[`action_${actionIndex}`]
+    delete formData[`action_${actionIndex}_target`]
+    actionIndex++
+  }
+  if (actions.length > 0) {
+    // Trim trailing do_nothing entries (matches OCR output behaviour)
+    while (actions.length > 0 && actions[actions.length - 1].action_type === 'do_nothing') {
+      actions.pop()
+    }
+    if (actions.length > 0) {
+      formData.actions = actions
+    }
+  }
+
   // Remove empty arrays — an unchecked checkbox group sends [] which can
   // fail oneOf schema validation (e.g. equip field in inventory management).
   for (const key of Object.keys(formData)) {
@@ -339,9 +351,9 @@ function applyFormData(data) {
   // Restore per-item radio groups from action arrays.
   // Inventory item radios are named inv_<itemId>; location item radios are named loc_<itemId>.
   const radioMappings = [
-    { dataKey: 'equip',   namePrefix: 'inv_', radioValue: 'equip' },
-    { dataKey: 'equip',   namePrefix: 'loc_', radioValue: 'equip' },
-    { dataKey: 'drop',    namePrefix: 'inv_', radioValue: 'drop' },
+    { dataKey: 'equip', namePrefix: 'inv_', radioValue: 'equip' },
+    { dataKey: 'equip', namePrefix: 'loc_', radioValue: 'equip' },
+    { dataKey: 'drop', namePrefix: 'inv_', radioValue: 'drop' },
     { dataKey: 'pick_up', namePrefix: 'loc_', radioValue: 'pick_up' },
     { dataKey: 'unequip', namePrefix: 'inv_', radioValue: 'unequip' },
   ]
@@ -355,6 +367,21 @@ function applyFormData(data) {
       )
       if (radio) radio.checked = true
     }
+  }
+
+  // Restore monster encounter action slots from the structured actions array.
+  if (Array.isArray(data.actions)) {
+    data.actions.forEach((action, i) => {
+      const actionRadio = doc.querySelector(
+        `input[type="radio"][name="action_${i}"][value="${action.action_type}"]`
+      )
+      if (actionRadio) actionRadio.checked = true
+
+      if (action.action_type === 'attack' && action.target_creature_instance_id) {
+        const targetSelect = doc.querySelector(`select[name="action_${i}_target"]`)
+        if (targetSelect) targetSelect.value = action.target_creature_instance_id
+      }
+    })
   }
 }
 

@@ -11,6 +11,32 @@
             "maxLength": 255,
             "minLength": 1,
             "type": "string"
+        },
+        "attack_damage": {
+            "type": "integer"
+        },
+        "defense": {
+            "type": "integer"
+        },
+        "max_health": {
+            "type": "integer"
+        },
+        "disposition": {
+            "type": "string",
+            "enum": ["aggressive", "inquisitive", "indifferent"]
+        },
+        "attack_method": {
+            "type": "string",
+            "enum": ["claws", "bite", "sting", "weapon", "spell", "slam", "touch", "breath", "gaze"]
+        },
+        "attack_description": {
+            "type": "string"
+        },
+        "body_decay_turns": {
+            "type": "integer"
+        },
+        "respawn_turns": {
+            "type": "integer"
         }
     },
     "required": [

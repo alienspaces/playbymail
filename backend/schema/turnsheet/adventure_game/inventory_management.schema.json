@@ -7,24 +7,32 @@
     "properties": {
         "pick_up": {
             "type": "array",
-            "items": { "type": "string" },
+            "items": {
+                "type": "string"
+            },
             "description": "Item instance IDs to pick up from location"
         },
         "drop": {
             "type": "array",
-            "items": { "type": "string" },
+            "items": {
+                "type": "string"
+            },
             "description": "Item instance IDs to drop"
         },
         "unequip": {
             "type": "array",
-            "items": { "type": "string" },
+            "items": {
+                "type": "string"
+            },
             "description": "Item instance IDs to unequip (move to backpack)"
         },
         "equip": {
             "oneOf": [
                 {
                     "type": "array",
-                    "items": { "type": "string" },
+                    "items": {
+                        "type": "string"
+                    },
                     "minItems": 1,
                     "description": "HTML form: item instance IDs to equip (backend assigns default slot)"
                 },
@@ -33,15 +41,29 @@
                     "items": {
                         "type": "object",
                         "properties": {
-                            "item_instance_id": { "type": "string" },
-                            "slot": { "type": "string" }
+                            "item_instance_id": {
+                                "type": "string"
+                            },
+                            "slot": {
+                                "type": "string"
+                            }
                         },
-                        "required": [ "item_instance_id", "slot" ]
+                        "required": [
+                            "item_instance_id",
+                            "slot"
+                        ]
                     },
                     "minItems": 1,
                     "description": "Full format: item instance ID and slot name"
                 }
             ]
+        },
+        "use": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            },
+            "description": "Item instance IDs of usable items to activate this turn"
         }
     },
     "additionalProperties": true

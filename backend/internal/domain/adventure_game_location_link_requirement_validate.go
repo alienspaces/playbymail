@@ -50,7 +50,7 @@ var validItemConditions = map[string]bool{
 }
 
 var validCreatureConditions = map[string]bool{
-	adventure_game_record.AdventureGameLocationLinkRequirementConditionDeadAtLocation:     true,
+	adventure_game_record.AdventureGameLocationLinkRequirementConditionDeadAtLocation:      true,
 	adventure_game_record.AdventureGameLocationLinkRequirementConditionNoneAliveAtLocation: true,
 	adventure_game_record.AdventureGameLocationLinkRequirementConditionNoneAliveInGame:     true,
 }

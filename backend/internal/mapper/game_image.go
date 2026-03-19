@@ -72,6 +72,27 @@ func GameTurnSheetImageToResponse(l logger.Logger, gameID string, img *game_reco
 	}, nil
 }
 
+func CreatureImageToResponse(l logger.Logger, gameID, creatureID string, img *game_record.GameImage) (*game_schema.CreatureImageResponse, error) {
+	l.Debug("mapping creature image to response")
+
+	data := &game_schema.CreatureImageData{
+		GameID:     gameID,
+		CreatureID: creatureID,
+	}
+
+	if img != nil {
+		responseData, err := GameImageRecordToResponseData(l, img)
+		if err != nil {
+			return nil, err
+		}
+		data.Portrait = responseData
+	}
+
+	return &game_schema.CreatureImageResponse{
+		Data: data,
+	}, nil
+}
+
 func LocationTurnSheetImageToResponse(l logger.Logger, gameID, locationID string, img *game_record.GameImage) (*game_schema.LocationTurnSheetImageResponse, error) {
 	l.Debug("mapping location turn sheet image to response")
 

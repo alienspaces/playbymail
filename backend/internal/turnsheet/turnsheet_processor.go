@@ -90,5 +90,11 @@ func getAdventureGameDocumentProcessorMap(l logger.Logger, cfg config.Config) (m
 	}
 	processors[adventure_game_record.AdventureGameTurnSheetTypeInventoryManagement] = inventoryManagementProcessor
 
+	monsterEncounterProcessor, err := NewMonsterEncounterProcessor(l, cfg)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create monster encounter processor: %w", err)
+	}
+	processors[adventure_game_record.AdventureGameTurnSheetTypeCreatureEncounter] = monsterEncounterProcessor
+
 	return processors, nil
 }

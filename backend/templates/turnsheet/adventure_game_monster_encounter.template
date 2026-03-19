@@ -1,0 +1,411 @@
+{{template "base.template" .}}
+
+{{define "styles"}}
+<style>
+    /*
+     * Fluid width for browser display; fixed A4 dimensions
+     * applied in @media print only. Avoids CSS variables and
+     * modern layout features for broad compatibility.
+     */
+
+    .encounter-columns {
+        display: table;
+        table-layout: fixed;
+        width: 100%;
+        margin-bottom: 10px;
+    }
+
+    .encounter-col-creatures {
+        display: table-cell;
+        width: 60%;
+        vertical-align: top;
+        padding-right: 8px;
+    }
+
+    .encounter-col-character {
+        display: table-cell;
+        width: 40%;
+        vertical-align: top;
+    }
+
+    /* ── Shared stat panel (used by both character and creatures) ── */
+    .stat-panel {
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        padding: 8px 10px;
+        background-color: rgba(255, 255, 255, 0.75);
+        box-sizing: border-box;
+    }
+
+    .stat-panel-title {
+        font-weight: 700;
+        font-size: 10px;
+        color: #2c3e50;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 5px;
+    }
+
+    .health-bar-outer {
+        background: #e0e0e0;
+        border-radius: 4px;
+        height: 10px;
+        width: 100%;
+        margin-bottom: 4px;
+        overflow: hidden;
+    }
+
+    .health-bar-inner {
+        height: 10px;
+        border-radius: 4px;
+        background: #27ae60;
+    }
+
+    .health-bar-inner-danger {
+        background: #c0392b;
+    }
+
+    .health-text {
+        font-size: 9px;
+        color: #555;
+        margin-bottom: 5px;
+    }
+
+    .stat-row {
+        font-size: 9px;
+        color: #444;
+        margin-bottom: 3px;
+    }
+
+    .stat-label {
+        font-weight: 600;
+        color: #2c3e50;
+    }
+
+    /* Character panel stretches to fill its table-cell */
+    .character-panel {
+        height: 100%;
+    }
+
+    /* ── Creature list ── */
+    .creature-list {
+        height: 100%;
+        box-sizing: border-box;
+    }
+
+    .creature-card {
+        display: table;
+        table-layout: fixed;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        padding: 7px 9px;
+        width: 100%;
+        box-sizing: border-box;
+        background-color: rgba(255, 255, 255, 0.75);
+        margin-bottom: 5px;
+    }
+
+    .creature-card-portrait {
+        display: table-cell;
+        width: 48px;
+        vertical-align: top;
+        padding-right: 8px;
+    }
+
+    .creature-card-portrait img {
+        width: 42px;
+        height: 42px;
+        object-fit: cover;
+        border-radius: 3px;
+        border: 1px solid #ccc;
+    }
+
+    .creature-card-portrait-placeholder {
+        width: 42px;
+        height: 42px;
+        background: #e8e8e8;
+        border-radius: 3px;
+        border: 1px solid #ccc;
+        display: table-cell;
+        text-align: center;
+        vertical-align: middle;
+        font-size: 18px;
+    }
+
+    .creature-card-content {
+        display: table-cell;
+        vertical-align: top;
+        line-height: 1.3;
+    }
+
+    .creature-card-name {
+        font-weight: 700;
+        font-size: 11px;
+        color: #2c3e50;
+    }
+
+    .creature-card-disposition {
+        font-size: 9px;
+        font-style: italic;
+        margin-left: 5px;
+    }
+
+    .disposition-aggressive { color: #c0392b; }
+    .disposition-inquisitive { color: #d35400; }
+    .disposition-indifferent { color: #7f8c8d; }
+
+    .creature-card-description {
+        font-size: 9px;
+        color: #555;
+        margin-top: 2px;
+    }
+
+    /* ── Dead creature styling ── */
+    .creature-card-dead {
+        opacity: 0.5;
+        background-color: rgba(220, 220, 220, 0.85);
+        border-color: #bbb;
+    }
+
+    .creature-card-dead-label {
+        font-size: 9px;
+        font-style: italic;
+        color: #888;
+        margin-top: 3px;
+    }
+
+    /* ── Read-only notice ── */
+    .read-only-notice {
+        padding: 8px 12px;
+        background-color: rgba(240, 240, 240, 0.9);
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 10px;
+        color: #666;
+        font-style: italic;
+        text-align: center;
+        margin-top: 10px;
+    }
+
+    /* ── Action slots ── */
+    .action-slots-section {
+        margin-top: 10px;
+    }
+
+    .action-slot {
+        display: table;
+        table-layout: fixed;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        padding: 8px 10px;
+        margin-bottom: 6px;
+        width: 100%;
+        box-sizing: border-box;
+        background-color: rgba(255, 255, 255, 0.75);
+    }
+
+    .action-slot-label {
+        display: table-cell;
+        width: 60px;
+        vertical-align: middle;
+        font-weight: 700;
+        font-size: 9px;
+        color: #2c3e50;
+        text-transform: uppercase;
+        padding-right: 8px;
+    }
+
+    .action-slot-options {
+        display: table-cell;
+        vertical-align: top;
+    }
+
+    /*
+     * Inline radio options side-by-side to save vertical space.
+     * Uses display:table to avoid flexbox per html-templates rule.
+     */
+    .action-options-row {
+        display: table;
+        width: auto;
+    }
+
+    .action-options-row .action-option {
+        display: table-cell;
+        padding-right: 16px;
+        margin-bottom: 0;
+        white-space: nowrap;
+    }
+
+    /*
+     * When the label is a table-cell (inside .action-options-row) the inner
+     * display:table context is lost, so force radio and text inline.
+     */
+    .action-options-row .action-option input[type="radio"],
+    .action-options-row .action-option .action-option-label {
+        display: inline;
+        vertical-align: middle;
+    }
+
+    .action-option {
+        display: table;
+        margin-bottom: 3px;
+    }
+
+    .action-option input[type="radio"] {
+        display: table-cell;
+        vertical-align: middle;
+        cursor: pointer;
+        padding-right: 4px;
+    }
+
+    .action-option-label {
+        display: table-cell;
+        vertical-align: middle;
+        font-size: 10px;
+        color: #333;
+        padding-left: 4px;
+    }
+
+    .action-target {
+        margin-top: 4px;
+        margin-left: 4px;
+    }
+
+    /* Encounter sheet has a compact header */
+    .header-content {
+        min-height: 22mm;
+    }
+
+    /* HTML-only select (hidden in print) */
+    .action-target-html {
+        display: block;
+        width: 100%;
+        font-size: 10px;
+        padding: 2px 4px;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+        background: #fff;
+        box-sizing: border-box;
+    }
+
+    /* PDF-only text field (hidden on screen) */
+    .action-target-pdf {
+        display: none;
+    }
+
+    @media print {
+        .action-target-html {
+            display: none;
+        }
+        .action-target-pdf {
+            display: block;
+            width: 100%;
+            border-bottom: 1px solid #555;
+            font-size: 9px;
+            color: #888;
+            margin-top: 2px;
+        }
+    }
+</style>
+{{end}}
+
+{{define "content"}}
+<div class="encounter-columns">
+    <!-- Creatures column -->
+    <div class="encounter-col-creatures">
+        <h3 class="content-section-title">Creatures</h3>
+        <div class="creature-list">
+            {{range .Creatures}}
+            <div class="creature-card{{if .IsDead}} creature-card-dead{{end}}">
+                <div class="creature-card-portrait">
+                    {{if .ImageDataURL}}
+                    <img src="{{.ImageDataURL}}" alt="{{.Name}}">
+                    {{else}}
+                    <div class="creature-card-portrait-placeholder">{{if .IsDead}}&#x1F480;{{else}}&#x1F47E;{{end}}</div>
+                    {{end}}
+                </div>
+                <div class="creature-card-content">
+                    <div>
+                        <span class="creature-card-name">{{.Name}}</span>
+                        {{if .IsDead}}<span class="creature-card-disposition disposition-indifferent">lies motionless on the ground</span>{{else if eq .Disposition "aggressive"}}<span class="creature-card-disposition disposition-aggressive">bares its teeth</span>{{else if eq .Disposition "inquisitive"}}<span class="creature-card-disposition disposition-inquisitive">watches you with keen interest</span>{{else}}<span class="creature-card-disposition disposition-indifferent">pays you no attention</span>{{end}}
+                    </div>
+                    <div class="creature-card-description">{{.Description}}</div>
+                    {{if .IsDead}}
+                    <div class="creature-card-dead-label">Slain this encounter.</div>
+                    {{else}}
+                    <div class="health-bar-outer">
+                        <div class="health-bar-inner{{if le (div (mul .Health 100) .MaxHealth) 25}} health-bar-inner-danger{{end}}" style="width: {{if gt .MaxHealth 0}}{{div (mul .Health 100) .MaxHealth}}{{else}}0{{end}}%;"></div>
+                    </div>
+                    <div class="health-text">{{.Health}} / {{.MaxHealth}}</div>
+                    <div class="stat-row"><span class="stat-label">ATK:</span> {{.AttackDamage}} &nbsp; <span class="stat-label">DEF:</span> {{.Defense}}</div>
+                    {{end}}
+                </div>
+            </div>
+            {{end}}
+        </div>
+    </div>
+
+    <!-- Character status column -->
+    <div class="encounter-col-character">
+        <h3 class="content-section-title">{{.CharacterName}}</h3>
+        <div class="stat-panel character-panel">
+            <div class="stat-panel-title">Health</div>
+            <div class="health-bar-outer">
+                <div class="health-bar-inner{{if le (div (mul .CharacterHealth 100) .CharacterMaxHealth) 25}} health-bar-inner-danger{{end}}" style="width: {{if gt .CharacterMaxHealth 0}}{{div (mul .CharacterHealth 100) .CharacterMaxHealth}}{{else}}0{{end}}%;"></div>
+            </div>
+            <div class="health-text">{{.CharacterHealth}} / {{.CharacterMaxHealth}}</div>
+            <div class="stat-row"><span class="stat-label">ATK:</span> {{.CharacterAttack}} &nbsp; <span class="stat-label">DEF:</span> {{.CharacterDefense}}</div>
+            {{if .EquippedWeapon}}
+            <div class="stat-row"><span class="stat-label">Weapon:</span> {{.EquippedWeapon.Name}}</div>
+            {{else}}
+            <div class="stat-row"><span class="stat-label">Weapon:</span> <em>Unarmed</em></div>
+            {{end}}
+            {{if .EquippedArmor}}
+            <div class="stat-row"><span class="stat-label">Armor:</span> {{.EquippedArmor.Name}}</div>
+            {{else}}
+            <div class="stat-row"><span class="stat-label">Armor:</span> <em>None</em></div>
+            {{end}}
+        </div>
+    </div>
+</div>
+
+<!-- Combat action slots (hidden when read-only) -->
+{{if not .ReadOnly}}
+<div class="action-slots-section">
+    <h3 class="content-section-title">Creature Actions (up to {{.MaxActions}})</h3>
+
+    {{range $i := (seq .MaxActions)}}
+    <div class="action-slot">
+        <div class="action-slot-label">Action {{add $i 1}}</div>
+        <div class="action-slot-options">
+            <div class="action-options-row">
+                <label class="action-option">
+                    <input type="radio" name="action_{{$i}}" value="do_nothing" checked>
+                    <span class="action-option-label">Do Nothing</span>
+                </label>
+                <label class="action-option">
+                    <input type="radio" name="action_{{$i}}" value="attack">
+                    <span class="action-option-label">Attack</span>
+                </label>
+            </div>
+            <div class="action-target">
+                <!-- HTML form: dropdown for online play -->
+                <select name="action_{{$i}}_target" class="action-target-html">
+                    <option value="">-- select target --</option>
+                    {{range $.Creatures}}
+                    {{if not .IsDead}}
+                    <option value="{{.CreatureInstanceID}}">{{.Name}}</option>
+                    {{end}}
+                    {{end}}
+                </select>
+                <!-- PDF/print: handwritten target for scanned forms -->
+                <div class="action-target-pdf">Target (write creature name): ___________________________</div>
+            </div>
+        </div>
+    </div>
+    {{end}}
+</div>
+{{else}}
+<div class="read-only-notice">This is a record of your creature encounter — no actions required.</div>
+{{end}}
+{{end}}

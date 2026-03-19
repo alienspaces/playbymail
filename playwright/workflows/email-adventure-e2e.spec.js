@@ -42,6 +42,7 @@ test.describe('Desert Kingdom E2E Email Adventure', () => {
   // Shared state across serial tests
   let gsiId = null
   let sessionToken = null
+  let desertJoinHref = null
 
   test.beforeAll(async () => {
     await clearAllEmails()
@@ -55,32 +56,16 @@ test.describe('Desert Kingdom E2E Email Adventure', () => {
     await page.goto('/games')
     await waitForPageReady(page)
 
-    const desertCard = page.locator('text=The Desert Kingdom')
-    await expect(desertCard.first()).toBeVisible({ timeout: 10000 })
+    const catalogGames = page.locator('[data-testid="catalog-games"]')
+    await expect(catalogGames).toBeVisible({ timeout: 10000 })
 
-    const joinButton = page.locator('[data-testid^="join-button-"]')
-      .filter({ has: page.locator(':scope').locator('..').locator('..').locator('text=The Desert Kingdom') })
+    // Use .first() since multiple instances of The Desert Kingdom may be seeded.
+    const desertCard = catalogGames.locator('.catalog-game', {
+      has: page.locator('.game-name', { hasText: 'The Desert Kingdom' }),
+    }).first()
+    await expect(desertCard).toBeVisible({ timeout: 5000 })
 
-    // Find the join button near the Desert Kingdom card
-    const allJoinButtons = page.locator('[data-testid^="join-button-"]')
-    const count = await allJoinButtons.count()
-    let desertJoinHref = null
-
-    for (let i = 0; i < count; i++) {
-      const btn = allJoinButtons.nth(i)
-      const parentCard = btn.locator('xpath=ancestor::*[contains(@class, "game-card") or contains(@data-testid, "game-card")]')
-      const cardText = await parentCard.textContent().catch(() => '')
-      if (cardText.includes('Desert Kingdom')) {
-        desertJoinHref = await btn.getAttribute('href')
-        break
-      }
-    }
-
-    // Fallback: just click the first join button if we can't find via parent
-    if (!desertJoinHref) {
-      const href = await allJoinButtons.first().getAttribute('href')
-      desertJoinHref = href
-    }
+    desertJoinHref = await desertCard.locator('.join-button').getAttribute('href')
 
     expect(desertJoinHref).toBeTruthy()
     expect(desertJoinHref).toMatch(/^\/player\/join-game\//)
@@ -89,24 +74,13 @@ test.describe('Desert Kingdom E2E Email Adventure', () => {
   test('Phase 1b: fill and submit join-game form', async ({ page }) => {
     await setupTestBypassHeaders(page)
 
-    // Navigate to games catalog to find the join link dynamically
-    await page.goto('/games')
-    await waitForPageReady(page)
-
-    // Find the Desert Kingdom card and its join button
-    const catalogGames = page.locator('[data-testid="catalog-games"]')
-    await expect(catalogGames).toBeVisible({ timeout: 10000 })
-
-    const desertCard = catalogGames.locator('.catalog-game', {
-      has: page.locator('.game-name', { hasText: 'The Desert Kingdom' })
-    })
-    await expect(desertCard).toBeVisible()
-
-    const joinHref = await desertCard.locator('.join-button').getAttribute('href')
-    expect(joinHref).toMatch(/^\/player\/join-game\//)
+    // Use the join href discovered in Phase 1a — avoids re-checking the catalog
+    // (which may show the game as 'started' if another test joined it first).
+    expect(desertJoinHref).toBeTruthy()
+    expect(desertJoinHref).toMatch(/^\/player\/join-game\//)
 
     // Navigate to the join game page
-    await page.goto(joinHref)
+    await page.goto(desertJoinHref)
     await waitForPageReady(page)
 
     // Wait for the player app and join sheet iframe to load

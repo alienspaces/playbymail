@@ -470,6 +470,7 @@ func submitJoinHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Par
 			AdventureGameLocationInstanceID: startingLocationInstanceID,
 			Health:                          100,
 			InventoryCapacity:               10,
+			LastTurnEvents:                  []byte("[]"),
 		}
 		characterInstanceRec, err = mm.CreateAdventureGameCharacterInstanceRec(characterInstanceRec)
 		if err != nil {

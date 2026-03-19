@@ -22,8 +22,21 @@ type LocationChoiceData struct {
 	LocationName        string `json:"location_name"`
 	LocationDescription string `json:"location_description"`
 
+	// Creatures currently present at this location
+	Creatures []LocationCreature `json:"creatures,omitempty"`
+
+	// When true, at least one aggressive creature is present and the flee warning is shown
+	HasAggressiveCreatures bool `json:"has_aggressive_creatures,omitempty"`
+
 	// Available location options
 	LocationOptions []LocationOption `json:"location_options"`
+}
+
+// LocationCreature represents a creature visible to the player at their current location.
+type LocationCreature struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Disposition string `json:"disposition"` // "aggressive", "inquisitive", "indifferent"
 }
 
 // LocationOption represents a location choice option for the player.
@@ -110,6 +123,19 @@ func (p *LocationChoiceProcessor) GeneratePreviewData(ctx context.Context, l log
 		},
 		LocationName:        "Dark Forest",
 		LocationDescription: "You are standing at the edge of a dark, ominous forest. The trees are tall and gnarled, blocking out most of the sunlight. You hear strange noises coming from within.",
+		Creatures: []LocationCreature{
+			{
+				Name:        "Forest Troll",
+				Description: "A hulking creature with mossy green skin blocks the path, its eyes fixed hungrily on you.",
+				Disposition: "aggressive",
+			},
+			{
+				Name:        "Woodland Sprite",
+				Description: "A tiny luminous figure flits between the branches above, watching with obvious curiosity.",
+				Disposition: "inquisitive",
+			},
+		},
+		HasAggressiveCreatures: true,
 		LocationOptions: []LocationOption{
 			{
 				LocationID:              "loc-1",
@@ -127,10 +153,10 @@ func (p *LocationChoiceProcessor) GeneratePreviewData(ctx context.Context, l log
 				LocationLinkDescription: "Head back to the safety of the village.",
 			},
 			{
-				LocationID:              "loc-4",
-				LocationLinkName:        "The Iron Gate",
-				IsLocked:                true,
-				LockedDescription:       "A rusted iron gate bars the path northward. Something heavy and cold presses against it from the other side.",
+				LocationID:        "loc-4",
+				LocationLinkName:  "The Iron Gate",
+				IsLocked:          true,
+				LockedDescription: "A rusted iron gate bars the path northward. Something heavy and cold presses against it from the other side.",
 			},
 		},
 	}

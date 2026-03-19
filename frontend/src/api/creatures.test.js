@@ -55,7 +55,7 @@ describe('creatures API', () => {
 
   describe('createCreature', () => {
     it('sends POST with data and returns json.data', async () => {
-      const data = { name: 'New Creature', description: 'A creature' }
+      const data = { name: 'New Creature', description: 'A creature', max_health: 50, attack_damage: 10, defense: 0 }
       const created = { id: 'creature-new', ...data }
       mockApiFetch.mockResolvedValue({
         ok: true,
