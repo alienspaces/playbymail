@@ -12,23 +12,23 @@ import (
 const TableAdventureGameLocationObjectEffect = "adventure_game_location_object_effect"
 
 const (
-	FieldAdventureGameLocationObjectEffectID                                    = "id"
-	FieldAdventureGameLocationObjectEffectGameID                                = "game_id"
-	FieldAdventureGameLocationObjectEffectAdventureGameLocationObjectID          = "adventure_game_location_object_id"
-	FieldAdventureGameLocationObjectEffectActionType                            = "action_type"
-	FieldAdventureGameLocationObjectEffectRequiredState                         = "required_state"
-	FieldAdventureGameLocationObjectEffectRequiredAdventureGameItemID           = "required_adventure_game_item_id"
-	FieldAdventureGameLocationObjectEffectResultDescription                     = "result_description"
-	FieldAdventureGameLocationObjectEffectEffectType                            = "effect_type"
-	FieldAdventureGameLocationObjectEffectResultState                           = "result_state"
-	FieldAdventureGameLocationObjectEffectResultAdventureGameItemID             = "result_adventure_game_item_id"
-	FieldAdventureGameLocationObjectEffectResultAdventureGameLocationLinkID     = "result_adventure_game_location_link_id"
-	FieldAdventureGameLocationObjectEffectResultAdventureGameCreatureID         = "result_adventure_game_creature_id"
-	FieldAdventureGameLocationObjectEffectResultAdventureGameLocationObjectID   = "result_adventure_game_location_object_id"
-	FieldAdventureGameLocationObjectEffectResultAdventureGameLocationID         = "result_adventure_game_location_id"
-	FieldAdventureGameLocationObjectEffectResultValueMin                        = "result_value_min"
-	FieldAdventureGameLocationObjectEffectResultValueMax                        = "result_value_max"
-	FieldAdventureGameLocationObjectEffectIsRepeatable                          = "is_repeatable"
+	FieldAdventureGameLocationObjectEffectID                                  = "id"
+	FieldAdventureGameLocationObjectEffectGameID                              = "game_id"
+	FieldAdventureGameLocationObjectEffectAdventureGameLocationObjectID       = "adventure_game_location_object_id"
+	FieldAdventureGameLocationObjectEffectActionType                          = "action_type"
+	FieldAdventureGameLocationObjectEffectRequiredState                       = "required_state"
+	FieldAdventureGameLocationObjectEffectRequiredAdventureGameItemID         = "required_adventure_game_item_id"
+	FieldAdventureGameLocationObjectEffectResultDescription                   = "result_description"
+	FieldAdventureGameLocationObjectEffectEffectType                          = "effect_type"
+	FieldAdventureGameLocationObjectEffectResultState                         = "result_state"
+	FieldAdventureGameLocationObjectEffectResultAdventureGameItemID           = "result_adventure_game_item_id"
+	FieldAdventureGameLocationObjectEffectResultAdventureGameLocationLinkID   = "result_adventure_game_location_link_id"
+	FieldAdventureGameLocationObjectEffectResultAdventureGameCreatureID       = "result_adventure_game_creature_id"
+	FieldAdventureGameLocationObjectEffectResultAdventureGameLocationObjectID = "result_adventure_game_location_object_id"
+	FieldAdventureGameLocationObjectEffectResultAdventureGameLocationID       = "result_adventure_game_location_id"
+	FieldAdventureGameLocationObjectEffectResultValueMin                      = "result_value_min"
+	FieldAdventureGameLocationObjectEffectResultValueMax                      = "result_value_max"
+	FieldAdventureGameLocationObjectEffectIsRepeatable                        = "is_repeatable"
 )
 
 // Action type constants — values for the action_type CHECK constraint.
@@ -51,7 +51,7 @@ const (
 	AdventureGameLocationObjectEffectActionTypeInsert  = "insert"
 	AdventureGameLocationObjectEffectActionTypePour    = "pour"
 	AdventureGameLocationObjectEffectActionTypeDisarm  = "disarm"
-	AdventureGameLocationObjectEffectActionTypeClimb  = "climb"
+	AdventureGameLocationObjectEffectActionTypeClimb   = "climb"
 	AdventureGameLocationObjectEffectActionTypeUse     = "use"
 )
 
@@ -84,18 +84,18 @@ const (
 	AdventureGameLocationObjectEffectEffectTypeInfo              = "info"
 	AdventureGameLocationObjectEffectEffectTypeChangeState       = "change_state"
 	AdventureGameLocationObjectEffectEffectTypeChangeObjectState = "change_object_state"
-	AdventureGameLocationObjectEffectEffectTypeGiveItem         = "give_item"
-	AdventureGameLocationObjectEffectEffectTypeRemoveItem       = "remove_item"
-	AdventureGameLocationObjectEffectEffectTypeOpenLink         = "open_link"
-	AdventureGameLocationObjectEffectEffectTypeCloseLink        = "close_link"
-	AdventureGameLocationObjectEffectEffectTypeRevealObject     = "reveal_object"
-	AdventureGameLocationObjectEffectEffectTypeHideObject       = "hide_object"
-	AdventureGameLocationObjectEffectEffectTypeDamage           = "damage"
-	AdventureGameLocationObjectEffectEffectTypeHeal             = "heal"
-	AdventureGameLocationObjectEffectEffectTypeSummonCreature   = "summon_creature"
-	AdventureGameLocationObjectEffectEffectTypeTeleport         = "teleport"
-	AdventureGameLocationObjectEffectEffectTypeNothing          = "nothing"
-	AdventureGameLocationObjectEffectEffectTypeRemoveObject     = "remove_object"
+	AdventureGameLocationObjectEffectEffectTypeGiveItem          = "give_item"
+	AdventureGameLocationObjectEffectEffectTypeRemoveItem        = "remove_item"
+	AdventureGameLocationObjectEffectEffectTypeOpenLink          = "open_link"
+	AdventureGameLocationObjectEffectEffectTypeCloseLink         = "close_link"
+	AdventureGameLocationObjectEffectEffectTypeRevealObject      = "reveal_object"
+	AdventureGameLocationObjectEffectEffectTypeHideObject        = "hide_object"
+	AdventureGameLocationObjectEffectEffectTypeDamage            = "damage"
+	AdventureGameLocationObjectEffectEffectTypeHeal              = "heal"
+	AdventureGameLocationObjectEffectEffectTypeSummonCreature    = "summon_creature"
+	AdventureGameLocationObjectEffectEffectTypeTeleport          = "teleport"
+	AdventureGameLocationObjectEffectEffectTypeNothing           = "nothing"
+	AdventureGameLocationObjectEffectEffectTypeRemoveObject      = "remove_object"
 )
 
 // AdventureGameLocationObjectEffectEffectTypes is the set of all valid effect_type values.
@@ -121,22 +121,22 @@ var AdventureGameLocationObjectEffectEffectTypes = set.New(
 // Multiple rows for the same (object, action_type, required_state) are allowed and all fire atomically.
 type AdventureGameLocationObjectEffect struct {
 	record.Record
-	GameID                                string         `db:"game_id"`
-	AdventureGameLocationObjectID         string         `db:"adventure_game_location_object_id"`
-	ActionType                            string         `db:"action_type"`
-	RequiredState                         sql.NullString `db:"required_state"`
-	RequiredAdventureGameItemID           sql.NullString `db:"required_adventure_game_item_id"`
-	ResultDescription                     string         `db:"result_description"`
-	EffectType                            string         `db:"effect_type"`
-	ResultState                           sql.NullString `db:"result_state"`
-	ResultAdventureGameItemID             sql.NullString `db:"result_adventure_game_item_id"`
-	ResultAdventureGameLocationLinkID     sql.NullString `db:"result_adventure_game_location_link_id"`
-	ResultAdventureGameCreatureID         sql.NullString `db:"result_adventure_game_creature_id"`
-	ResultAdventureGameLocationObjectID   sql.NullString `db:"result_adventure_game_location_object_id"`
-	ResultAdventureGameLocationID         sql.NullString `db:"result_adventure_game_location_id"`
-	ResultValueMin                        sql.NullInt32  `db:"result_value_min"`
-	ResultValueMax                        sql.NullInt32  `db:"result_value_max"`
-	IsRepeatable                          bool           `db:"is_repeatable"`
+	GameID                              string         `db:"game_id"`
+	AdventureGameLocationObjectID       string         `db:"adventure_game_location_object_id"`
+	ActionType                          string         `db:"action_type"`
+	RequiredState                       sql.NullString `db:"required_state"`
+	RequiredAdventureGameItemID         sql.NullString `db:"required_adventure_game_item_id"`
+	ResultDescription                   string         `db:"result_description"`
+	EffectType                          string         `db:"effect_type"`
+	ResultState                         sql.NullString `db:"result_state"`
+	ResultAdventureGameItemID           sql.NullString `db:"result_adventure_game_item_id"`
+	ResultAdventureGameLocationLinkID   sql.NullString `db:"result_adventure_game_location_link_id"`
+	ResultAdventureGameCreatureID       sql.NullString `db:"result_adventure_game_creature_id"`
+	ResultAdventureGameLocationObjectID sql.NullString `db:"result_adventure_game_location_object_id"`
+	ResultAdventureGameLocationID       sql.NullString `db:"result_adventure_game_location_id"`
+	ResultValueMin                      sql.NullInt32  `db:"result_value_min"`
+	ResultValueMax                      sql.NullInt32  `db:"result_value_max"`
+	IsRepeatable                        bool           `db:"is_repeatable"`
 }
 
 func (r *AdventureGameLocationObjectEffect) ToNamedArgs() pgx.NamedArgs {
