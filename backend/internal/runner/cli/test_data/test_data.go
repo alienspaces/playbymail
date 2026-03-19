@@ -136,30 +136,6 @@ func AccountUserGameSubscriptionConfig() []harness.AccountUserGameSubscriptionCo
 							},
 						},
 					},
-					AdventureGameItemInstanceConfigs: []harness.AdventureGameItemInstanceConfig{
-						{
-							Reference:       harness.GameItemInstanceOneRef,
-							GameItemRef:     harness.GameItemOneRef,
-							GameLocationRef: harness.GameLocationOneRef,
-							Record:          &adventure_game_record.AdventureGameItemInstance{},
-						},
-					},
-					AdventureGameCreatureInstanceConfigs: []harness.AdventureGameCreatureInstanceConfig{
-						{
-							Reference:       harness.GameCreatureInstanceOneRef,
-							GameCreatureRef: harness.GameCreatureOneRef,
-							GameLocationRef: harness.GameLocationOneRef,
-							Record:          &adventure_game_record.AdventureGameCreatureInstance{},
-						},
-					},
-					AdventureGameCharacterInstanceConfigs: []harness.AdventureGameCharacterInstanceConfig{
-						{
-							Reference:        harness.GameCharacterInstanceOneRef,
-							GameCharacterRef: harness.GameCharacterOneRef,
-							GameLocationRef:  harness.GameLocationOneRef,
-							Record:           &adventure_game_record.AdventureGameCharacterInstance{},
-						},
-					},
 				},
 			},
 		},
@@ -196,26 +172,8 @@ func AccountUserGameSubscriptionConfig() []harness.AccountUserGameSubscriptionCo
 							},
 						},
 					},
-					AdventureGameLocationInstanceConfigs: []harness.AdventureGameLocationInstanceConfig{
-						{Reference: "desert-loc-inst-oasis", GameLocationRef: "desert-location-oasis", Record: &adventure_game_record.AdventureGameLocationInstance{}},
-						{Reference: "desert-loc-inst-ruins", GameLocationRef: "desert-location-ruins", Record: &adventure_game_record.AdventureGameLocationInstance{}},
-						{Reference: "desert-loc-inst-canyon", GameLocationRef: "desert-location-canyon", Record: &adventure_game_record.AdventureGameLocationInstance{}},
-						{Reference: "desert-loc-inst-temple", GameLocationRef: "desert-location-temple", Record: &adventure_game_record.AdventureGameLocationInstance{}},
-					},
-					AdventureGameItemInstanceConfigs: []harness.AdventureGameItemInstanceConfig{
-						{Reference: "desert-item-inst-compass", GameItemRef: "desert-item-compass", GameLocationRef: "desert-location-oasis", Record: &adventure_game_record.AdventureGameItemInstance{}},
-						{Reference: "desert-item-inst-flask", GameItemRef: "desert-item-flask", GameLocationRef: "desert-location-oasis", Record: &adventure_game_record.AdventureGameItemInstance{}},
-						{Reference: "desert-item-inst-cloak", GameItemRef: "desert-item-cloak", GameLocationRef: "desert-location-ruins", Record: &adventure_game_record.AdventureGameItemInstance{}},
-						{Reference: "desert-item-inst-scarab", GameItemRef: "desert-item-scarab-key", GameLocationRef: "desert-location-canyon", Record: &adventure_game_record.AdventureGameItemInstance{}},
-					},
-					AdventureGameCreatureInstanceConfigs: []harness.AdventureGameCreatureInstanceConfig{
-						{Reference: "desert-creature-inst-serpent", GameCreatureRef: "desert-creature-serpent", GameLocationRef: "desert-location-canyon", Record: &adventure_game_record.AdventureGameCreatureInstance{}},
-						{Reference: "desert-creature-inst-guardian", GameCreatureRef: "desert-creature-guardian", GameLocationRef: "desert-location-temple", Record: &adventure_game_record.AdventureGameCreatureInstance{}},
-					},
 				},
 				// Second instance so parallel E2E tests each get their own isolated game world.
-				// Each instance has its own set of location, item, and creature instances so that
-				// the equip E2E test works regardless of which instance the player joins.
 				{
 					Reference: "game-instance-desert-b",
 					Record: &game_record.GameInstance{
@@ -232,22 +190,6 @@ func AccountUserGameSubscriptionConfig() []harness.AccountUserGameSubscriptionCo
 								ParameterValue: nullstring.FromString("5"),
 							},
 						},
-					},
-					AdventureGameLocationInstanceConfigs: []harness.AdventureGameLocationInstanceConfig{
-						{Reference: "desert-b-loc-inst-oasis", GameLocationRef: "desert-location-oasis", Record: &adventure_game_record.AdventureGameLocationInstance{}},
-						{Reference: "desert-b-loc-inst-ruins", GameLocationRef: "desert-location-ruins", Record: &adventure_game_record.AdventureGameLocationInstance{}},
-						{Reference: "desert-b-loc-inst-canyon", GameLocationRef: "desert-location-canyon", Record: &adventure_game_record.AdventureGameLocationInstance{}},
-						{Reference: "desert-b-loc-inst-temple", GameLocationRef: "desert-location-temple", Record: &adventure_game_record.AdventureGameLocationInstance{}},
-					},
-					AdventureGameItemInstanceConfigs: []harness.AdventureGameItemInstanceConfig{
-						{Reference: "desert-b-item-inst-compass", GameItemRef: "desert-item-compass", GameLocationRef: "desert-location-oasis", Record: &adventure_game_record.AdventureGameItemInstance{}},
-						{Reference: "desert-b-item-inst-flask", GameItemRef: "desert-item-flask", GameLocationRef: "desert-location-oasis", Record: &adventure_game_record.AdventureGameItemInstance{}},
-						{Reference: "desert-b-item-inst-cloak", GameItemRef: "desert-item-cloak", GameLocationRef: "desert-location-ruins", Record: &adventure_game_record.AdventureGameItemInstance{}},
-						{Reference: "desert-b-item-inst-scarab", GameItemRef: "desert-item-scarab-key", GameLocationRef: "desert-location-canyon", Record: &adventure_game_record.AdventureGameItemInstance{}},
-					},
-					AdventureGameCreatureInstanceConfigs: []harness.AdventureGameCreatureInstanceConfig{
-						{Reference: "desert-b-creature-inst-serpent", GameCreatureRef: "desert-creature-serpent", GameLocationRef: "desert-location-canyon", Record: &adventure_game_record.AdventureGameCreatureInstance{}},
-						{Reference: "desert-b-creature-inst-guardian", GameCreatureRef: "desert-creature-guardian", GameLocationRef: "desert-location-temple", Record: &adventure_game_record.AdventureGameCreatureInstance{}},
 					},
 				},
 			},
@@ -558,40 +500,58 @@ func GameConfig() []harness.GameConfig {
 					},
 				},
 			},
-			// Character configuration will be used during the account user game subscription creation
-			AdventureGameCharacterConfigs: []harness.AdventureGameCharacterConfig{
-				{
-					Reference:  harness.GameCharacterOneRef,
-					AccountRef: harness.AccountUserStandardRef,
-					Record: &adventure_game_record.AdventureGameCharacter{
-						Name: "Aria the Mage",
-					},
+		// Character configuration will be used during the account user game subscription creation
+		AdventureGameCharacterConfigs: []harness.AdventureGameCharacterConfig{
+			{
+				Reference:  harness.GameCharacterOneRef,
+				AccountRef: harness.AccountUserStandardRef,
+				Record: &adventure_game_record.AdventureGameCharacter{
+					Name: "Aria the Mage",
 				},
-				{
-					Reference:  harness.GameCharacterTwoRef,
-					AccountRef: harness.AccountUserProPlayerRef,
-					Record: &adventure_game_record.AdventureGameCharacter{
-						Name: "Thorne the Warrior",
-					},
+			},
+			{
+				Reference:  harness.GameCharacterTwoRef,
+				AccountRef: harness.AccountUserProPlayerRef,
+				Record: &adventure_game_record.AdventureGameCharacter{
+					Name: "Thorne the Warrior",
 				},
-				{
-					Reference:  harness.GameCharacterThreeRef,
-					AccountRef: harness.AccountUserProDesignerRef,
-					Record: &adventure_game_record.AdventureGameCharacter{
-						Name: "Luna the Scout",
-					},
+			},
+			{
+				Reference:  harness.GameCharacterThreeRef,
+				AccountRef: harness.AccountUserProDesignerRef,
+				Record: &adventure_game_record.AdventureGameCharacter{
+					Name: "Luna the Scout",
 				},
-				{
-					Reference:  harness.GameCharacterFourRef,
-					AccountRef: harness.AccountUserProManagerRef,
-					Record: &adventure_game_record.AdventureGameCharacter{
-						Name: "Max the Manager",
-					},
+			},
+			{
+				Reference:  harness.GameCharacterFourRef,
+				AccountRef: harness.AccountUserProManagerRef,
+				Record: &adventure_game_record.AdventureGameCharacter{
+					Name: "Max the Manager",
 				},
 			},
 		},
-		{
-			Reference: harness.GameTwoRef,
+		AdventureGameCreaturePlacementConfigs: []harness.AdventureGameCreaturePlacementConfig{
+			{
+				Reference:       harness.GameCreaturePlacementOneRef,
+				GameCreatureRef: harness.GameCreatureOneRef,
+				GameLocationRef: harness.GameLocationOneRef,
+				InitialCount:    1,
+				Record:          &adventure_game_record.AdventureGameCreaturePlacement{},
+			},
+		},
+		AdventureGameItemPlacementConfigs: []harness.AdventureGameItemPlacementConfig{
+			{
+				Reference:       harness.GameItemPlacementOneRef,
+				GameItemRef:     harness.GameItemOneRef,
+				GameLocationRef: harness.GameLocationOneRef,
+				InitialCount:    1,
+				Record:          &adventure_game_record.AdventureGameItemPlacement{},
+			},
+		},
+	},
+	{
+		Reference: harness.GameTwoRef,
 			Record: &game_record.Game{
 				Name:              "The Desert Kingdom",
 				Description:       "Welcome to The Desert Kingdom! Embark on a solo quest across scorching sand dunes, crumbling ancient ruins, and hidden oases in this single-player email adventure. Survive the elements, gather legendary artefacts, and unlock the sealed passages of a forgotten civilisation. Every turn challenges you to choose your path carefully — equip the right gear, explore boldly, and uncover the secrets buried beneath the shifting sands. Your destiny awaits!",
@@ -700,11 +660,58 @@ func GameConfig() []harness.GameConfig {
 					},
 				},
 			},
-			// Location links — bidirectional, some with item requirements
-			AdventureGameLocationLinkConfigs: []harness.AdventureGameLocationLinkConfig{
-				// Oasis Village <-> Ancient Ruins (free)
-				{
-					Reference:       "desert-link-oasis-to-ruins",
+		// Placement configs define where creatures/items start in each game instance
+		AdventureGameCreaturePlacementConfigs: []harness.AdventureGameCreaturePlacementConfig{
+			{
+				Reference:       "desert-creature-placement-serpent",
+				GameCreatureRef: "desert-creature-serpent",
+				GameLocationRef: "desert-location-canyon",
+				InitialCount:    1,
+				Record:          &adventure_game_record.AdventureGameCreaturePlacement{},
+			},
+			{
+				Reference:       "desert-creature-placement-guardian",
+				GameCreatureRef: "desert-creature-guardian",
+				GameLocationRef: "desert-location-temple",
+				InitialCount:    1,
+				Record:          &adventure_game_record.AdventureGameCreaturePlacement{},
+			},
+		},
+		AdventureGameItemPlacementConfigs: []harness.AdventureGameItemPlacementConfig{
+			{
+				Reference:       "desert-item-placement-compass",
+				GameItemRef:     "desert-item-compass",
+				GameLocationRef: "desert-location-oasis",
+				InitialCount:    1,
+				Record:          &adventure_game_record.AdventureGameItemPlacement{},
+			},
+			{
+				Reference:       "desert-item-placement-flask",
+				GameItemRef:     "desert-item-flask",
+				GameLocationRef: "desert-location-oasis",
+				InitialCount:    1,
+				Record:          &adventure_game_record.AdventureGameItemPlacement{},
+			},
+			{
+				Reference:       "desert-item-placement-cloak",
+				GameItemRef:     "desert-item-cloak",
+				GameLocationRef: "desert-location-ruins",
+				InitialCount:    1,
+				Record:          &adventure_game_record.AdventureGameItemPlacement{},
+			},
+			{
+				Reference:       "desert-item-placement-scarab",
+				GameItemRef:     "desert-item-scarab-key",
+				GameLocationRef: "desert-location-canyon",
+				InitialCount:    1,
+				Record:          &adventure_game_record.AdventureGameItemPlacement{},
+			},
+		},
+		// Location links — bidirectional, some with item requirements
+		AdventureGameLocationLinkConfigs: []harness.AdventureGameLocationLinkConfig{
+			// Oasis Village <-> Ancient Ruins (free)
+			{
+				Reference:       "desert-link-oasis-to-ruins",
 					FromLocationRef: "desert-location-oasis",
 					ToLocationRef:   "desert-location-ruins",
 					Record: &adventure_game_record.AdventureGameLocationLink{

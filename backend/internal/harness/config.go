@@ -172,12 +172,6 @@ type GameInstanceConfig struct {
 
 	// Game specific turn sheet configurations
 	GameTurnConfigs []GameTurnConfig
-
-	// Adventure game instance record configurations (optional; auto-generated when empty)
-	AdventureGameLocationInstanceConfigs  []AdventureGameLocationInstanceConfig
-	AdventureGameCreatureInstanceConfigs  []AdventureGameCreatureInstanceConfig
-	AdventureGameCharacterInstanceConfigs []AdventureGameCharacterInstanceConfig
-	AdventureGameItemInstanceConfigs      []AdventureGameItemInstanceConfig
 }
 
 type AccountUserGameSubscriptionConfig struct {
@@ -297,33 +291,6 @@ type AdventureGameItemPlacementConfig struct {
 	GameLocationRef string // Reference to the game_location (required)
 	InitialCount    int    // Number of items to place (defaults to 1)
 	Record          *adventure_game_record.AdventureGameItemPlacement
-}
-
-type AdventureGameLocationInstanceConfig struct {
-	Reference      string // Reference to the location instance record
-	GameLocationRef string // Reference to the location definition
-	Record         *adventure_game_record.AdventureGameLocationInstance
-}
-
-type AdventureGameCreatureInstanceConfig struct {
-	Reference      string // Reference to the creature instance record
-	GameCreatureRef string // Reference to the creature definition
-	GameLocationRef string // Reference to the location definition (resolved to location instance)
-	Record         *adventure_game_record.AdventureGameCreatureInstance
-}
-
-type AdventureGameCharacterInstanceConfig struct {
-	Reference       string // Reference to the character instance record
-	GameCharacterRef string // Reference to the character definition
-	GameLocationRef  string // Reference to the location definition (resolved to location instance)
-	Record          *adventure_game_record.AdventureGameCharacterInstance
-}
-
-type AdventureGameItemInstanceConfig struct {
-	Reference      string // Reference to the item instance record
-	GameItemRef    string // Reference to the item definition
-	GameLocationRef string // Optional: reference to the location definition (item placed at location)
-	Record         *adventure_game_record.AdventureGameItemInstance
 }
 
 type AdventureGameLocationObjectEffectConfig struct {

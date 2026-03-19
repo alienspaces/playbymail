@@ -36,14 +36,6 @@ func combatHarness(t *testing.T) *harness.Testing {
 	// Override the default creature stats for predictable combat arithmetic:
 	//   AttackDamage=10, Defense=2  →  player (unarmed, damage=5) deals max(5-2,1)=3 per hit
 	//                               →  creature deals max(10-0,1)=10 per retaliation
-	instanceCfg, err := dc.FindGameInstanceConfig(harness.GameInstanceOneRef)
-	require.NoError(t, err)
-	for i := range instanceCfg.AdventureGameCreatureInstanceConfigs {
-		if instanceCfg.AdventureGameCreatureInstanceConfigs[i].Reference == harness.GameCreatureInstanceOneRef {
-			// Record is set during instance creation; override via the game-level creature config instead.
-			break
-		}
-	}
 	for i := range dc.GameConfigs {
 		if dc.GameConfigs[i].Reference != harness.GameOneRef {
 			continue

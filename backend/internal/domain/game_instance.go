@@ -964,7 +964,7 @@ func (m *Domain) PopulateAdventureGameInstanceData(instanceID string) (*Adventur
 		}
 	}
 
-	// 5. Create character instances for all subscribed players
+	// 5. Create character instances for all subscribed players (deduplicated per character)
 	subscriptionInstances, err := m.GetManyGameSubscriptionInstanceRecs(&coresql.Options{
 		Params: []coresql.Param{
 			{Col: game_record.FieldGameSubscriptionInstanceGameInstanceID, Val: instanceID},
@@ -975,6 +975,7 @@ func (m *Domain) PopulateAdventureGameInstanceData(instanceID string) (*Adventur
 		return nil, err
 	}
 
+	createdCharacterIDs := make(map[string]bool)
 	for _, subInst := range subscriptionInstances {
 		// Get game subscription to find account_user_id
 		subRecs, err := m.GetManyGameSubscriptionRecs(&coresql.Options{
@@ -1007,6 +1008,12 @@ func (m *Domain) PopulateAdventureGameInstanceData(instanceID string) (*Adventur
 			continue
 		}
 
+		characterID := charRecs[0].ID
+		if createdCharacterIDs[characterID] {
+			l.Info("character instance already created for character >%s< - skipping duplicate subscription", characterID)
+			continue
+		}
+
 		if startingLocationInstanceID == "" {
 			l.Warn("no starting location instance found for game >%s< - cannot create character instance", gameID)
 			return nil, fmt.Errorf("no starting location instance found for game >%s<", gameID)
@@ -1015,16 +1022,17 @@ func (m *Domain) PopulateAdventureGameInstanceData(instanceID string) (*Adventur
 		charInst, err := m.CreateAdventureGameCharacterInstanceRec(&adventure_game_record.AdventureGameCharacterInstance{
 			GameID:                          gameID,
 			GameInstanceID:                  instanceID,
-			AdventureGameCharacterID:        charRecs[0].ID,
+			AdventureGameCharacterID:        characterID,
 			AdventureGameLocationInstanceID: startingLocationInstanceID,
 			Health:                          100,
 			InventoryCapacity:               10,
 			LastTurnEvents:                  []byte("[]"),
 		})
 		if err != nil {
-			l.Warn("failed to create character instance for character >%s< >%v<", charRecs[0].ID, err)
+			l.Warn("failed to create character instance for character >%s< >%v<", characterID, err)
 			return nil, err
 		}
+		createdCharacterIDs[characterID] = true
 		out.CharacterInstances = append(out.CharacterInstances, charInst)
 
 		if err := m.AssignStartingItemsToCharacterInstance(charInst); err != nil {
@@ -1032,7 +1040,7 @@ func (m *Domain) PopulateAdventureGameInstanceData(instanceID string) (*Adventur
 			return nil, err
 		}
 
-		l.Info("created character instance >%s< for character >%s< at location >%s<", charInst.ID, charRecs[0].ID, startingLocationInstanceID)
+		l.Info("created character instance >%s< for character >%s< at location >%s<", charInst.ID, characterID, startingLocationInstanceID)
 	}
 
 	l.Info("populated adventure game instance data: locations=%d creatures=%d objects=%d items=%d characters=%d",

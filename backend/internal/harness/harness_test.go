@@ -52,8 +52,8 @@ func TestHarnessSetupTeardown_DefaultDataConfig(t *testing.T) {
 	require.Len(t, h.Data.AdventureGameCreatureRecs, 2, "Should have exactly 2 adventure game creature records")
 	// Items: 2 (GameItemOneRef, GameItemTwoRef)
 	require.Len(t, h.Data.AdventureGameItemRecs, 2, "Should have exactly 2 adventure game item records")
-	// Location instances: 3 locations * 2 player subscriptions = 6 (auto-generated per player subscription)
-	require.Len(t, h.Data.AdventureGameLocationInstanceRecs, 6, "Should have exactly 6 adventure game location instance records (3 locations * 2 player subscriptions)")
+	// Location instances: 3 (one per location for GameInstanceOneRef; GameInstanceCleanRef stays in created status)
+	require.Len(t, h.Data.AdventureGameLocationInstanceRecs, 3, "Should have exactly 3 adventure game location instance records (1 per location for started instance)")
 	// Character instances: 1 (GameCharacterInstanceOneRef) - only for GameInstanceOneRef
 	require.Len(t, h.Data.AdventureGameCharacterInstanceRecs, 1, "Should have exactly 1 adventure game character instance record")
 	// Creature instances: 1 (GameCreatureInstanceOneRef) - only for GameInstanceOneRef
