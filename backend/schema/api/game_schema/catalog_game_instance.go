@@ -14,6 +14,7 @@ type CatalogGameInstanceResponseData struct {
 	GameDescription       string    `json:"game_description"`
 	TurnDurationHours     int       `json:"turn_duration_hours"`
 	GameSubscriptionID    string    `json:"game_subscription_id"`
+	AccountName           string    `json:"account_name"`
 	RequiredPlayerCount   int       `json:"required_player_count"`
 	DeliveryEmail         bool      `json:"delivery_email"`
 	DeliveryPhysicalPost  bool      `json:"delivery_physical_post"`

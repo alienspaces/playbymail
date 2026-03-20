@@ -26,6 +26,9 @@
         "game_subscription_id": {
             "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
         },
+        "account_name": {
+            "type": "string"
+        },
         "required_player_count": {
             "type": "integer",
             "minimum": 0
@@ -54,6 +57,7 @@
         "game_description",
         "turn_duration_hours",
         "game_subscription_id",
+        "account_name",
         "required_player_count",
         "delivery_email",
         "delivery_physical_post",

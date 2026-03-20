@@ -9,6 +9,26 @@ export async function getMe() {
   return data.data;
 }
 
+export async function getAccount(accountId) {
+  const res = await apiFetch(`${baseUrl}/api/v1/accounts/${accountId}`, {
+    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() }
+  });
+  await handleApiError(res, 'Failed to fetch account');
+  const data = await res.json();
+  return data.data;
+}
+
+export async function updateAccount(accountId, accountData) {
+  const res = await apiFetch(`${baseUrl}/api/v1/accounts/${accountId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+    body: JSON.stringify(accountData)
+  });
+  await handleApiError(res, 'Failed to update account');
+  const data = await res.json();
+  return data.data;
+}
+
 export async function deleteAccountUser(accountId, accountUserId) {
   const res = await apiFetch(`${baseUrl}/api/v1/accounts/${accountId}/users/${accountUserId}`, {
     method: 'DELETE',

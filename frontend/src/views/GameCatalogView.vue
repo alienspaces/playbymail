@@ -28,6 +28,7 @@
         <div class="game-info">
           <h2 class="game-name">{{ entry.game_name }}</h2>
           <p v-if="entry.game_description" class="game-description">{{ entry.game_description }}</p>
+          <p v-if="entry.account_name" class="game-host">Hosted by {{ entry.account_name }}</p>
           <div class="game-meta">
             <span class="game-type badge">{{ formatGameType(entry.game_type) }}</span>
             <span class="turn-duration">Turn: {{ entry.turn_duration_hours }}h</span>
@@ -164,6 +165,12 @@ onMounted(fetchCatalog)
   font-size: var(--font-size-md);
   margin-bottom: var(--space-sm);
   color: var(--color-text-muted, #444);
+}
+
+.game-host {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted, #666);
+  margin-bottom: var(--space-xs);
 }
 
 .game-meta {

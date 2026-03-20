@@ -17,6 +17,7 @@ func CatalogGameInstanceViewRecordToResponseData(l logger.Logger, rec *game_reco
 		GameDescription:       rec.GameDescription,
 		TurnDurationHours:     rec.TurnDurationHours,
 		GameSubscriptionID:    rec.GameSubscriptionID,
+		AccountName:           rec.AccountName,
 		RequiredPlayerCount:   rec.RequiredPlayerCount,
 		DeliveryEmail:         rec.DeliveryEmail,
 		DeliveryPhysicalPost:  rec.DeliveryPhysicalPost,

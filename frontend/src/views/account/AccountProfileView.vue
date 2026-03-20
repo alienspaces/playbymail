@@ -21,8 +21,40 @@
       <!-- Profile Information Card -->
       <DataCard title="Profile Information" class="game-card">
         <div class="game-info">
+          <!-- Account Name with inline edit -->
+          <div class="account-name-row">
+            <template v-if="editingName">
+              <span class="data-item-label">Account Name</span>
+              <div class="name-edit-controls">
+                <input
+                  v-model="nameInput"
+                  type="text"
+                  class="name-input"
+                  placeholder="Enter account name"
+                  maxlength="255"
+                  @keyup.enter="saveAccountName"
+                  @keyup.escape="cancelEditName"
+                />
+                <div class="name-edit-buttons">
+                  <AppButton @click="saveAccountName" variant="primary" size="small" :disabled="savingName">
+                    {{ savingName ? 'Saving…' : 'Save' }}
+                  </AppButton>
+                  <AppButton @click="cancelEditName" variant="secondary" size="small" :disabled="savingName">
+                    Cancel
+                  </AppButton>
+                </div>
+                <p v-if="nameError" class="name-error">{{ nameError }}</p>
+              </div>
+            </template>
+            <template v-else>
+              <DataItem label="Account Name" :value="accountData ? (accountData.name || 'Not set') : '…'" />
+              <AppButton @click="startEditName" variant="secondary" size="small" class="edit-name-btn">
+                Edit
+              </AppButton>
+            </template>
+          </div>
           <DataItem label="Email" :value="account.email" />
-          <DataItem label="Account ID" :value="account.id" />
+          <DataItem label="Account ID" :value="account.account_id" />
           <DataItem label="Account Created" :value="formatDate(account.created_at)" />
           <DataItem v-if="account.updated_at" label="Last Updated" :value="formatDate(account.updated_at)" />
         </div>
@@ -51,7 +83,7 @@
 </template>
 
 <script>
-import { getMe, deleteAccountUser } from '@/api/account'
+import { getMe, getAccount, updateAccount, deleteAccountUser } from '@/api/account'
 import { useAuthStore } from '@/stores/auth'
 import { useRouter } from 'vue-router'
 import ConfirmationModal from '@/components/ConfirmationModal.vue'
@@ -72,11 +104,16 @@ export default {
   data() {
     return {
       account: null,
+      accountData: null,
       loading: true,
       error: null,
       showDeleteModal: false,
       deleteConfirmationText: '',
-      deleting: false
+      deleting: false,
+      editingName: false,
+      nameInput: '',
+      savingName: false,
+      nameError: null
     }
   },
   async mounted() {
@@ -88,11 +125,33 @@ export default {
         this.loading = true
         this.error = null
         this.account = await getMe()
+        this.accountData = await getAccount(this.account.account_id)
       } catch (err) {
         this.error = err.message || 'Failed to load account information'
         console.error('Error loading account:', err)
       } finally {
         this.loading = false
+      }
+    },
+    startEditName() {
+      this.nameInput = this.accountData ? this.accountData.name : ''
+      this.nameError = null
+      this.editingName = true
+    },
+    cancelEditName() {
+      this.editingName = false
+      this.nameError = null
+    },
+    async saveAccountName() {
+      try {
+        this.savingName = true
+        this.nameError = null
+        this.accountData = await updateAccount(this.account.account_id, { name: this.nameInput })
+        this.editingName = false
+      } catch (err) {
+        this.nameError = err.message || 'Failed to update account name'
+      } finally {
+        this.savingName = false
       }
     },
     showDeleteConfirmation() {
@@ -186,6 +245,59 @@ export default {
   color: var(--color-text-muted);
   font-size: var(--font-size-sm);
   line-height: 1.4;
+}
+
+.account-name-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-sm);
+}
+
+.data-item-label {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  font-weight: var(--font-weight-bold);
+  min-width: 120px;
+  flex-shrink: 0;
+}
+
+.name-edit-controls {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  flex: 1;
+}
+
+.name-input {
+  padding: var(--space-xs) var(--space-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  background: var(--color-bg);
+  color: var(--color-text);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.name-input:focus {
+  outline: none;
+  border-color: var(--color-primary, #3b82f6);
+}
+
+.name-edit-buttons {
+  display: flex;
+  gap: var(--space-xs);
+}
+
+.name-error {
+  color: var(--color-danger, #dc2626);
+  font-size: var(--font-size-xs, 0.75rem);
+  margin: 0;
+}
+
+.edit-name-btn {
+  flex-shrink: 0;
+  align-self: center;
 }
 
 :deep(.data-card-danger) .game-info p {

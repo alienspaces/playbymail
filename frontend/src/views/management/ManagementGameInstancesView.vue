@@ -135,6 +135,18 @@
       @submit="handleCreateInstance"
       @cancel="closeCreateModal"
     />
+
+    <!-- Edit Instance Modal -->
+    <ResourceModalForm
+      :visible="showEditModal"
+      mode="edit"
+      title="Game Instance"
+      :fields="editInstanceFields"
+      :model-value="editInstanceForm"
+      :error="editModalError"
+      @submit="handleEditInstance"
+      @cancel="closeEditModal"
+    />
   </div>
 </template>
 
@@ -172,6 +184,62 @@ const instanceForm = ref({
 });
 
 const isDraftGame = computed(() => selectedGame.value?.status === 'draft');
+
+// Edit instance modal state
+const showEditModal = ref(false);
+const editModalError = ref('');
+const editingInstanceId = ref(null);
+const editInstanceForm = ref({
+  turn_duration_hours: 0,
+  required_player_count: 1,
+  delivery_email: true,
+  delivery_physical_post: false,
+  delivery_physical_local: false,
+  process_when_all_submitted: false,
+});
+
+const editInstanceFields = [
+  {
+    key: 'turn_duration_hours',
+    label: 'Turn Duration (Hours)',
+    type: 'number',
+    required: true,
+    min: 1,
+    placeholder: 'Hours between turns'
+  },
+  {
+    key: 'required_player_count',
+    label: 'Required Player Count',
+    type: 'number',
+    required: true,
+    min: 1,
+    placeholder: 'Minimum number of players required before game can start'
+  },
+  {
+    key: 'delivery_email',
+    label: 'Email Delivery',
+    type: 'checkbox',
+    checkboxLabel: 'Enable email delivery (web-based turn sheet viewer)'
+  },
+  {
+    key: 'delivery_physical_post',
+    label: 'Physical Post Delivery',
+    type: 'checkbox',
+    checkboxLabel: 'Enable physical post delivery (traditional mail-based)'
+  },
+  {
+    key: 'delivery_physical_local',
+    label: 'Physical Local Delivery',
+    type: 'checkbox',
+    checkboxLabel: 'Enable physical local delivery (convention/classroom - game master prints locally, players fill at table, manual scanning/submission)'
+  },
+  {
+    key: 'process_when_all_submitted',
+    label: 'Auto-Process Turn',
+    type: 'checkbox',
+    checkboxLabel: 'Automatically process the turn when all players have submitted'
+  },
+];
 
 const instanceFields = computed(() => {
   const fields = [
@@ -380,6 +448,57 @@ const handleCreateInstance = async (formData) => {
   }
 };
 
+const openEditInstance = (instance) => {
+  editingInstanceId.value = instance.id;
+  editInstanceForm.value = {
+    turn_duration_hours: instance.turn_duration_hours || 0,
+    required_player_count: instance.required_player_count || 1,
+    delivery_email: Boolean(instance.delivery_email),
+    delivery_physical_post: Boolean(instance.delivery_physical_post),
+    delivery_physical_local: Boolean(instance.delivery_physical_local),
+    process_when_all_submitted: Boolean(instance.process_when_all_submitted),
+  };
+  editModalError.value = '';
+  showEditModal.value = true;
+};
+
+const closeEditModal = () => {
+  showEditModal.value = false;
+  editModalError.value = '';
+  editingInstanceId.value = null;
+};
+
+const handleEditInstance = async (formData) => {
+  editModalError.value = '';
+
+  const deliveryEmail = Boolean(formData.delivery_email);
+  const deliveryPhysicalPost = Boolean(formData.delivery_physical_post);
+  const deliveryPhysicalLocal = Boolean(formData.delivery_physical_local);
+
+  if (!deliveryEmail && !deliveryPhysicalPost && !deliveryPhysicalLocal) {
+    editModalError.value = 'At least one delivery method must be enabled';
+    return;
+  }
+
+  try {
+    const instance = gameInstances.value.find(i => i.id === editingInstanceId.value);
+    await gameInstancesStore.updateGameInstance(gameId.value, editingInstanceId.value, {
+      game_id: instance?.game_id || gameId.value,
+      turn_duration_hours: formData.turn_duration_hours,
+      required_player_count: formData.required_player_count || 1,
+      delivery_email: deliveryEmail,
+      delivery_physical_post: deliveryPhysicalPost,
+      delivery_physical_local: deliveryPhysicalLocal,
+      process_when_all_submitted: Boolean(formData.process_when_all_submitted),
+    });
+    closeEditModal();
+    await loadGameInstances();
+  } catch (err) {
+    console.error('Failed to update instance:', err);
+    editModalError.value = err.message || 'Failed to update game instance';
+  }
+};
+
 const viewInstance = (instance) => {
   router.push(`/admin/games/${gameId.value}/instances/${instance.id}`);
 };
@@ -439,6 +558,7 @@ const getActiveInstanceActions = (instance) => {
   ];
 
   if (instance.status === 'created') {
+    actions.push({ key: 'edit', label: 'Edit', handler: () => openEditInstance(instance) });
     actions.push({ key: 'start', label: 'Start', handler: () => startInstance(instance) });
   } else if (instance.status === 'started') {
     actions.push({ key: 'pause', label: 'Pause', handler: () => pauseInstance(instance) });

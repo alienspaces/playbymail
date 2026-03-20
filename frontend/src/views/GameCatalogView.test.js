@@ -17,6 +17,7 @@ const mockCatalogData = [
     game_name: 'The Lost Kingdom',
     game_description: 'An adventure game',
     game_type: 'adventure',
+    account_name: 'Test Host',
     turn_duration_hours: 168,
     required_player_count: 4,
     delivery_email: true,
@@ -53,6 +54,7 @@ describe('GameCatalogView', () => {
     expect(wrapper.find('[data-testid="instance-card-inst-1"]').exists()).toBe(true)
     expect(wrapper.text()).toContain('The Lost Kingdom')
     expect(wrapper.text()).toContain('An adventure game')
+    expect(wrapper.text()).toContain('Hosted by Test Host')
     expect(wrapper.text()).toContain('Adventure')
   })
 

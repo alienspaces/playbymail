@@ -32,6 +32,9 @@
     <div v-else-if="instance" class="instance-details">
       <!-- Instance Information Section -->
       <DataCard :title="`Instance - ${instance.id.slice(0, 8)}...`">
+        <template v-if="instance.status === 'created'" #actions>
+          <Button @click="openEditInstance" variant="secondary" size="small">Edit Instance</Button>
+        </template>
         <div class="instance-info-grid">
           <div class="info-item">
             <span class="label">Instance ID</span>
@@ -75,28 +78,7 @@
           </div>
           <div class="info-item">
             <span class="label">Turn Duration</span>
-            <span v-if="!editingTurnDuration" class="value">
-              {{ formatTurnDuration(instance.turn_duration_hours) }}
-              <button
-                v-if="instance.status === 'created'"
-                @click="startEditTurnDuration"
-                class="edit-inline-btn"
-                title="Edit turn duration"
-              >✎</button>
-            </span>
-            <span v-else class="value turn-duration-edit">
-              <input
-                v-model.number="turnDurationEdit"
-                type="number"
-                min="0"
-                step="1"
-                class="turn-duration-input"
-              />
-              <button @click="saveTurnDuration" class="save-inline-btn" :disabled="savingTurnDuration">
-                {{ savingTurnDuration ? '…' : '✓' }}
-              </button>
-              <button @click="cancelEditTurnDuration" class="cancel-inline-btn">✕</button>
-            </span>
+            <span class="value">{{ formatTurnDuration(instance.turn_duration_hours) }}</span>
           </div>
           <div class="info-item" v-if="instance.next_turn_due_at">
             <span class="label">Next Turn Due</span>
@@ -235,6 +217,18 @@
         </ResourceTable>
       </DataCard>
 
+      <!-- Edit Instance Modal -->
+      <ResourceModalForm
+        :visible="showEditModal"
+        mode="edit"
+        title="Game Instance"
+        :fields="editInstanceFields"
+        :model-value="editInstanceForm"
+        :error="editModalError"
+        @submit="handleEditInstance"
+        @cancel="closeEditModal"
+      />
+
       <!-- Add/Edit Parameter Modal -->
       <div v-if="showEditParameterModal" class="modal-overlay" @click="closeParameterModal">
         <div class="modal-content" @click.stop>
@@ -303,6 +297,7 @@ import Button from '../../components/Button.vue';
 import TableActions from '../../components/TableActions.vue';
 import DataCard from '../../components/DataCard.vue';
 import ResourceTable from '../../components/ResourceTable.vue';
+import ResourceModalForm from '../../components/ResourceModalForm.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -332,10 +327,60 @@ const inviteLoading = ref(false);
 const inviteError = ref('');
 const inviteSuccess = ref(false);
 
-// Turn duration inline edit state
-const editingTurnDuration = ref(false);
-const turnDurationEdit = ref(0);
-const savingTurnDuration = ref(false);
+// Edit instance modal state
+const showEditModal = ref(false);
+const editModalError = ref('');
+const editInstanceForm = ref({
+  turn_duration_hours: 0,
+  required_player_count: 1,
+  delivery_email: true,
+  delivery_physical_post: false,
+  delivery_physical_local: false,
+  process_when_all_submitted: false,
+});
+
+const editInstanceFields = [
+  {
+    key: 'turn_duration_hours',
+    label: 'Turn Duration (Hours)',
+    type: 'number',
+    required: true,
+    min: 1,
+    placeholder: 'Hours between turns'
+  },
+  {
+    key: 'required_player_count',
+    label: 'Required Player Count',
+    type: 'number',
+    required: true,
+    min: 1,
+    placeholder: 'Minimum number of players required before game can start'
+  },
+  {
+    key: 'delivery_email',
+    label: 'Email Delivery',
+    type: 'checkbox',
+    checkboxLabel: 'Enable email delivery (web-based turn sheet viewer)'
+  },
+  {
+    key: 'delivery_physical_post',
+    label: 'Physical Post Delivery',
+    type: 'checkbox',
+    checkboxLabel: 'Enable physical post delivery (traditional mail-based)'
+  },
+  {
+    key: 'delivery_physical_local',
+    label: 'Physical Local Delivery',
+    type: 'checkbox',
+    checkboxLabel: 'Enable physical local delivery (convention/classroom - game master prints locally, players fill at table, manual scanning/submission)'
+  },
+  {
+    key: 'process_when_all_submitted',
+    label: 'Auto-Process Turn',
+    type: 'checkbox',
+    checkboxLabel: 'Automatically process the turn when all players have submitted'
+  },
+];
 
 // Computed: Check if game can be started
 const canStartGame = computed(() => {
@@ -471,28 +516,50 @@ const formatTurnDuration = (hours) => {
   return `${hours} hour${hours === 1 ? '' : 's'}`;
 };
 
-const startEditTurnDuration = () => {
-  turnDurationEdit.value = instance.value.turn_duration_hours || 0;
-  editingTurnDuration.value = true;
+const openEditInstance = () => {
+  editInstanceForm.value = {
+    turn_duration_hours: instance.value.turn_duration_hours || 0,
+    required_player_count: instance.value.required_player_count || 1,
+    delivery_email: Boolean(instance.value.delivery_email),
+    delivery_physical_post: Boolean(instance.value.delivery_physical_post),
+    delivery_physical_local: Boolean(instance.value.delivery_physical_local),
+    process_when_all_submitted: Boolean(instance.value.process_when_all_submitted),
+  };
+  editModalError.value = '';
+  showEditModal.value = true;
 };
 
-const cancelEditTurnDuration = () => {
-  editingTurnDuration.value = false;
+const closeEditModal = () => {
+  showEditModal.value = false;
+  editModalError.value = '';
 };
 
-const saveTurnDuration = async () => {
-  savingTurnDuration.value = true;
+const handleEditInstance = async (formData) => {
+  editModalError.value = '';
+
+  const deliveryEmail = Boolean(formData.delivery_email);
+  const deliveryPhysicalPost = Boolean(formData.delivery_physical_post);
+  const deliveryPhysicalLocal = Boolean(formData.delivery_physical_local);
+
+  if (!deliveryEmail && !deliveryPhysicalPost && !deliveryPhysicalLocal) {
+    editModalError.value = 'At least one delivery method must be enabled';
+    return;
+  }
+
   try {
     await gameInstancesStore.updateGameInstance(gameId.value, instanceId.value, {
       game_id: instance.value.game_id,
-      turn_duration_hours: turnDurationEdit.value,
+      turn_duration_hours: formData.turn_duration_hours,
+      required_player_count: formData.required_player_count || 1,
+      delivery_email: deliveryEmail,
+      delivery_physical_post: deliveryPhysicalPost,
+      delivery_physical_local: deliveryPhysicalLocal,
+      process_when_all_submitted: Boolean(formData.process_when_all_submitted),
     });
+    closeEditModal();
     await loadInstance();
-    editingTurnDuration.value = false;
   } catch (err) {
-    error.value = err.message || 'Failed to update turn duration';
-  } finally {
-    savingTurnDuration.value = false;
+    editModalError.value = err.message || 'Failed to update game instance';
   }
 };
 
@@ -1327,40 +1394,5 @@ const getEditingParameterDefault = () => {
   margin-top: var(--space-xs);
 }
 
-.edit-inline-btn,
-.save-inline-btn,
-.cancel-inline-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 0 var(--space-xs);
-  font-size: var(--font-size-sm);
-  color: var(--color-text-muted);
-  line-height: 1;
-}
 
-.edit-inline-btn:hover { color: var(--color-primary); }
-.save-inline-btn:hover { color: var(--color-success); }
-.cancel-inline-btn:hover { color: var(--color-danger); }
-
-.turn-duration-edit {
-  display: flex;
-  align-items: center;
-  gap: var(--space-xs);
-}
-
-.turn-duration-input {
-  width: 80px;
-  padding: 2px var(--space-xs);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  font-size: var(--font-size-sm);
-  color: var(--color-text);
-  background: var(--color-bg);
-}
-
-.turn-duration-input:focus {
-  outline: none;
-  border-color: var(--color-primary);
-}
 </style>
