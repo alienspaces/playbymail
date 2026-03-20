@@ -253,10 +253,13 @@ func (t *Testing) removeAdventureGameRecords() error {
 	if err := t.removeAdventureGameLocationObjectRecords(); err != nil {
 		return err
 	}
-	if err := t.removeAdventureGameLocationStructureRecords(); err != nil {
+	// Placements must be removed before locations (placements hold FK to locations).
+	// Location link requirements are removed inside removeAdventureGameLocationStructureRecords
+	// before creatures/items in removeAdventureGameEntityRecords (requirements reference both).
+	if err := t.removeAdventureGamePlacementsPerGame(); err != nil {
 		return err
 	}
-	if err := t.removeAdventureGamePlacementsPerGame(); err != nil {
+	if err := t.removeAdventureGameLocationStructureRecords(); err != nil {
 		return err
 	}
 	if err := t.removeAdventureGameEntityRecords(); err != nil {
