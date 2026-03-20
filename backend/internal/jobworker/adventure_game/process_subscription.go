@@ -14,17 +14,18 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/turnsheet"
 )
 
-// AdventureGameSubscriptionProcessingProcessor processes game subscription processing for adventure games
-type AdventureGameSubscriptionProcessingProcessor struct {
+// AdventureGameJoinGameProcessor processes join game turn sheets for adventure games,
+// creating the necessary game entities (game instance, character, character instance).
+type AdventureGameJoinGameProcessor struct {
 	Logger logger.Logger
 	Domain *domain.Domain
 }
 
-// NewAdventureGameSubscriptionProcessingProcessor creates a new adventure game subscription processing processor
-func NewAdventureGameSubscriptionProcessingProcessor(l logger.Logger, d *domain.Domain) (*AdventureGameSubscriptionProcessingProcessor, error) {
-	l = l.WithFunctionContext("NewAdventureGameSubscriptionProcessingProcessor")
+// NewAdventureGameJoinGameProcessor creates a new adventure game join game processor.
+func NewAdventureGameJoinGameProcessor(l logger.Logger, d *domain.Domain) (*AdventureGameJoinGameProcessor, error) {
+	l = l.WithFunctionContext("NewAdventureGameJoinGameProcessor")
 
-	return &AdventureGameSubscriptionProcessingProcessor{
+	return &AdventureGameJoinGameProcessor{
 		Logger: l,
 		Domain: d,
 	}, nil
@@ -32,8 +33,8 @@ func NewAdventureGameSubscriptionProcessingProcessor(l logger.Logger, d *domain.
 
 // ProcessGameSubscriptionProcessing processes a join game turn sheet and creates the necessary
 // game entities (game instance, character, character instance, etc.)
-func (p *AdventureGameSubscriptionProcessingProcessor) ProcessGameSubscriptionProcessing(ctx context.Context, subscriptionRec *game_record.GameSubscription, turnSheetRec *game_record.GameTurnSheet) error {
-	l := p.Logger.WithFunctionContext("AdventureGameSubscriptionProcessingProcessor/ProcessGameSubscriptionProcessing")
+func (p *AdventureGameJoinGameProcessor) ProcessGameSubscriptionProcessing(ctx context.Context, subscriptionRec *game_record.GameSubscription, turnSheetRec *game_record.GameTurnSheet) error {
+	l := p.Logger.WithFunctionContext("AdventureGameJoinGameProcessor/ProcessGameSubscriptionProcessing")
 
 	l.Info("processing join game turn sheet for subscription ID >%s< turn sheet ID >%s<", subscriptionRec.ID, turnSheetRec.ID)
 
@@ -132,7 +133,7 @@ func (p *AdventureGameSubscriptionProcessingProcessor) ProcessGameSubscriptionPr
 		GameInstanceID:                  gameInstanceRec.ID,
 		AdventureGameCharacterID:        characterRec.ID,
 		AdventureGameLocationInstanceID: startingLocationInstanceID,
-		Health:                          100,
+		Health:                          CharacterInitialHealth,
 		LastTurnEvents:                  []byte("[]"),
 	}
 
@@ -160,7 +161,7 @@ func (p *AdventureGameSubscriptionProcessingProcessor) ProcessGameSubscriptionPr
 
 // getOrCreateGameInstance gets an existing game instance for a manager subscription with capacity,
 // or creates a new one if none exist or all are full
-func (p *AdventureGameSubscriptionProcessingProcessor) getOrCreateGameInstance(gameID, managerSubscriptionID string) (*game_record.GameInstance, error) {
+func (p *AdventureGameJoinGameProcessor) getOrCreateGameInstance(gameID, managerSubscriptionID string) (*game_record.GameInstance, error) {
 	l := p.Logger.WithFunctionContext("getOrCreateGameInstance")
 
 	// Get all game instances for this game
@@ -257,7 +258,7 @@ func (p *AdventureGameSubscriptionProcessingProcessor) getOrCreateGameInstance(g
 }
 
 // getOrCreateAdventureGameCharacter gets or creates an adventure game character
-func (p *AdventureGameSubscriptionProcessingProcessor) getOrCreateAdventureGameCharacter(gameID, accountID, accountUserID, characterName string) (*adventure_game_record.AdventureGameCharacter, error) {
+func (p *AdventureGameJoinGameProcessor) getOrCreateAdventureGameCharacter(gameID, accountID, accountUserID, characterName string) (*adventure_game_record.AdventureGameCharacter, error) {
 	l := p.Logger.WithFunctionContext("getOrCreateAdventureGameCharacter")
 
 	// Check if character already exists
@@ -299,7 +300,7 @@ func (p *AdventureGameSubscriptionProcessingProcessor) getOrCreateAdventureGameC
 
 // getStartingLocationInstance gets the starting location instance for a game instance
 // It finds starting locations for the game and then finds the corresponding location instance
-func (p *AdventureGameSubscriptionProcessingProcessor) getStartingLocationInstance(gameID, gameInstanceID string) (string, error) {
+func (p *AdventureGameJoinGameProcessor) getStartingLocationInstance(gameID, gameInstanceID string) (string, error) {
 	l := p.Logger.WithFunctionContext("getStartingLocationInstance")
 
 	// Get starting locations for this game

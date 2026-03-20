@@ -3,6 +3,7 @@ package turn_sheet_processor
 import (
 	"fmt"
 
+	"gitlab.com/alienspaces/playbymail/core/nullint32"
 	coresql "gitlab.com/alienspaces/playbymail/core/sql"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
 	"gitlab.com/alienspaces/playbymail/internal/domain"
@@ -10,13 +11,11 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/turnsheet"
 )
 
-const defaultUnarmedAttackDamage = 5
-
 // ResolveEquipmentStats returns (weaponDamage, armorDefense) for a character
-// based on their currently equipped items. Used by both the monster encounter
-// processor and the location choice processor (flee penalty).
+// based on weapon_damage and armor_defense item effects on their equipped items.
+// Used by both the monster encounter processor and the location choice processor (flee penalty).
 func ResolveEquipmentStats(l logger.Logger, d *domain.Domain, characterInstanceID string) (weaponDamage, armorDefense int, err error) {
-	weaponDamage = defaultUnarmedAttackDamage
+	weaponDamage = DefaultUnarmedAttackDamage
 	armorDefense = 0
 
 	inventoryItems, err := d.GetAdventureGameItemInstanceRecsByCharacterInstance(characterInstanceID)
@@ -31,16 +30,37 @@ func ResolveEquipmentStats(l logger.Logger, d *domain.Domain, characterInstanceI
 
 		slot := itemInstance.EquipmentSlot.String
 
-		itemDef, err := d.GetAdventureGameItemRec(itemInstance.AdventureGameItemID, nil)
-		if err != nil {
-			l.Warn("failed to get item definition >%s< >%v<", itemInstance.AdventureGameItemID, err)
-			continue
+		effects, effectErr := d.GetManyAdventureGameItemEffectRecs(&coresql.Options{
+			Params: []coresql.Param{
+				{Col: adventure_game_record.FieldAdventureGameItemEffectAdventureGameItemID, Val: itemInstance.AdventureGameItemID},
+				{Col: adventure_game_record.FieldAdventureGameItemEffectActionType, Val: adventure_game_record.AdventureGameItemEffectActionTypeEquip},
+			},
+		})
+		if effectErr != nil {
+			l.Warn("failed to get item effects for item >%s< >%v<", itemInstance.AdventureGameItemID, effectErr)
+			return weaponDamage, armorDefense, fmt.Errorf("failed to get item effects: %w", effectErr)
 		}
 
-		if slot == adventure_game_record.AdventureGameItemEquipmentSlotWeapon {
-			weaponDamage = itemDef.Damage
-		} else if slot != "" {
-			armorDefense += itemDef.Defense
+		for _, effect := range effects {
+			if !nullint32.IsValid(effect.ResultValueMin) {
+				continue
+			}
+			statValue, err := nullint32.ToInt32(effect.ResultValueMin)
+			if err != nil {
+				l.Warn("failed to convert result value min to int32 >%v<", err)
+				continue
+			}
+
+			switch effect.EffectType {
+			case adventure_game_record.AdventureGameItemEffectEffectTypeWeaponDamage:
+				if slot == adventure_game_record.AdventureGameItemEquipmentSlotWeapon {
+					weaponDamage = int(statValue)
+				}
+			case adventure_game_record.AdventureGameItemEffectEffectTypeArmorDefense:
+				if slot != adventure_game_record.AdventureGameItemEquipmentSlotWeapon {
+					armorDefense += int(statValue)
+				}
+			}
 		}
 	}
 
@@ -49,7 +69,7 @@ func ResolveEquipmentStats(l logger.Logger, d *domain.Domain, characterInstanceI
 
 // HasAggressiveCreaturesAtLocation returns true if any alive aggressive creature
 // instances exist at the given location.
-func HasAggressiveCreaturesAtLocation(d *domain.Domain, gameInstanceID, locationInstanceID string) (bool, error) {
+func HasAggressiveCreaturesAtLocation(l logger.Logger, d *domain.Domain, gameInstanceID, locationInstanceID string) (bool, error) {
 	creatureInstances, err := d.GetManyAdventureGameCreatureInstanceRecs(&coresql.Options{
 		Params: []coresql.Param{
 			{Col: adventure_game_record.FieldAdventureGameCreatureInstanceGameInstanceID, Val: gameInstanceID},
@@ -96,8 +116,9 @@ func GetAliveCreaturesAtLocation(l logger.Logger, d *domain.Domain, gameInstance
 		creatureRec, err := d.GetAdventureGameCreatureRec(inst.AdventureGameCreatureID, nil)
 		if err != nil {
 			l.Warn("failed to get creature definition >%s< >%v<", inst.AdventureGameCreatureID, err)
-			continue
+			return nil, fmt.Errorf("failed to get creature definition: %w", err)
 		}
+
 		creatures = append(creatures, turnsheet.LocationCreature{
 			Name:        creatureRec.Name,
 			Description: creatureRec.Description,
@@ -108,15 +129,14 @@ func GetAliveCreaturesAtLocation(l logger.Logger, d *domain.Domain, gameInstance
 }
 
 // ReadTurnEventsForCategories reads turn events from the character instance without
-// clearing them, filters to only the given categories, and excludes flee_context events.
+// clearing them and filters to the given categories.
 // Call ClearTurnEvents once all processors have built their sheets.
-func ReadTurnEventsForCategories(l logger.Logger, d *domain.Domain, characterInstanceRec *adventure_game_record.AdventureGameCharacterInstance, categories ...string) []turnsheet.TurnEvent {
+func ReadTurnEventsForCategories(l logger.Logger, d *domain.Domain, characterInstanceRec *adventure_game_record.AdventureGameCharacterInstance, categories ...string) ([]turnsheet.TurnEvent, error) {
 	events, err := turnsheet.ReadTurnEvents(characterInstanceRec)
 	if err != nil {
-		l.Warn("failed to read turn events >%v<", err)
-		return nil
+		return nil, fmt.Errorf("failed to read turn events: %w", err)
 	}
-	return turnsheet.FilterTurnEventsByCategory(events, categories...)
+	return turnsheet.FilterTurnEventsByCategory(events, categories...), nil
 }
 
 // ClearTurnEvents reads and clears all turn events from the character instance and

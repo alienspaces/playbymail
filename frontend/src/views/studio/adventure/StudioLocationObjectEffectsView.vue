@@ -153,23 +153,63 @@ const EFFECT_TYPES = [
   'heal', 'summon_creature', 'teleport', 'nothing', 'remove_object',
 ];
 
-const effectFields = [
-  { key: 'adventure_game_location_object_id', label: 'Object', type: 'select', required: true, placeholder: 'Select an object…' },
-  { key: 'action_type', label: 'Action Type', type: 'select', required: true, placeholder: 'Select action type…' },
-  { key: 'effect_type', label: 'Effect Type', type: 'select', required: true, placeholder: 'Select effect type…' },
-  { key: 'result_description', label: 'Result Description', type: 'textarea', required: true, placeholder: 'What the player sees' },
-  { key: 'required_adventure_game_location_object_state_id', label: 'Required State', type: 'select', placeholder: '— any state —' },
-  { key: 'required_adventure_game_item_id', label: 'Required Item', type: 'select', placeholder: 'Optional required item…' },
+// Maps each effect_type to which result fields are shown and which are required.
+const OBJECT_EFFECT_TYPE_FIELD_RULES = {
+  info:                 { show: [], required: [] },
+  nothing:              { show: [], required: [] },
+  change_state:         { show: ['result_adventure_game_location_object_state_id'], required: ['result_adventure_game_location_object_state_id'] },
+  change_object_state:  { show: ['result_adventure_game_location_object_id', 'result_adventure_game_location_object_state_id'], required: ['result_adventure_game_location_object_id', 'result_adventure_game_location_object_state_id'] },
+  reveal_object:        { show: ['result_adventure_game_location_object_id'], required: ['result_adventure_game_location_object_id'] },
+  hide_object:          { show: ['result_adventure_game_location_object_id'], required: ['result_adventure_game_location_object_id'] },
+  remove_object:        { show: [], required: [] },
+  give_item:            { show: ['result_adventure_game_item_id'], required: ['result_adventure_game_item_id'] },
+  remove_item:          { show: ['result_adventure_game_item_id'], required: ['result_adventure_game_item_id'] },
+  open_link:            { show: ['result_adventure_game_location_link_id'], required: ['result_adventure_game_location_link_id'] },
+  close_link:           { show: ['result_adventure_game_location_link_id'], required: ['result_adventure_game_location_link_id'] },
+  damage:               { show: ['result_value_min', 'result_value_max'], required: ['result_value_min', 'result_value_max'] },
+  heal:                 { show: ['result_value_min', 'result_value_max'], required: ['result_value_min', 'result_value_max'] },
+  summon_creature:      { show: ['result_adventure_game_creature_id'], required: ['result_adventure_game_creature_id'] },
+  teleport:             { show: ['result_adventure_game_location_id'], required: ['result_adventure_game_location_id'] },
+};
+
+// All possible result fields with their base definitions.
+const OBJECT_RESULT_FIELDS = [
   { key: 'result_adventure_game_location_object_state_id', label: 'Result State', type: 'select', placeholder: '— no state change —' },
   { key: 'result_adventure_game_item_id', label: 'Result Item', type: 'select', placeholder: 'Item to give/remove…' },
   { key: 'result_adventure_game_location_link_id', label: 'Result Link', type: 'select', placeholder: 'Link to open/close…' },
   { key: 'result_adventure_game_creature_id', label: 'Result Creature', type: 'select', placeholder: 'Creature to summon…' },
   { key: 'result_adventure_game_location_object_id', label: 'Result Object', type: 'select', placeholder: 'Object to reveal/hide/change…' },
   { key: 'result_adventure_game_location_id', label: 'Result Location', type: 'select', placeholder: 'Location to teleport to…' },
-  { key: 'result_value_min', label: 'Min Value', type: 'number', placeholder: 'e.g. 5 (damage/heal amount)' },
-  { key: 'result_value_max', label: 'Max Value', type: 'number', placeholder: 'e.g. 10 (damage/heal amount)' },
+  { key: 'result_value_min', label: 'Min Value', type: 'number', placeholder: 'e.g. 5' },
+  { key: 'result_value_max', label: 'Max Value', type: 'number', placeholder: 'e.g. 10' },
+];
+
+// Base fields always shown regardless of effect type.
+const OBJECT_BASE_FIELDS = [
+  { key: 'adventure_game_location_object_id', label: 'Object', type: 'select', required: true, placeholder: 'Select an object…' },
+  { key: 'action_type', label: 'Action Type', type: 'select', required: true, placeholder: 'Select action type…' },
+  { key: 'effect_type', label: 'Effect Type', type: 'select', required: true, placeholder: 'Select effect type…' },
+  { key: 'result_description', label: 'Result Description', type: 'textarea', required: true, placeholder: 'What the player sees' },
+  { key: 'required_adventure_game_location_object_state_id', label: 'Required State', type: 'select', placeholder: '— any state —' },
+  { key: 'required_adventure_game_item_id', label: 'Required Item', type: 'select', placeholder: 'Optional required item…' },
+];
+
+const OBJECT_TAIL_FIELDS = [
   { key: 'is_repeatable', label: 'Repeatable', type: 'checkbox' },
 ];
+
+const effectFields = computed(() => {
+  const effectType = modalForm.value.effect_type;
+  const rules = OBJECT_EFFECT_TYPE_FIELD_RULES[effectType] || { show: [], required: [] };
+  const showSet = new Set(rules.show);
+  const requiredSet = new Set(rules.required);
+
+  const resultFields = OBJECT_RESULT_FIELDS
+    .filter((f) => showSet.has(f.key))
+    .map((f) => ({ ...f, required: requiredSet.has(f.key) }));
+
+  return [...OBJECT_BASE_FIELDS, ...resultFields, ...OBJECT_TAIL_FIELDS];
+});
 
 // ── States for the currently selected source and result objects ───────────────
 

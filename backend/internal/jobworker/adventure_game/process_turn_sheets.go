@@ -30,8 +30,6 @@ func (p *AdventureGame) ProcessTurnSheets(ctx context.Context, gameInstanceRec *
 		return nil
 	}
 
-	// TODO: (agent) Wrap each character's processCharacterTurnSheets in its own transaction (or the whole loop in one transaction with clear rollback semantics). Ensure job/runner transaction boundaries are respected and add tests for rollback on partial failure.
-
 	// Process turn sheets for each character
 	var errs []error
 	for _, characterInstanceRec := range characterInstanceRecs {

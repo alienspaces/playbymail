@@ -92,8 +92,8 @@ func TestReadTurnEventsForCategories(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			charRec := characterWithEvents(t, tt.events)
 
-			got := turn_sheet_processor.ReadTurnEventsForCategories(l, nil, charRec, tt.categories...)
-
+			got, err := turn_sheet_processor.ReadTurnEventsForCategories(l, nil, charRec, tt.categories...)
+			require.NoError(t, err)
 			require.Len(t, got, tt.wantLen)
 
 			// Verify every returned event is in the wanted category set.

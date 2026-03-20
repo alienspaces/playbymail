@@ -11,7 +11,6 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/turnsheet"
 )
 
-
 // RunCreatureLifecycle processes body decay and creature respawn for all game instances.
 // This should run BEFORE CreateTurnSheets so that dead bodies that have decayed
 // are removed from the game state and respawned creatures appear for the next turn.

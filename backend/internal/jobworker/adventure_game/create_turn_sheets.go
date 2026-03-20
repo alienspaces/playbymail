@@ -35,8 +35,6 @@ func (p *AdventureGame) CreateTurnSheets(ctx context.Context, gameInstanceRec *g
 		return nil, nil
 	}
 
-	// TODO: (agent) Wrap each character's createCharacterTurnSheets in its own transaction (or the whole loop in one transaction with clear rollback semantics). Ensure job/runner transaction boundaries are respected and add tests for rollback on partial failure.
-
 	// Process turn sheets for each character
 	var errs []error
 	var createdTurnSheets []*game_record.GameTurnSheet
@@ -63,7 +61,7 @@ func (p *AdventureGame) CreateTurnSheets(ctx context.Context, gameInstanceRec *g
 
 // createCharacterTurnSheets creates all of the current game turn's turn sheets for a character
 func (p *AdventureGame) createCharacterTurnSheets(ctx context.Context, gameInstanceRec *game_record.GameInstance, characterInstance *adventure_game_record.AdventureGameCharacterInstance) ([]*game_record.GameTurnSheet, error) {
-	l := p.Logger.WithFunctionContext("AdventureGame/processCharacterTurnSheets")
+	l := p.Logger.WithFunctionContext("AdventureGame/createCharacterTurnSheets")
 
 	l.Debug("creating turn sheets for game instance ID >%s< character instance ID >%s< turn number >%d<", gameInstanceRec.ID, characterInstance.ID, gameInstanceRec.CurrentTurn)
 

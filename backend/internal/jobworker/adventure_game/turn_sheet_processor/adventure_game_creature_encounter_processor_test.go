@@ -3,13 +3,13 @@ package turn_sheet_processor_test
 import (
 	"context"
 	"database/sql"
-	"gitlab.com/alienspaces/playbymail/core/nullstring"
 	"encoding/json"
 	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
+	"gitlab.com/alienspaces/playbymail/core/nullstring"
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/harness"
 	"gitlab.com/alienspaces/playbymail/internal/jobworker/adventure_game/turn_sheet_processor"

@@ -175,7 +175,7 @@ func (w *GameSubscriptionProcessingWorker) initializeProcessors(l logger.Logger,
 	processors := make(map[string]GameSubscriptionProcessingProcessor)
 
 	// Register adventure game processor
-	adventureProcessor, err := adventure_game.NewAdventureGameSubscriptionProcessingProcessor(l, d)
+	adventureProcessor, err := adventure_game.NewAdventureGameJoinGameProcessor(l, d)
 	if err != nil {
 		return nil, err
 	}

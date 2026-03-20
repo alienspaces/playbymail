@@ -26,10 +26,6 @@ func AdventureGameItemRequestToRecord(l logger.Logger, r *http.Request, rec *adv
 		rec.Description = req.Description
 		rec.CanBeEquipped = req.CanBeEquipped
 		rec.IsStartingItem = req.IsStartingItem
-		rec.CanBeUsed = req.CanBeUsed
-		rec.Damage = req.Damage
-		rec.Defense = req.Defense
-		rec.HealAmount = req.HealAmount
 		if req.ItemCategory != "" {
 			rec.ItemCategory = &req.ItemCategory
 		} else {
@@ -68,10 +64,6 @@ func AdventureGameItemRecordToResponseData(l logger.Logger, rec *adventure_game_
 		ItemCategory:   itemCategory,
 		EquipmentSlot:  equipmentSlot,
 		IsStartingItem: rec.IsStartingItem,
-		CanBeUsed:      rec.CanBeUsed,
-		Damage:         rec.Damage,
-		Defense:        rec.Defense,
-		HealAmount:     rec.HealAmount,
 		CreatedAt:      rec.CreatedAt,
 		UpdatedAt:      nulltime.ToTimePtr(rec.UpdatedAt),
 		DeletedAt:      nulltime.ToTimePtr(rec.DeletedAt),

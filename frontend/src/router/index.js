@@ -23,6 +23,7 @@ const routes = [
       { path: ':gameId/location-links', component: () => import('../views/studio/adventure/StudioLocationLinksView.vue') },
       { path: ':gameId/location-link-requirements', component: () => import('../views/studio/adventure/StudioLocationLinkRequirementsView.vue') },
       { path: ':gameId/items', component: () => import('../views/studio/adventure/StudioItemsView.vue') },
+      { path: ':gameId/item-effects', component: () => import('../views/studio/adventure/StudioItemEffectsView.vue') },
       { path: ':gameId/creatures', component: () => import('../views/studio/adventure/StudioCreaturesView.vue') },
       { path: ':gameId/item-placements', component: () => import('../views/studio/adventure/StudioItemPlacementsView.vue') },
       { path: ':gameId/creature-placements', component: () => import('../views/studio/adventure/StudioCreaturePlacementsView.vue') },

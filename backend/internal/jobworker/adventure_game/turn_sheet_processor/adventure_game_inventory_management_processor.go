@@ -2,12 +2,12 @@ package turn_sheet_processor
 
 import (
 	"context"
-	"gitlab.com/alienspaces/playbymail/core/nullstring"
 	"encoding/json"
 	"fmt"
 	"strings"
 
 	"gitlab.com/alienspaces/playbymail/core/convert"
+	"gitlab.com/alienspaces/playbymail/core/nullstring"
 	"gitlab.com/alienspaces/playbymail/core/record"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
 	"gitlab.com/alienspaces/playbymail/internal/domain"
@@ -68,7 +68,14 @@ func (p *AdventureGameInventoryManagementProcessor) ProcessTurnSheetResponse(ctx
 	for _, itemInstanceID := range scanData.Unequip {
 		l.Info("unequipping item >%s<", itemInstanceID)
 		name := p.resolveItemName(l, itemInstanceID)
-		_, err := p.Domain.UnequipAdventureGameItemInstanceRec(characterInstanceRec.ID, itemInstanceID)
+
+		itemInstance, err := p.Domain.GetAdventureGameItemInstanceRec(itemInstanceID, nil)
+		if err != nil {
+			l.Warn("failed to get item instance for unequip >%s< >%v<", itemInstanceID, err)
+			return fmt.Errorf("failed to get item instance %s: %w", itemInstanceID, err)
+		}
+
+		_, err = p.Domain.UnequipAdventureGameItemInstanceRec(characterInstanceRec.ID, itemInstanceID)
 		if err != nil {
 			l.Warn("failed to unequip item >%s< >%v<", itemInstanceID, err)
 			return fmt.Errorf("failed to unequip item %s: %w", itemInstanceID, err)
@@ -78,6 +85,20 @@ func (p *AdventureGameInventoryManagementProcessor) ProcessTurnSheetResponse(ctx
 			Icon:     turnsheet.TurnEventIconInventory,
 			Message:  fmt.Sprintf("You moved %s to your backpack.", name),
 		})
+
+		descriptions, charMutated, effectErr := applyItemEffectsForAction(
+			l, p.Domain, gameInstanceRec, characterInstanceRec, itemInstance,
+			adventure_game_record.AdventureGameItemEffectActionTypeUnequip,
+		)
+		if effectErr != nil {
+			l.Warn("failed to apply unequip effects for item >%s< >%v<", itemInstanceID, effectErr)
+		} else if len(descriptions) > 0 {
+			buildItemEffectTurnEvents(characterInstanceRec, descriptions, nil)
+		}
+		if charMutated {
+			charNeedsUpdate = true
+		}
+
 		charNeedsUpdate = true
 	}
 
@@ -85,7 +106,14 @@ func (p *AdventureGameInventoryManagementProcessor) ProcessTurnSheetResponse(ctx
 	for _, itemInstanceID := range scanData.Drop {
 		l.Info("dropping item >%s<", itemInstanceID)
 		name := p.resolveItemName(l, itemInstanceID)
-		_, err := p.Domain.DropAdventureGameItemInstanceRec(characterInstanceRec.ID, itemInstanceID)
+
+		itemInstance, err := p.Domain.GetAdventureGameItemInstanceRec(itemInstanceID, nil)
+		if err != nil {
+			l.Warn("failed to get item instance for drop >%s< >%v<", itemInstanceID, err)
+			return fmt.Errorf("failed to get item instance %s: %w", itemInstanceID, err)
+		}
+
+		_, err = p.Domain.DropAdventureGameItemInstanceRec(characterInstanceRec.ID, itemInstanceID)
 		if err != nil {
 			l.Warn("failed to drop item >%s< >%v<", itemInstanceID, err)
 			return fmt.Errorf("failed to drop item %s: %w", itemInstanceID, err)
@@ -95,6 +123,20 @@ func (p *AdventureGameInventoryManagementProcessor) ProcessTurnSheetResponse(ctx
 			Icon:     turnsheet.TurnEventIconInventory,
 			Message:  fmt.Sprintf("You dropped %s.", name),
 		})
+
+		descriptions, charMutated, effectErr := applyItemEffectsForAction(
+			l, p.Domain, gameInstanceRec, characterInstanceRec, itemInstance,
+			adventure_game_record.AdventureGameItemEffectActionTypeDrop,
+		)
+		if effectErr != nil {
+			l.Warn("failed to apply drop effects for item >%s< >%v<", itemInstanceID, effectErr)
+		} else if len(descriptions) > 0 {
+			buildItemEffectTurnEvents(characterInstanceRec, descriptions, nil)
+		}
+		if charMutated {
+			charNeedsUpdate = true
+		}
+
 		charNeedsUpdate = true
 	}
 
@@ -149,7 +191,7 @@ func (p *AdventureGameInventoryManagementProcessor) ProcessTurnSheetResponse(ctx
 		}
 
 		l.Info("equipping item >%s< to slot >%s<", action.ItemInstanceID, slot)
-		_, err = p.Domain.EquipAdventureGameItemInstanceRec(characterInstanceRec.ID, action.ItemInstanceID, slot)
+		equippedItemInstance, err := p.Domain.EquipAdventureGameItemInstanceRec(characterInstanceRec.ID, action.ItemInstanceID, slot)
 		if err != nil {
 			l.Warn("failed to equip item >%s< >%v<", action.ItemInstanceID, err)
 			return fmt.Errorf("failed to equip item %s: %w", action.ItemInstanceID, err)
@@ -159,6 +201,20 @@ func (p *AdventureGameInventoryManagementProcessor) ProcessTurnSheetResponse(ctx
 			Icon:     turnsheet.TurnEventIconInventory,
 			Message:  fmt.Sprintf("You equipped %s.", itemDef.Name),
 		})
+
+		descriptions, charMutated, effectErr := applyItemEffectsForAction(
+			l, p.Domain, gameInstanceRec, characterInstanceRec, equippedItemInstance,
+			adventure_game_record.AdventureGameItemEffectActionTypeEquip,
+		)
+		if effectErr != nil {
+			l.Warn("failed to apply equip effects for item >%s< >%v<", action.ItemInstanceID, effectErr)
+		} else if len(descriptions) > 0 {
+			buildItemEffectTurnEvents(characterInstanceRec, descriptions, nil)
+		}
+		if charMutated {
+			charNeedsUpdate = true
+		}
+
 		charNeedsUpdate = true
 	}
 
@@ -172,34 +228,37 @@ func (p *AdventureGameInventoryManagementProcessor) ProcessTurnSheetResponse(ctx
 			return fmt.Errorf("failed to get item instance %s: %w", itemInstanceID, err)
 		}
 
-		itemDef, err := p.Domain.GetAdventureGameItemRec(itemInstance.AdventureGameItemID, nil)
-		if err != nil {
-			l.Warn("failed to get item definition >%s< >%v<", itemInstance.AdventureGameItemID, err)
-			return fmt.Errorf("failed to get item definition %s: %w", itemInstanceID, err)
-		}
-
-		if !itemDef.CanBeUsed {
-			l.Warn("item >%s< is not usable — skipping", itemInstanceID)
-			continue
-		}
 		if itemInstance.UsesRemaining <= 0 {
 			l.Warn("item >%s< has no uses remaining — skipping", itemInstanceID)
 			continue
 		}
 
-		// Apply heal effect to character.
-		if itemDef.HealAmount > 0 {
-			characterInstanceRec.Health += itemDef.HealAmount
-			if characterInstanceRec.Health > 100 {
-				characterInstanceRec.Health = 100
-			}
-			l.Info("item >%s< healed character for >%d< (health now %d)", itemDef.Name, itemDef.HealAmount, characterInstanceRec.Health)
-			_ = turnsheet.AppendTurnEvent(characterInstanceRec, turnsheet.TurnEvent{
-				Category: turnsheet.TurnEventCategoryInventory,
-				Icon:     turnsheet.TurnEventIconHeal,
-				Message:  fmt.Sprintf("You used a %s and recovered %d health.", itemDef.Name, itemDef.HealAmount),
-			})
+		itemName := p.resolveItemName(l, itemInstanceID)
+
+		descriptions, charMutated, effectErr := applyItemEffectsForAction(
+			l, p.Domain, gameInstanceRec, characterInstanceRec, itemInstance,
+			adventure_game_record.AdventureGameItemEffectActionTypeUse,
+		)
+		if effectErr != nil {
+			l.Warn("failed to apply use effects for item >%s< >%v<", itemInstanceID, effectErr)
+			return fmt.Errorf("failed to apply use effects for item %s: %w", itemInstanceID, effectErr)
 		}
+
+		if len(descriptions) == 0 {
+			l.Info("item >%s< has no use effects — skipping use action", itemInstanceID)
+			continue
+		}
+
+		if charMutated {
+			charNeedsUpdate = true
+		}
+
+		buildItemEffectTurnEvents(characterInstanceRec, descriptions, nil)
+		_ = turnsheet.AppendTurnEvent(characterInstanceRec, turnsheet.TurnEvent{
+			Category: turnsheet.TurnEventCategoryInventory,
+			Icon:     turnsheet.TurnEventIconInventory,
+			Message:  fmt.Sprintf("You used %s.", itemName),
+		})
 
 		// Decrement uses and mark as used when exhausted.
 		itemInstance.UsesRemaining--
@@ -290,7 +349,7 @@ func (p *AdventureGameInventoryManagementProcessor) CreateNextTurnSheet(ctx cont
 	}
 
 	// Step 7: Check for aggressive creatures at the current location.
-	hasAggressiveCreatures, err := HasAggressiveCreaturesAtLocation(p.Domain, gameInstanceRec.ID, locationInstanceRec.ID)
+	hasAggressiveCreatures, err := HasAggressiveCreaturesAtLocation(l, p.Domain, gameInstanceRec.ID, locationInstanceRec.ID)
 	if err != nil {
 		l.Warn("failed to check for creatures at location >%v<", err)
 	}
@@ -336,6 +395,8 @@ func (p *AdventureGameInventoryManagementProcessor) CreateNextTurnSheet(ctx cont
 			}
 		}
 
+		canUse := itemHasUseEffects(l, p.Domain, itemInstance.AdventureGameItemID)
+
 		inventoryItem := turnsheet.InventoryItem{
 			ItemInstanceID:  itemInstance.ID,
 			ItemName:        itemDef.Name,
@@ -343,7 +404,7 @@ func (p *AdventureGameInventoryManagementProcessor) CreateNextTurnSheet(ctx cont
 			IsEquipped:      itemInstance.IsEquipped,
 			EquipmentSlot:   displaySlot,
 			CanEquip:        itemDef.CanBeEquipped,
-			CanUse:          itemDef.CanBeUsed,
+			CanUse:          canUse,
 			UsesRemaining:   itemInstance.UsesRemaining,
 		}
 		inventoryItemList = append(inventoryItemList, inventoryItem)
@@ -430,7 +491,10 @@ func (p *AdventureGameInventoryManagementProcessor) CreateNextTurnSheet(ctx cont
 	}
 
 	// Step 11: Read inventory events for this sheet. Events are cleared after all processors run.
-	displayEvents := ReadTurnEventsForCategories(l, p.Domain, characterInstanceRec, turnsheet.TurnEventCategoryInventory)
+	displayEvents, err := ReadTurnEventsForCategories(l, p.Domain, characterInstanceRec, turnsheet.TurnEventCategoryInventory)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read inventory events: %w", err)
+	}
 
 	// Step 12: Create sheet data
 	sheetData := turnsheet.InventoryManagementData{

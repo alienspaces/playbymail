@@ -1,0 +1,96 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "http://playbymail.games/schema/adventure_game_schema/adventure_game_item_effect.schema.json",
+    "title": "AdventureGameItemEffect",
+    "type": "object",
+    "properties": {
+        "id": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
+        },
+        "game_id": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
+        },
+        "adventure_game_item_id": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
+        },
+        "action_type": {
+            "type": "string",
+            "enum": [
+                "use",
+                "equip",
+                "unequip",
+                "inspect",
+                "drop"
+            ]
+        },
+        "required_adventure_game_item_id": {
+            "type": "string"
+        },
+        "required_adventure_game_location_id": {
+            "type": "string"
+        },
+        "result_description": {
+            "type": "string"
+        },
+        "effect_type": {
+            "type": "string",
+            "enum": [
+                "info",
+                "damage_target",
+                "damage_wielder",
+                "heal_target",
+                "heal_wielder",
+                "teleport",
+                "open_link",
+                "close_link",
+                "give_item",
+                "remove_item",
+                "summon_creature",
+                "nothing",
+                "weapon_damage",
+                "armor_defense"
+            ]
+        },
+        "result_adventure_game_item_id": {
+            "type": "string"
+        },
+        "result_adventure_game_location_link_id": {
+            "type": "string"
+        },
+        "result_adventure_game_creature_id": {
+            "type": "string"
+        },
+        "result_adventure_game_location_id": {
+            "type": "string"
+        },
+        "result_value_min": {
+            "type": "integer"
+        },
+        "result_value_max": {
+            "type": "integer"
+        },
+        "is_repeatable": {
+            "type": "boolean"
+        },
+        "created_at": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/created_at"
+        },
+        "updated_at": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/updated_at"
+        },
+        "deleted_at": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/updated_at"
+        }
+    },
+    "required": [
+        "id",
+        "game_id",
+        "adventure_game_item_id",
+        "action_type",
+        "result_description",
+        "effect_type",
+        "is_repeatable",
+        "created_at"
+    ],
+    "additionalProperties": false
+}

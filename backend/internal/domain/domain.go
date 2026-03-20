@@ -19,6 +19,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/repository/adventure_game_creature_instance"
 	"gitlab.com/alienspaces/playbymail/internal/repository/adventure_game_creature_placement"
 	"gitlab.com/alienspaces/playbymail/internal/repository/adventure_game_item"
+	"gitlab.com/alienspaces/playbymail/internal/repository/adventure_game_item_effect"
 	"gitlab.com/alienspaces/playbymail/internal/repository/adventure_game_item_instance"
 	"gitlab.com/alienspaces/playbymail/internal/repository/adventure_game_item_placement"
 	"gitlab.com/alienspaces/playbymail/internal/repository/adventure_game_location"
@@ -83,6 +84,7 @@ func NewDomain(l logger.Logger, cfg config.Config) (*Domain, error) {
 		adventure_game_location_link.NewRepository,
 		adventure_game_character.NewRepository,
 		adventure_game_item.NewRepository,
+		adventure_game_item_effect.NewRepository,
 		adventure_game_creature.NewRepository,
 		adventure_game_item_instance.NewRepository,
 		adventure_game_item_placement.NewRepository,
@@ -161,6 +163,11 @@ func (m *Domain) AdventureGameItemRepository() *repository.Generic[adventure_gam
 // AdventureGameItemPlacementRepository -
 func (m *Domain) AdventureGameItemPlacementRepository() *repository.Generic[adventure_game_record.AdventureGameItemPlacement, *adventure_game_record.AdventureGameItemPlacement] {
 	return m.Repositories[adventure_game_item_placement.TableName].(*repository.Generic[adventure_game_record.AdventureGameItemPlacement, *adventure_game_record.AdventureGameItemPlacement])
+}
+
+// AdventureGameItemEffectRepository -
+func (m *Domain) AdventureGameItemEffectRepository() *repository.Generic[adventure_game_record.AdventureGameItemEffect, *adventure_game_record.AdventureGameItemEffect] {
+	return m.Repositories[adventure_game_item_effect.TableName].(*repository.Generic[adventure_game_record.AdventureGameItemEffect, *adventure_game_record.AdventureGameItemEffect])
 }
 
 // AdventureGameCreaturePlacementRepository -

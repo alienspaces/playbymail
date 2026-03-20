@@ -36,6 +36,7 @@ func AdventureGameHandlerConfig(cfg config.Config, l logger.Logger, scnr turnshe
 		adventureGameCharacterHandlerConfig,
 		adventureGameCreatureHandlerConfig,
 		adventureGameItemHandlerConfig,
+		adventureGameItemEffectHandlerConfig,
 		adventureGameItemPlacementHandlerConfig,
 		adventureGameCreaturePlacementHandlerConfig,
 		adventureGameLocationHandlerConfig,

@@ -11,13 +11,32 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 )
 
-// AdventureGame is the turn sheet processor for adventure games
-//   - Only existing character instances are processed during turn processing
-//   - New player onboarding (join game) should be handled separately through API endpoints
+// AdventureGame is the turn sheet processor for adventure games.
+//   - Only existing character instances are processed during turn processing.
+//   - New player onboarding (join game) is handled by AdventureGameJoinGameProcessor
+//     in process_subscription.go.
 //
-// To add new turn sheet types:
-//   - Create processor in internal/jobworker/adventure_game/turn_sheet_processor/
-//   - Register in initializeTurnSheetProcessors() function below
+// # Extension guide for new game types
+//
+// File layout (mirror this package's structure):
+//   - One file per turn sheet processor in turn_sheet_processor/ (e.g. adventure_game_*_processor.go)
+//   - One file per effect subsystem (e.g. adventure_game_*_effect_processor.go)
+//   - Shared query helpers go in turn_sheet_processor/helpers.go
+//   - Package-level constants go in turn_sheet_processor/constants.go and adventure_game/constants.go
+//
+// Registering a new processor:
+//   - Implement the TurnSheetProcessor interface (ProcessTurnSheetResponse + CreateNextTurnSheet)
+//   - Register the new processor in initializeTurnSheetProcessors() below
+//
+// Null type construction:
+//   - Use core/nullstring, core/nullint64 etc. for all null-type construction
+//   - Avoid raw sql.Null* struct literals with explicit field assignments; use the core helpers
+//
+// Function/method argument order (enforced throughout this package):
+//  1. context.Context  — only on interface method boundaries
+//  2. logger.Logger    — all package-level helpers and unexported sub-functions
+//  3. *domain.Domain   — all package-level helpers and unexported sub-functions
+//  4. remaining domain arguments
 
 type AdventureGame struct {
 	Logger     logger.Logger
@@ -80,12 +99,12 @@ func (p *AdventureGame) initializeTurnSheetProcessors() (map[string]TurnSheetPro
 	processors[adventure_game_record.AdventureGameTurnSheetTypeInventoryManagement] = inventoryManagementProcessor
 
 	// Register monster encounter processor
-	monsterEncounterProcessor, err := turn_sheet_processor.NewAdventureGameCreatureEncounterProcessor(l, p.Domain)
+	creatureEncounterProcessor, err := turn_sheet_processor.NewAdventureGameCreatureEncounterProcessor(l, p.Domain)
 	if err != nil {
-		l.Warn("failed to initialize monster encounter processor >%v<", err)
+		l.Warn("failed to initialize creature encounter processor >%v<", err)
 		return nil, err
 	}
-	processors[adventure_game_record.AdventureGameTurnSheetTypeCreatureEncounter] = monsterEncounterProcessor
+	processors[adventure_game_record.AdventureGameTurnSheetTypeCreatureEncounter] = creatureEncounterProcessor
 
 	return processors, nil
 }

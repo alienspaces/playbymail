@@ -2,13 +2,13 @@ package turn_sheet_processor
 
 import (
 	"context"
-	"database/sql"
-	"gitlab.com/alienspaces/playbymail/core/nullstring"
 	"encoding/json"
 	"fmt"
 	"strings"
 
 	"gitlab.com/alienspaces/playbymail/core/convert"
+	"gitlab.com/alienspaces/playbymail/core/nullint64"
+	"gitlab.com/alienspaces/playbymail/core/nullstring"
 	"gitlab.com/alienspaces/playbymail/core/record"
 	coresql "gitlab.com/alienspaces/playbymail/core/sql"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
@@ -19,15 +19,13 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/utils/turnsheetutil"
 )
 
-const characterStartingHealth = 50
-
 // AdventureGameCreatureEncounterProcessor processes monster encounter turn sheet business logic.
 type AdventureGameCreatureEncounterProcessor struct {
 	Logger logger.Logger
 	Domain *domain.Domain
 }
 
-// NewAdventureGameCreatureEncounterProcessor creates a new monster encounter processor.
+// NewAdventureGameCreatureEncounterProcessor creates a new creature encounter processor.
 func NewAdventureGameCreatureEncounterProcessor(l logger.Logger, d *domain.Domain) (*AdventureGameCreatureEncounterProcessor, error) {
 	l = l.WithFunctionContext("NewAdventureGameCreatureEncounterProcessor")
 	return &AdventureGameCreatureEncounterProcessor{
@@ -93,7 +91,7 @@ func (p *AdventureGameCreatureEncounterProcessor) ProcessTurnSheetResponse(
 	weaponDamage, armorDefense, err := ResolveEquipmentStats(l, p.Domain, characterInstanceRec.ID)
 	if err != nil {
 		l.Warn("failed to resolve equipment stats >%v< — using unarmed defaults", err)
-		weaponDamage = defaultUnarmedAttackDamage
+		weaponDamage = DefaultUnarmedAttackDamage
 		armorDefense = 0
 	}
 
@@ -155,7 +153,7 @@ func (p *AdventureGameCreatureEncounterProcessor) ProcessTurnSheetResponse(
 
 			if creatureInstance.Health <= 0 {
 				creatureInstance.Health = 0
-				creatureInstance.DiedAtTurn = sql.NullInt64{Int64: int64(gameInstanceRec.CurrentTurn), Valid: true}
+				creatureInstance.DiedAtTurn = nullint64.FromInt64(int64(gameInstanceRec.CurrentTurn))
 				_, err = p.Domain.UpdateAdventureGameCreatureInstanceRec(creatureInstance)
 				if err != nil {
 					l.Warn("failed to update dead creature instance >%v<", err)
@@ -319,7 +317,7 @@ func (p *AdventureGameCreatureEncounterProcessor) CreateNextTurnSheet(
 		l.Warn("failed to resolve equipped gear details >%v<", err)
 	}
 
-	characterAttack := defaultUnarmedAttackDamage
+	characterAttack := DefaultUnarmedAttackDamage
 	if equippedWeapon != nil {
 		characterAttack = equippedWeapon.Damage
 	}
@@ -396,7 +394,10 @@ func (p *AdventureGameCreatureEncounterProcessor) CreateNextTurnSheet(
 	}
 
 	// Step 7: Read combat events for this sheet. Events are cleared after all processors run.
-	displayEvents := ReadTurnEventsForCategories(l, p.Domain, characterInstanceRec, turnsheet.TurnEventCategoryCombat)
+	displayEvents, err := ReadTurnEventsForCategories(l, p.Domain, characterInstanceRec, turnsheet.TurnEventCategoryCombat)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read combat events: %w", err)
+	}
 
 	// Step 8: Build sheet data.
 	maxActions := 3
@@ -519,6 +520,7 @@ func (p *AdventureGameCreatureEncounterProcessor) inventorySheetHadActions(
 }
 
 // resolveEquippedGear returns the display structs for the character's equipped weapon and armor.
+// Damage and defense values are derived from weapon_damage/armor_defense item effects.
 func (p *AdventureGameCreatureEncounterProcessor) resolveEquippedGear(l logger.Logger, characterInstanceID string) (weapon *turnsheet.EquippedWeapon, armor *turnsheet.EquippedArmor, err error) {
 	inventoryItems, err := p.Domain.GetAdventureGameItemInstanceRecsByCharacterInstance(characterInstanceID)
 	if err != nil {
@@ -535,17 +537,43 @@ func (p *AdventureGameCreatureEncounterProcessor) resolveEquippedGear(l logger.L
 			l.Warn("failed to get item definition >%s< >%v<", itemInstance.AdventureGameItemID, err)
 			continue
 		}
+
+		effects, effectErr := p.Domain.GetManyAdventureGameItemEffectRecs(&coresql.Options{
+			Params: []coresql.Param{
+				{Col: adventure_game_record.FieldAdventureGameItemEffectAdventureGameItemID, Val: itemInstance.AdventureGameItemID},
+				{Col: adventure_game_record.FieldAdventureGameItemEffectActionType, Val: adventure_game_record.AdventureGameItemEffectActionTypeEquip},
+			},
+		})
+		if effectErr != nil {
+			l.Warn("failed to get item effects for item >%s< >%v<", itemInstance.AdventureGameItemID, effectErr)
+			continue
+		}
+
 		if slot == adventure_game_record.AdventureGameItemEquipmentSlotWeapon && weapon == nil {
+			damage := 0
+			for _, effect := range effects {
+				if effect.EffectType == adventure_game_record.AdventureGameItemEffectEffectTypeWeaponDamage && effect.ResultValueMin.Valid {
+					damage = int(effect.ResultValueMin.Int32)
+					break
+				}
+			}
 			weapon = &turnsheet.EquippedWeapon{
 				ItemInstanceID: itemInstance.ID,
 				Name:           itemDef.Name,
-				Damage:         itemDef.Damage,
+				Damage:         damage,
 			}
 		} else if slot != adventure_game_record.AdventureGameItemEquipmentSlotWeapon && armor == nil {
+			defense := 0
+			for _, effect := range effects {
+				if effect.EffectType == adventure_game_record.AdventureGameItemEffectEffectTypeArmorDefense && effect.ResultValueMin.Valid {
+					defense = int(effect.ResultValueMin.Int32)
+					break
+				}
+			}
 			armor = &turnsheet.EquippedArmor{
 				ItemInstanceID: itemInstance.ID,
 				Name:           itemDef.Name,
-				Defense:        itemDef.Defense,
+				Defense:        defense,
 			}
 		}
 	}
@@ -571,10 +599,10 @@ func (p *AdventureGameCreatureEncounterProcessor) moveCreatureItemsToLocation(l 
 		if err == nil {
 			droppedNames = append(droppedNames, itemDef.Name)
 		}
-		item.AdventureGameCreatureInstanceID = sql.NullString{}
+		item.AdventureGameCreatureInstanceID = nullstring.FromString("")
 		item.AdventureGameLocationInstanceID = nullstring.FromString(locationInstanceID)
 		item.IsEquipped = false
-		item.EquipmentSlot = sql.NullString{}
+		item.EquipmentSlot = nullstring.FromString("")
 		_, err = p.Domain.UpdateAdventureGameItemInstanceRec(item)
 		if err != nil {
 			l.Warn("failed to move item >%s< from creature to location >%v<", item.ID, err)
@@ -707,18 +735,18 @@ func (p *AdventureGameCreatureEncounterProcessor) resetDeadCharacter(l logger.Lo
 		}
 		if locationRec.IsStartingLocation {
 			characterInstanceRec.AdventureGameLocationInstanceID = li.ID
-			characterInstanceRec.Health = characterStartingHealth
+			characterInstanceRec.Health = CharacterRespawnHealth
 			if startingLocationName != nil {
 				*startingLocationName = locationRec.Name
 			}
 			l.Info("resetting dead character to starting location >%s< with health >%d<",
-				li.ID, characterStartingHealth)
+				li.ID, CharacterRespawnHealth)
 			return nil
 		}
 	}
 
 	// No starting location found — just restore health without moving.
-	characterInstanceRec.Health = characterStartingHealth
+	characterInstanceRec.Health = CharacterRespawnHealth
 	l.Warn("no starting location found for game instance >%s< — restored health only", gameInstanceRec.ID)
 	return nil
 }
