@@ -300,6 +300,12 @@ func createOneAdventureGameCharacterHandler(w http.ResponseWriter, r *http.Reque
 
 	gameID := pp.ByName("game_id")
 
+	mm := m.(*domain.Domain)
+
+	if _, err := authorizeAdventureGameDesigner(l, r, mm, gameID); err != nil {
+		return err
+	}
+
 	var req adventure_game_schema.AdventureGameCharacterRequest
 	if _, err := server.ReadRequest(l, r, &req); err != nil {
 		l.Warn("failed reading request >%v<", err)
@@ -313,8 +319,6 @@ func createOneAdventureGameCharacterHandler(w http.ResponseWriter, r *http.Reque
 
 	// Set the game ID from the path parameter
 	rec.GameID = gameID
-
-	mm := m.(*domain.Domain)
 
 	// Populate AccountID (Owner) from AccountUserID (Player)
 	if rec.AccountUserID != "" {
@@ -360,13 +364,17 @@ func updateOneAdventureGameCharacterHandler(w http.ResponseWriter, r *http.Reque
 
 	l.Info("updating adventure game character record with path params >%#v<", pp)
 
+	mm := m.(*domain.Domain)
+
+	if _, err := authorizeAdventureGameDesigner(l, r, mm, gameID); err != nil {
+		return err
+	}
+
 	var req adventure_game_schema.AdventureGameCharacterRequest
 	if _, err := server.ReadRequest(l, r, &req); err != nil {
 		l.Warn("failed reading request >%v<", err)
 		return err
 	}
-
-	mm := m.(*domain.Domain)
 
 	rec, err := mm.GetAdventureGameCharacterRec(characterID, nil)
 	if err != nil {
@@ -424,6 +432,10 @@ func deleteOneAdventureGameCharacterHandler(w http.ResponseWriter, r *http.Reque
 	l.Info("deleting adventure game character record with path params >%#v<", pp)
 
 	mm := m.(*domain.Domain)
+
+	if _, err := authorizeAdventureGameDesigner(l, r, mm, gameID); err != nil {
+		return err
+	}
 
 	// First get the record to verify it belongs to the specified game
 	rec, err := mm.GetAdventureGameCharacterRec(characterID, nil)

@@ -295,6 +295,12 @@ func createOneAdventureGameLocationLinkRequirementHandler(w http.ResponseWriter,
 
 	gameID := pp.ByName("game_id")
 
+	mm := m.(*domain.Domain)
+
+	if _, err := authorizeAdventureGameDesigner(l, r, mm, gameID); err != nil {
+		return err
+	}
+
 	rec := &adventure_game_record.AdventureGameLocationLinkRequirement{}
 	rec, err := mapper.AdventureGameLocationLinkRequirementRequestToRecord(l, r, rec)
 	if err != nil {
@@ -303,8 +309,6 @@ func createOneAdventureGameLocationLinkRequirementHandler(w http.ResponseWriter,
 
 	// Set the game ID from the path parameter
 	rec.GameID = gameID
-
-	mm := m.(*domain.Domain)
 
 	rec, err = mm.CreateAdventureGameLocationLinkRequirementRec(rec)
 	if err != nil {
@@ -333,13 +337,17 @@ func updateOneAdventureGameLocationLinkRequirementHandler(w http.ResponseWriter,
 
 	l.Info("updating adventure game location link requirement record with path params >%#v<", pp)
 
+	mm := m.(*domain.Domain)
+
+	if _, err := authorizeAdventureGameDesigner(l, r, mm, gameID); err != nil {
+		return err
+	}
+
 	var req adventure_game_schema.AdventureGameLocationLinkRequirementRequest
 	if _, err := server.ReadRequest(l, r, &req); err != nil {
 		l.Warn("failed reading request >%v<", err)
 		return err
 	}
-
-	mm := m.(*domain.Domain)
 
 	rec, err := mm.GetAdventureGameLocationLinkRequirementRec(locationLinkRequirementID, nil)
 	if err != nil {
@@ -391,6 +399,10 @@ func deleteOneAdventureGameLocationLinkRequirementHandler(w http.ResponseWriter,
 	l.Info("deleting adventure game location link requirement record with path params >%#v<", pp)
 
 	mm := m.(*domain.Domain)
+
+	if _, err := authorizeAdventureGameDesigner(l, r, mm, gameID); err != nil {
+		return err
+	}
 
 	// First get the record to verify it belongs to the specified game
 	rec, err := mm.GetAdventureGameLocationLinkRequirementRec(locationLinkRequirementID, nil)

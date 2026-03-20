@@ -323,6 +323,12 @@ func createOneAdventureGameLocationLinkHandler(w http.ResponseWriter, r *http.Re
 		return coreerror.NewNotFoundError("game", gameID)
 	}
 
+	mm := m.(*domain.Domain)
+
+	if _, err := authorizeAdventureGameDesigner(l, r, mm, gameID); err != nil {
+		return err
+	}
+
 	rec := &adventure_game_record.AdventureGameLocationLink{}
 	rec, err := mapper.AdventureGameLocationLinkRequestToRecord(l, r, rec)
 	if err != nil {
@@ -331,8 +337,6 @@ func createOneAdventureGameLocationLinkHandler(w http.ResponseWriter, r *http.Re
 
 	// Set the game ID from the path parameter
 	rec.GameID = gameID
-
-	mm := m.(*domain.Domain)
 
 	rec, err = mm.CreateAdventureGameLocationLinkRec(rec)
 	if err != nil {
@@ -369,6 +373,10 @@ func updateOneAdventureGameLocationLinkHandler(w http.ResponseWriter, r *http.Re
 	}
 
 	mm := m.(*domain.Domain)
+
+	if _, err := authorizeAdventureGameDesigner(l, r, mm, gameID); err != nil {
+		return err
+	}
 
 	rec, err := mm.GetAdventureGameLocationLinkRec(locationLinkID, nil)
 	if err != nil {
@@ -423,6 +431,10 @@ func deleteOneAdventureGameLocationLinkHandler(w http.ResponseWriter, r *http.Re
 	l.Info("deleting adventure game location link record with path params >%#v<", pp)
 
 	mm := m.(*domain.Domain)
+
+	if _, err := authorizeAdventureGameDesigner(l, r, mm, gameID); err != nil {
+		return err
+	}
 
 	gameRec, err := mm.GetGameRec(gameID, nil)
 	if err != nil {

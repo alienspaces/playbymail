@@ -232,6 +232,10 @@ func createOneAdventureGameCreaturePlacementHandler(w http.ResponseWriter, r *ht
 	gameID := pp.ByName("game_id")
 	mm := m.(*domain.Domain)
 
+	if _, err := authorizeAdventureGameDesigner(l, r, mm, gameID); err != nil {
+		return err
+	}
+
 	gameRec, err := mm.GetGameRec(gameID, nil)
 	if err != nil {
 		l.Warn("failed getting adventure game record >%v<", err)
@@ -274,6 +278,10 @@ func updateOneAdventureGameCreaturePlacementHandler(w http.ResponseWriter, r *ht
 	gameID := pp.ByName("game_id")
 	placementID := pp.ByName("placement_id")
 	mm := m.(*domain.Domain)
+
+	if _, err := authorizeAdventureGameDesigner(l, r, mm, gameID); err != nil {
+		return err
+	}
 
 	rec, err := mm.GetAdventureGameCreaturePlacementRec(placementID, sql.ForUpdateNoWait)
 	if err != nil {
@@ -319,6 +327,10 @@ func deleteOneAdventureGameCreaturePlacementHandler(w http.ResponseWriter, r *ht
 	gameID := pp.ByName("game_id")
 	placementID := pp.ByName("placement_id")
 	mm := m.(*domain.Domain)
+
+	if _, err := authorizeAdventureGameDesigner(l, r, mm, gameID); err != nil {
+		return err
+	}
 
 	rec, err := mm.GetAdventureGameCreaturePlacementRec(placementID, sql.ForUpdateNoWait)
 	if err != nil {

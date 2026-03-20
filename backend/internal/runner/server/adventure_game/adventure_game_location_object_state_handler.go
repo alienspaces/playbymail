@@ -242,6 +242,10 @@ func createOneAdventureGameLocationObjectStateHandler(w http.ResponseWriter, r *
 	locationObjectID := pp.ByName("location_object_id")
 	mm := m.(*domain.Domain)
 
+	if _, err := authorizeAdventureGameDesigner(l, r, mm, gameID); err != nil {
+		return err
+	}
+
 	objectRec, err := mm.GetAdventureGameLocationObjectRec(locationObjectID, nil)
 	if err != nil {
 		l.Warn("failed getting adventure game location object record >%v<", err)
@@ -285,9 +289,14 @@ func createOneAdventureGameLocationObjectStateHandler(w http.ResponseWriter, r *
 func updateOneAdventureGameLocationObjectStateHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = logging.LoggerWithFunctionContext(l, packageName, "updateOneAdventureGameLocationObjectStateHandler")
 
+	gameID := pp.ByName("game_id")
 	locationObjectID := pp.ByName("location_object_id")
 	stateID := pp.ByName("state_id")
 	mm := m.(*domain.Domain)
+
+	if _, err := authorizeAdventureGameDesigner(l, r, mm, gameID); err != nil {
+		return err
+	}
 
 	rec, err := mm.GetAdventureGameLocationObjectStateRec(stateID, sql.ForUpdateNoWait)
 	if err != nil {
@@ -326,12 +335,17 @@ func updateOneAdventureGameLocationObjectStateHandler(w http.ResponseWriter, r *
 func deleteOneAdventureGameLocationObjectStateHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = logging.LoggerWithFunctionContext(l, packageName, "deleteOneAdventureGameLocationObjectStateHandler")
 
+	gameID := pp.ByName("game_id")
 	locationObjectID := pp.ByName("location_object_id")
 	stateID := pp.ByName("state_id")
 
 	l.Info("deleting adventure game location object state record with path params >%#v<", pp)
 
 	mm := m.(*domain.Domain)
+
+	if _, err := authorizeAdventureGameDesigner(l, r, mm, gameID); err != nil {
+		return err
+	}
 
 	rec, err := mm.GetAdventureGameLocationObjectStateRec(stateID, nil)
 	if err != nil {

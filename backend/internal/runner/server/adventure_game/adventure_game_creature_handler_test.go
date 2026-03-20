@@ -31,6 +31,8 @@ func Test_gameCreatureHandler(t *testing.T) {
 	require.NoError(t, err, "GetGameRecByRef returns without error")
 	creatureRec, err := th.Data.GetAdventureGameCreatureRecByRef(harness.GameCreatureOneRef)
 	require.NoError(t, err, "GetGameCreatureRecByRef returns without error")
+	gameDraftRec, err := th.Data.GetGameRecByRef(harness.GameDraftRef)
+	require.NoError(t, err, "GetGameRecByRef(GameDraftRef) returns without error")
 
 	testCaseCollectionResponseDecoder := testutil.TestCaseResponseDecoderGeneric[adventure_game_schema.AdventureGameCreatureCollectionResponse]
 	testCaseResponseDecoder := testutil.TestCaseResponseDecoderGeneric[adventure_game_schema.AdventureGameCreatureResponse]
@@ -105,7 +107,7 @@ func Test_gameCreatureHandler(t *testing.T) {
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[adventure_game.DeleteOneAdventureGameCreature]
 				},
-			RequestHeaders: testutil.AuthHeaderProDesigner,
+		RequestHeaders: testutil.AuthHeaderProDesigner,
 				RequestPathParams: func(d harness.Data) map[string]string {
 					return map[string]string{
 						":game_id":     gameRec.ID,
@@ -113,6 +115,25 @@ func Test_gameCreatureHandler(t *testing.T) {
 					}
 				},
 				ResponseCode: http.StatusNoContent,
+			},
+		},
+		{
+			TestCase: testutil.TestCase{
+				Name: "authenticated designer without game ownership when create creature then returns unauthorized",
+				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
+					return rnr.GetHandlerConfig()[adventure_game.CreateOneAdventureGameCreature]
+				},
+				RequestHeaders: testutil.AuthHeaderProDesigner,
+			RequestPathParams: func(d harness.Data) map[string]string {
+				return map[string]string{":game_id": gameDraftRec.ID}
+			},
+			RequestBody: func(d harness.Data) any {
+				return adventure_game_schema.AdventureGameCreatureRequest{
+					Name:        "Unauthorized Creature",
+					Description: "Should not be created",
+				}
+			},
+			ResponseCode: http.StatusForbidden,
 			},
 		},
 	}

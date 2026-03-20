@@ -43,6 +43,8 @@ func Test_adventureGameLocationLinkHandler(t *testing.T) {
 	require.NoError(t, err, "GetGameLocationRecByRef returns without error")
 	linkRec, err := th.Data.GetAdventureGameLocationLinkRecByRef(harness.GameLocationLinkOneRef)
 	require.NoError(t, err, "GetGameLocationLinkRecByRef returns without error")
+	gameDraftRec, err := th.Data.GetGameRecByRef(harness.GameDraftRef)
+	require.NoError(t, err, "GetGameRecByRef(GameDraftRef) returns without error")
 
 	testCaseCollectionResponseDecoder := testutil.TestCaseResponseDecoderGeneric[adventure_game_schema.AdventureGameLocationLinkCollectionResponse]
 	testCaseResponseDecoder := testutil.TestCaseResponseDecoderGeneric[adventure_game_schema.AdventureGameLocationLinkResponse]
@@ -154,6 +156,29 @@ func Test_adventureGameLocationLinkHandler(t *testing.T) {
 				ResponseCode: http.StatusNoContent,
 			},
 		},
+		{
+			TestCase: testutil.TestCase{
+				Name: "authenticated designer without game ownership when create location link then returns unauthorized",
+				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
+					return rnr.GetHandlerConfig()[adventure_game.CreateOneAdventureGameLocationLink]
+				},
+				RequestHeaders: testutil.AuthHeaderProDesigner,
+				RequestPathParams: func(d harness.Data) map[string]string {
+					return map[string]string{
+						":game_id": gameDraftRec.ID,
+					}
+				},
+			RequestBody: func(d harness.Data) any {
+				return adventure_game_schema.AdventureGameLocationLinkRequest{
+					Name:                        "Unauthorized Link",
+					Description:                 "Should not be created",
+					FromAdventureGameLocationID: locationOneRec.ID,
+					ToAdventureGameLocationID:   locationThreeRec.ID,
+				}
+			},
+			ResponseCode: http.StatusForbidden,
+		},
+	},
 	}
 
 	for _, tc := range testCases {

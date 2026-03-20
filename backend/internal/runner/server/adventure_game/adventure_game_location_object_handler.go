@@ -288,6 +288,10 @@ func createOneAdventureGameLocationObjectHandler(w http.ResponseWriter, r *http.
 	gameID := pp.ByName("game_id")
 	mm := m.(*domain.Domain)
 
+	if _, err := authorizeAdventureGameDesigner(l, r, mm, gameID); err != nil {
+		return err
+	}
+
 	gameRec, err := mm.GetGameRec(gameID, nil)
 	if err != nil {
 		l.Warn("failed getting game record >%v<", err)
@@ -328,6 +332,10 @@ func updateOneAdventureGameLocationObjectHandler(w http.ResponseWriter, r *http.
 	gameID := pp.ByName("game_id")
 	locationObjectID := pp.ByName("location_object_id")
 	mm := m.(*domain.Domain)
+
+	if _, err := authorizeAdventureGameDesigner(l, r, mm, gameID); err != nil {
+		return err
+	}
 
 	rec, err := mm.GetAdventureGameLocationObjectRec(locationObjectID, sql.ForUpdateNoWait)
 	if err != nil {
@@ -372,6 +380,10 @@ func deleteOneAdventureGameLocationObjectHandler(w http.ResponseWriter, r *http.
 	l.Info("deleting adventure game location object record with path params >%#v<", pp)
 
 	mm := m.(*domain.Domain)
+
+	if _, err := authorizeAdventureGameDesigner(l, r, mm, gameID); err != nil {
+		return err
+	}
 
 	rec, err := mm.GetAdventureGameLocationObjectRec(locationObjectID, nil)
 	if err != nil {

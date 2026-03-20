@@ -23,6 +23,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/mapper"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
+	"gitlab.com/alienspaces/playbymail/internal/runner/server/handler_auth"
 	"gitlab.com/alienspaces/playbymail/internal/utils/logging"
 )
 
@@ -46,6 +47,9 @@ func adventureGameCreatureImageHandlerConfig(l logger.Logger) (map[string]server
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
 				server.AuthenticationTypeToken,
+			},
+			AuthzPermissions: []server.AuthorizedPermission{
+				handler_auth.PermissionGameDesign,
 			},
 		},
 		DocumentationConfig: server.DocumentationConfig{
@@ -79,6 +83,9 @@ func adventureGameCreatureImageHandlerConfig(l logger.Logger) (map[string]server
 			AuthenTypes: []server.AuthenticationType{
 				server.AuthenticationTypeToken,
 			},
+			AuthzPermissions: []server.AuthorizedPermission{
+				handler_auth.PermissionGameDesign,
+			},
 		},
 		DocumentationConfig: server.DocumentationConfig{
 			Document:    true,
@@ -103,6 +110,10 @@ func uploadCreatureImageHandler(w http.ResponseWriter, r *http.Request, pp httpr
 	creatureID := pp.ByName("creature_id")
 	if creatureID == "" {
 		return coreerror.RequiredPathParameter("creature_id")
+	}
+
+	if _, err := authorizeAdventureGameDesigner(l, r, mm, gameID); err != nil {
+		return err
 	}
 
 	_, err := mm.GetGameRec(gameID, nil)
@@ -241,6 +252,10 @@ func deleteCreatureImageHandler(w http.ResponseWriter, r *http.Request, pp httpr
 	creatureID := pp.ByName("creature_id")
 	if creatureID == "" {
 		return coreerror.RequiredPathParameter("creature_id")
+	}
+
+	if _, err := authorizeAdventureGameDesigner(l, r, mm, gameID); err != nil {
+		return err
 	}
 
 	_, err := mm.GetGameRec(gameID, coresql.ForUpdateNoWait)

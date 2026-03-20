@@ -36,6 +36,9 @@ func Test_adventureGameCharacterHandler(t *testing.T) {
 	charRec, err := th.Data.GetAdventureGameCharacterRecByRef(harness.GameCharacterOneRef)
 	require.NoError(t, err, "GetGameCharacterRecByRef returns without error")
 
+	gameDraftRec, err := th.Data.GetGameRecByRef(harness.GameDraftRef)
+	require.NoError(t, err, "GetGameRecByRef(GameDraftRef) returns without error")
+
 	testCaseCollectionResponseDecoder := testutil.TestCaseResponseDecoderGeneric[adventure_game_schema.AdventureGameCharacterCollectionResponse]
 	testCaseResponseDecoder := testutil.TestCaseResponseDecoderGeneric[adventure_game_schema.AdventureGameCharacterResponse]
 
@@ -116,6 +119,26 @@ func Test_adventureGameCharacterHandler(t *testing.T) {
 				ResponseCode: http.StatusNoContent,
 			},
 		},
+		{
+			TestCase: testutil.TestCase{
+				Name: "authenticated designer without game ownership when create character then returns unauthorized",
+				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
+					return rnr.GetHandlerConfig()[adventure_game.CreateOneAdventureGameCharacter]
+				},
+				RequestHeaders: testutil.AuthHeaderProDesigner,
+				RequestBody: func(d harness.Data) any {
+					return adventure_game_schema.AdventureGameCharacterRequest{
+						AccountID:     accountRec.AccountID,
+						AccountUserID: accountRec.ID,
+						Name:          harness.UniqueName("Unauthorized Character"),
+					}
+				},
+			RequestPathParams: func(d harness.Data) map[string]string {
+				return map[string]string{":game_id": gameDraftRec.ID}
+			},
+			ResponseCode: http.StatusForbidden,
+		},
+	},
 	}
 
 	for _, tc := range testCases {

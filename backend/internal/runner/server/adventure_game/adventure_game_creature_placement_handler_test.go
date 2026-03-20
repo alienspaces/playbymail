@@ -36,6 +36,9 @@ func Test_adventureGameCreaturePlacementHandler(t *testing.T) {
 	locationRec, err := th.Data.GetAdventureGameLocationRecByRef(harness.GameLocationTwoRef)
 	require.NoError(t, err, "GetGameLocationRecByRef returns without error")
 
+	gameDraftRec, err := th.Data.GetGameRecByRef(harness.GameDraftRef)
+	require.NoError(t, err, "GetGameRecByRef(GameDraftRef) returns without error")
+
 	testCaseCollectionResponseDecoder := testutil.TestCaseResponseDecoderGeneric[adventure_game_schema.AdventureGameCreaturePlacementCollectionResponse]
 	testCaseResponseDecoder := testutil.TestCaseResponseDecoderGeneric[adventure_game_schema.AdventureGameCreaturePlacementResponse]
 
@@ -68,7 +71,7 @@ func Test_adventureGameCreaturePlacementHandler(t *testing.T) {
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[adventure_game.CreateOneAdventureGameCreaturePlacement]
 				},
-			RequestHeaders: testutil.AuthHeaderProDesigner,
+		RequestHeaders: testutil.AuthHeaderProDesigner,
 				RequestBody: func(d harness.Data) any {
 					return adventure_game_schema.AdventureGameCreaturePlacementRequest{
 						AdventureGameCreatureID: creatureRec.ID,
@@ -83,6 +86,26 @@ func Test_adventureGameCreaturePlacementHandler(t *testing.T) {
 				ResponseCode:    http.StatusCreated,
 			},
 		},
+		{
+			TestCase: testutil.TestCase{
+				Name: "authenticated designer without game ownership when create creature placement then returns unauthorized",
+				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
+					return rnr.GetHandlerConfig()[adventure_game.CreateOneAdventureGameCreaturePlacement]
+				},
+				RequestHeaders: testutil.AuthHeaderProDesigner,
+				RequestBody: func(d harness.Data) any {
+					return adventure_game_schema.AdventureGameCreaturePlacementRequest{
+						AdventureGameCreatureID: creatureRec.ID,
+						AdventureGameLocationID: locationRec.ID,
+						InitialCount:            5,
+					}
+				},
+			RequestPathParams: func(d harness.Data) map[string]string {
+				return map[string]string{":game_id": gameDraftRec.ID}
+			},
+			ResponseCode: http.StatusForbidden,
+		},
+	},
 	}
 
 	for _, tc := range testCases {

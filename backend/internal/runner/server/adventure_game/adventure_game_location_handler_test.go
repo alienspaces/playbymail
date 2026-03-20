@@ -152,6 +152,8 @@ func Test_createUpdateDeleteGameLocationHandler(t *testing.T) {
 	require.NoError(t, err, "GetGameRecByRef returns without error")
 	locationRec, err := th.Data.GetAdventureGameLocationRecByRef(harness.GameLocationOneRef)
 	require.NoError(t, err, "GetGameLocationRecByRef returns without error")
+	gameDraftRec, err := th.Data.GetGameRecByRef(harness.GameDraftRef)
+	require.NoError(t, err, "GetGameRecByRef(GameDraftRef) returns without error")
 
 	testCases := []testCase{
 		{
@@ -237,17 +239,39 @@ func Test_createUpdateDeleteGameLocationHandler(t *testing.T) {
 			},
 			expectResponse: nil,
 		},
-	}
+		{
+			TestCase: testutil.TestCase{
+				Name: "authenticated designer without game ownership when create location then returns unauthorized",
+				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
+					return rnr.GetHandlerConfig()[adventure_game.CreateOneAdventureGameLocation]
+				},
+				RequestHeaders: testutil.AuthHeaderProDesigner,
+				RequestBody: func(d harness.Data) any {
+					return adventure_game_schema.AdventureGameLocationRequest{
+						Name:        "Unauthorized Location",
+						Description: "Should not be created",
+					}
+				},
+			RequestPathParams: func(d harness.Data) map[string]string {
+				return map[string]string{
+					":game_id": gameDraftRec.ID,
+				}
+			},
+			ResponseCode: http.StatusForbidden,
+		},
+		expectResponse: nil,
+	},
+}
 
 	for _, testCase := range testCases {
 		t.Logf("Running test >%s<", testCase.Name)
 
 		t.Run(testCase.Name, func(t *testing.T) {
-			testFunc := func(method string, body any) {
-				if testCase.TestResponseCode() == http.StatusNoContent {
-					// No content expected
-					return
-				}
+		testFunc := func(method string, body any) {
+			if testCase.TestResponseCode() == http.StatusNoContent || testCase.TestResponseCode() >= 400 {
+				// No content expected or error response
+				return
+			}
 
 				require.NotNil(t, body, "Response body is not nil")
 				resp, ok := body.(adventure_game_schema.AdventureGameLocationResponse)

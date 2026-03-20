@@ -306,6 +306,10 @@ func createOneAdventureGameCreatureHandler(w http.ResponseWriter, r *http.Reques
 	gameID := pp.ByName("game_id")
 	mm := m.(*domain.Domain)
 
+	if _, err := authorizeAdventureGameDesigner(l, r, mm, gameID); err != nil {
+		return err
+	}
+
 	gameRec, err := mm.GetGameRec(gameID, nil)
 	if err != nil {
 		l.Warn("failed getting game record >%v<", err)
@@ -346,6 +350,10 @@ func updateOneAdventureGameCreatureHandler(w http.ResponseWriter, r *http.Reques
 	gameID := pp.ByName("game_id")
 	creatureID := pp.ByName("creature_id")
 	mm := m.(*domain.Domain)
+
+	if _, err := authorizeAdventureGameDesigner(l, r, mm, gameID); err != nil {
+		return err
+	}
 
 	rec, err := mm.GetAdventureGameCreatureRec(creatureID, sql.ForUpdateNoWait)
 	if err != nil {
@@ -391,6 +399,10 @@ func deleteOneAdventureGameCreatureHandler(w http.ResponseWriter, r *http.Reques
 	l.Info("deleting adventure game creature record with path params >%#v<", pp)
 
 	mm := m.(*domain.Domain)
+
+	if _, err := authorizeAdventureGameDesigner(l, r, mm, gameID); err != nil {
+		return err
+	}
 
 	// First get the record to verify it belongs to the specified game
 	rec, err := mm.GetAdventureGameCreatureRec(creatureID, nil)

@@ -288,6 +288,10 @@ func createOneAdventureGameItemEffectHandler(w http.ResponseWriter, r *http.Requ
 	gameID := pp.ByName("game_id")
 	mm := m.(*domain.Domain)
 
+	if _, err := authorizeAdventureGameDesigner(l, r, mm, gameID); err != nil {
+		return err
+	}
+
 	gameRec, err := mm.GetGameRec(gameID, nil)
 	if err != nil {
 		l.Warn("failed getting game record >%v<", err)
@@ -328,6 +332,10 @@ func updateOneAdventureGameItemEffectHandler(w http.ResponseWriter, r *http.Requ
 	gameID := pp.ByName("game_id")
 	itemEffectID := pp.ByName("item_effect_id")
 	mm := m.(*domain.Domain)
+
+	if _, err := authorizeAdventureGameDesigner(l, r, mm, gameID); err != nil {
+		return err
+	}
 
 	rec, err := mm.GetAdventureGameItemEffectRec(itemEffectID, sql.ForUpdateNoWait)
 	if err != nil {
@@ -372,6 +380,10 @@ func deleteOneAdventureGameItemEffectHandler(w http.ResponseWriter, r *http.Requ
 	l.Info("deleting adventure game item effect record with path params >%#v<", pp)
 
 	mm := m.(*domain.Domain)
+
+	if _, err := authorizeAdventureGameDesigner(l, r, mm, gameID); err != nil {
+		return err
+	}
 
 	rec, err := mm.GetAdventureGameItemEffectRec(itemEffectID, nil)
 	if err != nil {

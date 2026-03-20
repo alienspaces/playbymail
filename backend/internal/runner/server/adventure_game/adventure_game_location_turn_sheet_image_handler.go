@@ -28,6 +28,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/mapper"
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
+	"gitlab.com/alienspaces/playbymail/internal/runner/server/handler_auth"
 	"gitlab.com/alienspaces/playbymail/internal/turnsheet"
 	"gitlab.com/alienspaces/playbymail/internal/utils/config"
 	"gitlab.com/alienspaces/playbymail/internal/utils/logging"
@@ -56,6 +57,9 @@ func adventureGameLocationTurnSheetImageHandlerConfig(l logger.Logger) (map[stri
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
 				server.AuthenticationTypeToken,
+			},
+			AuthzPermissions: []server.AuthorizedPermission{
+				handler_auth.PermissionGameDesign,
 			},
 		},
 		DocumentationConfig: server.DocumentationConfig{
@@ -94,6 +98,9 @@ func adventureGameLocationTurnSheetImageHandlerConfig(l logger.Logger) (map[stri
 		MiddlewareConfig: server.MiddlewareConfig{
 			AuthenTypes: []server.AuthenticationType{
 				server.AuthenticationTypeToken,
+			},
+			AuthzPermissions: []server.AuthorizedPermission{
+				handler_auth.PermissionGameDesign,
 			},
 		},
 		DocumentationConfig: server.DocumentationConfig{
@@ -142,6 +149,10 @@ func uploadLocationTurnSheetImageHandler(w http.ResponseWriter, r *http.Request,
 	if locationID == "" {
 		l.Warn("location ID is empty")
 		return coreerror.RequiredPathParameter("location_id")
+	}
+
+	if _, err := authorizeAdventureGameDesigner(l, r, mm, gameID); err != nil {
+		return err
 	}
 
 	l.Info("uploading turn sheet image for location >%s< in game >%s<", locationID, gameID)
@@ -363,6 +374,10 @@ func deleteLocationTurnSheetImageHandler(w http.ResponseWriter, r *http.Request,
 	if locationID == "" {
 		l.Warn("location ID is empty")
 		return coreerror.RequiredPathParameter("location_id")
+	}
+
+	if _, err := authorizeAdventureGameDesigner(l, r, mm, gameID); err != nil {
+		return err
 	}
 
 	// Verify game exists and user has access

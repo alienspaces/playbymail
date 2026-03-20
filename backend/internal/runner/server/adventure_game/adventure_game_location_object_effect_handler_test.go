@@ -36,6 +36,9 @@ func Test_adventureGameLocationObjectEffectHandler(t *testing.T) {
 	locationObjectEffectRec, err := th.Data.GetAdventureGameLocationObjectEffectRecByRef(harness.GameLocationObjectEffectOneRef)
 	require.NoError(t, err, "GetAdventureGameLocationObjectEffectRecByRef returns without error")
 
+	gameDraftRec, err := th.Data.GetGameRecByRef(harness.GameDraftRef)
+	require.NoError(t, err, "GetGameRecByRef(GameDraftRef) returns without error")
+
 	testCaseCollectionResponseDecoder := testutil.TestCaseResponseDecoderGeneric[adventure_game_schema.AdventureGameLocationObjectEffectCollectionResponse]
 	testCaseResponseDecoder := testutil.TestCaseResponseDecoderGeneric[adventure_game_schema.AdventureGameLocationObjectEffectResponse]
 
@@ -181,6 +184,27 @@ func Test_adventureGameLocationObjectEffectHandler(t *testing.T) {
 				ResponseCode: http.StatusUnauthorized,
 			},
 		},
+		{
+			TestCase: testutil.TestCase{
+				Name: "authenticated designer without game ownership when create location object effect then returns unauthorized",
+				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
+					return rnr.GetHandlerConfig()[adventure_game.CreateOneAdventureGameLocationObjectEffect]
+				},
+				RequestHeaders: testutil.AuthHeaderProDesigner,
+				RequestBody: func(d harness.Data) any {
+					return adventure_game_schema.AdventureGameLocationObjectEffectRequest{
+						AdventureGameLocationObjectID: locationObjectRec.ID,
+						ActionType:                    "inspect",
+						ResultDescription:             "Should not be created",
+						EffectType:                    "info",
+					}
+				},
+			RequestPathParams: func(d harness.Data) map[string]string {
+				return map[string]string{":game_id": gameDraftRec.ID}
+			},
+			ResponseCode: http.StatusForbidden,
+		},
+	},
 	}
 
 	for _, tc := range testCases {
