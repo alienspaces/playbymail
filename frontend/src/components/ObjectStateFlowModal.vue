@@ -154,12 +154,6 @@ const transitions = computed(() =>
 
 const hasTransitions = computed(() => transitions.value.length > 0);
 
-const stateById = computed(() => {
-  const map = {};
-  for (const s of props.states) map[s.id] = s;
-  return map;
-});
-
 // ── Node layout ───────────────────────────────────────────────────────────────
 
 /**
