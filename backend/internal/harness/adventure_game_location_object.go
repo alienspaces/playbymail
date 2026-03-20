@@ -77,8 +77,8 @@ func (t *Testing) createAdventureGameLocationObjectRec(cfg AdventureGameLocation
 	}
 
 	// 4. Create effect records.
-	for _, effectConfig := range cfg.AdventureGameLocationObjectEffectConfigs {
-		_, err := t.createAdventureGameLocationObjectEffectRec(effectConfig, createdRec)
+	for i := range cfg.AdventureGameLocationObjectEffectConfigs {
+		_, err := t.createAdventureGameLocationObjectEffectRec(cfg.AdventureGameLocationObjectEffectConfigs[i], createdRec)
 		if err != nil {
 			l.Warn("failed creating adventure_game_location_object_effect record >%v<", err)
 			return nil, err

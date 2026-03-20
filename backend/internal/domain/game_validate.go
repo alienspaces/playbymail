@@ -158,7 +158,7 @@ func (m *Domain) validateAdventureGameObjectStateGraph(gameID string) ([]GameVal
 		if !obj.InitialAdventureGameLocationObjectStateID.Valid {
 			issues = append(issues, GameValidationIssue{
 				Field:    "location_objects",
-				Message:  fmt.Sprintf("Object \"%s\" has states defined but no initial state is set", obj.Name),
+				Message:  fmt.Sprintf("Object %q has states defined but no initial state is set", obj.Name),
 				Severity: ValidationSeverityWarning,
 			})
 		}
@@ -183,7 +183,7 @@ func (m *Domain) validateAdventureGameObjectStateGraph(gameID string) ([]GameVal
 			if !reachableStateIDs[s.ID] {
 				issues = append(issues, GameValidationIssue{
 					Field:    "location_objects",
-					Message:  fmt.Sprintf("Object \"%s\" state \"%s\" is unreachable: it is not the initial state and no effect produces it", obj.Name, s.Name),
+					Message:  fmt.Sprintf("Object %q state %q is unreachable: it is not the initial state and no effect produces it", obj.Name, s.Name),
 					Severity: ValidationSeverityWarning,
 				})
 			}
@@ -195,7 +195,7 @@ func (m *Domain) validateAdventureGameObjectStateGraph(gameID string) ([]GameVal
 			if len(requiredStateIDs) > 0 && !requiredStateIDs[s.ID] {
 				issues = append(issues, GameValidationIssue{
 					Field:    "location_objects",
-					Message:  fmt.Sprintf("Object \"%s\" state \"%s\" is a dead-end: no effects require it, so players cannot interact further once the object reaches this state", obj.Name, s.Name),
+					Message:  fmt.Sprintf("Object %q state %q is a dead-end: no effects require it, so players cannot interact further once the object reaches this state", obj.Name, s.Name),
 					Severity: ValidationSeverityWarning,
 				})
 			}

@@ -95,10 +95,7 @@ func (p *AdventureGameInventoryManagementProcessor) ProcessTurnSheetResponse(ctx
 		} else if len(descriptions) > 0 {
 			buildItemEffectTurnEvents(characterInstanceRec, descriptions, nil)
 		}
-		if charMutated {
-			charNeedsUpdate = true
-		}
-
+		_ = charMutated
 		charNeedsUpdate = true
 	}
 
@@ -133,10 +130,7 @@ func (p *AdventureGameInventoryManagementProcessor) ProcessTurnSheetResponse(ctx
 		} else if len(descriptions) > 0 {
 			buildItemEffectTurnEvents(characterInstanceRec, descriptions, nil)
 		}
-		if charMutated {
-			charNeedsUpdate = true
-		}
-
+		_ = charMutated
 		charNeedsUpdate = true
 	}
 
@@ -211,10 +205,7 @@ func (p *AdventureGameInventoryManagementProcessor) ProcessTurnSheetResponse(ctx
 		} else if len(descriptions) > 0 {
 			buildItemEffectTurnEvents(characterInstanceRec, descriptions, nil)
 		}
-		if charMutated {
-			charNeedsUpdate = true
-		}
-
+		_ = charMutated
 		charNeedsUpdate = true
 	}
 
@@ -249,10 +240,7 @@ func (p *AdventureGameInventoryManagementProcessor) ProcessTurnSheetResponse(ctx
 			continue
 		}
 
-		if charMutated {
-			charNeedsUpdate = true
-		}
-
+		_ = charMutated
 		buildItemEffectTurnEvents(characterInstanceRec, descriptions, nil)
 		_ = turnsheet.AppendTurnEvent(characterInstanceRec, turnsheet.TurnEvent{
 			Category: turnsheet.TurnEventCategoryInventory,
