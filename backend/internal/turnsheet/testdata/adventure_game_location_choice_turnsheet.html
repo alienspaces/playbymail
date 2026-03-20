@@ -354,7 +354,7 @@
             display: table;
             width: 100%;
             padding: 2px 0;
-            font-size: 11px;
+            font-size: 13px;
             color: #3d2b00;
             line-height: 1.4;
         }
@@ -363,7 +363,7 @@
             display: table-cell;
             width: 18px;
             vertical-align: top;
-            font-size: 12px;
+            font-size: 14px;
             line-height: 1.2;
         }
 
@@ -373,7 +373,7 @@
         }
 
         .narrative-empty {
-            font-size: 11px;
+            font-size: 13px;
             color: #9a7a3a;
             font-style: italic;
             margin-top: 4px;
@@ -708,7 +708,7 @@
                 
                 
                 <div class="content-section instruction-content">
-                    <p><strong>Instructions:</strong> Select your next location and return this form by the deadline to continue your adventure.</p>
+                    <p><strong>Instructions:</strong> Choose your next location or interact with an object at your current location.</p>
                 </div>
                 
 
@@ -801,7 +801,7 @@
             
             <div class="footer-content-item">
                 <div class="footer-content-label">Turn Sheet Deadline:</div>
-                <div class="footer-content-value">2026-03-21 08:49:58.447842563 &#43;0000 UTC</div>
+                <div class="footer-content-value">2026-03-21 21:12:26.957405875 &#43;0000 UTC</div>
             </div>
             
 
@@ -815,8 +815,29 @@
         </div>
         
     </div>
+    
+    
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var lastChecked = null;
+        document.querySelectorAll('input[type="radio"]').forEach(function(radio) {
+            radio.addEventListener('mousedown', function() {
+                lastChecked = this.checked ? this : null;
+            });
+            radio.addEventListener('click', function() {
+                if (this === lastChecked) {
+                    this.checked = false;
+                    lastChecked = null;
+                }
+            });
+        });
+    });
+</script>
+
 </body>
 </html>
+
+
 
 
 
