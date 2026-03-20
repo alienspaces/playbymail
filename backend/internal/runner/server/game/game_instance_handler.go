@@ -393,19 +393,15 @@ func gameInstanceHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig
 func getManyManagerGameInstancesHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = logging.LoggerWithFunctionContext(l, packageName, "getManyManagerGameInstancesHandler")
 
-	authenData, err := authorizeGameInstanceRead(l, r)
-	if err != nil {
-		return err
-	}
-
-	accountID := authenData.AccountUser.AccountID
-	l.Info("listing manager game instances for account >%s< with params >%#v<", accountID, qp)
+	authenData := server.GetRequestAuthenData(l, r)
+	accountUserID := authenData.AccountUser.ID
+	l.Info("listing manager game instances for account_user >%s< with params >%#v<", accountUserID, qp)
 
 	mm := m.(*domain.Domain)
 	opts := queryparam.ToSQLOptionsWithDefaults(qp)
 	opts.Params = append(opts.Params, sql.Param{
-		Col: game_record.FieldManagerGameInstanceVAccountID,
-		Val: accountID,
+		Col: game_record.FieldManagerGameInstanceVAccountUserID,
+		Val: accountUserID,
 	})
 
 	gameID := r.URL.Query().Get("game_id")
@@ -440,10 +436,6 @@ func getManyManagerGameInstancesHandler(w http.ResponseWriter, r *http.Request, 
 func getManyGameInstancesHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = logging.LoggerWithFunctionContext(l, packageName, "getManyGameInstancesHandler")
 
-	if _, err := authorizeGameInstanceRead(l, r); err != nil {
-		return err
-	}
-
 	gameID := pp.ByName("game_id")
 	if gameID == "" {
 		l.Warn("game id is required")
@@ -451,6 +443,23 @@ func getManyGameInstancesHandler(w http.ResponseWriter, r *http.Request, pp http
 	}
 
 	mm := m.(*domain.Domain)
+
+	_, managerSubRec, err := requireManagerSubscription(l, r, mm, gameID)
+	if err != nil {
+		return err
+	}
+
+	instanceLinks, err := mm.GetGameSubscriptionInstanceRecsBySubscription(managerSubRec.ID)
+	if err != nil {
+		l.Warn("failed getting subscription instance links >%v<", err)
+		return err
+	}
+
+	ownedInstanceIDs := make(map[string]bool, len(instanceLinks))
+	for _, link := range instanceLinks {
+		ownedInstanceIDs[link.GameInstanceID] = true
+	}
+
 	opts := queryparam.ToSQLOptionsWithDefaults(qp)
 	opts.Params = append(opts.Params, sql.Param{
 		Col: game_record.FieldGameInstanceGameID,
@@ -463,11 +472,18 @@ func getManyGameInstancesHandler(w http.ResponseWriter, r *http.Request, pp http
 		return err
 	}
 
+	ownedRecs := make([]*game_record.GameInstance, 0, len(instanceLinks))
+	for _, rec := range recs {
+		if ownedInstanceIDs[rec.ID] {
+			ownedRecs = append(ownedRecs, rec)
+		}
+	}
+
 	getPlayerCount := func(instanceID string) (int, error) {
 		return mm.GetPlayerCountForGameInstance(instanceID)
 	}
 
-	res, err := mapper.GameInstanceRecordsToCollectionResponse(l, recs, getPlayerCount)
+	res, err := mapper.GameInstanceRecordsToCollectionResponse(l, ownedRecs, getPlayerCount)
 	if err != nil {
 		return err
 	}
@@ -483,10 +499,6 @@ func getManyGameInstancesHandler(w http.ResponseWriter, r *http.Request, pp http
 func getOneGameInstanceHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = logging.LoggerWithFunctionContext(l, packageName, "getOneGameInstanceHandler")
 
-	if _, err := authorizeGameInstanceRead(l, r); err != nil {
-		return err
-	}
-
 	gameID := pp.ByName("game_id")
 	instanceID := pp.ByName("instance_id")
 	if gameID == "" {
@@ -499,15 +511,15 @@ func getOneGameInstanceHandler(w http.ResponseWriter, r *http.Request, pp httpro
 	}
 
 	mm := m.(*domain.Domain)
+
+	if _, err := authorizeGameInstanceModify(l, r, mm, gameID, instanceID); err != nil {
+		return err
+	}
+
 	rec, err := mm.GetGameInstanceRec(instanceID, nil)
 	if err != nil {
 		l.Warn("failed getting game instance record >%v<", err)
 		return err
-	}
-
-	if rec.GameID != gameID {
-		l.Warn("instance does not belong to specified game >%s< != >%s<", rec.GameID, gameID)
-		return coreerror.NewNotFoundError("game instance", instanceID)
 	}
 
 	playerCount, err := mm.GetPlayerCountForGameInstance(instanceID)
@@ -541,7 +553,7 @@ func createOneGameInstanceHandler(w http.ResponseWriter, r *http.Request, pp htt
 
 	mm := m.(*domain.Domain)
 
-	_, managerSubRec, err := authorizeGameInstanceCreate(l, r, mm, gameID)
+	_, managerSubRec, err := requireManagerSubscription(l, r, mm, gameID)
 	if err != nil {
 		return err
 	}

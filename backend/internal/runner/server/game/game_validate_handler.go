@@ -70,6 +70,10 @@ func validateGameHandler(w http.ResponseWriter, r *http.Request, pp httprouter.P
 
 	mm := m.(*domain.Domain)
 
+	if _, _, err := requireDesignerSubscription(l, r, mm, gameID); err != nil {
+		return err
+	}
+
 	issues, err := mm.ValidateGameReadyForInstance(gameID)
 	if err != nil {
 		l.Warn("failed validating game >%s< >%v<", gameID, err)

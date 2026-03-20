@@ -131,7 +131,7 @@ func Test_uploadGameTurnSheetImageHandler(t *testing.T) {
 		},
 		{
 			TestCase: testutil.TestCase{
-				Name: "upload turn sheet image with invalid game ID returns not found error",
+				Name: "upload turn sheet image with invalid game ID returns unauthorized error",
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[game.UploadGameTurnSheetImage]
 				},
@@ -146,7 +146,7 @@ func Test_uploadGameTurnSheetImageHandler(t *testing.T) {
 						"image": testImageData,
 					}
 				},
-				ResponseCode: http.StatusNotFound,
+				ResponseCode: http.StatusForbidden,
 			},
 		},
 		{

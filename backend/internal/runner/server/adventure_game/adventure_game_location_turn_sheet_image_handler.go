@@ -151,7 +151,7 @@ func uploadLocationTurnSheetImageHandler(w http.ResponseWriter, r *http.Request,
 		return coreerror.RequiredPathParameter("location_id")
 	}
 
-	if _, err := authorizeAdventureGameDesigner(l, r, mm, gameID); err != nil {
+	if _, err := requireDesignerSubscription(l, r, mm, gameID); err != nil {
 		return err
 	}
 
@@ -376,7 +376,7 @@ func deleteLocationTurnSheetImageHandler(w http.ResponseWriter, r *http.Request,
 		return coreerror.RequiredPathParameter("location_id")
 	}
 
-	if _, err := authorizeAdventureGameDesigner(l, r, mm, gameID); err != nil {
+	if _, err := requireDesignerSubscription(l, r, mm, gameID); err != nil {
 		return err
 	}
 

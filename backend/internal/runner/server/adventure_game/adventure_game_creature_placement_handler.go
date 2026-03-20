@@ -232,7 +232,7 @@ func createOneAdventureGameCreaturePlacementHandler(w http.ResponseWriter, r *ht
 	gameID := pp.ByName("game_id")
 	mm := m.(*domain.Domain)
 
-	if _, err := authorizeAdventureGameDesigner(l, r, mm, gameID); err != nil {
+	if _, err := requireDesignerSubscription(l, r, mm, gameID); err != nil {
 		return err
 	}
 
@@ -279,7 +279,7 @@ func updateOneAdventureGameCreaturePlacementHandler(w http.ResponseWriter, r *ht
 	placementID := pp.ByName("placement_id")
 	mm := m.(*domain.Domain)
 
-	if _, err := authorizeAdventureGameDesigner(l, r, mm, gameID); err != nil {
+	if _, err := requireDesignerSubscription(l, r, mm, gameID); err != nil {
 		return err
 	}
 
@@ -328,7 +328,7 @@ func deleteOneAdventureGameCreaturePlacementHandler(w http.ResponseWriter, r *ht
 	placementID := pp.ByName("placement_id")
 	mm := m.(*domain.Domain)
 
-	if _, err := authorizeAdventureGameDesigner(l, r, mm, gameID); err != nil {
+	if _, err := requireDesignerSubscription(l, r, mm, gameID); err != nil {
 		return err
 	}
 

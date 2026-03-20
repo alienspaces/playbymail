@@ -89,12 +89,12 @@ func (m *Domain) GetGameSubscriptionRec(recID string, lock *sql.Lock) (*game_rec
 	return rec, nil
 }
 
-// GetGameSubscriptionRecByAccountAndGame finds a subscription for a specific account, game, and subscription type.
-func (m *Domain) GetGameSubscriptionRecByAccountAndGame(accountID, gameID, subscriptionType string) (*game_record.GameSubscription, error) {
-	l := m.Logger("GetGameSubscriptionRecByAccountAndGame")
-	l.Debug("getting game_subscription for account >%s< game >%s< type >%s<", accountID, gameID, subscriptionType)
+// GetGameSubscriptionRecByAccountUserAndGame finds a subscription for a specific account user, game, and subscription type.
+func (m *Domain) GetGameSubscriptionRecByAccountUserAndGame(accountUserID, gameID, subscriptionType string) (*game_record.GameSubscription, error) {
+	l := m.Logger("GetGameSubscriptionRecByAccountUserAndGame")
+	l.Debug("getting game_subscription for account_user >%s< game >%s< type >%s<", accountUserID, gameID, subscriptionType)
 
-	if err := domain.ValidateUUIDField("account_id", accountID); err != nil {
+	if err := domain.ValidateUUIDField("account_user_id", accountUserID); err != nil {
 		return nil, err
 	}
 	if err := domain.ValidateUUIDField("game_id", gameID); err != nil {
@@ -104,7 +104,7 @@ func (m *Domain) GetGameSubscriptionRecByAccountAndGame(accountID, gameID, subsc
 	r := m.GameSubscriptionRepository()
 	recs, err := r.GetMany(&sql.Options{
 		Params: []sql.Param{
-			{Col: game_record.FieldGameSubscriptionAccountID, Val: accountID},
+			{Col: game_record.FieldGameSubscriptionAccountUserID, Val: accountUserID},
 			{Col: game_record.FieldGameSubscriptionGameID, Val: gameID},
 			{Col: game_record.FieldGameSubscriptionSubscriptionType, Val: subscriptionType},
 			{Col: game_record.FieldGameSubscriptionStatus, Val: game_record.GameSubscriptionStatusActive},
@@ -118,7 +118,7 @@ func (m *Domain) GetGameSubscriptionRecByAccountAndGame(accountID, gameID, subsc
 
 	if len(recs) == 0 {
 		return nil, coreerror.NewNotFoundError(game_record.TableGameSubscription,
-			"account_id="+accountID+", game_id="+gameID+", type="+subscriptionType)
+			"account_user_id="+accountUserID+", game_id="+gameID+", type="+subscriptionType)
 	}
 
 	return recs[0], nil

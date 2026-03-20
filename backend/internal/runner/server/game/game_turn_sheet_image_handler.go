@@ -164,12 +164,16 @@ func uploadGameTurnSheetImageHandler(w http.ResponseWriter, r *http.Request, pp 
 
 	l.Info("uploading game turn sheet image with path params >%#v<", pp)
 
-	mm := m.(*domain.Domain)
-
 	gameID := pp.ByName("game_id")
 	if gameID == "" {
 		l.Warn("game ID is empty")
 		return coreerror.RequiredPathParameter("game_id")
+	}
+
+	mm := m.(*domain.Domain)
+
+	if _, _, err := requireDesignerSubscription(l, r, mm, gameID); err != nil {
+		return err
 	}
 
 	l.Info("uploading turn sheet image for game >%s<", gameID)
@@ -436,8 +440,6 @@ func deleteOneGameTurnSheetImageHandler(w http.ResponseWriter, r *http.Request, 
 
 	l.Info("deleting one game turn sheet image with path params >%#v<", pp)
 
-	mm := m.(*domain.Domain)
-
 	gameID := pp.ByName("game_id")
 	if gameID == "" {
 		l.Warn("game ID is empty")
@@ -448,6 +450,12 @@ func deleteOneGameTurnSheetImageHandler(w http.ResponseWriter, r *http.Request, 
 	if gameImageID == "" {
 		l.Warn("game image ID is empty")
 		return coreerror.RequiredPathParameter("game_image_id")
+	}
+
+	mm := m.(*domain.Domain)
+
+	if _, _, err := requireDesignerSubscription(l, r, mm, gameID); err != nil {
+		return err
 	}
 
 	l.Info("deleting turn sheet image >%s< for game >%s<", gameImageID, gameID)

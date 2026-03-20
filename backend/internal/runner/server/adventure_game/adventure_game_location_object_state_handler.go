@@ -242,7 +242,7 @@ func createOneAdventureGameLocationObjectStateHandler(w http.ResponseWriter, r *
 	locationObjectID := pp.ByName("location_object_id")
 	mm := m.(*domain.Domain)
 
-	if _, err := authorizeAdventureGameDesigner(l, r, mm, gameID); err != nil {
+	if _, err := requireDesignerSubscription(l, r, mm, gameID); err != nil {
 		return err
 	}
 
@@ -294,7 +294,7 @@ func updateOneAdventureGameLocationObjectStateHandler(w http.ResponseWriter, r *
 	stateID := pp.ByName("state_id")
 	mm := m.(*domain.Domain)
 
-	if _, err := authorizeAdventureGameDesigner(l, r, mm, gameID); err != nil {
+	if _, err := requireDesignerSubscription(l, r, mm, gameID); err != nil {
 		return err
 	}
 
@@ -343,7 +343,7 @@ func deleteOneAdventureGameLocationObjectStateHandler(w http.ResponseWriter, r *
 
 	mm := m.(*domain.Domain)
 
-	if _, err := authorizeAdventureGameDesigner(l, r, mm, gameID); err != nil {
+	if _, err := requireDesignerSubscription(l, r, mm, gameID); err != nil {
 		return err
 	}
 

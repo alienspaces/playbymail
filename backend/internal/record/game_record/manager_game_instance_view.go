@@ -14,6 +14,7 @@ const (
 const (
 	FieldManagerGameInstanceVID                 = "id"
 	FieldManagerGameInstanceVAccountID          = "account_id"
+	FieldManagerGameInstanceVAccountUserID      = "account_user_id"
 	FieldManagerGameInstanceVGameID             = "game_id"
 	FieldManagerGameInstanceVGameName           = "game_name"
 	FieldManagerGameInstanceVGameType           = "game_type"
@@ -38,6 +39,7 @@ const (
 type ManagerGameInstanceView struct {
 	ID                    string         `db:"id"`
 	AccountID             string         `db:"account_id"`
+	AccountUserID         string         `db:"account_user_id"`
 	GameID                string         `db:"game_id"`
 	GameName              string         `db:"game_name"`
 	GameType              string         `db:"game_type"`
@@ -63,6 +65,7 @@ func (r *ManagerGameInstanceView) ToNamedArgs() pgx.NamedArgs {
 	return pgx.NamedArgs{
 		FieldManagerGameInstanceVID:                 r.ID,
 		FieldManagerGameInstanceVAccountID:          r.AccountID,
+		FieldManagerGameInstanceVAccountUserID:      r.AccountUserID,
 		FieldManagerGameInstanceVGameID:             r.GameID,
 		FieldManagerGameInstanceVGameName:           r.GameName,
 		FieldManagerGameInstanceVGameType:           r.GameType,

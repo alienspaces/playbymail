@@ -224,28 +224,28 @@ func (w *GameTurnProcessingWorker) queueTurnSheetNotificationEmails(ctx context.
 
 	l.Info("queueing turn sheet notification emails for game instance >%s< turn >%d<", gameInstanceRec.ID, gameInstanceRec.CurrentTurn)
 
-	// Get unique account IDs from turn sheets
-	accountIDs := set.New[string]()
+	// Get unique account user IDs from turn sheets
+	accountUserIDs := set.New[string]()
 	for _, turnSheet := range turnSheets {
-		if turnSheet.AccountID != "" {
-			accountIDs.Add(turnSheet.AccountID)
+		if turnSheet.AccountUserID != "" {
+			accountUserIDs.Add(turnSheet.AccountUserID)
 		}
 	}
 
-	if len(accountIDs) == 0 {
-		l.Info("no account IDs found in turn sheets, skipping email notifications")
+	if len(accountUserIDs) == 0 {
+		l.Info("no account user IDs found in turn sheets, skipping email notifications")
 		return nil
 	}
 
-	l.Info("found >%d< unique accounts for email notifications", len(accountIDs))
+	l.Info("found >%d< unique account users for email notifications", len(accountUserIDs))
 
-	// For each account, get the subscription and queue email job
+	// For each account user, get the subscription and queue email job
 	queuedCount := 0
-	for accountID := range accountIDs {
-		// Get the subscription for this account and game
-		subscriptionRec, err := m.GetGameSubscriptionRecByAccountAndGame(accountID, gameInstanceRec.GameID, game_record.GameSubscriptionTypePlayer)
+	for accountUserID := range accountUserIDs {
+		// Get the subscription for this account user and game
+		subscriptionRec, err := m.GetGameSubscriptionRecByAccountUserAndGame(accountUserID, gameInstanceRec.GameID, game_record.GameSubscriptionTypePlayer)
 		if err != nil {
-			l.Warn("failed to get game subscription for account >%s< game >%s< >%v<", accountID, gameInstanceRec.GameID, err)
+			l.Warn("failed to get game subscription for account_user >%s< game >%s< >%v<", accountUserID, gameInstanceRec.GameID, err)
 			continue
 		}
 
@@ -289,7 +289,7 @@ func (w *GameTurnProcessingWorker) queueTurnSheetNotificationEmails(ctx context.
 		}
 
 		queuedCount++
-		l.Debug("queued turn sheet notification email for subscription >%s< account >%s<", subscriptionRec.ID, accountID)
+		l.Debug("queued turn sheet notification email for subscription >%s< account_user >%s<", subscriptionRec.ID, accountUserID)
 	}
 
 	l.Info("queued >%d< turn sheet notification emails for game instance >%s< turn >%d<", queuedCount, gameInstanceRec.ID, gameInstanceRec.CurrentTurn)

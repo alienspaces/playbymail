@@ -268,12 +268,7 @@ func createGameSubscriptionHandler(w http.ResponseWriter, r *http.Request, pp ht
 
 	mm := m.(*domain.Domain)
 
-	// Get authenticated account
 	authenData := server.GetRequestAuthenData(l, r)
-	if authenData == nil || authenData.AccountUser.ID == "" {
-		l.Warn("authenticated account is required")
-		return coreerror.NewUnauthorizedError()
-	}
 
 	rec, err := mapper.GameSubscriptionRequestToRecord(l, r, &game_record.GameSubscription{})
 	if err != nil {
@@ -320,12 +315,7 @@ func updateGameSubscriptionHandler(w http.ResponseWriter, r *http.Request, pp ht
 
 	mm := m.(*domain.Domain)
 
-	// Get authenticated account
 	authenData := server.GetRequestAuthenData(l, r)
-	if authenData == nil || authenData.AccountUser.ID == "" {
-		l.Warn("authenticated account is required")
-		return coreerror.NewUnauthorizedError()
-	}
 
 	recID := pp.ByName("game_subscription_id")
 
@@ -335,9 +325,8 @@ func updateGameSubscriptionHandler(w http.ResponseWriter, r *http.Request, pp ht
 		return err
 	}
 
-	// Check if authenticated account is the owner of the subscription
-	if rec.AccountID != authenData.AccountUser.AccountID || rec.AccountUserID != authenData.AccountUser.ID {
-		l.Warn("authenticated account >%s< is not the owner of the subscription >%s<", authenData.AccountUser.AccountID, rec.ID)
+	if rec.AccountUserID != authenData.AccountUser.ID {
+		l.Warn("account_user >%s< is not the owner of the subscription >%s<", authenData.AccountUser.ID, rec.ID)
 		return coreerror.NewUnauthorizedError()
 	}
 
@@ -381,12 +370,7 @@ func deleteGameSubscriptionHandler(w http.ResponseWriter, r *http.Request, pp ht
 
 	mm := m.(*domain.Domain)
 
-	// Get authenticated account
 	authenData := server.GetRequestAuthenData(l, r)
-	if authenData == nil || authenData.AccountUser.ID == "" {
-		l.Warn("authenticated account is required")
-		return coreerror.NewUnauthorizedError()
-	}
 
 	recID := pp.ByName("game_subscription_id")
 
@@ -396,9 +380,8 @@ func deleteGameSubscriptionHandler(w http.ResponseWriter, r *http.Request, pp ht
 		return err
 	}
 
-	// Check if authenticated account is the owner of the subscription
-	if rec.AccountID != authenData.AccountUser.AccountID || rec.AccountUserID != authenData.AccountUser.ID {
-		l.Warn("authenticated account >%s< is not the owner of the subscription >%s<", authenData.AccountUser.AccountID, rec.ID)
+	if rec.AccountUserID != authenData.AccountUser.ID {
+		l.Warn("account_user >%s< is not the owner of the subscription >%s<", authenData.AccountUser.ID, rec.ID)
 		return coreerror.NewUnauthorizedError()
 	}
 
@@ -498,12 +481,8 @@ func gameSubscriptionInviteHandler(w http.ResponseWriter, r *http.Request, pp ht
 	}
 
 	authenData := server.GetRequestAuthenData(l, r)
-	if authenData == nil || authenData.AccountUser.AccountID == "" {
-		l.Warn("authenticated account is required for invite")
-		return coreerror.NewUnauthorizedError()
-	}
-	if subRec.AccountID != authenData.AccountUser.AccountID {
-		l.Warn("subscription >%s< does not belong to account >%s<", gameSubscriptionID, authenData.AccountUser.AccountID)
+	if subRec.AccountUserID != authenData.AccountUser.ID {
+		l.Warn("subscription >%s< does not belong to account_user >%s<", gameSubscriptionID, authenData.AccountUser.ID)
 		return coreerror.NewNotFoundError(game_record.TableGameSubscription, gameSubscriptionID)
 	}
 

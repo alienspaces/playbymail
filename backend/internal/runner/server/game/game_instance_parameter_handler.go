@@ -174,25 +174,15 @@ func gameInstanceParameterHandlerConfig(l logger.Logger) (map[string]server.Hand
 func getManyGameInstanceParametersHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = logging.LoggerWithFunctionContext(l, packageName, "getManyGameInstanceParametersHandler")
 
-	if _, err := authorizeGameInstanceRead(l, r); err != nil {
-		return err
-	}
-
 	gameID := pp.ByName("game_id")
 	instanceID := pp.ByName("instance_id")
 
 	l.Info("getting many game instance parameters for game >%s< instance >%s<", gameID, instanceID)
 
-	// Validate that the instance belongs to the specified game
-	gameInstance, err := m.(*domain.Domain).GetGameInstanceRec(instanceID, nil)
-	if err != nil {
-		l.Warn("failed getting game instance >%v<", err)
-		return err
-	}
+	mm := m.(*domain.Domain)
 
-	if gameInstance.GameID != gameID {
-		l.Warn("game instance >%s< does not belong to game >%s<", instanceID, gameID)
-		return coreerror.NewNotFoundError("game instance", instanceID)
+	if _, err := authorizeGameInstanceModify(l, r, mm, gameID, instanceID); err != nil {
+		return err
 	}
 
 	opts := queryparam.ToSQLOptionsWithDefaults(qp)
@@ -201,7 +191,7 @@ func getManyGameInstanceParametersHandler(w http.ResponseWriter, r *http.Request
 		Val: instanceID,
 	})
 
-	recs, err := m.(*domain.Domain).GetManyGameInstanceParameterRecs(opts)
+	recs, err := mm.GetManyGameInstanceParameterRecs(opts)
 	if err != nil {
 		l.Warn("failed getting game instance parameters >%v<", err)
 		return err
@@ -219,35 +209,24 @@ func getManyGameInstanceParametersHandler(w http.ResponseWriter, r *http.Request
 func getOneGameInstanceParameterHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = logging.LoggerWithFunctionContext(l, packageName, "getOneGameInstanceParameterHandler")
 
-	if _, err := authorizeGameInstanceRead(l, r); err != nil {
-		return err
-	}
-
 	gameID := pp.ByName("game_id")
 	instanceID := pp.ByName("instance_id")
 	parameterID := pp.ByName("parameter_id")
 
 	l.Info("getting game instance parameter >%s< for game >%s< instance >%s<", parameterID, gameID, instanceID)
 
-	// Validate that the instance belongs to the specified game
-	gameInstance, err := m.(*domain.Domain).GetGameInstanceRec(instanceID, nil)
-	if err != nil {
-		l.Warn("failed getting game instance >%v<", err)
+	mm := m.(*domain.Domain)
+
+	if _, err := authorizeGameInstanceModify(l, r, mm, gameID, instanceID); err != nil {
 		return err
 	}
 
-	if gameInstance.GameID != gameID {
-		l.Warn("game instance >%s< does not belong to game >%s<", instanceID, gameID)
-		return coreerror.NewNotFoundError("game instance", instanceID)
-	}
-
-	rec, err := m.(*domain.Domain).GetGameInstanceParameterRec(parameterID, nil)
+	rec, err := mm.GetGameInstanceParameterRec(parameterID, nil)
 	if err != nil {
 		l.Warn("failed getting game instance parameter >%v<", err)
 		return err
 	}
 
-	// Validate the parameter belongs to the game instance
 	if rec.GameInstanceID != instanceID {
 		l.Warn("parameter >%s< does not belong to game instance >%s<", parameterID, instanceID)
 		return coreerror.NewNotFoundError("parameter", parameterID)

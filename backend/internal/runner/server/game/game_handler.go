@@ -326,13 +326,7 @@ func createGameHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Par
 
 	l.Info("creating game record with path params >%#v<", pp)
 
-	// Get authenticated account ID
 	authenData := server.GetRequestAuthenData(l, r)
-	if authenData == nil || authenData.AccountUser.ID == "" {
-		l.Warn("authenticated account is required to create game")
-		return coreerror.NewUnauthorizedError()
-	}
-
 	mm := m.(*domain.Domain)
 
 	rec, err := mapper.GameRequestToRecord(l, r, &game_record.Game{})
@@ -380,13 +374,18 @@ func updateGameHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Par
 
 	l.Info("updating game record with path params >%#v<", pp)
 
-	mm := m.(*domain.Domain)
-
 	recID := pp.ByName("game_id")
 	if recID == "" {
 		l.Warn("game ID is empty")
 		return coreerror.RequiredPathParameter("game_id")
 	}
+
+	mm := m.(*domain.Domain)
+
+	if _, _, err := requireDesignerSubscription(l, r, mm, recID); err != nil {
+		return err
+	}
+
 	rec, err := mm.GetGameRec(recID, coresql.ForUpdateNoWait)
 	if err != nil {
 		return err
@@ -423,13 +422,18 @@ func deleteGameHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Par
 
 	l.Info("deleting game record with path params >%#v<", pp)
 
-	mm := m.(*domain.Domain)
-
 	recID := pp.ByName("game_id")
 	if recID == "" {
 		l.Warn("game ID is empty")
 		return coreerror.RequiredPathParameter("game_id")
 	}
+
+	mm := m.(*domain.Domain)
+
+	if _, _, err := requireDesignerSubscription(l, r, mm, recID); err != nil {
+		return err
+	}
+
 	rec, err := mm.GetGameRec(recID, coresql.ForUpdateNoWait)
 	if err != nil {
 		return err
@@ -455,12 +459,16 @@ func publishGameHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Pa
 
 	l.Info("publishing game with path params >%#v<", pp)
 
-	mm := m.(*domain.Domain)
-
 	gameID := pp.ByName("game_id")
 	if gameID == "" {
 		l.Warn("game ID is empty")
 		return coreerror.RequiredPathParameter("game_id")
+	}
+
+	mm := m.(*domain.Domain)
+
+	if _, _, err := requireDesignerSubscription(l, r, mm, gameID); err != nil {
+		return err
 	}
 
 	// Get the current game record

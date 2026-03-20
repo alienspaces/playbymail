@@ -112,7 +112,7 @@ func uploadCreatureImageHandler(w http.ResponseWriter, r *http.Request, pp httpr
 		return coreerror.RequiredPathParameter("creature_id")
 	}
 
-	if _, err := authorizeAdventureGameDesigner(l, r, mm, gameID); err != nil {
+	if _, err := requireDesignerSubscription(l, r, mm, gameID); err != nil {
 		return err
 	}
 
@@ -254,7 +254,7 @@ func deleteCreatureImageHandler(w http.ResponseWriter, r *http.Request, pp httpr
 		return coreerror.RequiredPathParameter("creature_id")
 	}
 
-	if _, err := authorizeAdventureGameDesigner(l, r, mm, gameID); err != nil {
+	if _, err := requireDesignerSubscription(l, r, mm, gameID); err != nil {
 		return err
 	}
 
