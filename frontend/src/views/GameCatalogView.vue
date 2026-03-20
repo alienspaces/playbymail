@@ -86,8 +86,28 @@ onMounted(fetchCatalog)
 <style scoped>
 .game-catalog-view {
   max-width: 900px;
+  width: 100%;
   margin: var(--space-lg) auto;
   padding: var(--space-xl);
+}
+
+@media (max-width: 600px) {
+  .game-catalog-view {
+    padding: var(--space-md);
+    margin: var(--space-sm) auto;
+  }
+
+  .catalog-game {
+    padding: var(--space-md);
+  }
+
+  .game-meta {
+    flex-wrap: wrap;
+  }
+
+  .subscription-details {
+    flex-wrap: wrap;
+  }
 }
 
 .catalog-header {
