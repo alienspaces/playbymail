@@ -29,7 +29,7 @@
             "enum": [
                 "info", "change_state", "change_object_state", "give_item", "remove_item",
                 "open_link", "close_link", "reveal_object", "hide_object", "damage",
-                "heal", "summon_creature", "teleport", "nothing", "remove_object"
+                "heal", "summon_creature", "teleport", "nothing", "remove_object", "place_item"
             ]
         },
         "result_adventure_game_location_object_state_id": {

@@ -2,6 +2,7 @@ package demo_scenarios
 
 import (
 	"gitlab.com/alienspaces/playbymail/internal/harness"
+	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 )
 
 const (
@@ -32,27 +33,33 @@ var DemoAccountDefs = []struct {
 }
 
 // AdventureGameConfig returns a standalone demo scenario exercising all adventure game features.
-// Accounts are managed by the CLI -- AccountConfigs is empty. Subscriptions are top-level
-// GameSubscriptionConfigs; the caller must set each Record.AccountID and Record.AccountUserID
-// from the demo account records (e.g. from ensureDemoAccounts()) in order: first subscription
-// uses first demo account, second uses second.
+// Accounts are managed by the CLI -- AccountConfigs is empty. The CLI (load_game_data.go) populates
+// each subscription Record.AccountID and Record.AccountUserID from ensureDemoAccounts() in order:
+// subscription[0] uses demoRecs.AccountUsers[0] (designer), subscription[1] uses [1] (manager).
 func AdventureGameConfig() harness.DataConfig {
 	return harness.DataConfig{
 		GameConfigs: adventureGameConfigs(),
-		// AccountUserGameSubscriptionConfigs: []harness.AccountUserGameSubscriptionConfig{
-		// 	{
-		// 		Reference:        DemoSubscriptionDesignerOneRef,
-		// 		GameRef:          DemoAdventureGameRef,
-		// 		SubscriptionType: game_record.GameSubscriptionTypeDesigner,
-		// 		Record:           &game_record.GameSubscription{},
-		// 	},
-		// 	{
-		// 		Reference:        DemoSubscriptionManagerOneRef,
-		// 		GameRef:          DemoAdventureGameRef,
-		// 		GameInstanceRefs: []string{DemoInstanceOneRef},
-		// 		SubscriptionType: game_record.GameSubscriptionTypeManager,
-		// 		Record:           &game_record.GameSubscription{},
-		// 	},
-		// },
+		AccountUserGameSubscriptionConfigs: []harness.AccountUserGameSubscriptionConfig{
+			{
+				Reference:        DemoSubscriptionDesignerOneRef,
+				GameRef:          DemoAdventureGameRef,
+				SubscriptionType: game_record.GameSubscriptionTypeDesigner,
+				Record:           &game_record.GameSubscription{},
+			},
+			{
+				Reference:        DemoSubscriptionManagerOneRef,
+				GameRef:          DemoAdventureGameRef,
+				SubscriptionType: game_record.GameSubscriptionTypeManager,
+				Record:           &game_record.GameSubscription{},
+				GameInstanceConfigs: []harness.GameInstanceConfig{
+					{
+						Reference: DemoInstanceOneRef,
+						Record: &game_record.GameInstance{
+							DeliveryEmail: true,
+						},
+					},
+				},
+			},
+		},
 	}
 }

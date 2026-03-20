@@ -9,7 +9,7 @@
         },
         "action_type": {
             "type": "string",
-            "enum": ["use", "equip", "unequip", "inspect", "drop"]
+            "enum": ["use", "equip", "unequip", "inspect", "drop", "pickup"]
         },
         "required_adventure_game_item_id": {
             "type": "string"

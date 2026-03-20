@@ -36,6 +36,7 @@ const (
 	AdventureGameItemEffectActionTypeUnequip = "unequip"
 	AdventureGameItemEffectActionTypeInspect = "inspect"
 	AdventureGameItemEffectActionTypeDrop    = "drop"
+	AdventureGameItemEffectActionTypePickup  = "pickup"
 )
 
 // AdventureGameItemEffectActionTypes is the set of all valid action_type values.
@@ -45,6 +46,7 @@ var AdventureGameItemEffectActionTypes = set.New(
 	AdventureGameItemEffectActionTypeUnequip,
 	AdventureGameItemEffectActionTypeInspect,
 	AdventureGameItemEffectActionTypeDrop,
+	AdventureGameItemEffectActionTypePickup,
 )
 
 // Effect type constants — values for the effect_type CHECK constraint.

@@ -150,7 +150,7 @@ const ACTION_TYPES = [
 const EFFECT_TYPES = [
   'info', 'change_state', 'change_object_state', 'give_item', 'remove_item',
   'open_link', 'close_link', 'reveal_object', 'hide_object', 'damage',
-  'heal', 'summon_creature', 'teleport', 'nothing', 'remove_object',
+  'heal', 'summon_creature', 'teleport', 'nothing', 'remove_object', 'place_item',
 ];
 
 // Maps each effect_type to which result fields are shown and which are required.
@@ -170,6 +170,7 @@ const OBJECT_EFFECT_TYPE_FIELD_RULES = {
   heal:                 { show: ['result_value_min', 'result_value_max'], required: ['result_value_min', 'result_value_max'] },
   summon_creature:      { show: ['result_adventure_game_creature_id'], required: ['result_adventure_game_creature_id'] },
   teleport:             { show: ['result_adventure_game_location_id'], required: ['result_adventure_game_location_id'] },
+  place_item:           { show: ['result_adventure_game_item_id', 'result_adventure_game_location_id'], required: ['result_adventure_game_item_id', 'result_adventure_game_location_id'] },
 };
 
 // All possible result fields with their base definitions.

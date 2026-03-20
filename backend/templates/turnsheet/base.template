@@ -374,7 +374,7 @@
             display: table;
             width: 100%;
             padding: 2px 0;
-            font-size: 11px;
+            font-size: 13px;
             color: #3d2b00;
             line-height: 1.4;
         }
@@ -383,7 +383,7 @@
             display: table-cell;
             width: 18px;
             vertical-align: top;
-            font-size: 12px;
+            font-size: 14px;
             line-height: 1.2;
         }
 
@@ -393,7 +393,7 @@
         }
 
         .narrative-empty {
-            font-size: 11px;
+            font-size: 13px;
             color: #9a7a3a;
             font-style: italic;
             margin-top: 4px;
@@ -539,5 +539,7 @@
         </div>
         {{end}}
     </div>
+    <!-- Child template scripts -->
+    {{block "scripts" .}}{{end}}
 </body>
 </html>

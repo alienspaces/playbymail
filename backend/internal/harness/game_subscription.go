@@ -16,12 +16,26 @@ func (t *Testing) createGameSubscriptions() error {
 
 	for i := range t.DataConfig.AccountUserGameSubscriptionConfigs {
 		subConfig := &t.DataConfig.AccountUserGameSubscriptionConfigs[i]
-		accountUserRec, err := t.Data.GetAccountUserRecByRef(subConfig.AccountUserRef)
-		if err != nil {
-			l.Warn("failed getting account user by ref >%s< >%v<", subConfig.AccountUserRef, err)
-			return err
+
+		var accountUserRec *account_record.AccountUser
+		if subConfig.AccountUserRef != "" {
+			var err error
+			accountUserRec, err = t.Data.GetAccountUserRecByRef(subConfig.AccountUserRef)
+			if err != nil {
+				l.Warn("failed getting account user by ref >%s< >%v<", subConfig.AccountUserRef, err)
+				return err
+			}
+		} else if subConfig.Record != nil && subConfig.Record.AccountUserID != "" {
+			// Account IDs pre-populated by the caller (e.g. demo CLI loader). Build a
+			// minimal AccountUser so createGameSubscriptionRec can set rec.AccountID/AccountUserID.
+			accountUserRec = &account_record.AccountUser{}
+			accountUserRec.ID = subConfig.Record.AccountUserID
+			accountUserRec.AccountID = subConfig.Record.AccountID
+		} else {
+			return fmt.Errorf("subscription config at index >%d< must have AccountUserRef or pre-populated Record.AccountUserID", i)
 		}
-		_, err = t.createGameSubscriptionRec(*subConfig, accountUserRec)
+
+		_, err := t.createGameSubscriptionRec(*subConfig, accountUserRec)
 		if err != nil {
 			l.Warn("failed creating game subscription >%v<", err)
 			return err

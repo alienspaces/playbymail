@@ -248,6 +248,25 @@
 </style>
 {{end}}
 
+{{define "scripts"}}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var lastChecked = null;
+        document.querySelectorAll('input[type="radio"]').forEach(function(radio) {
+            radio.addEventListener('mousedown', function() {
+                lastChecked = this.checked ? this : null;
+            });
+            radio.addEventListener('click', function() {
+                if (this === lastChecked) {
+                    this.checked = false;
+                    lastChecked = null;
+                }
+            });
+        });
+    });
+</script>
+{{end}}
+
 {{define "content"}}
 {{if .Creatures}}
 <div class="creatures-section">

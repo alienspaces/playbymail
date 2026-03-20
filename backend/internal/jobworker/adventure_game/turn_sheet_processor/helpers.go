@@ -11,16 +11,17 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/turnsheet"
 )
 
-// ResolveEquipmentStats returns (weaponDamage, armorDefense) for a character
+// ResolveEquipmentStats returns (weaponDamage, weaponName, armorDefense) for a character
 // based on weapon_damage and armor_defense item effects on their equipped items.
+// weaponName is empty when no weapon is equipped (unarmed).
 // Used by both the monster encounter processor and the location choice processor (flee penalty).
-func ResolveEquipmentStats(l logger.Logger, d *domain.Domain, characterInstanceID string) (weaponDamage, armorDefense int, err error) {
+func ResolveEquipmentStats(l logger.Logger, d *domain.Domain, characterInstanceID string) (weaponDamage int, weaponName string, armorDefense int, err error) {
 	weaponDamage = DefaultUnarmedAttackDamage
 	armorDefense = 0
 
 	inventoryItems, err := d.GetAdventureGameItemInstanceRecsByCharacterInstance(characterInstanceID)
 	if err != nil {
-		return weaponDamage, armorDefense, fmt.Errorf("failed to get inventory: %w", err)
+		return weaponDamage, weaponName, armorDefense, fmt.Errorf("failed to get inventory: %w", err)
 	}
 
 	for _, itemInstance := range inventoryItems {
@@ -38,7 +39,7 @@ func ResolveEquipmentStats(l logger.Logger, d *domain.Domain, characterInstanceI
 		})
 		if effectErr != nil {
 			l.Warn("failed to get item effects for item >%s< >%v<", itemInstance.AdventureGameItemID, effectErr)
-			return weaponDamage, armorDefense, fmt.Errorf("failed to get item effects: %w", effectErr)
+			return weaponDamage, weaponName, armorDefense, fmt.Errorf("failed to get item effects: %w", effectErr)
 		}
 
 		for _, effect := range effects {
@@ -55,6 +56,12 @@ func ResolveEquipmentStats(l logger.Logger, d *domain.Domain, characterInstanceI
 			case adventure_game_record.AdventureGameItemEffectEffectTypeWeaponDamage:
 				if slot == adventure_game_record.AdventureGameItemEquipmentSlotWeapon {
 					weaponDamage = int(statValue)
+					itemDef, defErr := d.GetAdventureGameItemRec(itemInstance.AdventureGameItemID, nil)
+					if defErr != nil {
+						l.Warn("failed to get item definition for weapon >%s< >%v<", itemInstance.AdventureGameItemID, defErr)
+					} else {
+						weaponName = itemDef.Name
+					}
 				}
 			case adventure_game_record.AdventureGameItemEffectEffectTypeArmorDefense:
 				if slot != adventure_game_record.AdventureGameItemEquipmentSlotWeapon {
@@ -64,7 +71,7 @@ func ResolveEquipmentStats(l logger.Logger, d *domain.Domain, characterInstanceI
 		}
 	}
 
-	return weaponDamage, armorDefense, nil
+	return weaponDamage, weaponName, armorDefense, nil
 }
 
 // HasAggressiveCreaturesAtLocation returns true if any alive aggressive creature

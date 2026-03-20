@@ -88,7 +88,7 @@ func (p *AdventureGameCreatureEncounterProcessor) ProcessTurnSheetResponse(
 	}
 
 	// Step 3: Determine equipped weapon damage and armor defense.
-	weaponDamage, armorDefense, err := ResolveEquipmentStats(l, p.Domain, characterInstanceRec.ID)
+	weaponDamage, weaponName, armorDefense, err := ResolveEquipmentStats(l, p.Domain, characterInstanceRec.ID)
 	if err != nil {
 		l.Warn("failed to resolve equipment stats >%v< — using unarmed defaults", err)
 		weaponDamage = DefaultUnarmedAttackDamage
@@ -145,10 +145,14 @@ func (p *AdventureGameCreatureEncounterProcessor) ProcessTurnSheetResponse(
 			creatureInstance.Health -= playerDamage
 			l.Info("player deals %d damage to creature >%s< (health now %d)", playerDamage, creatureDef.Name, creatureInstance.Health)
 
+			attackWith := "your fists"
+			if weaponName != "" {
+				attackWith = "your " + weaponName
+			}
 			_ = turnsheet.AppendTurnEvent(characterInstanceRec, turnsheet.TurnEvent{
 				Category: turnsheet.TurnEventCategoryCombat,
 				Icon:     turnsheet.TurnEventIconCombat,
-				Message:  fmt.Sprintf("You attacked the %s for %d damage.", creatureDef.Name, playerDamage),
+				Message:  fmt.Sprintf("You attack the %s with %s for %d damage.", creatureDef.Name, attackWith, playerDamage),
 			})
 
 			if creatureInstance.Health <= 0 {
@@ -307,7 +311,7 @@ func (p *AdventureGameCreatureEncounterProcessor) CreateNextTurnSheet(
 	}
 
 	// Step 3: Resolve equipped weapon and armor.
-	_, _, err = ResolveEquipmentStats(l, p.Domain, characterInstanceRec.ID)
+	_, _, _, err = ResolveEquipmentStats(l, p.Domain, characterInstanceRec.ID)
 	if err != nil {
 		l.Warn("failed to resolve equipment stats >%v<", err)
 	}

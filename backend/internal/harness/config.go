@@ -81,6 +81,7 @@ const (
 	GameLocationObjectEffectFourRef  = "game-location-object-effect-four"
 	GameLocationObjectEffectFiveRef  = "game-location-object-effect-five"
 	GameLocationObjectEffectSixRef   = "game-location-object-effect-six"
+	GameLocationObjectEffectSevenRef = "game-location-object-effect-seven"
 
 	GameItemInstanceOneRef = "game-item-instance-one"
 
@@ -737,22 +738,34 @@ func DefaultDataConfig() DataConfig {
 								IsRepeatable:      false,
 							},
 						},
-						{
-							Reference:        GameLocationObjectEffectSixRef,
-							RequiredStateRef: GameLocationObjectOneStateActivatedRef,
-							Record: &adventure_game_record.AdventureGameLocationObjectEffect{
-								ActionType:        adventure_game_record.AdventureGameLocationObjectEffectActionTypeTouch,
-								ResultDescription: "Warmth flows through you.",
-								EffectType:        adventure_game_record.AdventureGameLocationObjectEffectEffectTypeHeal,
-								ResultValueMin:    nullint32.FromInt32(10),
-								ResultValueMax:    nullint32.FromInt32(10),
-								IsRepeatable:      true,
-							},
+					{
+						Reference:        GameLocationObjectEffectSixRef,
+						RequiredStateRef: GameLocationObjectOneStateActivatedRef,
+						Record: &adventure_game_record.AdventureGameLocationObjectEffect{
+							ActionType:        adventure_game_record.AdventureGameLocationObjectEffectActionTypeTouch,
+							ResultDescription: "Warmth flows through you.",
+							EffectType:        adventure_game_record.AdventureGameLocationObjectEffectEffectTypeHeal,
+							ResultValueMin:    nullint32.FromInt32(10),
+							ResultValueMax:    nullint32.FromInt32(10),
+							IsRepeatable:      true,
+						},
+					},
+					{
+						Reference:         GameLocationObjectEffectSevenRef,
+						RequiredStateRef:  GameLocationObjectOneStateActivatedRef,
+						ResultItemRef:     GameItemOneRef,
+						ResultLocationRef: GameLocationTwoRef,
+						Record: &adventure_game_record.AdventureGameLocationObjectEffect{
+							ActionType:        adventure_game_record.AdventureGameLocationObjectEffectActionTypePull,
+							ResultDescription: "An item materialises at the far location.",
+							EffectType:        adventure_game_record.AdventureGameLocationObjectEffectEffectTypePlaceItem,
+							IsRepeatable:      false,
 						},
 					},
 				},
 			},
 		},
+	},
 			// Minimal draft game for testing update operations
 			{
 				Reference: GameDraftRef,

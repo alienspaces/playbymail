@@ -880,17 +880,18 @@ func GameConfig() []harness.GameConfig {
 							IsRepeatable:      true,
 						},
 					},
-					{
-						Reference:        "desert-obj-effect-sarcophagus-open",
-						RequiredStateRef: "desert-obj-sarcophagus-state-sealed",
-						ResultItemRef:    "desert-item-scarab-key",
-						Record: &adventure_game_record.AdventureGameLocationObjectEffect{
-							ActionType:        adventure_game_record.AdventureGameLocationObjectEffectActionTypeOpen,
-							ResultDescription: "The lid grinds open revealing a golden scarab key resting on dusty linen.",
-							EffectType:        adventure_game_record.AdventureGameLocationObjectEffectEffectTypeGiveItem,
-							IsRepeatable:      false,
-						},
+				{
+					Reference:         "desert-obj-effect-sarcophagus-open",
+					RequiredStateRef:  "desert-obj-sarcophagus-state-sealed",
+					ResultItemRef:     "desert-item-scarab-key",
+					ResultLocationRef: "desert-location-ruins",
+					Record: &adventure_game_record.AdventureGameLocationObjectEffect{
+						ActionType:        adventure_game_record.AdventureGameLocationObjectEffectActionTypeOpen,
+						ResultDescription: "The lid grinds open. A golden scarab key rests on dusty linen inside.",
+						EffectType:        adventure_game_record.AdventureGameLocationObjectEffectEffectTypePlaceItem,
+						IsRepeatable:      false,
 					},
+				},
 					{
 						Reference:        "desert-obj-effect-sarcophagus-open-state",
 						RequiredStateRef: "desert-obj-sarcophagus-state-sealed",

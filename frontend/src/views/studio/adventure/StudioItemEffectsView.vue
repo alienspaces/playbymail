@@ -109,7 +109,7 @@ const columns = [
 
 // ── Field definitions ─────────────────────────────────────────────────────────
 
-const ACTION_TYPES = ['use', 'equip', 'unequip', 'inspect', 'drop'];
+const ACTION_TYPES = ['use', 'equip', 'unequip', 'inspect', 'drop', 'pickup'];
 
 const EFFECT_TYPES = [
   'info', 'damage_target', 'damage_wielder', 'heal_target', 'heal_wielder',

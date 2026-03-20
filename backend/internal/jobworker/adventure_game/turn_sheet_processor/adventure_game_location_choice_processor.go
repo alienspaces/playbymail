@@ -207,7 +207,7 @@ func (p *AdventureGameLocationChoiceProcessor) applyFleePenalty(
 	}
 
 	// Determine character's armor defense.
-	_, armorDefense, err := ResolveEquipmentStats(l, p.Domain, characterInstanceRec.ID)
+	_, _, armorDefense, err := ResolveEquipmentStats(l, p.Domain, characterInstanceRec.ID)
 	if err != nil {
 		return fmt.Errorf("failed to resolve equipment stats for flee penalty: %w", err)
 	}

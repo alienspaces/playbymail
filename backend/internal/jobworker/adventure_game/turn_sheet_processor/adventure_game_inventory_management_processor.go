@@ -138,7 +138,14 @@ func (p *AdventureGameInventoryManagementProcessor) ProcessTurnSheetResponse(ctx
 	for _, itemInstanceID := range scanData.PickUp {
 		l.Info("picking up item >%s<", itemInstanceID)
 		name := p.resolveItemName(l, itemInstanceID)
-		_, err := p.Domain.PickUpAdventureGameItemInstanceRec(characterInstanceRec.ID, itemInstanceID)
+
+		itemInstance, err := p.Domain.GetAdventureGameItemInstanceRec(itemInstanceID, nil)
+		if err != nil {
+			l.Warn("failed to get item instance for pickup >%s< >%v<", itemInstanceID, err)
+			return fmt.Errorf("failed to get item instance %s: %w", itemInstanceID, err)
+		}
+
+		_, err = p.Domain.PickUpAdventureGameItemInstanceRec(characterInstanceRec.ID, itemInstanceID)
 		if err != nil {
 			l.Warn("failed to pick up item >%s< >%v<", itemInstanceID, err)
 			return fmt.Errorf("failed to pick up item %s: %w", itemInstanceID, err)
@@ -148,6 +155,17 @@ func (p *AdventureGameInventoryManagementProcessor) ProcessTurnSheetResponse(ctx
 			Icon:     turnsheet.TurnEventIconInventory,
 			Message:  fmt.Sprintf("You picked up %s.", name),
 		})
+
+		descriptions, charMutated, effectErr := applyItemEffectsForAction(
+			l, p.Domain, gameInstanceRec, characterInstanceRec, itemInstance,
+			adventure_game_record.AdventureGameItemEffectActionTypePickup,
+		)
+		if effectErr != nil {
+			l.Warn("failed to apply pickup effects for item >%s< >%v<", itemInstanceID, effectErr)
+		} else if len(descriptions) > 0 {
+			buildItemEffectTurnEvents(characterInstanceRec, descriptions, nil)
+		}
+		_ = charMutated
 		charNeedsUpdate = true
 	}
 

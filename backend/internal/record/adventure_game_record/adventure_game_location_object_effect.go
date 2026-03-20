@@ -96,6 +96,7 @@ const (
 	AdventureGameLocationObjectEffectEffectTypeTeleport          = "teleport"
 	AdventureGameLocationObjectEffectEffectTypeNothing           = "nothing"
 	AdventureGameLocationObjectEffectEffectTypeRemoveObject      = "remove_object"
+	AdventureGameLocationObjectEffectEffectTypePlaceItem         = "place_item"
 )
 
 // AdventureGameLocationObjectEffectEffectTypes is the set of all valid effect_type values.
@@ -115,6 +116,7 @@ var AdventureGameLocationObjectEffectEffectTypes = set.New(
 	AdventureGameLocationObjectEffectEffectTypeTeleport,
 	AdventureGameLocationObjectEffectEffectTypeNothing,
 	AdventureGameLocationObjectEffectEffectTypeRemoveObject,
+	AdventureGameLocationObjectEffectEffectTypePlaceItem,
 )
 
 // AdventureGameLocationObjectEffect defines what happens when a player performs an action on an object.

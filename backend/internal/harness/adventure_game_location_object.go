@@ -180,6 +180,14 @@ func (t *Testing) createAdventureGameLocationObjectEffectRec(cfg AdventureGameLo
 		rec.ResultAdventureGameLocationID = nullstring.FromString(locRec.ID)
 	}
 
+	if cfg.ResultLinkRef != "" {
+		linkRec, err := t.Data.GetAdventureGameLocationLinkRecByRef(cfg.ResultLinkRef)
+		if err != nil {
+			return nil, fmt.Errorf("could not resolve ResultLinkRef >%s<: %w", cfg.ResultLinkRef, err)
+		}
+		rec.ResultAdventureGameLocationLinkID = nullstring.FromString(linkRec.ID)
+	}
+
 	if cfg.ResultCreatureRef != "" {
 		creatureRec, err := t.Data.GetAdventureGameCreatureRecByRef(cfg.ResultCreatureRef)
 		if err != nil {

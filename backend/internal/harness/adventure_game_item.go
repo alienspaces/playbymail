@@ -48,14 +48,6 @@ func (t *Testing) createAdventureGameItemRec(itemConfig AdventureGameItemConfig,
 		t.Data.Refs.AdventureGameItemRefs[itemConfig.Reference] = rec.ID
 	}
 
-	// Create item effect records
-	for i := range itemConfig.AdventureGameItemEffectConfigs {
-		if _, err := t.createAdventureGameItemEffectRec(itemConfig.AdventureGameItemEffectConfigs[i], rec); err != nil {
-			l.Warn("failed creating adventure_game_item_effect record >%v<", err)
-			return nil, err
-		}
-	}
-
 	return rec, nil
 }
 

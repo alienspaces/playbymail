@@ -20,7 +20,8 @@
                 "equip",
                 "unequip",
                 "inspect",
-                "drop"
+                "drop",
+                "pickup"
             ]
         },
         "required_adventure_game_item_id": {

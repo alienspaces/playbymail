@@ -373,6 +373,74 @@ func TestAdventureGameLocationChoiceProcessor_ProcessObjectChoice_WrongState(t *
 	require.Equal(t, intactStateID, refreshed.CurrentAdventureGameLocationObjectStateID, "state should remain intact when no effects match")
 }
 
+// TestAdventureGameLocationChoiceProcessor_ProcessObjectChoice_PlaceItem verifies that a
+// place_item effect creates an item instance at the designer-specified location,
+// not in the character's inventory.
+func TestAdventureGameLocationChoiceProcessor_ProcessObjectChoice_PlaceItem(t *testing.T) {
+	th := objectHarness(t)
+	m := th.Domain.(*domain.Domain)
+
+	proc, err := turn_sheet_processor.NewAdventureGameLocationChoiceProcessor(m.Log, m)
+	require.NoError(t, err)
+
+	gameInstanceRec, err := th.Data.GetGameInstanceRecByRef(harness.GameInstanceOneRef)
+	require.NoError(t, err)
+
+	charInstanceRec, err := th.Data.GetAdventureGameCharacterInstanceRecByRef(harness.GameCharacterInstanceOneRef)
+	require.NoError(t, err)
+
+	// The place_item effect on the shrine requires state=activated and action=pull.
+	objectInstance, err := th.Data.GetAdventureGameLocationObjectInstanceByObjectRef(harness.GameLocationObjectOneRef)
+	require.NoError(t, err)
+
+	objectInstance.CurrentAdventureGameLocationObjectStateID = stateID(t, th, harness.GameLocationObjectOneStateActivatedRef)
+	_, err = m.UpdateAdventureGameLocationObjectInstanceRec(objectInstance)
+	require.NoError(t, err)
+
+	// The effect places GameItemOne at GameLocationTwo.
+	itemRec, err := th.Data.GetAdventureGameItemRecByRef(harness.GameItemOneRef)
+	require.NoError(t, err)
+
+	locationInstanceTwo, err := th.Data.GetAdventureGameLocationInstanceRecByRef(harness.GameLocationInstanceTwoRef)
+	require.NoError(t, err)
+
+	// Count items at the target location before the effect fires.
+	beforeInstances, err := m.GetManyAdventureGameItemInstanceRecs(nil)
+	require.NoError(t, err)
+	beforeCount := 0
+	for _, inst := range beforeInstances {
+		if inst.AdventureGameItemID == itemRec.ID && inst.AdventureGameLocationInstanceID.String == locationInstanceTwo.ID {
+			beforeCount++
+		}
+	}
+
+	scanData := turnsheet.LocationChoiceScanData{
+		ObjectChoice: objectInstance.ID + ":" + adventure_game_record.AdventureGameLocationObjectEffectActionTypePull,
+	}
+	turnSheet := buildLocationChoiceTurnSheet(t, gameInstanceRec, scanData)
+
+	err = proc.ProcessTurnSheetResponse(context.Background(), gameInstanceRec, charInstanceRec, turnSheet)
+	require.NoError(t, err)
+
+	afterInstances, err := m.GetManyAdventureGameItemInstanceRecs(nil)
+	require.NoError(t, err)
+	afterCount := 0
+	afterCharCount := 0
+	for _, inst := range afterInstances {
+		if inst.AdventureGameItemID == itemRec.ID {
+			if inst.AdventureGameLocationInstanceID.String == locationInstanceTwo.ID {
+				afterCount++
+			}
+			if inst.AdventureGameCharacterInstanceID.String == charInstanceRec.ID {
+				afterCharCount++
+			}
+		}
+	}
+
+	require.Equal(t, beforeCount+1, afterCount, "place_item effect should create one item instance at the target location")
+	require.Equal(t, 0, afterCharCount, "place_item effect should not add the item to the character's inventory")
+}
+
 // TestAdventureGameLocationChoiceProcessor_ProcessObjectChoice_NoObjectChoiceIsLocationChoice
 // verifies that a turn sheet with a location choice (not an object choice) still applies
 // the standard location movement logic.

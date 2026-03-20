@@ -104,6 +104,26 @@ func (t *Testing) processAdventureGameConfig(gameConfig GameConfig, gameRec *gam
 		}
 	}
 
+	// Item effects are created after links so that effects referencing location links
+	// (e.g. ResultLinkRef) can be resolved; items themselves were created first so that
+	// link requirements can reference them.
+	for _, itemConfig := range gameConfig.AdventureGameItemConfigs {
+		if len(itemConfig.AdventureGameItemEffectConfigs) == 0 {
+			continue
+		}
+		itemRec, err := t.Data.GetAdventureGameItemRecByRef(itemConfig.Reference)
+		if err != nil {
+			l.Warn("failed resolving item ref >%s< for deferred item effects >%v<", itemConfig.Reference, err)
+			return nil, err
+		}
+		for i := range itemConfig.AdventureGameItemEffectConfigs {
+			if _, err := t.createAdventureGameItemEffectRec(itemConfig.AdventureGameItemEffectConfigs[i], itemRec); err != nil {
+				l.Warn("failed creating deferred adventure_game_item_effect record >%v<", err)
+				return nil, err
+			}
+		}
+	}
+
 	for _, charConfig := range gameConfig.AdventureGameCharacterConfigs {
 		charRec, err := t.createAdventureGameCharacterRec(charConfig, gameRec)
 		if err != nil {

@@ -205,11 +205,7 @@
 <!-- Items at Location -->
 <div class="location-items-section">
     <h4 class="subsection-title" style="font-size: 12px; margin: 6px 0 4px 0;">Items at Location</h4>
-    {{if .HasAggressiveCreatures}}
-    <div class="no-items">
-        <p style="font-size: 10px; color: #c0392b; font-weight: 600;">Items here are guarded by hostile creatures. Defeat or flee the creatures before accessing this location's items.</p>
-    </div>
-    {{else if .LocationItems}}
+    {{if .LocationItems}}
     {{range .LocationItems}}
     <div class="location-item">
         <div class="location-item-actions">
@@ -241,7 +237,7 @@
     {{end}}
     {{else}}
     <div class="no-items">
-        <p style="font-size: 10px; color: #6c757d; font-style: italic;">No items at this location.</p>
+        <p style="font-size: 13px; color: #6c757d; font-style: italic;">No items at this location.</p>
     </div>
     {{end}}
 </div>

@@ -32,14 +32,12 @@
     </div>
 
     <!-- Submitted success -->
-    <div v-else-if="submitted" class="ts-success card" data-testid="ts-success">
-      <h1>Turn sheets submitted!</h1>
-      <p class="success-message">
-        Your turn sheets have been submitted successfully. The game manager will process them and
-        you'll hear from us for the next turn.
-      </p>
-      <a href="/games" class="catalog-link" data-testid="link-browse-more">Browse more games</a>
-    </div>
+    <ConfirmationCard
+      v-else-if="submitted"
+      title="Turn sheets submitted!"
+      message="Your turn sheets have been submitted successfully. The game manager will process them and you'll hear from us for the next turn."
+      data-testid="ts-success"
+    />
 
     <!-- Turn sheet list is empty -->
     <div v-else-if="currentTurnSheets.length === 0" class="ts-list" data-testid="ts-list">
@@ -104,6 +102,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
+import ConfirmationCard from '../components/ConfirmationCard.vue'
 import {
   verifyGameSubscriptionToken,
   requestNewTurnSheetToken,
@@ -688,23 +687,6 @@ onMounted(loadTurnSheets)
   font-size: 0.9rem;
 }
 
-.success-message {
-  color: var(--color-text, #11181c);
-  font-size: 1rem;
-  line-height: 1.6;
-  margin-bottom: 1.5rem;
-}
-
-.catalog-link {
-  display: inline-block;
-  color: #006ecd;
-  text-decoration: none;
-  font-weight: 600;
-}
-
-.catalog-link:hover {
-  text-decoration: underline;
-}
 
 .ts-loading {
   text-align: center;

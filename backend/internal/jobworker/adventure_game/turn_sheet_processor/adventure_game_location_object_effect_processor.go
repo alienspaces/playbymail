@@ -165,7 +165,8 @@ func (p *AdventureGameLocationChoiceProcessor) applyObjectEffect(
 	case adventure_game_record.AdventureGameLocationObjectEffectEffectTypeGiveItem,
 		adventure_game_record.AdventureGameLocationObjectEffectEffectTypeRemoveItem,
 		adventure_game_record.AdventureGameLocationObjectEffectEffectTypeOpenLink,
-		adventure_game_record.AdventureGameLocationObjectEffectEffectTypeCloseLink:
+		adventure_game_record.AdventureGameLocationObjectEffectEffectTypeCloseLink,
+		adventure_game_record.AdventureGameLocationObjectEffectEffectTypePlaceItem:
 		if err := p.applyObjectInventoryEffect(l, gameInstanceRec, characterInstanceRec, effect); err != nil {
 			return "", err
 		}
@@ -300,6 +301,28 @@ func (p *AdventureGameLocationChoiceProcessor) applyObjectInventoryEffect(
 				break
 			}
 		}
+
+	case adventure_game_record.AdventureGameLocationObjectEffectEffectTypePlaceItem:
+		if !effect.ResultAdventureGameItemID.Valid || effect.ResultAdventureGameItemID.String == "" {
+			return nil
+		}
+		if !effect.ResultAdventureGameLocationID.Valid || effect.ResultAdventureGameLocationID.String == "" {
+			return fmt.Errorf("place_item effect >%s< missing result_adventure_game_location_id", effect.ID)
+		}
+		destLocInst, err := p.getLocationInstanceForLocation(gameInstanceRec.ID, effect.ResultAdventureGameLocationID.String)
+		if err != nil {
+			return fmt.Errorf("failed to resolve destination location for place_item: %w", err)
+		}
+		itemInstance := &adventure_game_record.AdventureGameItemInstance{
+			GameID:                          gameInstanceRec.GameID,
+			GameInstanceID:                  gameInstanceRec.ID,
+			AdventureGameItemID:             effect.ResultAdventureGameItemID.String,
+			AdventureGameLocationInstanceID: nullstring.FromString(destLocInst.ID),
+		}
+		if _, err := p.Domain.CreateAdventureGameItemInstanceRec(itemInstance); err != nil {
+			return fmt.Errorf("failed to place item at location: %w", err)
+		}
+		l.Info("placed item >%s< at location instance >%s<", effect.ResultAdventureGameItemID.String, destLocInst.ID)
 
 	case adventure_game_record.AdventureGameLocationObjectEffectEffectTypeOpenLink:
 		if !effect.ResultAdventureGameLocationLinkID.Valid || effect.ResultAdventureGameLocationLinkID.String == "" {
