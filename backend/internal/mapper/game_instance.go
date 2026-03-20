@@ -42,6 +42,7 @@ func GameInstanceRequestToRecord(l logger.Logger, r *http.Request, rec *game_rec
 			rec.RequiredPlayerCount = req.RequiredPlayerCount
 		}
 		rec.IsClosedTesting = req.IsClosedTesting
+		rec.ProcessWhenAllSubmitted = req.ProcessWhenAllSubmitted
 	case server.HttpMethodPut, server.HttpMethodPatch:
 		if req.TurnDurationHours != 0 {
 			rec.TurnDurationHours = req.TurnDurationHours
@@ -66,6 +67,7 @@ func GameInstanceRequestToRecord(l logger.Logger, r *http.Request, rec *game_rec
 			rec.RequiredPlayerCount = req.RequiredPlayerCount
 		}
 		rec.IsClosedTesting = req.IsClosedTesting
+		rec.ProcessWhenAllSubmitted = req.ProcessWhenAllSubmitted
 	default:
 		return nil, fmt.Errorf("unsupported HTTP method")
 	}
@@ -92,6 +94,7 @@ func GameInstanceRecordToResponseData(l logger.Logger, rec *game_record.GameInst
 		RequiredPlayerCount:               rec.RequiredPlayerCount,
 		PlayerCount:                       playerCount,
 		IsClosedTesting:                   rec.IsClosedTesting,
+		ProcessWhenAllSubmitted:           rec.ProcessWhenAllSubmitted,
 		ClosedTestingJoinGameKey:          nullstring.ToStringPtr(rec.ClosedTestingJoinGameKey),
 		ClosedTestingJoinGameKeyExpiresAt: nulltime.ToTimePtr(rec.ClosedTestingJoinGameKeyExpiresAt),
 		CreatedAt:                         rec.CreatedAt,

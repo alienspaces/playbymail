@@ -166,7 +166,9 @@ const instanceForm = ref({
   delivery_physical_post: false,
   delivery_physical_local: false,
   required_player_count: 1,
-  is_closed_testing: false
+  is_closed_testing: false,
+  turn_duration_hours: selectedGame.value?.turn_duration_hours || 0,
+  process_when_all_submitted: false
 });
 
 const isDraftGame = computed(() => selectedGame.value?.status === 'draft');
@@ -198,6 +200,20 @@ const instanceFields = computed(() => {
       required: true,
       min: 1,
       placeholder: 'Minimum number of players required before game can start'
+    },
+    {
+      key: 'turn_duration_hours',
+      label: 'Turn Duration (Hours)',
+      type: 'number',
+      required: true,
+      min: 1,
+      placeholder: 'Hours between turns'
+    },
+    {
+      key: 'process_when_all_submitted',
+      label: 'Auto-Process Turn',
+      type: 'checkbox',
+      checkboxLabel: 'Automatically process the turn when all players have submitted'
     },
   ];
 
@@ -309,7 +325,9 @@ const createInstance = () => {
     delivery_physical_post: false,
     delivery_physical_local: false,
     required_player_count: 1,
-    is_closed_testing: isDraftGame.value ? true : false
+    is_closed_testing: isDraftGame.value ? true : false,
+    turn_duration_hours: selectedGame.value?.turn_duration_hours || 0,
+    process_when_all_submitted: false
   };
   createModalError.value = '';
   showCreateModal.value = true;
@@ -341,7 +359,9 @@ const handleCreateInstance = async (formData) => {
       delivery_physical_local: deliveryPhysicalLocal,
       delivery_email: deliveryEmail,
       required_player_count: formData.required_player_count || 1,
-      is_closed_testing: Boolean(formData.is_closed_testing)
+      is_closed_testing: Boolean(formData.is_closed_testing),
+      turn_duration_hours: formData.turn_duration_hours || selectedGame.value?.turn_duration_hours || 0,
+      process_when_all_submitted: Boolean(formData.process_when_all_submitted)
     };
 
     const createdInstance = await gameInstancesStore.createGameInstance(gameId.value, instanceData);

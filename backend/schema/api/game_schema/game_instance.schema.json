@@ -59,6 +59,9 @@
         "is_closed_testing": {
             "type": "boolean"
         },
+        "process_when_all_submitted": {
+            "type": "boolean"
+        },
         "turn_duration_hours": {
             "minimum": 0,
             "type": "integer"
@@ -94,6 +97,7 @@
         "required_player_count",
         "player_count",
         "is_closed_testing",
+        "process_when_all_submitted",
         "created_at"
     ],
     "additionalProperties": false

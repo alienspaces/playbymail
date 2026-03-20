@@ -408,6 +408,18 @@ func (t *Testing) removeAdventureGameRecords() error {
 		}
 	}
 
+	// Remove item effect records before items
+	l.Debug("removing >%d< adventure game item effect records", len(t.teardownData.AdventureGameItemEffectRecs))
+	for _, effectRec := range t.teardownData.AdventureGameItemEffectRecs {
+		if effectRec.ID == "" {
+			continue
+		}
+		if err := t.Domain.(*domain.Domain).RemoveAdventureGameItemEffectRec(effectRec.ID); err != nil {
+			l.Warn("failed removing adventure game item effect record >%v<", err)
+			return err
+		}
+	}
+
 	// Remove game item records before games to avoid FK errors
 	l.Debug("removing >%d< game item records", len(t.teardownData.AdventureGameItemRecs))
 	for _, itemRec := range t.teardownData.AdventureGameItemRecs {

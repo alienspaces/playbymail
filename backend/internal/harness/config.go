@@ -241,6 +241,25 @@ type AdventureGameCharacterConfig struct {
 type AdventureGameItemConfig struct {
 	Reference string // Reference to the game_item record
 	Record    *adventure_game_record.AdventureGameItem
+	// Effects attached to this item
+	AdventureGameItemEffectConfigs []AdventureGameItemEffectConfig
+}
+
+type AdventureGameItemEffectConfig struct {
+	Reference string // Reference to the effect record
+	Record    *adventure_game_record.AdventureGameItemEffect
+	// ResultItemRef is an optional reference to an item whose ID should be set on result_adventure_game_item_id.
+	ResultItemRef string
+	// ResultLocationRef is an optional reference to a location whose ID should be set on result_adventure_game_location_id.
+	ResultLocationRef string
+	// ResultLinkRef is an optional reference to a location link whose ID should be set on result_adventure_game_location_link_id.
+	ResultLinkRef string
+	// ResultCreatureRef is an optional reference to a creature whose ID should be set on result_adventure_game_creature_id.
+	ResultCreatureRef string
+	// RequiredItemRef is an optional reference to an item whose ID should be set on required_adventure_game_item_id.
+	RequiredItemRef string
+	// RequiredLocationRef is an optional reference to a location whose ID should be set on required_adventure_game_location_id.
+	RequiredLocationRef string
 }
 
 type AdventureGameCreatureConfig struct {

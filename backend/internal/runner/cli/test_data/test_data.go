@@ -618,13 +618,26 @@ func GameConfig() []harness.GameConfig {
 						EquipmentSlot: convert.PtrStrict("jewelry"),
 					},
 				},
-				{
-					Reference: "desert-item-flask",
-					Record: &adventure_game_record.AdventureGameItem{
-						Name:        "Water Flask",
-						Description: "A sturdy leather flask filled with cool, clear water from the oasis. Essential for desert survival, but heavy to carry.",
+			{
+				Reference: "desert-item-flask",
+				Record: &adventure_game_record.AdventureGameItem{
+					Name:        "Water Flask",
+					Description: "A sturdy leather flask filled with cool, clear water from the oasis. Essential for desert survival, but heavy to carry.",
+				},
+				AdventureGameItemEffectConfigs: []harness.AdventureGameItemEffectConfig{
+					{
+						Reference: "desert-item-flask-effect-use-heal",
+						Record: &adventure_game_record.AdventureGameItemEffect{
+							ActionType:        adventure_game_record.AdventureGameItemEffectActionTypeUse,
+							ResultDescription: "You drink deeply from the cool water, feeling refreshed and restored.",
+							EffectType:        adventure_game_record.AdventureGameItemEffectEffectTypeHealWielder,
+							ResultValueMin:    nullint32.FromInt32(5),
+							ResultValueMax:    nullint32.FromInt32(10),
+							IsRepeatable:      true,
+						},
 					},
 				},
+			},
 				{
 					Reference: "desert-item-cloak",
 					Record: &adventure_game_record.AdventureGameItem{

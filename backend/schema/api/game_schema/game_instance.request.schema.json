@@ -48,6 +48,13 @@
         },
         "is_closed_testing": {
             "type": "boolean"
+        },
+        "turn_duration_hours": {
+            "minimum": 0,
+            "type": "integer"
+        },
+        "process_when_all_submitted": {
+            "type": "boolean"
         }
     },
     "required": [

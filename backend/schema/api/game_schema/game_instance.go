@@ -23,6 +23,7 @@ type GameInstanceResponseData struct {
 	RequiredPlayerCount               int        `json:"required_player_count"`
 	PlayerCount                       int        `json:"player_count"`
 	IsClosedTesting                   bool       `json:"is_closed_testing"`
+	ProcessWhenAllSubmitted           bool       `json:"process_when_all_submitted"`
 	ClosedTestingJoinGameKey          *string    `json:"join_game_key,omitempty"`
 	ClosedTestingJoinGameKeyExpiresAt *time.Time `json:"join_game_key_expires_at,omitempty"`
 	CreatedAt                         time.Time  `json:"created_at"`
@@ -55,7 +56,8 @@ type GameInstanceRequest struct {
 	DeliveryPhysicalLocal bool       `json:"delivery_physical_local,omitempty"`
 	DeliveryEmail         bool       `json:"delivery_email,omitempty"`
 	RequiredPlayerCount   int        `json:"required_player_count,omitempty"`
-	IsClosedTesting       bool       `json:"is_closed_testing,omitempty"`
+	IsClosedTesting            bool `json:"is_closed_testing,omitempty"`
+	ProcessWhenAllSubmitted    bool `json:"process_when_all_submitted,omitempty"`
 }
 
 type JoinGameLinkResponseData struct {
