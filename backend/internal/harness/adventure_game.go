@@ -245,13 +245,31 @@ func (t *Testing) addAdventureGameInstanceDataToStores(instanceData *domain.Adve
 		len(instanceData.CharacterInstances))
 }
 
-// removeAdventureGameRecords removes the adventure game records for a game
+// removeAdventureGameRecords removes all adventure game records in the correct FK order.
 func (t *Testing) removeAdventureGameRecords() error {
 	l := t.Logger("removeAdventureGameRecords")
-
 	l.Debug("removing adventure game records")
 
-	// Remove location object records before location link requirements and locations
+	if err := t.removeAdventureGameLocationObjectRecords(); err != nil {
+		return err
+	}
+	if err := t.removeAdventureGameLocationStructureRecords(); err != nil {
+		return err
+	}
+	if err := t.removeAdventureGamePlacementsPerGame(); err != nil {
+		return err
+	}
+	if err := t.removeAdventureGameEntityRecords(); err != nil {
+		return err
+	}
+	return nil
+}
+
+// removeAdventureGameLocationObjectRecords removes location object effects, states, and objects.
+// Objects and states have a circular FK dependency that is broken by clearing initial_state_id first.
+func (t *Testing) removeAdventureGameLocationObjectRecords() error {
+	l := t.Logger("removeAdventureGameLocationObjectRecords")
+
 	l.Debug("removing >%d< adventure game location object effect records", len(t.teardownData.AdventureGameLocationObjectEffectRecs))
 	for _, effectRec := range t.teardownData.AdventureGameLocationObjectEffectRecs {
 		if effectRec.ID == "" {
@@ -263,25 +281,19 @@ func (t *Testing) removeAdventureGameRecords() error {
 		}
 	}
 
-	// Objects and states have a circular FK dependency:
-	//   state.adventure_game_location_object_id → object.id
-	//   object.initial_adventure_game_location_object_state_id → state.id
-	// Break the cycle by clearing initial_state_id on every object before deleting states.
+	// Break the circular FK cycle before deleting states.
 	l.Debug("clearing initial state IDs on >%d< adventure game location object records", len(t.teardownData.AdventureGameLocationObjectRecs))
 	for _, objectRec := range t.teardownData.AdventureGameLocationObjectRecs {
-		if objectRec.ID == "" {
+		if objectRec.ID == "" || !objectRec.InitialAdventureGameLocationObjectStateID.Valid {
 			continue
 		}
-		if objectRec.InitialAdventureGameLocationObjectStateID.Valid {
-			objectRec.InitialAdventureGameLocationObjectStateID = sql.NullString{}
-			if _, err := t.Domain.(*domain.Domain).UpdateAdventureGameLocationObjectRec(objectRec); err != nil {
-				l.Warn("failed clearing initial state on adventure game location object record >%v<", err)
-				return err
-			}
+		objectRec.InitialAdventureGameLocationObjectStateID = sql.NullString{}
+		if _, err := t.Domain.(*domain.Domain).UpdateAdventureGameLocationObjectRec(objectRec); err != nil {
+			l.Warn("failed clearing initial state on adventure game location object record >%v<", err)
+			return err
 		}
 	}
 
-	// Now delete state records (objects no longer reference them via FK).
 	l.Debug("removing >%d< adventure game location object state records", len(t.teardownData.AdventureGameLocationObjectStateRecs))
 	for _, stateRec := range t.teardownData.AdventureGameLocationObjectStateRecs {
 		if stateRec.ID == "" {
@@ -293,7 +305,6 @@ func (t *Testing) removeAdventureGameRecords() error {
 		}
 	}
 
-	// Now delete objects (states no longer reference them via FK).
 	l.Debug("removing >%d< adventure game location object records", len(t.teardownData.AdventureGameLocationObjectRecs))
 	for _, objectRec := range t.teardownData.AdventureGameLocationObjectRecs {
 		if objectRec.ID == "" {
@@ -305,24 +316,54 @@ func (t *Testing) removeAdventureGameRecords() error {
 		}
 	}
 
-	// Remove game location link requirements before creatures and items (requirements reference both)
+	return nil
+}
+
+// removeAdventureGameLocationStructureRecords removes link requirements, links, and locations.
+func (t *Testing) removeAdventureGameLocationStructureRecords() error {
+	l := t.Logger("removeAdventureGameLocationStructureRecords")
+
 	l.Debug("removing >%d< game location link requirement records", len(t.teardownData.AdventureGameLocationLinkRequirementRecs))
 	for _, reqRec := range t.teardownData.AdventureGameLocationLinkRequirementRecs {
-		l.Debug("[teardown] game location link requirement ID: >%s<", reqRec.ID)
 		if reqRec.ID == "" {
-			l.Warn("[teardown] skipping game location link requirement with empty ID")
 			continue
 		}
-		err := t.Domain.(*domain.Domain).RemoveAdventureGameLocationLinkRequirementRec(reqRec.ID)
-		if err != nil {
+		if err := t.Domain.(*domain.Domain).RemoveAdventureGameLocationLinkRequirementRec(reqRec.ID); err != nil {
 			l.Warn("failed removing game location link requirement record >%v<", err)
 			return err
 		}
 	}
 
-	// Remove ALL creature and item placements for each game before removing creatures/items.
-	// This includes both harness-created placements (tracked in teardownData) and any additional
-	// placements created by API handlers during tests, which would cause FK violations if left behind.
+	l.Debug("removing >%d< game location link records", len(t.teardownData.AdventureGameLocationLinkRecs))
+	for _, linkRec := range t.teardownData.AdventureGameLocationLinkRecs {
+		if linkRec.ID == "" {
+			continue
+		}
+		if err := t.Domain.(*domain.Domain).RemoveAdventureGameLocationLinkRec(linkRec.ID); err != nil {
+			l.Warn("failed removing game location link record >%v<", err)
+			return err
+		}
+	}
+
+	l.Debug("removing >%d< game location records", len(t.teardownData.AdventureGameLocationRecs))
+	for _, gameLocationRec := range t.teardownData.AdventureGameLocationRecs {
+		if gameLocationRec.ID == "" {
+			continue
+		}
+		if err := t.Domain.(*domain.Domain).RemoveAdventureGameLocationRec(gameLocationRec.ID); err != nil {
+			l.Warn("failed removing game location record >%v<", err)
+			return err
+		}
+	}
+
+	return nil
+}
+
+// removeAdventureGamePlacementsPerGame removes all creature and item placements for each game.
+// This covers both harness-created placements and any additional ones created by API handlers.
+func (t *Testing) removeAdventureGamePlacementsPerGame() error {
+	l := t.Logger("removeAdventureGamePlacementsPerGame")
+
 	for _, gameRec := range t.teardownData.GameRecs {
 		if gameRec.ID == "" {
 			continue
@@ -362,53 +403,24 @@ func (t *Testing) removeAdventureGameRecords() error {
 		}
 	}
 
-	// Remove game creature records (after requirements)
+	return nil
+}
+
+// removeAdventureGameEntityRecords removes creatures, items, and characters.
+func (t *Testing) removeAdventureGameEntityRecords() error {
+	l := t.Logger("removeAdventureGameEntityRecords")
+
 	l.Debug("removing >%d< game creature records", len(t.teardownData.AdventureGameCreatureRecs))
 	for _, creatureRec := range t.teardownData.AdventureGameCreatureRecs {
-		l.Debug("[teardown] game creature ID: >%s<", creatureRec.ID)
 		if creatureRec.ID == "" {
-			l.Warn("[teardown] skipping game creature with empty ID")
 			continue
 		}
-		err := t.Domain.(*domain.Domain).RemoveAdventureGameCreatureRec(creatureRec.ID)
-		if err != nil {
+		if err := t.Domain.(*domain.Domain).RemoveAdventureGameCreatureRec(creatureRec.ID); err != nil {
 			l.Warn("failed removing game creature record >%v<", err)
 			return err
 		}
 	}
 
-	// Remove game location links
-	l.Debug("removing >%d< game location link records", len(t.teardownData.AdventureGameLocationLinkRecs))
-	for _, linkRec := range t.teardownData.AdventureGameLocationLinkRecs {
-		l.Debug("[teardown] game location link ID: >%s<", linkRec.ID)
-		if linkRec.ID == "" {
-			l.Warn("[teardown] skipping game location link with empty ID")
-			continue
-		}
-		err := t.Domain.(*domain.Domain).RemoveAdventureGameLocationLinkRec(linkRec.ID)
-		if err != nil {
-			l.Warn("failed removing game location link record >%v<", err)
-			return err
-		}
-	}
-
-	// Remove game location records before games to avoid FK errors
-	l.Debug("removing >%d< game location records", len(t.teardownData.AdventureGameLocationRecs))
-	for _, gameLocationRec := range t.teardownData.AdventureGameLocationRecs {
-		l.Debug("[teardown] game location ID: >%s<", gameLocationRec.ID)
-		if gameLocationRec.ID == "" {
-			l.Warn("[teardown] skipping game location with empty ID")
-			continue
-		}
-		l.Debug("removing game location record ID >%s<", gameLocationRec.ID)
-		err := t.Domain.(*domain.Domain).RemoveAdventureGameLocationRec(gameLocationRec.ID)
-		if err != nil {
-			l.Warn("failed removing game location record >%v<", err)
-			return err
-		}
-	}
-
-	// Remove item effect records before items
 	l.Debug("removing >%d< adventure game item effect records", len(t.teardownData.AdventureGameItemEffectRecs))
 	for _, effectRec := range t.teardownData.AdventureGameItemEffectRecs {
 		if effectRec.ID == "" {
@@ -420,31 +432,23 @@ func (t *Testing) removeAdventureGameRecords() error {
 		}
 	}
 
-	// Remove game item records before games to avoid FK errors
 	l.Debug("removing >%d< game item records", len(t.teardownData.AdventureGameItemRecs))
 	for _, itemRec := range t.teardownData.AdventureGameItemRecs {
-		l.Debug("[teardown] game item ID: >%s<", itemRec.ID)
 		if itemRec.ID == "" {
-			l.Warn("[teardown] skipping game item with empty ID")
 			continue
 		}
-		err := t.Domain.(*domain.Domain).RemoveAdventureGameItemRec(itemRec.ID)
-		if err != nil {
+		if err := t.Domain.(*domain.Domain).RemoveAdventureGameItemRec(itemRec.ID); err != nil {
 			l.Warn("failed removing game item record >%v<", err)
 			return err
 		}
 	}
 
-	// Remove game character records
 	l.Debug("removing >%d< game character records", len(t.teardownData.AdventureGameCharacterRecs))
 	for _, charRec := range t.teardownData.AdventureGameCharacterRecs {
-		l.Debug("[teardown] game character ID: >%s<", charRec.ID)
 		if charRec.ID == "" {
-			l.Warn("[teardown] skipping game character with empty ID")
 			continue
 		}
-		err := t.Domain.(*domain.Domain).RemoveAdventureGameCharacterRec(charRec.ID)
-		if err != nil {
+		if err := t.Domain.(*domain.Domain).RemoveAdventureGameCharacterRec(charRec.ID); err != nil {
 			l.Warn("failed removing game character record >%v<", err)
 			return err
 		}
