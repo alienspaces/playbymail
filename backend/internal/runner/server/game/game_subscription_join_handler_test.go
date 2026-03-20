@@ -82,16 +82,23 @@ func Test_submitJoinHandler(t *testing.T) {
 		require.NoError(t, err)
 	}()
 
-	testCases := []testutil.TestCase{
+	type testCase struct {
+		testutil.TestCase
+		expectInstanceID bool
+		expectStatus     string
+	}
+
+	testCases := []testCase{
 		{
-			Name: "authenticated request to submit join creates subscription",
-			NewRunner: func(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], scanner turnsheet.TurnSheetScanner, d harness.Data) (testutil.TestRunnerer, error) {
-				return testutil.NewTestRunner(cfg, l, s, j, scanner)
-			},
-			HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
-				return rnr.GetHandlerConfig()[game.SubmitJoin]
-			},
-			RequestHeaders: testutil.AuthHeaderStandard,
+			TestCase: testutil.TestCase{
+				Name: "authenticated request creates active subscription with instance",
+				NewRunner: func(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], scanner turnsheet.TurnSheetScanner, d harness.Data) (testutil.TestRunnerer, error) {
+					return testutil.NewTestRunner(cfg, l, s, j, scanner)
+				},
+				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
+					return rnr.GetHandlerConfig()[game.SubmitJoin]
+				},
+			RequestHeaders: testutil.AuthHeaderProManager,
 			RequestPathParams: func(d harness.Data) map[string]string {
 				return map[string]string{
 					":game_subscription_id": managerSubscriptionID(t, d),
@@ -108,13 +115,44 @@ func Test_submitJoinHandler(t *testing.T) {
 					PostalCode:         "90210",
 				}
 			},
-			ResponseDecoder: testutil.TestCaseResponseDecoderGeneric[player_schema.JoinGameSubmitResponse],
-			ResponseCode:    http.StatusCreated,
+				ResponseDecoder: testutil.TestCaseResponseDecoderGeneric[player_schema.JoinGameSubmitResponse],
+				ResponseCode:    http.StatusCreated,
+			},
+			expectInstanceID: true,
+			expectStatus:     "active",
+		},
+		{
+			TestCase: testutil.TestCase{
+				Name: "unauthenticated request creates pending_approval subscription without instance",
+				NewRunner: func(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], scanner turnsheet.TurnSheetScanner, d harness.Data) (testutil.TestRunnerer, error) {
+					return testutil.NewTestRunner(cfg, l, s, j, scanner)
+				},
+				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
+					return rnr.GetHandlerConfig()[game.SubmitJoin]
+				},
+				RequestPathParams: func(d harness.Data) map[string]string {
+					return map[string]string{
+						":game_subscription_id": managerSubscriptionID(t, d),
+					}
+				},
+				RequestBody: func(d harness.Data) interface{} {
+					return player_schema.JoinGameSubmitRequest{
+						Email:              "newplayer2@example.com",
+						Name:               "New Player Two",
+						DeliveryMethod:     "email",
+					}
+				},
+				ResponseDecoder: testutil.TestCaseResponseDecoderGeneric[player_schema.JoinGameSubmitResponse],
+				ResponseCode:    http.StatusCreated,
+			},
+			expectInstanceID: false,
+			expectStatus:     "pending_approval",
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.Name, func(t *testing.T) {
+			tc := tc
 			testFunc := func(method string, body any) {
 				if tc.TestResponseCode() != http.StatusCreated {
 					return
@@ -123,10 +161,15 @@ func Test_submitJoinHandler(t *testing.T) {
 				res := body.(player_schema.JoinGameSubmitResponse)
 				require.NotNil(t, res.Data)
 				require.NotEmpty(t, res.Data.GameSubscriptionID)
-				require.NotEmpty(t, res.Data.GameInstanceID)
 				require.NotEmpty(t, res.Data.GameID)
+				require.Equal(t, tc.expectStatus, res.Data.Status)
+				if tc.expectInstanceID {
+					require.NotEmpty(t, res.Data.GameInstanceID)
+				} else {
+					require.Empty(t, res.Data.GameInstanceID)
+				}
 			}
-			testutil.RunTestCase(t, th, &tc, testFunc)
+			testutil.RunTestCase(t, th, &tc.TestCase, testFunc)
 		})
 	}
 }

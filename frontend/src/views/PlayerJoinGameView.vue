@@ -13,14 +13,21 @@
     </div>
 
     <!-- Success confirmation -->
-    <div v-else-if="step === 'success'" class="join-success card" data-testid="step-success">
-      <h1>You're in!</h1>
-      <p class="success-message">
-        You have successfully joined the game.
-        You will receive further instructions soon.
-      </p>
-      <a href="/games" class="catalog-link" data-testid="link-browse-more">Browse more games</a>
-    </div>
+    <ConfirmationCard
+      v-else-if="step === 'success'"
+      title="You're in!"
+      message="You have successfully joined the game. You will receive further instructions soon."
+      data-testid="step-success"
+    />
+
+    <!-- Email confirmation pending -->
+    <ConfirmationCard
+      v-else-if="step === 'pending'"
+      title="Check your email"
+      message="We've sent a confirmation link to your email address. Click the link to complete your subscription."
+      link-test-id="link-browse-more-pending"
+      data-testid="step-pending"
+    />
 
     <!-- Turn sheet display -->
     <div v-else class="join-sheet-wrapper" data-testid="join-sheet">
@@ -45,6 +52,7 @@
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { getJoinSheet, submitJoinGame } from '../api/joinGame'
+import ConfirmationCard from '../components/ConfirmationCard.vue'
 
 const route = useRoute()
 
@@ -137,8 +145,12 @@ async function onSubmit() {
 
   submitting.value = true
   try {
-    await submitJoinGame(route.params.game_subscription_id, data)
-    step.value = 'success'
+    const res = await submitJoinGame(route.params.game_subscription_id, data)
+    if (res?.data?.status === 'pending_approval') {
+      step.value = 'pending'
+    } else {
+      step.value = 'success'
+    }
   } catch (err) {
     submitError.value = err.message || 'Failed to submit. Please try again.'
   } finally {
@@ -246,35 +258,5 @@ onMounted(() => {
   font-size: var(--font-size-sm, 0.875rem);
 }
 
-.join-success {
-  padding: var(--space-xl, 2rem);
-}
 
-.join-success h1 {
-  font-size: var(--font-size-xl, 1.5rem);
-  margin-bottom: var(--space-md, 1rem);
-}
-
-.success-message {
-  margin-bottom: var(--space-xl, 2rem);
-  color: var(--color-text-muted, #444);
-}
-
-.catalog-link {
-  display: inline-block;
-  padding: var(--space-sm, 0.5rem) var(--space-xl, 2rem);
-  background: transparent;
-  color: var(--color-button, #006ecd);
-  border: 2px solid var(--color-button, #006ecd);
-  border-radius: var(--radius-sm, 4px);
-  text-decoration: none;
-  font-weight: var(--font-weight-bold, 600);
-  font-size: var(--font-size-sm, 0.875rem);
-  transition: all 0.2s;
-}
-
-.catalog-link:hover {
-  background: var(--color-button, #006ecd);
-  color: var(--color-text-light, #fff);
-}
 </style>

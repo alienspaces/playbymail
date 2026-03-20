@@ -179,8 +179,8 @@ function hasCachedData(sheet) {
 async function authenticateWithToken() {
   const token = route.params.turn_sheet_token
   if (!token) return true
-  if (authStore.sessionToken) return true
-
+  // Always exchange the URL token — an existing session may belong to a different account
+  // (e.g. a designer browsing their own game), so we must not skip this step.
   const gameSubscriptionInstanceId = route.params.game_subscription_instance_id
   try {
     const sessionToken = await verifyGameSubscriptionToken(gameSubscriptionInstanceId, token)

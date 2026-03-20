@@ -181,7 +181,7 @@ func getManyGameInstanceParametersHandler(w http.ResponseWriter, r *http.Request
 
 	mm := m.(*domain.Domain)
 
-	if _, err := authorizeGameInstanceModify(l, r, mm, gameID, instanceID); err != nil {
+	if _, err := authorizeManagerModify(l, r, mm, gameID, instanceID); err != nil {
 		return err
 	}
 
@@ -217,7 +217,7 @@ func getOneGameInstanceParameterHandler(w http.ResponseWriter, r *http.Request, 
 
 	mm := m.(*domain.Domain)
 
-	if _, err := authorizeGameInstanceModify(l, r, mm, gameID, instanceID); err != nil {
+	if _, err := authorizeManagerModify(l, r, mm, gameID, instanceID); err != nil {
 		return err
 	}
 
@@ -251,7 +251,7 @@ func createOneGameInstanceParameterHandler(w http.ResponseWriter, r *http.Reques
 
 	mm := m.(*domain.Domain)
 
-	if _, err := authorizeGameInstanceModify(l, r, mm, gameID, instanceID); err != nil {
+	if _, err := authorizeManagerModify(l, r, mm, gameID, instanceID); err != nil {
 		return err
 	}
 
@@ -293,7 +293,7 @@ func updateOneGameInstanceParameterHandler(w http.ResponseWriter, r *http.Reques
 
 	mm := m.(*domain.Domain)
 
-	if _, err := authorizeGameInstanceModify(l, r, mm, gameID, instanceID); err != nil {
+	if _, err := authorizeManagerModify(l, r, mm, gameID, instanceID); err != nil {
 		return err
 	}
 
@@ -344,7 +344,7 @@ func deleteOneGameInstanceParameterHandler(w http.ResponseWriter, r *http.Reques
 
 	mm := m.(*domain.Domain)
 
-	if _, err := authorizeGameInstanceModify(l, r, mm, gameID, instanceID); err != nil {
+	if _, err := authorizeManagerModify(l, r, mm, gameID, instanceID); err != nil {
 		return err
 	}
 

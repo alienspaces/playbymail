@@ -8,6 +8,7 @@ const mockHandleApiError = vi.fn()
 vi.mock('./baseUrl', () => ({
   baseUrl: 'http://localhost:8080',
   handleApiError: (...args) => mockHandleApiError(...args),
+  getAuthHeaders: () => ({}),
 }))
 
 import { getJoinGameInfo, getJoinSheet, submitJoinGame } from './joinGame'
@@ -58,7 +59,10 @@ describe('joinGame API', () => {
 
       const result = await getJoinSheet(SUB_ID)
 
-      expect(mockFetch).toHaveBeenCalledWith(`${BASE}/${SUB_ID}/join/sheet`)
+      expect(mockFetch).toHaveBeenCalledWith(
+        `${BASE}/${SUB_ID}/join/sheet`,
+        expect.objectContaining({ headers: {} })
+      )
       expect(result).toBe(html)
     })
 
@@ -88,7 +92,7 @@ describe('joinGame API', () => {
       delivery_physical_post: false,
     }
 
-    it('calls POST /api/v1/game-subscriptions/:id/join without auth headers', async () => {
+    it('calls POST /api/v1/game-subscriptions/:id/join and returns parsed response', async () => {
       mockFetch.mockResolvedValue({
         ok: true,
         json: () =>
@@ -97,6 +101,7 @@ describe('joinGame API', () => {
               game_subscription_id: 'sub-1',
               game_instance_id: 'inst-1',
               game_id: 'g1',
+              status: 'active',
             },
           }),
       })
@@ -107,11 +112,12 @@ describe('joinGame API', () => {
         `${BASE}/${SUB_ID}/join`,
         expect.objectContaining({
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: expect.objectContaining({ 'Content-Type': 'application/json' }),
           body: JSON.stringify(submitData),
         })
       )
       expect(result.data.game_subscription_id).toBe('sub-1')
+      expect(result.data.status).toBe('active')
     })
 
     it('calls handleApiError on failure', async () => {

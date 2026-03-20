@@ -18,6 +18,8 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/type/domainer"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
 	"gitlab.com/alienspaces/playbymail/internal/domain"
+	"gitlab.com/alienspaces/playbymail/internal/jobqueue"
+	"gitlab.com/alienspaces/playbymail/internal/jobworker"
 	"gitlab.com/alienspaces/playbymail/internal/record/account_record"
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
@@ -80,7 +82,7 @@ func gameSubscriptionJoinHandlerConfig(l logger.Logger) (map[string]server.Handl
 		Path:        "/api/v1/game-subscriptions/:game_subscription_id/join",
 		HandlerFunc: submitJoinHandler,
 		MiddlewareConfig: server.MiddlewareConfig{
-			AuthenTypes: []server.AuthenticationType{server.AuthenticationTypePublic},
+			AuthenTypes: []server.AuthenticationType{server.AuthenticationTypeOptionalToken},
 			ValidateRequestSchema: jsonschema.SchemaWithReferences{
 				Main: jsonschema.Schema{
 					Location: "api/player_schema",
@@ -372,12 +374,20 @@ func submitJoinHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Par
 
 	// Source account record IDs from authenticated session if available.
 	var accountID, accountUserID, accountUserContactID string
+	isAuthenticated := false
 
 	authenData := server.GetRequestAuthenData(l, r)
 	if authenData != nil && authenData.IsAuthenticated() {
+		isAuthenticated = true
 		accountID = authenData.AccountUser.AccountID
 		accountUserID = authenData.AccountUser.ID
 		accountUserContactID = authenData.AccountUser.AccountUserContactID
+		// Override the submitted email with the authenticated account's email so that a
+		// logged-in user cannot accidentally create a subscription under a different account.
+		if req.Email != authenData.AccountUser.Email {
+			l.Warn("submitted email >%s< differs from authenticated account email >%s<, using authenticated email", req.Email, authenData.AccountUser.Email)
+		}
+		req.Email = authenData.AccountUser.Email
 	}
 
 	accountRec := &account_record.Account{
@@ -405,21 +415,32 @@ func submitJoinHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Par
 		PostalCode:         nullstring.FromString(req.PostalCode),
 	}
 
-	// Create or update account, account user, and account user contact and basic subscriptions records.
+	// Create or update account, account user, and account user contact.
 	accountRec, accountUserRec, accountUserContactRec, _, err = mm.UpsertAccount(accountRec, accountUserRec, accountUserContactRec)
 	if err != nil {
 		l.Warn("failed to upsert account >%v<", err)
 		return err
 	}
 
-	// Auto-assign: find an available instance under this subscription.
-	gameInstanceRec, err := mm.FindAvailableGameInstance(gameSubscriptionRec.ID)
-	if err != nil {
-		l.Warn("failed to find available instance for subscription >%s< >%v<", gameSubscriptionRec.ID, err)
-		return err
+	// Determine subscription status: authenticated users are active immediately;
+	// non-authenticated users start as pending_approval and confirm via email.
+	subscriptionStatus := game_record.GameSubscriptionStatusActive
+	if !isAuthenticated {
+		subscriptionStatus = game_record.GameSubscriptionStatusPendingApproval
 	}
-	if gameInstanceRec == nil {
-		return coreerror.NewInvalidDataError("no game instances are currently accepting new players")
+
+	// For authenticated users only: find an instance before creating the subscription
+	// so we can reject early if no capacity is available.
+	var gameInstanceRec *game_record.GameInstance
+	if isAuthenticated {
+		gameInstanceRec, err = mm.FindAvailableGameInstance(gameSubscriptionRec.ID)
+		if err != nil {
+			l.Warn("failed to find available instance for subscription >%s< >%v<", gameSubscriptionRec.ID, err)
+			return err
+		}
+		if gameInstanceRec == nil {
+			return coreerror.NewInvalidDataError("no game instances are currently accepting new players")
+		}
 	}
 
 	playerGameSubscriptionRec, err := mm.CreateGameSubscriptionRec(&game_record.GameSubscription{
@@ -428,7 +449,7 @@ func submitJoinHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Par
 		AccountUserID:        accountUserRec.ID,
 		AccountUserContactID: nullstring.FromString(accountUserContactRec.ID),
 		SubscriptionType:     game_record.GameSubscriptionTypePlayer,
-		Status:               game_record.GameSubscriptionStatusActive,
+		Status:               subscriptionStatus,
 		DeliveryMethod:       nullstring.FromString(req.DeliveryMethod),
 	})
 	if err != nil {
@@ -465,24 +486,43 @@ func submitJoinHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Par
 		l.Info("created adventure game character >%s< for player >%s<", characterRec.ID, accountUserRec.ID)
 	}
 
-	// Link the player subscription to the game instance so the instance can auto-start and
-	// turn processing can create turn sheets and send notification emails.
-	_, err = mm.AssignPlayerToGameInstance(playerGameSubscriptionRec.ID, gameInstanceRec.ID)
-	if err != nil {
-		l.Warn("failed to assign player to game instance >%v<", err)
+	if isAuthenticated {
+		// Link the player subscription to the game instance so the instance can auto-start
+		// and turn processing can create turn sheets and send notification emails.
+		_, err = mm.AssignPlayerToGameInstance(playerGameSubscriptionRec.ID, gameInstanceRec.ID)
+		if err != nil {
+			l.Warn("failed to assign player to game instance >%v<", err)
+			return err
+		}
+
+		l.Info("responding with created player subscription >%s< assigned to instance >%s<", playerGameSubscriptionRec.ID, gameInstanceRec.ID)
+
+		return server.WriteResponse(l, w, http.StatusCreated, &player_schema.JoinGameSubmitResponse{
+			Data: &player_schema.JoinGameSubmitResponseData{
+				GameSubscriptionID: playerGameSubscriptionRec.ID,
+				GameInstanceID:     gameInstanceRec.ID,
+				GameID:             gameSubscriptionRec.GameID,
+				Status:             game_record.GameSubscriptionStatusActive,
+			},
+		})
+	}
+
+	// Non-authenticated: send confirmation email; instance assignment is deferred to approval.
+	if _, err := jc.InsertTx(r.Context(), mm.Tx, &jobworker.SendGameSubscriptionApprovalEmailWorkerArgs{
+		GameSubscriptionID: playerGameSubscriptionRec.ID,
+	}, &river.InsertOpts{Queue: jobqueue.QueueDefault}); err != nil {
+		l.Warn("failed to enqueue approval email job >%v<", err)
 		return err
 	}
 
-	res := player_schema.JoinGameSubmitResponse{
+	l.Info("responding with pending subscription >%s< awaiting email confirmation", playerGameSubscriptionRec.ID)
+
+	return server.WriteResponse(l, w, http.StatusCreated, &player_schema.JoinGameSubmitResponse{
 		Data: &player_schema.JoinGameSubmitResponseData{
 			GameSubscriptionID: playerGameSubscriptionRec.ID,
-			GameInstanceID:     gameInstanceRec.ID,
 			GameID:             gameSubscriptionRec.GameID,
+			Status:             game_record.GameSubscriptionStatusPendingApproval,
 		},
-	}
-
-	l.Info("responding with created player subscription >%s< assigned to instance >%s<", playerGameSubscriptionRec.ID, gameInstanceRec.ID)
-
-	return server.WriteResponse(l, w, http.StatusCreated, res)
+	})
 }
 

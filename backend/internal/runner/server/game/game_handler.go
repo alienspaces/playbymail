@@ -382,7 +382,7 @@ func updateGameHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Par
 
 	mm := m.(*domain.Domain)
 
-	if _, _, err := requireDesignerSubscription(l, r, mm, recID); err != nil {
+	if _, _, err := authorizeDesignerModify(l, r, mm, recID); err != nil {
 		return err
 	}
 
@@ -430,7 +430,7 @@ func deleteGameHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Par
 
 	mm := m.(*domain.Domain)
 
-	if _, _, err := requireDesignerSubscription(l, r, mm, recID); err != nil {
+	if _, _, err := authorizeDesignerModify(l, r, mm, recID); err != nil {
 		return err
 	}
 
@@ -467,7 +467,7 @@ func publishGameHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Pa
 
 	mm := m.(*domain.Domain)
 
-	if _, _, err := requireDesignerSubscription(l, r, mm, gameID); err != nil {
+	if _, _, err := authorizeDesignerModify(l, r, mm, gameID); err != nil {
 		return err
 	}
 

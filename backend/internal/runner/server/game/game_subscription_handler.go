@@ -420,12 +420,41 @@ func approveGameSubscriptionHandler(w http.ResponseWriter, r *http.Request, pp h
 		return err
 	}
 
-	// Enqueue game subscription processing job to create game entities
-	if _, err := jc.InsertTx(r.Context(), mm.Tx, &jobworker.GameSubscriptionProcessingWorkerArgs{
-		GameSubscriptionID: rec.ID,
-	}, &river.InsertOpts{Queue: jobqueue.QueueDefault}); err != nil {
-		l.Warn("failed to enqueue process subscription job >%v<", err)
+	// Check whether this subscription already has a game_subscription_instance link.
+	// Turn-sheet approvals create the link during processing, so they need the
+	// processing job. Online-join approvals have no link yet and need one created now.
+	existingLinks, err := mm.GetGameSubscriptionInstanceRecsBySubscription(subscriptionID)
+	if err != nil {
+		l.Warn("failed to get game subscription instance records >%v<", err)
 		return err
+	}
+
+	if len(existingLinks) == 0 {
+		// Online-join approval: find an available instance and link the player.
+		// Instance management data is still created later by StartGameInstance.
+		gameInstanceRec, err := mm.FindAvailableGameInstance(rec.ID)
+		if err != nil {
+			l.Warn("failed to find available game instance for subscription >%s< >%v<", rec.ID, err)
+			return err
+		}
+		if gameInstanceRec == nil {
+			return coreerror.NewInvalidDataError("no game instances are currently accepting new players")
+		}
+
+		if _, err := mm.AssignPlayerToGameInstance(rec.ID, gameInstanceRec.ID); err != nil {
+			l.Warn("failed to assign player to game instance >%v<", err)
+			return err
+		}
+
+		l.Info("assigned approved subscription >%s< to game instance >%s<", rec.ID, gameInstanceRec.ID)
+	} else {
+		// Turn-sheet approval: enqueue processing job to create game entities.
+		if _, err := jc.InsertTx(r.Context(), mm.Tx, &jobworker.GameSubscriptionProcessingWorkerArgs{
+			GameSubscriptionID: rec.ID,
+		}, &river.InsertOpts{Queue: jobqueue.QueueDefault}); err != nil {
+			l.Warn("failed to enqueue process subscription job >%v<", err)
+			return err
+		}
 	}
 
 	instanceRecs, err := mm.GetGameSubscriptionInstanceRecsBySubscription(subscriptionID)

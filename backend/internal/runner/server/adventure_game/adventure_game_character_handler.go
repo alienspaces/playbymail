@@ -302,7 +302,7 @@ func createOneAdventureGameCharacterHandler(w http.ResponseWriter, r *http.Reque
 
 	mm := m.(*domain.Domain)
 
-	if _, err := requireDesignerSubscription(l, r, mm, gameID); err != nil {
+	if _, err := authorizeDesignerModify(l, r, mm, gameID); err != nil {
 		return err
 	}
 
@@ -366,7 +366,7 @@ func updateOneAdventureGameCharacterHandler(w http.ResponseWriter, r *http.Reque
 
 	mm := m.(*domain.Domain)
 
-	if _, err := requireDesignerSubscription(l, r, mm, gameID); err != nil {
+	if _, err := authorizeDesignerModify(l, r, mm, gameID); err != nil {
 		return err
 	}
 
@@ -433,7 +433,7 @@ func deleteOneAdventureGameCharacterHandler(w http.ResponseWriter, r *http.Reque
 
 	mm := m.(*domain.Domain)
 
-	if _, err := requireDesignerSubscription(l, r, mm, gameID); err != nil {
+	if _, err := authorizeDesignerModify(l, r, mm, gameID); err != nil {
 		return err
 	}
 

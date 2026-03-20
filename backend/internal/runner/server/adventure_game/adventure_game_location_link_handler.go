@@ -325,7 +325,7 @@ func createOneAdventureGameLocationLinkHandler(w http.ResponseWriter, r *http.Re
 
 	mm := m.(*domain.Domain)
 
-	if _, err := requireDesignerSubscription(l, r, mm, gameID); err != nil {
+	if _, err := authorizeDesignerModify(l, r, mm, gameID); err != nil {
 		return err
 	}
 
@@ -374,7 +374,7 @@ func updateOneAdventureGameLocationLinkHandler(w http.ResponseWriter, r *http.Re
 
 	mm := m.(*domain.Domain)
 
-	if _, err := requireDesignerSubscription(l, r, mm, gameID); err != nil {
+	if _, err := authorizeDesignerModify(l, r, mm, gameID); err != nil {
 		return err
 	}
 
@@ -432,7 +432,7 @@ func deleteOneAdventureGameLocationLinkHandler(w http.ResponseWriter, r *http.Re
 
 	mm := m.(*domain.Domain)
 
-	if _, err := requireDesignerSubscription(l, r, mm, gameID); err != nil {
+	if _, err := authorizeDesignerModify(l, r, mm, gameID); err != nil {
 		return err
 	}
 

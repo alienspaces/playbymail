@@ -30,10 +30,10 @@ func requireManagerSubscription(l logger.Logger, r *http.Request, mm *domain.Dom
 	return authenData, managerSubRec, nil
 }
 
-// authorizeGameInstanceModify verifies the authenticated account owns the given game instance
+// authorizeManagerModify verifies the authenticated account owns the given game instance
 // by confirming their manager subscription is linked to it via game_subscription_instance.
 // Used by update, delete, and all lifecycle handlers.
-func authorizeGameInstanceModify(l logger.Logger, r *http.Request, mm *domain.Domain, gameID, instanceID string) (*server.AuthenData, error) {
+func authorizeManagerModify(l logger.Logger, r *http.Request, mm *domain.Domain, gameID, instanceID string) (*server.AuthenData, error) {
 	authenData, managerSubRec, err := requireManagerSubscription(l, r, mm, gameID)
 	if err != nil {
 		return nil, err

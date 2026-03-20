@@ -30,3 +30,10 @@ func requireDesignerSubscription(l logger.Logger, r *http.Request, mm *domain.Do
 
 	return authenData, nil
 }
+
+// authorizeDesignerModify verifies the authenticated account user holds an active
+// designer subscription for the given game. Used by create, update, and delete
+// handlers to ensure only the game's own designer can modify its resources.
+func authorizeDesignerModify(l logger.Logger, r *http.Request, mm *domain.Domain, gameID string) (*server.AuthenData, error) {
+	return requireDesignerSubscription(l, r, mm, gameID)
+}

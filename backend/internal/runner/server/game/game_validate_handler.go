@@ -70,7 +70,7 @@ func validateGameHandler(w http.ResponseWriter, r *http.Request, pp httprouter.P
 
 	mm := m.(*domain.Domain)
 
-	if _, _, err := requireDesignerSubscription(l, r, mm, gameID); err != nil {
+	if _, _, err := authorizeDesignerModify(l, r, mm, gameID); err != nil {
 		return err
 	}
 

@@ -9,9 +9,10 @@
             "properties": {
                 "game_subscription_id": { "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id" },
                 "game_instance_id": { "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id" },
-                "game_id": { "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id" }
+                "game_id": { "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id" },
+                "status": { "type": "string", "enum": ["active", "pending_approval"] }
             },
-            "required": ["game_subscription_id", "game_instance_id", "game_id"],
+            "required": ["game_subscription_id", "game_id", "status"],
             "additionalProperties": false
         },
         "error": {

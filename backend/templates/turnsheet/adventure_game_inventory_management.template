@@ -52,14 +52,14 @@
     
     .inventory-item-name {
         font-weight: 600;
-        font-size: 11px;
+        font-size: 14px;
         color: #2c3e50;
     }
     
     .inventory-item-meta {
-        font-size: 9px;
+        font-size: 12px;
         color: #6c757d;
-        margin-top: 1px;
+        margin-top: 2px;
     }
     
     .location-items-section {
@@ -105,26 +105,26 @@
     
     .location-item-name {
         font-weight: 600;
-        font-size: 11px;
+        font-size: 14px;
         color: #2c3e50;
     }
     
     .location-item-description {
-        font-size: 9px;
+        font-size: 12px;
         color: #6c757d;
-        margin-top: 1px;
+        margin-top: 2px;
     }
     
     .capacity-indicator {
         text-align: center;
-        font-size: 10px;
+        font-size: 12px;
         color: #495057;
         margin-bottom: 6px;
         font-weight: 600;
     }
     
     .action-label {
-        font-size: 8px;
+        font-size: 12px;
         color: #6c757d;
         white-space: nowrap;
     }

@@ -38,8 +38,9 @@ type JoinGameSubmitRequest struct {
 // JoinGameSubmitResponseData is the data for the join submit response.
 type JoinGameSubmitResponseData struct {
 	GameSubscriptionID string `json:"game_subscription_id"`
-	GameInstanceID     string `json:"game_instance_id"`
+	GameInstanceID     string `json:"game_instance_id,omitempty"`
 	GameID             string `json:"game_id"`
+	Status             string `json:"status"`
 }
 
 // JoinGameSubmitResponse is the response for POST /join.

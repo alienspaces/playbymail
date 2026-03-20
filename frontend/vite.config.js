@@ -12,8 +12,11 @@ function playerAppFallback() {
     name: 'player-app-fallback',
     configureServer(server) {
       server.middlewares.use((req, _res, next) => {
-        if (req.url && req.url.startsWith('/player/') && !req.url.includes('.')) {
-          req.url = '/player/index.html'
+        if (req.url && req.url.startsWith('/player/')) {
+          const pathname = req.url.split('?')[0]
+          if (!pathname.includes('.')) {
+            req.url = '/player/index.html'
+          }
         }
         next()
       })

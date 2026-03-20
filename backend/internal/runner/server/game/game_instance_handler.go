@@ -512,7 +512,7 @@ func getOneGameInstanceHandler(w http.ResponseWriter, r *http.Request, pp httpro
 
 	mm := m.(*domain.Domain)
 
-	if _, err := authorizeGameInstanceModify(l, r, mm, gameID, instanceID); err != nil {
+	if _, err := authorizeManagerModify(l, r, mm, gameID, instanceID); err != nil {
 		return err
 	}
 
@@ -622,7 +622,7 @@ func updateOneGameInstanceHandler(w http.ResponseWriter, r *http.Request, pp htt
 
 	mm := m.(*domain.Domain)
 
-	if _, err := authorizeGameInstanceModify(l, r, mm, gameID, instanceID); err != nil {
+	if _, err := authorizeManagerModify(l, r, mm, gameID, instanceID); err != nil {
 		return err
 	}
 
@@ -676,7 +676,7 @@ func deleteOneGameInstanceHandler(w http.ResponseWriter, r *http.Request, pp htt
 
 	mm := m.(*domain.Domain)
 
-	if _, err := authorizeGameInstanceModify(l, r, mm, gameID, instanceID); err != nil {
+	if _, err := authorizeManagerModify(l, r, mm, gameID, instanceID); err != nil {
 		return err
 	}
 
@@ -709,7 +709,7 @@ func startGameInstanceHandler(w http.ResponseWriter, r *http.Request, pp httprou
 
 	mm := m.(*domain.Domain)
 
-	if _, err := authorizeGameInstanceModify(l, r, mm, gameID, instanceID); err != nil {
+	if _, err := authorizeManagerModify(l, r, mm, gameID, instanceID); err != nil {
 		return err
 	}
 
@@ -756,7 +756,7 @@ func pauseGameInstanceHandler(w http.ResponseWriter, r *http.Request, pp httprou
 
 	mm := m.(*domain.Domain)
 
-	if _, err := authorizeGameInstanceModify(l, r, mm, gameID, instanceID); err != nil {
+	if _, err := authorizeManagerModify(l, r, mm, gameID, instanceID); err != nil {
 		return err
 	}
 
@@ -803,7 +803,7 @@ func resumeGameInstanceHandler(w http.ResponseWriter, r *http.Request, pp httpro
 
 	mm := m.(*domain.Domain)
 
-	if _, err := authorizeGameInstanceModify(l, r, mm, gameID, instanceID); err != nil {
+	if _, err := authorizeManagerModify(l, r, mm, gameID, instanceID); err != nil {
 		return err
 	}
 
@@ -850,7 +850,7 @@ func cancelGameInstanceHandler(w http.ResponseWriter, r *http.Request, pp httpro
 
 	mm := m.(*domain.Domain)
 
-	if _, err := authorizeGameInstanceModify(l, r, mm, gameID, instanceID); err != nil {
+	if _, err := authorizeManagerModify(l, r, mm, gameID, instanceID); err != nil {
 		return err
 	}
 
@@ -897,7 +897,7 @@ func getJoinGameLinkHandler(w http.ResponseWriter, r *http.Request, pp httproute
 
 	mm := m.(*domain.Domain)
 
-	if _, err := authorizeGameInstanceModify(l, r, mm, gameID, instanceID); err != nil {
+	if _, err := authorizeManagerModify(l, r, mm, gameID, instanceID); err != nil {
 		return err
 	}
 
@@ -962,7 +962,7 @@ func inviteTesterHandler(w http.ResponseWriter, r *http.Request, pp httprouter.P
 
 	mm := m.(*domain.Domain)
 
-	if _, err := authorizeGameInstanceModify(l, r, mm, gameID, instanceID); err != nil {
+	if _, err := authorizeManagerModify(l, r, mm, gameID, instanceID); err != nil {
 		return err
 	}
 
@@ -1036,7 +1036,7 @@ func resetOneGameInstanceHandler(w http.ResponseWriter, r *http.Request, pp http
 
 	mm := m.(*domain.Domain)
 
-	if _, err := authorizeGameInstanceModify(l, r, mm, gameID, instanceID); err != nil {
+	if _, err := authorizeManagerModify(l, r, mm, gameID, instanceID); err != nil {
 		return err
 	}
 

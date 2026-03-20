@@ -71,23 +71,39 @@ describe('PlayerJoinGameView', () => {
     expect(backLink.attributes('href')).toBe('/games')
   })
 
-  it('shows success step after successful submission', async () => {
+  it('shows success step after successful submission with active status', async () => {
     mockGetJoinSheet.mockResolvedValue(mockSheetHtml)
     mockSubmitJoinGame.mockResolvedValue({
-      data: { game_subscription_id: 'sub-1', game_instance_id: 'inst-1', game_id: 'g1' },
+      data: { game_subscription_id: 'sub-1', game_instance_id: 'inst-1', game_id: 'g1', status: 'active' },
     })
 
     const wrapper = mount(PlayerJoinGameView)
     await flushPromises()
 
-    // Simulate a submit that bypasses iframe extraction (iframe DOM not accessible in unit tests)
-    // by directly testing the success state transition
+    // Directly set the step to test success state rendering
     wrapper.vm.step = 'success'
     await nextTick()
 
     expect(wrapper.find('[data-testid="step-success"]').exists()).toBe(true)
     expect(wrapper.find('[data-testid="link-browse-more"]').exists()).toBe(true)
     expect(wrapper.find('[data-testid="link-browse-more"]').attributes('href')).toBe('/games')
+  })
+
+  it('shows pending step after submission with pending_approval status', async () => {
+    mockGetJoinSheet.mockResolvedValue(mockSheetHtml)
+    mockSubmitJoinGame.mockResolvedValue({
+      data: { game_subscription_id: 'sub-1', game_id: 'g1', status: 'pending_approval' },
+    })
+
+    const wrapper = mount(PlayerJoinGameView)
+    await flushPromises()
+
+    wrapper.vm.step = 'pending'
+    await nextTick()
+
+    expect(wrapper.find('[data-testid="step-pending"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="step-success"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="link-browse-more-pending"]').exists()).toBe(true)
   })
 
   it('shows submit error when form data cannot be extracted', async () => {

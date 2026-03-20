@@ -133,7 +133,7 @@ func (w *SendGameSubscriptionApprovalEmailWorker) DoWork(ctx context.Context, m 
 		return nil, err
 	}
 
-	approvalPath := fmt.Sprintf("/api/v1/game-subscriptions/%s/approve?email=%s", gameSubscriptionRec.ID, url.QueryEscape(accountUserRec.Email))
+	approvalPath := fmt.Sprintf("/player/confirm-subscription/%s?email=%s", gameSubscriptionRec.ID, url.QueryEscape(accountUserRec.Email))
 
 	// Construct full URL using configured app host
 	approvalURL := fmt.Sprintf("%s%s", w.Config.AppHost, approvalPath)

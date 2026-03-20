@@ -11,6 +11,11 @@ const routes = [
     name: 'PlayerJoinGame',
     component: () => import('../views/PlayerJoinGameView.vue'),
   },
+  {
+    path: '/player/confirm-subscription/:game_subscription_id',
+    name: 'PlayerConfirmSubscription',
+    component: () => import('../views/PlayerConfirmSubscriptionView.vue'),
+  },
 ]
 
 const router = createRouter({

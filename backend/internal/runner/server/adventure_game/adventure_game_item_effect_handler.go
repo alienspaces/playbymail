@@ -288,7 +288,7 @@ func createOneAdventureGameItemEffectHandler(w http.ResponseWriter, r *http.Requ
 	gameID := pp.ByName("game_id")
 	mm := m.(*domain.Domain)
 
-	if _, err := requireDesignerSubscription(l, r, mm, gameID); err != nil {
+	if _, err := authorizeDesignerModify(l, r, mm, gameID); err != nil {
 		return err
 	}
 
@@ -333,7 +333,7 @@ func updateOneAdventureGameItemEffectHandler(w http.ResponseWriter, r *http.Requ
 	itemEffectID := pp.ByName("item_effect_id")
 	mm := m.(*domain.Domain)
 
-	if _, err := requireDesignerSubscription(l, r, mm, gameID); err != nil {
+	if _, err := authorizeDesignerModify(l, r, mm, gameID); err != nil {
 		return err
 	}
 
@@ -381,7 +381,7 @@ func deleteOneAdventureGameItemEffectHandler(w http.ResponseWriter, r *http.Requ
 
 	mm := m.(*domain.Domain)
 
-	if _, err := requireDesignerSubscription(l, r, mm, gameID); err != nil {
+	if _, err := authorizeDesignerModify(l, r, mm, gameID); err != nil {
 		return err
 	}
 

@@ -176,6 +176,13 @@ func (g *PDFGenerator) loadTemplate(templatePath string) (*template.Template, er
 		},
 		// safeURL marks a string as safe for use in URL contexts (e.g., data: URLs)
 		"safeURL": func(s string) template.URL { return template.URL(s) },
+		// title returns s with the first letter uppercased
+		"title": func(s string) string {
+			if s == "" {
+				return s
+			}
+			return strings.ToUpper(s[:1]) + s[1:]
+		},
 	})
 
 	// Parse base template first (located in turnsheet/)

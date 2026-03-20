@@ -332,7 +332,7 @@
                         <input type="radio" name="object_choice" value="{{$obj.ObjectInstanceID}}:{{.ActionType}}">
                     </div>
                     <div class="object-action-content">
-                        {{.ActionType}}
+                        {{title .ActionType}}
                         {{if .RequiredItemName}}<span style="font-size:11px;color:#888;">(requires: {{.RequiredItemName}})</span>{{end}}
                     </div>
                 </label>
@@ -340,7 +340,7 @@
                 <div class="object-action-unavailable">
                     <div class="object-action-icon">&#x26D4;</div>
                     <div class="object-action-content">
-                        {{.ActionType}}
+                        {{title .ActionType}}
                         {{if .RequiredItemName}} &mdash; requires: {{.RequiredItemName}}{{end}}
                     </div>
                 </div>
