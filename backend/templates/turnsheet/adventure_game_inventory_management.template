@@ -132,16 +132,12 @@
 {{end}}
 
 {{define "content"}}
-<h3 class="content-section-title">Inventory Management</h3>
-<p class="content-section-subtitle">{{.CharacterName}} - {{.CurrentLocationName}}</p>
-
 <div class="capacity-indicator">
     Carrying {{.InventoryCount}}/{{.InventoryCapacity}} items
 </div>
 
 <!-- Current Inventory in Two Columns -->
 <div class="inventory-section">
-    <h4 class="subsection-title" style="font-size: 12px; margin: 6px 0 4px 0;">Inventory</h4>
     {{if .CurrentInventory}}
     <div class="inventory-columns">
         {{range .CurrentInventory}}

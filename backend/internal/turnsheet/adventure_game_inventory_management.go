@@ -128,7 +128,7 @@ type EquipAction struct {
 	Slot           string `json:"slot"`
 }
 
-const defaultInventoryManagementInstructions = "Manage your inventory by checking boxes to drop items, equip items, or move items to/from backpack. Return this form by the deadline."
+const defaultInventoryManagementInstructions = "Manage your inventory by checking boxes to drop items, equip items, or move items to/from backpack."
 
 const inventoryManagementTemplatePath = "turnsheet/adventure_game_inventory_management.template"
 
