@@ -14,16 +14,17 @@ const (
 )
 
 const (
-	FieldGameSubscriptionID                   = "id"
-	FieldGameSubscriptionGameID               = "game_id"
-	FieldGameSubscriptionAccountID            = "account_id"
-	FieldGameSubscriptionAccountUserID        = "account_user_id"
-	FieldGameSubscriptionAccountUserContactID = "account_contact_id"
-	FieldGameSubscriptionSubscriptionType     = "subscription_type"
-	FieldGameSubscriptionCreatedAt            = "created_at"
-	FieldGameSubscriptionStatus               = "status"
-	FieldGameSubscriptionInstanceLimit        = "instance_limit"
-	FieldGameSubscriptionDeliveryMethod       = "delivery_method"
+	FieldGameSubscriptionID                       = "id"
+	FieldGameSubscriptionGameID                   = "game_id"
+	FieldGameSubscriptionAccountID                = "account_id"
+	FieldGameSubscriptionAccountUserID            = "account_user_id"
+	FieldGameSubscriptionAccountUserContactID     = "account_contact_id"
+	FieldGameSubscriptionSubscriptionType         = "subscription_type"
+	FieldGameSubscriptionCreatedAt                = "created_at"
+	FieldGameSubscriptionStatus                   = "status"
+	FieldGameSubscriptionInstanceLimit            = "instance_limit"
+	FieldGameSubscriptionDeliveryMethod           = "delivery_method"
+	FieldGameSubscriptionPendingApprovalExpiresAt = "pending_approval_expires_at"
 )
 
 const (
@@ -47,14 +48,15 @@ const (
 // GameSubscription represents a subscription to a game (Player, Manager, Designer)
 type GameSubscription struct {
 	record.Record
-	GameID               string         `db:"game_id"`
-	AccountID            string         `db:"account_id"`
-	AccountUserID        string         `db:"account_user_id"`
-	AccountUserContactID sql.NullString `db:"account_contact_id"`
-	SubscriptionType     string         `db:"subscription_type"`
-	Status               string         `db:"status"`
-	InstanceLimit        sql.NullInt32  `db:"instance_limit"`
-	DeliveryMethod       sql.NullString `db:"delivery_method"`
+	GameID                   string         `db:"game_id"`
+	AccountID                string         `db:"account_id"`
+	AccountUserID            string         `db:"account_user_id"`
+	AccountUserContactID     sql.NullString `db:"account_contact_id"`
+	SubscriptionType         string         `db:"subscription_type"`
+	Status                   string         `db:"status"`
+	InstanceLimit            sql.NullInt32  `db:"instance_limit"`
+	DeliveryMethod           sql.NullString `db:"delivery_method"`
+	PendingApprovalExpiresAt sql.NullTime   `db:"pending_approval_expires_at"`
 }
 
 func (r *GameSubscription) ToNamedArgs() pgx.NamedArgs {
@@ -67,5 +69,6 @@ func (r *GameSubscription) ToNamedArgs() pgx.NamedArgs {
 	args[FieldGameSubscriptionStatus] = r.Status
 	args[FieldGameSubscriptionInstanceLimit] = r.InstanceLimit
 	args[FieldGameSubscriptionDeliveryMethod] = r.DeliveryMethod
+	args[FieldGameSubscriptionPendingApprovalExpiresAt] = r.PendingApprovalExpiresAt
 	return args
 }

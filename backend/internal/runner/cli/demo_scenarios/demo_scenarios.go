@@ -55,7 +55,9 @@ func AdventureGameConfig() harness.DataConfig {
 					{
 						Reference: DemoInstanceOneRef,
 						Record: &game_record.GameInstance{
-							DeliveryEmail: true,
+							DeliveryEmail:           true,
+							TurnDurationHours:       1,
+							ProcessWhenAllSubmitted: true,
 						},
 					},
 				},

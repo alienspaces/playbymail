@@ -98,23 +98,23 @@ func Test_submitJoinHandler(t *testing.T) {
 				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
 					return rnr.GetHandlerConfig()[game.SubmitJoin]
 				},
-			RequestHeaders: testutil.AuthHeaderProManager,
-			RequestPathParams: func(d harness.Data) map[string]string {
-				return map[string]string{
-					":game_subscription_id": managerSubscriptionID(t, d),
-				}
-			},
-			RequestBody: func(d harness.Data) interface{} {
-				return player_schema.JoinGameSubmitRequest{
-					Email:              "newplayer@example.com",
-					Name:               "New Player",
-					DeliveryMethod:     "post",
-					PostalAddressLine1: "123 Main St",
-					StateProvince:      "CA",
-					Country:            "US",
-					PostalCode:         "90210",
-				}
-			},
+				RequestHeaders: testutil.AuthHeaderProManager,
+				RequestPathParams: func(d harness.Data) map[string]string {
+					return map[string]string{
+						":game_subscription_id": managerSubscriptionID(t, d),
+					}
+				},
+				RequestBody: func(d harness.Data) interface{} {
+					return player_schema.JoinGameSubmitRequest{
+						Email:              "newplayer@example.com",
+						Name:               "New Player",
+						DeliveryMethod:     "post",
+						PostalAddressLine1: "123 Main St",
+						StateProvince:      "CA",
+						Country:            "US",
+						PostalCode:         "90210",
+					}
+				},
 				ResponseDecoder: testutil.TestCaseResponseDecoderGeneric[player_schema.JoinGameSubmitResponse],
 				ResponseCode:    http.StatusCreated,
 			},
@@ -123,7 +123,7 @@ func Test_submitJoinHandler(t *testing.T) {
 		},
 		{
 			TestCase: testutil.TestCase{
-				Name: "unauthenticated request creates pending_approval subscription without instance",
+				Name: "unauthenticated request creates pending_approval subscription with instance",
 				NewRunner: func(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], scanner turnsheet.TurnSheetScanner, d harness.Data) (testutil.TestRunnerer, error) {
 					return testutil.NewTestRunner(cfg, l, s, j, scanner)
 				},
@@ -145,11 +145,10 @@ func Test_submitJoinHandler(t *testing.T) {
 				ResponseDecoder: testutil.TestCaseResponseDecoderGeneric[player_schema.JoinGameSubmitResponse],
 				ResponseCode:    http.StatusCreated,
 			},
-			expectInstanceID: false,
+			expectInstanceID: true,
 			expectStatus:     "pending_approval",
 		},
 	}
-
 
 	for _, tc := range testCases {
 		t.Run(tc.Name, func(t *testing.T) {

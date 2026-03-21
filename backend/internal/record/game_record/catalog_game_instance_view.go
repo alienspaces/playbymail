@@ -22,6 +22,8 @@ const (
 	FieldCGIVGameSubscriptionID  = "game_subscription_id"
 	FieldCGIVAccountName         = "account_name"
 	FieldCGIVRequiredPlayerCount = "required_player_count"
+	FieldCGIVPlayerCount         = "player_count"
+	FieldCGIVRemainingCapacity   = "remaining_capacity"
 	FieldCGIVDeliveryEmail       = "delivery_email"
 	FieldCGIVDeliveryPhysPost    = "delivery_physical_post"
 	FieldCGIVDeliveryPhysLocal   = "delivery_physical_local"
@@ -42,6 +44,8 @@ type CatalogGameInstanceView struct {
 	GameSubscriptionID    string       `db:"game_subscription_id"`
 	AccountName           string       `db:"account_name"`
 	RequiredPlayerCount   int          `db:"required_player_count"`
+	PlayerCount           int          `db:"player_count"`
+	RemainingCapacity     int          `db:"remaining_capacity"`
 	DeliveryEmail         bool         `db:"delivery_email"`
 	DeliveryPhysicalPost  bool         `db:"delivery_physical_post"`
 	DeliveryPhysicalLocal bool         `db:"delivery_physical_local"`
@@ -63,6 +67,8 @@ func (r *CatalogGameInstanceView) ToNamedArgs() pgx.NamedArgs {
 		FieldCGIVGameSubscriptionID:  r.GameSubscriptionID,
 		FieldCGIVAccountName:         r.AccountName,
 		FieldCGIVRequiredPlayerCount: r.RequiredPlayerCount,
+		FieldCGIVPlayerCount:         r.PlayerCount,
+		FieldCGIVRemainingCapacity:   r.RemainingCapacity,
 		FieldCGIVDeliveryEmail:       r.DeliveryEmail,
 		FieldCGIVDeliveryPhysPost:    r.DeliveryPhysicalPost,
 		FieldCGIVDeliveryPhysLocal:   r.DeliveryPhysicalLocal,

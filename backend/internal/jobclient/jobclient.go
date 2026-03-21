@@ -96,6 +96,16 @@ func addDefaultPeriodicJobs(l logger.Logger, cfg config.Config, s storer.Storer,
 
 	l.Info("adding default periodic jobs")
 
+	p = append(p, river.NewPeriodicJob(
+		river.PeriodicInterval(5*time.Minute),
+		func() (river.JobArgs, *river.InsertOpts) {
+			return jobworker.ExpirePendingSubscriptionsWorkerArgs{}, &river.InsertOpts{
+				Queue: jobqueue.QueueDefault,
+			}
+		},
+		nil,
+	))
+
 	return p, nil
 }
 
@@ -212,6 +222,17 @@ func getWorkers(l logger.Logger, cfg config.Config, s storer.Storer, e emailer.E
 
 	if err := river.AddWorkerSafely(w, joinGameTurnSheetWorker); err != nil {
 		return nil, fmt.Errorf("failed to add NewGameSubscriptionProcessingWorker worker: %w", err)
+	}
+
+	// Periodically expires pending_approval subscriptions whose confirmation
+	// window has elapsed, revoking the subscription and freeing the reserved slot.
+	expirePendingWorker, err := jobworker.NewExpirePendingSubscriptionsWorker(l, cfg, s)
+	if err != nil {
+		return nil, fmt.Errorf("failed NewExpirePendingSubscriptionsWorker worker: %w", err)
+	}
+
+	if err := river.AddWorkerSafely(w, expirePendingWorker); err != nil {
+		return nil, fmt.Errorf("failed to add NewExpirePendingSubscriptionsWorker worker: %w", err)
 	}
 
 	return w, nil

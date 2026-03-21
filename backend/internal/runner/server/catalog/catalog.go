@@ -32,7 +32,6 @@ func CatalogHandlerConfig(cfg config.Config, l logger.Logger, scnr turnsheet.Tur
 	catalogConfig := make(map[string]server.HandlerConfig)
 
 	handlerConfigFuncs := []func(logger.Logger) (map[string]server.HandlerConfig, error){
-		catalogGameHandlerConfig,
 		catalogGameInstanceHandlerConfig,
 	}
 

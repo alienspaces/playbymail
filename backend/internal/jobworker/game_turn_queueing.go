@@ -192,13 +192,13 @@ func (w *GameTurnQueueingWorker) autoStartFullInstances(m *domain.Domain) error 
 
 	started := 0
 	for _, rec := range createdRecs {
-		hasCapacity, err := m.GameInstanceHasAvailableCapacity(rec.ID)
+		readyToStart, err := m.GameInstanceReadyToStart(rec.ID)
 		if err != nil {
-			l.Warn("failed capacity check for instance >%s< >%v<", rec.ID, err)
+			l.Warn("failed ready-to-start check for instance >%s< >%v<", rec.ID, err)
 			continue
 		}
 
-		if hasCapacity {
+		if !readyToStart {
 			continue
 		}
 

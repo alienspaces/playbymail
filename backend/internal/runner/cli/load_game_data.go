@@ -125,6 +125,29 @@ func (rnr *Runner) loadGameData(c *cli.Context) error {
 				return err
 			}
 			l.Info("published game %s (%s)", rec.Name, rec.ID)
+
+			// Clear is_closed_testing on all instances: they were forced to true
+			// during creation because the game was draft at that point.
+			instances, err := dm.GetManyGameInstanceRecs(&coresql.Options{
+				Params: []coresql.Param{
+					{Col: game_record.FieldGameInstanceGameID, Val: rec.ID},
+				},
+			})
+			if err != nil {
+				l.Warn("failed getting game instances for game %s >%v<", rec.ID, err)
+				return err
+			}
+			for _, inst := range instances {
+				if inst.IsClosedTesting {
+					inst.IsClosedTesting = false
+					_, err = dm.UpdateGameInstanceRec(inst)
+					if err != nil {
+						l.Warn("failed clearing is_closed_testing on instance %s >%v<", inst.ID, err)
+						return err
+					}
+					l.Info("cleared is_closed_testing on instance %s", inst.ID)
+				}
+			}
 		}
 		if err := rnr.Domain.Commit(); err != nil {
 			l.Warn("failed committing game publish >%v<", err)

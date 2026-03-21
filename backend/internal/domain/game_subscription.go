@@ -1,7 +1,9 @@
 package domain
 
 import (
+	gosql "database/sql"
 	"errors"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 
@@ -414,6 +416,11 @@ func (m *Domain) ApproveGameSubscription(subscriptionID, email string) (*game_re
 		return nil, coreerror.NewInvalidDataError("subscription is not pending approval, current status: %s", rec.Status)
 	}
 
+	// Reject expired pending subscriptions
+	if rec.PendingApprovalExpiresAt.Valid && rec.PendingApprovalExpiresAt.Time.Before(time.Now()) {
+		return nil, coreerror.NewInvalidDataError("subscription confirmation has expired, please join the game again")
+	}
+
 	// Get the account user record(s) linked to this tenant
 	// Note: We use the sql alias for core/sql as defined in imports
 	accountUserRecs, err := m.GetManyAccountUserRecs(&sql.Options{
@@ -438,8 +445,9 @@ func (m *Domain) ApproveGameSubscription(subscriptionID, email string) (*game_re
 		return nil, coreerror.NewInvalidDataError("email does not match subscription")
 	}
 
-	// Update status to active
+	// Update status to active and clear the expiry
 	rec.Status = game_record.GameSubscriptionStatusActive
+	rec.PendingApprovalExpiresAt = gosql.NullTime{}
 
 	updated, err := m.UpdateGameSubscriptionRec(rec)
 	if err != nil {

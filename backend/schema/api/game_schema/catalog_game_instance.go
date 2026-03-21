@@ -16,6 +16,8 @@ type CatalogGameInstanceResponseData struct {
 	GameSubscriptionID    string    `json:"game_subscription_id"`
 	AccountName           string    `json:"account_name"`
 	RequiredPlayerCount   int       `json:"required_player_count"`
+	PlayerCount           int       `json:"player_count"`
+	RemainingCapacity     int       `json:"remaining_capacity"`
 	DeliveryEmail         bool      `json:"delivery_email"`
 	DeliveryPhysicalPost  bool      `json:"delivery_physical_post"`
 	DeliveryPhysicalLocal bool      `json:"delivery_physical_local"`

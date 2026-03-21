@@ -32,7 +32,7 @@
           <div class="game-meta">
             <span class="game-type badge">{{ formatGameType(entry.game_type) }}</span>
             <span class="turn-duration">Turn: {{ entry.turn_duration_hours }}h</span>
-            <span v-if="entry.required_player_count > 0" class="capacity">{{ entry.required_player_count }} players needed</span>
+            <span v-if="entry.required_player_count > 0" class="capacity">{{ entry.remaining_capacity }} {{ entry.remaining_capacity === 1 ? 'player' : 'players' }} needed</span>
           </div>
         </div>
 

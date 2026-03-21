@@ -416,6 +416,7 @@ func (m *Domain) GetPlayerCountForGameInstance(gameInstanceID string) (int, erro
 		return 0, err
 	}
 
+	now := time.Now()
 	count := 0
 	for _, gameSubscriptionInstanceRec := range gameSubscriptionInstanceRecs {
 		gameSubscriptionRec, err := m.GetGameSubscriptionRec(gameSubscriptionInstanceRec.GameSubscriptionID, nil)
@@ -423,9 +424,16 @@ func (m *Domain) GetPlayerCountForGameInstance(gameInstanceID string) (int, erro
 			l.Warn("failed to get game subscription >%s< >%v<", gameSubscriptionInstanceRec.GameSubscriptionID, err)
 			continue
 		}
-		if gameSubscriptionRec.SubscriptionType == game_record.GameSubscriptionTypePlayer {
-			count++
+		if gameSubscriptionRec.SubscriptionType != game_record.GameSubscriptionTypePlayer {
+			continue
 		}
+		// Exclude expired pending subscriptions
+		if gameSubscriptionRec.Status == game_record.GameSubscriptionStatusPendingApproval &&
+			gameSubscriptionRec.PendingApprovalExpiresAt.Valid &&
+			gameSubscriptionRec.PendingApprovalExpiresAt.Time.Before(now) {
+			continue
+		}
+		count++
 	}
 
 	l.Info("player count for game instance >%s< is >%d<", gameInstanceID, count)
@@ -451,6 +459,68 @@ func (m *Domain) GameInstanceHasAvailableCapacity(gameInstanceID string) (bool, 
 	}
 
 	return playerCount < instance.RequiredPlayerCount, nil
+}
+
+// GetActivePlayerCountForGameInstance counts only confirmed (active) player subscriptions
+// linked to the game instance. Used by auto-start logic where only confirmed players count.
+func (m *Domain) GetActivePlayerCountForGameInstance(gameInstanceID string) (int, error) {
+	l := m.Logger("GetActivePlayerCountForGameInstance")
+
+	if err := domain.ValidateUUIDField("game_instance_id", gameInstanceID); err != nil {
+		return 0, err
+	}
+
+	gameSubscriptionInstanceRecs, err := m.GetManyGameSubscriptionInstanceRecs(&coresql.Options{
+		Params: []coresql.Param{
+			{Col: game_record.FieldGameSubscriptionInstanceGameInstanceID, Val: gameInstanceID},
+		},
+	})
+	if err != nil {
+		l.Warn("failed to get subscription instances for game instance ID >%s< >%v<", gameInstanceID, err)
+		return 0, err
+	}
+
+	count := 0
+	for _, gameSubscriptionInstanceRec := range gameSubscriptionInstanceRecs {
+		gameSubscriptionRec, err := m.GetGameSubscriptionRec(gameSubscriptionInstanceRec.GameSubscriptionID, nil)
+		if err != nil {
+			l.Warn("failed to get game subscription >%s< >%v<", gameSubscriptionInstanceRec.GameSubscriptionID, err)
+			continue
+		}
+		if gameSubscriptionRec.SubscriptionType != game_record.GameSubscriptionTypePlayer {
+			continue
+		}
+		if gameSubscriptionRec.Status != game_record.GameSubscriptionStatusActive {
+			continue
+		}
+		count++
+	}
+
+	l.Info("active player count for game instance >%s< is >%d<", gameInstanceID, count)
+
+	return count, nil
+}
+
+// GameInstanceReadyToStart returns true when the number of confirmed (active) players
+// meets the instance's required player count. Unlimited instances (RequiredPlayerCount == 0)
+// are never auto-started this way.
+func (m *Domain) GameInstanceReadyToStart(gameInstanceID string) (bool, error) {
+	instance, err := m.GetGameInstanceRec(gameInstanceID, nil)
+	if err != nil {
+		return false, err
+	}
+
+	// Instances with no player requirement cannot be auto-started by count alone
+	if instance.RequiredPlayerCount == 0 {
+		return false, nil
+	}
+
+	activeCount, err := m.GetActivePlayerCountForGameInstance(gameInstanceID)
+	if err != nil {
+		return false, err
+	}
+
+	return activeCount >= instance.RequiredPlayerCount, nil
 }
 
 // FindAvailableGameInstance finds an available game instance for a game subscription.
@@ -921,12 +991,12 @@ func (m *Domain) PopulateAdventureGameInstanceData(instanceID string) (*Adventur
 			continue
 		}
 		objInst, err := m.CreateAdventureGameLocationObjectInstanceRec(&adventure_game_record.AdventureGameLocationObjectInstance{
-			GameID:                                       gameID,
-			GameInstanceID:                               instanceID,
-			AdventureGameLocationObjectID:                obj.ID,
-			AdventureGameLocationInstanceID:              locationInstanceID,
-			CurrentAdventureGameLocationObjectStateID:    obj.InitialAdventureGameLocationObjectStateID.String,
-			IsVisible:                                    !obj.IsHidden,
+			GameID:                                    gameID,
+			GameInstanceID:                            instanceID,
+			AdventureGameLocationObjectID:             obj.ID,
+			AdventureGameLocationInstanceID:           locationInstanceID,
+			CurrentAdventureGameLocationObjectStateID: obj.InitialAdventureGameLocationObjectStateID.String,
+			IsVisible:                                 !obj.IsHidden,
 		})
 		if err != nil {
 			l.Warn("failed to create location object instance >%v<", err)

@@ -33,6 +33,14 @@
             "type": "integer",
             "minimum": 0
         },
+        "player_count": {
+            "type": "integer",
+            "minimum": 0
+        },
+        "remaining_capacity": {
+            "type": "integer",
+            "minimum": 0
+        },
         "delivery_email": {
             "type": "boolean"
         },
@@ -59,6 +67,8 @@
         "game_subscription_id",
         "account_name",
         "required_player_count",
+        "player_count",
+        "remaining_capacity",
         "delivery_email",
         "delivery_physical_post",
         "delivery_physical_local",
