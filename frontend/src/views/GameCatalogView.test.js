@@ -20,6 +20,8 @@ const mockCatalogData = [
     account_name: 'Test Host',
     turn_duration_hours: 168,
     required_player_count: 4,
+    player_count: 0,
+    remaining_capacity: 4,
     delivery_email: true,
     delivery_physical_local: false,
     delivery_physical_post: false,
