@@ -137,9 +137,9 @@ func Test_submitJoinHandler(t *testing.T) {
 				},
 				RequestBody: func(d harness.Data) interface{} {
 					return player_schema.JoinGameSubmitRequest{
-						Email:              "newplayer2@example.com",
-						Name:               "New Player Two",
-						DeliveryMethod:     "email",
+						Email:          "newplayer2@example.com",
+						Name:           "New Player Two",
+						DeliveryMethod: "email",
 					}
 				},
 				ResponseDecoder: testutil.TestCaseResponseDecoderGeneric[player_schema.JoinGameSubmitResponse],
@@ -149,6 +149,7 @@ func Test_submitJoinHandler(t *testing.T) {
 			expectStatus:     "pending_approval",
 		},
 	}
+
 
 	for _, tc := range testCases {
 		t.Run(tc.Name, func(t *testing.T) {
@@ -172,4 +173,47 @@ func Test_submitJoinHandler(t *testing.T) {
 			testutil.RunTestCase(t, th, &tc.TestCase, testFunc)
 		})
 	}
+}
+
+func Test_submitJoinHandler_duplicateJoin(t *testing.T) {
+	t.Parallel()
+
+	th := testutil.NewTestHarness(t)
+	require.NotNil(t, th)
+
+	_, err := th.Setup()
+	require.NoError(t, err)
+	defer func() {
+		err = th.Teardown()
+		require.NoError(t, err)
+	}()
+
+	// AccountUserStandardRef already has GameSubscriptionPlayerOneRef (a player subscription
+	// for GameOneRef) in the harness data. Attempting to join again via the manager link
+	// as that user should be rejected by the duplicate-join guard without needing to commit
+	// any additional state.
+	tc := testutil.TestCase{
+		Name: "authenticated user with existing player subscription is rejected",
+		NewRunner: func(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], scanner turnsheet.TurnSheetScanner, d harness.Data) (testutil.TestRunnerer, error) {
+			return testutil.NewTestRunner(cfg, l, s, j, scanner)
+		},
+		HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
+			return rnr.GetHandlerConfig()[game.SubmitJoin]
+		},
+		RequestHeaders: testutil.AuthHeaderStandard,
+		RequestPathParams: func(d harness.Data) map[string]string {
+			return map[string]string{":game_subscription_id": managerSubscriptionID(t, d)}
+		},
+		RequestBody: func(d harness.Data) interface{} {
+			return player_schema.JoinGameSubmitRequest{
+				Email:          "standard@example.com",
+				Name:           "Standard User",
+				CharacterName:  "Standard Character",
+				DeliveryMethod: "email",
+			}
+		},
+		ResponseDecoder: testutil.TestCaseResponseDecoderGeneric[player_schema.JoinGameSubmitResponse],
+		ResponseCode:    http.StatusBadRequest,
+	}
+	testutil.RunTestCase(t, th, &tc, func(method string, body any) {})
 }

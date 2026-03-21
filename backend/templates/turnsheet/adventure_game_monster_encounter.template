@@ -319,7 +319,7 @@
             <div class="creature-card{{if .IsDead}} creature-card-dead{{end}}">
                 <div class="creature-card-portrait">
                     {{if .ImageDataURL}}
-                    <img src="{{.ImageDataURL}}" alt="{{.Name}}">
+                    <img src="{{.ImageDataURL | safeURL}}" alt="{{.Name}}">
                     {{else}}
                     <div class="creature-card-portrait-placeholder">{{if .IsDead}}&#x1F480;{{else}}&#x1F47E;{{end}}</div>
                     {{end}}

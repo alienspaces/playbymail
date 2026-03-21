@@ -453,38 +453,46 @@ func (m *Domain) GameInstanceHasAvailableCapacity(gameInstanceID string) (bool, 
 	return playerCount < instance.RequiredPlayerCount, nil
 }
 
-// FindAvailableGameInstance finds an available game instance for a game subscription
-// Returns the first instance with available capacity, or nil if none available
+// FindAvailableGameInstance finds an available game instance for a game subscription.
+// Only instances linked to this specific subscription via game_subscription_instance are
+// considered, ensuring a player joining via one manager's link is never assigned to a
+// different manager's instance.
+// Returns the first linked instance with available capacity, or nil if none available.
 func (m *Domain) FindAvailableGameInstance(gameSubscriptionID string) (*game_record.GameInstance, error) {
 	l := m.Logger("FindAvailableGameInstance")
 
-	// Get the subscription to find the game ID
-	subscription, err := m.GetGameSubscriptionRec(gameSubscriptionID, nil)
-	if err != nil {
+	if err := domain.ValidateUUIDField("game_subscription_id", gameSubscriptionID); err != nil {
 		return nil, err
 	}
 
-	// Get all active instances for this game
-	instances, err := m.GetManyGameInstanceRecs(&coresql.Options{
+	// Get subscription-instance links for this specific subscription only.
+	subscriptionInstanceRecs, err := m.GetManyGameSubscriptionInstanceRecs(&coresql.Options{
 		Params: []coresql.Param{
-			{Col: game_record.FieldGameInstanceGameID, Val: subscription.GameID},
-			{Col: game_record.FieldGameInstanceStatus, Val: game_record.GameInstanceStatusCreated},
+			{Col: game_record.FieldGameSubscriptionInstanceGameSubscriptionID, Val: gameSubscriptionID},
 		},
 	})
 	if err != nil {
-		l.Warn("failed to get game instances for game ID >%s< >%v<", subscription.GameID, err)
+		l.Warn("failed to get subscription instances for subscription ID >%s< >%v<", gameSubscriptionID, err)
 		return nil, err
 	}
 
-	// Find first instance with available capacity
-	for _, instance := range instances {
-		hasCapacity, err := m.GameInstanceHasAvailableCapacity(instance.ID)
+	// Find first linked instance that is created and has available capacity.
+	for _, subInst := range subscriptionInstanceRecs {
+		instanceRec, err := m.GetGameInstanceRec(subInst.GameInstanceID, nil)
 		if err != nil {
-			l.Warn("failed to check capacity for instance >%s< >%v<", instance.ID, err)
+			l.Warn("failed to get game instance >%s< >%v<", subInst.GameInstanceID, err)
+			continue
+		}
+		if instanceRec.Status != game_record.GameInstanceStatusCreated {
+			continue
+		}
+		hasCapacity, err := m.GameInstanceHasAvailableCapacity(instanceRec.ID)
+		if err != nil {
+			l.Warn("failed to check capacity for instance >%s< >%v<", instanceRec.ID, err)
 			continue
 		}
 		if hasCapacity {
-			return instance, nil
+			return instanceRec, nil
 		}
 	}
 

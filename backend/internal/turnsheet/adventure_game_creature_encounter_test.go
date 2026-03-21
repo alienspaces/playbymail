@@ -572,9 +572,70 @@ func TestMonsterEncounterProcessor_GenerateTurnSheet_HTMLContent(t *testing.T) {
 					"expected HTML to contain %q", want)
 			}
 			for _, absent := range tt.wantAbsent {
-				require.False(t, strings.Contains(htmlStr, absent),
-					"expected HTML not to contain %q", absent)
-			}
-		})
+			require.False(t, strings.Contains(htmlStr, absent),
+				"expected HTML not to contain %q", absent)
+		}
+	})
 	}
+}
+
+// TestMonsterEncounterProcessor_GenerateTurnSheet_CreatureImage verifies that a creature
+// portrait data URL is embedded correctly in the rendered HTML without being sanitised to
+// "#ZgotmplZ" by html/template's URL context escaping.
+func TestMonsterEncounterProcessor_GenerateTurnSheet_CreatureImage(t *testing.T) {
+	t.Parallel()
+
+	l := corelog.NewDefaultLogger()
+	cfg := config.Config{Config: coreconfig.Config{TemplatesPath: "../../templates"}}
+
+	processor, err := turnsheet.NewMonsterEncounterProcessor(l, cfg)
+	require.NoError(t, err)
+
+	// Minimal 1×1 JPEG as a data URL (small enough for a unit test).
+	creatureImageURL := "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/" +
+		"wAARCAABAAEDASIAAhEBAxEB/8QAFAABAAAAAAAAAAAAAAAAAAAACf/EABQQAQAAAAAAAAAAAAAAAAAAAAD/xAAUAQEAAAAAAAAAAAAAAAAAAAAA/8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAwDAQACEQMRAD8AJQAB/9k="
+
+	data := &turnsheet.MonsterEncounterData{
+		TurnSheetTemplateData: turnsheet.TurnSheetTemplateData{
+			GameName:      convert.Ptr("Test Game"),
+			GameType:      convert.Ptr("adventure"),
+			TurnNumber:    convert.Ptr(1),
+			AccountName:   convert.Ptr("Test Player"),
+			TurnSheetCode: convert.Ptr(generateTestTurnSheetCode(t)),
+		},
+		CharacterName:      "Aldric",
+		CharacterHealth:    80,
+		CharacterMaxHealth: 100,
+		Creatures: []turnsheet.EncounterCreature{
+			{
+				CreatureInstanceID: "creature-1",
+				Name:               "Crypt Spider",
+				Description:        "A pale spider lurks in the shadows.",
+				Health:             30,
+				MaxHealth:          30,
+				AttackDamage:       8,
+				Defense:            2,
+				Disposition:        "aggressive",
+				ImageDataURL:       &creatureImageURL,
+			},
+		},
+		MaxActions: 2,
+	}
+
+	sheetData, err := json.Marshal(data)
+	require.NoError(t, err)
+
+	ctx := context.Background()
+	html, err := processor.GenerateTurnSheet(ctx, l, turnsheet.DocumentFormatHTML, sheetData)
+	require.NoError(t, err)
+	require.NotEmpty(t, html)
+
+	htmlStr := string(html)
+
+	require.True(t, strings.Contains(htmlStr, `src="data:image/jpeg`),
+		"expected rendered HTML to contain creature portrait as data URL, got #ZgotmplZ sanitised URL instead")
+	require.False(t, strings.Contains(htmlStr, "#ZgotmplZ"),
+		"expected rendered HTML NOT to contain #ZgotmplZ (html/template URL sanitisation artifact)")
+	require.False(t, strings.Contains(htmlStr, `class="creature-card-portrait-placeholder"`),
+		"expected placeholder div NOT to be rendered when ImageDataURL is set")
 }

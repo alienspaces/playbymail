@@ -187,6 +187,21 @@ func TestDomain_FindAvailableGameInstance(t *testing.T) {
 	managerSubscriptionRec, err := th.Data.GetGameSubscriptionRecByRef(harness.GameSubscriptionManagerOneRef)
 	require.NoError(t, err, "GetGameSubscriptionRecByRef returns without error")
 
+	gameRec, err := th.Data.GetGameRecByRef(harness.GameOneRef)
+	require.NoError(t, err, "GetGameRecByRef returns without error")
+
+	// Create a second manager subscription for the same game with no linked instances.
+	// FindAvailableGameInstance must only search instances linked to the given subscription,
+	// so this subscription should return nil even though instances exist for the game.
+	otherManagerSubRec, err := m.CreateGameSubscriptionRec(&game_record.GameSubscription{
+		GameID:           gameRec.ID,
+		AccountID:        managerSubscriptionRec.AccountID,
+		AccountUserID:    managerSubscriptionRec.AccountUserID,
+		SubscriptionType: game_record.GameSubscriptionTypeManager,
+		Status:           game_record.GameSubscriptionStatusActive,
+	})
+	require.NoError(t, err, "CreateGameSubscriptionRec returns without error")
+
 	testCases := []struct {
 		name           string
 		subscriptionID string
@@ -194,10 +209,18 @@ func TestDomain_FindAvailableGameInstance(t *testing.T) {
 		expectError    bool
 	}{
 		{
-			// The default harness data includes game instances with status "created" for GameOneRef
-			name:           "returns available instance for valid subscription",
+			// GameSubscriptionManagerOneRef has GameInstanceCleanRef linked (status=created, no players).
+			name:           "returns available instance linked to this subscription",
 			subscriptionID: managerSubscriptionRec.ID,
 			expectInstance: true,
+			expectError:    false,
+		},
+		{
+			// The other manager subscription has no game_subscription_instance links, so nil is
+			// returned even though instances exist for the same game.
+			name:           "returns nil when subscription has no linked instances",
+			subscriptionID: otherManagerSubRec.ID,
+			expectInstance: false,
 			expectError:    false,
 		},
 		{

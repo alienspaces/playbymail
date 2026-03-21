@@ -429,6 +429,26 @@ func submitJoinHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Par
 		subscriptionStatus = game_record.GameSubscriptionStatusPendingApproval
 	}
 
+	// Reject duplicate joins: check if this account user already has a player subscription
+	// for this game. This prevents a unique constraint violation on adventure_game_character
+	// and gives a clear error when a player tries to join a second time.
+	if accountUserID != "" {
+		existingPlayerSubs, err := mm.GetManyGameSubscriptionRecs(&coresql.Options{
+			Params: []coresql.Param{
+				{Col: game_record.FieldGameSubscriptionGameID, Val: gameSubscriptionRec.GameID},
+				{Col: game_record.FieldGameSubscriptionAccountUserID, Val: accountUserID},
+				{Col: game_record.FieldGameSubscriptionSubscriptionType, Val: game_record.GameSubscriptionTypePlayer},
+			},
+		})
+		if err != nil {
+			l.Warn("failed to check for existing player subscription >%v<", err)
+			return err
+		}
+		if len(existingPlayerSubs) > 0 {
+			return coreerror.NewInvalidDataError("you have already joined this game")
+		}
+	}
+
 	// For authenticated users only: find an instance before creating the subscription
 	// so we can reject early if no capacity is available.
 	var gameInstanceRec *game_record.GameInstance
