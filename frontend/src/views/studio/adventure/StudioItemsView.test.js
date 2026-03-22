@@ -16,7 +16,7 @@ const mockItems = [
 ];
 
 vi.mock('../../../api/items', () => ({
-  fetchItems: vi.fn(async () => mockItems),
+  fetchItems: vi.fn(async () => ({ data: mockItems, hasMore: false })),
   createItem: vi.fn(),
   updateItem: vi.fn(),
   deleteItem: vi.fn()

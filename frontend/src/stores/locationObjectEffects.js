@@ -12,14 +12,19 @@ export const useLocationObjectEffectsStore = defineStore('locationObjectEffects'
     loading: false,
     error: null,
     gameId: null,
+    pageNumber: 1,
+    hasMore: false,
   }),
   actions: {
-    async fetchLocationObjectEffects(gameId) {
+    async fetchLocationObjectEffects(gameId, pageNumber = 1) {
       this.loading = true;
       this.error = null;
       this.gameId = gameId;
       try {
-        this.locationObjectEffects = await apiFetchLocationObjectEffects(gameId);
+        const result = await apiFetchLocationObjectEffects(gameId, { page_number: pageNumber });
+        this.locationObjectEffects = result.data;
+        this.hasMore = result.hasMore;
+        this.pageNumber = pageNumber;
       } catch (e) {
         this.error = e.message;
       } finally {

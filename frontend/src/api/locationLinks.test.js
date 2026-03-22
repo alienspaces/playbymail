@@ -24,32 +24,45 @@ describe('locationLinks API', () => {
   })
 
   describe('fetchLocationLinks', () => {
-    it('calls GET /api/v1/adventure-games/:gameId/location-links and returns data', async () => {
+    it('calls GET /api/v1/adventure-games/:gameId/location-links and returns data with hasMore', async () => {
       const links = [{ id: 'link1', from_location_id: 'loc1', to_location_id: 'loc2' }]
       mockApiFetch.mockResolvedValue({
         ok: true,
         json: () => Promise.resolve({ data: links }),
+        headers: { get: (name) => name === 'X-Pagination' ? '{"has_more":false}' : null },
       })
 
       const result = await fetchLocationLinks('game-1')
 
       expect(mockApiFetch).toHaveBeenCalledWith(
-        'http://localhost:8080/api/v1/adventure-games/game-1/location-links',
+        expect.stringContaining('/api/v1/adventure-games/game-1/location-links'),
         expect.objectContaining({
           headers: expect.objectContaining({ Authorization: 'Bearer test-token' }),
         })
       )
-      expect(result).toEqual(links)
+      expect(result).toEqual({ data: links, hasMore: false })
     })
 
-    it('returns empty array when data is null', async () => {
+    it('returns hasMore true when header indicates more pages', async () => {
+      mockApiFetch.mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ data: [{ id: 'link1' }] }),
+        headers: { get: (name) => name === 'X-Pagination' ? '{"has_more":true}' : null },
+      })
+
+      const result = await fetchLocationLinks('game-1', { page_number: 1 })
+      expect(result.hasMore).toBe(true)
+    })
+
+    it('returns empty data when response data is null', async () => {
       mockApiFetch.mockResolvedValue({
         ok: true,
         json: () => Promise.resolve({ data: null }),
+        headers: { get: () => null },
       })
 
       const result = await fetchLocationLinks('game-1')
-      expect(result).toEqual([])
+      expect(result).toEqual({ data: [], hasMore: false })
     })
   })
 

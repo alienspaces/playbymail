@@ -242,7 +242,7 @@ func getManyAdventureGameLocationObjectEffectsHandler(w http.ResponseWriter, r *
 		return err
 	}
 
-	if err = server.WriteResponse(l, w, http.StatusOK, res); err != nil {
+	if err = server.WriteResponse(l, w, http.StatusOK, res, server.XPaginationHeader(len(recs), qp.PageSize)); err != nil {
 		l.Warn("failed writing response >%v<", err)
 		return err
 	}

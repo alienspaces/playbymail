@@ -20,6 +20,8 @@
           <TableActions :actions="getActions(row)" />
         </template>
       </ResourceTable>
+      <TablePagination :pageNumber="requirementsStore.pageNumber" :hasMore="requirementsStore.hasMore"
+        @page-change="(p) => requirementsStore.fetchLocationLinkRequirements(selectedGame.id, p)" />
 
       <!-- Create/Edit Requirement Modal (custom — needs conditional fields) -->
       <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
@@ -125,6 +127,7 @@ import ConfirmationModal from '../../../components/ConfirmationModal.vue';
 import PageHeader from '../../../components/PageHeader.vue';
 import GameContext from '../../../components/GameContext.vue';
 import TableActions from '../../../components/TableActions.vue';
+import TablePagination from '../../../components/TablePagination.vue';
 
 const requirementsStore = useLocationLinkRequirementsStore();
 const locationLinksStore = useLocationLinksStore();

@@ -12,14 +12,19 @@ export const useLocationLinkRequirementsStore = defineStore('locationLinkRequire
     loading: false,
     error: null,
     gameId: null,
+    pageNumber: 1,
+    hasMore: false,
   }),
   actions: {
-    async fetchLocationLinkRequirements(gameId) {
+    async fetchLocationLinkRequirements(gameId, pageNumber = 1) {
       this.loading = true;
       this.error = null;
       this.gameId = gameId;
       try {
-        this.requirements = await apiFetchLocationLinkRequirements(gameId);
+        const result = await apiFetchLocationLinkRequirements(gameId, { page_number: pageNumber });
+        this.requirements = result.data;
+        this.hasMore = result.hasMore;
+        this.pageNumber = pageNumber;
       } catch (err) {
         this.error = err.message;
         throw err;

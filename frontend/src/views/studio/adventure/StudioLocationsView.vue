@@ -21,6 +21,8 @@
           <TableActions :actions="getActions(row)" />
         </template>
       </ResourceTable>
+      <TablePagination :pageNumber="locationsStore.pageNumber" :hasMore="locationsStore.hasMore"
+        @page-change="(p) => locationsStore.fetchLocations(selectedGame.id, p)" />
     </div>
 
     <!-- Custom modal for create/edit with image upload support -->
@@ -88,6 +90,7 @@ import ConfirmationModal from '../../../components/ConfirmationModal.vue';
 import PageHeader from '../../../components/PageHeader.vue';
 import GameContext from '../../../components/GameContext.vue';
 import TableActions from '../../../components/TableActions.vue';
+import TablePagination from '../../../components/TablePagination.vue';
 import LocationTurnSheetImageUpload from '../../../components/LocationTurnSheetImageUpload.vue';
 import LocationTurnSheetPreviewModal from '../../../components/LocationTurnSheetPreviewModal.vue';
 

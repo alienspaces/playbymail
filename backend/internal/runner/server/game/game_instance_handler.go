@@ -425,7 +425,7 @@ func getManyManagerGameInstancesHandler(w http.ResponseWriter, r *http.Request, 
 		return err
 	}
 
-	if err = server.WriteResponse(l, w, http.StatusOK, res); err != nil {
+	if err = server.WriteResponse(l, w, http.StatusOK, res, server.XPaginationHeader(len(recs), qp.PageSize)); err != nil {
 		l.Warn("failed writing response >%v<", err)
 		return err
 	}
@@ -488,7 +488,7 @@ func getManyGameInstancesHandler(w http.ResponseWriter, r *http.Request, pp http
 		return err
 	}
 
-	if err = server.WriteResponse(l, w, http.StatusOK, res); err != nil {
+	if err = server.WriteResponse(l, w, http.StatusOK, res, server.XPaginationHeader(len(ownedRecs), qp.PageSize)); err != nil {
 		l.Warn("failed writing response >%v<", err)
 		return err
 	}

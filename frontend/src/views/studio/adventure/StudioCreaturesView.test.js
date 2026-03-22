@@ -15,7 +15,7 @@ const mockCreatures = [
 ];
 
 vi.mock('../../../api/creatures', () => ({
-  fetchCreatures: vi.fn(async () => mockCreatures),
+  fetchCreatures: vi.fn(async () => ({ data: mockCreatures, hasMore: false })),
   createCreature: vi.fn(),
   updateCreature: vi.fn(),
   deleteCreature: vi.fn()

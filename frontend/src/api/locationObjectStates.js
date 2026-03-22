@@ -6,14 +6,14 @@ import { baseUrl, getAuthHeaders, apiFetch, handleApiError } from './baseUrl';
  * @param {string} locationObjectId
  * @returns {Promise<GameLocationObjectState[]>}
  */
-export async function fetchLocationObjectStates(gameId, locationObjectId) {
-  const res = await apiFetch(
-    `${baseUrl}/api/v1/adventure-games/${encodeURIComponent(gameId)}/location-objects/${encodeURIComponent(locationObjectId)}/states`,
-    { headers: { ...getAuthHeaders() } }
-  );
+export async function fetchLocationObjectStates(gameId, locationObjectId, params = {}) {
+  const url = new URL(`${baseUrl}/api/v1/adventure-games/${encodeURIComponent(gameId)}/location-objects/${encodeURIComponent(locationObjectId)}/states`);
+  if (params.page_number) url.searchParams.set('page_number', params.page_number);
+  const res = await apiFetch(url.toString(), { headers: { ...getAuthHeaders() } });
   await handleApiError(res, 'Failed to fetch location object states');
   const json = await res.json();
-  return json.data || [];
+  const pagination = JSON.parse(res.headers.get('X-Pagination') || '{}');
+  return { data: json.data || [], hasMore: !!pagination.has_more };
 }
 
 /**

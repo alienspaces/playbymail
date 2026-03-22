@@ -16,6 +16,8 @@
           <TableActions :actions="getActions(row)" />
         </template>
       </ResourceTable>
+      <TablePagination :pageNumber="creaturePlacementsStore.pageNumber" :hasMore="creaturePlacementsStore.hasMore"
+        @page-change="(p) => creaturePlacementsStore.fetchCreaturePlacements(selectedGame.id, p)" />
 
       <!-- Create/Edit Creature Placement Modal -->
       <ResourceModalForm :visible="showCreaturePlacementModal" :mode="creaturePlacementModalMode"
@@ -44,6 +46,7 @@ import ConfirmationModal from '../../../components/ConfirmationModal.vue';
 import PageHeader from '../../../components/PageHeader.vue';
 import GameContext from '../../../components/GameContext.vue';
 import TableActions from '../../../components/TableActions.vue';
+import TablePagination from '../../../components/TablePagination.vue';
 
 const creaturesStore = useCreaturesStore();
 const locationsStore = useLocationsStore();

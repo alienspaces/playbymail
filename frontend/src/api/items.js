@@ -5,13 +5,16 @@ import { baseUrl, getAuthHeaders, apiFetch, handleApiError } from './baseUrl';
  * @param {string} gameId
  * @returns {Promise<GameItem[]>}
  */
-export async function fetchItems(gameId) {
-  const res = await apiFetch(`${baseUrl}/api/v1/adventure-games/${encodeURIComponent(gameId)}/items`, {
+export async function fetchItems(gameId, params = {}) {
+  const url = new URL(`${baseUrl}/api/v1/adventure-games/${encodeURIComponent(gameId)}/items`);
+  if (params.page_number) url.searchParams.set('page_number', params.page_number);
+  const res = await apiFetch(url.toString(), {
     headers: { ...getAuthHeaders() },
   });
   await handleApiError(res, 'Failed to fetch items');
   const json = await res.json();
-  return json.data || [];
+  const pagination = JSON.parse(res.headers.get('X-Pagination') || '{}');
+  return { data: json.data || [], hasMore: !!pagination.has_more };
 }
 
 /**

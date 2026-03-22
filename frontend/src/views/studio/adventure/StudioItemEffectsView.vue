@@ -26,6 +26,8 @@
           <TableActions :actions="getActions(row)" />
         </template>
       </ResourceTable>
+      <TablePagination :pageNumber="itemEffectsStore.pageNumber" :hasMore="itemEffectsStore.hasMore"
+        @page-change="(p) => itemEffectsStore.fetchItemEffects(selectedGame.id, p)" />
 
       <ResourceModalForm
         :visible="showModal"
@@ -66,6 +68,7 @@ import ConfirmationModal from '../../../components/ConfirmationModal.vue';
 import PageHeader from '../../../components/PageHeader.vue';
 import GameContext from '../../../components/GameContext.vue';
 import TableActions from '../../../components/TableActions.vue';
+import TablePagination from '../../../components/TablePagination.vue';
 
 const itemEffectsStore = useItemEffectsStore();
 const itemsStore = useItemsStore();

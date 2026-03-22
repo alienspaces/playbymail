@@ -29,6 +29,8 @@
           <TableActions :actions="getActions(row)" />
         </template>
       </ResourceTable>
+      <TablePagination :pageNumber="locationObjectsStore.pageNumber" :hasMore="locationObjectsStore.hasMore"
+        @page-change="(p) => locationObjectsStore.fetchLocationObjects(selectedGame.id, p)" />
 
       <!-- Object create / edit modal -->
       <ResourceModalForm
@@ -143,6 +145,7 @@ import ObjectStateFlowModal from '../../../components/ObjectStateFlowModal.vue';
 import PageHeader from '../../../components/PageHeader.vue';
 import GameContext from '../../../components/GameContext.vue';
 import TableActions from '../../../components/TableActions.vue';
+import TablePagination from '../../../components/TablePagination.vue';
 
 const locationsStore = useLocationsStore();
 const locationObjectsStore = useLocationObjectsStore();

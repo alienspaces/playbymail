@@ -20,6 +20,8 @@
           <TableActions :actions="getActions(row)" />
         </template>
       </ResourceTable>
+      <TablePagination :pageNumber="locationLinksStore.pageNumber" :hasMore="locationLinksStore.hasMore"
+        @page-change="(p) => locationLinksStore.fetchLocationLinks(selectedGame.id, p)" />
 
       <!-- Create/Edit Location Link Modal -->
       <ResourceModalForm :visible="showModal" :mode="modalMode" title="Location Link" :fields="locationLinkFields"
@@ -46,6 +48,7 @@ import ConfirmationModal from '../../../components/ConfirmationModal.vue';
 import PageHeader from '../../../components/PageHeader.vue';
 import GameContext from '../../../components/GameContext.vue';
 import TableActions from '../../../components/TableActions.vue';
+import TablePagination from '../../../components/TablePagination.vue';
 
 const locationLinksStore = useLocationLinksStore();
 const locationsStore = useLocationsStore();

@@ -7,14 +7,19 @@ export const useItemsStore = defineStore('items', {
     loading: false,
     error: null,
     gameId: null,
+    pageNumber: 1,
+    hasMore: false,
   }),
   actions: {
-    async fetchItems(gameId) {
+    async fetchItems(gameId, pageNumber = 1) {
       this.loading = true;
       this.error = null;
       this.gameId = gameId;
       try {
-        this.items = await apiFetchItems(gameId);
+        const result = await apiFetchItems(gameId, { page_number: pageNumber });
+        this.items = result.data;
+        this.hasMore = result.hasMore;
+        this.pageNumber = pageNumber;
       } catch (e) {
         this.error = e.message;
       } finally {

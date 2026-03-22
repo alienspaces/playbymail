@@ -203,7 +203,7 @@ func getManyGameInstanceParametersHandler(w http.ResponseWriter, r *http.Request
 		return err
 	}
 
-	return server.WriteResponse(l, w, http.StatusOK, response)
+	return server.WriteResponse(l, w, http.StatusOK, response, server.XPaginationHeader(len(recs), qp.PageSize))
 }
 
 func getOneGameInstanceParameterHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {

@@ -10,6 +10,8 @@ vi.mock('../../../stores/itemEffects', () => ({
     itemEffects: [],
     loading: false,
     error: null,
+    pageNumber: 1,
+    hasMore: false,
     fetchItemEffects: vi.fn(),
     createItemEffect: vi.fn(),
     updateItemEffect: vi.fn(),

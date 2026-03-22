@@ -5,13 +5,16 @@ import { baseUrl, getAuthHeaders, apiFetch, handleApiError } from './baseUrl';
  * @param {string} gameId
  * @returns {Promise<GameLocationObject[]>}
  */
-export async function fetchLocationObjects(gameId) {
-  const res = await apiFetch(`${baseUrl}/api/v1/adventure-games/${encodeURIComponent(gameId)}/location-objects`, {
+export async function fetchLocationObjects(gameId, params = {}) {
+  const url = new URL(`${baseUrl}/api/v1/adventure-games/${encodeURIComponent(gameId)}/location-objects`);
+  if (params.page_number) url.searchParams.set('page_number', params.page_number);
+  const res = await apiFetch(url.toString(), {
     headers: { ...getAuthHeaders() },
   });
   await handleApiError(res, 'Failed to fetch location objects');
   const json = await res.json();
-  return json.data || [];
+  const pagination = JSON.parse(res.headers.get('X-Pagination') || '{}');
+  return { data: json.data || [], hasMore: !!pagination.has_more };
 }
 
 /**

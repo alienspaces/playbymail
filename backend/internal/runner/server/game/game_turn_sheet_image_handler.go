@@ -362,7 +362,7 @@ func getManyGameTurnSheetImagesHandler(w http.ResponseWriter, r *http.Request, p
 
 	l.Info("responding with >%d< game turn sheet images for game >%s<", len(images), gameID)
 
-	if err = server.WriteResponse(l, w, http.StatusOK, res); err != nil {
+	if err = server.WriteResponse(l, w, http.StatusOK, res, server.XPaginationHeader(len(images), qp.PageSize)); err != nil {
 		l.Warn("failed writing response >%v<", err)
 		return err
 	}

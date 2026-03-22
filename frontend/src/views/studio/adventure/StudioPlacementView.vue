@@ -9,6 +9,8 @@
         <h2>Items</h2>
         <ResourceTable :columns="itemColumns" :rows="itemsStore.items" :loading="itemsStore.loading"
           :error="itemsStore.error" />
+        <TablePagination :pageNumber="itemsStore.pageNumber" :hasMore="itemsStore.hasMore"
+          @page-change="(p) => itemsStore.fetchItems(gameId, p)" />
       </section>
       <section class="studio-section">
         <h3>Item Placements</h3>
@@ -21,6 +23,8 @@
             <TableActions :actions="getItemPlacementActions(row)" />
           </template>
         </ResourceTable>
+        <TablePagination :pageNumber="itemPlacementsStore.pageNumber" :hasMore="itemPlacementsStore.hasMore"
+          @page-change="(p) => itemPlacementsStore.fetchItemPlacements(gameId, p)" />
 
         <!-- Create/Edit Modal using ResourceModalForm -->
         <ResourceModalForm :visible="showItemPlacementModal" :mode="itemPlacementModalMode" title="Item Placement"
@@ -50,6 +54,8 @@
         <h2>Creatures</h2>
         <ResourceTable :columns="creatureColumns" :rows="creaturesStore.creatures" :loading="creaturesStore.loading"
           :error="creaturesStore.error" />
+        <TablePagination :pageNumber="creaturesStore.pageNumber" :hasMore="creaturesStore.hasMore"
+          @page-change="(p) => creaturesStore.fetchCreatures(gameId, p)" />
       </section>
       <section class="studio-section">
         <h3>Creature Placements</h3>
@@ -62,6 +68,8 @@
             <TableActions :actions="getCreaturePlacementActions(row)" />
           </template>
         </ResourceTable>
+        <TablePagination :pageNumber="creaturePlacementsStore.pageNumber" :hasMore="creaturePlacementsStore.hasMore"
+          @page-change="(p) => creaturePlacementsStore.fetchCreaturePlacements(gameId, p)" />
         <ResourceModalForm :visible="showCreaturePlacementModal" :mode="creaturePlacementModalMode"
           title="Creature Placement" :fields="creaturePlacementFields" :modelValue="creaturePlacementModalForm"
           :error="creaturePlacementModalError" @submit="handleCreaturePlacementSubmit"
@@ -101,6 +109,7 @@ import { storeToRefs } from 'pinia';
 import ResourceTable from '../../../components/ResourceTable.vue';
 import ResourceModalForm from '../../../components/ResourceModalForm.vue';
 import TableActions from '../../../components/TableActions.vue';
+import TablePagination from '../../../components/TablePagination.vue';
 import ConfirmationModal from '../../../components/ConfirmationModal.vue';
 
 const itemsStore = useItemsStore();

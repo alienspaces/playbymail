@@ -7,14 +7,19 @@ export const useLocationLinksStore = defineStore('locationLinks', {
     loading: false,
     error: null,
     gameId: null,
+    pageNumber: 1,
+    hasMore: false,
   }),
   actions: {
-    async fetchLocationLinks(gameId) {
+    async fetchLocationLinks(gameId, pageNumber = 1) {
       this.loading = true;
       this.error = null;
       this.gameId = gameId;
       try {
-        this.locationLinks = await apiFetchLocationLinks(gameId);
+        const result = await apiFetchLocationLinks(gameId, { page_number: pageNumber });
+        this.locationLinks = result.data;
+        this.hasMore = result.hasMore;
+        this.pageNumber = pageNumber;
       } catch (err) {
         this.error = err.message;
         throw err;

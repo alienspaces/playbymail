@@ -12,14 +12,19 @@ export const useItemEffectsStore = defineStore('itemEffects', {
     loading: false,
     error: null,
     gameId: null,
+    pageNumber: 1,
+    hasMore: false,
   }),
   actions: {
-    async fetchItemEffects(gameId) {
+    async fetchItemEffects(gameId, pageNumber = 1) {
       this.loading = true;
       this.error = null;
       this.gameId = gameId;
       try {
-        this.itemEffects = await apiFetchItemEffects(gameId);
+        const result = await apiFetchItemEffects(gameId, { page_number: pageNumber });
+        this.itemEffects = result.data;
+        this.hasMore = result.hasMore;
+        this.pageNumber = pageNumber;
       } catch (e) {
         this.error = e.message;
       } finally {

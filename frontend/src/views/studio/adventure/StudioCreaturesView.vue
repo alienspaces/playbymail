@@ -21,6 +21,8 @@
           <TableActions :actions="getActions(row)" />
         </template>
       </ResourceTable>
+      <TablePagination :pageNumber="creaturesStore.pageNumber" :hasMore="creaturesStore.hasMore"
+        @page-change="(p) => creaturesStore.fetchCreatures(selectedGame.id, p)" />
     </div>
 
     <!-- Custom modal for create/edit with portrait upload support -->
@@ -141,6 +143,7 @@ import ConfirmationModal from '../../../components/ConfirmationModal.vue';
 import PageHeader from '../../../components/PageHeader.vue';
 import GameContext from '../../../components/GameContext.vue';
 import TableActions from '../../../components/TableActions.vue';
+import TablePagination from '../../../components/TablePagination.vue';
 import CreaturePortraitUpload from '../../../components/CreaturePortraitUpload.vue';
 
 const creaturesStore = useCreaturesStore();

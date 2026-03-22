@@ -23,32 +23,33 @@ describe('creaturePlacements API', () => {
     mockHandleApiError.mockImplementation((res) => res)
   })
 
-  const mockJson = (data) => ({
+  const mockJson = (data, paginationHeader = null) => ({
     ok: true,
     json: () => Promise.resolve(data),
+    headers: { get: (name) => name === 'X-Pagination' ? paginationHeader : null },
   })
 
   describe('fetchCreaturePlacements', () => {
-    it('calls GET /api/v1/adventure-games/:gameId/creature-placements and returns json.data', async () => {
+    it('calls GET /api/v1/adventure-games/:gameId/creature-placements and returns data with hasMore', async () => {
       const placements = [{ id: 'p1', creature_id: 'c1' }]
-      mockApiFetch.mockResolvedValue(mockJson({ data: placements }))
+      mockApiFetch.mockResolvedValue(mockJson({ data: placements }, '{"has_more":false}'))
 
       const result = await fetchCreaturePlacements('game-1')
 
       expect(mockApiFetch).toHaveBeenCalledWith(
-        'http://localhost:8080/api/v1/adventure-games/game-1/creature-placements',
+        expect.stringContaining('/api/v1/adventure-games/game-1/creature-placements'),
         expect.objectContaining({
           headers: expect.objectContaining({ Authorization: 'Bearer test-token' }),
         })
       )
-      expect(result).toEqual(placements)
+      expect(result).toEqual({ data: placements, hasMore: false })
     })
 
-    it('returns empty array when data is null/undefined', async () => {
+    it('returns empty data when data is null/undefined', async () => {
       mockApiFetch.mockResolvedValue(mockJson({}))
 
       const result = await fetchCreaturePlacements('game-1')
-      expect(result).toEqual([])
+      expect(result).toEqual({ data: [], hasMore: false })
     })
   })
 

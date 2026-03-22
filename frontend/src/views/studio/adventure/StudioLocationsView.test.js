@@ -15,7 +15,7 @@ const mockLocations = [
 ];
 
 vi.mock('../../../api/locations', () => ({
-  fetchLocations: vi.fn(async () => mockLocations),
+  fetchLocations: vi.fn(async () => ({ data: mockLocations, hasMore: false })),
   createLocation: vi.fn(),
   updateLocation: vi.fn(),
   deleteLocation: vi.fn()

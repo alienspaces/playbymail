@@ -24,38 +24,52 @@ describe('locations API', () => {
   })
 
   describe('fetchLocations', () => {
-    it('calls GET /api/v1/adventure-games/:gameId/locations and returns data', async () => {
+    it('calls GET /api/v1/adventure-games/:gameId/locations and returns data with hasMore', async () => {
       const locations = [{ id: 'loc1', name: 'Location 1' }]
       mockApiFetch.mockResolvedValue({
         ok: true,
         json: () => Promise.resolve({ data: locations }),
+        headers: { get: (name) => name === 'X-Pagination' ? '{"has_more":false}' : null },
       })
 
       const result = await fetchLocations('game-1')
 
       expect(mockApiFetch).toHaveBeenCalledWith(
-        'http://localhost:8080/api/v1/adventure-games/game-1/locations',
+        expect.stringContaining('/api/v1/adventure-games/game-1/locations'),
         expect.objectContaining({
           headers: expect.objectContaining({ Authorization: 'Bearer test-token' }),
         })
       )
-      expect(result).toEqual(locations)
+      expect(result).toEqual({ data: locations, hasMore: false })
     })
 
-    it('returns empty array when data is null', async () => {
+    it('returns hasMore true when header indicates more pages', async () => {
+      mockApiFetch.mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ data: [{ id: 'loc1' }] }),
+        headers: { get: (name) => name === 'X-Pagination' ? '{"has_more":true}' : null },
+      })
+
+      const result = await fetchLocations('game-1', { page_number: 1 })
+      expect(result.hasMore).toBe(true)
+    })
+
+    it('returns empty data when response data is null', async () => {
       mockApiFetch.mockResolvedValue({
         ok: true,
         json: () => Promise.resolve({ data: null }),
+        headers: { get: () => null },
       })
 
       const result = await fetchLocations('game-1')
-      expect(result).toEqual([])
+      expect(result).toEqual({ data: [], hasMore: false })
     })
 
     it('encodes gameId in URL', async () => {
       mockApiFetch.mockResolvedValue({
         ok: true,
         json: () => Promise.resolve({ data: [] }),
+        headers: { get: () => null },
       })
 
       await fetchLocations('game/id')

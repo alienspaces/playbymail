@@ -7,14 +7,19 @@ export const useCreaturesStore = defineStore('creatures', {
     loading: false,
     error: null,
     gameId: null,
+    pageNumber: 1,
+    hasMore: false,
   }),
   actions: {
-    async fetchCreatures(gameId) {
+    async fetchCreatures(gameId, pageNumber = 1) {
       this.loading = true;
       this.error = null;
       this.gameId = gameId;
       try {
-        this.creatures = await apiFetchCreatures(gameId);
+        const result = await apiFetchCreatures(gameId, { page_number: pageNumber });
+        this.creatures = result.data;
+        this.hasMore = result.hasMore;
+        this.pageNumber = pageNumber;
       } catch (e) {
         this.error = e.message;
       } finally {

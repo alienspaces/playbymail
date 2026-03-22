@@ -268,7 +268,7 @@ func getManyAccountUsersHandler(w http.ResponseWriter, r *http.Request, pp httpr
 		return err
 	}
 
-	return server.WriteResponse(l, w, http.StatusOK, res)
+	return server.WriteResponse(l, w, http.StatusOK, res, server.XPaginationHeader(len(recs), qp.PageSize))
 }
 
 func getAccountUserHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {

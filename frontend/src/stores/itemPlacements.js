@@ -7,14 +7,19 @@ export const useItemPlacementsStore = defineStore('itemPlacements', {
     loading: false,
     error: null,
     gameId: null,
+    pageNumber: 1,
+    hasMore: false,
   }),
   actions: {
-    async fetchItemPlacements(gameId) {
+    async fetchItemPlacements(gameId, pageNumber = 1) {
       this.loading = true;
       this.error = null;
       this.gameId = gameId;
       try {
-        this.itemPlacements = await apiFetchItemPlacements(gameId);
+        const result = await apiFetchItemPlacements(gameId, { page_number: pageNumber });
+        this.itemPlacements = result.data;
+        this.hasMore = result.hasMore;
+        this.pageNumber = pageNumber;
       } catch (e) {
         this.error = e.message;
       } finally {

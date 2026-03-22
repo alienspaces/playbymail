@@ -24,32 +24,34 @@ describe('locationObjectEffects API', () => {
   })
 
   describe('fetchLocationObjectEffects', () => {
-    it('calls GET /api/v1/adventure-games/:gameId/location-object-effects and returns data', async () => {
+    it('calls GET /api/v1/adventure-games/:gameId/location-object-effects and returns data with hasMore', async () => {
       const effects = [{ id: 'eff1', action_type: 'inspect', effect_type: 'info' }]
       mockApiFetch.mockResolvedValue({
         ok: true,
         json: () => Promise.resolve({ data: effects }),
+        headers: { get: (name) => name === 'X-Pagination' ? '{"has_more":false}' : null },
       })
 
       const result = await fetchLocationObjectEffects('game-1')
 
       expect(mockApiFetch).toHaveBeenCalledWith(
-        'http://localhost:8080/api/v1/adventure-games/game-1/location-object-effects',
+        expect.stringContaining('/api/v1/adventure-games/game-1/location-object-effects'),
         expect.objectContaining({
           headers: expect.objectContaining({ Authorization: 'Bearer test-token' }),
         })
       )
-      expect(result).toEqual(effects)
+      expect(result).toEqual({ data: effects, hasMore: false })
     })
 
-    it('returns empty array when data is null', async () => {
+    it('returns empty data when response data is null', async () => {
       mockApiFetch.mockResolvedValue({
         ok: true,
         json: () => Promise.resolve({ data: null }),
+        headers: { get: () => null },
       })
 
       const result = await fetchLocationObjectEffects('game-1')
-      expect(result).toEqual([])
+      expect(result).toEqual({ data: [], hasMore: false })
     })
   })
 

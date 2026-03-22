@@ -24,32 +24,34 @@ describe('items API', () => {
   })
 
   describe('fetchItems', () => {
-    it('calls GET /api/v1/adventure-games/:gameId/items and returns data', async () => {
+    it('calls GET /api/v1/adventure-games/:gameId/items and returns data with hasMore', async () => {
       const items = [{ id: 'item1', name: 'Item 1' }]
       mockApiFetch.mockResolvedValue({
         ok: true,
         json: () => Promise.resolve({ data: items }),
+        headers: { get: (name) => name === 'X-Pagination' ? '{"has_more":false}' : null },
       })
 
       const result = await fetchItems('game-1')
 
       expect(mockApiFetch).toHaveBeenCalledWith(
-        'http://localhost:8080/api/v1/adventure-games/game-1/items',
+        expect.stringContaining('/api/v1/adventure-games/game-1/items'),
         expect.objectContaining({
           headers: expect.objectContaining({ Authorization: 'Bearer test-token' }),
         })
       )
-      expect(result).toEqual(items)
+      expect(result).toEqual({ data: items, hasMore: false })
     })
 
-    it('returns empty array when data is null', async () => {
+    it('returns empty data when response data is null', async () => {
       mockApiFetch.mockResolvedValue({
         ok: true,
         json: () => Promise.resolve({ data: null }),
+        headers: { get: () => null },
       })
 
       const result = await fetchItems('game-1')
-      expect(result).toEqual([])
+      expect(result).toEqual({ data: [], hasMore: false })
     })
   })
 
