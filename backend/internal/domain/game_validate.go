@@ -99,6 +99,13 @@ func (m *Domain) validateAdventureGameReadyForInstance(gameID string) ([]GameVal
 //   - Objects with states defined but no initial state set
 //   - States that can never be reached (not the initial state, not a result of any effect)
 //   - States that are dead-ends (no effects require this state, so once reached nothing changes)
+//
+// State transitions can originate from two sources that must both be considered:
+//   - The object's own effects (e.g. a door being pushed open)
+//   - Cross-object effects from other objects (e.g. a lever that reveals a hidden door)
+//
+// Ignoring cross-object effects produces false-positive warnings on objects like the
+// Hidden Door, whose states are driven entirely by the Lever in another location.
 func (m *Domain) validateAdventureGameObjectStateGraph(gameID string) ([]GameValidationIssue, error) {
 	var issues []GameValidationIssue
 
@@ -135,15 +142,30 @@ func (m *Domain) validateAdventureGameObjectStateGraph(gameID string) ([]GameVal
 		return nil, err
 	}
 
-	// Index states and effects by object ID for efficient lookup.
+	// Index states by the object they belong to.
 	statesByObjectID := make(map[string][]*adventure_game_record.AdventureGameLocationObjectState)
 	for _, s := range allStateRecs {
 		statesByObjectID[s.AdventureGameLocationObjectID] = append(statesByObjectID[s.AdventureGameLocationObjectID], s)
 	}
 
+	// effectsByObjectID holds effects that an object owns — these are the interactions
+	// available to players when they act on that object (e.g. push, inspect, burn).
 	effectsByObjectID := make(map[string][]*adventure_game_record.AdventureGameLocationObjectEffect)
 	for _, e := range allEffectRecs {
 		effectsByObjectID[e.AdventureGameLocationObjectID] = append(effectsByObjectID[e.AdventureGameLocationObjectID], e)
+	}
+
+	// crossEffectsByTargetID holds effects whose result targets another object via
+	// result_adventure_game_location_object_id. These are cross-object effects such as
+	// change_object_state, reveal_object, and hide_object. An object may have states
+	// that are only reachable via these external transitions (e.g. a door revealed by a
+	// lever), so they must be considered separately from the object's own effects.
+	crossEffectsByTargetID := make(map[string][]*adventure_game_record.AdventureGameLocationObjectEffect)
+	for _, e := range allEffectRecs {
+		if e.ResultAdventureGameLocationObjectID.Valid {
+			targetID := e.ResultAdventureGameLocationObjectID.String
+			crossEffectsByTargetID[targetID] = append(crossEffectsByTargetID[targetID], e)
+		}
 	}
 
 	for _, obj := range objectRecs {
@@ -152,7 +174,8 @@ func (m *Domain) validateAdventureGameObjectStateGraph(gameID string) ([]GameVal
 			continue
 		}
 
-		effects := effectsByObjectID[obj.ID]
+		ownEffects := effectsByObjectID[obj.ID]
+		crossEffects := crossEffectsByTargetID[obj.ID]
 
 		// Check: object has states but no initial state.
 		if !obj.InitialAdventureGameLocationObjectStateID.Valid {
@@ -163,13 +186,14 @@ func (m *Domain) validateAdventureGameObjectStateGraph(gameID string) ([]GameVal
 			})
 		}
 
-		// Build sets of IDs referenced in effects.
-		reachableStateIDs := make(map[string]bool) // result of any effect
-		requiredStateIDs := make(map[string]bool)   // required by any effect
+		// Build sets of state IDs that are reachable (can be entered) or required
+		// (must be active for an effect to fire) based on the object's own effects.
+		reachableStateIDs := make(map[string]bool)
+		requiredStateIDs := make(map[string]bool)
 		if obj.InitialAdventureGameLocationObjectStateID.Valid {
 			reachableStateIDs[obj.InitialAdventureGameLocationObjectStateID.String] = true
 		}
-		for _, e := range effects {
+		for _, e := range ownEffects {
 			if e.ResultAdventureGameLocationObjectStateID.Valid {
 				reachableStateIDs[e.ResultAdventureGameLocationObjectStateID.String] = true
 			}
@@ -178,8 +202,37 @@ func (m *Domain) validateAdventureGameObjectStateGraph(gameID string) ([]GameVal
 			}
 		}
 
+		// Cross-object effects from other objects can also set this object's state
+		// (e.g. a lever using change_object_state to reveal a hidden door). Include
+		// those result states in the reachable set so we don't falsely warn that
+		// states like "revealed" are unreachable just because no own-effect produces them.
+		for _, e := range crossEffects {
+			if e.ResultAdventureGameLocationObjectStateID.Valid {
+				reachableStateIDs[e.ResultAdventureGameLocationObjectStateID.String] = true
+			}
+		}
+
+		// Objects with a remove_object effect are intentionally destructible: when the
+		// object is consumed (e.g. a burning rack), the terminal state before removal is
+		// by design and should not be flagged as a dead-end. Detect this once per object.
+		isDestructible := false
+		for _, e := range ownEffects {
+			if e.EffectType == adventure_game_record.AdventureGameLocationObjectEffectEffectTypeRemoveObject {
+				isDestructible = true
+				break
+			}
+		}
+
+		// If cross-object effects target this object, dead-end suppression applies.
+		// External effects (e.g. hide_object, change_object_state) can unconditionally
+		// transition this object regardless of its current state, so a state with no
+		// own required-state effects is not necessarily a designer mistake.
+		hasInboundCrossEffects := len(crossEffects) > 0
+
 		for _, s := range states {
-			// Warn about unreachable states (not initial, not a result of any effect).
+			// Warn about unreachable states (not initial, not a result of any own or
+			// cross-object effect). This still fires even for objects with cross-object
+			// effects, because an unreachable state is always a configuration mistake.
 			if !reachableStateIDs[s.ID] {
 				issues = append(issues, GameValidationIssue{
 					Field:    "location_objects",
@@ -188,11 +241,13 @@ func (m *Domain) validateAdventureGameObjectStateGraph(gameID string) ([]GameVal
 				})
 			}
 
-			// Warn about dead-end states (no effects require this state, meaning
-			// once an object reaches this state no further effects can be triggered).
-			// Only warn if there are effects at all and at least one has a required state,
-			// so we don't spam on simple objects with unconditional effects.
-			if len(requiredStateIDs) > 0 && !requiredStateIDs[s.ID] {
+			// Warn about dead-end states: no own effect requires this state, meaning
+			// once the object reaches this state players cannot interact further.
+			// Only warn when:
+			//   - there are effects with required states (otherwise all states look like dead-ends), and
+			//   - no cross-object effects target this object (external forces can still move it), and
+			//   - the object is not destructible (terminal state before removal is intentional).
+			if len(requiredStateIDs) > 0 && !requiredStateIDs[s.ID] && !hasInboundCrossEffects && !isDestructible {
 				issues = append(issues, GameValidationIssue{
 					Field:    "location_objects",
 					Message:  fmt.Sprintf("Object %q state %q is a dead-end: no effects require it, so players cannot interact further once the object reaches this state", obj.Name, s.Name),

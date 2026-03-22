@@ -126,5 +126,9 @@ func (t *Testing) applyAccountUserRecDefaultValues(rec *account_record.AccountUs
 		rec.Email = UniqueEmail(gofakeit.Email())
 	}
 
+	if rec.Status == "" {
+		rec.Status = account_record.AccountUserStatusActive
+	}
+
 	return rec
 }

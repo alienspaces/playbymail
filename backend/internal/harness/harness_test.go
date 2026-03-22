@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"gitlab.com/alienspaces/playbymail/internal/harness"
+	"gitlab.com/alienspaces/playbymail/internal/record/account_record"
 	"gitlab.com/alienspaces/playbymail/internal/utils/config"
 	"gitlab.com/alienspaces/playbymail/internal/utils/deps"
 )
@@ -60,6 +61,11 @@ func TestHarnessSetupTeardown_DefaultDataConfig(t *testing.T) {
 	require.Len(t, h.Data.AdventureGameCreatureInstanceRecs, 1, "Should have exactly 1 adventure game creature instance record")
 	// Item instances: 1 (GameItemInstanceOneRef) - only for GameInstanceOneRef
 	require.Len(t, h.Data.AdventureGameItemInstanceRecs, 1, "Should have exactly 1 adventure game item instance record")
+
+	// All harness account users should be active by default
+	for _, rec := range h.Data.AccountUserRecs {
+		require.Equalf(t, account_record.AccountUserStatusActive, rec.Status, "Account user %s should have active status", rec.Email)
+	}
 
 	// Check that references are set
 	for ref, id := range h.Data.Refs.AccountUserRefs {

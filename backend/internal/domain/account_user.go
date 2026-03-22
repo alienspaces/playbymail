@@ -435,7 +435,13 @@ func (m *Domain) VerifyAccountUserVerificationToken(token string, testBypassEnab
 
 	l.Info("user account found for verification token >%s<", token)
 
-	// Generate session token
+	// Promote pending users to active on first successful verification
+	if rec.Status == account_record.AccountUserStatusPendingApproval {
+		l.Info("promoting account user >%s< from pending_approval to active", rec.ID)
+		rec.Status = account_record.AccountUserStatusActive
+	}
+
+	// Generate session token (also persists any status change via UpdateAccountUserRec)
 	sessionToken, err := m.GenerateAccountUserSessionToken(rec)
 	if err != nil {
 		l.Warn("failed to generate session token >%v<", err)
