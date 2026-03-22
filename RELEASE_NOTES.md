@@ -14,6 +14,55 @@ Here's what's been happening with Play by Mail — from the early foundations in
 
 ---
 
+## 🗓️ 23 March 2026
+
+**Theme**: Item Effects, Studio Pagination & Player Experience
+
+### 🎯 Major Features
+
+**Item Effects for Weapons & Armour**
+- Items can now have effects that modify combat stats — weapons gain attack bonuses, armour gains defence bonuses
+- A dedicated Studio page lets game designers create and manage item effects for each item
+- Weapon and armour names now appear in combat action log entries (e.g. "Attack with your Rusty Dagger")
+
+**Place Item Effect**
+- A new location object effect type — when an object is triggered, an item can be spawned at another location in the game
+- Item pickup actions can now trigger follow-on effects, opening up richer object chains
+
+**Player Subscription Confirmation**
+- Joining a game that requires approval now shows a clear pending state with a dedicated confirmation screen
+- Players receive an email link to confirm their subscription; clicking it completes the join flow
+
+### 🎨 Improvements
+
+**Studio Pagination**
+- All studio data tables now have Previous / Next pagination controls, making large collections easy to browse
+
+**Game Catalog**
+- Each game card now shows who is hosting the game ("Hosted by [Account Name]")
+- Remaining open spots in an instance are displayed so you can see at a glance if there's room
+
+**Account Profile**
+- Your account name is now visible and editable directly from your profile page
+
+**Game Instance Creation**
+- Turn duration and "process when all submitted" settings are now configurable in the create instance form
+- The turn duration field pre-fills with the game's configured default
+
+**Demo Game Content**
+- Three new locations added to the demo game: The Sacristy, The Ossuary, and The Infirmary
+- Three new creatures: Crypt Spider, Bone Revenant, and Drowned Monk
+- Six new items: Rusty Dagger, Monk's Iron Mace, Leather Cuirass, Healing Draught, Brass Thurible, and Tarnished Locket
+
+### 🐛 Bug Fixes
+
+- Fixed creature portrait images missing from encounter turn sheets
+- Fixed the game catalog being too wide on mobile screens
+- Fixed attempting to join a game you've already joined now showing a clear error instead of failing silently
+- Fixed pending-approval subscriptions now expiring after 24 hours, freeing reserved game slots automatically
+
+---
+
 ## 🗓️ 20 March 2026
 
 **Theme**: Interactive Location Objects & Game Instance Controls
