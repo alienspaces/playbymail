@@ -100,6 +100,13 @@ Use --delete to remove an existing demo game without loading a new one.`,
 				},
 				Action: r.loadGameData,
 			},
+			// Account / user inspection
+			{
+				Name:    "db-list-users",
+				Aliases: []string{"lu"},
+				Usage:   "List all accounts and users with status and session info",
+				Action:  r.listUsers,
+			},
 		},
 	}
 

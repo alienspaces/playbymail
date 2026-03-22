@@ -1,0 +1,35 @@
+#!/usr/bin/env sh
+
+# List users from the Heroku production database.
+# Fetches DATABASE_URL from Heroku and delegates to db-list-users.
+#
+# Usage:
+#   ./tools/db-list-users-heroku
+
+set -e
+
+APP_NAME=${HEROKU_APP_NAME:-playbymail}
+
+if [ ! -f "backend/go.mod" ]; then
+    echo "❌ Must be run from playbymail root directory"
+    exit 1
+fi
+
+if ! command -v heroku >/dev/null 2>&1; then
+    echo "❌ Heroku CLI not found. Install with: curl https://cli-assets.heroku.com/install.sh | sh"
+    exit 1
+fi
+
+echo "Fetching DATABASE_URL from Heroku app '$APP_NAME'..."
+HEROKU_DATABASE_URL=$(heroku config:get DATABASE_URL --app "$APP_NAME")
+
+if [ -z "$HEROKU_DATABASE_URL" ]; then
+    echo "❌ Could not retrieve DATABASE_URL from Heroku for app '$APP_NAME'"
+    exit 1
+fi
+
+echo "✅ Heroku DATABASE_URL retrieved"
+echo "⚠️  Targeting PRODUCTION database on app '$APP_NAME'"
+echo
+
+DATABASE_URL="$HEROKU_DATABASE_URL" ./tools/db-list-users "$@"
