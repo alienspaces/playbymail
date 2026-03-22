@@ -4,10 +4,10 @@
 # Fetches DATABASE_URL from Heroku and delegates to db-load-demo-game.
 #
 # Usage:
-#   ./tools/db-load-demo-game-heroku --game "<name>"
-#   ./tools/db-load-demo-game-heroku --game "<name>" --publish
-#   ./tools/db-load-demo-game-heroku --game "<name>" --replace --publish
 #   ./tools/db-load-demo-game-heroku --list
+#   ./tools/db-load-demo-game-heroku --type <type>
+#   ./tools/db-load-demo-game-heroku --type <type> --replace
+#   ./tools/db-load-demo-game-heroku --type <type> --delete
 
 set -e
 

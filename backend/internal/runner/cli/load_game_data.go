@@ -14,8 +14,9 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/runner/cli/demo_scenarios"
 )
 
-// loadGameData loads a demo game into the target database.
-// Game name is required (use --list to see options). Loaded games are draft unless --publish is set.
+// loadGameData loads or deletes a demo game for the given game type.
+// Use --list to see available types. Use --delete to remove without reloading.
+// Use --replace to remove and reload an existing demo game.
 func (rnr *Runner) loadGameData(c *cli.Context) error {
 	l := loggerWithFunctionContext(rnr.Log, "loadGameData")
 
@@ -23,24 +24,52 @@ func (rnr *Runner) loadGameData(c *cli.Context) error {
 		return rnr.listDemoGames(c)
 	}
 
-	gameName := c.String("game")
-	if gameName == "" {
-		return fmt.Errorf("--game is required (use --list to see available demo games)")
+	gameType := c.String("type")
+	if gameType == "" {
+		return fmt.Errorf("--type is required (use --list to see available demo game types)")
 	}
 
-	entry, ok := LookupDemoGame(gameName)
+	entry, ok := LookupDemoGameByType(gameType)
 	if !ok {
-		l.Warn("unknown demo game >%s<", gameName)
-		return fmt.Errorf("unknown demo game %q (use --list to see available demo games)", gameName)
+		l.Warn("unknown demo game type >%s<", gameType)
+		return fmt.Errorf("unknown demo game type %q (use --list to see available types)", gameType)
 	}
 
-	l.Info("** Load Demo Game: %s **", gameName)
-	config := entry.Config()
+	if c.Bool("delete") {
+		return rnr.deleteGameData(c, entry)
+	}
+
+	l.Info("** Load Demo Game: %s (type: %s) **", entry.Name, gameType)
 
 	err := rnr.InitDomain()
 	if err != nil {
 		l.Warn("failed domain init >%v<", err)
 		return err
+	}
+
+	existing, err := rnr.gameExistsByName(entry.Name)
+	if err != nil {
+		return err
+	}
+	if existing && !c.Bool("replace") {
+		return fmt.Errorf(
+			"demo game for type %q already exists (%s); use --replace to overwrite or --delete to remove",
+			gameType, entry.Name,
+		)
+	}
+	if existing && c.Bool("replace") {
+		if err := rnr.removeGameByName(entry.Name); err != nil {
+			l.Warn("failed removing existing demo game >%s<: %v", entry.Name, err)
+			return err
+		}
+		if err := rnr.Domain.Commit(); err != nil {
+			l.Warn("failed committing game removal >%v<", err)
+			return err
+		}
+		if err := rnr.InitDomainTx(); err != nil {
+			l.Warn("failed re-init domain tx after removal >%v<", err)
+			return err
+		}
 	}
 
 	// Ensure demo accounts exist -- create if missing, reuse if present.
@@ -49,6 +78,8 @@ func (rnr *Runner) loadGameData(c *cli.Context) error {
 		l.Warn("failed ensuring demo accounts >%v<", err)
 		return err
 	}
+
+	config := entry.Config()
 
 	// Populate each top-level subscription Record with account IDs (same order as DemoAccountDefs).
 	for i := range config.AccountUserGameSubscriptionConfigs {
@@ -59,37 +90,6 @@ func (rnr *Runner) loadGameData(c *cli.Context) error {
 		if rec != nil {
 			rec.AccountID = demoRecs.AccountUsers[i].AccountID
 			rec.AccountUserID = demoRecs.AccountUsers[i].ID
-		}
-	}
-
-	for i := range config.GameConfigs {
-		gc := &config.GameConfigs[i]
-		if gc.Record == nil || gc.Record.Name == "" {
-			continue
-		}
-		existing, err := rnr.gameExistsByName(gc.Record.Name)
-		if err != nil {
-			return err
-		}
-		if existing && !c.Bool("replace") {
-			return fmt.Errorf("game %q already exists; use --replace to overwrite", gc.Record.Name)
-		}
-		if existing && c.Bool("replace") {
-			if err := rnr.removeGameByName(gc.Record.Name); err != nil {
-				l.Warn("failed removing existing game >%s<: %v", gc.Record.Name, err)
-				return err
-			}
-		}
-	}
-
-	if c.Bool("replace") {
-		if err := rnr.Domain.Commit(); err != nil {
-			l.Warn("failed committing game removal >%v<", err)
-			return err
-		}
-		if err := rnr.InitDomainTx(); err != nil {
-			l.Warn("failed re-init domain tx after removal >%v<", err)
-			return err
 		}
 	}
 
@@ -107,55 +107,80 @@ func (rnr *Runner) loadGameData(c *cli.Context) error {
 		return err
 	}
 
-	// Publish games via the domain layer if requested
-	if c.Bool("publish") {
-		if err := rnr.InitDomainTx(); err != nil {
-			l.Warn("failed re-init domain tx for publish >%v<", err)
+	// Always publish: update game status and clear is_closed_testing on instances.
+	if err := rnr.InitDomainTx(); err != nil {
+		l.Warn("failed re-init domain tx for publish >%v<", err)
+		return err
+	}
+	dm, ok := rnr.Domain.(*domain.Domain)
+	if !ok {
+		return fmt.Errorf("cannot publish: domain type assertion failed")
+	}
+	for _, rec := range testHarness.Data.GameRecs {
+		rec.Status = game_record.GameStatusPublished
+		_, err = dm.UpdateGameRec(rec)
+		if err != nil {
+			l.Warn("failed publishing game %s >%v<", rec.ID, err)
 			return err
 		}
-		dm, ok := rnr.Domain.(*domain.Domain)
-		if !ok {
-			return fmt.Errorf("cannot publish: domain type assertion failed")
-		}
-		for _, rec := range testHarness.Data.GameRecs {
-			rec.Status = game_record.GameStatusPublished
-			_, err = dm.UpdateGameRec(rec)
-			if err != nil {
-				l.Warn("failed publishing game %s >%v<", rec.ID, err)
-				return err
-			}
-			l.Info("published game %s (%s)", rec.Name, rec.ID)
+		l.Info("published game %s (%s)", rec.Name, rec.ID)
 
-			// Clear is_closed_testing on all instances: they were forced to true
-			// during creation because the game was draft at that point.
-			instances, err := dm.GetManyGameInstanceRecs(&coresql.Options{
-				Params: []coresql.Param{
-					{Col: game_record.FieldGameInstanceGameID, Val: rec.ID},
-				},
-			})
-			if err != nil {
-				l.Warn("failed getting game instances for game %s >%v<", rec.ID, err)
-				return err
-			}
-			for _, inst := range instances {
-				if inst.IsClosedTesting {
-					inst.IsClosedTesting = false
-					_, err = dm.UpdateGameInstanceRec(inst)
-					if err != nil {
-						l.Warn("failed clearing is_closed_testing on instance %s >%v<", inst.ID, err)
-						return err
-					}
-					l.Info("cleared is_closed_testing on instance %s", inst.ID)
-				}
-			}
-		}
-		if err := rnr.Domain.Commit(); err != nil {
-			l.Warn("failed committing game publish >%v<", err)
+		// Clear is_closed_testing on all instances: they were forced to true
+		// during creation because the game was draft at that point.
+		instances, err := dm.GetManyGameInstanceRecs(&coresql.Options{
+			Params: []coresql.Param{
+				{Col: game_record.FieldGameInstanceGameID, Val: rec.ID},
+			},
+		})
+		if err != nil {
+			l.Warn("failed getting game instances for game %s >%v<", rec.ID, err)
 			return err
+		}
+		for _, inst := range instances {
+			if inst.IsClosedTesting {
+				inst.IsClosedTesting = false
+				_, err = dm.UpdateGameInstanceRec(inst)
+				if err != nil {
+					l.Warn("failed clearing is_closed_testing on instance %s >%v<", inst.ID, err)
+					return err
+				}
+				l.Info("cleared is_closed_testing on instance %s", inst.ID)
+			}
 		}
 	}
+	if err := rnr.Domain.Commit(); err != nil {
+		l.Warn("failed committing game publish >%v<", err)
+		return err
+	}
 
-	l.Info("game data loaded successfully")
+	l.Info("demo game loaded and published successfully")
+
+	return nil
+}
+
+// deleteGameData removes the demo game for the given type along with all dependents.
+func (rnr *Runner) deleteGameData(_ *cli.Context, entry DemoGameEntry) error {
+	l := loggerWithFunctionContext(rnr.Log, "deleteGameData")
+
+	l.Info("** Delete Demo Game: %s **", entry.Name)
+
+	err := rnr.InitDomain()
+	if err != nil {
+		l.Warn("failed domain init >%v<", err)
+		return err
+	}
+
+	if err := rnr.removeGameByName(entry.Name); err != nil {
+		l.Warn("failed removing demo game >%s<: %v", entry.Name, err)
+		return err
+	}
+
+	if err := rnr.Domain.Commit(); err != nil {
+		l.Warn("failed committing demo game deletion >%v<", err)
+		return err
+	}
+
+	l.Info("demo game deleted successfully")
 
 	return nil
 }
@@ -646,16 +671,17 @@ func (rnr *Runner) removeGameInstanceDependents(dm *domain.Domain, instanceID st
 // listDemoGames prints registered demo game summaries to stdout.
 func (rnr *Runner) listDemoGames(_ *cli.Context) error {
 	games := ListDemoGames()
-	fmt.Println("Available demo games:")
+	fmt.Println("Available demo game types:")
 	fmt.Println()
 	for _, g := range games {
-		fmt.Printf("  %s (%s)\n", g.Name, g.GameType)
-		fmt.Printf("    %s\n\n", g.Description)
+		fmt.Printf("  type: %s\n", g.Type)
+		fmt.Printf("  name: %s\n", g.Name)
+		fmt.Printf("  %s\n\n", g.Description)
 	}
 	fmt.Println("Usage:")
-	fmt.Printf("  db-load-demo-game --game \"<name>\"\n")
-	fmt.Printf("  db-load-demo-game --game \"<name>\" --publish\n")
-	fmt.Printf("  db-load-demo-game --game \"<name>\" --replace --publish\n")
+	fmt.Printf("  db-load-demo-game --type <type>\n")
+	fmt.Printf("  db-load-demo-game --type <type> --replace\n")
+	fmt.Printf("  db-load-demo-game --type <type> --delete\n")
 	fmt.Println()
 	return nil
 }

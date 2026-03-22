@@ -312,75 +312,29 @@ func TestRemoveGameAndDependents(t *testing.T) {
 
 func TestLoadGameData(t *testing.T) {
 
-	t.Run("missing game returns error", func(t *testing.T) {
+	t.Run("missing type returns error", func(t *testing.T) {
 		rnr := newTestRunnerWithDomain(t)
 		ctx := newCliContext(nil, nil)
 		err := rnr.loadGameData(ctx)
 		require.Error(t, err)
-		require.Contains(t, err.Error(), "--game is required")
+		require.Contains(t, err.Error(), "--type is required")
 	})
 
-	t.Run("unknown game returns error", func(t *testing.T) {
+	t.Run("unknown type returns error", func(t *testing.T) {
 		rnr := newTestRunnerWithDomain(t)
-		ctx := newCliContext(map[string]string{"game": "Nonexistent Game"}, nil)
+		ctx := newCliContext(map[string]string{"type": "nonexistent_type"}, nil)
 		err := rnr.loadGameData(ctx)
 		require.Error(t, err)
-		require.Contains(t, err.Error(), "unknown demo game")
+		require.Contains(t, err.Error(), "unknown demo game type")
 	})
 
-	t.Run("load draft", func(t *testing.T) {
+	t.Run("load and publish", func(t *testing.T) {
 		rnr := newTestRunnerWithDomain(t)
 		defer cleanupLoadedGame(t, rnr)
 
-		ctx := newCliContext(map[string]string{"game": demo_scenarios.DemoAdventureGameName}, nil)
+		ctx := newCliContext(map[string]string{"type": game_record.GameTypeAdventure}, nil)
 		err := rnr.loadGameData(ctx)
-		require.NoError(t, err, "loadGameData succeeds for draft")
-
-		err = rnr.InitDomainTx()
-		require.NoError(t, err)
-
-		dm := rnr.Domain.(*domain.Domain)
-		games, err := dm.GetManyGameRecs(&coresql.Options{
-			Params: []coresql.Param{{Col: game_record.FieldGameName, Val: demo_scenarios.DemoAdventureGameName}},
-		})
-		require.NoError(t, err)
-		require.Len(t, games, 1, "one game should exist")
-		require.Equal(t, game_record.GameStatusDraft, games[0].Status, "game should be draft")
-	})
-
-	t.Run("case insensitive lookup", func(t *testing.T) {
-		rnr := newTestRunnerWithDomain(t)
-		defer cleanupLoadedGame(t, rnr)
-
-		ctx := newCliContext(map[string]string{"game": "the door beneath the staircase"}, nil)
-		err := rnr.loadGameData(ctx)
-		require.NoError(t, err, "case-insensitive game name should work")
-	})
-
-	t.Run("duplicate without replace returns error", func(t *testing.T) {
-		rnr := newTestRunnerWithDomain(t)
-		defer cleanupLoadedGame(t, rnr)
-
-		ctx := newCliContext(map[string]string{"game": demo_scenarios.DemoAdventureGameName}, nil)
-		err := rnr.loadGameData(ctx)
-		require.NoError(t, err, "first load should succeed")
-
-		err = rnr.loadGameData(ctx)
-		require.Error(t, err, "duplicate load should fail")
-		require.Contains(t, err.Error(), "already exists")
-		require.Contains(t, err.Error(), "--replace")
-	})
-
-	t.Run("load with publish", func(t *testing.T) {
-		rnr := newTestRunnerWithDomain(t)
-		defer cleanupLoadedGame(t, rnr)
-
-		ctx := newCliContext(
-			map[string]string{"game": demo_scenarios.DemoAdventureGameName},
-			map[string]bool{"publish": true},
-		)
-		err := rnr.loadGameData(ctx)
-		require.NoError(t, err, "loadGameData succeeds with publish")
+		require.NoError(t, err, "loadGameData succeeds")
 
 		err = rnr.InitDomainTx()
 		require.NoError(t, err)
@@ -392,13 +346,44 @@ func TestLoadGameData(t *testing.T) {
 		require.NoError(t, err)
 		require.Len(t, games, 1, "one game should exist")
 		require.Equal(t, game_record.GameStatusPublished, games[0].Status, "game should be published")
+
+		instances, err := dm.GetManyGameInstanceRecs(&coresql.Options{
+			Params: []coresql.Param{{Col: game_record.FieldGameInstanceGameID, Val: games[0].ID}},
+		})
+		require.NoError(t, err)
+		for _, inst := range instances {
+			require.False(t, inst.IsClosedTesting, "is_closed_testing should be cleared")
+		}
+	})
+
+	t.Run("case insensitive type lookup", func(t *testing.T) {
+		rnr := newTestRunnerWithDomain(t)
+		defer cleanupLoadedGame(t, rnr)
+
+		ctx := newCliContext(map[string]string{"type": "ADVENTURE"}, nil)
+		err := rnr.loadGameData(ctx)
+		require.NoError(t, err, "case-insensitive type should work")
+	})
+
+	t.Run("duplicate without replace returns error", func(t *testing.T) {
+		rnr := newTestRunnerWithDomain(t)
+		defer cleanupLoadedGame(t, rnr)
+
+		ctx := newCliContext(map[string]string{"type": game_record.GameTypeAdventure}, nil)
+		err := rnr.loadGameData(ctx)
+		require.NoError(t, err, "first load should succeed")
+
+		err = rnr.loadGameData(ctx)
+		require.Error(t, err, "duplicate load should fail")
+		require.Contains(t, err.Error(), "already exists")
+		require.Contains(t, err.Error(), "--replace")
 	})
 
 	t.Run("replace", func(t *testing.T) {
 		rnr := newTestRunnerWithDomain(t)
 		defer cleanupLoadedGame(t, rnr)
 
-		ctx := newCliContext(map[string]string{"game": demo_scenarios.DemoAdventureGameName}, nil)
+		ctx := newCliContext(map[string]string{"type": game_record.GameTypeAdventure}, nil)
 		err := rnr.loadGameData(ctx)
 		require.NoError(t, err)
 
@@ -414,7 +399,7 @@ func TestLoadGameData(t *testing.T) {
 		originalID := games[0].ID
 
 		replaceCtx := newCliContext(
-			map[string]string{"game": demo_scenarios.DemoAdventureGameName},
+			map[string]string{"type": game_record.GameTypeAdventure},
 			map[string]bool{"replace": true},
 		)
 		err = rnr.loadGameData(replaceCtx)
@@ -430,6 +415,35 @@ func TestLoadGameData(t *testing.T) {
 		require.NoError(t, err)
 		require.Len(t, games, 1, "exactly one game should exist after replace")
 		require.NotEqual(t, originalID, games[0].ID, "game ID should differ after replace")
+		require.Equal(t, game_record.GameStatusPublished, games[0].Status, "replaced game should be published")
+	})
+
+	t.Run("delete", func(t *testing.T) {
+		rnr := newTestRunnerWithDomain(t)
+		defer cleanupLoadedGame(t, rnr)
+
+		// Load the game first
+		loadCtx := newCliContext(map[string]string{"type": game_record.GameTypeAdventure}, nil)
+		err := rnr.loadGameData(loadCtx)
+		require.NoError(t, err, "initial load should succeed")
+
+		// Now delete it
+		deleteCtx := newCliContext(
+			map[string]string{"type": game_record.GameTypeAdventure},
+			map[string]bool{"delete": true},
+		)
+		err = rnr.loadGameData(deleteCtx)
+		require.NoError(t, err, "delete should succeed")
+
+		err = rnr.InitDomainTx()
+		require.NoError(t, err)
+
+		dm := rnr.Domain.(*domain.Domain)
+		games, err := dm.GetManyGameRecs(&coresql.Options{
+			Params: []coresql.Param{{Col: game_record.FieldGameName, Val: demo_scenarios.DemoAdventureGameName}},
+		})
+		require.NoError(t, err)
+		require.Empty(t, games, "game should not exist after delete")
 	})
 }
 
@@ -439,32 +453,32 @@ func TestListDemoGames(t *testing.T) {
 
 	var found *DemoGameSummary
 	for i := range games {
-		if games[i].Name == demo_scenarios.DemoAdventureGameName {
+		if games[i].Type == game_record.GameTypeAdventure {
 			found = &games[i]
 			break
 		}
 	}
-	require.NotNil(t, found, "should contain %q", demo_scenarios.DemoAdventureGameName)
-	require.Equal(t, game_record.GameTypeAdventure, found.GameType)
+	require.NotNil(t, found, "should contain type %q", game_record.GameTypeAdventure)
+	require.Equal(t, demo_scenarios.DemoAdventureGameName, found.Name)
 	require.NotEmpty(t, found.Description)
 
 	for i := 1; i < len(games); i++ {
-		require.True(t, games[i-1].Name <= games[i].Name, "games should be sorted by name")
+		require.True(t, games[i-1].Type <= games[i].Type, "games should be sorted by type")
 	}
 }
 
-func TestLookupDemoGame(t *testing.T) {
-	_, ok := LookupDemoGame(demo_scenarios.DemoAdventureGameName)
-	require.True(t, ok, "exact name should match")
+func TestLookupDemoGameByType(t *testing.T) {
+	_, ok := LookupDemoGameByType(game_record.GameTypeAdventure)
+	require.True(t, ok, "exact type should match")
 
-	_, ok = LookupDemoGame("the door beneath the staircase")
-	require.True(t, ok, "lowercase should match")
-
-	_, ok = LookupDemoGame("THE DOOR BENEATH THE STAIRCASE")
+	_, ok = LookupDemoGameByType("ADVENTURE")
 	require.True(t, ok, "uppercase should match")
 
-	_, ok = LookupDemoGame("Nonexistent Game")
-	require.False(t, ok, "unknown name should not match")
+	_, ok = LookupDemoGameByType("Adventure")
+	require.True(t, ok, "mixed case should match")
+
+	_, ok = LookupDemoGameByType("nonexistent_type")
+	require.False(t, ok, "unknown type should not match")
 }
 
 // --- internal helpers ---

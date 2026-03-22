@@ -60,11 +60,10 @@ if [ $# -eq 0 ]; then
     echo "❌ Arguments required."
     echo
     echo "Usage:"
-    echo "  ./tools/db-load-demo-game --list                                        List available demo games"
-    echo "  ./tools/db-load-demo-game --game \"<game name>\"                          Load as draft"
-    echo "  ./tools/db-load-demo-game --game \"<game name>\" --publish                Load and publish"
-    echo "  ./tools/db-load-demo-game --game \"<game name>\" --replace                Replace existing game"
-    echo "  ./tools/db-load-demo-game --game \"<game name>\" --replace --publish      Replace and publish"
+    echo "  ./tools/db-load-demo-game --list                          List available demo game types"
+    echo "  ./tools/db-load-demo-game --type <type>                   Load and publish demo game"
+    echo "  ./tools/db-load-demo-game --type <type> --replace         Replace existing demo game"
+    echo "  ./tools/db-load-demo-game --type <type> --delete          Delete demo game"
     echo
     exit 1
 fi

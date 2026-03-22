@@ -71,28 +71,31 @@ Loads static reference data expected to exist on any test environment.`,
 			{
 				Name:    "db-load-demo-game",
 				Aliases: []string{"lddg"},
-				Usage:   "Load a demo game by name (requires --game)",
+				Usage:   "Load or delete a demo game by type (requires --type)",
 				Description: `
-Loads a demo game into the target database.
-Use --list to print available demo games. Games are loaded as draft unless --publish is set.`,
+Loads a demo game into the target database and publishes it.
+Use --list to print available game types and names.
+Use --replace to remove an existing demo game before loading.
+Use --delete to remove an existing demo game without loading a new one.`,
 				Flags: []cli.Flag{
 					&cli.StringFlag{
-						Name:    "game",
-						Aliases: []string{"g"},
-						Usage:   "Game name (required; use --list to see options)",
+						Name:    "type",
+						Aliases: []string{"t"},
+						Usage:   "Game type (required; use --list to see options)",
 					},
 					&cli.BoolFlag{
 						Name:    "list",
 						Aliases: []string{"l"},
-						Usage:   "Print available demo games, then exit",
-					},
-					&cli.BoolFlag{
-						Name:  "publish",
-						Usage: "Publish loaded games (default: games remain draft)",
+						Usage:   "Print available demo game types and names, then exit",
 					},
 					&cli.BoolFlag{
 						Name:  "replace",
-						Usage: "Remove existing game with same name before loading",
+						Usage: "Remove existing demo game before loading",
+					},
+					&cli.BoolFlag{
+						Name:    "delete",
+						Aliases: []string{"d"},
+						Usage:   "Delete the demo game for this type (removes all dependents)",
 					},
 				},
 				Action: r.loadGameData,
