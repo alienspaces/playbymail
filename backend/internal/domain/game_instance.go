@@ -203,17 +203,14 @@ func (m *Domain) StartGameInstance(instanceID string) (*game_record.GameInstance
 		return nil, nil, fmt.Errorf("game instance must be in 'created' status to start")
 	}
 
-	// Check player count meets required count (only if required_player_count > 0)
-	if instance.RequiredPlayerCount > 0 {
-		playerCount, err := m.GetPlayerCountForGameInstance(instanceID)
-		if err != nil {
-			l.Warn("failed to get player count for game instance >%s< >%v<", instanceID, err)
-			return nil, nil, err
-		}
+	playerCount, err := m.GetPlayerCountForGameInstance(instanceID)
+	if err != nil {
+		l.Warn("failed to get player count for game instance >%s< >%v<", instanceID, err)
+		return nil, nil, err
+	}
 
-		if playerCount < instance.RequiredPlayerCount {
-			return nil, nil, fmt.Errorf("insufficient players: have %d, need %d", playerCount, instance.RequiredPlayerCount)
-		}
+	if playerCount < instance.RequiredPlayerCount {
+		return nil, nil, fmt.Errorf("insufficient players: have %d, need %d", playerCount, instance.RequiredPlayerCount)
 	}
 
 	// Populate all world and player instance data before transitioning status
@@ -234,9 +231,8 @@ func (m *Domain) StartGameInstance(instanceID string) (*game_record.GameInstance
 	now := time.Now()
 	instance.Status = game_record.GameInstanceStatusStarted
 	instance.StartedAt = nulltime.FromTime(now)
+	instance.NextTurnDueAt = nulltime.FromTime(now)
 	instance.CurrentTurn = 0
-
-	// NOTE: The turn processing job will determine when the next turn is due.
 
 	instance, err = m.UpdateGameInstanceRec(instance)
 	if err != nil {
@@ -448,11 +444,6 @@ func (m *Domain) GameInstanceHasAvailableCapacity(gameInstanceID string) (bool, 
 		return false, err
 	}
 
-	// If required_player_count is 0, there's no capacity limit
-	if instance.RequiredPlayerCount == 0 {
-		return true, nil
-	}
-
 	playerCount, err := m.GetPlayerCountForGameInstance(gameInstanceID)
 	if err != nil {
 		return false, err
@@ -502,17 +493,11 @@ func (m *Domain) GetActivePlayerCountForGameInstance(gameInstanceID string) (int
 }
 
 // GameInstanceReadyToStart returns true when the number of confirmed (active) players
-// meets the instance's required player count. Unlimited instances (RequiredPlayerCount == 0)
-// are never auto-started this way.
+// meets the instance's required player count.
 func (m *Domain) GameInstanceReadyToStart(gameInstanceID string) (bool, error) {
 	instance, err := m.GetGameInstanceRec(gameInstanceID, nil)
 	if err != nil {
 		return false, err
-	}
-
-	// Instances with no player requirement cannot be auto-started by count alone
-	if instance.RequiredPlayerCount == 0 {
-		return false, nil
 	}
 
 	activeCount, err := m.GetActivePlayerCountForGameInstance(gameInstanceID)

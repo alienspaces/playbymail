@@ -1,13 +1,16 @@
 {
-    "$schema": "http://json-schema.org/draft-07/schema#",
-    "$id": "http://playbymail.games/schema/account_schema/account.request.schema.json",
-    "title": "AccountRequest",
-    "type": "object",
-    "properties": {
-        "name": {
-            "type": "string"
-        }
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://playbymail.games/schema/account_schema/account.request.schema.json",
+  "title": "AccountRequest",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
     },
-    "required": [],
-    "additionalProperties": false
+    "timezone": {
+      "type": "string"
+    }
+  },
+  "required": [],
+  "additionalProperties": false
 }

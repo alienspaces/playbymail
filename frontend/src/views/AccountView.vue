@@ -29,26 +29,30 @@
         <div class="game-info">
           <DataItem label="Email" :value="account.email" />
           <DataItem label="Account Created" :value="formatDate(account.created_at)" />
-          <DataItem v-if="account.updated_at" label="Last Updated" :value="formatDate(account.updated_at)" />
+          <DataItem
+            v-if="account.updated_at"
+            label="Last Updated"
+            :value="formatDate(account.updated_at)"
+          />
         </div>
       </DataCard>
 
       <!-- Contact Information Cards -->
-      <DataCard 
-        v-for="contact in accountContacts" 
-        :key="contact.id"
-        title="Contact Information"
-      >
+      <DataCard v-for="contact in accountContacts" :key="contact.id" title="Contact Information">
         <div class="account-info">
           <DataItem label="Name" :value="contact.name" />
           <DataItem label="Address Line 1" :value="contact.postal_address_line1" />
-          <DataItem v-if="contact.postal_address_line2" label="Address Line 2" :value="contact.postal_address_line2" />
+          <DataItem
+            v-if="contact.postal_address_line2"
+            label="Address Line 2"
+            :value="contact.postal_address_line2"
+          />
           <DataItem label="State/Province" :value="contact.state_province" />
           <DataItem label="Country" :value="contact.country" />
           <DataItem label="Postal Code" :value="contact.postal_code" />
         </div>
       </DataCard>
-      
+
       <!-- Account ID Card -->
       <DataCard title="Account ID">
         <div class="account-info">
@@ -59,7 +63,10 @@
       <!-- Danger Zone Card -->
       <DataCard title="Danger Zone">
         <div class="account-info">
-          <p>This action cannot be undone. This will permanently delete your account and all associated data.</p>
+          <p>
+            This action cannot be undone. This will permanently delete your account and all
+            associated data.
+          </p>
         </div>
         <template #primary>
           <Button @click="showDeleteConfirmation" variant="danger" size="small">
@@ -87,90 +94,83 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
-import { useAuthStore } from '@/stores/auth';
-import { getMe, getAccountContacts, deleteAccountUser } from '@/api/account';
-import Button from '@/components/Button.vue';
-import DataCard from '@/components/DataCard.vue';
-import DataItem from '@/components/DataItem.vue';
-import ConfirmationModal from '@/components/ConfirmationModal.vue';
-import PageHeader from '@/components/PageHeader.vue';
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
+import { getMe, getAccountContacts, deleteAccountUser } from '@/api/account'
+import { formatDateTime } from '@/utils/dateFormat'
+import Button from '@/components/Button.vue'
+import DataCard from '@/components/DataCard.vue'
+import DataItem from '@/components/DataItem.vue'
+import ConfirmationModal from '@/components/ConfirmationModal.vue'
+import PageHeader from '@/components/PageHeader.vue'
 
-const router = useRouter();
-const authStore = useAuthStore();
+const router = useRouter()
+const authStore = useAuthStore()
 
-const account = ref(null);
-const accountContacts = ref([]);
-const loading = ref(true);
-const error = ref(null);
-const showDeleteModal = ref(false);
-const deleting = ref(false);
+const account = ref(null)
+const accountContacts = ref([])
+const loading = ref(true)
+const error = ref(null)
+const showDeleteModal = ref(false)
+const deleting = ref(false)
 
 onMounted(async () => {
-  await loadAccount();
-});
+  await loadAccount()
+})
 
 const loadAccount = async () => {
   try {
-    loading.value = true;
-    error.value = null;
-    account.value = await getMe();
-    
+    loading.value = true
+    error.value = null
+    account.value = await getMe()
+
     if (account.value && account.value.account_id && account.value.id) {
       try {
-        accountContacts.value = await getAccountContacts(account.value.account_id, account.value.id);
+        accountContacts.value = await getAccountContacts(account.value.account_id, account.value.id)
       } catch (err) {
         // Contacts might not exist yet, that's okay
-        console.log('No account contacts found:', err);
-        accountContacts.value = [];
+        console.log('No account contacts found:', err)
+        accountContacts.value = []
       }
     }
   } catch (err) {
-    error.value = err.message || 'Failed to load account information';
-    console.error('Error loading account:', err);
+    error.value = err.message || 'Failed to load account information'
+    console.error('Error loading account:', err)
   } finally {
-    loading.value = false;
+    loading.value = false
   }
-};
+}
 
 const showDeleteConfirmation = () => {
-  showDeleteModal.value = true;
-  error.value = null;
-};
+  showDeleteModal.value = true
+  error.value = null
+}
 
 const hideDeleteConfirmation = () => {
-  showDeleteModal.value = false;
-  error.value = null;
-};
+  showDeleteModal.value = false
+  error.value = null
+}
 
 const confirmDeleteAccount = async () => {
   try {
-    deleting.value = true;
-    error.value = null;
-    await deleteAccountUser(account.value.account_id, account.value.id);
-    
-    // Clear auth store and redirect to home
-    authStore.logout();
-    router.push('/');
-  } catch (err) {
-    error.value = err.message || 'Failed to delete account';
-    console.error('Error deleting account:', err);
-  } finally {
-    deleting.value = false;
-  }
-};
+    deleting.value = true
+    error.value = null
+    await deleteAccountUser(account.value.account_id, account.value.id)
 
-const formatDate = (dateString) => {
-  if (!dateString) return 'N/A';
-  return new Date(dateString).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
-};
+    // Clear auth store and redirect to home
+    authStore.logout()
+    router.push('/')
+  } catch (err) {
+    error.value = err.message || 'Failed to delete account'
+    console.error('Error deleting account:', err)
+  } finally {
+    deleting.value = false
+  }
+}
+
+const formatDate = (dateString) =>
+  formatDateTime(dateString, { timezone: authStore.accountTimezone })
 </script>
 
 <style scoped>
@@ -185,7 +185,7 @@ const formatDate = (dateString) => {
   padding: var(--space-xl);
   background: var(--color-bg);
   border-radius: var(--radius-lg);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .error-state button {

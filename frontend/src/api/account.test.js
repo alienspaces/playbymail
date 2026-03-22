@@ -12,6 +12,8 @@ vi.mock('./baseUrl', () => ({
 
 import {
   getMe,
+  getAccount,
+  updateAccount,
   deleteAccountUser,
   getAccountContacts,
   getAccountContact,
@@ -24,6 +26,85 @@ describe('account API', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockHandleApiError.mockImplementation((res) => res)
+  })
+
+  describe('getAccount', () => {
+    it('calls GET /api/v1/accounts/:accountId and returns data', async () => {
+      const accountData = { id: 'acct-1', name: 'Test', timezone: 'America/New_York' }
+      mockApiFetch.mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ data: accountData }),
+      })
+
+      const result = await getAccount('acct-1')
+
+      expect(mockApiFetch).toHaveBeenCalledWith(
+        'http://localhost:8080/api/v1/accounts/acct-1',
+        expect.objectContaining({
+          headers: expect.objectContaining({ Authorization: 'Bearer test-token' }),
+        }),
+      )
+      expect(result).toEqual(accountData)
+    })
+  })
+
+  describe('updateAccount', () => {
+    it('sends PUT with name to /api/v1/accounts/:accountId', async () => {
+      const updated = { id: 'acct-1', name: 'New Name', timezone: null }
+      mockApiFetch.mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ data: updated }),
+      })
+
+      const result = await updateAccount('acct-1', { name: 'New Name' })
+
+      expect(mockApiFetch).toHaveBeenCalledWith(
+        'http://localhost:8080/api/v1/accounts/acct-1',
+        expect.objectContaining({
+          method: 'PUT',
+          body: JSON.stringify({ name: 'New Name' }),
+        }),
+      )
+      expect(result).toEqual(updated)
+    })
+
+    it('sends PUT with timezone to /api/v1/accounts/:accountId', async () => {
+      const updated = { id: 'acct-1', name: '', timezone: 'Europe/London' }
+      mockApiFetch.mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ data: updated }),
+      })
+
+      const result = await updateAccount('acct-1', { timezone: 'Europe/London' })
+
+      expect(mockApiFetch).toHaveBeenCalledWith(
+        'http://localhost:8080/api/v1/accounts/acct-1',
+        expect.objectContaining({
+          method: 'PUT',
+          body: JSON.stringify({ timezone: 'Europe/London' }),
+        }),
+      )
+      expect(result).toEqual(updated)
+    })
+
+    it('sends PUT with null timezone to clear timezone', async () => {
+      const updated = { id: 'acct-1', name: '', timezone: null }
+      mockApiFetch.mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ data: updated }),
+      })
+
+      const result = await updateAccount('acct-1', { timezone: null })
+
+      expect(mockApiFetch).toHaveBeenCalledWith(
+        'http://localhost:8080/api/v1/accounts/acct-1',
+        expect.objectContaining({
+          method: 'PUT',
+          body: JSON.stringify({ timezone: null }),
+        }),
+      )
+      expect(result).toEqual(updated)
+    })
   })
 
   describe('getMe', () => {
@@ -40,7 +121,7 @@ describe('account API', () => {
         'http://localhost:8080/api/v1/me',
         expect.objectContaining({
           headers: expect.objectContaining({ Authorization: 'Bearer test-token' }),
-        })
+        }),
       )
       expect(result).toEqual(meData)
     })
@@ -54,7 +135,7 @@ describe('account API', () => {
 
       expect(mockApiFetch).toHaveBeenCalledWith(
         'http://localhost:8080/api/v1/accounts/acct-1/users/user-1',
-        expect.objectContaining({ method: 'DELETE' })
+        expect.objectContaining({ method: 'DELETE' }),
       )
       expect(result).toBe(true)
     })
@@ -74,7 +155,7 @@ describe('account API', () => {
         'http://localhost:8080/api/v1/accounts/acct-1/users/user-1/contacts',
         expect.objectContaining({
           headers: expect.objectContaining({ Authorization: 'Bearer test-token' }),
-        })
+        }),
       )
       expect(result).toEqual(contacts)
     })
@@ -102,7 +183,7 @@ describe('account API', () => {
 
       expect(mockApiFetch).toHaveBeenCalledWith(
         'http://localhost:8080/api/v1/accounts/acct-1/users/user-1/contacts/c1',
-        expect.any(Object)
+        expect.any(Object),
       )
       expect(result).toEqual(contact)
     })
@@ -124,7 +205,7 @@ describe('account API', () => {
         expect.objectContaining({
           method: 'POST',
           body: JSON.stringify(contactData),
-        })
+        }),
       )
       expect(result).toEqual(created)
     })
@@ -146,7 +227,7 @@ describe('account API', () => {
         expect.objectContaining({
           method: 'PUT',
           body: JSON.stringify(contactData),
-        })
+        }),
       )
       expect(result).toEqual(updated)
     })
@@ -160,7 +241,7 @@ describe('account API', () => {
 
       expect(mockApiFetch).toHaveBeenCalledWith(
         'http://localhost:8080/api/v1/accounts/acct-1/users/user-1/contacts/c1',
-        expect.objectContaining({ method: 'DELETE' })
+        expect.objectContaining({ method: 'DELETE' }),
       )
       expect(result).toBe(true)
     })

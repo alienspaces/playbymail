@@ -60,7 +60,7 @@ func Test_searchManyGameInstancesHandler(t *testing.T) {
 				ResponseDecoder: testutil.TestCaseResponseDecoderGeneric[game_schema.ManagerGameInstanceCollectionResponse],
 				ResponseCode:    http.StatusOK,
 			},
-			expectedCount: 2, // GameInstanceOneRef and GameInstanceCleanRef
+		expectedCount: 3, // GameInstanceOneRef, GameInstanceTwoRef, and GameInstanceCleanRef
 		},
 		{
 			TestCase: testutil.TestCase{
@@ -71,7 +71,7 @@ func Test_searchManyGameInstancesHandler(t *testing.T) {
 				RequestHeaders: testutil.AuthHeaderProManager,
 				RequestQueryParams: func(d harness.Data) map[string]any {
 					return map[string]any{
-						"page_size":   "2",
+						"page_size":   "10",
 						"page_number": "1",
 						"game_id":     gameRec.ID,
 					}
@@ -79,18 +79,18 @@ func Test_searchManyGameInstancesHandler(t *testing.T) {
 				ResponseDecoder: testutil.TestCaseResponseDecoderGeneric[game_schema.ManagerGameInstanceCollectionResponse],
 				ResponseCode:    http.StatusOK,
 			},
-			expectedCount: 2, // GameInstanceOneRef and GameInstanceCleanRef
-		},
-	}
+			expectedCount: 3, // GameInstanceOneRef, GameInstanceTwoRef, and GameInstanceCleanRef
+	},
+}
 
-	for _, testCase := range testCases {
-		t.Logf("Running test >%s<\n", testCase.Name)
+for _, testCase := range testCases {
+	t.Logf("Running test >%s<\n", testCase.Name)
 
-		t.Run(testCase.Name, func(t *testing.T) {
-			testFunc := func(method string, body any) {
-				require.NotNil(t, body, "Response body is not nil")
+	t.Run(testCase.Name, func(t *testing.T) {
+		testFunc := func(method string, body any) {
+			require.NotNil(t, body, "Response body is not nil")
 
-				resp := body.(game_schema.ManagerGameInstanceCollectionResponse)
+			resp := body.(game_schema.ManagerGameInstanceCollectionResponse)
 				require.NotNil(t, resp.Data, "Response data is not nil")
 				require.Equal(t, testCase.expectedCount, len(resp.Data), "Response contains expected number of instances")
 
@@ -146,7 +146,7 @@ func Test_getManyGameInstancesHandler(t *testing.T) {
 				ResponseDecoder: testutil.TestCaseResponseDecoderGeneric[game_schema.GameInstanceCollectionResponse],
 				ResponseCode:    http.StatusOK,
 			},
-			expectedCount: 2, // GameInstanceOneRef and GameInstanceCleanRef
+			expectedCount: 3, // GameInstanceOneRef, GameInstanceTwoRef, and GameInstanceCleanRef
 		},
 		{
 			TestCase: testutil.TestCase{
@@ -169,7 +169,7 @@ func Test_getManyGameInstancesHandler(t *testing.T) {
 				ResponseDecoder: testutil.TestCaseResponseDecoderGeneric[game_schema.GameInstanceCollectionResponse],
 				ResponseCode:    http.StatusOK,
 			},
-			expectedCount: 2, // GameInstanceOneRef and GameInstanceCleanRef
+			expectedCount: 3, // GameInstanceOneRef, GameInstanceTwoRef, and GameInstanceCleanRef
 		},
 	}
 
@@ -237,15 +237,15 @@ func Test_getOneGameInstanceHandler(t *testing.T) {
 				ResponseDecoder: testutil.TestCaseResponseDecoderGeneric[game_schema.GameInstanceResponse],
 				ResponseCode:    http.StatusOK,
 			},
-		expectResponse: func(d harness.Data) game_schema.GameInstanceResponse {
-			// GameInstanceOneRef has ShouldStartGameInstance true so harness starts it → status "started", CurrentTurn 0
-			return game_schema.GameInstanceResponse{
-				Data: &game_schema.GameInstanceResponseData{
-					Status:      "started",
-					CurrentTurn: 0,
-				},
-			}
-		},
+			expectResponse: func(d harness.Data) game_schema.GameInstanceResponse {
+				// GameInstanceOneRef has ShouldStartGameInstance true so harness starts it → status "started", CurrentTurn 0
+				return game_schema.GameInstanceResponse{
+					Data: &game_schema.GameInstanceResponseData{
+						Status:      "started",
+						CurrentTurn: 0,
+					},
+				}
+			},
 		},
 	}
 
@@ -309,7 +309,9 @@ func Test_createOneGameInstanceHandler(t *testing.T) {
 				},
 				RequestBody: func(d harness.Data) interface{} {
 					return game_schema.GameInstanceRequest{
-						GameID: gameRec.ID,
+						GameID:              gameRec.ID,
+						RequiredPlayerCount: 1,
+						DeliveryEmail:       true,
 					}
 				},
 				ResponseDecoder: testutil.TestCaseResponseDecoderGeneric[game_schema.GameInstanceResponse],
@@ -397,9 +399,9 @@ func Test_updateOneGameInstanceHandler(t *testing.T) {
 				ResponseDecoder: testutil.TestCaseResponseDecoderGeneric[game_schema.GameInstanceResponse],
 				ResponseCode:    http.StatusOK,
 			},
-		expectResponse: func(d harness.Data, req game_schema.GameInstanceRequest) game_schema.GameInstanceResponse {
-			// GameInstanceOneRef has ShouldStartGameInstance true so harness starts it → status "started"
-			return game_schema.GameInstanceResponse{
+			expectResponse: func(d harness.Data, req game_schema.GameInstanceRequest) game_schema.GameInstanceResponse {
+				// GameInstanceOneRef has ShouldStartGameInstance true so harness starts it → status "started"
+				return game_schema.GameInstanceResponse{
 					Data: &game_schema.GameInstanceResponseData{
 						GameID:      req.GameID,
 						Status:      "started",
@@ -513,11 +515,11 @@ func Test_startGameInstanceHandler(t *testing.T) {
 		require.NoError(t, err, "Test data teardown returns without error")
 	}()
 
-	// Use GameInstanceCleanRef: ShouldStartGameInstance is false so it stays "created"; test can start it
+	// Use GameInstanceTwoRef: has a player linked, ShouldStartGameInstance is false so it stays "created"; test can start it
 	gameRec, err := th.Data.GetGameRecByRef(harness.GameOneRef)
 	require.NoError(t, err, "GetGameRecByRef returns without error")
 
-	gameInstanceRec, err := th.Data.GetGameInstanceRecByRef(harness.GameInstanceCleanRef)
+	gameInstanceRec, err := th.Data.GetGameInstanceRecByRef(harness.GameInstanceTwoRef)
 	require.NoError(t, err, "GetGameInstanceRecByRef returns without error")
 
 	testCases := []struct {
@@ -566,6 +568,8 @@ func Test_startGameInstanceHandler(t *testing.T) {
 				require.Equal(t, xResp.CurrentTurn, aResp.CurrentTurn, "Current turn equals expected")
 				require.NotEmpty(t, aResp.ID, "Instance ID is not empty")
 				require.False(t, aResp.CreatedAt.IsZero(), "Instance CreatedAt is not zero")
+				require.NotNil(t, aResp.StartedAt, "StartedAt is set on start")
+				require.NotNil(t, aResp.NextTurnDueAt, "NextTurnDueAt is set on start")
 			}
 
 			testutil.RunTestCase(t, th, &testCase.TestCase, testFunc)
@@ -736,15 +740,15 @@ func Test_cancelGameInstanceHandler(t *testing.T) {
 				ResponseDecoder: testutil.TestCaseResponseDecoderGeneric[game_schema.GameInstanceResponse],
 				ResponseCode:    http.StatusOK,
 			},
-		expectResponse: func(d harness.Data) game_schema.GameInstanceResponse {
-			// GameInstanceOneRef was started (CurrentTurn 0); cancel does not reset current_turn
-			return game_schema.GameInstanceResponse{
-				Data: &game_schema.GameInstanceResponseData{
-					Status:      "cancelled",
-					CurrentTurn: 0,
-				},
-			}
-		},
+			expectResponse: func(d harness.Data) game_schema.GameInstanceResponse {
+				// GameInstanceOneRef was started (CurrentTurn 0); cancel does not reset current_turn
+				return game_schema.GameInstanceResponse{
+					Data: &game_schema.GameInstanceResponseData{
+						Status:      "cancelled",
+						CurrentTurn: 0,
+					},
+				}
+			},
 		},
 	}
 

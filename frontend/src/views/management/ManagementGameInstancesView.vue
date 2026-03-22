@@ -4,23 +4,23 @@
 -->
 <template>
   <div class="game-instances-view">
-    <PageHeader 
+    <PageHeader
       :title="`${selectedGame?.name || ''} - Game Instances`"
       subtitle="Manage active game sessions and monitor player activity"
       :showIcon="false"
       titleLevel="h2"
     />
-    
+
     <Button @click="goBack" variant="secondary" size="small" class="back-button">
       <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+        <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" />
       </svg>
       Back to Games
     </Button>
 
     <!-- Active Instances Section -->
     <div class="section">
-      <PageHeader 
+      <PageHeader
         title="Active Instances"
         actionText="Create Instance"
         :showIcon="false"
@@ -28,9 +28,9 @@
         @action="createInstance"
       />
 
-      <ResourceTable 
-        :columns="columns" 
-        :rows="activeInstances" 
+      <ResourceTable
+        :columns="columns"
+        :rows="activeInstances"
         :loading="gameInstancesStore.loading"
         :error="gameInstancesStore.error"
       >
@@ -51,7 +51,8 @@
         </template>
 
         <template #cell-player_count="{ row }">
-          {{ row.player_count || 0 }}{{ row.required_player_count > 0 ? ` / ${row.required_player_count}` : '' }}
+          {{ row.player_count || 0
+          }}{{ row.required_player_count > 0 ? ` / ${row.required_player_count}` : '' }}
         </template>
 
         <template #cell-delivery_methods="{ row }">
@@ -82,15 +83,11 @@
 
     <!-- Completed Instances Section -->
     <div class="section">
-      <PageHeader 
-        title="Completed Instances"
-        :showIcon="false"
-        titleLevel="h3"
-      />
+      <PageHeader title="Completed Instances" :showIcon="false" titleLevel="h3" />
 
-      <ResourceTable 
-        :columns="completedColumns" 
-        :rows="completedInstances" 
+      <ResourceTable
+        :columns="completedColumns"
+        :rows="completedInstances"
         :loading="gameInstancesStore.loading"
         :error="null"
       >
@@ -119,7 +116,10 @@
         </template>
       </ResourceTable>
 
-      <p v-if="!gameInstancesStore.loading && completedInstances.length === 0" class="empty-message">
+      <p
+        v-if="!gameInstancesStore.loading && completedInstances.length === 0"
+        class="empty-message"
+      >
         No completed instances yet.
       </p>
     </div>
@@ -151,28 +151,29 @@
 </template>
 
 <script setup>
-import { computed, onMounted } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
-import { useGamesStore } from '../../stores/games';
-import { useGameInstancesStore } from '../../stores/gameInstances';
-import { ref } from 'vue';
-import Button from '../../components/Button.vue';
-import PageHeader from '../../components/PageHeader.vue';
-import ResourceTable from '../../components/ResourceTable.vue';
-import TableActions from '../../components/TableActions.vue';
-import ResourceModalForm from '../../components/ResourceModalForm.vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { useGamesStore } from '../../stores/games'
+import { useGameInstancesStore } from '../../stores/gameInstances'
+import { useAuthStore } from '../../stores/auth'
+import { formatDateTime, formatDeadline as sharedFormatDeadline } from '../../utils/dateFormat'
+import Button from '../../components/Button.vue'
+import PageHeader from '../../components/PageHeader.vue'
+import ResourceTable from '../../components/ResourceTable.vue'
+import TableActions from '../../components/TableActions.vue'
+import ResourceModalForm from '../../components/ResourceModalForm.vue'
 
-const route = useRoute();
-const router = useRouter();
-const gamesStore = useGamesStore();
-const gameInstancesStore = useGameInstancesStore();
+const route = useRoute()
+const router = useRouter()
+const gamesStore = useGamesStore()
+const gameInstancesStore = useGameInstancesStore()
 
-const gameId = computed(() => route.params.gameId);
-const selectedGame = computed(() => gamesStore.games.find(g => g.id === gameId.value));
+const gameId = computed(() => route.params.gameId)
+const selectedGame = computed(() => gamesStore.games.find((g) => g.id === gameId.value))
 
 // Create instance modal state
-const showCreateModal = ref(false);
-const createModalError = ref('');
+const showCreateModal = ref(false)
+const createModalError = ref('')
 const instanceForm = ref({
   delivery_email: true,
   delivery_physical_post: false,
@@ -180,15 +181,15 @@ const instanceForm = ref({
   required_player_count: 1,
   is_closed_testing: false,
   turn_duration_hours: selectedGame.value?.turn_duration_hours || 0,
-  process_when_all_submitted: false
-});
+  process_when_all_submitted: false,
+})
 
-const isDraftGame = computed(() => selectedGame.value?.status === 'draft');
+const isDraftGame = computed(() => selectedGame.value?.status === 'draft')
 
 // Edit instance modal state
-const showEditModal = ref(false);
-const editModalError = ref('');
-const editingInstanceId = ref(null);
+const showEditModal = ref(false)
+const editModalError = ref('')
+const editingInstanceId = ref(null)
 const editInstanceForm = ref({
   turn_duration_hours: 0,
   required_player_count: 1,
@@ -196,7 +197,7 @@ const editInstanceForm = ref({
   delivery_physical_post: false,
   delivery_physical_local: false,
   process_when_all_submitted: false,
-});
+})
 
 const editInstanceFields = [
   {
@@ -205,7 +206,7 @@ const editInstanceFields = [
     type: 'number',
     required: true,
     min: 1,
-    placeholder: 'Hours between turns'
+    placeholder: 'Hours between turns',
   },
   {
     key: 'required_player_count',
@@ -213,33 +214,34 @@ const editInstanceFields = [
     type: 'number',
     required: true,
     min: 1,
-    placeholder: 'Minimum number of players required before game can start'
+    placeholder: 'Minimum number of players required before game can start',
   },
   {
     key: 'delivery_email',
     label: 'Email Delivery',
     type: 'checkbox',
-    checkboxLabel: 'Enable email delivery (web-based turn sheet viewer)'
+    checkboxLabel: 'Enable email delivery (web-based turn sheet viewer)',
   },
   {
     key: 'delivery_physical_post',
     label: 'Physical Post Delivery',
     type: 'checkbox',
-    checkboxLabel: 'Enable physical post delivery (traditional mail-based)'
+    checkboxLabel: 'Enable physical post delivery (traditional mail-based)',
   },
   {
     key: 'delivery_physical_local',
     label: 'Physical Local Delivery',
     type: 'checkbox',
-    checkboxLabel: 'Enable physical local delivery (convention/classroom - game master prints locally, players fill at table, manual scanning/submission)'
+    checkboxLabel:
+      'Enable physical local delivery (convention/classroom - game master prints locally, players fill at table, manual scanning/submission)',
   },
   {
     key: 'process_when_all_submitted',
     label: 'Auto-Process Turn',
     type: 'checkbox',
-    checkboxLabel: 'Automatically process the turn when all players have submitted'
+    checkboxLabel: 'Automatically process the turn when all players have submitted',
   },
-];
+]
 
 const instanceFields = computed(() => {
   const fields = [
@@ -247,19 +249,20 @@ const instanceFields = computed(() => {
       key: 'delivery_email',
       label: 'Email Delivery',
       type: 'checkbox',
-      checkboxLabel: 'Enable email delivery (web-based turn sheet viewer)'
+      checkboxLabel: 'Enable email delivery (web-based turn sheet viewer)',
     },
     {
       key: 'delivery_physical_post',
       label: 'Physical Post Delivery',
       type: 'checkbox',
-      checkboxLabel: 'Enable physical post delivery (traditional mail-based)'
+      checkboxLabel: 'Enable physical post delivery (traditional mail-based)',
     },
     {
       key: 'delivery_physical_local',
       label: 'Physical Local Delivery',
       type: 'checkbox',
-      checkboxLabel: 'Enable physical local delivery (convention/classroom - game master prints locally, players fill at table, manual scanning/submission)'
+      checkboxLabel:
+        'Enable physical local delivery (convention/classroom - game master prints locally, players fill at table, manual scanning/submission)',
     },
     {
       key: 'required_player_count',
@@ -267,7 +270,7 @@ const instanceFields = computed(() => {
       type: 'number',
       required: true,
       min: 1,
-      placeholder: 'Minimum number of players required before game can start'
+      placeholder: 'Minimum number of players required before game can start',
     },
     {
       key: 'turn_duration_hours',
@@ -275,33 +278,33 @@ const instanceFields = computed(() => {
       type: 'number',
       required: true,
       min: 1,
-      placeholder: 'Hours between turns'
+      placeholder: 'Hours between turns',
     },
     {
       key: 'process_when_all_submitted',
       label: 'Auto-Process Turn',
       type: 'checkbox',
-      checkboxLabel: 'Automatically process the turn when all players have submitted'
+      checkboxLabel: 'Automatically process the turn when all players have submitted',
     },
-  ];
+  ]
 
   if (isDraftGame.value) {
     fields.push({
       key: 'closed_testing_notice',
       type: 'info',
-      text: 'This game is unpublished. Instances are restricted to closed testing \u2014 players must be invited to join.'
-    });
+      text: 'This game is unpublished. Instances are restricted to closed testing \u2014 players must be invited to join.',
+    })
   } else {
     fields.push({
       key: 'is_closed_testing',
       label: 'Closed Testing',
       type: 'checkbox',
-      checkboxLabel: 'Enable closed testing mode (requires join game key for players to join)'
-    });
+      checkboxLabel: 'Enable closed testing mode (requires join game key for players to join)',
+    })
   }
 
-  return fields;
-});
+  return fields
+})
 
 const columns = [
   { key: 'id', label: 'Instance ID' },
@@ -310,82 +313,82 @@ const columns = [
   { key: 'player_count', label: 'Players' },
   { key: 'delivery_methods', label: 'Delivery Methods' },
   { key: 'next_turn_due_at', label: 'Next Turn Due' },
-  { key: 'started_at', label: 'Started' }
-];
+  { key: 'started_at', label: 'Started' },
+]
 
 const completedColumns = [
   { key: 'id', label: 'Instance ID' },
   { key: 'status', label: 'Status' },
   { key: 'current_turn', label: 'Final Turn' },
-  { key: 'completed_at', label: 'Completed' }
-];
+  { key: 'completed_at', label: 'Completed' },
+]
 
-const gameInstances = computed(() => gameInstancesStore.gameInstances);
+const gameInstances = computed(() => gameInstancesStore.gameInstances)
 
-const activeInstances = computed(() => 
-  gameInstances.value.filter(instance => 
-    instance.game_id === gameId.value && 
-    ['created', 'started', 'paused'].includes(instance.status)
-  )
-);
+const activeInstances = computed(() =>
+  gameInstances.value.filter(
+    (instance) =>
+      instance.game_id === gameId.value &&
+      ['created', 'started', 'paused'].includes(instance.status),
+  ),
+)
 
-const completedInstances = computed(() => 
-  gameInstances.value.filter(instance => 
-    instance.game_id === gameId.value && 
-    ['completed', 'cancelled'].includes(instance.status)
-  )
-);
+const completedInstances = computed(() =>
+  gameInstances.value.filter(
+    (instance) =>
+      instance.game_id === gameId.value && ['completed', 'cancelled'].includes(instance.status),
+  ),
+)
+
+let pollTimer = null
 
 onMounted(async () => {
   if (!gamesStore.games.length) {
-    await gamesStore.fetchGames();
+    await gamesStore.fetchGames()
   }
   if (selectedGame.value) {
-    gamesStore.setSelectedGame(selectedGame.value);
+    gamesStore.setSelectedGame(selectedGame.value)
   }
-  await loadGameInstances();
-});
+  await loadGameInstances()
+  pollTimer = setInterval(() => {
+    gameInstancesStore.pollGameInstances(gameId.value)
+  }, 30000)
+})
+
+onUnmounted(() => {
+  if (pollTimer) clearInterval(pollTimer)
+})
 
 const loadGameInstances = async () => {
   try {
-    await gameInstancesStore.fetchGameInstances(gameId.value);
+    await gameInstancesStore.fetchGameInstances(gameId.value)
   } catch (error) {
-    console.error('Failed to load game instances:', error);
+    console.error('Failed to load game instances:', error)
   }
-};
+}
 
 const getStatusLabel = (status) => {
   const labels = {
-    'created': 'Created',
-    'started': 'Running',
-    'paused': 'Paused',
-    'completed': 'Completed',
-    'cancelled': 'Cancelled'
-  };
-  return labels[status] || status;
-};
+    created: 'Created',
+    started: 'Running',
+    paused: 'Paused',
+    completed: 'Completed',
+    cancelled: 'Cancelled',
+  }
+  return labels[status] || status
+}
 
-const formatDate = (dateString) => {
-  if (!dateString) return 'N/A';
-  return new Date(dateString).toLocaleDateString();
-};
+const authStore = useAuthStore()
 
-const formatDeadline = (deadlineString) => {
-  if (!deadlineString) return 'N/A';
-  const deadline = new Date(deadlineString);
-  const now = new Date();
-  const diff = deadline - now;
-  
-  if (diff < 0) return 'Overdue';
-  if (diff < 24 * 60 * 60 * 1000) return 'Today';
-  if (diff < 48 * 60 * 60 * 1000) return 'Tomorrow';
-  
-  return deadline.toLocaleDateString();
-};
+const formatDate = (dateString) =>
+  formatDateTime(dateString, { timezone: authStore.accountTimezone })
+
+const formatDeadline = (deadlineString) =>
+  sharedFormatDeadline(deadlineString, { timezone: authStore.accountTimezone })
 
 const goBack = () => {
-  router.push('/admin');
-};
+  router.push('/admin')
+}
 
 const createInstance = () => {
   instanceForm.value = {
@@ -395,29 +398,29 @@ const createInstance = () => {
     required_player_count: 1,
     is_closed_testing: isDraftGame.value ? true : false,
     turn_duration_hours: selectedGame.value?.turn_duration_hours || 0,
-    process_when_all_submitted: false
-  };
-  createModalError.value = '';
-  showCreateModal.value = true;
-};
+    process_when_all_submitted: false,
+  }
+  createModalError.value = ''
+  showCreateModal.value = true
+}
 
 const closeCreateModal = () => {
-  showCreateModal.value = false;
-  createModalError.value = '';
-};
+  showCreateModal.value = false
+  createModalError.value = ''
+}
 
 const handleCreateInstance = async (formData) => {
-  createModalError.value = '';
-  
+  createModalError.value = ''
+
   // Ensure boolean values are properly set (checkboxes can be undefined)
-  const deliveryPhysicalPost = Boolean(formData.delivery_physical_post);
-  const deliveryPhysicalLocal = Boolean(formData.delivery_physical_local);
-  const deliveryEmail = Boolean(formData.delivery_email);
-  
+  const deliveryPhysicalPost = Boolean(formData.delivery_physical_post)
+  const deliveryPhysicalLocal = Boolean(formData.delivery_physical_local)
+  const deliveryEmail = Boolean(formData.delivery_email)
+
   // Validate at least one delivery method is selected
   if (!deliveryPhysicalPost && !deliveryPhysicalLocal && !deliveryEmail) {
-    createModalError.value = 'At least one delivery method must be enabled';
-    return;
+    createModalError.value = 'At least one delivery method must be enabled'
+    return
   }
 
   try {
@@ -428,28 +431,29 @@ const handleCreateInstance = async (formData) => {
       delivery_email: deliveryEmail,
       required_player_count: formData.required_player_count || 1,
       is_closed_testing: Boolean(formData.is_closed_testing),
-      turn_duration_hours: formData.turn_duration_hours || selectedGame.value?.turn_duration_hours || 0,
-      process_when_all_submitted: Boolean(formData.process_when_all_submitted)
-    };
+      turn_duration_hours:
+        formData.turn_duration_hours || selectedGame.value?.turn_duration_hours || 0,
+      process_when_all_submitted: Boolean(formData.process_when_all_submitted),
+    }
 
-    const createdInstance = await gameInstancesStore.createGameInstance(gameId.value, instanceData);
-    
+    const createdInstance = await gameInstancesStore.createGameInstance(gameId.value, instanceData)
+
     // Close modal and refresh list
-    closeCreateModal();
-    await loadGameInstances();
-    
+    closeCreateModal()
+    await loadGameInstances()
+
     // Navigate to instance details
     if (createdInstance && createdInstance.id) {
-      router.push(`/admin/games/${gameId.value}/instances/${createdInstance.id}`);
+      router.push(`/admin/games/${gameId.value}/instances/${createdInstance.id}`)
     }
   } catch (err) {
-    console.error('Failed to create instance:', err);
-    createModalError.value = err.message || 'Failed to create game instance';
+    console.error('Failed to create instance:', err)
+    createModalError.value = err.message || 'Failed to create game instance'
   }
-};
+}
 
 const openEditInstance = (instance) => {
-  editingInstanceId.value = instance.id;
+  editingInstanceId.value = instance.id
   editInstanceForm.value = {
     turn_duration_hours: instance.turn_duration_hours || 0,
     required_player_count: instance.required_player_count || 1,
@@ -457,31 +461,31 @@ const openEditInstance = (instance) => {
     delivery_physical_post: Boolean(instance.delivery_physical_post),
     delivery_physical_local: Boolean(instance.delivery_physical_local),
     process_when_all_submitted: Boolean(instance.process_when_all_submitted),
-  };
-  editModalError.value = '';
-  showEditModal.value = true;
-};
+  }
+  editModalError.value = ''
+  showEditModal.value = true
+}
 
 const closeEditModal = () => {
-  showEditModal.value = false;
-  editModalError.value = '';
-  editingInstanceId.value = null;
-};
+  showEditModal.value = false
+  editModalError.value = ''
+  editingInstanceId.value = null
+}
 
 const handleEditInstance = async (formData) => {
-  editModalError.value = '';
+  editModalError.value = ''
 
-  const deliveryEmail = Boolean(formData.delivery_email);
-  const deliveryPhysicalPost = Boolean(formData.delivery_physical_post);
-  const deliveryPhysicalLocal = Boolean(formData.delivery_physical_local);
+  const deliveryEmail = Boolean(formData.delivery_email)
+  const deliveryPhysicalPost = Boolean(formData.delivery_physical_post)
+  const deliveryPhysicalLocal = Boolean(formData.delivery_physical_local)
 
   if (!deliveryEmail && !deliveryPhysicalPost && !deliveryPhysicalLocal) {
-    editModalError.value = 'At least one delivery method must be enabled';
-    return;
+    editModalError.value = 'At least one delivery method must be enabled'
+    return
   }
 
   try {
-    const instance = gameInstances.value.find(i => i.id === editingInstanceId.value);
+    const instance = gameInstances.value.find((i) => i.id === editingInstanceId.value)
     await gameInstancesStore.updateGameInstance(gameId.value, editingInstanceId.value, {
       game_id: instance?.game_id || gameId.value,
       turn_duration_hours: formData.turn_duration_hours,
@@ -490,98 +494,104 @@ const handleEditInstance = async (formData) => {
       delivery_physical_post: deliveryPhysicalPost,
       delivery_physical_local: deliveryPhysicalLocal,
       process_when_all_submitted: Boolean(formData.process_when_all_submitted),
-    });
-    closeEditModal();
-    await loadGameInstances();
+    })
+    closeEditModal()
+    await loadGameInstances()
   } catch (err) {
-    console.error('Failed to update instance:', err);
-    editModalError.value = err.message || 'Failed to update game instance';
+    console.error('Failed to update instance:', err)
+    editModalError.value = err.message || 'Failed to update game instance'
   }
-};
+}
 
 const viewInstance = (instance) => {
-  router.push(`/admin/games/${gameId.value}/instances/${instance.id}`);
-};
+  router.push(`/admin/games/${gameId.value}/instances/${instance.id}`)
+}
 
 const startInstance = async (instance) => {
   try {
-    await gameInstancesStore.startGameInstance(gameId.value, instance.id);
-    await loadGameInstances();
+    await gameInstancesStore.startGameInstance(gameId.value, instance.id)
+    await loadGameInstances()
   } catch (error) {
-    console.error('Failed to start instance:', error);
+    console.error('Failed to start instance:', error)
   }
-};
+}
 
 const pauseInstance = async (instance) => {
   try {
-    await gameInstancesStore.pauseGameInstance(gameId.value, instance.id);
-    await loadGameInstances();
+    await gameInstancesStore.pauseGameInstance(gameId.value, instance.id)
+    await loadGameInstances()
   } catch (error) {
-    console.error('Failed to pause instance:', error);
+    console.error('Failed to pause instance:', error)
   }
-};
+}
 
 const resumeInstance = async (instance) => {
   try {
-    await gameInstancesStore.resumeGameInstance(gameId.value, instance.id);
-    await loadGameInstances();
+    await gameInstancesStore.resumeGameInstance(gameId.value, instance.id)
+    await loadGameInstances()
   } catch (error) {
-    console.error('Failed to resume instance:', error);
+    console.error('Failed to resume instance:', error)
   }
-};
+}
 
 const cancelInstance = async (instance) => {
-  if (!confirm(`Are you sure you want to cancel this game instance?`)) return;
-  
+  if (!confirm(`Are you sure you want to cancel this game instance?`)) return
+
   try {
-    await gameInstancesStore.cancelGameInstance(gameId.value, instance.id);
-    await loadGameInstances();
+    await gameInstancesStore.cancelGameInstance(gameId.value, instance.id)
+    await loadGameInstances()
   } catch (error) {
-    console.error('Failed to cancel instance:', error);
+    console.error('Failed to cancel instance:', error)
   }
-};
+}
 
 const deleteInstance = async (instance) => {
-  if (!confirm(`Are you sure you want to delete this game instance? This cannot be undone.`)) return;
+  if (!confirm(`Are you sure you want to delete this game instance? This cannot be undone.`)) return
 
   try {
-    await gameInstancesStore.deleteGameInstance(gameId.value, instance.id);
-    await loadGameInstances();
+    await gameInstancesStore.deleteGameInstance(gameId.value, instance.id)
+    await loadGameInstances()
   } catch (error) {
-    console.error('Failed to delete instance:', error);
+    console.error('Failed to delete instance:', error)
   }
-};
+}
 
 const getActiveInstanceActions = (instance) => {
-  const actions = [
-    { key: 'view', label: 'View Details', handler: () => viewInstance(instance) }
-  ];
+  const actions = [{ key: 'view', label: 'View Details', handler: () => viewInstance(instance) }]
 
   if (instance.status === 'created') {
-    actions.push({ key: 'edit', label: 'Edit', handler: () => openEditInstance(instance) });
-    actions.push({ key: 'start', label: 'Start', handler: () => startInstance(instance) });
+    actions.push({ key: 'edit', label: 'Edit', handler: () => openEditInstance(instance) })
+    actions.push({ key: 'start', label: 'Start', handler: () => startInstance(instance) })
   } else if (instance.status === 'started') {
-    actions.push({ key: 'pause', label: 'Pause', handler: () => pauseInstance(instance) });
+    actions.push({ key: 'pause', label: 'Pause', handler: () => pauseInstance(instance) })
   } else if (instance.status === 'paused') {
-    actions.push({ key: 'resume', label: 'Resume', handler: () => resumeInstance(instance) });
+    actions.push({ key: 'resume', label: 'Resume', handler: () => resumeInstance(instance) })
   }
 
   if (['created', 'started', 'paused'].includes(instance.status)) {
-    actions.push({ key: 'cancel', label: 'Cancel', danger: true, handler: () => cancelInstance(instance) });
+    actions.push({
+      key: 'cancel',
+      label: 'Cancel',
+      danger: true,
+      handler: () => cancelInstance(instance),
+    })
   }
 
-  return actions;
-};
+  return actions
+}
 
 const getCompletedInstanceActions = (instance) => {
-  const actions = [
-    { key: 'view', label: 'View Details', handler: () => viewInstance(instance) }
-  ];
+  const actions = [{ key: 'view', label: 'View Details', handler: () => viewInstance(instance) }]
   if (instance.status === 'cancelled') {
-    actions.push({ key: 'delete', label: 'Delete', danger: true, handler: () => deleteInstance(instance) });
+    actions.push({
+      key: 'delete',
+      label: 'Delete',
+      danger: true,
+      handler: () => deleteInstance(instance),
+    })
   }
-  return actions;
-};
+  return actions
+}
 </script>
 
 <style scoped>

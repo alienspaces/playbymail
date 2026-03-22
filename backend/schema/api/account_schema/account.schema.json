@@ -1,34 +1,29 @@
 {
-    "$schema": "http://json-schema.org/draft-07/schema#",
-    "$id": "http://playbymail.games/schema/account_schema/account.schema.json",
-    "title": "Account",
-    "type": "object",
-    "properties": {
-        "created_at": {
-            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/created_at"
-        },
-        "id": {
-            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
-        },
-        "name": {
-            "type": "string"
-        },
-        "updated_at": {
-            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/updated_at"
-        },
-        "status": {
-            "type": "string",
-            "enum": [
-                "active",
-                "disabled"
-            ]
-        }
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://playbymail.games/schema/account_schema/account.schema.json",
+  "title": "Account",
+  "type": "object",
+  "properties": {
+    "created_at": {
+      "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/created_at"
     },
-    "required": [
-        "id",
-        "name",
-        "created_at",
-        "status"
-    ],
-    "additionalProperties": false
+    "id": {
+      "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
+    },
+    "name": {
+      "type": "string"
+    },
+    "timezone": {
+      "type": "string"
+    },
+    "updated_at": {
+      "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/updated_at"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["active", "disabled"]
+    }
+  },
+  "required": ["id", "name", "created_at", "status"],
+  "additionalProperties": false
 }

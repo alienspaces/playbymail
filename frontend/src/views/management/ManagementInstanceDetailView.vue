@@ -53,26 +53,51 @@
           <div class="info-item">
             <span class="label">Players</span>
             <span class="value">
-              {{ instance.player_count || 0 }}{{ instance.required_player_count > 0 ? ` /
-              ${instance.required_player_count}` : '' }}
+              {{ instance.player_count || 0
+              }}{{
+                instance.required_player_count > 0
+                  ? ` /
+              ${instance.required_player_count}`
+                  : ''
+              }}
             </span>
           </div>
           <div class="info-item">
             <span class="label">Delivery Methods</span>
             <span class="delivery-methods">
-              <span v-if="instance.delivery_physical_post" class="delivery-badge delivery-physical-post">Post</span>
-              <span v-if="instance.delivery_physical_local" class="delivery-badge delivery-physical-local">Local</span>
-              <span v-if="instance.delivery_email" class="delivery-badge delivery-email">Email</span>
               <span
-                v-if="!instance.delivery_physical_post && !instance.delivery_physical_local && !instance.delivery_email"
-                class="no-delivery-methods">
+                v-if="instance.delivery_physical_post"
+                class="delivery-badge delivery-physical-post"
+                >Post</span
+              >
+              <span
+                v-if="instance.delivery_physical_local"
+                class="delivery-badge delivery-physical-local"
+                >Local</span
+              >
+              <span v-if="instance.delivery_email" class="delivery-badge delivery-email"
+                >Email</span
+              >
+              <span
+                v-if="
+                  !instance.delivery_physical_post &&
+                  !instance.delivery_physical_local &&
+                  !instance.delivery_email
+                "
+                class="no-delivery-methods"
+              >
                 <em>None</em>
               </span>
             </span>
           </div>
           <div class="info-item">
             <span class="label">Closed Testing</span>
-            <span :class="['testing-badge', instance.is_closed_testing ? 'testing-enabled' : 'testing-disabled']">
+            <span
+              :class="[
+                'testing-badge',
+                instance.is_closed_testing ? 'testing-enabled' : 'testing-disabled',
+              ]"
+            >
               {{ instance.is_closed_testing ? 'Enabled' : 'Disabled' }}
             </span>
           </div>
@@ -109,32 +134,57 @@
           <div v-if="instance.status === 'created'" class="player-status">
             <p v-if="instance.required_player_count > 0" class="status-message">
               <span v-if="canStartGame" class="status-ready">
-                ✓ Ready to start ({{ instance.player_count || 0 }}/{{ instance.required_player_count }} players)
+                ✓ Ready to start ({{ instance.player_count || 0 }}/{{
+                  instance.required_player_count
+                }}
+                players)
               </span>
               <span v-else class="status-waiting">
-                ⏳ Waiting for players ({{ instance.player_count || 0 }}/{{ instance.required_player_count }})
+                ⏳ Waiting for players ({{ instance.player_count || 0 }}/{{
+                  instance.required_player_count
+                }})
               </span>
             </p>
           </div>
           <div class="controls-grid">
-            <Button v-if="instance.status === 'created'" @click="startInstance" variant="primary"
-              :disabled="controlLoading || !canStartGame">
+            <Button
+              v-if="instance.status === 'created'"
+              @click="startInstance"
+              variant="primary"
+              :disabled="controlLoading || !canStartGame"
+            >
               Start Game
             </Button>
-            <Button v-if="instance.status === 'started'" @click="pauseInstance" variant="warning"
-              :disabled="controlLoading">
+            <Button
+              v-if="instance.status === 'started'"
+              @click="pauseInstance"
+              variant="warning"
+              :disabled="controlLoading"
+            >
               Pause Game
             </Button>
-            <Button v-if="instance.status === 'paused'" @click="resumeInstance" variant="success"
-              :disabled="controlLoading">
+            <Button
+              v-if="instance.status === 'paused'"
+              @click="resumeInstance"
+              variant="success"
+              :disabled="controlLoading"
+            >
               Resume Game
             </Button>
-            <Button v-if="['created', 'started', 'paused'].includes(instance.status)" @click="resetInstance"
-              variant="warning" :disabled="controlLoading">
+            <Button
+              v-if="['created', 'started', 'paused'].includes(instance.status)"
+              @click="resetInstance"
+              variant="warning"
+              :disabled="controlLoading"
+            >
               Reset Instance
             </Button>
-            <Button v-if="['created', 'started', 'paused'].includes(instance.status)" @click="cancelInstance"
-              variant="danger" :disabled="controlLoading">
+            <Button
+              v-if="['created', 'started', 'paused'].includes(instance.status)"
+              @click="cancelInstance"
+              variant="danger"
+              :disabled="controlLoading"
+            >
               Cancel Game
             </Button>
           </div>
@@ -145,22 +195,36 @@
       <DataCard v-if="instance.is_closed_testing" title="Closed Testing">
         <div class="closed-testing-section">
           <div class="closed-testing-info">
-            <p class="info-text">This instance is in closed testing mode. Share the join link with testers or invite
-              them via email.</p>
+            <p class="info-text">
+              This instance is in closed testing mode. Share the join link with testers or invite
+              them via email.
+            </p>
           </div>
           <div class="closed-testing-controls">
             <div class="join-link-control">
               <Button @click="copyJoinLink" variant="secondary" :disabled="joinLinkLoading">
                 {{ joinLinkCopied ? '✓ Link Copied!' : 'Copy Join Game Link' }}
               </Button>
-              <input v-if="joinLinkUrl" type="text" :value="fullJoinLinkUrl" readonly class="join-link-input"
-                ref="joinLinkInput" />
+              <input
+                v-if="joinLinkUrl"
+                type="text"
+                :value="fullJoinLinkUrl"
+                readonly
+                class="join-link-input"
+                ref="joinLinkInput"
+              />
             </div>
             <div class="invite-tester-control">
               <form @submit.prevent="inviteTester" class="invite-form">
                 <div class="form-group">
-                  <input v-model="testerEmail" type="email" placeholder="Enter tester email address" required
-                    class="email-input" :disabled="inviteLoading" />
+                  <input
+                    v-model="testerEmail"
+                    type="email"
+                    placeholder="Enter tester email address"
+                    required
+                    class="email-input"
+                    :disabled="inviteLoading"
+                  />
                   <Button type="submit" variant="primary" :disabled="inviteLoading">
                     {{ inviteLoading ? 'Sending...' : 'Invite Tester' }}
                   </Button>
@@ -179,8 +243,12 @@
 
       <!-- Game Instance Parameters Section -->
       <DataCard title="Game Instance Parameters">
-        <ResourceTable :columns="parameterColumns" :rows="parameterRows" :loading="instanceParametersLoading"
-          :error="null">
+        <ResourceTable
+          :columns="parameterColumns"
+          :rows="parameterRows"
+          :loading="instanceParametersLoading"
+          :error="null"
+        >
           <template #cell-parameter="{ row }">
             <div class="param-info">
               <strong>{{ row.description }}</strong>
@@ -209,7 +277,10 @@
             </span>
           </template>
           <template #actions="{ row }">
-            <TableActions v-if="instance && instance.status === 'created'" :actions="getParameterActions(row)" />
+            <TableActions
+              v-if="instance && instance.status === 'created'"
+              :actions="getParameterActions(row)"
+            />
             <span v-else class="locked-message">
               <em>Locked</em>
             </span>
@@ -240,26 +311,52 @@
           <form @submit.prevent="saveParameter" class="parameter-form">
             <div class="form-group">
               <label for="parameterKey">Parameter</label>
-              <input id="parameterKey" :value="parameterForm.parameter_key" type="text" disabled
-                class="disabled-input" />
+              <input
+                id="parameterKey"
+                :value="parameterForm.parameter_key"
+                type="text"
+                disabled
+                class="disabled-input"
+              />
               <small class="help-text">{{ getEditingParameterType() }}</small>
             </div>
 
             <div class="form-group">
               <label for="parameterValue">Value</label>
-              <input v-if="selectedParameterType === 'string'" id="parameterValue"
-                v-model="parameterForm.parameter_value" type="text" required :placeholder="getParameterPlaceholder()" />
-              <input v-else-if="selectedParameterType === 'integer'" id="parameterValue"
-                v-model="parameterForm.parameter_value" type="number" required
-                :placeholder="getParameterPlaceholder()" />
-              <select v-else-if="selectedParameterType === 'boolean'" id="parameterValue"
-                v-model="parameterForm.parameter_value" required>
+              <input
+                v-if="selectedParameterType === 'string'"
+                id="parameterValue"
+                v-model="parameterForm.parameter_value"
+                type="text"
+                required
+                :placeholder="getParameterPlaceholder()"
+              />
+              <input
+                v-else-if="selectedParameterType === 'integer'"
+                id="parameterValue"
+                v-model="parameterForm.parameter_value"
+                type="number"
+                required
+                :placeholder="getParameterPlaceholder()"
+              />
+              <select
+                v-else-if="selectedParameterType === 'boolean'"
+                id="parameterValue"
+                v-model="parameterForm.parameter_value"
+                required
+              >
                 <option value="">Select value...</option>
                 <option value="true">True</option>
                 <option value="false">False</option>
               </select>
-              <input v-else id="parameterValue" v-model="parameterForm.parameter_value" type="text" required
-                :placeholder="getParameterPlaceholder()" />
+              <input
+                v-else
+                id="parameterValue"
+                v-model="parameterForm.parameter_value"
+                type="text"
+                required
+                :placeholder="getParameterPlaceholder()"
+              />
               <small v-if="getEditingParameterDefault()" class="help-text">
                 Default: {{ getEditingParameterDefault() }}
               </small>
@@ -280,56 +377,57 @@
           </form>
         </div>
       </div>
-
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
-import { useGamesStore } from '../../stores/games';
-import { useGameInstancesStore } from '../../stores/gameInstances';
-import { useGameInstanceParametersStore } from '../../stores/gameInstanceParameters';
-import { useGameParametersStore } from '../../stores/gameParameters';
-import { getJoinGameLink, inviteTester as apiInviteTester } from '../../api/gameInstances';
-import Button from '../../components/Button.vue';
-import TableActions from '../../components/TableActions.vue';
-import DataCard from '../../components/DataCard.vue';
-import ResourceTable from '../../components/ResourceTable.vue';
-import ResourceModalForm from '../../components/ResourceModalForm.vue';
+import { ref, computed, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { useGamesStore } from '../../stores/games'
+import { useGameInstancesStore } from '../../stores/gameInstances'
+import { useGameInstanceParametersStore } from '../../stores/gameInstanceParameters'
+import { useGameParametersStore } from '../../stores/gameParameters'
+import { useAuthStore } from '../../stores/auth'
+import { formatDateTime, formatDeadline as sharedFormatDeadline } from '../../utils/dateFormat'
+import { getJoinGameLink, inviteTester as apiInviteTester } from '../../api/gameInstances'
+import Button from '../../components/Button.vue'
+import TableActions from '../../components/TableActions.vue'
+import DataCard from '../../components/DataCard.vue'
+import ResourceTable from '../../components/ResourceTable.vue'
+import ResourceModalForm from '../../components/ResourceModalForm.vue'
 
-const route = useRoute();
-const router = useRouter();
-const gamesStore = useGamesStore();
-const gameInstancesStore = useGameInstancesStore();
-const gameInstanceParametersStore = useGameInstanceParametersStore();
-const gameParametersStore = useGameParametersStore();
+const route = useRoute()
+const router = useRouter()
+const gamesStore = useGamesStore()
+const gameInstancesStore = useGameInstancesStore()
+const gameInstanceParametersStore = useGameInstanceParametersStore()
+const gameParametersStore = useGameParametersStore()
 
-const gameId = computed(() => route.params.gameId);
-const instanceId = computed(() => route.params.instanceId);
-const selectedGame = computed(() => gamesStore.games.find(g => g.id === gameId.value));
+const gameId = computed(() => route.params.gameId)
+const instanceId = computed(() => route.params.instanceId)
+const selectedGame = computed(() => gamesStore.games.find((g) => g.id === gameId.value))
 
-const loading = ref(false);
-const controlLoading = ref(false);
-const instanceParametersLoading = ref(false);
-const error = ref('');
-const instance = ref(null);
-const instanceParameters = ref([]);
+const loading = ref(false)
+const controlLoading = ref(false)
+const instanceParametersLoading = ref(false)
+const error = ref('')
+const instance = ref(null)
+const instanceParameters = ref([])
 
 // Closed testing state
-const joinLinkUrl = ref('');
-const joinLinkLoading = ref(false);
-const joinLinkCopied = ref(false);
-const joinLinkInput = ref(null);
-const testerEmail = ref('');
-const inviteLoading = ref(false);
-const inviteError = ref('');
-const inviteSuccess = ref(false);
+const joinLinkUrl = ref('')
+const joinLinkLoading = ref(false)
+const joinLinkCopied = ref(false)
+const joinLinkInput = ref(null)
+const testerEmail = ref('')
+const inviteLoading = ref(false)
+const inviteError = ref('')
+const inviteSuccess = ref(false)
 
 // Edit instance modal state
-const showEditModal = ref(false);
-const editModalError = ref('');
+const showEditModal = ref(false)
+const editModalError = ref('')
 const editInstanceForm = ref({
   turn_duration_hours: 0,
   required_player_count: 1,
@@ -337,7 +435,7 @@ const editInstanceForm = ref({
   delivery_physical_post: false,
   delivery_physical_local: false,
   process_when_all_submitted: false,
-});
+})
 
 const editInstanceFields = [
   {
@@ -346,7 +444,7 @@ const editInstanceFields = [
     type: 'number',
     required: true,
     min: 1,
-    placeholder: 'Hours between turns'
+    placeholder: 'Hours between turns',
   },
   {
     key: 'required_player_count',
@@ -354,167 +452,172 @@ const editInstanceFields = [
     type: 'number',
     required: true,
     min: 1,
-    placeholder: 'Minimum number of players required before game can start'
+    placeholder: 'Minimum number of players required before game can start',
   },
   {
     key: 'delivery_email',
     label: 'Email Delivery',
     type: 'checkbox',
-    checkboxLabel: 'Enable email delivery (web-based turn sheet viewer)'
+    checkboxLabel: 'Enable email delivery (web-based turn sheet viewer)',
   },
   {
     key: 'delivery_physical_post',
     label: 'Physical Post Delivery',
     type: 'checkbox',
-    checkboxLabel: 'Enable physical post delivery (traditional mail-based)'
+    checkboxLabel: 'Enable physical post delivery (traditional mail-based)',
   },
   {
     key: 'delivery_physical_local',
     label: 'Physical Local Delivery',
     type: 'checkbox',
-    checkboxLabel: 'Enable physical local delivery (convention/classroom - game master prints locally, players fill at table, manual scanning/submission)'
+    checkboxLabel:
+      'Enable physical local delivery (convention/classroom - game master prints locally, players fill at table, manual scanning/submission)',
   },
   {
     key: 'process_when_all_submitted',
     label: 'Auto-Process Turn',
     type: 'checkbox',
-    checkboxLabel: 'Automatically process the turn when all players have submitted'
+    checkboxLabel: 'Automatically process the turn when all players have submitted',
   },
-];
+]
 
 // Computed: Check if game can be started
 const canStartGame = computed(() => {
-  if (!instance.value) return false;
-  if (instance.value.status !== 'created') return false;
-  if (instance.value.required_player_count === 0) return true; // No requirement
-  return (instance.value.player_count || 0) >= instance.value.required_player_count;
-});
+  if (!instance.value) return false
+  if (instance.value.status !== 'created') return false
+  if (instance.value.required_player_count === 0) return true // No requirement
+  return (instance.value.player_count || 0) >= instance.value.required_player_count
+})
 
 // Parameter management state
-const showEditParameterModal = ref(false);
-const savingParameter = ref(false);
-const parameterError = ref('');
+const showEditParameterModal = ref(false)
+const savingParameter = ref(false)
+const parameterError = ref('')
 const parameterForm = ref({
   parameter_key: '',
-  parameter_value: ''
-});
-const editingParameterId = ref(null);
+  parameter_value: '',
+})
+const editingParameterId = ref(null)
 
 // Available parameters for the game type
 const availableParameters = computed(() => {
-  if (!selectedGame.value) return [];
-  return gameParametersStore.getParametersByGameType(selectedGame.value.game_type);
-});
+  if (!selectedGame.value) return []
+  return gameParametersStore.getParametersByGameType(selectedGame.value.game_type)
+})
 
 // All available parameters, including those not yet configured for this instance
 const allAvailableParameters = computed(() => {
-  const allParams = [...availableParameters.value];
+  const allParams = [...availableParameters.value]
   // Add a 'configured' property to indicate if it's already in the instance's parameters
-  allParams.forEach(param => {
-    param.configured = instanceParameters.value.some(ip => ip.parameter_key === param.config_key);
-  });
-  return allParams;
-});
+  allParams.forEach((param) => {
+    param.configured = instanceParameters.value.some((ip) => ip.parameter_key === param.config_key)
+  })
+  return allParams
+})
 
 // ResourceTable columns for parameters
 const parameterColumns = [
   { key: 'parameter', label: 'Parameter' },
   { key: 'type', label: 'Type' },
   { key: 'current_value', label: 'Current Value' },
-  { key: 'default_value', label: 'Default Value' }
-];
+  { key: 'default_value', label: 'Default Value' },
+]
 
 // ResourceTable rows for parameters (using allAvailableParameters as rows)
 const parameterRows = computed(() => {
-  return allAvailableParameters.value.map(param => ({
+  return allAvailableParameters.value.map((param) => ({
     id: param.config_key,
-    ...param
-  }));
-});
+    ...param,
+  }))
+})
 
 // Selected parameter type for form validation
 const selectedParameterType = computed(() => {
-  if (!parameterForm.value.parameter_key) return '';
-  const param = availableParameters.value.find(p => p.config_key === parameterForm.value.parameter_key);
-  return param ? param.value_type : '';
-});
+  if (!parameterForm.value.parameter_key) return ''
+  const param = availableParameters.value.find(
+    (p) => p.config_key === parameterForm.value.parameter_key,
+  )
+  return param ? param.value_type : ''
+})
 
 onMounted(async () => {
-  await loadInstance();
-  await loadInstanceParameters();
-  await loadGameParameters();
-});
+  await loadInstance()
+  await loadInstanceParameters()
+  await loadGameParameters()
+})
 
 const loadInstance = async () => {
-  loading.value = true;
-  error.value = '';
+  loading.value = true
+  error.value = ''
 
   try {
     if (!selectedGame.value) {
-      await gamesStore.fetchGames();
+      await gamesStore.fetchGames()
     }
 
-    const instanceData = await gameInstancesStore.getGameInstance(gameId.value, instanceId.value);
-    instance.value = instanceData;
+    const instanceData = await gameInstancesStore.getGameInstance(gameId.value, instanceId.value)
+    instance.value = instanceData
   } catch (err) {
-    error.value = err.message || 'Failed to load instance details';
+    error.value = err.message || 'Failed to load instance details'
   } finally {
-    loading.value = false;
+    loading.value = false
   }
-};
+}
 
 const loadInstanceParameters = async () => {
-  if (!instanceId.value) return;
+  if (!instanceId.value) return
 
-  instanceParametersLoading.value = true;
+  instanceParametersLoading.value = true
   try {
-    await gameInstanceParametersStore.fetchGameInstanceParameters(gameId.value, instanceId.value);
-    instanceParameters.value = gameInstanceParametersStore.getParametersByGameInstanceId(instanceId.value);
+    await gameInstanceParametersStore.fetchGameInstanceParameters(gameId.value, instanceId.value)
+    instanceParameters.value = gameInstanceParametersStore.getParametersByGameInstanceId(
+      instanceId.value,
+    )
   } catch (err) {
-    console.error('Failed to load instance parameters:', err);
+    console.error('Failed to load instance parameters:', err)
   } finally {
-    instanceParametersLoading.value = false;
+    instanceParametersLoading.value = false
   }
-};
+}
 
 const loadGameParameters = async () => {
-  if (!selectedGame.value) return;
+  if (!selectedGame.value) return
 
   try {
-    await gameParametersStore.fetchGameParameters();
+    await gameParametersStore.fetchGameParameters()
   } catch (err) {
-    console.error('Failed to load game parameters:', err);
+    console.error('Failed to load game parameters:', err)
   }
-};
+}
 
 const getStatusLabel = (status) => {
   const labels = {
-    'created': 'Created',
-    'started': 'Started',
-    'paused': 'Paused',
-    'completed': 'Completed',
-    'cancelled': 'Cancelled'
-  };
-  return labels[status] || status;
-};
+    created: 'Created',
+    started: 'Started',
+    paused: 'Paused',
+    completed: 'Completed',
+    cancelled: 'Cancelled',
+  }
+  return labels[status] || status
+}
 
-const formatDate = (dateString) => {
-  if (!dateString) return 'N/A';
-  return new Date(dateString).toLocaleString();
-};
+const authStore = useAuthStore()
+
+const formatDate = (dateString) =>
+  formatDateTime(dateString, { timezone: authStore.accountTimezone })
 
 const formatTurnDuration = (hours) => {
-  if (!hours) return '0 hours (immediate)';
+  if (!hours) return '0 hours (immediate)'
   if (hours % (24 * 7) === 0) {
-    const weeks = hours / (24 * 7);
-    return `${weeks} week${weeks === 1 ? '' : 's'}`;
+    const weeks = hours / (24 * 7)
+    return `${weeks} week${weeks === 1 ? '' : 's'}`
   }
   if (hours % 24 === 0) {
-    const days = hours / 24;
-    return `${days} day${days === 1 ? '' : 's'}`;
+    const days = hours / 24
+    return `${days} day${days === 1 ? '' : 's'}`
   }
-  return `${hours} hour${hours === 1 ? '' : 's'}`;
-};
+  return `${hours} hour${hours === 1 ? '' : 's'}`
+}
 
 const openEditInstance = () => {
   editInstanceForm.value = {
@@ -524,26 +627,26 @@ const openEditInstance = () => {
     delivery_physical_post: Boolean(instance.value.delivery_physical_post),
     delivery_physical_local: Boolean(instance.value.delivery_physical_local),
     process_when_all_submitted: Boolean(instance.value.process_when_all_submitted),
-  };
-  editModalError.value = '';
-  showEditModal.value = true;
-};
+  }
+  editModalError.value = ''
+  showEditModal.value = true
+}
 
 const closeEditModal = () => {
-  showEditModal.value = false;
-  editModalError.value = '';
-};
+  showEditModal.value = false
+  editModalError.value = ''
+}
 
 const handleEditInstance = async (formData) => {
-  editModalError.value = '';
+  editModalError.value = ''
 
-  const deliveryEmail = Boolean(formData.delivery_email);
-  const deliveryPhysicalPost = Boolean(formData.delivery_physical_post);
-  const deliveryPhysicalLocal = Boolean(formData.delivery_physical_local);
+  const deliveryEmail = Boolean(formData.delivery_email)
+  const deliveryPhysicalPost = Boolean(formData.delivery_physical_post)
+  const deliveryPhysicalLocal = Boolean(formData.delivery_physical_local)
 
   if (!deliveryEmail && !deliveryPhysicalPost && !deliveryPhysicalLocal) {
-    editModalError.value = 'At least one delivery method must be enabled';
-    return;
+    editModalError.value = 'At least one delivery method must be enabled'
+    return
   }
 
   try {
@@ -555,262 +658,281 @@ const handleEditInstance = async (formData) => {
       delivery_physical_post: deliveryPhysicalPost,
       delivery_physical_local: deliveryPhysicalLocal,
       process_when_all_submitted: Boolean(formData.process_when_all_submitted),
-    });
-    closeEditModal();
-    await loadInstance();
+    })
+    closeEditModal()
+    await loadInstance()
   } catch (err) {
-    editModalError.value = err.message || 'Failed to update game instance';
+    editModalError.value = err.message || 'Failed to update game instance'
   }
-};
+}
 
-const formatDeadline = (deadlineString) => {
-  if (!deadlineString) return 'N/A';
-  const deadline = new Date(deadlineString);
-  const now = new Date();
-  const diff = deadline - now;
-
-  if (diff < 0) return 'Overdue';
-  if (diff < 24 * 60 * 60 * 1000) return 'Today';
-  if (diff < 48 * 60 * 60 * 1000) return 'Tomorrow';
-
-  return deadline.toLocaleDateString();
-};
+const formatDeadline = (deadlineString) =>
+  sharedFormatDeadline(deadlineString, { timezone: authStore.accountTimezone })
 
 const startInstance = async () => {
-  await performAction('startGameInstance', 'Failed to start instance');
-};
+  await performAction('startGameInstance', 'Failed to start instance')
+}
 
 const pauseInstance = async () => {
-  await performAction('pauseGameInstance', 'Failed to pause instance');
-};
+  await performAction('pauseGameInstance', 'Failed to pause instance')
+}
 
 const resumeInstance = async () => {
-  await performAction('resumeGameInstance', 'Failed to resume instance');
-};
+  await performAction('resumeGameInstance', 'Failed to resume instance')
+}
 
 const resetInstance = async () => {
-  if (!confirm('Are you sure you want to reset this game instance? All instance data (turns, characters, items, etc.) will be deleted. Players will remain subscribed.')) {
-    return;
+  if (
+    !confirm(
+      'Are you sure you want to reset this game instance? All instance data (turns, characters, items, etc.) will be deleted. Players will remain subscribed.',
+    )
+  ) {
+    return
   }
-  await performAction('resetGameInstance', 'Failed to reset instance');
-};
+  await performAction('resetGameInstance', 'Failed to reset instance')
+}
 
 const cancelInstance = async () => {
-  if (!confirm('Are you sure you want to cancel this game instance? This action cannot be undone.')) {
-    return;
+  if (
+    !confirm('Are you sure you want to cancel this game instance? This action cannot be undone.')
+  ) {
+    return
   }
-  await performAction('cancelGameInstance', 'Failed to cancel instance');
-};
+  await performAction('cancelGameInstance', 'Failed to cancel instance')
+}
 
 const performAction = async (action, errorMessage) => {
-  controlLoading.value = true;
+  controlLoading.value = true
   try {
-    await gameInstancesStore[action](gameId.value, instanceId.value);
-    await loadInstance(); // Reload instance data
+    await gameInstancesStore[action](gameId.value, instanceId.value)
+    await loadInstance() // Reload instance data
   } catch (err) {
-    error.value = err.message || errorMessage;
+    error.value = err.message || errorMessage
   } finally {
-    controlLoading.value = false;
+    controlLoading.value = false
   }
-};
+}
 
 const goBack = () => {
-  router.push(`/admin/games/${gameId.value}/instances`);
-};
+  router.push(`/admin/games/${gameId.value}/instances`)
+}
 
 // Closed testing functions
 const copyJoinLink = async () => {
-  joinLinkLoading.value = true;
-  joinLinkCopied.value = false;
+  joinLinkLoading.value = true
+  joinLinkCopied.value = false
 
   try {
     // Fetch join link if not already loaded
     if (!joinLinkUrl.value) {
-      const response = await getJoinGameLink(gameId.value, instanceId.value);
-      joinLinkUrl.value = response.join_game_url || response.data?.join_game_url;
+      const response = await getJoinGameLink(gameId.value, instanceId.value)
+      joinLinkUrl.value = response.join_game_url || response.data?.join_game_url
     }
 
     // Build full URL
-    const fullUrl = `${window.location.origin}${joinLinkUrl.value}`;
+    const fullUrl = `${window.location.origin}${joinLinkUrl.value}`
 
     // Copy to clipboard
-    await navigator.clipboard.writeText(fullUrl);
-    joinLinkCopied.value = true;
+    await navigator.clipboard.writeText(fullUrl)
+    joinLinkCopied.value = true
 
     // Reset copied state after 2 seconds
     setTimeout(() => {
-      joinLinkCopied.value = false;
-    }, 2000);
+      joinLinkCopied.value = false
+    }, 2000)
   } catch (err) {
-    error.value = err.message || 'Failed to get join game link';
+    error.value = err.message || 'Failed to get join game link'
   } finally {
-    joinLinkLoading.value = false;
+    joinLinkLoading.value = false
   }
-};
+}
 
 const fullJoinLinkUrl = computed(() => {
-  if (!joinLinkUrl.value) return '';
-  return `${window.location.origin}${joinLinkUrl.value}`;
-});
+  if (!joinLinkUrl.value) return ''
+  return `${window.location.origin}${joinLinkUrl.value}`
+})
 
 const inviteTester = async () => {
   if (!testerEmail.value) {
-    inviteError.value = 'Please enter an email address';
-    return;
+    inviteError.value = 'Please enter an email address'
+    return
   }
 
-  inviteLoading.value = true;
-  inviteError.value = '';
-  inviteSuccess.value = false;
+  inviteLoading.value = true
+  inviteError.value = ''
+  inviteSuccess.value = false
 
   try {
-    await apiInviteTester(gameId.value, instanceId.value, testerEmail.value);
-    inviteSuccess.value = true;
-    testerEmail.value = '';
+    await apiInviteTester(gameId.value, instanceId.value, testerEmail.value)
+    inviteSuccess.value = true
+    testerEmail.value = ''
 
     // Clear success message after 3 seconds
     setTimeout(() => {
-      inviteSuccess.value = false;
-    }, 3000);
+      inviteSuccess.value = false
+    }, 3000)
   } catch (err) {
-    inviteError.value = err.message || 'Failed to invite tester';
+    inviteError.value = err.message || 'Failed to invite tester'
   } finally {
-    inviteLoading.value = false;
+    inviteLoading.value = false
   }
-};
+}
 
 const getParameterPlaceholder = () => {
-  const param = availableParameters.value.find(p => p.config_key === parameterForm.value.parameter_key);
+  const param = availableParameters.value.find(
+    (p) => p.config_key === parameterForm.value.parameter_key,
+  )
   if (param) {
-    if (param.value_type === 'string') return 'Enter a value (e.g., "Hello World")';
-    if (param.value_type === 'integer') return 'Enter a number (e.g., 123)';
-    if (param.value_type === 'boolean') return 'Select a value (true or false)';
-    return 'Enter a value';
+    if (param.value_type === 'string') return 'Enter a value (e.g., "Hello World")'
+    if (param.value_type === 'integer') return 'Enter a number (e.g., 123)'
+    if (param.value_type === 'boolean') return 'Select a value (true or false)'
+    return 'Enter a value'
   }
-  return 'Enter a value';
-};
+  return 'Enter a value'
+}
 
 const editParameterInline = (param) => {
-  editingParameterId.value = null; // Clear any existing editing ID
-  parameterForm.value.parameter_key = param.config_key;
+  editingParameterId.value = null // Clear any existing editing ID
+  parameterForm.value.parameter_key = param.config_key
 
   // Get current value if parameter is already configured, otherwise use default or empty
-  const currentParam = instanceParameters.value.find(p => p.parameter_key === param.config_key);
+  const currentParam = instanceParameters.value.find((p) => p.parameter_key === param.config_key)
   if (currentParam) {
-    parameterForm.value.parameter_value = currentParam.parameter_value;
+    parameterForm.value.parameter_value = currentParam.parameter_value
   } else {
     // Use default value if available, otherwise empty
-    parameterForm.value.parameter_value = param.default_value || '';
+    parameterForm.value.parameter_value = param.default_value || ''
   }
 
-  showEditParameterModal.value = true;
-};
+  showEditParameterModal.value = true
+}
 
 const closeParameterModal = () => {
-  showEditParameterModal.value = false;
-  parameterForm.value = { parameter_key: '', parameter_value: '' };
-  editingParameterId.value = null;
-  parameterError.value = '';
-};
+  showEditParameterModal.value = false
+  parameterForm.value = { parameter_key: '', parameter_value: '' }
+  editingParameterId.value = null
+  parameterError.value = ''
+}
 
 const saveParameter = async () => {
   if (!parameterForm.value.parameter_key) {
-    parameterError.value = 'Please select a parameter.';
-    return;
+    parameterError.value = 'Please select a parameter.'
+    return
   }
 
   if (!parameterForm.value.parameter_value) {
-    parameterError.value = 'Parameter value cannot be empty.';
-    return;
+    parameterError.value = 'Parameter value cannot be empty.'
+    return
   }
 
-  savingParameter.value = true;
-  parameterError.value = '';
+  savingParameter.value = true
+  parameterError.value = ''
 
   try {
     // Check if parameter already exists for this instance
-    const existingParam = instanceParameters.value.find(p => p.parameter_key === parameterForm.value.parameter_key);
+    const existingParam = instanceParameters.value.find(
+      (p) => p.parameter_key === parameterForm.value.parameter_key,
+    )
 
     if (existingParam) {
       // Update existing parameter
-      await gameInstanceParametersStore.updateGameInstanceParameter(gameId.value, instanceId.value, existingParam.id, {
-        parameter_key: parameterForm.value.parameter_key,
-        parameter_value: parameterForm.value.parameter_value
-      });
+      await gameInstanceParametersStore.updateGameInstanceParameter(
+        gameId.value,
+        instanceId.value,
+        existingParam.id,
+        {
+          parameter_key: parameterForm.value.parameter_key,
+          parameter_value: parameterForm.value.parameter_value,
+        },
+      )
     } else {
       // Create new parameter
-      await gameInstanceParametersStore.createGameInstanceParameter(gameId.value, instanceId.value, {
-        parameter_key: parameterForm.value.parameter_key,
-        parameter_value: parameterForm.value.parameter_value
-      });
+      await gameInstanceParametersStore.createGameInstanceParameter(
+        gameId.value,
+        instanceId.value,
+        {
+          parameter_key: parameterForm.value.parameter_key,
+          parameter_value: parameterForm.value.parameter_value,
+        },
+      )
     }
 
-    await loadInstanceParameters(); // Reload parameters after save
-    closeParameterModal();
+    await loadInstanceParameters() // Reload parameters after save
+    closeParameterModal()
   } catch (err) {
-    parameterError.value = err.message || 'Failed to save parameter.';
+    parameterError.value = err.message || 'Failed to save parameter.'
   } finally {
-    savingParameter.value = false;
+    savingParameter.value = false
   }
-};
+}
 
 const removeParameterByKey = async (key) => {
   if (!confirm('Are you sure you want to remove this parameter?')) {
-    return;
+    return
   }
   try {
-    const parameterToRemove = instanceParameters.value.find(p => p.parameter_key === key);
+    const parameterToRemove = instanceParameters.value.find((p) => p.parameter_key === key)
     if (parameterToRemove) {
-      await gameInstanceParametersStore.deleteGameInstanceParameter(gameId.value, instanceId.value, parameterToRemove.id);
-      await loadInstanceParameters();
+      await gameInstanceParametersStore.deleteGameInstanceParameter(
+        gameId.value,
+        instanceId.value,
+        parameterToRemove.id,
+      )
+      await loadInstanceParameters()
     }
   } catch (err) {
     // Handle error silently since the user can see if the operation failed
-    console.error('Failed to remove parameter:', err);
+    console.error('Failed to remove parameter:', err)
   }
-};
+}
 
 const getCurrentParameterValue = (key) => {
-  const param = instanceParameters.value.find(p => p.parameter_key === key);
-  return param ? param.parameter_value : null;
-};
+  const param = instanceParameters.value.find((p) => p.parameter_key === key)
+  return param ? param.parameter_value : null
+}
 
 const getParameterActions = (param) => {
-  const actions = [];
-  const hasValue = getCurrentParameterValue(param.config_key);
+  const actions = []
+  const hasValue = getCurrentParameterValue(param.config_key)
 
   actions.push({
     key: hasValue ? 'edit' : 'set',
     label: hasValue ? 'Edit' : 'Set',
-    handler: () => editParameterInline(param)
-  });
+    handler: () => editParameterInline(param),
+  })
 
   if (hasValue) {
     actions.push({
       key: 'remove',
       label: 'Remove',
       danger: true,
-      handler: () => removeParameterByKey(param.config_key)
-    });
+      handler: () => removeParameterByKey(param.config_key),
+    })
   }
 
-  return actions;
-};
+  return actions
+}
 
 const getEditingParameterDescription = () => {
-  const param = availableParameters.value.find(p => p.config_key === parameterForm.value.parameter_key);
-  return param ? param.description : 'N/A';
-};
+  const param = availableParameters.value.find(
+    (p) => p.config_key === parameterForm.value.parameter_key,
+  )
+  return param ? param.description : 'N/A'
+}
 
 const getEditingParameterType = () => {
-  const param = availableParameters.value.find(p => p.config_key === parameterForm.value.parameter_key);
-  return param ? param.value_type : 'N/A';
-};
+  const param = availableParameters.value.find(
+    (p) => p.config_key === parameterForm.value.parameter_key,
+  )
+  return param ? param.value_type : 'N/A'
+}
 
 const getEditingParameterDefault = () => {
-  const param = availableParameters.value.find(p => p.config_key === parameterForm.value.parameter_key);
-  return param ? param.default_value : 'N/A';
-};
+  const param = availableParameters.value.find(
+    (p) => p.config_key === parameterForm.value.parameter_key,
+  )
+  return param ? param.default_value : 'N/A'
+}
 </script>
 
 <style scoped>
@@ -1393,6 +1515,4 @@ const getEditingParameterDefault = () => {
   font-size: var(--font-size-sm);
   margin-top: var(--space-xs);
 }
-
-
 </style>

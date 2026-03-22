@@ -1,6 +1,8 @@
 package account_record
 
 import (
+	"database/sql"
+
 	"github.com/jackc/pgx/v5"
 	"gitlab.com/alienspaces/playbymail/core/record"
 )
@@ -11,8 +13,9 @@ const (
 )
 
 const (
-	FieldAccountName   string = "name"
-	FieldAccountStatus string = "status"
+	FieldAccountName     string = "name"
+	FieldAccountStatus   string = "status"
+	FieldAccountTimezone string = "timezone"
 )
 
 const (
@@ -22,8 +25,9 @@ const (
 
 type Account struct {
 	record.Record
-	Name   string `db:"name"`
-	Status string `db:"status"`
+	Name     string         `db:"name"`
+	Status   string         `db:"status"`
+	Timezone sql.NullString `db:"timezone"`
 }
 
 // ToNamedArgs converts the struct to a map of named arguments
@@ -32,5 +36,6 @@ func (r *Account) ToNamedArgs() pgx.NamedArgs {
 	args := r.Record.ToNamedArgs()
 	args[FieldAccountName] = r.Name
 	args[FieldAccountStatus] = r.Status
+	args[FieldAccountTimezone] = r.Timezone
 	return args
 }

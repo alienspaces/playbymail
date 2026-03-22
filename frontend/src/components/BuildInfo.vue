@@ -1,23 +1,16 @@
 <script setup>
+import { formatDateTime } from '../utils/dateFormat'
+
 // Build info injected by Vite during build
 const buildInfo = {
   commitRef: import.meta.env.VITE_COMMIT_REF || 'dev',
   buildDate: import.meta.env.VITE_BUILD_DATE || new Date().toISOString(),
-  buildTime: import.meta.env.VITE_BUILD_TIME || new Date().toISOString()
+  buildTime: import.meta.env.VITE_BUILD_TIME || new Date().toISOString(),
 }
 
-// Format the build date for display
 const formatBuildDate = (dateString) => {
   try {
-    const date = new Date(dateString)
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      timeZoneName: 'short'
-    })
+    return formatDateTime(dateString)
   } catch {
     return 'Unknown'
   }
@@ -28,8 +21,13 @@ const formatBuildDate = (dateString) => {
   <div class="build-info-panel">
     <span class="build-commit">{{ buildInfo.commitRef }}</span>
     <span class="build-date">{{ formatBuildDate(buildInfo.buildDate) }}</span>
-    <a href="https://github.com/alienspaces/playbymail/blob/main/RELEASE_NOTES.md" class="release-notes-link"
-      target="_blank" rel="noopener noreferrer">Release Notes</a>
+    <a
+      href="https://github.com/alienspaces/playbymail/blob/main/RELEASE_NOTES.md"
+      class="release-notes-link"
+      target="_blank"
+      rel="noopener noreferrer"
+      >Release Notes</a
+    >
   </div>
 </template>
 

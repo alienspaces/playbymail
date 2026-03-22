@@ -11,6 +11,7 @@ type AccountResponseData struct {
 	ID        string     `json:"id"`
 	Name      string     `json:"name"`
 	Status    string     `json:"status"`
+	Timezone  *string    `json:"timezone,omitempty"`
 	CreatedAt time.Time  `json:"created_at"`
 	UpdatedAt *time.Time `json:"updated_at,omitempty"`
 }
@@ -29,7 +30,8 @@ type AccountCollectionResponse struct {
 
 type AccountRequest struct {
 	common_schema.Request
-	Name *string `json:"name,omitempty"`
+	Name     *string `json:"name,omitempty"`
+	Timezone *string `json:"timezone,omitempty"`
 }
 
 type AccountQueryParams struct {

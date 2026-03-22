@@ -43,7 +43,7 @@
             "type": "boolean"
         },
         "required_player_count": {
-            "minimum": 0,
+            "minimum": 1,
             "type": "integer"
         },
         "is_closed_testing": {

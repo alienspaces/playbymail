@@ -1,6 +1,7 @@
 package mapper
 
 import (
+	"database/sql"
 	"fmt"
 	"net/http"
 
@@ -24,8 +25,16 @@ func AccountRequestToRecord(l logger.Logger, r *http.Request, rec *account_recor
 	switch server.HttpMethod(r.Method) {
 	case server.HttpMethodPost:
 		rec.Name = convert.String(req.Name)
+		if req.Timezone != nil {
+			rec.Timezone = sql.NullString{String: *req.Timezone, Valid: true}
+		}
 	case server.HttpMethodPut, server.HttpMethodPatch:
 		rec.Name = convert.String(req.Name)
+		if req.Timezone != nil {
+			rec.Timezone = sql.NullString{String: *req.Timezone, Valid: true}
+		} else {
+			rec.Timezone = sql.NullString{}
+		}
 	default:
 		return nil, fmt.Errorf("unsupported HTTP method")
 	}
@@ -35,10 +44,15 @@ func AccountRequestToRecord(l logger.Logger, r *http.Request, rec *account_recor
 
 func AccountRecordToResponseData(l logger.Logger, rec *account_record.Account) (*account_schema.AccountResponseData, error) {
 	l.Debug("mapping account record to response data")
+	var timezone *string
+	if rec.Timezone.Valid {
+		timezone = &rec.Timezone.String
+	}
 	return &account_schema.AccountResponseData{
 		ID:        rec.ID,
 		Name:      rec.Name,
 		Status:    rec.Status,
+		Timezone:  timezone,
 		CreatedAt: rec.CreatedAt,
 		UpdatedAt: nulltime.ToTimePtr(rec.UpdatedAt),
 	}, nil

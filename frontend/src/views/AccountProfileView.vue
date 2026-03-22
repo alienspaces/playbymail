@@ -38,7 +38,10 @@
         <div class="danger-item">
           <div class="danger-content">
             <h3>Delete Account</h3>
-            <p>This action cannot be undone. This will permanently delete your account and all associated data.</p>
+            <p>
+              This action cannot be undone. This will permanently delete your account and all
+              associated data.
+            </p>
           </div>
           <button @click="showDeleteConfirmation" class="btn delete-btn">Delete Account</button>
         </div>
@@ -46,11 +49,19 @@
     </div>
 
     <!-- Delete Confirmation Modal -->
-    <ConfirmationModal :visible="showDeleteModal" title="Delete Account"
+    <ConfirmationModal
+      :visible="showDeleteModal"
+      title="Delete Account"
       message="Are you sure you want to delete your account? This action cannot be undone."
       warning="All your data, including games, characters, and settings will be permanently deleted."
-      confirmText="Delete Account" :loading="deleting" loadingText="Deleting..." :requireConfirmation="true"
-      confirmationText="DELETE" @confirm="confirmDeleteAccount" @cancel="hideDeleteConfirmation" />
+      confirmText="Delete Account"
+      :loading="deleting"
+      loadingText="Deleting..."
+      :requireConfirmation="true"
+      confirmationText="DELETE"
+      @confirm="confirmDeleteAccount"
+      @cancel="hideDeleteConfirmation"
+    />
   </div>
 </template>
 
@@ -58,12 +69,13 @@
 import { getMe, deleteAccountUser } from '@/api/account'
 import { useAuthStore } from '@/stores/auth'
 import { useRouter } from 'vue-router'
+import { formatDateTime } from '@/utils/dateFormat'
 import ConfirmationModal from '@/components/ConfirmationModal.vue'
 
 export default {
   name: 'AccountProfileView',
   components: {
-    ConfirmationModal
+    ConfirmationModal,
   },
   data() {
     return {
@@ -72,7 +84,7 @@ export default {
       error: null,
       showDeleteModal: false,
       deleteConfirmationText: '',
-      deleting: false
+      deleting: false,
     }
   },
   async mounted() {
@@ -125,16 +137,10 @@ export default {
       }
     },
     formatDate(dateString) {
-      if (!dateString) return 'N/A'
-      return new Date(dateString).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      })
-    }
-  }
+      const authStore = useAuthStore()
+      return formatDateTime(dateString, { timezone: authStore.accountTimezone })
+    },
+  },
 }
 </script>
 
@@ -163,9 +169,7 @@ h2::after {
   left: 0;
   right: 0;
   height: 2px;
-  background: linear-gradient(to right,
-      var(--color-pen-blue) 0%,
-      transparent 100%);
+  background: linear-gradient(to right, var(--color-pen-blue) 0%, transparent 100%);
   opacity: 0.3;
   transform: rotate(-0.2deg);
 }

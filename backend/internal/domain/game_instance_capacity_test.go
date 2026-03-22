@@ -114,15 +114,6 @@ func TestDomain_HasAvailableCapacity(t *testing.T) {
 	})
 	require.NoError(t, err, "CreateGameInstanceRec returns without error")
 
-	// Create instance with RequiredPlayerCount = 0 (unlimited capacity)
-	instanceUnlimited, err := m.CreateGameInstanceRec(&game_record.GameInstance{
-		GameID:              gameRec.ID,
-		Status:              game_record.GameInstanceStatusCreated,
-		RequiredPlayerCount: 0,
-		DeliveryEmail:       true,
-	})
-	require.NoError(t, err, "CreateGameInstanceRec returns without error")
-
 	testCases := []struct {
 		name        string
 		instanceID  string
@@ -132,12 +123,6 @@ func TestDomain_HasAvailableCapacity(t *testing.T) {
 		{
 			name:        "returns true when instance has available capacity",
 			instanceID:  instanceWithCapacity.ID,
-			expectValue: true,
-			expectError: false,
-		},
-		{
-			name:        "returns true when instance has no capacity limit",
-			instanceID:  instanceUnlimited.ID,
 			expectValue: true,
 			expectError: false,
 		},

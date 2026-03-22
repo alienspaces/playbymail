@@ -1,7 +1,11 @@
 <template>
   <div class="account-subscriptions-view">
-    <PageHeader title="Subscriptions" :showIcon="false" titleLevel="h2"
-      subtitle="Manage your account and game subscriptions" />
+    <PageHeader
+      title="Subscriptions"
+      :showIcon="false"
+      titleLevel="h2"
+      subtitle="Manage your account and game subscriptions"
+    />
 
     <!-- Loading state -->
     <div v-if="loading" class="loading-state">
@@ -11,9 +15,7 @@
     <!-- Error state -->
     <div v-else-if="error" class="error-state">
       <p>{{ error }}</p>
-      <AppButton @click="loadSubscriptions" variant="primary" size="small">
-        Retry
-      </AppButton>
+      <AppButton @click="loadSubscriptions" variant="primary" size="small"> Retry </AppButton>
     </div>
 
     <!-- Subscriptions content -->
@@ -21,20 +23,35 @@
       <!-- Account Subscriptions Section -->
       <div class="subscriptions-section">
         <h3>Account Subscriptions</h3>
-        <p class="section-description">Subscriptions that grant permissions for game design capabilities.</p>
+        <p class="section-description">
+          Subscriptions that grant permissions for game design capabilities.
+        </p>
 
         <div v-if="accountSubscriptions.length > 0" class="subscriptions-grid">
-          <DataCard v-for="subscription in accountSubscriptions" :key="subscription.id"
-            :title="formatSubscriptionType(subscription.subscription_type)" class="subscription-card">
+          <DataCard
+            v-for="subscription in accountSubscriptions"
+            :key="subscription.id"
+            :title="formatSubscriptionType(subscription.subscription_type)"
+            class="subscription-card"
+          >
             <div class="subscription-info">
-              <DataItem label="Type" :value="formatSubscriptionType(subscription.subscription_type)" />
+              <DataItem
+                label="Type"
+                :value="formatSubscriptionType(subscription.subscription_type)"
+              />
               <DataItem label="Status" :value="subscription.status" />
               <DataItem label="Auto Renew" :value="subscription.auto_renew ? 'Yes' : 'No'" />
               <DataItem label="Created" :value="formatDate(subscription.created_at)" />
-              <DataItem v-if="subscription.subscription_type === 'basic_game_designer'" label="Game Limit"
-                :value="`${gameCount} / 10 games`" />
-              <DataItem v-else-if="subscription.subscription_type === 'professional_game_designer'" label="Game Limit"
-                value="Unlimited" />
+              <DataItem
+                v-if="subscription.subscription_type === 'basic_game_designer'"
+                label="Game Limit"
+                :value="`${gameCount} / 10 games`"
+              />
+              <DataItem
+                v-else-if="subscription.subscription_type === 'professional_game_designer'"
+                label="Game Limit"
+                value="Unlimited"
+              />
             </div>
           </DataCard>
         </div>
@@ -50,18 +67,33 @@
         <p class="section-description">Subscriptions to specific games for playing or managing.</p>
 
         <div v-if="gameSubscriptions.length > 0" class="subscriptions-grid">
-          <DataCard v-for="subscription in gameSubscriptions" :key="subscription.id"
-            :title="subscription.game_name || 'Unknown Game'" class="subscription-card">
+          <DataCard
+            v-for="subscription in gameSubscriptions"
+            :key="subscription.id"
+            :title="subscription.game_name || 'Unknown Game'"
+            class="subscription-card"
+          >
             <div class="subscription-info">
               <DataItem label="Game" :value="subscription.game_name || 'Unknown Game'" />
-              <DataItem label="Type" :value="formatGameSubscriptionType(subscription.subscription_type)" />
+              <DataItem
+                label="Type"
+                :value="formatGameSubscriptionType(subscription.subscription_type)"
+              />
               <DataItem label="Status" :value="subscription.status" />
-              <DataItem v-if="subscription.instance_limit !== null && subscription.instance_limit !== undefined"
+              <DataItem
+                v-if="
+                  subscription.instance_limit !== null && subscription.instance_limit !== undefined
+                "
                 label="Instance Limit"
-                :value="subscription.instance_limit === null ? 'Unlimited' : subscription.instance_limit" />
-              <DataItem v-if="subscription.game_instance_ids && subscription.game_instance_ids.length > 0"
+                :value="
+                  subscription.instance_limit === null ? 'Unlimited' : subscription.instance_limit
+                "
+              />
+              <DataItem
+                v-if="subscription.game_instance_ids && subscription.game_instance_ids.length > 0"
                 label="Instances"
-                :value="`${subscription.game_instance_ids.length} instance${subscription.game_instance_ids.length !== 1 ? 's' : ''}`" />
+                :value="`${subscription.game_instance_ids.length} instance${subscription.game_instance_ids.length !== 1 ? 's' : ''}`"
+              />
               <DataItem label="Created" :value="formatDate(subscription.created_at)" />
             </div>
 
@@ -78,9 +110,13 @@
     </div>
 
     <!-- Confirm Cancel Dialog -->
-    <ConfirmationModal :visible="showCancelModal" title="Cancel Game Subscription"
+    <ConfirmationModal
+      :visible="showCancelModal"
+      title="Cancel Game Subscription"
       :message="`Are you sure you want to cancel your ${formatGameSubscriptionType(subscriptionToCancel?.subscription_type)} subscription to '${subscriptionToCancel?.game_name || 'this game'}'?`"
-      @confirm="handleCancelSubscription" @cancel="closeCancelModal" />
+      @confirm="handleCancelSubscription"
+      @cancel="closeCancelModal"
+    />
   </div>
 </template>
 
@@ -88,6 +124,8 @@
 import { getMyAccountSubscriptions } from '@/api/accountSubscriptions'
 import { getMyGameSubscriptions, cancelGameSubscription } from '@/api/gameSubscriptions'
 import { listGames } from '@/api/games'
+import { useAuthStore } from '@/stores/auth'
+import { formatDateTime } from '@/utils/dateFormat'
 import PageHeader from '@/components/PageHeader.vue'
 import DataCard from '@/components/DataCard.vue'
 import DataItem from '@/components/DataItem.vue'
@@ -103,7 +141,7 @@ export default {
     DataItem,
     TableActions,
     ConfirmationModal,
-    AppButton
+    AppButton,
   },
   data() {
     return {
@@ -114,7 +152,7 @@ export default {
       loading: true,
       error: null,
       showCancelModal: false,
-      subscriptionToCancel: null
+      subscriptionToCancel: null,
     }
   },
   async mounted() {
@@ -142,11 +180,11 @@ export default {
         this.gameCount = this.games.length
 
         // Enrich game subscriptions with game names
-        this.gameSubscriptions = this.gameSubscriptions.map(sub => {
-          const game = this.games.find(g => g.id === sub.game_id)
+        this.gameSubscriptions = this.gameSubscriptions.map((sub) => {
+          const game = this.games.find((g) => g.id === sub.game_id)
           return {
             ...sub,
-            game_name: game ? game.name : 'Unknown Game'
+            game_name: game ? game.name : 'Unknown Game',
           }
         })
       } catch (err) {
@@ -159,7 +197,7 @@ export default {
     formatSubscriptionType(type) {
       const types = {
         basic_game_designer: 'Basic Game Designer',
-        professional_game_designer: 'Professional Game Designer'
+        professional_game_designer: 'Professional Game Designer',
       }
       return types[type] || type
     },
@@ -167,19 +205,13 @@ export default {
       const types = {
         player: 'Player',
         manager: 'Manager',
-        designer: 'Designer'
+        designer: 'Designer',
       }
       return types[type] || type
     },
     formatDate(dateString) {
-      if (!dateString) return 'N/A'
-      return new Date(dateString).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      })
+      const authStore = useAuthStore()
+      return formatDateTime(dateString, { timezone: authStore.accountTimezone })
     },
     openCancel(subscription) {
       this.subscriptionToCancel = subscription
@@ -205,17 +237,20 @@ export default {
     getGameSubscriptionActions(subscription) {
       const actions = []
       // Only allow cancelling Player and Manager subscriptions
-      if (subscription.subscription_type === 'player' || subscription.subscription_type === 'manager') {
+      if (
+        subscription.subscription_type === 'player' ||
+        subscription.subscription_type === 'manager'
+      ) {
         actions.push({
           key: 'cancel',
           label: 'Cancel',
           danger: true,
-          handler: () => this.openCancel(subscription)
+          handler: () => this.openCancel(subscription),
         })
       }
       return actions
-    }
-  }
+    },
+  },
 }
 </script>
 

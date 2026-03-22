@@ -810,34 +810,47 @@ func DefaultDataConfig() DataConfig {
 				SubscriptionType: game_record.GameSubscriptionTypeDesigner,
 				Record:           &game_record.GameSubscription{},
 			},
-			{
-				Reference:        GameSubscriptionManagerOneRef,
-				AccountUserRef:   AccountUserProManagerRef,
-				GameRef:          GameOneRef,
-				SubscriptionType: game_record.GameSubscriptionTypeManager,
-				Record:           &game_record.GameSubscription{},
-				GameInstanceConfigs: []GameInstanceConfig{
-					{
-						Reference:              GameInstanceOneRef,
-						Record:                 &game_record.GameInstance{},
-						PlayerSubscriptionRefs: []string{GameSubscriptionPlayerOneRef, GameSubscriptionPlayerThreeRef},
-						GameInstanceParameterConfigs: []GameInstanceParameterConfig{
-							{
-								Reference: GameInstanceParameterOneRef,
-								Record: &game_record.GameInstanceParameter{
-									ParameterKey:   domain.AdventureGameParameterCharacterLives,
-									ParameterValue: nullstring.FromString("3"),
-								},
+		{
+			Reference:                             GameSubscriptionPlayerTwoRef,
+			AccountUserRef:                        AccountUserProPlayerRef,
+			GameRef:                               GameOneRef,
+			SubscriptionType:                      game_record.GameSubscriptionTypePlayer,
+			AccountUserManagerGameSubscriptionRef: GameSubscriptionManagerOneRef,
+			Record:                                &game_record.GameSubscription{},
+		},
+		{
+			Reference:        GameSubscriptionManagerOneRef,
+			AccountUserRef:   AccountUserProManagerRef,
+			GameRef:          GameOneRef,
+			SubscriptionType: game_record.GameSubscriptionTypeManager,
+			Record:           &game_record.GameSubscription{},
+			GameInstanceConfigs: []GameInstanceConfig{
+				{
+					Reference:              GameInstanceOneRef,
+					Record:                 &game_record.GameInstance{},
+					PlayerSubscriptionRefs: []string{GameSubscriptionPlayerOneRef, GameSubscriptionPlayerThreeRef},
+					GameInstanceParameterConfigs: []GameInstanceParameterConfig{
+						{
+							Reference: GameInstanceParameterOneRef,
+							Record: &game_record.GameInstanceParameter{
+								ParameterKey:   domain.AdventureGameParameterCharacterLives,
+								ParameterValue: nullstring.FromString("3"),
 							},
 						},
-					ShouldStartGameInstance: true,
 					},
-					{
-						Reference: GameInstanceCleanRef,
-						Record:    &game_record.GameInstance{},
-					},
+				ShouldStartGameInstance: true,
+				},
+				{
+					Reference:              GameInstanceTwoRef,
+					Record:                 &game_record.GameInstance{},
+					PlayerSubscriptionRefs: []string{GameSubscriptionPlayerTwoRef},
+				},
+				{
+					Reference: GameInstanceCleanRef,
+					Record:    &game_record.GameInstance{},
 				},
 			},
+		},
 		},
 	}
 }

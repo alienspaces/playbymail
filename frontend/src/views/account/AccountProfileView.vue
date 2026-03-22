@@ -1,7 +1,11 @@
 <template>
   <div class="account-profile-view">
-    <PageHeader title="Account Profile" :showIcon="false" titleLevel="h2"
-      subtitle="Review your profile details and account status" />
+    <PageHeader
+      title="Account Profile"
+      :showIcon="false"
+      titleLevel="h2"
+      subtitle="Review your profile details and account status"
+    />
 
     <!-- Loading state -->
     <div v-if="loading" class="loading-state">
@@ -11,9 +15,7 @@
     <!-- Error state -->
     <div v-else-if="error" class="error-state">
       <p>{{ error }}</p>
-      <AppButton @click="loadAccount" variant="primary" size="small">
-        Retry
-      </AppButton>
+      <AppButton @click="loadAccount" variant="primary" size="small"> Retry </AppButton>
     </div>
 
     <!-- Account information -->
@@ -36,10 +38,20 @@
                   @keyup.escape="cancelEditName"
                 />
                 <div class="name-edit-buttons">
-                  <AppButton @click="saveAccountName" variant="primary" size="small" :disabled="savingName">
+                  <AppButton
+                    @click="saveAccountName"
+                    variant="primary"
+                    size="small"
+                    :disabled="savingName"
+                  >
                     {{ savingName ? 'Saving…' : 'Save' }}
                   </AppButton>
-                  <AppButton @click="cancelEditName" variant="secondary" size="small" :disabled="savingName">
+                  <AppButton
+                    @click="cancelEditName"
+                    variant="secondary"
+                    size="small"
+                    :disabled="savingName"
+                  >
                     Cancel
                   </AppButton>
                 </div>
@@ -47,23 +59,89 @@
               </div>
             </template>
             <template v-else>
-              <DataItem label="Account Name" :value="accountData ? (accountData.name || 'Not set') : '…'" />
-              <AppButton @click="startEditName" variant="secondary" size="small" class="edit-name-btn">
+              <DataItem
+                label="Account Name"
+                :value="accountData ? accountData.name || 'Not set' : '…'"
+              />
+              <AppButton
+                @click="startEditName"
+                variant="secondary"
+                size="small"
+                class="edit-name-btn"
+              >
                 Edit
               </AppButton>
             </template>
           </div>
+
           <DataItem label="Email" :value="account.email" />
           <DataItem label="Account ID" :value="account.account_id" />
           <DataItem label="Account Created" :value="formatDate(account.created_at)" />
-          <DataItem v-if="account.updated_at" label="Last Updated" :value="formatDate(account.updated_at)" />
+          <DataItem
+            v-if="account.updated_at"
+            label="Last Updated"
+            :value="formatDate(account.updated_at)"
+          />
+
+          <!-- Time Zone with inline edit -->
+          <div class="account-timezone-row">
+            <template v-if="editingTimezone">
+              <span class="data-item-label">Time Zone</span>
+              <div class="timezone-edit-controls">
+                <select v-model="timezoneInput" class="timezone-select">
+                  <option value="">Use browser default ({{ browserTimezone }})</option>
+                  <option v-for="tz in timezones" :key="tz" :value="tz">{{ tz }}</option>
+                </select>
+                <div class="name-edit-buttons">
+                  <AppButton
+                    @click="saveTimezone"
+                    variant="primary"
+                    size="small"
+                    :disabled="savingTimezone"
+                  >
+                    {{ savingTimezone ? 'Saving…' : 'Save' }}
+                  </AppButton>
+                  <AppButton
+                    @click="cancelEditTimezone"
+                    variant="secondary"
+                    size="small"
+                    :disabled="savingTimezone"
+                  >
+                    Cancel
+                  </AppButton>
+                </div>
+                <p v-if="timezoneError" class="name-error">{{ timezoneError }}</p>
+              </div>
+            </template>
+            <template v-else>
+              <DataItem
+                label="Time Zone"
+                :value="
+                  accountData && accountData.timezone
+                    ? accountData.timezone
+                    : `Browser default (${browserTimezone})`
+                "
+              />
+              <AppButton
+                @click="startEditTimezone"
+                variant="secondary"
+                size="small"
+                class="edit-name-btn"
+              >
+                Edit
+              </AppButton>
+            </template>
+          </div>
         </div>
       </DataCard>
 
       <!-- Danger Zone Card -->
       <DataCard title="Danger Zone" variant="danger" class="game-card">
         <div class="game-info">
-          <p>This action cannot be undone. This will permanently delete your account and all associated data.</p>
+          <p>
+            This action cannot be undone. This will permanently delete your account and all
+            associated data.
+          </p>
         </div>
         <template #primary>
           <AppButton @click="showDeleteConfirmation" variant="danger" size="small">
@@ -74,11 +152,19 @@
     </div>
 
     <!-- Delete Confirmation Modal -->
-    <ConfirmationModal :visible="showDeleteModal" title="Delete Account"
+    <ConfirmationModal
+      :visible="showDeleteModal"
+      title="Delete Account"
       message="Are you sure you want to delete your account? This action cannot be undone."
       warning="All your data, including games, characters, and settings will be permanently deleted."
-      confirmText="Delete Account" :loading="deleting" loadingText="Deleting..." :requireConfirmation="true"
-      confirmationText="DELETE" @confirm="confirmDeleteAccount" @cancel="hideDeleteConfirmation" />
+      confirmText="Delete Account"
+      :loading="deleting"
+      loadingText="Deleting..."
+      :requireConfirmation="true"
+      confirmationText="DELETE"
+      @confirm="confirmDeleteAccount"
+      @cancel="hideDeleteConfirmation"
+    />
   </div>
 </template>
 
@@ -86,6 +172,7 @@
 import { getMe, getAccount, updateAccount, deleteAccountUser } from '@/api/account'
 import { useAuthStore } from '@/stores/auth'
 import { useRouter } from 'vue-router'
+import { formatDateTime } from '@/utils/dateFormat'
 import ConfirmationModal from '@/components/ConfirmationModal.vue'
 import PageHeader from '@/components/PageHeader.vue'
 import DataCard from '@/components/DataCard.vue'
@@ -99,7 +186,7 @@ export default {
     PageHeader,
     DataCard,
     DataItem,
-    AppButton
+    AppButton,
   },
   data() {
     return {
@@ -113,10 +200,17 @@ export default {
       editingName: false,
       nameInput: '',
       savingName: false,
-      nameError: null
+      nameError: null,
+      editingTimezone: false,
+      timezoneInput: '',
+      savingTimezone: false,
+      timezoneError: null,
+      timezones: [],
+      browserTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     }
   },
   async mounted() {
+    this.timezones = Intl.supportedValuesOf('timeZone')
     await this.loadAccount()
   },
   methods: {
@@ -126,6 +220,8 @@ export default {
         this.error = null
         this.account = await getMe()
         this.accountData = await getAccount(this.account.account_id)
+        const authStore = useAuthStore()
+        authStore.setAccountTimezone(this.accountData?.timezone || null)
       } catch (err) {
         this.error = err.message || 'Failed to load account information'
         console.error('Error loading account:', err)
@@ -154,6 +250,30 @@ export default {
         this.savingName = false
       }
     },
+    startEditTimezone() {
+      this.timezoneInput = this.accountData?.timezone || ''
+      this.timezoneError = null
+      this.editingTimezone = true
+    },
+    cancelEditTimezone() {
+      this.editingTimezone = false
+      this.timezoneError = null
+    },
+    async saveTimezone() {
+      try {
+        this.savingTimezone = true
+        this.timezoneError = null
+        const payload = { timezone: this.timezoneInput || null }
+        this.accountData = await updateAccount(this.account.account_id, payload)
+        const authStore = useAuthStore()
+        authStore.setAccountTimezone(this.accountData?.timezone || null)
+        this.editingTimezone = false
+      } catch (err) {
+        this.timezoneError = err.message || 'Failed to update time zone'
+      } finally {
+        this.savingTimezone = false
+      }
+    },
     showDeleteConfirmation() {
       this.showDeleteModal = true
       this.deleteConfirmationText = ''
@@ -174,7 +294,6 @@ export default {
         this.error = null
         await deleteAccountUser(this.account.account_id, this.account.id)
 
-        // Clear auth store and redirect to home
         const authStore = useAuthStore()
         authStore.logout()
 
@@ -188,16 +307,10 @@ export default {
       }
     },
     formatDate(dateString) {
-      if (!dateString) return 'N/A'
-      return new Date(dateString).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      })
-    }
-  }
+      const authStore = useAuthStore()
+      return formatDateTime(dateString, { timezone: authStore.accountTimezone })
+    },
+  },
 }
 </script>
 
@@ -247,7 +360,8 @@ export default {
   line-height: 1.4;
 }
 
-.account-name-row {
+.account-name-row,
+.account-timezone-row {
   display: flex;
   align-items: flex-start;
   gap: var(--space-sm);
@@ -261,7 +375,8 @@ export default {
   flex-shrink: 0;
 }
 
-.name-edit-controls {
+.name-edit-controls,
+.timezone-edit-controls {
   display: flex;
   flex-direction: column;
   gap: var(--space-xs);
@@ -280,6 +395,22 @@ export default {
 }
 
 .name-input:focus {
+  outline: none;
+  border-color: var(--color-primary, #3b82f6);
+}
+
+.timezone-select {
+  padding: var(--space-xs) var(--space-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  background: var(--color-bg);
+  color: var(--color-text);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.timezone-select:focus {
   outline: none;
   border-color: var(--color-primary, #3b82f6);
 }

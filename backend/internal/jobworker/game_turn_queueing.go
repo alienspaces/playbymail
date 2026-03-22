@@ -202,17 +202,10 @@ func (w *GameTurnQueueingWorker) autoStartFullInstances(m *domain.Domain) error 
 			continue
 		}
 
-		// Instance is full — start it
-		instance, _, err := m.StartGameInstance(rec.ID)
+		// Instance is full — start it (StartGameInstance sets NextTurnDueAt = now)
+		_, _, err = m.StartGameInstance(rec.ID)
 		if err != nil {
 			l.Warn("failed to auto-start instance >%s< >%v<", rec.ID, err)
-			continue
-		}
-
-		// Set NextTurnDueAt to now so turn processing is queued on this run
-		instance.NextTurnDueAt = nulltime.FromTime(time.Now())
-		if _, err := m.UpdateGameInstanceRec(instance); err != nil {
-			l.Warn("failed to set NextTurnDueAt for instance >%s< >%v<", rec.ID, err)
 			continue
 		}
 

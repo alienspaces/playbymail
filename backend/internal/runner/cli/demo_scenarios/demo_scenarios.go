@@ -57,6 +57,7 @@ func AdventureGameConfig() harness.DataConfig {
 						Record: &game_record.GameInstance{
 							DeliveryEmail:           true,
 							TurnDurationHours:       1,
+							RequiredPlayerCount:     1,
 							ProcessWhenAllSubmitted: true,
 						},
 					},

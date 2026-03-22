@@ -176,12 +176,11 @@ func validateGameInstanceRec(args *validateGameInstanceArgs, requireID bool) err
 		)
 	}
 
-	// Validate required_player_count (0 means no check, >= 1 means check is enforced)
-	if rec.RequiredPlayerCount < 0 {
+	if rec.RequiredPlayerCount < 1 {
 		return InvalidField(
 			game_record.FieldGameInstanceRequiredPlayerCount,
 			fmt.Sprintf("%d", rec.RequiredPlayerCount),
-			"required_player_count must be 0 or greater",
+			"required_player_count must be 1 or greater",
 		)
 	}
 
