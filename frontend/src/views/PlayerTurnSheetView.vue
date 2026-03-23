@@ -110,6 +110,7 @@ import {
   getGameSubscriptionInstanceTurnSheetHTML,
   saveGameSubscriptionInstanceTurnSheet,
   submitGameSubscriptionInstanceTurnSheets,
+  UnauthenticatedError,
 } from '../api/player'
 
 const route = useRoute()
@@ -203,6 +204,23 @@ async function loadTurnSheets() {
     const res = await getGameSubscriptionInstanceTurnSheets(route.params.game_subscription_instance_id)
     turnSheets.value = res.turn_sheets ?? []
   } catch (err) {
+    if (err instanceof UnauthenticatedError) {
+      // Session was overwritten (e.g. by an email prefetcher) between
+      // authenticateWithToken() and the first data fetch. Re-authenticate
+      // and retry once before giving up.
+      const reauthed = await authenticateWithToken()
+      if (!reauthed) {
+        tokenExpired.value = true
+        return
+      }
+      try {
+        const res = await getGameSubscriptionInstanceTurnSheets(route.params.game_subscription_instance_id)
+        turnSheets.value = res.turn_sheets ?? []
+      } catch (retryErr) {
+        loadError.value = retryErr.message || 'Failed to load turn sheets. Please try again.'
+      }
+      return
+    }
     loadError.value = err.message || 'Failed to load turn sheets. Please try again.'
   } finally {
     loading.value = false
@@ -219,6 +237,23 @@ async function loadSheetHTML(sheet) {
     const gameSubscriptionInstanceId = route.params.game_subscription_instance_id
     activeHTML.value = await getGameSubscriptionInstanceTurnSheetHTML(gameSubscriptionInstanceId, sheet.id)
   } catch (err) {
+    if (err instanceof UnauthenticatedError) {
+      // Re-authenticate and retry once.
+      const reauthed = await authenticateWithToken()
+      if (!reauthed) {
+        tokenExpired.value = true
+        loadingHTML.value = false
+        return
+      }
+      try {
+        const gameSubscriptionInstanceId = route.params.game_subscription_instance_id
+        activeHTML.value = await getGameSubscriptionInstanceTurnSheetHTML(gameSubscriptionInstanceId, sheet.id)
+      } catch (retryErr) {
+        activeHTML.value = `<p style="color:red;">Failed to load turn sheet: ${retryErr.message}</p>`
+      }
+      loadingHTML.value = false
+      return
+    }
     activeHTML.value = `<p style="color:red;">Failed to load turn sheet: ${err.message}</p>`
   } finally {
     loadingHTML.value = false
@@ -429,23 +464,46 @@ async function onSubmit() {
       }
     }
 
-    // Save all sheets that have cached data to the backend
-    const gameSubscriptionInstanceId = route.params.game_subscription_instance_id
-    for (const sheet of currentTurnSheets.value) {
-      const cached = formDataCache.value.get(sheet.id)
-      if (cached) {
-        await saveGameSubscriptionInstanceTurnSheet(gameSubscriptionInstanceId, sheet.id, cached)
-      }
-    }
-
-    // Submit all turn sheets (backend marks all as completed, with or without scanned data)
-    await submitGameSubscriptionInstanceTurnSheets(gameSubscriptionInstanceId)
+    await saveAndSubmitAll()
     submitted.value = true
   } catch (err) {
     submitError.value = err.message || 'Failed to submit. Please try again.'
   } finally {
     submitting.value = false
   }
+}
+
+// saveAndSubmitAll performs the save + submit sequence. On UnauthenticatedError
+// it re-exchanges the turn sheet token for a fresh session and retries once.
+// Players arrive here exclusively via a turn sheet email link and never log in
+// through the main app, so a 401 should always trigger re-authentication rather
+// than a redirect to /login.
+async function saveAndSubmitAll() {
+  try {
+    await doSaveAndSubmit()
+  } catch (err) {
+    if (!(err instanceof UnauthenticatedError)) throw err
+
+    const reauthed = await authenticateWithToken()
+    if (!reauthed) {
+      tokenExpired.value = true
+      throw new Error('Your link has expired. Please request a new one.')
+    }
+    await doSaveAndSubmit()
+  }
+}
+
+async function doSaveAndSubmit() {
+  const gameSubscriptionInstanceId = route.params.game_subscription_instance_id
+
+  for (const sheet of currentTurnSheets.value) {
+    const cached = formDataCache.value.get(sheet.id)
+    if (cached) {
+      await saveGameSubscriptionInstanceTurnSheet(gameSubscriptionInstanceId, sheet.id, cached)
+    }
+  }
+
+  await submitGameSubscriptionInstanceTurnSheets(gameSubscriptionInstanceId)
 }
 
 // When the active sheet changes: cache outgoing sheet's form data, then load new sheet

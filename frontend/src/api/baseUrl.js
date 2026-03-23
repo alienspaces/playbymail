@@ -15,12 +15,31 @@ export function getAuthHeaders() {
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
+// Sentinel error class for unauthenticated responses. Callers that pass
+// skipAutoLogout: true to apiFetch/handleApiError will receive this instead
+// of being redirected to /login. Used by the player turn sheet flow, which
+// re-exchanges the turn sheet token for a fresh session rather than logging in.
+export class UnauthenticatedError extends Error {
+  constructor() {
+    super('unauthenticated');
+    this.name = 'UnauthenticatedError';
+  }
+}
+
 /**
- * Extracts error message from backend API error response
- * Backend returns errors as an array of { code, message } objects
+ * Extracts error message from backend API error response.
+ * Backend returns errors as an array of { code, message } objects.
+ *
+ * Options:
+ *   skipAutoLogout {boolean} - When true, throws UnauthenticatedError on 401
+ *     instead of calling logout() and redirecting. Use for flows where the
+ *     caller handles session recovery (e.g. player turn sheet re-auth).
  */
-export async function handleApiError(res, defaultMessage) {
+export async function handleApiError(res, defaultMessage, { skipAutoLogout = false } = {}) {
   if (res.status === 401) {
+    if (skipAutoLogout) {
+      throw new UnauthenticatedError();
+    }
     useAuthStore().logout('session_expired');
     throw new Error('Session expired. Please log in again.');
   }
@@ -46,11 +65,19 @@ export async function handleApiError(res, defaultMessage) {
   return res;
 }
 
+/**
+ * Options:
+ *   skipAutoLogout {boolean} - See handleApiError above.
+ */
 export async function apiFetch(url, options = {}) {
-  const res = await fetch(url, options);
+  const { skipAutoLogout = false, ...fetchOptions } = options;
+  const res = await fetch(url, fetchOptions);
   if (res.status === 401) {
+    if (skipAutoLogout) {
+      throw new UnauthenticatedError();
+    }
     useAuthStore().logout('session_expired');
     throw new Error('Session expired. Please log in again.');
   }
   return res;
-} 
+}

@@ -1,0 +1,58 @@
+#!/usr/bin/env sh
+
+# Resend turn sheet notification emails for all players in a game instance.
+# Regenerates turn sheet tokens and queues notification emails.
+#
+# Usage:
+#   ./tools/resend-turn-sheet-email --game-instance-id <id>
+
+echo
+echo "** Resend turn sheet emails"
+echo
+
+GREEN='\033[0;32m'
+NC='\033[0m'
+
+print_status() {
+    echo -e "${GREEN}✅ $1${NC}"
+}
+
+if [ ! -f "backend/go.mod" ]; then
+    echo "❌ Must be run from playbymail root directory"
+    exit 1
+fi
+
+if [ -z "$CI" ]; then
+    if [ -f ".env.develop" ]; then
+        cp .env.develop .env
+        print_status "Environment file copied"
+    fi
+
+    if [ -f "tools/environment" ]; then
+        . tools/environment || exit $?
+        print_status "Environment loaded"
+    fi
+fi
+
+if [ -f "playbymail-cli" ]; then
+    rm playbymail-cli
+    print_status "Old CLI binary removed"
+fi
+
+cd backend || exit 1
+print_status "Building Go CLI..."
+go build -o ../playbymail-cli ./cmd/cli
+cd ..
+
+if [ ! -f "playbymail-cli" ]; then
+    echo "❌ CLI build failed - binary not found"
+    exit 1
+fi
+
+./playbymail-cli resend-turn-sheet-email "$@" || exit $?
+print_status "Done"
+
+rm playbymail-cli
+print_status "CLI binary removed after use"
+
+echo "** All done **"
