@@ -7,8 +7,9 @@ import (
 )
 
 const (
-	DemoMechaImageJoinGameRef = "demo-mecha-image-join-game"
-	DemoMechaImageOrdersRef   = "demo-mecha-image-orders"
+	DemoMechaImageJoinGameRef       = "demo-mecha-image-join-game"
+	DemoMechaImageOrdersRef         = "demo-mecha-image-orders"
+	DemoMechaImageManagementRef     = "demo-mecha-image-management"
 
 	ImageMechaJoinGame = "mecha-join-game.jpg"
 	ImageMechaOrders   = "mecha-orders.jpg"
@@ -136,6 +137,11 @@ func mechaGameConfigs() []harness.GameConfig {
 				Reference:     DemoMechaImageOrdersRef,
 				ImagePath:     ImageMechaOrders,
 				TurnSheetType: mecha_record.MechaTurnSheetTypeOrders,
+			},
+			{
+				Reference:     DemoMechaImageManagementRef,
+				ImagePath:     ImageMechaOrders,
+				TurnSheetType: mecha_record.MechaTurnSheetTypeLanceManagement,
 			},
 		},
 		MechaChassisConfigs: []harness.MechaChassisConfig{

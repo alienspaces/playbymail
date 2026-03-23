@@ -145,6 +145,7 @@ const SHEET_PRESENTATION_ORDER = [
   'adventure_game_monster',
   'mecha_join_game',
   'mecha_orders',
+  'mecha_lance_management',
 ]
 
 // Derive current turn sheets (latest turn only), sorted by canonical presentation order.
@@ -171,6 +172,7 @@ function formatSheetType(sheetType) {
     adventure_game_monster: 'Creature Encounter',
     mecha_join_game: 'Join Game',
     mecha_orders: 'Mech Orders',
+    mecha_lance_management: 'Lance Management',
   }
   return labels[sheetType] ?? sheetType.replace(/_/g, ' ')
 }

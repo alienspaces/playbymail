@@ -1095,6 +1095,11 @@ func GameConfig() []harness.GameConfig {
 				TurnSheetType: mecha_record.MechaTurnSheetTypeJoinGame,
 			},
 			{
+				Reference:     "steel-image-management",
+				ImagePath:     ImageSteelOrders,
+				TurnSheetType: mecha_record.MechaTurnSheetTypeLanceManagement,
+			},
+			{
 				Reference:     "steel-image-orders",
 				ImagePath:     ImageSteelOrders,
 				TurnSheetType: mecha_record.MechaTurnSheetTypeOrders,
@@ -1281,59 +1286,81 @@ func GameConfig() []harness.GameConfig {
 					Name:        "Thunder Lance",
 					Description: "Standard issue starter lance for incoming Steel Thunder commanders.",
 				},
-				LanceMechConfigs: []harness.MechaLanceMechConfig{
-					{
-						Reference:  "steel-mech-starter-1",
-						ChassisRef: "steel-chassis-viper",
-						Record:     &mecha_record.MechaLanceMech{Callsign: "Thunder-1"},
+			LanceMechConfigs: []harness.MechaLanceMechConfig{
+				{
+					Reference:  "steel-mech-starter-1",
+					ChassisRef: "steel-chassis-viper",
+					Record:     &mecha_record.MechaLanceMech{Callsign: "Thunder-1"},
+					WeaponConfigRefs: []harness.MechaLanceMechWeaponRef{
+						{WeaponRef: "steel-weapon-light-pulse-cannon", SlotLocation: "right-arm"},
 					},
-					{
-						Reference:  "steel-mech-starter-2",
-						ChassisRef: "steel-chassis-ranger",
-						Record:     &mecha_record.MechaLanceMech{Callsign: "Thunder-2"},
+				},
+				{
+					Reference:  "steel-mech-starter-2",
+					ChassisRef: "steel-chassis-ranger",
+					Record:     &mecha_record.MechaLanceMech{Callsign: "Thunder-2"},
+					WeaponConfigRefs: []harness.MechaLanceMechWeaponRef{
+						{WeaponRef: "steel-weapon-pulse-cannon", SlotLocation: "right-torso"},
+						{WeaponRef: "steel-weapon-rocket-pack", SlotLocation: "left-torso"},
 					},
 				},
 			},
-			{
-				Reference:  "steel-lance-alpha",
-				AccountRef: harness.AccountUserStandardRef,
-				Record: &mecha_record.MechaLance{
-					Name:        "Alpha Lance",
-					Description: "The standard player's lance, leading the assault.",
-				},
-				LanceMechConfigs: []harness.MechaLanceMechConfig{
-					{
-						Reference:  "steel-mech-alpha-1",
-						ChassisRef: "steel-chassis-ranger",
-						Record:     &mecha_record.MechaLanceMech{Callsign: "Alpha-1"},
+		},
+		{
+			Reference:  "steel-lance-alpha",
+			AccountRef: harness.AccountUserStandardRef,
+			Record: &mecha_record.MechaLance{
+				Name:        "Alpha Lance",
+				Description: "The standard player's lance, leading the assault.",
+			},
+			LanceMechConfigs: []harness.MechaLanceMechConfig{
+				{
+					Reference:  "steel-mech-alpha-1",
+					ChassisRef: "steel-chassis-ranger",
+					Record:     &mecha_record.MechaLanceMech{Callsign: "Alpha-1"},
+					WeaponConfigRefs: []harness.MechaLanceMechWeaponRef{
+						{WeaponRef: "steel-weapon-pulse-cannon", SlotLocation: "right-torso"},
+						{WeaponRef: "steel-weapon-rocket-pack", SlotLocation: "left-torso"},
 					},
-					{
-						Reference:  "steel-mech-alpha-2",
-						ChassisRef: "steel-chassis-viper",
-						Record:     &mecha_record.MechaLanceMech{Callsign: "Alpha-2"},
+				},
+				{
+					Reference:  "steel-mech-alpha-2",
+					ChassisRef: "steel-chassis-viper",
+					Record:     &mecha_record.MechaLanceMech{Callsign: "Alpha-2"},
+					WeaponConfigRefs: []harness.MechaLanceMechWeaponRef{
+						{WeaponRef: "steel-weapon-light-pulse-cannon", SlotLocation: "right-arm"},
 					},
 				},
 			},
-			{
-				Reference:  "steel-lance-bravo",
-				AccountRef: harness.AccountUserProPlayerRef,
-				Record: &mecha_record.MechaLance{
-					Name:        "Bravo Lance",
-					Description: "The pro player's lance, holding the defensive line.",
-				},
-				LanceMechConfigs: []harness.MechaLanceMechConfig{
-					{
-						Reference:  "steel-mech-bravo-1",
-						ChassisRef: "steel-chassis-crusher",
-						Record:     &mecha_record.MechaLanceMech{Callsign: "Bravo-1"},
+		},
+		{
+			Reference:  "steel-lance-bravo",
+			AccountRef: harness.AccountUserProPlayerRef,
+			Record: &mecha_record.MechaLance{
+				Name:        "Bravo Lance",
+				Description: "The pro player's lance, holding the defensive line.",
+			},
+			LanceMechConfigs: []harness.MechaLanceMechConfig{
+				{
+					Reference:  "steel-mech-bravo-1",
+					ChassisRef: "steel-chassis-crusher",
+					Record:     &mecha_record.MechaLanceMech{Callsign: "Bravo-1"},
+					WeaponConfigRefs: []harness.MechaLanceMechWeaponRef{
+						{WeaponRef: "steel-weapon-heavy-pulse-cannon", SlotLocation: "right-torso"},
+						{WeaponRef: "steel-weapon-pulse-cannon", SlotLocation: "left-torso"},
 					},
-					{
-						Reference:  "steel-mech-bravo-2",
-						ChassisRef: "steel-chassis-ranger",
-						Record:     &mecha_record.MechaLanceMech{Callsign: "Bravo-2"},
+				},
+				{
+					Reference:  "steel-mech-bravo-2",
+					ChassisRef: "steel-chassis-ranger",
+					Record:     &mecha_record.MechaLanceMech{Callsign: "Bravo-2"},
+					WeaponConfigRefs: []harness.MechaLanceMechWeaponRef{
+						{WeaponRef: "steel-weapon-pulse-cannon", SlotLocation: "right-torso"},
+						{WeaponRef: "steel-weapon-light-pulse-cannon", SlotLocation: "left-arm"},
 					},
 				},
 			},
+		},
 		},
 	},
 	// Mecha email-only scenario — mirrors the adventure email-only pattern with a single
@@ -1352,6 +1379,11 @@ func GameConfig() []harness.GameConfig {
 				Reference:     "iron-image-join-game",
 				ImagePath:     ImageIronJoinGame,
 				TurnSheetType: mecha_record.MechaTurnSheetTypeJoinGame,
+			},
+			{
+				Reference:     "iron-image-management",
+				ImagePath:     ImageIronOrders,
+				TurnSheetType: mecha_record.MechaTurnSheetTypeLanceManagement,
 			},
 			{
 				Reference:     "iron-image-orders",
@@ -1484,59 +1516,80 @@ func GameConfig() []harness.GameConfig {
 					Name:        "Vanguard Lance",
 					Description: "Standard issue starter lance for incoming Iron Vanguard commanders.",
 				},
-				LanceMechConfigs: []harness.MechaLanceMechConfig{
-					{
-						Reference:  "iron-mech-starter-1",
-						ChassisRef: "iron-chassis-scout",
-						Record:     &mecha_record.MechaLanceMech{Callsign: "Vanguard-1"},
+			LanceMechConfigs: []harness.MechaLanceMechConfig{
+				{
+					Reference:  "iron-mech-starter-1",
+					ChassisRef: "iron-chassis-scout",
+					Record:     &mecha_record.MechaLanceMech{Callsign: "Vanguard-1"},
+					WeaponConfigRefs: []harness.MechaLanceMechWeaponRef{
+						{WeaponRef: "iron-weapon-chaingun", SlotLocation: "right-arm"},
 					},
-					{
-						Reference:  "iron-mech-starter-2",
-						ChassisRef: "iron-chassis-sentinel",
-						Record:     &mecha_record.MechaLanceMech{Callsign: "Vanguard-2"},
+				},
+				{
+					Reference:  "iron-mech-starter-2",
+					ChassisRef: "iron-chassis-sentinel",
+					Record:     &mecha_record.MechaLanceMech{Callsign: "Vanguard-2"},
+					WeaponConfigRefs: []harness.MechaLanceMechWeaponRef{
+						{WeaponRef: "iron-weapon-pulse-cannon", SlotLocation: "right-torso"},
+						{WeaponRef: "iron-weapon-chaingun", SlotLocation: "left-arm"},
 					},
 				},
 			},
-			{
-				Reference:  "iron-lance-one",
-				AccountRef: harness.AccountUserStandardRef,
-				Record: &mecha_record.MechaLance{
-					Name:        "Iron Lance",
-					Description: "The player's lance, spearheading the advance.",
-				},
-				LanceMechConfigs: []harness.MechaLanceMechConfig{
-					{
-						Reference:  "iron-mech-one-1",
-						ChassisRef: "iron-chassis-sentinel",
-						Record:     &mecha_record.MechaLanceMech{Callsign: "Iron-1"},
+		},
+		{
+			Reference:  "iron-lance-one",
+			AccountRef: harness.AccountUserStandardRef,
+			Record: &mecha_record.MechaLance{
+				Name:        "Iron Lance",
+				Description: "The player's lance, spearheading the advance.",
+			},
+			LanceMechConfigs: []harness.MechaLanceMechConfig{
+				{
+					Reference:  "iron-mech-one-1",
+					ChassisRef: "iron-chassis-sentinel",
+					Record:     &mecha_record.MechaLanceMech{Callsign: "Iron-1"},
+					WeaponConfigRefs: []harness.MechaLanceMechWeaponRef{
+						{WeaponRef: "iron-weapon-pulse-cannon", SlotLocation: "right-torso"},
+						{WeaponRef: "iron-weapon-chaingun", SlotLocation: "left-arm"},
 					},
-					{
-						Reference:  "iron-mech-one-2",
-						ChassisRef: "iron-chassis-scout",
-						Record:     &mecha_record.MechaLanceMech{Callsign: "Iron-2"},
+				},
+				{
+					Reference:  "iron-mech-one-2",
+					ChassisRef: "iron-chassis-scout",
+					Record:     &mecha_record.MechaLanceMech{Callsign: "Iron-2"},
+					WeaponConfigRefs: []harness.MechaLanceMechWeaponRef{
+						{WeaponRef: "iron-weapon-chaingun", SlotLocation: "right-arm"},
 					},
 				},
 			},
-			{
-				Reference:           "iron-computer-opponent-lance",
-				ComputerOpponentRef: "iron-computer-opponent",
-				Record: &mecha_record.MechaLance{
-					Name:        "Defender Lance",
-					Description: "The garrison's reaction force, defending the Command Post.",
-				},
-				LanceMechConfigs: []harness.MechaLanceMechConfig{
-					{
-						Reference:  "iron-defender-1",
-						ChassisRef: "iron-chassis-sentinel",
-						Record:     &mecha_record.MechaLanceMech{Callsign: "Defender-1"},
+		},
+		{
+			Reference:           "iron-computer-opponent-lance",
+			ComputerOpponentRef: "iron-computer-opponent",
+			Record: &mecha_record.MechaLance{
+				Name:        "Defender Lance",
+				Description: "The garrison's reaction force, defending the Command Post.",
+			},
+			LanceMechConfigs: []harness.MechaLanceMechConfig{
+				{
+					Reference:  "iron-defender-1",
+					ChassisRef: "iron-chassis-sentinel",
+					Record:     &mecha_record.MechaLanceMech{Callsign: "Defender-1"},
+					WeaponConfigRefs: []harness.MechaLanceMechWeaponRef{
+						{WeaponRef: "iron-weapon-pulse-cannon", SlotLocation: "right-torso"},
+						{WeaponRef: "iron-weapon-chaingun", SlotLocation: "left-arm"},
 					},
-					{
-						Reference:  "iron-defender-2",
-						ChassisRef: "iron-chassis-scout",
-						Record:     &mecha_record.MechaLanceMech{Callsign: "Defender-2"},
+				},
+				{
+					Reference:  "iron-defender-2",
+					ChassisRef: "iron-chassis-scout",
+					Record:     &mecha_record.MechaLanceMech{Callsign: "Defender-2"},
+					WeaponConfigRefs: []harness.MechaLanceMechWeaponRef{
+						{WeaponRef: "iron-weapon-chaingun", SlotLocation: "right-arm"},
 					},
 				},
 			},
+		},
 		},
 	},
 }
