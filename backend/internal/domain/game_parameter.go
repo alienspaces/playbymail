@@ -26,7 +26,7 @@ const (
 )
 
 const (
-	MechWargameParameterLanceSize = "lance_size"
+	MechaParameterLanceSize = "lance_size"
 )
 
 var gameParameters = []game_record.GameParameter{
@@ -38,10 +38,10 @@ var gameParameters = []game_record.GameParameter{
 		ValueType:    GameParameterValueTypeInteger,
 		DefaultValue: "3",
 	},
-	// Mech wargame parameters
+	// Mecha parameters
 	{
-		GameType:     game_record.GameTypeMechWargame,
-		ConfigKey:    MechWargameParameterLanceSize,
+		GameType:     game_record.GameTypeMecha,
+		ConfigKey:    MechaParameterLanceSize,
 		Description:  "The number of mechs in a player lance.",
 		ValueType:    GameParameterValueTypeInteger,
 		DefaultValue: "4",

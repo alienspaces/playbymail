@@ -81,14 +81,14 @@ const SHEET_TYPES_BY_GAME_TYPE = {
             description: 'Background image for the inventory management turn sheet used by players to manage their items.'
         }
     ],
-    mech_wargame: [
+    mecha: [
         {
-            value: 'mech_wargame_join_game',
+            value: 'mecha_join_game',
             label: 'Join Game',
             description: 'Background image for the join game turn sheet that new commanders receive when joining.'
         },
         {
-            value: 'mech_wargame_orders',
+            value: 'mecha_orders',
             label: 'Mech Orders',
             description: 'Background image for the mech orders turn sheet used by players to submit movement and attack orders.'
         }

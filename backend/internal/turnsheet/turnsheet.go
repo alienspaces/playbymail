@@ -18,8 +18,8 @@ func GetTurnSheetJoinGameData(gameRec *game_record.Game, turnSheetCode string) (
 	switch gameRec.GameType {
 	case game_record.GameTypeAdventure:
 		return createAdventureGameJoinGameData(gameRec, turnSheetCode), nil
-	case game_record.GameTypeMechWargame:
-		return createMechWargameJoinGameData(gameRec, turnSheetCode), nil
+	case game_record.GameTypeMecha:
+		return createMechaJoinGameData(gameRec, turnSheetCode), nil
 	default:
 		return JoinGameData{}, fmt.Errorf("join game turn sheets not supported for game type: %s", gameRec.GameType)
 	}

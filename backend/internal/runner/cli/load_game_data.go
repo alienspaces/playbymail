@@ -11,6 +11,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/record/account_record"
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
+	"gitlab.com/alienspaces/playbymail/internal/record/mecha_record"
 	"gitlab.com/alienspaces/playbymail/internal/runner/cli/demo_scenarios"
 )
 
@@ -378,7 +379,12 @@ func (rnr *Runner) removeGameAndDependents(dm *domain.Domain, gameID string) err
 		return err
 	}
 
-	// 12. Game images
+	// 13. Mecha definition data (lance mechs -> lances -> sector links -> sectors -> weapons -> chassis)
+	if err := rnr.removeMechaDefinitionData(dm, gameID); err != nil {
+		return err
+	}
+
+	// Game images
 	images, err := dm.GetManyGameImageRecs(&coresql.Options{
 		Params: []coresql.Param{{Col: game_record.FieldGameImageGameID, Val: gameID}},
 	})
@@ -583,6 +589,54 @@ func (rnr *Runner) removeGameInstanceDependents(dm *domain.Domain, instanceID st
 		}
 	}
 
+	// Mech instances depend on lance instances and sector instances — remove first.
+	mechInsts, err := dm.GetManyMechaMechInstanceRecs(byInstance)
+	if err != nil {
+		return fmt.Errorf("failed getting mech instances: %w", err)
+	}
+	for _, rec := range mechInsts {
+		if err := dm.RemoveMechaMechInstanceRec(rec.ID); err != nil {
+			return fmt.Errorf("failed removing mech instance >%s<: %w", rec.ID, err)
+		}
+	}
+
+	// Mecha turn sheets reference lance instances — remove before lance instances.
+	// The turn sheet table has no game_instance_id column; iterate via lance instance IDs.
+	lanceInsts, err := dm.GetManyMechaLanceInstanceRecs(byInstance)
+	if err != nil {
+		return fmt.Errorf("failed getting lance instances: %w", err)
+	}
+	for _, lanceInst := range lanceInsts {
+		mwTurnSheets, err := dm.GetManyMechaTurnSheetRecs(&coresql.Options{
+			Params: []coresql.Param{{Col: mecha_record.FieldMechaTurnSheetMechaLanceInstanceID, Val: lanceInst.ID}},
+		})
+		if err != nil {
+			return fmt.Errorf("failed getting mecha turn sheets for lance instance >%s<: %w", lanceInst.ID, err)
+		}
+		for _, rec := range mwTurnSheets {
+			if err := dm.RemoveMechaTurnSheetRec(rec.ID); err != nil {
+				return fmt.Errorf("failed removing mecha turn sheet >%s<: %w", rec.ID, err)
+			}
+		}
+	}
+
+	for _, rec := range lanceInsts {
+		if err := dm.RemoveMechaLanceInstanceRec(rec.ID); err != nil {
+			return fmt.Errorf("failed removing lance instance >%s<: %w", rec.ID, err)
+		}
+	}
+
+	// Sector instances
+	sectorInsts, err := dm.GetManyMechaSectorInstanceRecs(byInstance)
+	if err != nil {
+		return fmt.Errorf("failed getting sector instances: %w", err)
+	}
+	for _, rec := range sectorInsts {
+		if err := dm.RemoveMechaSectorInstanceRec(rec.ID); err != nil {
+			return fmt.Errorf("failed removing sector instance >%s<: %w", rec.ID, err)
+		}
+	}
+
 	// Adventure game item instances must be removed before character instances
 	// (item_instance.adventure_game_character_instance_id FK references character_instance)
 	itemInsts, err := dm.GetManyAdventureGameItemInstanceRecs(byInstance)
@@ -662,6 +716,79 @@ func (rnr *Runner) removeGameInstanceDependents(dm *domain.Domain, instanceID st
 	for _, rec := range params {
 		if err := dm.RemoveGameInstanceParameterRec(rec.ID); err != nil {
 			return fmt.Errorf("failed removing instance parameter >%s<: %w", rec.ID, err)
+		}
+	}
+
+	return nil
+}
+
+// removeMechaDefinitionData removes mecha-specific design records for a game
+// in FK-safe order: lance mechs -> lances -> sector links -> sectors -> weapons -> chassis.
+func (rnr *Runner) removeMechaDefinitionData(dm *domain.Domain, gameID string) error {
+	byGame := &coresql.Options{
+		Params: []coresql.Param{{Col: "game_id", Val: gameID}},
+	}
+
+	// Lance mechs must be removed before lances (FK dependency)
+	lanceMechs, err := dm.GetManyMechaLanceMechRecs(byGame)
+	if err != nil {
+		return fmt.Errorf("failed getting mecha lance mechs: %w", err)
+	}
+	for _, rec := range lanceMechs {
+		if err := dm.RemoveMechaLanceMechRec(rec.ID); err != nil {
+			return fmt.Errorf("failed removing mecha lance mech >%s<: %w", rec.ID, err)
+		}
+	}
+
+	// Lances must be removed before chassis (FK on account, chassis via lance_mech already done)
+	lances, err := dm.GetManyMechaLanceRecs(byGame)
+	if err != nil {
+		return fmt.Errorf("failed getting mecha lances: %w", err)
+	}
+	for _, rec := range lances {
+		if err := dm.RemoveMechaLanceRec(rec.ID); err != nil {
+			return fmt.Errorf("failed removing mecha lance >%s<: %w", rec.ID, err)
+		}
+	}
+
+	// Sector links must be removed before sectors
+	sectorLinks, err := dm.GetManyMechaSectorLinkRecs(byGame)
+	if err != nil {
+		return fmt.Errorf("failed getting mecha sector links: %w", err)
+	}
+	for _, rec := range sectorLinks {
+		if err := dm.RemoveMechaSectorLinkRec(rec.ID); err != nil {
+			return fmt.Errorf("failed removing mecha sector link >%s<: %w", rec.ID, err)
+		}
+	}
+
+	sectors, err := dm.GetManyMechaSectorRecs(byGame)
+	if err != nil {
+		return fmt.Errorf("failed getting mecha sectors: %w", err)
+	}
+	for _, rec := range sectors {
+		if err := dm.RemoveMechaSectorRec(rec.ID); err != nil {
+			return fmt.Errorf("failed removing mecha sector >%s<: %w", rec.ID, err)
+		}
+	}
+
+	weapons, err := dm.GetManyMechaWeaponRecs(byGame)
+	if err != nil {
+		return fmt.Errorf("failed getting mecha weapons: %w", err)
+	}
+	for _, rec := range weapons {
+		if err := dm.RemoveMechaWeaponRec(rec.ID); err != nil {
+			return fmt.Errorf("failed removing mecha weapon >%s<: %w", rec.ID, err)
+		}
+	}
+
+	chassis, err := dm.GetManyMechaChassisRecs(byGame)
+	if err != nil {
+		return fmt.Errorf("failed getting mecha chassis: %w", err)
+	}
+	for _, rec := range chassis {
+		if err := dm.RemoveMechaChassisRec(rec.ID); err != nil {
+			return fmt.Errorf("failed removing mecha chassis >%s<: %w", rec.ID, err)
 		}
 	}
 

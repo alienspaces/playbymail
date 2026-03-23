@@ -2,22 +2,23 @@ package turnsheet
 
 import (
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
-	"gitlab.com/alienspaces/playbymail/internal/record/mech_wargame_record"
+	"gitlab.com/alienspaces/playbymail/internal/record/mecha_record"
 )
 
 // ScannedDataSchemaLocation is the subdirectory (relative to SchemaPath) where scanned_data
 // JSON schemas for turn sheet types live, e.g. turnsheet/adventure_game.
 const ScannedDataSchemaLocation = "turnsheet/adventure_game"
 
-// MechWargameScannedDataSchemaLocation is the subdirectory for mech wargame scanned_data schemas.
-const MechWargameScannedDataSchemaLocation = "turnsheet/mech_wargame"
+// MechaScannedDataSchemaLocation is the subdirectory for mecha scanned_data schemas.
+const MechaScannedDataSchemaLocation = "turnsheet/mecha"
 
 // scannedDataSchemaLocationBySheetType maps turn sheet types to their schema subdirectory.
 var scannedDataSchemaLocationBySheetType = map[string]string{
 	adventure_game_record.AdventureGameTurnSheetTypeLocationChoice:      ScannedDataSchemaLocation,
 	adventure_game_record.AdventureGameTurnSheetTypeInventoryManagement: ScannedDataSchemaLocation,
 	adventure_game_record.AdventureGameTurnSheetTypeCreatureEncounter:   ScannedDataSchemaLocation,
-	mech_wargame_record.MechWargameTurnSheetTypeOrders:                  MechWargameScannedDataSchemaLocation,
+	mecha_record.MechaTurnSheetTypeOrders:          MechaScannedDataSchemaLocation,
+	mecha_record.MechaTurnSheetTypeLanceManagement: MechaScannedDataSchemaLocation,
 }
 
 // scannedDataSchemaNameBySheetType maps turn sheet types to their scanned_data schema filename.
@@ -26,7 +27,8 @@ var scannedDataSchemaNameBySheetType = map[string]string{
 	adventure_game_record.AdventureGameTurnSheetTypeLocationChoice:      LocationChoiceScannedDataSchemaName,
 	adventure_game_record.AdventureGameTurnSheetTypeInventoryManagement: InventoryManagementScannedDataSchemaName,
 	adventure_game_record.AdventureGameTurnSheetTypeCreatureEncounter:   MonsterEncounterScannedDataSchemaName,
-	mech_wargame_record.MechWargameTurnSheetTypeOrders:                  OrdersScannedDataSchemaName,
+	mecha_record.MechaTurnSheetTypeOrders:          OrdersScannedDataSchemaName,
+	mecha_record.MechaTurnSheetTypeLanceManagement: LanceManagementScannedDataSchemaName,
 }
 
 // ScannedDataSchemaName returns the JSON schema filename for the given sheet type's scanned_data,

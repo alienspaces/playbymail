@@ -8,7 +8,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
-	"gitlab.com/alienspaces/playbymail/internal/record/mech_wargame_record"
+	"gitlab.com/alienspaces/playbymail/internal/record/mecha_record"
 	"gitlab.com/alienspaces/playbymail/internal/utils/config"
 )
 
@@ -67,11 +67,11 @@ func getDocumentProcessorMap(l logger.Logger, cfg config.Config) (map[string]Doc
 	}
 	maps.Copy(processors, adventureProcessors)
 
-	mechWargameProcessors, err := getMechWargameDocumentProcessorMap(l, cfg)
+	mechaProcessors, err := getMechaDocumentProcessorMap(l, cfg)
 	if err != nil {
 		return nil, err
 	}
-	maps.Copy(processors, mechWargameProcessors)
+	maps.Copy(processors, mechaProcessors)
 
 	return processors, nil
 }
@@ -106,20 +106,26 @@ func getAdventureGameDocumentProcessorMap(l logger.Logger, cfg config.Config) (m
 	return processors, nil
 }
 
-func getMechWargameDocumentProcessorMap(l logger.Logger, cfg config.Config) (map[string]DocumentProcessor, error) {
+func getMechaDocumentProcessorMap(l logger.Logger, cfg config.Config) (map[string]DocumentProcessor, error) {
 	processors := make(map[string]DocumentProcessor)
 
-	joinGameProcessor, err := NewMechWargameJoinGameProcessor(l, cfg)
+	joinGameProcessor, err := NewMechaJoinGameProcessor(l, cfg)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create mech wargame join game processor: %w", err)
+		return nil, fmt.Errorf("failed to create mecha join game processor: %w", err)
 	}
-	processors[mech_wargame_record.MechWargameTurnSheetTypeJoinGame] = joinGameProcessor
+	processors[mecha_record.MechaTurnSheetTypeJoinGame] = joinGameProcessor
 
-	ordersProcessor, err := NewMechWargameOrdersProcessor(l, cfg)
+	ordersProcessor, err := NewMechaOrdersProcessor(l, cfg)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create mech wargame orders processor: %w", err)
+		return nil, fmt.Errorf("failed to create mecha orders processor: %w", err)
 	}
-	processors[mech_wargame_record.MechWargameTurnSheetTypeOrders] = ordersProcessor
+	processors[mecha_record.MechaTurnSheetTypeOrders] = ordersProcessor
+
+	managementProcessor, err := NewMechaLanceManagementProcessor(l, cfg)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create mecha lance management processor: %w", err)
+	}
+	processors[mecha_record.MechaTurnSheetTypeLanceManagement] = managementProcessor
 
 	return processors, nil
 }

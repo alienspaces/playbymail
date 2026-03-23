@@ -170,9 +170,9 @@ func (t *Testing) createGames() error {
 		l.Debug("created >%d< adventure game location link requirement records", len(adventureGameRecs.LocationLinkRequirements))
 		l.Debug("created >%d< adventure game character records", len(adventureGameRecs.Characters))
 
-		// Process mech wargame config
-		if err := t.processMechWargameConfig(t.DataConfig.GameConfigs[i], gameRec); err != nil {
-			l.Warn("failed processing mech wargame config >%v<", err)
+		// Process mecha config
+		if err := t.processMechaConfig(t.DataConfig.GameConfigs[i], gameRec); err != nil {
+			l.Warn("failed processing mecha config >%v<", err)
 			return err
 		}
 	}
@@ -321,14 +321,14 @@ func (t *Testing) RemoveData() error {
 	l.Debug("removed adventure game records")
 
 	// ------------------------------------------------------------
-	// Mech wargame specific records
+	// Mecha specific records
 	// ------------------------------------------------------------
 
-	if err := t.removeMechWargameRecords(); err != nil {
-		l.Warn("failed removing mech wargame records >%v<", err)
+	if err := t.removeMechaRecords(); err != nil {
+		l.Warn("failed removing mecha records >%v<", err)
 		return err
 	}
-	l.Debug("removed mech wargame records")
+	l.Debug("removed mecha records")
 
 	// Remove game image records
 	l.Debug("removing >%d< game image records", len(t.teardownData.GameImageRecs))

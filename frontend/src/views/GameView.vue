@@ -119,7 +119,7 @@ export default {
           label: 'Type',
           required: true,
           type: 'select',
-          options: [{ value: 'adventure', label: 'Adventure' }, { value: 'mech_wargame', label: 'Mech Wargame' }],
+          options: [{ value: 'adventure', label: 'Adventure' }, { value: 'mecha', label: 'Mecha' }],
         },
         {
           key: 'turn_duration_hours',

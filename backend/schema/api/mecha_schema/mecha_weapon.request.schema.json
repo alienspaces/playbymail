@@ -1,0 +1,32 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "http://playbymail.games/schema/mecha_schema/mecha_weapon.request.schema.json",
+    "title": "MechaWeaponRequest",
+    "type": "object",
+    "properties": {
+        "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+        },
+        "description": {
+            "type": "string"
+        },
+        "damage": {
+            "type": "integer"
+        },
+        "heat_cost": {
+            "type": "integer"
+        },
+        "range_band": {
+            "type": "string",
+            "enum": ["short", "medium", "long"]
+        },
+        "mount_size": {
+            "type": "string",
+            "enum": ["small", "medium", "large"]
+        }
+    },
+    "required": ["name", "description"],
+    "additionalProperties": false
+}

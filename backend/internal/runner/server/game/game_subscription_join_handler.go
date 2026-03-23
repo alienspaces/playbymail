@@ -26,6 +26,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/record/account_record"
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
+	"gitlab.com/alienspaces/playbymail/internal/record/mecha_record"
 	"gitlab.com/alienspaces/playbymail/internal/turnsheet"
 	"gitlab.com/alienspaces/playbymail/internal/utils/logging"
 	"gitlab.com/alienspaces/playbymail/internal/utils/turnsheetutil"
@@ -282,7 +283,13 @@ func getJoinSheetHandler(w http.ResponseWriter, r *http.Request, pp httprouter.P
 
 	cfg := mm.Config()
 
-	joinGameSheetType := adventure_game_record.AdventureGameTurnSheetTypeJoinGame
+	var joinGameSheetType string
+	switch gameRec.GameType {
+	case game_record.GameTypeMecha:
+		joinGameSheetType = mecha_record.MechaTurnSheetTypeJoinGame
+	default:
+		joinGameSheetType = adventure_game_record.AdventureGameTurnSheetTypeJoinGame
+	}
 
 	processor, err := turnsheet.GetDocumentProcessor(l, cfg, joinGameSheetType)
 	if err != nil {
@@ -512,6 +519,16 @@ func submitJoinHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Par
 		}
 
 		l.Info("created adventure game character >%s< for player >%s<", characterRec.ID, accountUserRec.ID)
+	}
+
+	if gameRec.GameType == game_record.GameTypeMecha {
+		lanceRec, err := mm.CreateDefaultMechaLanceForPlayer(gameRec.ID, accountRec.ID, accountUserRec.ID, req.CharacterName, req.Name)
+		if err != nil {
+			l.Warn("failed to create default mecha lance for player >%v<", err)
+			return err
+		}
+
+		l.Info("created mecha lance >%s< for player >%s<", lanceRec.ID, accountUserRec.ID)
 	}
 
 	// Reserve the slot by linking the player subscription to the game instance

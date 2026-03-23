@@ -11,11 +11,11 @@
             "description": "The type of the game.",
             "enum": [
                 "adventure",
-                "mech_wargame"
+                "mecha"
             ],
             "examples": [
                 "adventure",
-                "mech_wargame"
+                "mecha"
             ],
             "maxLength": 50,
             "minLength": 1,

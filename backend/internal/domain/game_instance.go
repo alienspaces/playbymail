@@ -227,10 +227,10 @@ func (m *Domain) StartGameInstance(instanceID string) (*game_record.GameInstance
 			l.Warn("failed to populate adventure game instance data >%v<", err)
 			return nil, nil, err
 		}
-	case game_record.GameTypeMechWargame:
-		_, err = m.PopulateMechWargameGameInstanceData(instanceID)
+	case game_record.GameTypeMecha:
+		_, err = m.PopulateMechaGameInstanceData(instanceID)
 		if err != nil {
-			l.Warn("failed to populate mech wargame game instance data >%v<", err)
+			l.Warn("failed to populate mecha game instance data >%v<", err)
 			return nil, nil, err
 		}
 	}
@@ -1133,9 +1133,9 @@ func (m *Domain) DeleteGameInstance(instanceID string) error {
 		return err
 	}
 
-	// Delete mech_wargame instance data (turn sheets, mech instances, lance instances, sector instances)
-	if err := m.deleteMechWargameInstanceData(instanceID); err != nil {
-		l.Warn("failed to delete mech wargame instance data >%v<", err)
+	// Delete mecha instance data (turn sheets, mech instances, lance instances, sector instances)
+	if err := m.deleteMechaInstanceData(instanceID); err != nil {
+		l.Warn("failed to delete mecha instance data >%v<", err)
 		return err
 	}
 
@@ -1320,9 +1320,9 @@ func (m *Domain) RemoveGameInstance(instanceID string) error {
 		return err
 	}
 
-	// Remove mech_wargame instance data (turn sheets, mech instances, lance instances, sector instances)
-	if err := m.removeMechWargameInstanceData(instanceID); err != nil {
-		l.Warn("failed to remove mech wargame instance data >%v<", err)
+	// Remove mecha instance data (turn sheets, mech instances, lance instances, sector instances)
+	if err := m.removeMechaInstanceData(instanceID); err != nil {
+		l.Warn("failed to remove mecha instance data >%v<", err)
 		return err
 	}
 

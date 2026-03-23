@@ -22,7 +22,7 @@ const (
 
 const (
 	GameTypeAdventure   string = "adventure"
-	GameTypeMechWargame string = "mech_wargame"
+	GameTypeMecha string = "mecha"
 )
 
 const (

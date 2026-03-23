@@ -28,7 +28,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/jobqueue"
 	"gitlab.com/alienspaces/playbymail/internal/jobworker/adventure_game"
-	"gitlab.com/alienspaces/playbymail/internal/jobworker/mech_wargame"
+	"gitlab.com/alienspaces/playbymail/internal/jobworker/mecha"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 	"gitlab.com/alienspaces/playbymail/internal/utils/config"
 )
@@ -214,12 +214,12 @@ func (w *GameTurnProcessingWorker) initializeProcessors(l logger.Logger, d *doma
 	}
 	processors[game_record.GameTypeAdventure] = adventureProcessor
 
-	// Register mech wargame processor
-	mechWargameProcessor, err := mech_wargame.NewMechWargame(l, d)
+	// Register mecha processor
+	mechaProcessor, err := mecha.NewMecha(l, d, w.Config)
 	if err != nil {
 		return nil, err
 	}
-	processors[game_record.GameTypeMechWargame] = mechWargameProcessor
+	processors[game_record.GameTypeMecha] = mechaProcessor
 
 	return processors, nil
 }

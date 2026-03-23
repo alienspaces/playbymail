@@ -1,0 +1,48 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "http://playbymail.games/schema/mecha_schema/mecha_lance_mech.schema.json",
+    "title": "MechaLanceMech",
+    "type": "object",
+    "properties": {
+        "id": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
+        },
+        "game_id": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
+        },
+        "mecha_lance_id": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
+        },
+        "mecha_chassis_id": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
+        },
+        "callsign": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 50
+        },
+        "weapon_config": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "weapon_id": { "type": "string", "minLength": 1 },
+                    "slot_location": { "type": "string", "minLength": 1 }
+                },
+                "required": ["weapon_id", "slot_location"],
+                "additionalProperties": false
+            }
+        },
+        "created_at": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/created_at"
+        },
+        "updated_at": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/updated_at"
+        },
+        "deleted_at": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/updated_at"
+        }
+    },
+    "required": ["id", "game_id", "mecha_lance_id", "mecha_chassis_id", "callsign", "weapon_config", "created_at"],
+    "additionalProperties": false
+}

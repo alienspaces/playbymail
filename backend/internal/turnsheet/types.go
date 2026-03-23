@@ -16,6 +16,7 @@ const (
 	TurnEventCategoryMovement  = "movement"
 	TurnEventCategoryWorld     = "world"
 	TurnEventCategoryFlee      = "flee"
+	TurnEventCategorySystem    = "system"
 	// flee_context is an internal category used to pass flee state between processors
 	TurnEventCategoryFleeContext = "flee_context"
 )
@@ -29,6 +30,7 @@ const (
 	TurnEventIconFlee      = "💨"
 	TurnEventIconDeath     = "💀"
 	TurnEventIconHeal      = "💚"
+	TurnEventIconSystem    = "⚙️"
 )
 
 // TurnEvent represents a narrative event that occurred during turn processing.

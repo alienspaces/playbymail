@@ -8,7 +8,7 @@
             "description": "The type of the game.",
             "enum": [
                 "adventure",
-                "mech_wargame"
+                "mecha"
             ],
             "type": "string"
         },

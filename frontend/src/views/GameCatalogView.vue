@@ -64,7 +64,7 @@ const loading = ref(false)
 const error = ref(null)
 
 function formatGameType(gameType) {
-  const types = { adventure: 'Adventure', mech_wargame: 'Mech Wargame' }
+  const types = { adventure: 'Adventure', mecha: 'Mecha' }
   return types[gameType] ?? gameType
 }
 

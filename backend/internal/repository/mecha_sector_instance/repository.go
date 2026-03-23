@@ -1,0 +1,24 @@
+package mecha_sector_instance
+
+import (
+	"github.com/jackc/pgx/v5"
+
+	"gitlab.com/alienspaces/playbymail/core/repository"
+	"gitlab.com/alienspaces/playbymail/core/type/logger"
+	"gitlab.com/alienspaces/playbymail/core/type/repositor"
+	"gitlab.com/alienspaces/playbymail/internal/record/mecha_record"
+)
+
+const (
+	TableName string = mecha_record.TableMechaSectorInstance
+)
+
+func NewRepository(l logger.Logger, tx pgx.Tx) (repositor.Repositor, error) {
+	return repository.NewGeneric[mecha_record.MechaSectorInstance, *mecha_record.MechaSectorInstance](
+		repository.NewArgs{
+			Tx:        tx,
+			TableName: TableName,
+			Record:    mecha_record.MechaSectorInstance{},
+		},
+	)
+}

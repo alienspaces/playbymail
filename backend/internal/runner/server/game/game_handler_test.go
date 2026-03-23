@@ -182,7 +182,7 @@ func Test_createUpdateDeleteGameHandler(t *testing.T) {
 		},
 		{
 			TestCase: testutil.TestCase{
-				Name: "authenticated designer when create mech_wargame game with valid properties then returns created game",
+				Name: "authenticated designer when create mecha game with valid properties then returns created game",
 				NewRunner: func(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], scanner turnsheet.TurnSheetScanner, d harness.Data) (testutil.TestRunnerer, error) {
 					return testutil.NewTestRunner(cfg, l, s, j, scanner)
 				},
@@ -192,10 +192,10 @@ func Test_createUpdateDeleteGameHandler(t *testing.T) {
 				RequestHeaders: testutil.AuthHeaderProDesigner,
 				RequestBody: func(d harness.Data) any {
 					return game_schema.GameRequest{
-						Name:              "Test Mech Wargame",
-						GameType:          game_record.GameTypeMechWargame,
+						Name:              "Test Mecha",
+						GameType:          game_record.GameTypeMecha,
 						TurnDurationHours: 168, // 1 week
-						Description:       "A test mech wargame description",
+						Description:       "A test mecha description",
 					}
 				},
 				ResponseDecoder: testCaseResponseDecoder,

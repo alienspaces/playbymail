@@ -8,7 +8,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/record/account_record"
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
-	"gitlab.com/alienspaces/playbymail/internal/record/mech_wargame_record"
+	"gitlab.com/alienspaces/playbymail/internal/record/mecha_record"
 	"gitlab.com/alienspaces/playbymail/internal/repository/account"
 	"gitlab.com/alienspaces/playbymail/internal/repository/account_contact"
 	"gitlab.com/alienspaces/playbymail/internal/repository/account_game_view"
@@ -33,16 +33,17 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/repository/adventure_game_location_object_state"
 	"gitlab.com/alienspaces/playbymail/internal/repository/adventure_game_turn_sheet"
 	"gitlab.com/alienspaces/playbymail/internal/repository/catalog_game_instance_view"
-	"gitlab.com/alienspaces/playbymail/internal/repository/mech_wargame_chassis"
-	"gitlab.com/alienspaces/playbymail/internal/repository/mech_wargame_lance"
-	"gitlab.com/alienspaces/playbymail/internal/repository/mech_wargame_lance_instance"
-	"gitlab.com/alienspaces/playbymail/internal/repository/mech_wargame_lance_mech"
-	"gitlab.com/alienspaces/playbymail/internal/repository/mech_wargame_mech_instance"
-	"gitlab.com/alienspaces/playbymail/internal/repository/mech_wargame_sector"
-	"gitlab.com/alienspaces/playbymail/internal/repository/mech_wargame_sector_instance"
-	"gitlab.com/alienspaces/playbymail/internal/repository/mech_wargame_sector_link"
-	"gitlab.com/alienspaces/playbymail/internal/repository/mech_wargame_turn_sheet"
-	"gitlab.com/alienspaces/playbymail/internal/repository/mech_wargame_weapon"
+	"gitlab.com/alienspaces/playbymail/internal/repository/mecha_chassis"
+	"gitlab.com/alienspaces/playbymail/internal/repository/mecha_computer_opponent"
+	"gitlab.com/alienspaces/playbymail/internal/repository/mecha_lance"
+	"gitlab.com/alienspaces/playbymail/internal/repository/mecha_lance_instance"
+	"gitlab.com/alienspaces/playbymail/internal/repository/mecha_lance_mech"
+	"gitlab.com/alienspaces/playbymail/internal/repository/mecha_mech_instance"
+	"gitlab.com/alienspaces/playbymail/internal/repository/mecha_sector"
+	"gitlab.com/alienspaces/playbymail/internal/repository/mecha_sector_instance"
+	"gitlab.com/alienspaces/playbymail/internal/repository/mecha_sector_link"
+	"gitlab.com/alienspaces/playbymail/internal/repository/mecha_turn_sheet"
+	"gitlab.com/alienspaces/playbymail/internal/repository/mecha_weapon"
 	"gitlab.com/alienspaces/playbymail/internal/repository/game"
 	"gitlab.com/alienspaces/playbymail/internal/repository/game_image"
 	"gitlab.com/alienspaces/playbymail/internal/repository/game_instance"
@@ -110,17 +111,18 @@ func NewDomain(l logger.Logger, cfg config.Config) (*Domain, error) {
 		adventure_game_location_object_instance.NewRepository,
 		adventure_game_location_object_state.NewRepository,
 
-		// Mech wargame repositories
-		mech_wargame_chassis.NewRepository,
-		mech_wargame_weapon.NewRepository,
-		mech_wargame_sector.NewRepository,
-		mech_wargame_sector_link.NewRepository,
-		mech_wargame_lance.NewRepository,
-		mech_wargame_lance_mech.NewRepository,
-		mech_wargame_sector_instance.NewRepository,
-		mech_wargame_lance_instance.NewRepository,
-		mech_wargame_mech_instance.NewRepository,
-		mech_wargame_turn_sheet.NewRepository,
+		// Mecha repositories
+		mecha_chassis.NewRepository,
+		mecha_computer_opponent.NewRepository,
+		mecha_weapon.NewRepository,
+		mecha_sector.NewRepository,
+		mecha_sector_link.NewRepository,
+		mecha_lance.NewRepository,
+		mecha_lance_mech.NewRepository,
+		mecha_sector_instance.NewRepository,
+		mecha_lance_instance.NewRepository,
+		mecha_mech_instance.NewRepository,
+		mecha_turn_sheet.NewRepository,
 	}
 
 	cd, err := domain.NewDomain(l, repositoryConstructors)
@@ -303,54 +305,59 @@ func (m *Domain) AdventureGameLocationObjectStateRepository() *repository.Generi
 	return m.Repositories[adventure_game_location_object_state.TableName].(*repository.Generic[adventure_game_record.AdventureGameLocationObjectState, *adventure_game_record.AdventureGameLocationObjectState])
 }
 
-// MechWargameChassisRepository -
-func (m *Domain) MechWargameChassisRepository() *repository.Generic[mech_wargame_record.MechWargameChassis, *mech_wargame_record.MechWargameChassis] {
-	return m.Repositories[mech_wargame_chassis.TableName].(*repository.Generic[mech_wargame_record.MechWargameChassis, *mech_wargame_record.MechWargameChassis])
+// MechaChassisRepository -
+func (m *Domain) MechaChassisRepository() *repository.Generic[mecha_record.MechaChassis, *mecha_record.MechaChassis] {
+	return m.Repositories[mecha_chassis.TableName].(*repository.Generic[mecha_record.MechaChassis, *mecha_record.MechaChassis])
 }
 
-// MechWargameWeaponRepository -
-func (m *Domain) MechWargameWeaponRepository() *repository.Generic[mech_wargame_record.MechWargameWeapon, *mech_wargame_record.MechWargameWeapon] {
-	return m.Repositories[mech_wargame_weapon.TableName].(*repository.Generic[mech_wargame_record.MechWargameWeapon, *mech_wargame_record.MechWargameWeapon])
+// MechaComputerOpponentRepository -
+func (m *Domain) MechaComputerOpponentRepository() *repository.Generic[mecha_record.MechaComputerOpponent, *mecha_record.MechaComputerOpponent] {
+	return m.Repositories[mecha_computer_opponent.TableName].(*repository.Generic[mecha_record.MechaComputerOpponent, *mecha_record.MechaComputerOpponent])
 }
 
-// MechWargameSectorRepository -
-func (m *Domain) MechWargameSectorRepository() *repository.Generic[mech_wargame_record.MechWargameSector, *mech_wargame_record.MechWargameSector] {
-	return m.Repositories[mech_wargame_sector.TableName].(*repository.Generic[mech_wargame_record.MechWargameSector, *mech_wargame_record.MechWargameSector])
+// MechaWeaponRepository -
+func (m *Domain) MechaWeaponRepository() *repository.Generic[mecha_record.MechaWeapon, *mecha_record.MechaWeapon] {
+	return m.Repositories[mecha_weapon.TableName].(*repository.Generic[mecha_record.MechaWeapon, *mecha_record.MechaWeapon])
 }
 
-// MechWargameSectorLinkRepository -
-func (m *Domain) MechWargameSectorLinkRepository() *repository.Generic[mech_wargame_record.MechWargameSectorLink, *mech_wargame_record.MechWargameSectorLink] {
-	return m.Repositories[mech_wargame_sector_link.TableName].(*repository.Generic[mech_wargame_record.MechWargameSectorLink, *mech_wargame_record.MechWargameSectorLink])
+// MechaSectorRepository -
+func (m *Domain) MechaSectorRepository() *repository.Generic[mecha_record.MechaSector, *mecha_record.MechaSector] {
+	return m.Repositories[mecha_sector.TableName].(*repository.Generic[mecha_record.MechaSector, *mecha_record.MechaSector])
 }
 
-// MechWargameLanceRepository -
-func (m *Domain) MechWargameLanceRepository() *repository.Generic[mech_wargame_record.MechWargameLance, *mech_wargame_record.MechWargameLance] {
-	return m.Repositories[mech_wargame_lance.TableName].(*repository.Generic[mech_wargame_record.MechWargameLance, *mech_wargame_record.MechWargameLance])
+// MechaSectorLinkRepository -
+func (m *Domain) MechaSectorLinkRepository() *repository.Generic[mecha_record.MechaSectorLink, *mecha_record.MechaSectorLink] {
+	return m.Repositories[mecha_sector_link.TableName].(*repository.Generic[mecha_record.MechaSectorLink, *mecha_record.MechaSectorLink])
 }
 
-// MechWargameLanceMechRepository -
-func (m *Domain) MechWargameLanceMechRepository() *repository.Generic[mech_wargame_record.MechWargameLanceMech, *mech_wargame_record.MechWargameLanceMech] {
-	return m.Repositories[mech_wargame_lance_mech.TableName].(*repository.Generic[mech_wargame_record.MechWargameLanceMech, *mech_wargame_record.MechWargameLanceMech])
+// MechaLanceRepository -
+func (m *Domain) MechaLanceRepository() *repository.Generic[mecha_record.MechaLance, *mecha_record.MechaLance] {
+	return m.Repositories[mecha_lance.TableName].(*repository.Generic[mecha_record.MechaLance, *mecha_record.MechaLance])
 }
 
-// MechWargameSectorInstanceRepository -
-func (m *Domain) MechWargameSectorInstanceRepository() *repository.Generic[mech_wargame_record.MechWargameSectorInstance, *mech_wargame_record.MechWargameSectorInstance] {
-	return m.Repositories[mech_wargame_sector_instance.TableName].(*repository.Generic[mech_wargame_record.MechWargameSectorInstance, *mech_wargame_record.MechWargameSectorInstance])
+// MechaLanceMechRepository -
+func (m *Domain) MechaLanceMechRepository() *repository.Generic[mecha_record.MechaLanceMech, *mecha_record.MechaLanceMech] {
+	return m.Repositories[mecha_lance_mech.TableName].(*repository.Generic[mecha_record.MechaLanceMech, *mecha_record.MechaLanceMech])
 }
 
-// MechWargameLanceInstanceRepository -
-func (m *Domain) MechWargameLanceInstanceRepository() *repository.Generic[mech_wargame_record.MechWargameLanceInstance, *mech_wargame_record.MechWargameLanceInstance] {
-	return m.Repositories[mech_wargame_lance_instance.TableName].(*repository.Generic[mech_wargame_record.MechWargameLanceInstance, *mech_wargame_record.MechWargameLanceInstance])
+// MechaSectorInstanceRepository -
+func (m *Domain) MechaSectorInstanceRepository() *repository.Generic[mecha_record.MechaSectorInstance, *mecha_record.MechaSectorInstance] {
+	return m.Repositories[mecha_sector_instance.TableName].(*repository.Generic[mecha_record.MechaSectorInstance, *mecha_record.MechaSectorInstance])
 }
 
-// MechWargameMechInstanceRepository -
-func (m *Domain) MechWargameMechInstanceRepository() *repository.Generic[mech_wargame_record.MechWargameMechInstance, *mech_wargame_record.MechWargameMechInstance] {
-	return m.Repositories[mech_wargame_mech_instance.TableName].(*repository.Generic[mech_wargame_record.MechWargameMechInstance, *mech_wargame_record.MechWargameMechInstance])
+// MechaLanceInstanceRepository -
+func (m *Domain) MechaLanceInstanceRepository() *repository.Generic[mecha_record.MechaLanceInstance, *mecha_record.MechaLanceInstance] {
+	return m.Repositories[mecha_lance_instance.TableName].(*repository.Generic[mecha_record.MechaLanceInstance, *mecha_record.MechaLanceInstance])
 }
 
-// MechWargameTurnSheetRepository -
-func (m *Domain) MechWargameTurnSheetRepository() *repository.Generic[mech_wargame_record.MechWargameTurnSheet, *mech_wargame_record.MechWargameTurnSheet] {
-	return m.Repositories[mech_wargame_turn_sheet.TableName].(*repository.Generic[mech_wargame_record.MechWargameTurnSheet, *mech_wargame_record.MechWargameTurnSheet])
+// MechaMechInstanceRepository -
+func (m *Domain) MechaMechInstanceRepository() *repository.Generic[mecha_record.MechaMechInstance, *mecha_record.MechaMechInstance] {
+	return m.Repositories[mecha_mech_instance.TableName].(*repository.Generic[mecha_record.MechaMechInstance, *mecha_record.MechaMechInstance])
+}
+
+// MechaTurnSheetRepository -
+func (m *Domain) MechaTurnSheetRepository() *repository.Generic[mecha_record.MechaTurnSheet, *mecha_record.MechaTurnSheet] {
+	return m.Repositories[mecha_turn_sheet.TableName].(*repository.Generic[mecha_record.MechaTurnSheet, *mecha_record.MechaTurnSheet])
 }
 
 // Logger - Returns a logger with package context and provided function context

@@ -135,8 +135,8 @@
           </li>
         </ul>
 
-        <!-- Mech wargame specific links -->
-        <ul v-if="isMechWargameGame">
+        <!-- Mecha specific links -->
+        <ul v-if="isMechaGame">
           <li>
             <router-link :to="`/studio/${selectedGame.id}/chassis`" active-class="active">
               <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
@@ -206,7 +206,7 @@ const gamesStore = useGamesStore();
 const { selectedGame } = storeToRefs(gamesStore);
 
 const isAdventureGame = computed(() => selectedGame.value?.game_type === 'adventure')
-const isMechWargameGame = computed(() => selectedGame.value?.game_type === 'mech_wargame')
+const isMechaGame = computed(() => selectedGame.value?.game_type === 'mecha')
 </script>
 
 <style scoped>

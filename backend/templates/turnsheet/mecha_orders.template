@@ -1,0 +1,425 @@
+{{template "base.template" .}}
+
+{{define "styles"}}
+<style>
+    .lance-info {
+        margin-bottom: 10px;
+        font-size: 14px;
+        font-weight: bold;
+    }
+
+    .mech-orders-section {
+        margin-bottom: 14px;
+    }
+
+    .mech-order-entry {
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        padding: 8px 12px;
+        margin-bottom: 8px;
+        background-color: rgba(255, 255, 255, 0.80);
+    }
+
+    .mech-order-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-bottom: 4px;
+    }
+
+    .mech-callsign {
+        font-weight: 700;
+        font-size: 14px;
+        color: #1a1a2e;
+    }
+
+    .mech-status {
+        font-size: 11px;
+        font-style: italic;
+        color: #555;
+    }
+
+    .mech-status-destroyed {
+        color: #c0392b;
+        font-weight: bold;
+    }
+
+    .mech-status-shutdown {
+        color: #e67e22;
+        font-weight: bold;
+    }
+
+    /* Stat panel row: chassis info on left, bars on right */
+    .mech-stat-panel {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 6px;
+        flex-wrap: wrap;
+    }
+
+    .mech-chassis-info {
+        font-size: 11px;
+        color: #444;
+        min-width: 110px;
+    }
+
+    .mech-chassis-name {
+        font-weight: 600;
+    }
+
+    .mech-chassis-class {
+        display: inline-block;
+        font-size: 10px;
+        padding: 1px 5px;
+        border-radius: 3px;
+        background: #e9ecef;
+        color: #495057;
+        text-transform: capitalize;
+        margin-left: 4px;
+    }
+
+    .mech-chassis-class-light   { background: #d4edda; color: #155724; }
+    .mech-chassis-class-medium  { background: #fff3cd; color: #856404; }
+    .mech-chassis-class-heavy   { background: #fde9e0; color: #7a2723; }
+    .mech-chassis-class-assault { background: #f8d7da; color: #721c24; }
+
+    .mech-stat-bars {
+        flex: 1 1 180px;
+    }
+
+    .stat-bar-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 3px;
+    }
+
+    .stat-bar-label {
+        font-size: 10px;
+        font-weight: 600;
+        color: #555;
+        width: 50px;
+        text-align: right;
+        flex-shrink: 0;
+    }
+
+    .stat-bar-outer {
+        flex: 1;
+        background: #e9ecef;
+        border-radius: 3px;
+        height: 8px;
+        overflow: hidden;
+    }
+
+    .stat-bar-inner {
+        height: 100%;
+        border-radius: 3px;
+        background: #28a745;
+    }
+
+    /* Color thresholds applied via inline style percentage */
+    .stat-bar-inner-warn   { background: #ffc107; }
+    .stat-bar-inner-danger { background: #dc3545; }
+    .stat-bar-inner-heat   { background: #17a2b8; }
+    .stat-bar-inner-heat-warn   { background: #fd7e14; }
+    .stat-bar-inner-heat-danger { background: #dc3545; }
+
+    .stat-bar-text {
+        font-size: 10px;
+        color: #555;
+        width: 46px;
+        flex-shrink: 0;
+    }
+
+    .mech-meta {
+        display: flex;
+        gap: 12px;
+        font-size: 11px;
+        color: #555;
+        margin-bottom: 5px;
+    }
+
+    .mech-meta-item strong {
+        color: #333;
+    }
+
+    /* Weapon table */
+    .mech-weapons {
+        margin-bottom: 6px;
+    }
+
+    .mech-weapons table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 10px;
+    }
+
+    .mech-weapons th {
+        text-align: left;
+        color: #666;
+        font-weight: 600;
+        padding: 1px 4px;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    .mech-weapons td {
+        padding: 1px 4px;
+        color: #333;
+    }
+
+    .mech-weapons tr:nth-child(even) td {
+        background: rgba(0,0,0,0.03);
+    }
+
+    /* Refit overlay */
+    .mech-refit-notice {
+        background: #fff3cd;
+        border: 1px solid #ffc107;
+        border-radius: 3px;
+        padding: 4px 8px;
+        font-size: 11px;
+        color: #856404;
+        font-weight: 600;
+        margin-bottom: 6px;
+    }
+
+    .mech-location {
+        font-size: 12px;
+        color: #666;
+        margin-bottom: 6px;
+    }
+
+    .order-fields {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .order-field {
+        flex: 1 1 45%;
+        min-width: 160px;
+    }
+
+    .order-field label {
+        font-size: 11px;
+        font-weight: 600;
+        color: #444;
+        display: block;
+        margin-bottom: 2px;
+    }
+
+    /* HTML-only select for online play */
+    .order-select-html {
+        display: block;
+        width: 100%;
+        font-size: 11px;
+        padding: 3px 6px;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+        background: #fff;
+        box-sizing: border-box;
+    }
+
+    /* PDF-only handwriting line for print/scan */
+    .order-input-line-pdf {
+        display: none;
+    }
+
+    @media print {
+        .order-select-html {
+            display: none;
+        }
+        .order-input-line-pdf {
+            display: block;
+            border-bottom: 1px solid #555;
+            min-height: 18px;
+            width: 100%;
+        }
+    }
+
+    .options-panel {
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 8px 12px;
+        margin-bottom: 10px;
+        background-color: rgba(255, 255, 255, 0.70);
+    }
+
+    .options-panel h4 {
+        margin: 0 0 6px 0;
+        font-size: 12px;
+        color: #333;
+    }
+
+    .options-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px 16px;
+        list-style: none;
+        margin: 0;
+        padding: 0;
+    }
+
+    .options-list li {
+        font-size: 11px;
+        color: #444;
+    }
+
+    .option-id {
+        font-family: monospace;
+        font-size: 10px;
+        color: #777;
+        margin-left: 4px;
+    }
+</style>
+{{end}}
+
+{{define "content"}}
+{{if .LanceName}}
+<div class="lance-info">Lance: {{.LanceName}}</div>
+{{end}}
+
+<div class="mech-orders-section">
+    {{range .LanceMechs}}
+    <div class="mech-order-entry">
+        {{/* Header: callsign + status */}}
+        <div class="mech-order-header">
+            <span class="mech-callsign">{{.MechCallsign}}</span>
+            <span class="mech-status{{if eq .MechStatus "destroyed"}} mech-status-destroyed{{else if eq .MechStatus "shutdown"}} mech-status-shutdown{{end}}">{{.MechStatus}}</span>
+        </div>
+
+        {{/* Chassis info + class badge */}}
+        {{if .ChassisName}}
+        <div class="mech-chassis-info" style="margin-bottom:4px;">
+            <span class="mech-chassis-name">{{.ChassisName}}</span>
+            <span class="mech-chassis-class mech-chassis-class-{{.ChassisClass}}">{{.ChassisClass}}</span>
+        </div>
+        {{end}}
+
+        {{/* Refit notice replaces order fields */}}
+        {{if .IsRefitting}}
+        <div class="mech-refit-notice">&#9881; IN REFIT — orders unavailable this turn</div>
+        {{else}}
+
+        {{/* Stat bars */}}
+        {{if gt .MaxArmor 0}}
+        <div class="mech-stat-bars" style="margin-bottom:5px;">
+            {{/* Armor bar */}}
+            <div class="stat-bar-row">
+                <span class="stat-bar-label">Armor</span>
+                <div class="stat-bar-outer">
+                    <div class="stat-bar-inner{{if gt .MaxArmor 0}}{{if le (div (mul .CurrentArmor 100) .MaxArmor) 25}} stat-bar-inner-danger{{else if le (div (mul .CurrentArmor 100) .MaxArmor) 50}} stat-bar-inner-warn{{end}}{{end}}"
+                        style="width: {{if gt .MaxArmor 0}}{{div (mul .CurrentArmor 100) .MaxArmor}}{{else}}0{{end}}%;"></div>
+                </div>
+                <span class="stat-bar-text">{{.CurrentArmor}} / {{.MaxArmor}}</span>
+            </div>
+            {{/* Structure bar */}}
+            <div class="stat-bar-row">
+                <span class="stat-bar-label">Structure</span>
+                <div class="stat-bar-outer">
+                    <div class="stat-bar-inner{{if gt .MaxStructure 0}}{{if le (div (mul .CurrentStructure 100) .MaxStructure) 25}} stat-bar-inner-danger{{else if le (div (mul .CurrentStructure 100) .MaxStructure) 50}} stat-bar-inner-warn{{end}}{{end}}"
+                        style="width: {{if gt .MaxStructure 0}}{{div (mul .CurrentStructure 100) .MaxStructure}}{{else}}0{{end}}%;"></div>
+                </div>
+                <span class="stat-bar-text">{{.CurrentStructure}} / {{.MaxStructure}}</span>
+            </div>
+            {{/* Heat gauge */}}
+            <div class="stat-bar-row">
+                <span class="stat-bar-label">Heat</span>
+                <div class="stat-bar-outer">
+                    <div class="stat-bar-inner stat-bar-inner-heat{{if gt .HeatCapacity 0}}{{if ge (div (mul .CurrentHeat 100) .HeatCapacity) 80}} stat-bar-inner-heat-danger{{else if ge (div (mul .CurrentHeat 100) .HeatCapacity) 60}} stat-bar-inner-heat-warn{{end}}{{end}}"
+                        style="width: {{if gt .HeatCapacity 0}}{{div (mul .CurrentHeat 100) .HeatCapacity}}{{else}}0{{end}}%;"></div>
+                </div>
+                <span class="stat-bar-text">{{.CurrentHeat}} / {{.HeatCapacity}}</span>
+            </div>
+        </div>
+        {{end}}
+
+        {{/* Speed and pilot skill */}}
+        <div class="mech-meta">
+            {{if gt .Speed 0}}<span class="mech-meta-item"><strong>SPD</strong> {{.Speed}}</span>{{end}}
+            {{if gt .PilotSkill 0}}<span class="mech-meta-item"><strong>PILOT</strong> {{.PilotSkill}}</span>{{end}}
+        </div>
+
+        {{/* Weapon loadout */}}
+        {{if .Weapons}}
+        <div class="mech-weapons">
+            <table>
+                <tr>
+                    <th>Weapon</th>
+                    <th>DMG</th>
+                    <th>HEAT</th>
+                    <th>RANGE</th>
+                    <th>SLOT</th>
+                </tr>
+                {{range .Weapons}}
+                <tr>
+                    <td>{{.Name}}</td>
+                    <td>{{.Damage}}</td>
+                    <td>{{.HeatCost}}</td>
+                    <td>{{.RangeBand}}</td>
+                    <td>{{.SlotLocation}}</td>
+                </tr>
+                {{end}}
+            </table>
+        </div>
+        {{end}}
+
+        {{/* Location */}}
+        {{if .CurrentSectorName}}
+        <div class="mech-location">Sector: {{.CurrentSectorName}}</div>
+        {{end}}
+
+        {{/* Order fields */}}
+        <div class="order-fields">
+            <div class="order-field">
+                <label>Move To (Sector)</label>
+                <select name="move_to_{{.MechInstanceID}}" class="order-select-html">
+                    <option value="">-- stay in place --</option>
+                    {{range $.AvailableSectors}}
+                    <option value="{{.SectorInstanceID}}">{{.SectorName}}</option>
+                    {{end}}
+                </select>
+                <div class="order-input-line-pdf"></div>
+            </div>
+            <div class="order-field">
+                <label>Attack Target (Mech)</label>
+                <select name="attack_target_{{.MechInstanceID}}" class="order-select-html">
+                    <option value="">-- no attack --</option>
+                    {{range $.EnemyMechs}}
+                    <option value="{{.MechInstanceID}}">{{.Callsign}} @ {{.SectorName}}</option>
+                    {{end}}
+                </select>
+                <div class="order-input-line-pdf"></div>
+            </div>
+        </div>
+        <input type="hidden" name="mech_instance_id_{{.MechInstanceID}}" value="{{.MechInstanceID}}">
+
+        {{end}}{{/* end if not IsRefitting */}}
+    </div>
+    {{else}}
+    <p style="font-size:13px;color:#666;">No mechs available in this lance.</p>
+    {{end}}
+</div>
+
+{{if .AvailableSectors}}
+<div class="options-panel">
+    <h4>Available Sectors (Movement Destinations)</h4>
+    <ul class="options-list">
+        {{range .AvailableSectors}}
+        <li>{{.SectorName}} <span class="option-id">[{{.SectorInstanceID}}]</span></li>
+        {{end}}
+    </ul>
+</div>
+{{end}}
+
+{{if .EnemyMechs}}
+<div class="options-panel">
+    <h4>Enemy Mechs (Attack Targets)</h4>
+    <ul class="options-list">
+        {{range .EnemyMechs}}
+        <li>{{.Callsign}} @ {{.SectorName}} <span class="option-id">[{{.MechInstanceID}}]</span></li>
+        {{end}}
+    </ul>
+</div>
+{{end}}
+{{end}}

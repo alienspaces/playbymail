@@ -1,0 +1,189 @@
+{{define "styles"}}
+<style>
+.main-content .account-details,
+.main-content .commander-details {
+    width: 100%;
+    margin: 0 auto;
+}
+
+.main-content .account-info-section {
+    padding: 0;
+}
+
+.main-content .account-details {
+    padding: 0;
+}
+
+.main-content .form-group {
+    margin-bottom: 8px;
+}
+
+.main-content .form-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.main-content .form-row.two-column {
+    gap: 28px;
+}
+
+.main-content .form-row.two-column .form-group.third {
+    flex: 1 1 calc(50% - 14px);
+    max-width: calc(50% - 14px);
+}
+
+.main-content .form-group.post-code {
+    flex: 1 1 calc(50% - 14px);
+    max-width: calc(50% - 14px);
+}
+
+.main-content .form-group.half {
+    flex: 1 1 48%;
+    min-width: 180px;
+}
+
+.main-content .form-group.third {
+    flex: 1 1 48%;
+    min-width: 180px;
+}
+
+.main-content .section-divider {
+    margin: 10px 0;
+    border-bottom: 1px solid #d1d5db;
+}
+
+.main-content .delivery-options {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-top: 4px;
+}
+
+.main-content .delivery-option {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.95em;
+}
+
+</style>
+{{- if and (.HasDeliveryChoice) (.AvailableDeliveryMethods.PhysicalPost)}}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var radios = document.querySelectorAll('input[name="delivery_method"]');
+    var section = document.getElementById('postal-address-fields');
+    if (!radios.length || !section) return;
+
+    var requiredInputs = section.querySelectorAll('input[required]');
+
+    function toggle(show) {
+        section.style.display = show ? '' : 'none';
+        for (var i = 0; i < requiredInputs.length; i++) {
+            requiredInputs[i].required = show;
+        }
+    }
+
+    toggle(false);
+
+    for (var i = 0; i < radios.length; i++) {
+        radios[i].addEventListener('change', function() {
+            toggle(this.value === 'post');
+        });
+    }
+});
+</script>
+{{- end}}
+{{end}}
+
+{{define "content"}}
+{{- if .HasDeliveryChoice -}}
+<div class="delivery-section">
+    <h3 class="content-section-title">How would you like to play?</h3>
+    <div class="form-group">
+        <div class="delivery-options">
+            {{- if .AvailableDeliveryMethods.Email -}}
+            <label class="delivery-option">
+                <input type="radio" name="delivery_method" value="email"{{if eq .DefaultDeliveryMethod "email"}} checked{{end}} required>
+                By Email
+            </label>
+            {{- end -}}
+            {{- if .AvailableDeliveryMethods.PhysicalLocal -}}
+            <label class="delivery-option">
+                <input type="radio" name="delivery_method" value="local"{{if eq .DefaultDeliveryMethod "local"}} checked{{end}} required>
+                Local pickup
+            </label>
+            {{- end -}}
+            {{- if .AvailableDeliveryMethods.PhysicalPost -}}
+            <label class="delivery-option">
+                <input type="radio" name="delivery_method" value="post"{{if eq .DefaultDeliveryMethod "post"}} checked{{end}} required>
+                By Post
+            </label>
+            {{- end -}}
+        </div>
+    </div>
+</div>
+<div class="section-divider"></div>
+{{- else if .DefaultDeliveryMethod -}}
+<input type="hidden" name="delivery_method" value="{{.DefaultDeliveryMethod}}">
+{{- end -}}
+
+<div class="account-info-section">
+    <h3 class="content-section-title">Your PlayByMail Account</h3>
+    <div class="account-details">
+        <div class="form-group">
+            <label class="form-field-title" for="email">Email Address:</label>
+            {{- if .AccountEmail}}
+            <input type="email" id="email" name="email" value="{{.AccountEmail}}" readonly required>
+            {{- else}}
+            <input type="email" id="email" name="email" required>
+            {{- end}}
+        </div>
+        <div class="form-group">
+            <label class="form-field-title" for="name">Name:</label>
+            <input type="text" id="name" name="name" required>
+        </div>
+        {{- if .AvailableDeliveryMethods.PhysicalPost}}
+        <div id="postal-address-fields">
+        <div class="form-group">
+            <label class="form-field-title" for="postal_address_line1">Address Line 1:</label>
+            <input type="text" id="postal_address_line1" name="postal_address_line1" required>
+        </div>
+        <div class="form-group">
+            <label class="form-field-title" for="postal_address_line2">Address Line 2:</label>
+            <input type="text" id="postal_address_line2" name="postal_address_line2">
+        </div>
+        <div class="form-row two-column">
+            <div class="form-group third">
+                <label class="form-field-title" for="state_province">State / Province:</label>
+                <input type="text" id="state_province" name="state_province" required>
+            </div>
+            <div class="form-group third">
+                <label class="form-field-title" for="country">Country:</label>
+                <input type="text" id="country" name="country" required>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group third post-code">
+                <label class="form-field-title" for="postal_code">Post Code:</label>
+                <input type="text" id="postal_code" name="postal_code" required>
+            </div>
+        </div>
+        </div>
+        {{- end}}
+    </div>
+</div>
+
+<div class="commander-info-section">
+    <div class="section-divider"></div>
+    <h3 class="content-section-title">Your Mecha Commander</h3>
+    <div class="commander-details">
+        <div class="form-group">
+            <label class="form-field-title" for="commander_name">Commander Name:</label>
+            <input type="text" id="commander_name" name="commander_name" required>
+        </div>
+    </div>
+</div>
+{{end}}
+
+{{template "base.template" .}}

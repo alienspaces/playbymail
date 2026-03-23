@@ -63,7 +63,7 @@ describe('GameView', () => {
     expect(wrapper.vm.modalForm.game_type).toBe('')
   })
 
-  it('game type field includes adventure and mech_wargame options', () => {
+  it('game type field includes adventure and mecha options', () => {
     const wrapper = mount(GameView, {
       global: { mocks: { $router: { push: vi.fn() } } }
     })
@@ -73,11 +73,11 @@ describe('GameView', () => {
 
     const optionValues = gameTypeField.options.map(o => o.value)
     expect(optionValues).toContain('adventure')
-    expect(optionValues).toContain('mech_wargame')
+    expect(optionValues).toContain('mecha')
   })
 
-  it('creates a mech_wargame game and closes the modal', async () => {
-    const createdGame = { id: '99', name: 'Battle for the Planet', game_type: 'mech_wargame' }
+  it('creates a mecha game and closes the modal', async () => {
+    const createdGame = { id: '99', name: 'Battle for the Planet', game_type: 'mecha' }
     fetch.mockImplementation((url, opts) => {
       if (url && url.includes('/account/subscriptions')) {
         return Promise.resolve({ ok: true, json: () => Promise.resolve({ data: mockSubscriptions }) })
@@ -99,7 +99,7 @@ describe('GameView', () => {
 
     await wrapper.vm.handleSubmit({
       name: 'Battle for the Planet',
-      game_type: 'mech_wargame',
+      game_type: 'mecha',
       turn_duration_hours: 168,
       description: 'Mech warriors battling for a planet',
     })
