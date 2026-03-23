@@ -107,6 +107,7 @@ func NewMechaLanceManagementProcessor(l logger.Logger, cfg config.Config) (*Mech
 // GenerateTurnSheet generates a lance management turn sheet document.
 func (p *MechaLanceManagementProcessor) GenerateTurnSheet(ctx context.Context, l logger.Logger, format DocumentFormat, sheetData []byte) ([]byte, error) {
 	l = l.WithFunctionContext("MechaLanceManagementProcessor/GenerateTurnSheet")
+	l.Debug("Generating lance management turn sheet")
 
 	var data LanceManagementData
 	if err := json.Unmarshal(sheetData, &data); err != nil {
@@ -124,6 +125,7 @@ func (p *MechaLanceManagementProcessor) GenerateTurnSheet(ctx context.Context, l
 // structured JSON matching LanceManagementScanData.
 func (p *MechaLanceManagementProcessor) ScanTurnSheet(ctx context.Context, l logger.Logger, sheetData []byte, imageData []byte) ([]byte, error) {
 	l = l.WithFunctionContext("MechaLanceManagementProcessor/ScanTurnSheet")
+	l.Debug("Scanning lance management turn sheet")
 
 	if len(imageData) == 0 {
 		return nil, fmt.Errorf("no image data provided for scanning")
@@ -170,6 +172,7 @@ For each mech, identify:
 // GeneratePreviewData returns sample management sheet data for previewing.
 func (p *MechaLanceManagementProcessor) GeneratePreviewData(ctx context.Context, l logger.Logger, gameRec *game_record.Game, backgroundImage *string) ([]byte, error) {
 	l = l.WithFunctionContext("MechaLanceManagementProcessor/GeneratePreviewData")
+	l.Debug("Generating lance management preview data")
 
 	turnSheetCode, err := turnsheetutil.GeneratePlayGameTurnSheetCode("preview-management-sheet-id")
 	if err != nil {

@@ -32,6 +32,8 @@ const (
 func mechaSectorLinkHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error) {
 	l = logging.LoggerWithFunctionContext(l, packageName, "mechaSectorLinkHandlerConfig")
 
+	l.Debug("Adding mecha sector link handler configuration")
+
 	sectorLinkConfig := make(map[string]server.HandlerConfig)
 
 	collectionResponseSchema := jsonschema.SchemaWithReferences{

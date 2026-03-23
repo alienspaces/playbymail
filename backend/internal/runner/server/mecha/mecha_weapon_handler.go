@@ -32,6 +32,8 @@ const (
 func mechaWeaponHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error) {
 	l = logging.LoggerWithFunctionContext(l, packageName, "mechaWeaponHandlerConfig")
 
+	l.Debug("Adding mecha weapon handler configuration")
+
 	weaponConfig := make(map[string]server.HandlerConfig)
 
 	collectionResponseSchema := jsonschema.SchemaWithReferences{

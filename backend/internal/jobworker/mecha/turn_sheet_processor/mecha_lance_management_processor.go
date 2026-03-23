@@ -112,7 +112,7 @@ func (p *MechaLanceManagementProcessor) ProcessTurnSheetResponse(
 			if err == nil && mechInst.CurrentStructure < chassisRec.StructurePoints {
 				damage := chassisRec.StructurePoints - mechInst.CurrentStructure
 				// Cost: 1 SP per 25% max structure block to repair
-				cost := max((damage*4+chassisRec.StructurePoints-1)/chassisRec.StructurePoints, 1)
+				cost := intMax((damage*4+chassisRec.StructurePoints-1)/chassisRec.StructurePoints, 1)
 				spCost += cost
 				// Full structure restored at end of turn (after IsRefitting cleared)
 				mechInst.CurrentStructure = chassisRec.StructurePoints
@@ -442,7 +442,7 @@ func (p *MechaLanceManagementProcessor) buildManagementSheet(
 	return sheetRec, nil
 }
 
-func max(a, b int) int {
+func intMax(a, b int) int {
 	if a > b {
 		return a
 	}

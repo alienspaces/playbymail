@@ -258,7 +258,7 @@ func (s *llmStrategy) GenerateOrders(ctx context.Context, l logger.Logger, state
 func (s *llmStrategy) buildGameStatePrompt(state *GameStateContext) string {
 	var sb strings.Builder
 
-	sb.WriteString(fmt.Sprintf("Turn %d. You command the following mechs:\n", state.TurnNumber))
+	fmt.Fprintf(&sb, "Turn %d. You command the following mechs:\n", state.TurnNumber)
 	for _, m := range state.OwnMechs {
 		sectorName := "unknown"
 		for _, sec := range state.Sectors {
@@ -267,9 +267,9 @@ func (s *llmStrategy) buildGameStatePrompt(state *GameStateContext) string {
 				break
 			}
 		}
-		sb.WriteString(fmt.Sprintf("  - Mech ID: %s, Callsign: %s, Status: %s, Location: %s (sector_instance_id: %s), Armor: %d, Structure: %d\n",
+		fmt.Fprintf(&sb, "  - Mech ID: %s, Callsign: %s, Status: %s, Location: %s (sector_instance_id: %s), Armor: %d, Structure: %d\n",
 			m.ID, m.Callsign, m.Status, sectorName, m.MechaSectorInstanceID,
-			m.CurrentArmor, m.CurrentStructure))
+			m.CurrentArmor, m.CurrentStructure)
 	}
 
 	if len(state.EnemyMechs) > 0 {
@@ -284,8 +284,8 @@ func (s *llmStrategy) buildGameStatePrompt(state *GameStateContext) string {
 					}
 				}
 			}
-			sb.WriteString(fmt.Sprintf("  - Mech ID: %s, Callsign: %s, Location: %s (sector_instance_id: %s)\n",
-				em.Instance.ID, em.Instance.Callsign, sectorName, em.Instance.MechaSectorInstanceID))
+			fmt.Fprintf(&sb, "  - Mech ID: %s, Callsign: %s, Location: %s (sector_instance_id: %s)\n",
+				em.Instance.ID, em.Instance.Callsign, sectorName, em.Instance.MechaSectorInstanceID)
 		}
 	}
 
@@ -300,9 +300,9 @@ func (s *llmStrategy) buildGameStatePrompt(state *GameStateContext) string {
 				}
 			}
 		}
-		sb.WriteString(fmt.Sprintf("  - %s (id: %s, terrain: %s, elevation: %d) → [%s]\n",
+		fmt.Fprintf(&sb, "  - %s (id: %s, terrain: %s, elevation: %d) → [%s]\n",
 			sec.Design.Name, sec.Instance.ID, sec.Design.TerrainType, sec.Design.Elevation,
-			strings.Join(linkNames, ", ")))
+			strings.Join(linkNames, ", "))
 	}
 
 	sb.WriteString(`

@@ -91,6 +91,12 @@ func hitChance(pilotSkill int) int {
 	return chance
 }
 
+// pendingDamage accumulates damage from all attacks before applying (simultaneous resolution).
+type pendingDamage struct {
+	armorDmg     int
+	structureDmg int
+}
+
 // resolveCombat runs combat resolution for a game instance. It must be called
 // after all movement (player and AI) has been applied. The sector graph from
 // the decision engine context is rebuilt here for range calculations.
@@ -101,23 +107,54 @@ func (p *Mecha) resolveCombat(
 	attacks []AttackDeclaration,
 ) error {
 	if len(attacks) == 0 {
-		l.Debug("no attack declarations for game instance >%s< — skipping combat", gameInstanceRec.ID)
+		l.Info("no attack declarations for game instance >%s< — skipping combat", gameInstanceRec.ID)
 		return nil
 	}
 
-	// Load all mech instances for this game instance
 	allMechInsts, err := p.Domain.GetManyMechaMechInstanceRecs(&coresql.Options{
 		Params: []coresql.Param{
 			{Col: mecha_record.FieldMechaMechInstanceGameInstanceID, Val: gameInstanceRec.ID},
 		},
 	})
 	if err != nil {
-		return fmt.Errorf("failed to load mech instances: %w", err)
+		l.Warn("failed to load mech instances: %v", err)
+		return err
 	}
 
-	// Build mech snapshot map keyed by instance ID
-	snapshots := make(map[string]*mechSnapshot, len(allMechInsts))
-	for _, inst := range allMechInsts {
+	snapshots := buildMechSnapshots(l, allMechInsts)
+
+	sectors, err := p.buildSectorGraph(gameInstanceRec.ID)
+	if err != nil {
+		l.Warn("failed to build sector graph: %v", err)
+		return err
+	}
+
+	seed := int64(gameInstanceRec.CurrentTurn)
+	for _, b := range []byte(gameInstanceRec.ID) {
+		seed += int64(b)
+	}
+	rng := rand.New(rand.NewSource(seed)) //nolint:gosec
+
+	damageMap := make(map[string]*pendingDamage, len(allMechInsts))
+	heatMap := make(map[string]int, len(allMechInsts))
+	eventsByLance := make(map[string][]turnsheet.TurnEvent)
+
+	p.resolveAttacks(l, attacks, snapshots, sectors, rng, damageMap, heatMap, eventsByLance)
+	p.applyPendingDamage(l, damageMap, snapshots, attacks, eventsByLance)
+	p.applyPendingHeat(l, heatMap, snapshots, eventsByLance)
+	p.persistMechChanges(l, snapshots, damageMap, heatMap)
+
+	if err := p.appendCombatEventsToLances(l, eventsByLance); err != nil {
+		l.Warn("failed to persist combat events: %v", err)
+		return err
+	}
+
+	return nil
+}
+
+func buildMechSnapshots(l logger.Logger, insts []*mecha_record.MechaMechInstance) map[string]*mechSnapshot {
+	snapshots := make(map[string]*mechSnapshot, len(insts))
+	for _, inst := range insts {
 		var weapons []mecha_record.WeaponConfigEntry
 		if len(inst.WeaponConfigJSON) > 0 {
 			if err := json.Unmarshal(inst.WeaponConfigJSON, &weapons); err != nil {
@@ -131,17 +168,18 @@ func (p *Mecha) resolveCombat(
 			Weapons:          weapons,
 		}
 	}
+	return snapshots
+}
 
-	// Build sector graph (reuse logic from decision engine)
+func (p *Mecha) buildSectorGraph(gameInstanceID string) ([]*sectorState, error) {
 	sectorInsts, err := p.Domain.GetManyMechaSectorInstanceRecs(&coresql.Options{
 		Params: []coresql.Param{
-			{Col: mecha_record.FieldMechaSectorInstanceGameInstanceID, Val: gameInstanceRec.ID},
+			{Col: mecha_record.FieldMechaSectorInstanceGameInstanceID, Val: gameInstanceID},
 		},
 	})
 	if err != nil {
-		return fmt.Errorf("failed to load sector instances: %w", err)
+		return nil, fmt.Errorf("failed to load sector instances: %w", err)
 	}
-
 	var sectors []*sectorState
 	for _, si := range sectorInsts {
 		links, _ := p.Domain.GetManyMechaSectorLinkRecs(&coresql.Options{
@@ -163,26 +201,19 @@ func (p *Mecha) resolveCombat(
 			LinkDestInstanceIDs: linkDestIDs,
 		})
 	}
+	return sectors, nil
+}
 
-	// Seed RNG deterministically for this game instance + turn
-	seed := int64(gameInstanceRec.CurrentTurn)
-	for _, b := range []byte(gameInstanceRec.ID) {
-		seed += int64(b)
-	}
-	rng := rand.New(rand.NewSource(seed)) //nolint:gosec
-
-	// Track damage and heat to apply after all attacks resolve
-	type pendingDamage struct {
-		armorDmg     int
-		structureDmg int
-	}
-	damageMap := make(map[string]*pendingDamage, len(allMechInsts))
-	heatMap := make(map[string]int, len(allMechInsts))
-
-	// Collect events per lance instance
-	eventsByLance := make(map[string][]turnsheet.TurnEvent)
-
-	// Resolve each attack declaration
+func (p *Mecha) resolveAttacks(
+	l logger.Logger,
+	attacks []AttackDeclaration,
+	snapshots map[string]*mechSnapshot,
+	sectors []*sectorState,
+	rng *rand.Rand,
+	damageMap map[string]*pendingDamage,
+	heatMap map[string]int,
+	eventsByLance map[string][]turnsheet.TurnEvent,
+) {
 	for _, atk := range attacks {
 		attacker, ok := snapshots[atk.AttackerMechInstanceID]
 		if !ok {
@@ -194,7 +225,6 @@ func (p *Mecha) resolveCombat(
 			l.Warn("target mech >%s< not found in snapshot — skipping", atk.TargetMechInstanceID)
 			continue
 		}
-
 		if attacker.Instance.Status == mecha_record.MechInstanceStatusDestroyed ||
 			attacker.Instance.Status == mecha_record.MechInstanceStatusShutdown {
 			l.Debug("attacker >%s< is %s — skipping attack", attacker.Instance.Callsign, attacker.Instance.Status)
@@ -204,7 +234,6 @@ func (p *Mecha) resolveCombat(
 			l.Debug("target >%s< is already destroyed — skipping attack", target.Instance.Callsign)
 			continue
 		}
-
 		dist := rangeDistance(attacker.SectorInstanceID, target.SectorInstanceID, sectors)
 		if dist >= 2 {
 			l.Info("%s fired at %s but target is out of range (distance %d)",
@@ -214,78 +243,98 @@ func (p *Mecha) resolveCombat(
 					attacker.Instance.Callsign, target.Instance.Callsign))
 			continue
 		}
-
 		if len(attacker.Weapons) == 0 {
 			l.Debug("attacker >%s< has no weapons — skipping attack", attacker.Instance.Callsign)
 			continue
 		}
-
-		chance := hitChance(attacker.Instance.PilotSkill)
-		totalDmg := 0
-
-		for _, slot := range attacker.Weapons {
-			if slot.WeaponID == "" {
-				continue
-			}
-			weaponRec, err := p.Domain.GetMechaWeaponRec(slot.WeaponID, nil)
-			if err != nil {
-				l.Warn("failed to load weapon >%s<: %v", slot.WeaponID, err)
-				continue
-			}
-
-			if !weaponCanFire(weaponRec.RangeBand, dist) {
-				l.Debug("%s weapon %s cannot reach target at distance %d",
-					attacker.Instance.Callsign, weaponRec.Name, dist)
-				continue
-			}
-
-			// Heat accumulates regardless of hit
-			heatMap[atk.AttackerMechInstanceID] += weaponRec.HeatCost
-
-			roll := rng.Intn(100)
-			if roll < chance {
-				totalDmg += weaponRec.Damage
-				l.Info("%s: %s hit %s with %s for %d damage (roll %d < %d%%)",
-					attacker.Instance.Callsign, weaponRec.Name,
-					target.Instance.Callsign, weaponRec.Name,
-					weaponRec.Damage, roll, chance)
-				appendCombatEvent(eventsByLance, attacker.LanceInstanceID,
-					fmt.Sprintf("%s fired %s at %s — HIT for %d damage.",
-						attacker.Instance.Callsign, weaponRec.Name,
-						target.Instance.Callsign, weaponRec.Damage))
-				appendCombatEvent(eventsByLance, target.LanceInstanceID,
-					fmt.Sprintf("%s hit by %s from %s — %d damage.",
-						target.Instance.Callsign, weaponRec.Name,
-						attacker.Instance.Callsign, weaponRec.Damage))
-			} else {
-				l.Info("%s: %s missed %s (roll %d >= %d%%)",
-					attacker.Instance.Callsign, weaponRec.Name,
-					target.Instance.Callsign, roll, chance)
-				appendCombatEvent(eventsByLance, attacker.LanceInstanceID,
-					fmt.Sprintf("%s fired %s at %s — missed.",
-						attacker.Instance.Callsign, weaponRec.Name,
-						target.Instance.Callsign))
-			}
-		}
-
+		totalDmg := p.fireWeapons(l, atk, attacker, target, dist, rng, heatMap, eventsByLance)
 		if totalDmg > 0 {
-			dm := damageMap[atk.TargetMechInstanceID]
-			if dm == nil {
-				dm = &pendingDamage{}
-				damageMap[atk.TargetMechInstanceID] = dm
-			}
-			// Apply damage to armor first, overflow to structure
-			currentArmor := snapshots[atk.TargetMechInstanceID].Instance.CurrentArmor
-			if totalDmg <= currentArmor {
-				dm.armorDmg += totalDmg
-			} else {
-				dm.armorDmg += currentArmor
-				dm.structureDmg += totalDmg - currentArmor
-			}
+			accumulateDamage(atk.TargetMechInstanceID, totalDmg, snapshots, damageMap)
 		}
 	}
+}
 
-	// Apply accumulated damage and heat to all affected mechs
+func (p *Mecha) fireWeapons(
+	l logger.Logger,
+	atk AttackDeclaration,
+	attacker, target *mechSnapshot,
+	dist int,
+	rng *rand.Rand,
+	heatMap map[string]int,
+	eventsByLance map[string][]turnsheet.TurnEvent,
+) int {
+	chance := hitChance(attacker.Instance.PilotSkill)
+	totalDmg := 0
+	for _, slot := range attacker.Weapons {
+		if slot.WeaponID == "" {
+			continue
+		}
+		weaponRec, err := p.Domain.GetMechaWeaponRec(slot.WeaponID, nil)
+		if err != nil {
+			l.Warn("failed to load weapon >%s<: %v", slot.WeaponID, err)
+			continue
+		}
+		if !weaponCanFire(weaponRec.RangeBand, dist) {
+			l.Debug("%s weapon %s cannot reach target at distance %d",
+				attacker.Instance.Callsign, weaponRec.Name, dist)
+			continue
+		}
+		heatMap[atk.AttackerMechInstanceID] += weaponRec.HeatCost
+		roll := rng.Intn(100)
+		if roll < chance {
+			totalDmg += weaponRec.Damage
+			l.Info("%s: %s hit %s with %s for %d damage (roll %d < %d%%)",
+				attacker.Instance.Callsign, weaponRec.Name,
+				target.Instance.Callsign, weaponRec.Name,
+				weaponRec.Damage, roll, chance)
+			appendCombatEvent(eventsByLance, attacker.LanceInstanceID,
+				fmt.Sprintf("%s fired %s at %s — HIT for %d damage.",
+					attacker.Instance.Callsign, weaponRec.Name,
+					target.Instance.Callsign, weaponRec.Damage))
+			appendCombatEvent(eventsByLance, target.LanceInstanceID,
+				fmt.Sprintf("%s hit by %s from %s — %d damage.",
+					target.Instance.Callsign, weaponRec.Name,
+					attacker.Instance.Callsign, weaponRec.Damage))
+		} else {
+			l.Info("%s: %s missed %s (roll %d >= %d%%)",
+				attacker.Instance.Callsign, weaponRec.Name,
+				target.Instance.Callsign, roll, chance)
+			appendCombatEvent(eventsByLance, attacker.LanceInstanceID,
+				fmt.Sprintf("%s fired %s at %s — missed.",
+					attacker.Instance.Callsign, weaponRec.Name,
+					target.Instance.Callsign))
+		}
+	}
+	return totalDmg
+}
+
+func accumulateDamage(
+	targetID string,
+	totalDmg int,
+	snapshots map[string]*mechSnapshot,
+	damageMap map[string]*pendingDamage,
+) {
+	dm := damageMap[targetID]
+	if dm == nil {
+		dm = &pendingDamage{}
+		damageMap[targetID] = dm
+	}
+	currentArmor := snapshots[targetID].Instance.CurrentArmor
+	if totalDmg <= currentArmor {
+		dm.armorDmg += totalDmg
+	} else {
+		dm.armorDmg += currentArmor
+		dm.structureDmg += totalDmg - currentArmor
+	}
+}
+
+func (p *Mecha) applyPendingDamage(
+	l logger.Logger,
+	damageMap map[string]*pendingDamage,
+	snapshots map[string]*mechSnapshot,
+	attacks []AttackDeclaration,
+	eventsByLance map[string][]turnsheet.TurnEvent,
+) {
 	for mechID, dm := range damageMap {
 		snap, ok := snapshots[mechID]
 		if !ok {
@@ -305,7 +354,6 @@ func (p *Mecha) resolveCombat(
 			l.Info("mech >%s< destroyed", inst.Callsign)
 			appendCombatEvent(eventsByLance, snap.LanceInstanceID,
 				fmt.Sprintf("%s has been DESTROYED!", inst.Callsign))
-			// Notify attacker's lance
 			for _, atk := range attacks {
 				if atk.TargetMechInstanceID == mechID {
 					if attSnap, ok := snapshots[atk.AttackerMechInstanceID]; ok {
@@ -319,7 +367,14 @@ func (p *Mecha) resolveCombat(
 			inst.Status = mecha_record.MechInstanceStatusDamaged
 		}
 	}
+}
 
+func (p *Mecha) applyPendingHeat(
+	l logger.Logger,
+	heatMap map[string]int,
+	snapshots map[string]*mechSnapshot,
+	eventsByLance map[string][]turnsheet.TurnEvent,
+) {
 	for mechID, heat := range heatMap {
 		snap, ok := snapshots[mechID]
 		if !ok {
@@ -342,8 +397,14 @@ func (p *Mecha) resolveCombat(
 			}
 		}
 	}
+}
 
-	// Persist updated mech instances
+func (p *Mecha) persistMechChanges(
+	l logger.Logger,
+	snapshots map[string]*mechSnapshot,
+	damageMap map[string]*pendingDamage,
+	heatMap map[string]int,
+) {
 	for _, snap := range snapshots {
 		if _, changed := damageMap[snap.Instance.ID]; changed {
 			if _, err := p.Domain.UpdateMechaMechInstanceRec(snap.Instance); err != nil {
@@ -355,13 +416,6 @@ func (p *Mecha) resolveCombat(
 			}
 		}
 	}
-
-	// Persist TurnEvents to each affected lance instance
-	if err := p.appendCombatEventsToLances(l, eventsByLance); err != nil {
-		l.Warn("failed to persist combat events: %v", err)
-	}
-
-	return nil
 }
 
 func appendCombatEvent(

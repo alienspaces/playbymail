@@ -30,8 +30,8 @@ import (
 // DELETE (document) /api/v1/mecha-games/{game_id}/chassis/{chassis_id}
 
 const (
-	GetManyMechaChassis  = "get-many-mecha-chassis"
-	GetOneMechaChassis   = "get-one-mecha-chassis"
+	GetManyMechaChassis   = "get-many-mecha-chassis"
+	GetOneMechaChassis    = "get-one-mecha-chassis"
 	CreateOneMechaChassis = "create-one-mecha-chassis"
 	UpdateOneMechaChassis = "update-one-mecha-chassis"
 	DeleteOneMechaChassis = "delete-one-mecha-chassis"
@@ -39,6 +39,8 @@ const (
 
 func mechaChassisHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error) {
 	l = logging.LoggerWithFunctionContext(l, packageName, "mechaChassisHandlerConfig")
+
+	l.Debug("Adding mecha chassis handler configuration")
 
 	chassisConfig := make(map[string]server.HandlerConfig)
 

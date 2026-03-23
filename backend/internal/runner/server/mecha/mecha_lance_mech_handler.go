@@ -32,6 +32,8 @@ const (
 func mechaLanceMechHandlerConfig(l logger.Logger) (map[string]server.HandlerConfig, error) {
 	l = logging.LoggerWithFunctionContext(l, packageName, "mechaLanceMechHandlerConfig")
 
+	l.Debug("Adding mecha lance mech handler configuration")
+
 	lanceMechConfig := make(map[string]server.HandlerConfig)
 
 	collectionResponseSchema := jsonschema.SchemaWithReferences{
@@ -191,7 +193,7 @@ func createOneMechaLanceMechHandler(w http.ResponseWriter, r *http.Request, pp h
 	}
 
 	rec := &mecha_record.MechaLanceMech{
-		GameID:             gameID,
+		GameID:       gameID,
 		MechaLanceID: lanceID,
 	}
 
