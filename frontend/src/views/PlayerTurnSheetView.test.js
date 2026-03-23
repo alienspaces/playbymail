@@ -10,7 +10,15 @@ const mockSubmitGameSubscriptionInstanceTurnSheets = vi.fn()
 const mockVerifyGameSubscriptionToken = vi.fn()
 const mockRequestNewTurnSheetToken = vi.fn()
 
-vi.mock('../api/player', () => ({
+vi.mock('../api/player', () => {
+  class UnauthenticatedError extends Error {
+    constructor() {
+      super('unauthenticated')
+      this.name = 'UnauthenticatedError'
+    }
+  }
+  return {
+  UnauthenticatedError,
   verifyGameSubscriptionToken: (...args) => mockVerifyGameSubscriptionToken(...args),
   requestNewTurnSheetToken: (...args) => mockRequestNewTurnSheetToken(...args),
   getGameSubscriptionInstanceTurnSheets: (...args) => mockGetGameSubscriptionInstanceTurnSheets(...args),
@@ -19,7 +27,8 @@ vi.mock('../api/player', () => ({
   submitGameSubscriptionInstanceTurnSheets: (...args) => mockSubmitGameSubscriptionInstanceTurnSheets(...args),
   downloadGameSubscriptionInstanceTurnSheetPDF: vi.fn(),
   uploadGameSubscriptionInstanceTurnSheetScan: vi.fn(),
-}))
+  }
+})
 
 const mockSetSessionToken = vi.fn()
 
