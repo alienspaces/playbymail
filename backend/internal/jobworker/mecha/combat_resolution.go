@@ -12,7 +12,10 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 	"gitlab.com/alienspaces/playbymail/internal/record/mecha_record"
 	"gitlab.com/alienspaces/playbymail/internal/turnsheet"
+	"gitlab.com/alienspaces/playbymail/internal/utils/logging"
 )
+
+const packageName = "mecha"
 
 // AttackDeclaration is an alias for the type defined in turn_sheet_processor.
 type AttackDeclaration = turn_sheet_processor.AttackDeclaration
@@ -121,9 +124,13 @@ func (p *Mecha) resolveCombat(
 		return err
 	}
 
-	snapshots := buildMechSnapshots(l, allMechInsts)
+	snapshots, err := buildMechSnapshots(l, allMechInsts)
+	if err != nil {
+		l.Warn("failed to build mech snapshots: %v", err)
+		return err
+	}
 
-	sectors, err := p.buildSectorGraph(gameInstanceRec.ID)
+	sectors, err := p.buildSectorGraph(l, gameInstanceRec.ID)
 	if err != nil {
 		l.Warn("failed to build sector graph: %v", err)
 		return err
@@ -152,13 +159,16 @@ func (p *Mecha) resolveCombat(
 	return nil
 }
 
-func buildMechSnapshots(l logger.Logger, insts []*mecha_record.MechaMechInstance) map[string]*mechSnapshot {
+func buildMechSnapshots(l logger.Logger, insts []*mecha_record.MechaMechInstance) (map[string]*mechSnapshot, error) {
+
 	snapshots := make(map[string]*mechSnapshot, len(insts))
+
 	for _, inst := range insts {
 		var weapons []mecha_record.WeaponConfigEntry
 		if len(inst.WeaponConfigJSON) > 0 {
 			if err := json.Unmarshal(inst.WeaponConfigJSON, &weapons); err != nil {
 				l.Warn("failed to unmarshal weapon config for mech >%s<: %v", inst.ID, err)
+				return nil, err
 			}
 		}
 		snapshots[inst.ID] = &mechSnapshot{
@@ -168,25 +178,36 @@ func buildMechSnapshots(l logger.Logger, insts []*mecha_record.MechaMechInstance
 			Weapons:          weapons,
 		}
 	}
-	return snapshots
+
+	return snapshots, nil
 }
 
-func (p *Mecha) buildSectorGraph(gameInstanceID string) ([]*sectorState, error) {
+func (p *Mecha) buildSectorGraph(l logger.Logger, gameInstanceID string) ([]*sectorState, error) {
+
 	sectorInsts, err := p.Domain.GetManyMechaSectorInstanceRecs(&coresql.Options{
 		Params: []coresql.Param{
 			{Col: mecha_record.FieldMechaSectorInstanceGameInstanceID, Val: gameInstanceID},
 		},
 	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to load sector instances: %w", err)
+		l.Warn("failed to load sector instances: %v", err)
+		return nil, err
 	}
+
 	var sectors []*sectorState
+
 	for _, si := range sectorInsts {
-		links, _ := p.Domain.GetManyMechaSectorLinkRecs(&coresql.Options{
+
+		links, err := p.Domain.GetManyMechaSectorLinkRecs(&coresql.Options{
 			Params: []coresql.Param{
 				{Col: mecha_record.FieldMechaSectorLinkFromMechaSectorID, Val: si.MechaSectorID},
 			},
 		})
+		if err != nil {
+			l.Warn("failed to load sector links: %v", err)
+			return nil, err
+		}
+
 		var linkDestIDs []string
 		for _, lnk := range links {
 			for _, other := range sectorInsts {
@@ -201,6 +222,7 @@ func (p *Mecha) buildSectorGraph(gameInstanceID string) ([]*sectorState, error) 
 			LinkDestInstanceIDs: linkDestIDs,
 		})
 	}
+
 	return sectors, nil
 }
 
@@ -214,26 +236,35 @@ func (p *Mecha) resolveAttacks(
 	heatMap map[string]int,
 	eventsByLance map[string][]turnsheet.TurnEvent,
 ) {
+	l = logging.LoggerWithFunctionContext(l, packageName, "resolveAttacks")
+
 	for _, atk := range attacks {
+
+		l.Info("resolving attack by attacker mech >%s< on target mech >%s<", atk.AttackerMechInstanceID, atk.TargetMechInstanceID)
+
 		attacker, ok := snapshots[atk.AttackerMechInstanceID]
 		if !ok {
 			l.Warn("attacker mech >%s< not found in snapshot — skipping", atk.AttackerMechInstanceID)
 			continue
 		}
+
 		target, ok := snapshots[atk.TargetMechInstanceID]
 		if !ok {
 			l.Warn("target mech >%s< not found in snapshot — skipping", atk.TargetMechInstanceID)
 			continue
 		}
+
 		if attacker.Instance.Status == mecha_record.MechInstanceStatusDestroyed ||
 			attacker.Instance.Status == mecha_record.MechInstanceStatusShutdown {
-			l.Debug("attacker >%s< is %s — skipping attack", attacker.Instance.Callsign, attacker.Instance.Status)
+			l.Info("attacker >%s< is %s — skipping attack", attacker.Instance.Callsign, attacker.Instance.Status)
 			continue
 		}
+
 		if target.Instance.Status == mecha_record.MechInstanceStatusDestroyed {
-			l.Debug("target >%s< is already destroyed — skipping attack", target.Instance.Callsign)
+			l.Info("target >%s< is already destroyed — skipping attack", target.Instance.Callsign)
 			continue
 		}
+
 		dist := rangeDistance(attacker.SectorInstanceID, target.SectorInstanceID, sectors)
 		if dist >= 2 {
 			l.Info("%s fired at %s but target is out of range (distance %d)",
@@ -243,12 +274,15 @@ func (p *Mecha) resolveAttacks(
 					attacker.Instance.Callsign, target.Instance.Callsign))
 			continue
 		}
+
 		if len(attacker.Weapons) == 0 {
-			l.Debug("attacker >%s< has no weapons — skipping attack", attacker.Instance.Callsign)
+			l.Info("attacker >%s< has no weapons — skipping attack", attacker.Instance.Callsign)
 			continue
 		}
+
 		totalDmg := p.fireWeapons(l, atk, attacker, target, dist, rng, heatMap, eventsByLance)
 		if totalDmg > 0 {
+			l.Info("total damage: %d", totalDmg)
 			accumulateDamage(atk.TargetMechInstanceID, totalDmg, snapshots, damageMap)
 		}
 	}
@@ -263,22 +297,30 @@ func (p *Mecha) fireWeapons(
 	heatMap map[string]int,
 	eventsByLance map[string][]turnsheet.TurnEvent,
 ) int {
+	l = logging.LoggerWithFunctionContext(l, packageName, "fireWeapons")
+
+	l.Info("firing weapons by attacker mech >%s< on target mech >%s<", attacker.Instance.Callsign, target.Instance.Callsign)
+
 	chance := hitChance(attacker.Instance.PilotSkill)
+
 	totalDmg := 0
 	for _, slot := range attacker.Weapons {
 		if slot.WeaponID == "" {
 			continue
 		}
+
 		weaponRec, err := p.Domain.GetMechaWeaponRec(slot.WeaponID, nil)
 		if err != nil {
 			l.Warn("failed to load weapon >%s<: %v", slot.WeaponID, err)
 			continue
 		}
+
 		if !weaponCanFire(weaponRec.RangeBand, dist) {
 			l.Debug("%s weapon %s cannot reach target at distance %d",
 				attacker.Instance.Callsign, weaponRec.Name, dist)
 			continue
 		}
+
 		heatMap[atk.AttackerMechInstanceID] += weaponRec.HeatCost
 		roll := rng.Intn(100)
 		if roll < chance {
@@ -305,6 +347,7 @@ func (p *Mecha) fireWeapons(
 					target.Instance.Callsign))
 		}
 	}
+
 	return totalDmg
 }
 
