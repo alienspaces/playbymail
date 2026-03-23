@@ -1,4 +1,6 @@
-import { baseUrl, getAuthHeaders, apiFetch, handleApiError } from './baseUrl';
+import { baseUrl, getAuthHeaders, apiFetch, handleApiError, UnauthenticatedError } from './baseUrl';
+
+export { UnauthenticatedError };
 
 const gameSubscriptionInstancePath = (gameSubscriptionInstanceId) =>
   `${baseUrl}/api/v1/player/game-subscription-instances/${gameSubscriptionInstanceId}`;
@@ -49,8 +51,9 @@ export async function requestNewTurnSheetToken(gameSubscriptionInstanceID, email
 export async function getGameSubscriptionInstanceTurnSheets(gameSubscriptionInstanceId) {
   const res = await apiFetch(`${gameSubscriptionInstancePath(gameSubscriptionInstanceId)}/turn-sheets`, {
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+    skipAutoLogout: true,
   });
-  await handleApiError(res, 'Failed to load turn sheets');
+  await handleApiError(res, 'Failed to load turn sheets', { skipAutoLogout: true });
   return await res.json();
 }
 
@@ -63,8 +66,9 @@ export async function getGameSubscriptionInstanceTurnSheets(gameSubscriptionInst
 export async function getGameSubscriptionInstanceTurnSheet(gameSubscriptionInstanceId, turnSheetId) {
   const res = await apiFetch(`${gameSubscriptionInstancePath(gameSubscriptionInstanceId)}/turn-sheets/${turnSheetId}`, {
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+    skipAutoLogout: true,
   });
-  await handleApiError(res, 'Failed to load turn sheet');
+  await handleApiError(res, 'Failed to load turn sheet', { skipAutoLogout: true });
   return await res.json();
 }
 
@@ -80,8 +84,9 @@ export async function saveGameSubscriptionInstanceTurnSheet(gameSubscriptionInst
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
     body: JSON.stringify({ scanned_data: scannedData }),
+    skipAutoLogout: true,
   });
-  await handleApiError(res, 'Failed to save turn sheet');
+  await handleApiError(res, 'Failed to save turn sheet', { skipAutoLogout: true });
   return await res.json();
 }
 
@@ -94,8 +99,9 @@ export async function submitGameSubscriptionInstanceTurnSheets(gameSubscriptionI
   const res = await apiFetch(`${gameSubscriptionInstancePath(gameSubscriptionInstanceId)}/turn-sheet-upload`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+    skipAutoLogout: true,
   });
-  await handleApiError(res, 'Failed to submit turn sheets');
+  await handleApiError(res, 'Failed to submit turn sheets', { skipAutoLogout: true });
   return await res.json();
 }
 
@@ -108,8 +114,9 @@ export async function submitGameSubscriptionInstanceTurnSheets(gameSubscriptionI
 export async function getGameSubscriptionInstanceTurnSheetHTML(gameSubscriptionInstanceId, turnSheetId) {
   const res = await apiFetch(`${gameSubscriptionInstancePath(gameSubscriptionInstanceId)}/turn-sheets/${turnSheetId}`, {
     headers: { Accept: 'text/html', ...getAuthHeaders() },
+    skipAutoLogout: true,
   });
-  await handleApiError(res, 'Failed to load turn sheet HTML');
+  await handleApiError(res, 'Failed to load turn sheet HTML', { skipAutoLogout: true });
   return await res.text();
 }
 
@@ -123,8 +130,9 @@ export async function getGameSubscriptionInstanceTurnSheetHTML(gameSubscriptionI
 export async function downloadGameSubscriptionInstanceTurnSheetPDF(gameSubscriptionInstanceId, turnSheetId) {
   const res = await apiFetch(`${gameSubscriptionInstancePath(gameSubscriptionInstanceId)}/turn-sheets/${turnSheetId}/download`, {
     headers: { Accept: 'application/pdf', ...getAuthHeaders() },
+    skipAutoLogout: true,
   });
-  await handleApiError(res, 'Failed to download turn sheet PDF');
+  await handleApiError(res, 'Failed to download turn sheet PDF', { skipAutoLogout: true });
   return res;
 }
 
@@ -143,8 +151,9 @@ export async function uploadGameSubscriptionInstanceTurnSheetScan(gameSubscripti
     method: 'POST',
     headers: { ...getAuthHeaders() },
     body: formData,
+    skipAutoLogout: true,
   });
-  await handleApiError(res, 'Failed to upload scanned turn sheet');
+  await handleApiError(res, 'Failed to upload scanned turn sheet', { skipAutoLogout: true });
   return await res.json();
 }
 

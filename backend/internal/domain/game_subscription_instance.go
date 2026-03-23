@@ -258,8 +258,17 @@ func (m *Domain) validateGameSubscriptionInstanceRecForDelete(rec *game_record.G
 	return nil
 }
 
-// GenerateGameSubscriptionInstanceTurnSheetToken generates a UUID turn sheet key and sets expiration to 3 days from now.
-// This invalidates any existing key by generating a new one.
+// turnSheetTokenExpiry is the safety-net expiry for a turn sheet token. The
+// token is explicitly invalidated when the player submits their turn sheets,
+// so this duration only matters for players who never submit (e.g. they drop
+// out of the game). 30 days is generous enough to cover any reasonable turn
+// length without leaving stale tokens indefinitely.
+const turnSheetTokenExpiry = 30 * 24 * time.Hour
+
+// GenerateGameSubscriptionInstanceTurnSheetToken generates a UUID turn sheet
+// token and sets a 30-day safety-net expiry. The token is valid until the
+// player submits their turn sheets, at which point it is explicitly NULLed.
+// This replaces any previously held token.
 func (m *Domain) GenerateGameSubscriptionInstanceTurnSheetToken(instanceID string) (string, error) {
 	l := m.Logger("GenerateGameSubscriptionInstanceTurnSheetToken")
 
@@ -272,11 +281,9 @@ func (m *Domain) GenerateGameSubscriptionInstanceTurnSheetToken(instanceID strin
 	// Generate UUID for turn sheet key
 	turnSheetKey := uuid.New().String()
 
-	// Set turn sheet key and expiration (3 days from now)
 	rec.TurnSheetToken = nullstring.FromString(turnSheetKey)
-	rec.TurnSheetTokenExpiresAt = nulltime.FromTime(time.Now().Add(3 * 24 * time.Hour))
+	rec.TurnSheetTokenExpiresAt = nulltime.FromTime(time.Now().Add(turnSheetTokenExpiry))
 
-	// Update instance with new key
 	_, err = m.UpdateGameSubscriptionInstanceRec(rec)
 	if err != nil {
 		l.Warn("failed updating game subscription instance with turn sheet token >%v<", err)
@@ -288,7 +295,49 @@ func (m *Domain) GenerateGameSubscriptionInstanceTurnSheetToken(instanceID strin
 	return turnSheetKey, nil
 }
 
-// VerifyGameSubscriptionInstanceTurnSheetKey verifies that a turn sheet key exists, is not expired, and matches the instance.
+// InvalidateGameSubscriptionInstanceTurnSheetToken nulls the turn sheet token
+// and its expiry on a game subscription instance, preventing the email link
+// from being used again. Called after a player successfully submits their
+// turn sheets for the current turn.
+func (m *Domain) InvalidateGameSubscriptionInstanceTurnSheetToken(instanceID string) error {
+	l := m.Logger("InvalidateGameSubscriptionInstanceTurnSheetToken")
+
+	rec, err := m.GetGameSubscriptionInstanceRec(instanceID, sql.ForUpdateNoWait)
+	if err != nil {
+		l.Warn("failed to get game subscription instance record >%v<", err)
+		return err
+	}
+
+	rec.TurnSheetToken = nullstring.FromString("")
+	rec.TurnSheetTokenExpiresAt = nulltime.FromTime(time.Time{})
+
+	_, err = m.UpdateGameSubscriptionInstanceRec(rec)
+	if err != nil {
+		l.Warn("failed to invalidate turn sheet token for instance >%s< >%v<", instanceID, err)
+		return err
+	}
+
+	l.Info("invalidated turn sheet token for game subscription instance >%s<", instanceID)
+
+	return nil
+}
+
+// VerifyGameSubscriptionInstanceTurnSheetKey verifies that a turn sheet token
+// exists, is not expired, and matches the instance.
+//
+// This function intentionally does NOT invalidate the token on success. A
+// turn sheet token is reusable: the same token may be exchanged for a new
+// session token as many times as needed until the player submits their turn
+// sheets (at which point the token is explicitly NULLed) or the safety-net
+// expiry elapses.
+//
+// Reusability is required for two reasons:
+//  1. Email prefetchers (e.g. Gmail Web Preview) call verify-token when the
+//     notification email lands in the player's inbox, creating a race with the
+//     player's own browser. The frontend recovers by re-calling verify-token
+//     whenever it receives a 401.
+//  2. A player may open the email link across multiple sessions or devices
+//     before submitting.
 func (m *Domain) VerifyGameSubscriptionInstanceTurnSheetKey(instanceID, turnSheetKey string) (*game_record.GameSubscriptionInstance, error) {
 	l := m.Logger("VerifyGameSubscriptionInstanceTurnSheetKey")
 	l.Debug("verifying game subscription instance turn sheet key >%s<", turnSheetKey)

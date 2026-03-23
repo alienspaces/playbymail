@@ -100,15 +100,36 @@ Use --delete to remove an existing demo game without loading a new one.`,
 				},
 				Action: r.loadGameData,
 			},
-			// Account / user inspection
-			{
-				Name:    "db-list-users",
-				Aliases: []string{"lu"},
-				Usage:   "List all accounts and users with status and session info",
-				Action:  r.listUsers,
-			},
+		// Account / user inspection
+		{
+			Name:    "db-list-users",
+			Aliases: []string{"lu"},
+			Usage:   "List all accounts and users with status and session info",
+			Action:  r.listUsers,
 		},
-	}
+		// Game instance management
+		{
+			Name:    "list-game-instances",
+			Aliases: []string{"lgi"},
+			Usage:   "List all game instances with status, current turn, and player count",
+			Action:  r.listGameInstances,
+		},
+		{
+			Name:    "resend-turn-sheet-email",
+			Aliases: []string{"rtse"},
+			Usage:   "Resend turn sheet notification emails for all players in a game instance",
+			Flags: []cli.Flag{
+				&cli.StringFlag{
+					Name:     "game-instance-id",
+					Aliases:  []string{"i"},
+					Usage:    "ID of the game instance to resend emails for (required)",
+					Required: true,
+				},
+			},
+			Action: r.resendTurnSheetEmail,
+		},
+	},
+}
 
 	return &r, nil
 }

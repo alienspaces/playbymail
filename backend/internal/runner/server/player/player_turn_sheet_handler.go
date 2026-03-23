@@ -548,6 +548,12 @@ func submitGameSubscriptionInstanceTurnSheetsHandler(w http.ResponseWriter, r *h
 
 	l.Info("submitted >%d< turn sheets via game subscription instance >%s<", completedCount, gameSubscriptionInstanceRec.ID)
 
+	// Invalidate the turn sheet token now that the player has submitted.
+	// The token is re-issued when the next turn's notification email is sent.
+	if err := mm.InvalidateGameSubscriptionInstanceTurnSheetToken(gameSubscriptionInstanceRec.ID); err != nil {
+		l.Warn("failed to invalidate turn sheet token for instance >%s< >%v<", gameSubscriptionInstanceRec.ID, err)
+	}
+
 	// Check if we should trigger early turn processing
 	if gameInstanceRec.ProcessWhenAllSubmitted && gameInstanceRec.Status == game_record.GameInstanceStatusStarted {
 		allSubmitted, checkErr := checkAllTurnSheetsSubmitted(l, mm, gameInstanceRec)
@@ -667,7 +673,21 @@ func downloadGameSubscriptionInstanceTurnSheetPDFHandler(w http.ResponseWriter, 
 	return err
 }
 
-// verifyGameSubscriptionTokenHandler verifies a game subscription instance token and returns a session token
+// verifyGameSubscriptionTokenHandler verifies a game subscription instance token
+// and returns a session token.
+//
+// A turn sheet token is intentionally reusable: it can be exchanged for a
+// session token multiple times until it is explicitly invalidated (on
+// submission) or its safety-net expiry elapses. This is required because:
+//
+//   - Email link prefetchers (e.g. Gmail Web Preview) may call this endpoint
+//     automatically when the player's email arrives, generating a session that
+//     races with the player's own browser.
+//   - The frontend retries this exchange whenever a 401 is received on a
+//     subsequent authenticated request, silently refreshing the session without
+//     requiring the player to do anything.
+//
+// Never invalidate or consume the turn sheet token here.
 func verifyGameSubscriptionTokenHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Params, qp *queryparam.QueryParams, l logger.Logger, m domainer.Domainer, jc *river.Client[pgx.Tx]) error {
 	l = logging.LoggerWithFunctionContext(l, packageName, "verifyGameSubscriptionTokenHandler")
 

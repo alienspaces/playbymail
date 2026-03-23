@@ -176,8 +176,8 @@ func (w *SendTurnSheetNotificationEmailWorker) DoWork(ctx context.Context, m *do
 		expirationDate = expirationTimeVal.Format("January 2, 2006")
 		expirationTime = expirationTimeVal.Format("3:04 PM MST")
 	} else {
-		// Fallback: 3 days from now
-		expirationTimeVal := time.Now().Add(3 * 24 * time.Hour)
+		// Fallback: 30-day safety-net (matches turnSheetTokenExpiry in domain)
+		expirationTimeVal := time.Now().Add(30 * 24 * time.Hour)
 		expirationDate = expirationTimeVal.Format("January 2, 2006")
 		expirationTime = expirationTimeVal.Format("3:04 PM MST")
 	}
