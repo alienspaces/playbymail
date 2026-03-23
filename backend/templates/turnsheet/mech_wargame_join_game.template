@@ -1,0 +1,127 @@
+{{template "base.template" .}}
+
+{{define "styles"}}
+<style>
+.main-content .account-details {
+    width: 100%;
+    margin: 0 auto;
+}
+
+.main-content .form-group {
+    margin-bottom: 8px;
+}
+
+.main-content .form-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.main-content .form-row.two-column .form-group.half {
+    flex: 1 1 calc(50% - 14px);
+    max-width: calc(50% - 14px);
+}
+
+.main-content .form-group.post-code {
+    flex: 1 1 calc(50% - 14px);
+    max-width: calc(50% - 14px);
+}
+
+.main-content .form-group.half {
+    flex: 1 1 48%;
+    min-width: 180px;
+}
+
+.main-content .section-divider {
+    margin: 10px 0;
+    border-bottom: 1px solid #d1d5db;
+}
+
+.main-content .delivery-options {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-top: 4px;
+}
+
+.main-content .delivery-option {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.95em;
+}
+</style>
+{{end}}
+
+{{define "content"}}
+<div class="account-details">
+    <div class="section-divider"></div>
+
+    <div class="form-group">
+        <label class="form-label">Email Address</label>
+        <div class="form-input-line"></div>
+    </div>
+
+    <div class="form-row">
+        <div class="form-group half">
+            <label class="form-label">Full Name</label>
+            <div class="form-input-line"></div>
+        </div>
+        <div class="form-group half">
+            <label class="form-label">Commander Name</label>
+            <div class="form-input-line"></div>
+        </div>
+    </div>
+
+    {{- if and (.HasDeliveryChoice) (.AvailableDeliveryMethods.PhysicalPost)}}
+    <div class="section-divider"></div>
+
+    <div class="form-group">
+        <label class="form-label">Postal Address Line 1</label>
+        <div class="form-input-line"></div>
+    </div>
+    <div class="form-group">
+        <label class="form-label">Postal Address Line 2 (optional)</label>
+        <div class="form-input-line"></div>
+    </div>
+    <div class="form-row">
+        <div class="form-group half">
+            <label class="form-label">State / Province</label>
+            <div class="form-input-line"></div>
+        </div>
+        <div class="form-group half">
+            <label class="form-label">Country</label>
+            <div class="form-input-line"></div>
+        </div>
+    </div>
+    <div class="form-group post-code">
+        <label class="form-label">Post Code / Zip</label>
+        <div class="form-input-line"></div>
+    </div>
+    {{- end}}
+
+    {{- if .HasDeliveryChoice}}
+    <div class="section-divider"></div>
+    <div class="form-group">
+        <label class="form-label">Preferred Delivery Method</label>
+        <div class="delivery-options">
+            {{- if .AvailableDeliveryMethods.Email}}
+            <div class="delivery-option">
+                <input type="radio" name="delivery_method" value="email" {{if eq (.DefaultDeliveryMethod) "email"}}checked{{end}}> Email
+            </div>
+            {{- end}}
+            {{- if .AvailableDeliveryMethods.PhysicalLocal}}
+            <div class="delivery-option">
+                <input type="radio" name="delivery_method" value="local" {{if eq (.DefaultDeliveryMethod) "local"}}checked{{end}}> Local Pickup
+            </div>
+            {{- end}}
+            {{- if .AvailableDeliveryMethods.PhysicalPost}}
+            <div class="delivery-option">
+                <input type="radio" name="delivery_method" value="post" {{if eq (.DefaultDeliveryMethod) "post"}}checked{{end}}> Post
+            </div>
+            {{- end}}
+        </div>
+    </div>
+    {{- end}}
+</div>
+{{end}}

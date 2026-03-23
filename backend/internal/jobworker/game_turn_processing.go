@@ -28,6 +28,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/jobqueue"
 	"gitlab.com/alienspaces/playbymail/internal/jobworker/adventure_game"
+	"gitlab.com/alienspaces/playbymail/internal/jobworker/mech_wargame"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 	"gitlab.com/alienspaces/playbymail/internal/utils/config"
 )
@@ -213,7 +214,12 @@ func (w *GameTurnProcessingWorker) initializeProcessors(l logger.Logger, d *doma
 	}
 	processors[game_record.GameTypeAdventure] = adventureProcessor
 
-	// TODO: (agent) When adding a new game type: implement a GameTurnProcessor for it, register it in initializeProcessors (e.g. processors[game_record.GameTypeX] = xProcessor), and add corresponding jobworker/adventure_game-style package if needed.
+	// Register mech wargame processor
+	mechWargameProcessor, err := mech_wargame.NewMechWargame(l, d)
+	if err != nil {
+		return nil, err
+	}
+	processors[game_record.GameTypeMechWargame] = mechWargameProcessor
 
 	return processors, nil
 }

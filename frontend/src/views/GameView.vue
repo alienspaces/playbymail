@@ -99,7 +99,7 @@ export default {
       modalForm: {
         id: '',
         name: '',
-        game_type: 'adventure',
+        game_type: '',
         turn_duration_hours: 168, // Default to 1 week
         description: '',
       },
@@ -119,7 +119,7 @@ export default {
           label: 'Type',
           required: true,
           type: 'select',
-          options: [{ value: 'adventure', label: 'Adventure' }],
+          options: [{ value: 'adventure', label: 'Adventure' }, { value: 'mech_wargame', label: 'Mech Wargame' }],
         },
         {
           key: 'turn_duration_hours',
@@ -187,7 +187,7 @@ export default {
       this.modalForm = {
         id: '',
         name: '',
-        game_type: 'adventure',
+        game_type: '',
         turn_duration_hours: 168,
         description: '',
       }

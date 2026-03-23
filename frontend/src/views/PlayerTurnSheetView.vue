@@ -143,6 +143,8 @@ const SHEET_PRESENTATION_ORDER = [
   'adventure_game_location_choice',
   'adventure_game_inventory_management',
   'adventure_game_monster',
+  'mech_wargame_join_game',
+  'mech_wargame_orders',
 ]
 
 // Derive current turn sheets (latest turn only), sorted by canonical presentation order.
@@ -167,6 +169,8 @@ function formatSheetType(sheetType) {
     adventure_game_location_choice: 'Location Choice',
     adventure_game_inventory_management: 'Inventory Management',
     adventure_game_monster: 'Creature Encounter',
+    mech_wargame_join_game: 'Join Game',
+    mech_wargame_orders: 'Mech Orders',
   }
   return labels[sheetType] ?? sheetType.replace(/_/g, ' ')
 }

@@ -1,0 +1,21 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "http://playbymail.games/schema/mech_wargame_schema/mech_wargame_sector_link.request.schema.json",
+    "title": "MechWargameSectorLinkRequest",
+    "type": "object",
+    "properties": {
+        "from_mech_wargame_sector_id": {
+            "type": "string",
+            "minLength": 1
+        },
+        "to_mech_wargame_sector_id": {
+            "type": "string",
+            "minLength": 1
+        },
+        "cover_modifier": {
+            "type": "integer"
+        }
+    },
+    "required": ["from_mech_wargame_sector_id", "to_mech_wargame_sector_id"],
+    "additionalProperties": false
+}

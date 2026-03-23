@@ -1,0 +1,39 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "http://playbymail.games/schema/mech_wargame_schema/mech_wargame_lance.schema.json",
+    "title": "MechWargameLance",
+    "type": "object",
+    "properties": {
+        "id": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
+        },
+        "game_id": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
+        },
+        "account_id": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
+        },
+        "account_user_id": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
+        },
+        "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+        },
+        "description": {
+            "type": "string"
+        },
+        "created_at": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/created_at"
+        },
+        "updated_at": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/updated_at"
+        },
+        "deleted_at": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/updated_at"
+        }
+    },
+    "required": ["id", "game_id", "account_id", "account_user_id", "name", "description", "created_at"],
+    "additionalProperties": false
+}

@@ -21,6 +21,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/runner/server/catalog"
 	"gitlab.com/alienspaces/playbymail/internal/runner/server/game"
 	"gitlab.com/alienspaces/playbymail/internal/runner/server/handler_auth"
+	"gitlab.com/alienspaces/playbymail/internal/runner/server/mech_wargame"
 	"gitlab.com/alienspaces/playbymail/internal/runner/server/player"
 	"gitlab.com/alienspaces/playbymail/internal/turnsheet"
 	"gitlab.com/alienspaces/playbymail/internal/utils/config"
@@ -75,6 +76,8 @@ func NewRunner(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Cli
 		account.AccountHandlerConfig,
 		// Adventure Game handlers
 		adventure_game.AdventureGameHandlerConfig,
+		// Mech Wargame handlers
+		mech_wargame.MechWargameHandlerConfig,
 		// Catalog handlers (public)
 		catalog.CatalogHandlerConfig,
 		// Player handlers

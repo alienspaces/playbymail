@@ -68,21 +68,38 @@ import GameTurnSheetPreviewModal from '../../../components/GameTurnSheetPreviewM
 const gamesStore = useGamesStore();
 const { selectedGame } = storeToRefs(gamesStore);
 
-// Turn sheet types available for game-level backgrounds
-const availableSheetTypes = [
-    {
-        value: 'adventure_game_join_game',
-        label: 'Join Game',
-        description: 'Background image for the join game turn sheet that new players receive when joining.'
-    },
-    {
-        value: 'adventure_game_inventory_management',
-        label: 'Inventory Management',
-        description: 'Background image for the inventory management turn sheet used by players to manage their items.'
-    }
-];
+const SHEET_TYPES_BY_GAME_TYPE = {
+    adventure: [
+        {
+            value: 'adventure_game_join_game',
+            label: 'Join Game',
+            description: 'Background image for the join game turn sheet that new players receive when joining.'
+        },
+        {
+            value: 'adventure_game_inventory_management',
+            label: 'Inventory Management',
+            description: 'Background image for the inventory management turn sheet used by players to manage their items.'
+        }
+    ],
+    mech_wargame: [
+        {
+            value: 'mech_wargame_join_game',
+            label: 'Join Game',
+            description: 'Background image for the join game turn sheet that new commanders receive when joining.'
+        },
+        {
+            value: 'mech_wargame_orders',
+            label: 'Mech Orders',
+            description: 'Background image for the mech orders turn sheet used by players to submit movement and attack orders.'
+        }
+    ],
+};
 
-const activeTab = ref(availableSheetTypes[0].value);
+const availableSheetTypes = computed(
+    () => SHEET_TYPES_BY_GAME_TYPE[selectedGame.value?.game_type] ?? SHEET_TYPES_BY_GAME_TYPE.adventure
+);
+
+const activeTab = ref(availableSheetTypes.value[0]?.value ?? '');
 const images = ref([]);
 const loading = ref(false);
 const showPreviewModal = ref(false);
@@ -90,7 +107,7 @@ const previewTurnSheetType = ref('');
 
 // Computed property to get the active sheet type object
 const activeSheetType = computed(() => {
-    return availableSheetTypes.find(st => st.value === activeTab.value) || null;
+    return availableSheetTypes.value.find(st => st.value === activeTab.value) || null;
 });
 
 // Set active tab
@@ -107,7 +124,7 @@ function getImageForType(turnSheetType) {
 
 // Get label for a turn sheet type
 function getSheetTypeLabel(turnSheetType) {
-    const sheetType = availableSheetTypes.find(st => st.value === turnSheetType);
+    const sheetType = availableSheetTypes.value.find(st => st.value === turnSheetType);
     return sheetType ? sheetType.label : turnSheetType;
 }
 

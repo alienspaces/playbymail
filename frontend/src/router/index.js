@@ -31,6 +31,13 @@ const routes = [
       { path: ':gameId/location-object-effects', component: () => import('../views/studio/adventure/StudioLocationObjectEffectsView.vue') },
       { path: ':gameId/turn-sheet-backgrounds', component: () => import('../views/studio/adventure/StudioTurnSheetBackgroundsView.vue') },
 
+      // Mech wargame type studio views
+      { path: ':gameId/chassis', component: () => import('../views/studio/mech_wargame/StudioChassisView.vue') },
+      { path: ':gameId/weapons', component: () => import('../views/studio/mech_wargame/StudioWeaponsView.vue') },
+      { path: ':gameId/sectors', component: () => import('../views/studio/mech_wargame/StudioSectorsView.vue') },
+      { path: ':gameId/sector-links', component: () => import('../views/studio/mech_wargame/StudioSectorLinksView.vue') },
+      { path: ':gameId/lances', component: () => import('../views/studio/mech_wargame/StudioLancesView.vue') },
+
     ],
   },
   {

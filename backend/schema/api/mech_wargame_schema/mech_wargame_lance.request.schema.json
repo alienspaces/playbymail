@@ -1,0 +1,22 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "http://playbymail.games/schema/mech_wargame_schema/mech_wargame_lance.request.schema.json",
+    "title": "MechWargameLanceRequest",
+    "type": "object",
+    "properties": {
+        "account_user_id": {
+            "type": "string",
+            "minLength": 1
+        },
+        "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+        },
+        "description": {
+            "type": "string"
+        }
+    },
+    "required": ["account_user_id", "name", "description"],
+    "additionalProperties": false
+}

@@ -29,6 +29,8 @@
           <span class="context-label">Selected Game</span>
           <span class="context-name">{{ selectedGame.name }}</span>
         </div>
+
+        <!-- Common links shown for all game types -->
         <ul>
           <li>
             <router-link :to="`/studio/${selectedGame.id}/turn-sheet-backgrounds`" active-class="active">
@@ -39,6 +41,10 @@
               Turn Sheets
             </router-link>
           </li>
+        </ul>
+
+        <!-- Adventure game specific links -->
+        <ul v-if="isAdventureGame">
           <li>
             <router-link :to="`/studio/${selectedGame.id}/locations`" active-class="active">
               <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
@@ -129,6 +135,50 @@
           </li>
         </ul>
 
+        <!-- Mech wargame specific links -->
+        <ul v-if="isMechWargameGame">
+          <li>
+            <router-link :to="`/studio/${selectedGame.id}/chassis`" active-class="active">
+              <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2L2 12h3v8h6v-5h2v5h6v-8h3L12 2z" />
+              </svg>
+              Chassis
+            </router-link>
+          </li>
+          <li>
+            <router-link :to="`/studio/${selectedGame.id}/weapons`" active-class="active">
+              <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M22 9V7h-2V5c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-2h2v-2h-2v-2h2v-2h-2V9h2zm-4 10H4V5h14v14z" />
+              </svg>
+              Weapons
+            </router-link>
+          </li>
+          <li>
+            <router-link :to="`/studio/${selectedGame.id}/sectors`" active-class="active">
+              <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+              </svg>
+              Sectors
+            </router-link>
+          </li>
+          <li>
+            <router-link :to="`/studio/${selectedGame.id}/sector-links`" active-class="active">
+              <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+              </svg>
+              Sector Links
+            </router-link>
+          </li>
+          <li>
+            <router-link :to="`/studio/${selectedGame.id}/lances`" active-class="active">
+              <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5z" />
+              </svg>
+              Lances
+            </router-link>
+          </li>
+        </ul>
+
         <GameIssuesPanel />
       </div>
     </template>
@@ -145,6 +195,7 @@
 </template>
 
 <script setup>
+import { computed } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useGamesStore } from '../stores/games';
 import SidebarLayout from './SidebarLayout.vue';
@@ -153,6 +204,9 @@ import GameIssuesPanel from './GameIssuesPanel.vue';
 
 const gamesStore = useGamesStore();
 const { selectedGame } = storeToRefs(gamesStore);
+
+const isAdventureGame = computed(() => selectedGame.value?.game_type === 'adventure')
+const isMechWargameGame = computed(() => selectedGame.value?.game_type === 'mech_wargame')
 </script>
 
 <style scoped>

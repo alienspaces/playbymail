@@ -10,12 +10,14 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/record/account_record"
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
+	"gitlab.com/alienspaces/playbymail/internal/record/mech_wargame_record"
 )
 
 const (
-	GameOneRef   = "game-one"
-	GameTwoRef   = "game-two"
-	GameDraftRef = "game-draft"
+	GameOneRef        = "game-one"
+	GameTwoRef        = "game-two"
+	GameDraftRef      = "game-draft"
+	GameMechWargameRef = "game-mech-wargame"
 
 	AccountStandardRef    = "account-standard"
 	AccountProPlayerRef   = "account-pro-player"
@@ -120,6 +122,16 @@ const (
 
 	GameImageJoinGameRef  = "game-image-join-game"
 	GameImageInventoryRef = "game-image-inventory"
+
+	// Mech wargame specific references
+	MechWargameChassisOneRef    = "mech-wargame-chassis-one"
+	MechWargameWeaponOneRef     = "mech-wargame-weapon-one"
+	MechWargameSectorOneRef     = "mech-wargame-sector-one"
+	MechWargameSectorTwoRef     = "mech-wargame-sector-two"
+	MechWargameSectorLinkOneRef = "mech-wargame-sector-link-one"
+	MechWargameLanceOneRef      = "mech-wargame-lance-one"
+	MechWargameLanceTwoRef      = "mech-wargame-lance-two"
+	MechWargameLanceMechOneRef  = "mech-wargame-lance-mech-one"
 )
 
 // DataConfig -
@@ -150,6 +162,13 @@ type GameConfig struct {
 	AdventureGameLocationObjectConfigs    []AdventureGameLocationObjectConfig
 	AdventureGameCreaturePlacementConfigs []AdventureGameCreaturePlacementConfig // Where creatures start in the world
 	AdventureGameItemPlacementConfigs     []AdventureGameItemPlacementConfig     // Where items start in the world
+
+	// Mech wargame specific configurations
+	MechWargameChassisConfigs    []MechWargameChassisConfig
+	MechWargameWeaponConfigs     []MechWargameWeaponConfig
+	MechWargameSectorConfigs     []MechWargameSectorConfig
+	MechWargameSectorLinkConfigs []MechWargameSectorLinkConfig
+	MechWargameLanceConfigs      []MechWargameLanceConfig
 }
 
 type GameImageConfig struct {
@@ -351,6 +370,45 @@ type AdventureGameLocationObjectConfig struct {
 	AdventureGameLocationObjectStateConfigs []AdventureGameLocationObjectStateConfig
 	// Effects attached to this object
 	AdventureGameLocationObjectEffectConfigs []AdventureGameLocationObjectEffectConfig
+}
+
+// ------------------------------------------------------------
+// Mech wargame specific configuration
+// ------------------------------------------------------------
+
+type MechWargameChassisConfig struct {
+	Reference string
+	Record    *mech_wargame_record.MechWargameChassis
+}
+
+type MechWargameWeaponConfig struct {
+	Reference string
+	Record    *mech_wargame_record.MechWargameWeapon
+}
+
+type MechWargameSectorConfig struct {
+	Reference string
+	Record    *mech_wargame_record.MechWargameSector
+}
+
+type MechWargameSectorLinkConfig struct {
+	Reference          string
+	FromSectorRef      string
+	ToSectorRef        string
+	Record             *mech_wargame_record.MechWargameSectorLink
+}
+
+type MechWargameLanceMechConfig struct {
+	Reference   string
+	ChassisRef  string
+	Record      *mech_wargame_record.MechWargameLanceMech
+}
+
+type MechWargameLanceConfig struct {
+	Reference        string
+	AccountRef       string
+	Record           *mech_wargame_record.MechWargameLance
+	LanceMechConfigs []MechWargameLanceMechConfig
 }
 
 // Helper methods for modifying DataConfig
@@ -766,17 +824,103 @@ func DefaultDataConfig() DataConfig {
 			},
 		},
 	},
-			// Minimal draft game for testing update operations
-			{
-				Reference: GameDraftRef,
-				Record: &game_record.Game{
-					Name:              UniqueName("Default Draft Game"),
-					GameType:          game_record.GameTypeAdventure,
-					TurnDurationHours: 168,
-					Status:            game_record.GameStatusDraft,
+		// Minimal draft game for testing update operations
+		{
+			Reference: GameDraftRef,
+			Record: &game_record.Game{
+				Name:              UniqueName("Default Draft Game"),
+				GameType:          game_record.GameTypeAdventure,
+				TurnDurationHours: 168,
+				Status:            game_record.GameStatusDraft,
+			},
+		},
+		// Mech wargame game for testing mech wargame specific resources
+		{
+			Reference: GameMechWargameRef,
+			Record: &game_record.Game{
+				Name:              UniqueName("Default Mech Wargame"),
+				GameType:          game_record.GameTypeMechWargame,
+				TurnDurationHours: 168,
+			},
+			MechWargameChassisConfigs: []MechWargameChassisConfig{
+				{
+					Reference: MechWargameChassisOneRef,
+					Record: &mech_wargame_record.MechWargameChassis{
+						Name:            UniqueName("Timber Wolf"),
+						Description:     "A heavy assault mech.",
+						ChassisClass:    mech_wargame_record.ChassisClassHeavy,
+						ArmorPoints:     200,
+						StructurePoints: 100,
+						HeatCapacity:    40,
+						Speed:           3,
+					},
+				},
+			},
+			MechWargameWeaponConfigs: []MechWargameWeaponConfig{
+				{
+					Reference: MechWargameWeaponOneRef,
+					Record: &mech_wargame_record.MechWargameWeapon{
+						Name:        UniqueName("Large Laser"),
+						Description: "A powerful energy weapon.",
+						Damage:      8,
+						HeatCost:    8,
+						RangeBand:   mech_wargame_record.WeaponRangeBandMedium,
+						MountSize:   mech_wargame_record.WeaponMountSizeLarge,
+					},
+				},
+			},
+			MechWargameSectorConfigs: []MechWargameSectorConfig{
+				{
+					Reference: MechWargameSectorOneRef,
+					Record: &mech_wargame_record.MechWargameSector{
+						Name:             UniqueName("Ridge South"),
+						Description:      "A rocky ridge offering good cover.",
+						TerrainType:      mech_wargame_record.SectorTerrainTypeRough,
+						Elevation:        2,
+						IsStartingSector: true,
+					},
+				},
+				{
+					Reference: MechWargameSectorTwoRef,
+					Record: &mech_wargame_record.MechWargameSector{
+						Name:        UniqueName("Relay Station"),
+						Description: "An abandoned communications relay station.",
+						TerrainType: mech_wargame_record.SectorTerrainTypeUrban,
+						Elevation:   0,
+					},
+				},
+			},
+			MechWargameSectorLinkConfigs: []MechWargameSectorLinkConfig{
+				{
+					Reference:     MechWargameSectorLinkOneRef,
+					FromSectorRef: MechWargameSectorOneRef,
+					ToSectorRef:   MechWargameSectorTwoRef,
+					Record: &mech_wargame_record.MechWargameSectorLink{
+						CoverModifier: 1,
+					},
+				},
+			},
+			MechWargameLanceConfigs: []MechWargameLanceConfig{
+				{
+				Reference:  MechWargameLanceOneRef,
+				AccountRef: AccountUserStandardRef,
+					Record: &mech_wargame_record.MechWargameLance{
+						Name:        UniqueName("Alpha Lance"),
+						Description: "First player lance.",
+					},
+					LanceMechConfigs: []MechWargameLanceMechConfig{
+						{
+							Reference:  MechWargameLanceMechOneRef,
+							ChassisRef: MechWargameChassisOneRef,
+							Record: &mech_wargame_record.MechWargameLanceMech{
+								Callsign: "Wolf-1",
+							},
+						},
+					},
 				},
 			},
 		},
+	},
 		// Account user game subscription configurations may only be be resolved
 		// once both accounts and games have been created.
 		AccountUserGameSubscriptionConfigs: []AccountUserGameSubscriptionConfig{

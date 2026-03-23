@@ -14,6 +14,7 @@
               <select v-if="field.type === 'select'" v-model="form[field.key]" :id="field.key"
                 :required="field.required" :placeholder="field.placeholder" class="form-select">
                 <option v-if="field.placeholder" value="" disabled>{{ field.placeholder }}</option>
+                <option v-else-if="!form[field.key]" value="" disabled hidden></option>
                 <option v-for="option in getFieldOptions(field)" :key="option.value" :value="option.value">
                   {{ option.label }}
                 </option>

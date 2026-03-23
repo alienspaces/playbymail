@@ -7,6 +7,7 @@ import (
 	coresql "gitlab.com/alienspaces/playbymail/core/sql"
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
+	"gitlab.com/alienspaces/playbymail/internal/record/mech_wargame_record"
 )
 
 const (
@@ -33,10 +34,17 @@ func (m *Domain) ValidateGameReadyForInstance(gameID string) ([]GameValidationIs
 
 	var issues []GameValidationIssue
 
-	if gameRec.GameType == game_record.GameTypeAdventure {
+	switch gameRec.GameType {
+	case game_record.GameTypeAdventure:
 		issues, err = m.validateAdventureGameReadyForInstance(gameID)
 		if err != nil {
 			l.Warn("failed validating adventure game >%s< >%v<", gameID, err)
+			return nil, err
+		}
+	case game_record.GameTypeMechWargame:
+		issues, err = m.validateMechWargameGameReadyForInstance(gameID)
+		if err != nil {
+			l.Warn("failed validating mech wargame game >%s< >%v<", gameID, err)
 			return nil, err
 		}
 	}
@@ -345,7 +353,7 @@ func validateGameRec(args *validateGameArgs) error {
 		return err
 	}
 
-	if rec.GameType != game_record.GameTypeAdventure {
+	if rec.GameType != game_record.GameTypeAdventure && rec.GameType != game_record.GameTypeMechWargame {
 		return InvalidField(game_record.FieldGameType, rec.GameType, "game type is not valid")
 	}
 
@@ -372,4 +380,84 @@ func validateGameRecForDelete(args *validateGameArgs) error {
 	}
 
 	return nil
+}
+
+func (m *Domain) validateMechWargameGameReadyForInstance(gameID string) ([]GameValidationIssue, error) {
+	var issues []GameValidationIssue
+
+	sectorRecs, err := m.GetManyMechWargameSectorRecs(&coresql.Options{
+		Params: []coresql.Param{
+			{Col: mech_wargame_record.FieldMechWargameSectorGameID, Val: gameID},
+		},
+		Limit: 1,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if len(sectorRecs) == 0 {
+		issues = append(issues, GameValidationIssue{
+			Field:    "sectors",
+			Message:  "Mech wargame must have at least one sector before creating an instance",
+			Severity: ValidationSeverityError,
+		})
+		return issues, nil
+	}
+
+	startingSectorRecs, err := m.GetManyMechWargameSectorRecs(&coresql.Options{
+		Params: []coresql.Param{
+			{Col: mech_wargame_record.FieldMechWargameSectorGameID, Val: gameID},
+			{Col: mech_wargame_record.FieldMechWargameSectorIsStartingSector, Val: true},
+		},
+		Limit: 1,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if len(startingSectorRecs) == 0 {
+		issues = append(issues, GameValidationIssue{
+			Field:    "starting_sector",
+			Message:  "Mech wargame must have at least one starting sector before creating an instance",
+			Severity: ValidationSeverityError,
+		})
+	}
+
+	chassisRecs, err := m.GetManyMechWargameChassisRecs(&coresql.Options{
+		Params: []coresql.Param{
+			{Col: mech_wargame_record.FieldMechWargameChassisGameID, Val: gameID},
+		},
+		Limit: 1,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if len(chassisRecs) == 0 {
+		issues = append(issues, GameValidationIssue{
+			Field:    "chassis",
+			Message:  "Mech wargame must have at least one chassis defined before creating an instance",
+			Severity: ValidationSeverityError,
+		})
+	}
+
+	lanceRecs, err := m.GetManyMechWargameLanceRecs(&coresql.Options{
+		Params: []coresql.Param{
+			{Col: mech_wargame_record.FieldMechWargameLanceGameID, Val: gameID},
+		},
+		Limit: 1,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if len(lanceRecs) == 0 {
+		issues = append(issues, GameValidationIssue{
+			Field:    "lances",
+			Message:  "Mech wargame must have at least one lance (player slot) defined before creating an instance",
+			Severity: ValidationSeverityError,
+		})
+	}
+
+	return issues, nil
 }

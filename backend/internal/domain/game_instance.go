@@ -220,10 +220,17 @@ func (m *Domain) StartGameInstance(instanceID string) (*game_record.GameInstance
 	}
 
 	var instanceData *AdventureGameInstanceData
-	if gameRec.GameType == game_record.GameTypeAdventure {
+	switch gameRec.GameType {
+	case game_record.GameTypeAdventure:
 		instanceData, err = m.PopulateAdventureGameInstanceData(instanceID)
 		if err != nil {
 			l.Warn("failed to populate adventure game instance data >%v<", err)
+			return nil, nil, err
+		}
+	case game_record.GameTypeMechWargame:
+		_, err = m.PopulateMechWargameGameInstanceData(instanceID)
+		if err != nil {
+			l.Warn("failed to populate mech wargame game instance data >%v<", err)
 			return nil, nil, err
 		}
 	}
@@ -1126,6 +1133,12 @@ func (m *Domain) DeleteGameInstance(instanceID string) error {
 		return err
 	}
 
+	// Delete mech_wargame instance data (turn sheets, mech instances, lance instances, sector instances)
+	if err := m.deleteMechWargameInstanceData(instanceID); err != nil {
+		l.Warn("failed to delete mech wargame instance data >%v<", err)
+		return err
+	}
+
 	// Delete adventure_game_turn_sheet records (linked via character instance)
 	charInstances, err := m.GetManyAdventureGameCharacterInstanceRecs(&coresql.Options{
 		Params: []coresql.Param{
@@ -1304,6 +1317,12 @@ func (m *Domain) RemoveGameInstance(instanceID string) error {
 
 	_, err := m.GetGameInstanceRec(instanceID, coresql.ForUpdateNoWait)
 	if err != nil {
+		return err
+	}
+
+	// Remove mech_wargame instance data (turn sheets, mech instances, lance instances, sector instances)
+	if err := m.removeMechWargameInstanceData(instanceID); err != nil {
+		l.Warn("failed to remove mech wargame instance data >%v<", err)
 		return err
 	}
 
