@@ -188,22 +188,3 @@ func (m *Domain) RemoveGameRec(recID string) error {
 
 	return nil
 }
-
-// CreateGame -
-// Note: Games no longer have account_id. Designer subscriptions must be created separately
-// via the game_subscription handler after game creation.
-func (m *Domain) CreateGame(rec *game_record.Game) (*game_record.Game, *game_record.GameSubscription, error) {
-	l := m.Logger("CreateGame")
-
-	l.Debug("creating game >%#v<", rec)
-
-	createdRec, err := m.CreateGameRec(rec)
-	if err != nil {
-		l.Warn("failed to create game record >%v<", err)
-		return nil, nil, err
-	}
-
-	// Games no longer have owners - designer subscriptions are created separately
-	// Return nil for subscription to indicate it should be created via handler
-	return createdRec, nil, nil
-}

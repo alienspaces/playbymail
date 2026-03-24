@@ -177,7 +177,7 @@ func (t *Testing) createAdventureGameInstanceRecords(gameInstanceConfig GameInst
 
 	instanceRec := gameInstanceRec
 	if instanceRec.Status != game_record.GameInstanceStatusStarted {
-		var instanceData *domain.AdventureGameInstanceData
+		var instanceData *domain.GameInstanceData
 		var err error
 		instanceRec, instanceData, err = t.Domain.(*domain.Domain).StartGameInstance(gameInstanceRec.ID)
 		if err != nil {
@@ -185,8 +185,8 @@ func (t *Testing) createAdventureGameInstanceRecords(gameInstanceConfig GameInst
 			return err
 		}
 
-		if instanceData != nil {
-			t.addAdventureGameInstanceDataToStores(instanceData, gameInstanceRec.ID)
+		if instanceData != nil && instanceData.Adventure != nil {
+			t.addAdventureGameInstanceDataToStores(instanceData.Adventure, gameInstanceRec.ID)
 		}
 	}
 

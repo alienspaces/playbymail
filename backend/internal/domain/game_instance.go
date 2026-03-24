@@ -190,8 +190,15 @@ func (m *Domain) RemoveGameInstanceRec(recID string) error {
 
 // Game Runtime Management Functions
 
+// GameInstanceData holds the populated runtime records for a started game instance.
+// Exactly one of the game-type-specific fields will be non-nil, matching the game type of the instance.
+type GameInstanceData struct {
+	Adventure *AdventureGameInstanceData
+	Mecha     *MechaInstanceData
+}
+
 // StartGameInstance starts a game instance: populates all world and player data then transitions status to started.
-func (m *Domain) StartGameInstance(instanceID string) (*game_record.GameInstance, *AdventureGameInstanceData, error) {
+func (m *Domain) StartGameInstance(instanceID string) (*game_record.GameInstance, *GameInstanceData, error) {
 	l := m.Logger("StartGameInstance")
 
 	instance, err := m.GetGameInstanceRec(instanceID, coresql.ForUpdateNoWait)
@@ -219,16 +226,16 @@ func (m *Domain) StartGameInstance(instanceID string) (*game_record.GameInstance
 		return nil, nil, err
 	}
 
-	var instanceData *AdventureGameInstanceData
+	instanceData := &GameInstanceData{}
 	switch gameRec.GameType {
 	case game_record.GameTypeAdventure:
-		instanceData, err = m.PopulateAdventureGameInstanceData(instanceID)
+		instanceData.Adventure, err = m.PopulateAdventureGameInstanceData(instanceID)
 		if err != nil {
 			l.Warn("failed to populate adventure game instance data >%v<", err)
 			return nil, nil, err
 		}
 	case game_record.GameTypeMecha:
-		_, err = m.PopulateMechaGameInstanceData(instanceID)
+		instanceData.Mecha, err = m.PopulateMechaGameInstanceData(instanceID)
 		if err != nil {
 			l.Warn("failed to populate mecha game instance data >%v<", err)
 			return nil, nil, err
