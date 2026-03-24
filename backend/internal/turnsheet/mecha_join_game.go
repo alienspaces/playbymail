@@ -70,6 +70,7 @@ func createMechaJoinGameData(gameRec *game_record.Game, turnSheetCode string) Jo
 			TurnSheetInstructions: convert.Ptr(DefaultMechaJoinGameInstructions()),
 			TurnSheetDeadline:     nil,
 			TurnSheetCode:         convert.Ptr(turnSheetCode),
+			HideNarrative:         true,
 		},
 		GameDescription: gameRec.Description,
 	}

@@ -399,6 +399,103 @@
             margin-top: 4px;
         }
 
+        /*
+         * Drawer handle and overlay: default display:none declared here,
+         * before the @media block, so the media query's display:block
+         * correctly wins the cascade on narrow screens.
+         */
+        .drawer-handle {
+            display: none;
+            position: fixed;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            writing-mode: vertical-rl;
+            padding: 10px 6px;
+            background: rgba(184, 134, 11, 0.85);
+            border: 1px solid #8a6200;
+            border-right: none;
+            border-radius: 4px 0 0 4px;
+            color: #fff8e8;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: 'Times New Roman', serif;
+            z-index: 98;
+            box-shadow: -2px 0 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .drawer-handle:hover {
+            background: rgba(184, 134, 11, 1);
+        }
+
+        .drawer-overlay {
+            display: none;
+        }
+
+        /*
+         * Narrow-screen layout: stack the two-column table into a single
+         * column and convert the "What Happened" log into a right-hand
+         * drawer overlay toggled by a handle on the right edge.
+         * Uses a width media feature query (not @media screen) per html-templates rule.
+         */
+        @media (max-width: 600px) {
+            .sheet-columns {
+                display: block;
+            }
+
+            .sheet-col-content {
+                display: block;
+                width: 100%;
+                padding: 2mm 8px;
+            }
+
+            .sheet-col-log {
+                display: none;
+                position: fixed;
+                top: 0;
+                right: 0;
+                width: 85%;
+                max-width: 320px;
+                height: 100%;
+                z-index: 100;
+                padding: 0;
+                overflow-y: auto;
+                box-shadow: -2px 0 12px rgba(0, 0, 0, 0.4);
+            }
+
+            .sheet-col-log.drawer-open {
+                display: block;
+            }
+
+            .narrative-content {
+                height: auto;
+                min-height: 100%;
+                border-radius: 0;
+                border-left: none;
+                border-right: 3px solid #b8860b;
+            }
+
+            .drawer-handle {
+                display: block;
+            }
+
+            .drawer-overlay {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.4);
+                z-index: 99;
+            }
+
+            .drawer-overlay.drawer-open {
+                display: block;
+            }
+        }
+
         @media print {
             body {
                 background-color: white;
@@ -452,6 +549,16 @@
                 height: 185mm;
                 overflow: hidden;
             }
+
+            /* Hide mobile-only UI in print */
+            .drawer-handle,
+            .drawer-overlay {
+                display: none !important;
+            }
+
+            .sheet-col-log {
+                display: table-cell !important;
+            }
         }
     </style>
     
@@ -492,13 +599,16 @@
                 <div class="content-section instruction-content instruction-content--empty"></div>
                 {{end}}
 
-                <!-- Main content area: always two columns — left for actions, right for event log -->
+                <!-- Main content area: two columns for play turns, single column for join sheets -->
                 <div class="content-section main-content debug-main" style="padding: 0; background-color: transparent;">
+                    {{if not .HideNarrative}}
+                    <!-- Drawer handle: only visible on narrow screens via @media (max-width: 600px) -->
+                    <div class="drawer-handle" id="drawer-handle">What Happened</div>
                     <div class="sheet-columns">
                         <div class="sheet-col-content">
                             {{template "content" .}}
                         </div>
-                        <div class="sheet-col-log">
+                        <div class="sheet-col-log" id="sheet-col-log">
                             <div class="narrative-content">
                                 <h3 class="narrative-title">What Happened</h3>
                                 {{if .TurnEvents}}
@@ -514,6 +624,13 @@
                             </div>
                         </div>
                     </div>
+                    <!-- Backdrop overlay for drawer on mobile -->
+                    <div class="drawer-overlay" id="drawer-overlay"></div>
+                    {{else}}
+                    <div class="sheet-col-content">
+                        {{template "content" .}}
+                    </div>
+                    {{end}}
                 </div>
             </div>
         </div>
@@ -541,5 +658,24 @@
     </div>
     <!-- Child template scripts -->
     {{block "scripts" .}}{{end}}
+
+    <script>
+    (function() {
+        var handle = document.getElementById('drawer-handle');
+        var log = document.getElementById('sheet-col-log');
+        var overlay = document.getElementById('drawer-overlay');
+        if (!handle || !log || !overlay) return;
+
+        handle.addEventListener('click', function() {
+            log.classList.toggle('drawer-open');
+            overlay.classList.toggle('drawer-open');
+        });
+
+        overlay.addEventListener('click', function() {
+            log.classList.remove('drawer-open');
+            overlay.classList.remove('drawer-open');
+        });
+    })();
+    </script>
 </body>
 </html>

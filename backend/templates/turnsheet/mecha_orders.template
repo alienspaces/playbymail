@@ -271,6 +271,30 @@
         color: #777;
         margin-left: 4px;
     }
+
+    /*
+     * Narrow-screen: allow the weapons table to scroll horizontally and
+     * ensure order fields stack vertically (min-width already ensures
+     * flex-wrap kicks in, but make it explicit for very narrow screens).
+     */
+    @media (max-width: 600px) {
+        .mech-weapons {
+            overflow-x: auto;
+        }
+        .mech-weapons table {
+            min-width: 320px;
+        }
+        .order-fields {
+            flex-direction: column;
+        }
+        .order-field {
+            flex: none;
+            width: 100%;
+        }
+        .mech-stat-bars {
+            overflow-x: auto;
+        }
+    }
 </style>
 {{end}}
 

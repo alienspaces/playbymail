@@ -72,6 +72,7 @@ func createAdventureGameJoinGameData(gameRec *game_record.Game, turnSheetCode st
 			TurnSheetInstructions: convert.Ptr(DefaultJoinGameInstructions()),
 			TurnSheetDeadline:     nil,
 			TurnSheetCode:         convert.Ptr(turnSheetCode),
+			HideNarrative:         true,
 		},
 		GameDescription: gameRec.Description,
 	}
@@ -218,6 +219,7 @@ func defaultJoinGameTemplateData() *JoinGameData {
 		TurnSheetTemplateData: TurnSheetTemplateData{
 			TurnSheetTitle:        &title,
 			TurnSheetInstructions: &instructions,
+			HideNarrative:         true,
 		},
 	}
 }

@@ -34,6 +34,16 @@ export default defineConfig({
       },
       dependencies: ['setup'],
     },
+    {
+      // Visual regression tests for turn sheet HTML rendering.
+      // Loads static HTML files directly -- no server or auth setup required.
+      // Run: npm run test:e2e:visual
+      // First run creates baselines; update baselines with --update-snapshots.
+      // Generate HTML fixtures first with: ./tools/render-turnsheets
+      name: 'visual',
+      testMatch: /.*turnsheet-visual.*/,
+      use: { ...devices['Desktop Chrome'] },
+    },
   ],
 
   webServer: [

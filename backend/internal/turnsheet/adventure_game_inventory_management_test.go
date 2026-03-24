@@ -356,6 +356,11 @@ func TestGenerateInventoryManagementFormatsForPrinting(t *testing.T) {
 			TurnSheetCode:     convert.Ptr(turnSheetCode),
 			TurnSheetDeadline: convert.Ptr(time.Now().Add(24 * time.Hour)),
 			BackgroundImage:   &backgroundImage,
+			TurnEvents: []turnsheet.TurnEvent{
+				{Category: turnsheet.TurnEventCategorySystem, Icon: turnsheet.TurnEventIconSystem, Message: "Aria looted the chest in the Crystal Caverns."},
+				{Category: turnsheet.TurnEventCategorySystem, Icon: turnsheet.TurnEventIconSystem, Message: "Found a Healing Potion and a Scroll of Light."},
+				{Category: turnsheet.TurnEventCategorySystem, Icon: turnsheet.TurnEventIconSystem, Message: "Dropped the Rusty Dagger to make space."},
+			},
 		},
 		CharacterName:       "Aria the Mage",
 		CurrentLocationName: "Mystic Grove",

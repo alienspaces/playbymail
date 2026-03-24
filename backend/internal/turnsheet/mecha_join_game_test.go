@@ -263,7 +263,7 @@ func TestMechaJoinGameProcessor_GenerateTurnSheet_WithDeliveryMethods(t *testing
 			require.Equal(t, tt.expectAddressFields, hasAddress,
 				"expected address fields presence to be %v", tt.expectAddressFields)
 
-			hasScript := strings.Contains(htmlStr, `postal-address-fields`) && strings.Contains(htmlStr, `<script>`)
+			hasScript := strings.Contains(htmlStr, `postal-address-fields`) && strings.Contains(htmlStr, `toggle(this.value === 'post')`)
 			require.Equal(t, tt.expectToggleScript, hasScript,
 				"expected toggle script presence to be %v", tt.expectToggleScript)
 		})

@@ -304,6 +304,11 @@ func TestGenerateLocationChoiceFormatsForPrinting(t *testing.T) {
 			TurnSheetCode:     convert.Ptr(turnSheetCode),
 			TurnSheetDeadline: convert.Ptr(time.Now().Add(24 * time.Hour)),
 			BackgroundImage:   &backgroundImage,
+			TurnEvents: []turnsheet.TurnEvent{
+				{Category: turnsheet.TurnEventCategoryMovement, Icon: turnsheet.TurnEventIconMovement, Message: "You arrived at Mystic Grove after a long journey through the forest."},
+				{Category: turnsheet.TurnEventCategorySystem, Icon: turnsheet.TurnEventIconSystem, Message: "The ancient trees seem to watch your every move."},
+				{Category: turnsheet.TurnEventCategorySystem, Icon: turnsheet.TurnEventIconSystem, Message: "You discovered a hidden path leading north."},
+			},
 		},
 		LocationName:        "Mystic Grove",
 		LocationDescription: "You stand at the edge of an ancient forest. The trees whisper secrets of old magic.",

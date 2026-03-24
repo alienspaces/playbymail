@@ -264,6 +264,29 @@
     .catalog-table tr:nth-child(even) td {
         background: rgba(0,0,0,0.02);
     }
+
+    /*
+     * Narrow-screen: wrap stat summary and allow weapons/catalog tables
+     * to scroll horizontally rather than overflowing invisibly.
+     */
+    @media (max-width: 600px) {
+        .stat-summary {
+            flex-wrap: wrap;
+            gap: 4px 12px;
+        }
+        .management-header {
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+        .weapons-section,
+        .catalog-section {
+            overflow-x: auto;
+        }
+        .weapons-table,
+        .catalog-table {
+            min-width: 380px;
+        }
+    }
 </style>
 {{end}}
 

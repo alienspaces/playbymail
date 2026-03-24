@@ -305,6 +305,12 @@ func TestGenerateMonsterEncounterFormatsForPrinting(t *testing.T) {
 			TurnSheetCode:     convert.Ptr(turnSheetCode),
 			TurnSheetDeadline: convert.Ptr(time.Now().Add(24 * time.Hour)),
 			BackgroundImage:   &backgroundImage,
+			TurnEvents: []turnsheet.TurnEvent{
+				{Category: turnsheet.TurnEventCategoryMovement, Icon: turnsheet.TurnEventIconMovement, Message: "Aldric entered the shadowed corridor."},
+				{Category: turnsheet.TurnEventCategoryCombat, Icon: turnsheet.TurnEventIconCombat, Message: "Aldric attacked the Goblin Scout for 8 damage."},
+				{Category: turnsheet.TurnEventCategoryCombat, Icon: turnsheet.TurnEventIconCombat, Message: "Goblin Scout retaliated for 4 damage."},
+				{Category: turnsheet.TurnEventCategorySystem, Icon: turnsheet.TurnEventIconSystem, Message: "Aldric's health dropped to 65."},
+			},
 		},
 		CharacterName:      "Aldric",
 		CharacterHealth:    65,
