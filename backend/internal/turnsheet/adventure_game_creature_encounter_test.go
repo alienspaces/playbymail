@@ -270,9 +270,8 @@ func TestMonsterEncounterProcessor_ScanTurnSheet(t *testing.T) {
 	}
 }
 
-// TestGenerateMonsterEncounterFormatsForPrinting generates HTML and PDF versions for physical testing.
-// Set SAVE_TEST_FILES=true to save the files to the testdata directory.
-func TestGenerateMonsterEncounterFormatsForPrinting(t *testing.T) {
+// TestGenerateMonsterEncounterRendering generates HTML and PDF fixtures for gallery and visual regression tests.
+func TestGenerateMonsterEncounterRendering(t *testing.T) {
 
 	cfg, l, _, _, _ := testutil.NewDefaultDependencies(t)
 	cfg.TemplatesPath = "../../templates"

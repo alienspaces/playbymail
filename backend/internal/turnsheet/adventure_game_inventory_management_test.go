@@ -307,9 +307,8 @@ func TestInventoryManagementProcessor_ScanTurnSheet(t *testing.T) {
 	}
 }
 
-// TestGenerateInventoryManagementFormatsForPrinting generates HTML and PDF versions for physical testing
-// Set SAVE_TEST_FILES=true to save the files to testdata directory
-func TestGenerateInventoryManagementFormatsForPrinting(t *testing.T) {
+// TestGenerateInventoryManagementRendering generates HTML and PDF fixtures for gallery and visual regression tests.
+func TestGenerateInventoryManagementRendering(t *testing.T) {
 
 	cfg, l, _, _, _ := testutil.NewDefaultDependencies(t)
 

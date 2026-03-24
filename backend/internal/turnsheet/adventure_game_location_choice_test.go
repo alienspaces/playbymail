@@ -255,9 +255,8 @@ func TestLocationChoiceProcessor_ScanTurnSheet(t *testing.T) {
 	}
 }
 
-// TestGenerateLocationChoicePDFForPrinting generates a PDF for physical testing
-// Set SAVE_TEST_FILES=true to save the PDF to testdata directory
-func TestGenerateLocationChoiceFormatsForPrinting(t *testing.T) {
+// TestGenerateLocationChoiceRendering generates HTML and PDF fixtures for gallery and visual regression tests.
+func TestGenerateLocationChoiceRendering(t *testing.T) {
 
 	cfg, l, _, _, _ := testutil.NewDefaultDependencies(t)
 

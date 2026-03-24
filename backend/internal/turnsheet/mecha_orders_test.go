@@ -165,7 +165,7 @@ func TestMechaOrdersProcessor_ScanTurnSheet_EmptyImageReturnsError(t *testing.T)
 	require.Nil(t, result)
 }
 
-func TestGenerateMechaOrdersFormatsForPrinting(t *testing.T) {
+func TestGenerateMechaOrdersRendering(t *testing.T) {
 	cfg, l, _, _, _ := testutil.NewDefaultDependencies(t)
 	cfg.TemplatesPath = "../../templates"
 	cfg.SaveTestFiles = true

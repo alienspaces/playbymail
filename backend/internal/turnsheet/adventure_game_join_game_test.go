@@ -579,7 +579,7 @@ func TestJoinGameScanData_Validate(t *testing.T) {
 	}
 }
 
-func TestGenerateJoinGameFormatsForPrinting(t *testing.T) {
+func TestGenerateJoinGameRendering(t *testing.T) {
 
 	cfg, l, _, _, _ := testutil.NewDefaultDependencies(t)
 	cfg.TemplatesPath = "../../templates"

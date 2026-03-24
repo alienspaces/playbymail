@@ -336,7 +336,7 @@ func TestMechaJoinGameScanData_Validate(t *testing.T) {
 	}
 }
 
-func TestGenerateMechaJoinGameFormatsForPrinting(t *testing.T) {
+func TestGenerateMechaJoinGameRendering(t *testing.T) {
 	cfg, l, _, _, _ := testutil.NewDefaultDependencies(t)
 	cfg.TemplatesPath = "../../templates"
 	cfg.SaveTestFiles = true

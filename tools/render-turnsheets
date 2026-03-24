@@ -2,7 +2,7 @@
 
 # Regenerate all turn sheet HTML and PDF test fixtures.
 #
-# Runs the ForPrinting tests in the turnsheet package, which write rendered
+# Runs the Rendering tests in the turnsheet package, which write rendered
 # HTML and PDF files to backend/internal/turnsheet/testdata/.
 #
 # These files are gitignored (generated output). Run this script before
@@ -14,7 +14,7 @@
 # After running, serve the gallery with:
 #   ./tools/serve-turnsheets
 
-. ./tools/test-backend ./internal/turnsheet/... -run "FormatsForPrinting" -v || exit $?
+. ./tools/test-backend ./internal/turnsheet/... -run "Rendering" -v || exit $?
 
 echo
 echo "=> Turn sheet fixtures written to backend/internal/turnsheet/testdata/"

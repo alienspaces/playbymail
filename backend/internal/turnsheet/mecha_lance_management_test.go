@@ -166,7 +166,7 @@ func TestMechaLanceManagementProcessor_ScanTurnSheet_EmptyImageReturnsError(t *t
 	require.Nil(t, result)
 }
 
-func TestGenerateMechaLanceManagementFormatsForPrinting(t *testing.T) {
+func TestGenerateMechaLanceManagementRendering(t *testing.T) {
 	cfg, l, _, _, _ := testutil.NewDefaultDependencies(t)
 	cfg.TemplatesPath = "../../templates"
 	cfg.SaveTestFiles = true
