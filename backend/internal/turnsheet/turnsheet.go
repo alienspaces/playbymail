@@ -27,10 +27,10 @@ func GetTurnSheetJoinGameData(gameRec *game_record.Game, turnSheetCode string) (
 
 // BaseProcessor provides common functionality for all turn sheet processors
 type BaseProcessor struct {
-	Scanner      *scanner.ImageScanner
-	Generator    *generator.PDFGenerator
-	Log          logger.Logger
-	Config       config.Config
+	Scanner   *scanner.ImageScanner
+	Renderer  *generator.DocumentRenderer
+	Log       logger.Logger
+	Config    config.Config
 	TemplatePath string
 }
 
@@ -46,17 +46,17 @@ func NewBaseProcessor(l logger.Logger, cfg config.Config) (*BaseProcessor, error
 		return nil, fmt.Errorf("failed to create image scanner: %w", err)
 	}
 
-	generatorInstance, err := generator.NewPDFGenerator(l)
+	rendererInstance, err := generator.NewDocumentRenderer(l)
 	if err != nil {
-		l.Warn("failed to create PDF generator >%v<", err)
-		return nil, fmt.Errorf("failed to create PDF generator: %w", err)
+		l.Warn("failed to create document renderer >%v<", err)
+		return nil, fmt.Errorf("failed to create document renderer: %w", err)
 	}
 
 	templatePath := cfg.TemplatesPath
 
 	return &BaseProcessor{
 		Scanner:      scannerInstance,
-		Generator:    generatorInstance,
+		Renderer:     rendererInstance,
 		Log:          l,
 		Config:       cfg,
 		TemplatePath: templatePath,
@@ -67,15 +67,15 @@ func NewBaseProcessor(l logger.Logger, cfg config.Config) (*BaseProcessor, error
 func (bp *BaseProcessor) GenerateDocument(ctx context.Context, format DocumentFormat, templatePath string, data any) ([]byte, error) {
 	l := bp.Log.WithFunctionContext("BaseProcessor/GenerateDocument")
 
-	bp.Generator.SetTemplatePath(bp.TemplatePath)
+	bp.Renderer.SetTemplatePath(bp.TemplatePath)
 
 	switch format {
 	case DocumentFormatPDF, "":
 		l.Info("generating PDF document template=%s", templatePath)
-		return bp.Generator.GeneratePDF(ctx, templatePath, data)
+		return bp.Renderer.GeneratePDF(ctx, templatePath, data)
 	case DocumentFormatHTML:
 		l.Info("generating HTML document template=%s", templatePath)
-		html, err := bp.Generator.GenerateHTML(ctx, templatePath, data)
+		html, err := bp.Renderer.GenerateHTML(ctx, templatePath, data)
 		if err != nil {
 			return nil, err
 		}
@@ -216,9 +216,9 @@ func (bp *BaseProcessor) ExtractTextFromImage(ctx context.Context, imageData []b
 func (bp *BaseProcessor) renderTemplatePreview(ctx context.Context, templatePath string, data any) ([]byte, error) {
 	l := bp.Log.WithFunctionContext("BaseProcessor/renderTemplatePreview")
 
-	bp.Generator.SetTemplatePath(bp.TemplatePath)
+	bp.Renderer.SetTemplatePath(bp.TemplatePath)
 
-	png, err := bp.Generator.GeneratePNG(ctx, templatePath, data)
+	png, err := bp.Renderer.GeneratePNG(ctx, templatePath, data)
 	if err != nil {
 		l.Warn("failed to render template preview >%v<", err)
 		return nil, err

@@ -15,6 +15,7 @@ require (
 	github.com/chromedp/cdproto v0.0.0-20250724212937-08a3db8b4327
 	github.com/chromedp/chromedp v0.14.1
 	github.com/davecgh/go-spew v1.1.1
+	github.com/fsnotify/fsnotify v1.9.0
 	github.com/golang-jwt/jwt/v4 v4.5.2
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx/v5 v5.7.5

@@ -3,8 +3,6 @@ package turnsheet_test
 import (
 	"context"
 	"encoding/json"
-	"fmt"
-	"os"
 	"testing"
 	"time"
 
@@ -307,167 +305,6 @@ func TestInventoryManagementProcessor_ScanTurnSheet(t *testing.T) {
 	}
 }
 
-// TestGenerateInventoryManagementRendering generates HTML and PDF fixtures for gallery and visual regression tests.
-func TestGenerateInventoryManagementRendering(t *testing.T) {
-
-	cfg, l, _, _, _ := testutil.NewDefaultDependencies(t)
-
-	cfg.TemplatesPath = "../../templates"
-	// SaveTestFiles defaults to false - set SAVE_TEST_FILES=true to generate files
-	cfg.SaveTestFiles = true
-
-	processor, err := turnsheet.NewInventoryManagementProcessor(l, cfg)
-	require.NoError(t, err)
-
-	type formatCase struct {
-		name     string
-		format   turnsheet.DocumentFormat
-		ext      string
-		logExtra bool
-	}
-
-	cases := []formatCase{
-		{
-			name:     "pdf",
-			format:   turnsheet.DocumentFormatPDF,
-			ext:      "pdf",
-			logExtra: true,
-		},
-		{
-			name:   "html",
-			format: turnsheet.DocumentFormatHTML,
-			ext:    "html",
-		},
-	}
-
-	// Load test background image
-	backgroundImage := loadTestBackgroundImage(t, "testdata/background-dungeon.png")
-
-	// Generate realistic turn sheet code
-	turnSheetCode := generateTestTurnSheetCode(t)
-
-	testData := &turnsheet.InventoryManagementData{
-		TurnSheetTemplateData: turnsheet.TurnSheetTemplateData{
-			GameName:          convert.Ptr("The Enchanted Forest Adventure"),
-			GameType:          convert.Ptr("adventure"),
-			TurnNumber:        convert.Ptr(1),
-			AccountName:       convert.Ptr("Test Player"),
-			TurnSheetCode:     convert.Ptr(turnSheetCode),
-			TurnSheetDeadline: convert.Ptr(time.Now().Add(24 * time.Hour)),
-			BackgroundImage:   &backgroundImage,
-			TurnEvents: []turnsheet.TurnEvent{
-				{Category: turnsheet.TurnEventCategorySystem, Icon: turnsheet.TurnEventIconSystem, Message: "Aria looted the chest in the Crystal Caverns."},
-				{Category: turnsheet.TurnEventCategorySystem, Icon: turnsheet.TurnEventIconSystem, Message: "Found a Healing Potion and a Scroll of Light."},
-				{Category: turnsheet.TurnEventCategorySystem, Icon: turnsheet.TurnEventIconSystem, Message: "Dropped the Rusty Dagger to make space."},
-			},
-		},
-		CharacterName:       "Aria the Mage",
-		CurrentLocationName: "Mystic Grove",
-		InventoryCapacity:   10,
-		InventoryCount:      5,
-		CurrentInventory: []turnsheet.InventoryItem{
-			{
-				ItemInstanceID:  "item-1",
-				ItemName:        "Crystal Key",
-				ItemDescription: "A glowing crystal key that hums with ancient magic",
-				IsEquipped:      false,
-				EquipmentSlot:   "",
-				CanEquip:        false,
-			},
-			{
-				ItemInstanceID:  "item-2",
-				ItemName:        "Iron Sword",
-				ItemDescription: "A sturdy iron sword with a leather-wrapped hilt",
-				IsEquipped:      true,
-				EquipmentSlot:   "weapon",
-				CanEquip:        true,
-			},
-			{
-				ItemInstanceID:  "item-3",
-				ItemName:        "Leather Armor",
-				ItemDescription: "Basic leather protection, worn but serviceable",
-				IsEquipped:      true,
-				EquipmentSlot:   "armor",
-				CanEquip:        true,
-			},
-			{
-				ItemInstanceID:  "item-4",
-				ItemName:        "Healing Potion",
-				ItemDescription: "A red potion that restores health when consumed",
-				IsEquipped:      false,
-				EquipmentSlot:   "",
-				CanEquip:        false,
-			},
-			{
-				ItemInstanceID:  "item-5",
-				ItemName:        "Magic Ring",
-				ItemDescription: "A silver ring imbued with protective magic",
-				IsEquipped:      false,
-				EquipmentSlot:   "",
-				CanEquip:        true,
-			},
-		},
-		EquipmentSlots: turnsheet.EquipmentSlots{
-			Weapon: &turnsheet.EquippedItem{
-				ItemInstanceID: "item-2",
-				ItemName:       "Iron Sword",
-				SlotName:       "weapon",
-			},
-			Armor: &turnsheet.EquippedItem{
-				ItemInstanceID: "item-3",
-				ItemName:       "Leather Armor",
-				SlotName:       "armor",
-			},
-		},
-		LocationItems: []turnsheet.LocationItem{
-			{
-				ItemInstanceID:  "item-6",
-				ItemName:        "Shadow Cloak",
-				ItemDescription: "A dark cloak that seems to blend with shadows",
-				CanEquip:        true,
-			},
-			{
-				ItemInstanceID:  "item-7",
-				ItemName:        "Wind Charm",
-				ItemDescription: "A small charm that whispers with the wind",
-				CanEquip:        false,
-			},
-		},
-	}
-
-	ctx := context.Background()
-	sheetData, err := json.Marshal(testData)
-	require.NoError(t, err, "Should marshal test data")
-
-	for _, tc := range cases {
-		tc := tc
-		t.Run(tc.name, func(t *testing.T) {
-			output, err := processor.GenerateTurnSheet(ctx, l, tc.format, sheetData)
-			require.NoError(t, err, "Should generate output without error")
-			require.NotEmpty(t, output, "Output should not be empty")
-
-			if cfg.SaveTestFiles {
-				path := fmt.Sprintf("testdata/adventure_game_inventory_management_turnsheet.%s", tc.ext)
-				err = os.WriteFile(path, output, 0644)
-				require.NoError(t, err, "Should save output to testdata directory")
-
-				t.Logf("%s preview saved to %s", tc.name, path)
-
-				if tc.logExtra {
-					t.Logf("Output size: %d bytes", len(output))
-					t.Logf("")
-					t.Logf("Generated successfully. To test the scanner:")
-					t.Logf("1. Print the PDF: %s", path)
-					t.Logf("2. Fill out the turn sheet with your inventory actions")
-					t.Logf("3. Scan the completed turn sheet to a JPEG file")
-					t.Logf("4. Save the JPEG in testdata/ with a descriptive name")
-					t.Logf("5. Write a test that loads the JPEG and tests the scanner")
-				}
-			}
-		})
-	}
-}
-
 // TestInventoryManagementScanData_UnmarshalHTMLFormEquip tests that scanned_data
 // unmarshals correctly for both HTML form format (equip as []string) and full format (equip as []EquipAction).
 func TestInventoryManagementScanData_UnmarshalHTMLFormEquip(t *testing.T) {
@@ -526,9 +363,9 @@ func TestValidateInventoryActions(t *testing.T) {
 	}
 
 	tests := []struct {
-		name        string
-		scanData    *turnsheet.InventoryManagementScanData
-		expectError bool
+		name          string
+		scanData      *turnsheet.InventoryManagementScanData
+		expectError   bool
 		errorContains string
 	}{
 		{
@@ -592,7 +429,7 @@ func TestValidateInventoryActions(t *testing.T) {
 			errorContains: "invalid item_instance_id for drop: loc-1",
 		},
 		{
-			name: "nil scan data fails",
+			name:          "nil scan data fails",
 			scanData:      nil,
 			expectError:   true,
 			errorContains: "no scan data provided",

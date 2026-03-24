@@ -3,7 +3,6 @@ package turnsheet_test
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"os"
 	"testing"
 	"time"
@@ -251,119 +250,6 @@ func TestLocationChoiceProcessor_ScanTurnSheet(t *testing.T) {
 
 			totalDuration := time.Since(testStart)
 			t.Logf("Test completed in %v (scan: %v)", totalDuration, scanDuration)
-		})
-	}
-}
-
-// TestGenerateLocationChoiceRendering generates HTML and PDF fixtures for gallery and visual regression tests.
-func TestGenerateLocationChoiceRendering(t *testing.T) {
-
-	cfg, l, _, _, _ := testutil.NewDefaultDependencies(t)
-
-	cfg.TemplatesPath = "../../templates"
-	// SaveTestFiles defaults to false - set SAVE_TEST_FILES=true to generate files
-	cfg.SaveTestFiles = true
-
-	processor, err := turnsheet.NewLocationChoiceProcessor(l, cfg)
-	require.NoError(t, err)
-
-	type formatCase struct {
-		name     string
-		format   turnsheet.DocumentFormat
-		ext      string
-		logExtra bool
-	}
-
-	cases := []formatCase{
-		{
-			name:     "pdf",
-			format:   turnsheet.DocumentFormatPDF,
-			ext:      "pdf",
-			logExtra: true,
-		},
-		{
-			name:   "html",
-			format: turnsheet.DocumentFormatHTML,
-			ext:    "html",
-		},
-	}
-
-	// Load test background image
-	backgroundImage := loadTestBackgroundImage(t, "testdata/background-cliffpath.png")
-
-	// Generate realistic turn sheet code
-	turnSheetCode := generateTestTurnSheetCode(t)
-
-	testData := &turnsheet.LocationChoiceData{
-		TurnSheetTemplateData: turnsheet.TurnSheetTemplateData{
-			GameName:          convert.Ptr("The Enchanted Forest Adventure"),
-			GameType:          convert.Ptr("adventure"),
-			TurnNumber:        convert.Ptr(1),
-			AccountName:       convert.Ptr("Test Player"),
-			TurnSheetCode:     convert.Ptr(turnSheetCode),
-			TurnSheetDeadline: convert.Ptr(time.Now().Add(24 * time.Hour)),
-			BackgroundImage:   &backgroundImage,
-			TurnEvents: []turnsheet.TurnEvent{
-				{Category: turnsheet.TurnEventCategoryMovement, Icon: turnsheet.TurnEventIconMovement, Message: "You arrived at Mystic Grove after a long journey through the forest."},
-				{Category: turnsheet.TurnEventCategorySystem, Icon: turnsheet.TurnEventIconSystem, Message: "The ancient trees seem to watch your every move."},
-				{Category: turnsheet.TurnEventCategorySystem, Icon: turnsheet.TurnEventIconSystem, Message: "You discovered a hidden path leading north."},
-			},
-		},
-		LocationName:        "Mystic Grove",
-		LocationDescription: "You stand at the edge of an ancient forest. The trees whisper secrets of old magic.",
-		LocationOptions: []turnsheet.LocationOption{
-			{
-				LocationID:              "crystal_caverns",
-				LocationLinkName:        "Crystal Caverns",
-				LocationLinkDescription: "Enter the glowing caverns where crystals hum with power",
-			},
-			{
-				LocationID:              "dark_tower",
-				LocationLinkName:        "Dark Tower",
-				LocationLinkDescription: "Climb the mysterious tower that pierces the sky",
-			},
-			{
-				LocationID:              "sunset_plains",
-				LocationLinkName:        "Sunset Plains",
-				LocationLinkDescription: "Venture into the vast plains where the sun sets eternally",
-			},
-			{
-				LocationID:              "mermaid_lagoon",
-				LocationLinkName:        "Mermaid Lagoon",
-				LocationLinkDescription: "Dive into the hidden lagoon where mermaids sing",
-			},
-		},
-	}
-
-	ctx := context.Background()
-	sheetData, err := json.Marshal(testData)
-	require.NoError(t, err, "Should marshal test data")
-
-	for _, tc := range cases {
-		tc := tc
-		t.Run(tc.name, func(t *testing.T) {
-			output, err := processor.GenerateTurnSheet(ctx, l, tc.format, sheetData)
-			require.NoError(t, err, "Should generate output without error")
-			require.NotEmpty(t, output, "Output should not be empty")
-
-			if cfg.SaveTestFiles {
-				path := fmt.Sprintf("testdata/adventure_game_location_choice_turnsheet.%s", tc.ext)
-				err = os.WriteFile(path, output, 0644)
-				require.NoError(t, err, "Should save output to testdata directory")
-
-				t.Logf("%s preview saved to %s", tc.name, path)
-
-				if tc.logExtra {
-					t.Logf("Output size: %d bytes", len(output))
-					t.Logf("")
-					t.Logf("Generated successfully. To test the scanner:")
-					t.Logf("1. Print the PDF: %s", path)
-					t.Logf("2. Fill out the turn sheet with your choices")
-					t.Logf("3. Scan the completed turn sheet to a JPEG file")
-					t.Logf("4. Save the JPEG in testdata/ with a descriptive name")
-					t.Logf("5. Write a test that loads the JPEG and tests the scanner")
-				}
-			}
 		})
 	}
 }

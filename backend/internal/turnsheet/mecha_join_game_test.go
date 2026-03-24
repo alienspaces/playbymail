@@ -4,10 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"os"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -173,51 +171,51 @@ func TestMechaJoinGameProcessor_GenerateTurnSheet_WithDeliveryMethods(t *testing
 		expectHiddenMethod  string
 	}{
 		{
-			name:               "email only — hidden input, no address fields",
-			deliveryMethods:    turnsheet.DeliveryMethods{Email: true},
-			expectRadioButton:  false,
+			name:                "email only — hidden input, no address fields",
+			deliveryMethods:     turnsheet.DeliveryMethods{Email: true},
+			expectRadioButton:   false,
 			expectAddressFields: false,
-			expectToggleScript: false,
-			expectHiddenMethod: "email",
+			expectToggleScript:  false,
+			expectHiddenMethod:  "email",
 		},
 		{
-			name:               "local only — hidden input, no address fields",
-			deliveryMethods:    turnsheet.DeliveryMethods{PhysicalLocal: true},
-			expectRadioButton:  false,
+			name:                "local only — hidden input, no address fields",
+			deliveryMethods:     turnsheet.DeliveryMethods{PhysicalLocal: true},
+			expectRadioButton:   false,
 			expectAddressFields: false,
-			expectToggleScript: false,
-			expectHiddenMethod: "local",
+			expectToggleScript:  false,
+			expectHiddenMethod:  "local",
 		},
 		{
-			name:               "post only — hidden input, address fields shown",
-			deliveryMethods:    turnsheet.DeliveryMethods{PhysicalPost: true},
-			expectRadioButton:  false,
+			name:                "post only — hidden input, address fields shown",
+			deliveryMethods:     turnsheet.DeliveryMethods{PhysicalPost: true},
+			expectRadioButton:   false,
 			expectAddressFields: true,
-			expectToggleScript: false,
-			expectHiddenMethod: "post",
+			expectToggleScript:  false,
+			expectHiddenMethod:  "post",
 		},
 		{
-			name:               "email and local — radio buttons, email checked, no address fields",
-			deliveryMethods:    turnsheet.DeliveryMethods{Email: true, PhysicalLocal: true},
-			expectRadioButton:  true,
+			name:                "email and local — radio buttons, email checked, no address fields",
+			deliveryMethods:     turnsheet.DeliveryMethods{Email: true, PhysicalLocal: true},
+			expectRadioButton:   true,
 			expectAddressFields: false,
-			expectToggleScript: false,
+			expectToggleScript:  false,
 			expectCheckedMethod: "email",
 		},
 		{
-			name:               "email and post — radio buttons, email checked, address fields, toggle script",
-			deliveryMethods:    turnsheet.DeliveryMethods{Email: true, PhysicalPost: true},
-			expectRadioButton:  true,
+			name:                "email and post — radio buttons, email checked, address fields, toggle script",
+			deliveryMethods:     turnsheet.DeliveryMethods{Email: true, PhysicalPost: true},
+			expectRadioButton:   true,
 			expectAddressFields: true,
-			expectToggleScript: true,
+			expectToggleScript:  true,
 			expectCheckedMethod: "email",
 		},
 		{
-			name:               "all three — radio buttons, email checked, address fields, toggle script",
-			deliveryMethods:    turnsheet.DeliveryMethods{Email: true, PhysicalLocal: true, PhysicalPost: true},
-			expectRadioButton:  true,
+			name:                "all three — radio buttons, email checked, address fields, toggle script",
+			deliveryMethods:     turnsheet.DeliveryMethods{Email: true, PhysicalLocal: true, PhysicalPost: true},
+			expectRadioButton:   true,
 			expectAddressFields: true,
-			expectToggleScript: true,
+			expectToggleScript:  true,
 			expectCheckedMethod: "email",
 		},
 	}
@@ -331,82 +329,6 @@ func TestMechaJoinGameScanData_Validate(t *testing.T) {
 				require.Contains(t, err.Error(), tt.expectErr)
 			} else {
 				require.NoError(t, err)
-			}
-		})
-	}
-}
-
-func TestGenerateMechaJoinGameRendering(t *testing.T) {
-	cfg, l, _, _, _ := testutil.NewDefaultDependencies(t)
-	cfg.TemplatesPath = "../../templates"
-	cfg.SaveTestFiles = true
-
-	processor, err := turnsheet.NewMechaJoinGameProcessor(l, cfg)
-	require.NoError(t, err)
-
-	backgroundImage := loadTestBackgroundImage(t, "testdata/background-darkforest.png")
-
-	type formatCase struct {
-		name     string
-		format   turnsheet.DocumentFormat
-		ext      string
-		logExtra bool
-		deadline time.Duration
-	}
-
-	cases := []formatCase{
-		{
-			name:     "pdf",
-			format:   turnsheet.DocumentFormatPDF,
-			ext:      "pdf",
-			logExtra: true,
-			deadline: 7 * 24 * time.Hour,
-		},
-		{
-			name:     "html",
-			format:   turnsheet.DocumentFormatHTML,
-			ext:      "html",
-			deadline: 48 * time.Hour,
-		},
-	}
-
-	ctx := context.Background()
-
-	for _, tc := range cases {
-		tc := tc
-		t.Run(tc.name, func(t *testing.T) {
-			turnSheetCode := generateTestJoinTurnSheetCode(t)
-
-			testData := &turnsheet.JoinGameData{
-				TurnSheetTemplateData: turnsheet.TurnSheetTemplateData{
-					GameName:          convert.Ptr("Steel Thunder"),
-					GameType:          convert.Ptr("mecha"),
-					TurnNumber:        convert.Ptr(0),
-					TurnSheetCode:     convert.Ptr(turnSheetCode),
-					TurnSheetDeadline: convert.Ptr(time.Now().Add(tc.deadline)),
-					BackgroundImage:   &backgroundImage,
-					HideNarrative:     true,
-				},
-				GameDescription:          "Command a lance of powerful war mechs!",
-				AvailableDeliveryMethods: turnsheet.DeliveryMethods{Email: true},
-			}
-
-			sheetData, err := json.Marshal(testData)
-			require.NoError(t, err, "Should marshal test data")
-
-			output, err := processor.GenerateTurnSheet(ctx, l, tc.format, sheetData)
-			require.NoError(t, err, "Should generate output without error")
-			require.NotEmpty(t, output, "Output should not be empty")
-
-			if cfg.SaveTestFiles {
-				path := fmt.Sprintf("testdata/mecha_join_game_turnsheet.%s", tc.ext)
-				err = os.WriteFile(path, output, 0644)
-				require.NoError(t, err, "Should save output to testdata directory")
-				t.Logf("%s preview saved to %s", tc.name, path)
-
-				if tc.logExtra {
-					t.Logf("Output size: %d bytes", len(output))
-				}
 			}
 		})
 	}

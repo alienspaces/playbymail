@@ -3,8 +3,6 @@ package turnsheet_test
 import (
 	"context"
 	"encoding/json"
-	"fmt"
-	"os"
 	"strings"
 	"testing"
 	"time"
@@ -76,24 +74,24 @@ func TestMonsterEncounterProcessor_GenerateTurnSheet(t *testing.T) {
 					Name:           "Leather Jerkin",
 					Defense:        3,
 				},
-			Creatures: []turnsheet.EncounterCreature{
-				{
-					CreatureInstanceID: "creature-1",
-					Name:               "Sand Serpent",
-					Description:        "A massive serpent that lurks beneath desert sands.",
-					Health:             80,
-					MaxHealth:          100,
-					AttackDamage:       12,
-					Defense:            2,
-					Disposition:        "aggressive",
+				Creatures: []turnsheet.EncounterCreature{
+					{
+						CreatureInstanceID: "creature-1",
+						Name:               "Sand Serpent",
+						Description:        "A massive serpent that lurks beneath desert sands.",
+						Health:             80,
+						MaxHealth:          100,
+						AttackDamage:       12,
+						Defense:            2,
+						Disposition:        "aggressive",
+					},
 				},
+				MaxActions: 3,
 			},
-			MaxActions: 3,
+			expectError: false,
 		},
-		expectError: false,
-	},
-	{
-		name: "given MonsterEncounterData with no creatures when generating turn sheet then error is returned",
+		{
+			name: "given MonsterEncounterData with no creatures when generating turn sheet then error is returned",
 			data: &turnsheet.MonsterEncounterData{
 				TurnSheetTemplateData: turnsheet.TurnSheetTemplateData{
 					GameName:      convert.Ptr("Test Game"),
@@ -125,19 +123,19 @@ func TestMonsterEncounterProcessor_GenerateTurnSheet(t *testing.T) {
 				CharacterName:      "Aldric",
 				CharacterHealth:    90,
 				CharacterMaxHealth: 100,
-			Creatures: []turnsheet.EncounterCreature{
-				{
-					CreatureInstanceID: "creature-2",
-					Name:               "Sand Serpent",
-					Description:        "A massive serpent. It lies still.",
-					Health:             0,
-					MaxHealth:          100,
-					AttackDamage:       12,
-					Defense:            2,
-					Disposition:        "aggressive",
-					IsDead:             true,
+				Creatures: []turnsheet.EncounterCreature{
+					{
+						CreatureInstanceID: "creature-2",
+						Name:               "Sand Serpent",
+						Description:        "A massive serpent. It lies still.",
+						Health:             0,
+						MaxHealth:          100,
+						AttackDamage:       12,
+						Defense:            2,
+						Disposition:        "aggressive",
+						IsDead:             true,
+					},
 				},
-			},
 				MaxActions: 0,
 				ReadOnly:   true,
 			},
@@ -265,119 +263,6 @@ func TestMonsterEncounterProcessor_ScanTurnSheet(t *testing.T) {
 			} else {
 				require.NoError(t, err, "Should not return error")
 				require.NotNil(t, resultData, "Result should not be nil")
-			}
-		})
-	}
-}
-
-// TestGenerateMonsterEncounterRendering generates HTML and PDF fixtures for gallery and visual regression tests.
-func TestGenerateMonsterEncounterRendering(t *testing.T) {
-
-	cfg, l, _, _, _ := testutil.NewDefaultDependencies(t)
-	cfg.TemplatesPath = "../../templates"
-	cfg.SaveTestFiles = true
-
-	processor, err := turnsheet.NewMonsterEncounterProcessor(l, cfg)
-	require.NoError(t, err)
-
-	type formatCase struct {
-		name     string
-		format   turnsheet.DocumentFormat
-		ext      string
-		logExtra bool
-	}
-
-	cases := []formatCase{
-		{name: "pdf", format: turnsheet.DocumentFormatPDF, ext: "pdf", logExtra: true},
-		{name: "html", format: turnsheet.DocumentFormatHTML, ext: "html"},
-	}
-
-	backgroundImage := loadTestBackgroundImage(t, "testdata/background-darkforest.png")
-	turnSheetCode := generateTestTurnSheetCode(t)
-
-	testData := &turnsheet.MonsterEncounterData{
-		TurnSheetTemplateData: turnsheet.TurnSheetTemplateData{
-			GameName:          convert.Ptr("The Door Beneath the Staircase"),
-			GameType:          convert.Ptr("adventure"),
-			TurnNumber:        convert.Ptr(3),
-			AccountName:       convert.Ptr("Test Player"),
-			TurnSheetCode:     convert.Ptr(turnSheetCode),
-			TurnSheetDeadline: convert.Ptr(time.Now().Add(24 * time.Hour)),
-			BackgroundImage:   &backgroundImage,
-			TurnEvents: []turnsheet.TurnEvent{
-				{Category: turnsheet.TurnEventCategoryMovement, Icon: turnsheet.TurnEventIconMovement, Message: "Aldric entered the shadowed corridor."},
-				{Category: turnsheet.TurnEventCategoryCombat, Icon: turnsheet.TurnEventIconCombat, Message: "Aldric attacked the Goblin Scout for 8 damage."},
-				{Category: turnsheet.TurnEventCategoryCombat, Icon: turnsheet.TurnEventIconCombat, Message: "Goblin Scout retaliated for 4 damage."},
-				{Category: turnsheet.TurnEventCategorySystem, Icon: turnsheet.TurnEventIconSystem, Message: "Aldric's health dropped to 65."},
-			},
-		},
-		CharacterName:      "Aldric",
-		CharacterHealth:    65,
-		CharacterMaxHealth: 100,
-		CharacterAttack:    8,
-		CharacterDefense:   3,
-		EquippedWeapon: &turnsheet.EquippedWeapon{
-			ItemInstanceID: "weapon-1",
-			Name:           "Iron Sword",
-			Damage:         8,
-		},
-		EquippedArmor: &turnsheet.EquippedArmor{
-			ItemInstanceID: "armor-1",
-			Name:           "Leather Jerkin",
-			Defense:        3,
-		},
-	Creatures: []turnsheet.EncounterCreature{
-		{
-			CreatureInstanceID: "creature-1",
-			Name:               "Sand Serpent",
-			Description:        "A massive serpent that lurks beneath the desert sands, striking with terrifying speed.",
-			Health:             80,
-			MaxHealth:          100,
-			AttackDamage:       12,
-			Defense:            2,
-			Disposition:        "aggressive",
-		},
-		{
-			CreatureInstanceID: "creature-2",
-			Name:               "Desert Scorpion",
-			Description:        "A venomous scorpion the size of a dog. Its tail curls menacingly.",
-			Health:             35,
-			MaxHealth:          50,
-			AttackDamage:       8,
-			Defense:            4,
-			Disposition:        "aggressive",
-		},
-	},
-		MaxActions: 3,
-	}
-
-	ctx := context.Background()
-	sheetData, err := json.Marshal(testData)
-	require.NoError(t, err, "Should marshal test data")
-
-	for _, tc := range cases {
-		tc := tc
-		t.Run(tc.name, func(t *testing.T) {
-			output, err := processor.GenerateTurnSheet(ctx, l, tc.format, sheetData)
-			require.NoError(t, err, "Should generate output without error")
-			require.NotEmpty(t, output, "Output should not be empty")
-
-			if cfg.SaveTestFiles {
-				path := fmt.Sprintf("testdata/adventure_game_monster_encounter_turnsheet.%s", tc.ext)
-				err = os.WriteFile(path, output, 0644)
-				require.NoError(t, err, "Should save output to testdata directory")
-				t.Logf("%s preview saved to %s", tc.name, path)
-
-				if tc.logExtra {
-					t.Logf("Output size: %d bytes", len(output))
-					t.Logf("")
-					t.Logf("Generated successfully. To test the scanner:")
-					t.Logf("1. Print the PDF: %s", path)
-					t.Logf("2. Fill in combat actions (attack/do nothing + target)")
-					t.Logf("3. Scan the completed turn sheet to a JPEG file")
-					t.Logf("4. Save the JPEG in testdata/ with a descriptive name")
-					t.Logf("5. Write a test that loads the JPEG and tests the scanner")
-				}
 			}
 		})
 	}
@@ -528,9 +413,9 @@ func TestMonsterEncounterProcessor_GenerateTurnSheet_HTMLContent(t *testing.T) {
 				"Creature Encounter", // renamed title
 				"creature encounter", // read-only notice text
 				"action-options-row", // CSS still rendered in styles block
-				"min-height: 22mm",  // compact header override
-				"ATK:",              // character attack stat row
-				"DEF:",              // character defense stat row
+				"min-height: 22mm",   // compact header override
+				"ATK:",               // character attack stat row
+				"DEF:",               // character defense stat row
 			},
 			wantAbsent: []string{
 				"Monster Encounter",
@@ -577,10 +462,10 @@ func TestMonsterEncounterProcessor_GenerateTurnSheet_HTMLContent(t *testing.T) {
 					"expected HTML to contain %q", want)
 			}
 			for _, absent := range tt.wantAbsent {
-			require.False(t, strings.Contains(htmlStr, absent),
-				"expected HTML not to contain %q", absent)
-		}
-	})
+				require.False(t, strings.Contains(htmlStr, absent),
+					"expected HTML not to contain %q", absent)
+			}
+		})
 	}
 }
 

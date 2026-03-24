@@ -14,8 +14,8 @@ import (
 
 // GeneratePNG renders the specified template data as a PNG screenshot. This is
 // primarily used to provide blank reference images for OCR pipelines.
-func (g *PDFGenerator) GeneratePNG(ctx context.Context, templatePath string, data any) ([]byte, error) {
-	l := g.logger.WithFunctionContext("PDFGenerator/GeneratePNG")
+func (g *DocumentRenderer) GeneratePNG(ctx context.Context, templatePath string, data any) ([]byte, error) {
+	l := g.logger.WithFunctionContext("DocumentRenderer/GeneratePNG")
 
 	html, err := g.GenerateHTML(ctx, templatePath, data)
 	if err != nil {
@@ -33,8 +33,8 @@ func (g *PDFGenerator) GeneratePNG(ctx context.Context, templatePath string, dat
 
 var pngSignature = []byte{0x89, 'P', 'N', 'G', 0x0D, 0x0A, 0x1A, 0x0A}
 
-func (g *PDFGenerator) htmlToPNG(ctx context.Context, html string) ([]byte, error) {
-	l := g.logger.WithFunctionContext("PDFGenerator/htmlToPNG")
+func (g *DocumentRenderer) htmlToPNG(ctx context.Context, html string) ([]byte, error) {
+	l := g.logger.WithFunctionContext("DocumentRenderer/htmlToPNG")
 
 	l.Info("starting HTML to PNG conversion html_size=%d", len(html))
 

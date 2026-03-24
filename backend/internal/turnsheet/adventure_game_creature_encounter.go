@@ -302,6 +302,11 @@ func (p *MonsterEncounterProcessor) ScanTurnSheet(ctx context.Context, l logger.
 	return json.Marshal(scanData)
 }
 
+// DefaultMonsterEncounterInstructions returns the default instruction text for the given number of combat actions.
+func DefaultMonsterEncounterInstructions(maxActions int) string {
+	return buildMonsterEncounterInstructions(maxActions)
+}
+
 func buildMonsterEncounterInstructions(maxActions int) string {
 	if maxActions == 0 {
 		maxActions = 3
