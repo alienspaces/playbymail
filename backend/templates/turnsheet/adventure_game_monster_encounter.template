@@ -276,6 +276,28 @@
         min-height: 22mm;
     }
 
+    /*
+     * Narrow-screen: stack the creatures/character columns vertically.
+     * At 375px the 60%/40% split (~225px/~150px) is unusable.
+     */
+    @media (max-width: 600px) {
+        .encounter-columns {
+            display: block;
+        }
+        .encounter-col-creatures,
+        .encounter-col-character {
+            display: block;
+            width: 100%;
+            padding-right: 0;
+            margin-bottom: 10px;
+        }
+        .action-options-row .action-option {
+            display: block;
+            padding-right: 0;
+            margin-bottom: 4px;
+        }
+    }
+
     /* HTML-only select (hidden in print) */
     .action-target-html {
         display: block;

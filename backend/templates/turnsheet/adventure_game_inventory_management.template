@@ -128,6 +128,16 @@
         color: #6c757d;
         white-space: nowrap;
     }
+
+    /*
+     * Narrow-screen: collapse the two-column inventory grid to a single
+     * column so items are not squeezed into ~150px each.
+     */
+    @media (max-width: 600px) {
+        .inventory-columns {
+            column-count: 1;
+        }
+    }
 </style>
 {{end}}
 

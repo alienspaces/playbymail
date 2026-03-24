@@ -1,0 +1,21 @@
+#!/usr/bin/env sh
+
+# Regenerate all turn sheet HTML and PDF test fixtures.
+#
+# Runs the Rendering tests in the turnsheet package, which write rendered
+# HTML and PDF files to backend/internal/turnsheet/testdata/.
+#
+# These files are gitignored (generated output). Run this script before
+# opening the gallery or running Playwright visual regression tests.
+#
+# Usage (from playbymail/):
+#   ./tools/render-turnsheets
+#
+# After running, serve the gallery with:
+#   ./tools/serve-turnsheets
+
+. ./tools/test-backend ./internal/turnsheet/... -run "Rendering" -v || exit $?
+
+echo
+echo "=> Turn sheet fixtures written to backend/internal/turnsheet/testdata/"
+echo "=> Run ./tools/serve-turnsheets to view the gallery"

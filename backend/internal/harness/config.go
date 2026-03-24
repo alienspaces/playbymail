@@ -10,12 +10,16 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/record/account_record"
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
+	"gitlab.com/alienspaces/playbymail/internal/record/mecha_record"
 )
 
 const (
 	GameOneRef   = "game-one"
 	GameTwoRef   = "game-two"
+	GameThreeRef = "game-three"
+	GameFourRef  = "game-four"
 	GameDraftRef = "game-draft"
+	GameMechaRef = "game-mecha"
 
 	AccountStandardRef    = "account-standard"
 	AccountProPlayerRef   = "account-pro-player"
@@ -57,6 +61,8 @@ const (
 
 	GameInstanceOneRef   = "game-instance-one"
 	GameInstanceTwoRef   = "game-instance-two"
+	GameInstanceThreeRef = "game-instance-three"
+	GameInstanceFourRef  = "game-instance-four"
 	GameInstanceCleanRef = "game-instance-clean"
 
 	GameInstanceParameterOneRef = "game-instance-parameter-one"
@@ -94,12 +100,16 @@ const (
 	GameCharacterInstanceTwoRef = "game-character-instance-two"
 
 	// Designer subscriptions
-	GameSubscriptionDesignerOneRef = "game-subscription-designer-one"
-	GameSubscriptionDesignerTwoRef = "game-subscription-designer-two"
+	GameSubscriptionDesignerOneRef   = "game-subscription-designer-one"
+	GameSubscriptionDesignerTwoRef   = "game-subscription-designer-two"
+	GameSubscriptionDesignerThreeRef = "game-subscription-designer-three"
+	GameSubscriptionDesignerFourRef  = "game-subscription-designer-four"
 
 	// Manager subscriptions
-	GameSubscriptionManagerOneRef = "game-subscription-manager-one"
-	GameSubscriptionManagerTwoRef = "game-subscription-manager-two"
+	GameSubscriptionManagerOneRef   = "game-subscription-manager-one"
+	GameSubscriptionManagerTwoRef   = "game-subscription-manager-two"
+	GameSubscriptionManagerThreeRef = "game-subscription-manager-three"
+	GameSubscriptionManagerFourRef  = "game-subscription-manager-four"
 
 	// Player subscriptions
 	GameSubscriptionPlayerOneRef   = "game-subscription-player-one"
@@ -120,6 +130,17 @@ const (
 
 	GameImageJoinGameRef  = "game-image-join-game"
 	GameImageInventoryRef = "game-image-inventory"
+
+	// Mecha specific references
+	MechaChassisOneRef    = "mecha-chassis-one"
+	MechaWeaponOneRef     = "mecha-weapon-one"
+	MechaSectorOneRef     = "mecha-sector-one"
+	MechaSectorTwoRef     = "mecha-sector-two"
+	MechaSectorLinkOneRef = "mecha-sector-link-one"
+	MechaLanceStarterRef  = "mecha-lance-starter"
+	MechaLanceOneRef      = "mecha-lance-one"
+	MechaLanceTwoRef      = "mecha-lance-two"
+	MechaLanceMechOneRef  = "mecha-lance-mech-one"
 )
 
 // DataConfig -
@@ -150,6 +171,14 @@ type GameConfig struct {
 	AdventureGameLocationObjectConfigs    []AdventureGameLocationObjectConfig
 	AdventureGameCreaturePlacementConfigs []AdventureGameCreaturePlacementConfig // Where creatures start in the world
 	AdventureGameItemPlacementConfigs     []AdventureGameItemPlacementConfig     // Where items start in the world
+
+	// Mecha specific configurations
+	MechaChassisConfigs            []MechaChassisConfig
+	MechaWeaponConfigs             []MechaWeaponConfig
+	MechaSectorConfigs             []MechaSectorConfig
+	MechaSectorLinkConfigs         []MechaSectorLinkConfig
+	MechaComputerOpponentConfigs   []MechaComputerOpponentConfig
+	MechaLanceConfigs              []MechaLanceConfig
 }
 
 type GameImageConfig struct {
@@ -351,6 +380,60 @@ type AdventureGameLocationObjectConfig struct {
 	AdventureGameLocationObjectStateConfigs []AdventureGameLocationObjectStateConfig
 	// Effects attached to this object
 	AdventureGameLocationObjectEffectConfigs []AdventureGameLocationObjectEffectConfig
+}
+
+// ------------------------------------------------------------
+// Mecha specific configuration
+// ------------------------------------------------------------
+
+type MechaChassisConfig struct {
+	Reference string
+	Record    *mecha_record.MechaChassis
+}
+
+type MechaWeaponConfig struct {
+	Reference string
+	Record    *mecha_record.MechaWeapon
+}
+
+type MechaSectorConfig struct {
+	Reference string
+	Record    *mecha_record.MechaSector
+}
+
+type MechaSectorLinkConfig struct {
+	Reference          string
+	FromSectorRef      string
+	ToSectorRef        string
+	Record             *mecha_record.MechaSectorLink
+}
+
+// MechaLanceMechWeaponRef maps a weapon ref to a slot location for
+// use in MechaLanceMechConfig.WeaponConfigRefs.
+type MechaLanceMechWeaponRef struct {
+	WeaponRef    string
+	SlotLocation string
+}
+
+type MechaLanceMechConfig struct {
+	Reference        string
+	ChassisRef       string
+	WeaponConfigRefs []MechaLanceMechWeaponRef
+	Record           *mecha_record.MechaLanceMech
+}
+
+type MechaComputerOpponentConfig struct {
+	Reference string
+	Record    *mecha_record.MechaComputerOpponent
+}
+
+type MechaLanceConfig struct {
+	Reference           string
+	AccountRef          string
+	ComputerOpponentRef string // mutually exclusive with AccountRef and IsPlayerStarter
+	IsPlayerStarter     bool   // mutually exclusive with AccountRef and ComputerOpponentRef
+	Record              *mecha_record.MechaLance
+	LanceMechConfigs    []MechaLanceMechConfig
 }
 
 // Helper methods for modifying DataConfig
@@ -766,17 +849,120 @@ func DefaultDataConfig() DataConfig {
 			},
 		},
 	},
-			// Minimal draft game for testing update operations
-			{
-				Reference: GameDraftRef,
-				Record: &game_record.Game{
-					Name:              UniqueName("Default Draft Game"),
-					GameType:          game_record.GameTypeAdventure,
-					TurnDurationHours: 168,
-					Status:            game_record.GameStatusDraft,
+		// Minimal draft game for testing update operations
+		{
+			Reference: GameDraftRef,
+			Record: &game_record.Game{
+				Name:              UniqueName("Default Draft Game"),
+				GameType:          game_record.GameTypeAdventure,
+				TurnDurationHours: 168,
+				Status:            game_record.GameStatusDraft,
+			},
+		},
+		// Mecha game for testing mecha specific resources
+		{
+			Reference: GameMechaRef,
+			Record: &game_record.Game{
+				Name:              UniqueName("Default Mecha"),
+				GameType:          game_record.GameTypeMecha,
+				TurnDurationHours: 168,
+			},
+			MechaChassisConfigs: []MechaChassisConfig{
+				{
+					Reference: MechaChassisOneRef,
+					Record: &mecha_record.MechaChassis{
+						Name:            UniqueName("Timber Wolf"),
+						Description:     "A heavy assault mech.",
+						ChassisClass:    mecha_record.ChassisClassHeavy,
+						ArmorPoints:     200,
+						StructurePoints: 100,
+						HeatCapacity:    40,
+						Speed:           3,
+					},
+				},
+			},
+			MechaWeaponConfigs: []MechaWeaponConfig{
+				{
+					Reference: MechaWeaponOneRef,
+					Record: &mecha_record.MechaWeapon{
+						Name:        UniqueName("Large Laser"),
+						Description: "A powerful energy weapon.",
+						Damage:      8,
+						HeatCost:    8,
+						RangeBand:   mecha_record.WeaponRangeBandMedium,
+						MountSize:   mecha_record.WeaponMountSizeLarge,
+					},
+				},
+			},
+			MechaSectorConfigs: []MechaSectorConfig{
+				{
+					Reference: MechaSectorOneRef,
+					Record: &mecha_record.MechaSector{
+						Name:             UniqueName("Ridge South"),
+						Description:      "A rocky ridge offering good cover.",
+						TerrainType:      mecha_record.SectorTerrainTypeRough,
+						Elevation:        2,
+						IsStartingSector: true,
+					},
+				},
+				{
+					Reference: MechaSectorTwoRef,
+					Record: &mecha_record.MechaSector{
+						Name:        UniqueName("Relay Station"),
+						Description: "An abandoned communications relay station.",
+						TerrainType: mecha_record.SectorTerrainTypeUrban,
+						Elevation:   0,
+					},
+				},
+			},
+			MechaSectorLinkConfigs: []MechaSectorLinkConfig{
+				{
+					Reference:     MechaSectorLinkOneRef,
+					FromSectorRef: MechaSectorOneRef,
+					ToSectorRef:   MechaSectorTwoRef,
+					Record: &mecha_record.MechaSectorLink{
+						CoverModifier: 1,
+					},
+				},
+			},
+			MechaLanceConfigs: []MechaLanceConfig{
+				{
+					Reference:       MechaLanceStarterRef,
+					IsPlayerStarter: true,
+					Record: &mecha_record.MechaLance{
+						Name:        UniqueName("Starter Lance"),
+						Description: "Default starter lance for new players.",
+					},
+					LanceMechConfigs: []MechaLanceMechConfig{
+						{
+							Reference:  "mecha-lance-starter-mech-1",
+							ChassisRef: MechaChassisOneRef,
+							Record: &mecha_record.MechaLanceMech{
+								Callsign: "Starter-1",
+							},
+						},
+					},
+				},
+				{
+					Reference:  MechaLanceOneRef,
+					AccountRef: AccountUserStandardRef,
+					Record: &mecha_record.MechaLance{
+						Name:        UniqueName("Alpha Lance"),
+						Description: "First player lance.",
+					},
+					LanceMechConfigs: []MechaLanceMechConfig{
+						{
+							Reference:  MechaLanceMechOneRef,
+							ChassisRef: MechaChassisOneRef,
+							Record: &mecha_record.MechaLanceMech{
+								Callsign: "Wolf-1",
+							},
+						},
+					},
 				},
 			},
 		},
+	},
 		// Account user game subscription configurations may only be be resolved
 		// once both accounts and games have been created.
 		AccountUserGameSubscriptionConfigs: []AccountUserGameSubscriptionConfig{

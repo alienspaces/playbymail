@@ -10,10 +10,12 @@
         "game_type": {
             "description": "The type of the game.",
             "enum": [
-                "adventure"
+                "adventure",
+                "mecha"
             ],
             "examples": [
-                "adventure"
+                "adventure",
+                "mecha"
             ],
             "maxLength": 50,
             "minLength": 1,

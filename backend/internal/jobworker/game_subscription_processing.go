@@ -13,8 +13,10 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/jobqueue"
 	"gitlab.com/alienspaces/playbymail/internal/jobworker/adventure_game"
+	"gitlab.com/alienspaces/playbymail/internal/jobworker/mecha"
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
+	"gitlab.com/alienspaces/playbymail/internal/record/mecha_record"
 	"gitlab.com/alienspaces/playbymail/internal/utils/config"
 )
 
@@ -110,15 +112,17 @@ func (w *GameSubscriptionProcessingWorker) DoWork(ctx context.Context, m *domain
 		return nil, err
 	}
 
-	// Find the join game turn sheet processing record for this subscription
-	turnSheetRec, err := w.findGameSubscriptionProcessing(m, subscriptionRec)
+	// Find the join game turn sheet processing record for this subscription (may be nil for online joins)
+	turnSheetRec, err := w.findGameSubscriptionProcessing(m, subscriptionRec, gameRec.GameType)
 	if err != nil {
 		l.Warn("failed to find join game turn sheet >%v<", err)
 		return nil, err
 	}
 
-	if turnSheetRec == nil {
-		l.Warn("no join game turn sheet found for subscription ID >%s<", j.Args.GameSubscriptionID)
+	// Adventure games require a physically scanned join-game turn sheet; skip if none found.
+	// Game types that create player entities at join-time (e.g. mecha) can proceed without one.
+	if turnSheetRec == nil && gameRec.GameType == game_record.GameTypeAdventure {
+		l.Info("no join game turn sheet found for adventure game subscription ID >%s< - skipping", j.Args.GameSubscriptionID)
 		return nil, nil
 	}
 
@@ -151,18 +155,29 @@ func (w *GameSubscriptionProcessingWorker) DoWork(ctx context.Context, m *domain
 	}, nil
 }
 
-// findGameSubscriptionProcessing finds the join game turn sheet for a subscription
-func (w *GameSubscriptionProcessingWorker) findGameSubscriptionProcessing(m *domain.Domain, subscriptionRec *game_record.GameSubscription) (*game_record.GameTurnSheet, error) {
-	// Get all turn sheets for this account
+// joinGameTurnSheetTypeByGameType returns the join-game turn sheet type constant for a
+// given game type so that findGameSubscriptionProcessing can locate the correct record.
+func joinGameTurnSheetTypeByGameType(gameType string) string {
+	switch gameType {
+	case game_record.GameTypeMecha:
+		return mecha_record.MechaTurnSheetTypeJoinGame
+	default:
+		return adventure_game_record.AdventureGameTurnSheetTypeJoinGame
+	}
+}
+
+// findGameSubscriptionProcessing finds the join game turn sheet for a subscription.
+func (w *GameSubscriptionProcessingWorker) findGameSubscriptionProcessing(m *domain.Domain, subscriptionRec *game_record.GameSubscription, gameType string) (*game_record.GameTurnSheet, error) {
 	turnSheetRecs, err := m.GetGameTurnSheetRecsByAccount(subscriptionRec.AccountID)
 	if err != nil {
 		return nil, err
 	}
 
-	// Find the join game turn sheet for this game
+	joinSheetType := joinGameTurnSheetTypeByGameType(gameType)
+
 	for _, turnSheetRec := range turnSheetRecs {
 		if turnSheetRec.GameID == subscriptionRec.GameID &&
-			turnSheetRec.SheetType == adventure_game_record.AdventureGameTurnSheetTypeJoinGame {
+			turnSheetRec.SheetType == joinSheetType {
 			return turnSheetRec, nil
 		}
 	}
@@ -174,14 +189,17 @@ func (w *GameSubscriptionProcessingWorker) findGameSubscriptionProcessing(m *dom
 func (w *GameSubscriptionProcessingWorker) initializeProcessors(l logger.Logger, d *domain.Domain) (map[string]GameSubscriptionProcessingProcessor, error) {
 	processors := make(map[string]GameSubscriptionProcessingProcessor)
 
-	// Register adventure game processor
 	adventureProcessor, err := adventure_game.NewAdventureGameJoinGameProcessor(l, d)
 	if err != nil {
 		return nil, err
 	}
 	processors[game_record.GameTypeAdventure] = adventureProcessor
 
-	// TODO: (agent) When adding a new game type: implement a subscription processor for it and register in initializeProcessors (e.g. processors[game_record.GameTypeX] = xProcessor).
+	mechaProcessor, err := mecha.NewMechaJoinGameProcessor(l, d)
+	if err != nil {
+		return nil, err
+	}
+	processors[game_record.GameTypeMecha] = mechaProcessor
 
 	return processors, nil
 }

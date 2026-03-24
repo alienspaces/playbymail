@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Turn Sheet Gallery</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #1a1a2e;
+            color: #e0e0e0;
+        }
+
+        .gallery-header {
+            background: #16213e;
+            border-bottom: 2px solid #0f3460;
+            padding: 20px 32px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .gallery-header h1 {
+            font-size: 22px;
+            font-weight: 700;
+            color: #e0e0e0;
+            letter-spacing: 0.5px;
+        }
+
+        .gallery-header p {
+            font-size: 13px;
+            color: #888;
+            margin-top: 4px;
+        }
+
+        .toc {
+            margin-top: 14px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .toc a {
+            font-size: 12px;
+            color: #a0c4ff;
+            text-decoration: none;
+            background: #0f3460;
+            padding: 4px 10px;
+            border-radius: 4px;
+            border: 1px solid #1a5276;
+            white-space: nowrap;
+        }
+
+        .toc a:hover {
+            background: #1a5276;
+            color: #fff;
+        }
+
+        .gallery-body {
+            padding: 32px;
+        }
+
+        .sheet-section {
+            margin-bottom: 56px;
+        }
+
+        .sheet-section-header {
+            display: flex;
+            align-items: baseline;
+            gap: 16px;
+            margin-bottom: 16px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #0f3460;
+        }
+
+        .sheet-section-header h2 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #e0e0e0;
+        }
+
+        .sheet-section-header .sheet-links {
+            display: flex;
+            gap: 10px;
+        }
+
+        .sheet-section-header .sheet-links a {
+            font-size: 11px;
+            color: #888;
+            text-decoration: none;
+        }
+
+        .sheet-section-header .sheet-links a:hover {
+            color: #a0c4ff;
+        }
+
+        .viewports {
+            display: flex;
+            gap: 24px;
+            align-items: flex-start;
+        }
+
+        .viewport-block {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .viewport-label {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #888;
+        }
+
+        .viewport-label .viewport-dims {
+            font-weight: 400;
+            color: #555;
+            margin-left: 6px;
+        }
+
+        .iframe-wrapper {
+            border: 1px solid #0f3460;
+            border-radius: 6px;
+            overflow: hidden;
+            background: #fff;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+        }
+
+        .iframe-desktop {
+            width: 1024px;
+            height: 768px;
+        }
+
+        .iframe-mobile {
+            width: 375px;
+            height: 812px;
+        }
+
+        .iframe-desktop iframe,
+        .iframe-mobile iframe {
+            display: block;
+            border: none;
+        }
+
+        .missing-notice {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 8px;
+            background: #12121e;
+            color: #555;
+            font-size: 13px;
+            text-align: center;
+            padding: 24px;
+        }
+
+        .missing-notice code {
+            font-size: 12px;
+            background: #1a1a2e;
+            padding: 4px 8px;
+            border-radius: 3px;
+            color: #a0c4ff;
+        }
+
+        .divider {
+            width: 1px;
+            background: #0f3460;
+            align-self: stretch;
+            margin: 0 4px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="gallery-header">
+    <h1>Turn Sheet Gallery</h1>
+    <p>Fixed-width iframes: desktop (1024px) and mobile (375px). Run <code style="background:#0f3460;padding:2px 6px;border-radius:3px;font-size:11px;">./tools/render-turnsheets</code> to regenerate all fixtures.</p>
+    <nav class="toc">
+        <a href="#adventure-join-game">Adventure: Join Game</a>
+        <a href="#adventure-location-choice">Adventure: Location Choice</a>
+        <a href="#adventure-inventory">Adventure: Inventory</a>
+        <a href="#adventure-monster">Adventure: Monster Encounter</a>
+        <a href="#mecha-join-game">Mecha: Join Game</a>
+        <a href="#mecha-lance-management">Mecha: Lance Management</a>
+        <a href="#mecha-orders">Mecha: Orders</a>
+    </nav>
+</div>
+
+<div class="gallery-body">
+
+    <!-- ======================================================= -->
+    <!-- Adventure Game: Join Game                               -->
+    <!-- ======================================================= -->
+    <section class="sheet-section" id="adventure-join-game">
+        <div class="sheet-section-header">
+            <h2>Adventure Game &mdash; Join Game</h2>
+            <div class="sheet-links">
+                <a href="adventure_game_join_game_turnsheet.html" target="_blank">Open standalone &rarr;</a>
+            </div>
+        </div>
+        <div class="viewports">
+            <div class="viewport-block">
+                <div class="viewport-label">Desktop <span class="viewport-dims">1024&times;768</span></div>
+                <div class="iframe-wrapper iframe-desktop">
+                    <iframe src="adventure_game_join_game_turnsheet.html" width="1024" height="768"
+                        title="Adventure Join Game - Desktop"></iframe>
+                </div>
+            </div>
+            <div class="divider"></div>
+            <div class="viewport-block">
+                <div class="viewport-label">Mobile <span class="viewport-dims">375&times;812</span></div>
+                <div class="iframe-wrapper iframe-mobile">
+                    <iframe src="adventure_game_join_game_turnsheet.html" width="375" height="812"
+                        title="Adventure Join Game - Mobile"></iframe>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ======================================================= -->
+    <!-- Adventure Game: Location Choice                         -->
+    <!-- ======================================================= -->
+    <section class="sheet-section" id="adventure-location-choice">
+        <div class="sheet-section-header">
+            <h2>Adventure Game &mdash; Location Choice</h2>
+            <div class="sheet-links">
+                <a href="adventure_game_location_choice_turnsheet.html" target="_blank">Open standalone &rarr;</a>
+            </div>
+        </div>
+        <div class="viewports">
+            <div class="viewport-block">
+                <div class="viewport-label">Desktop <span class="viewport-dims">1024&times;768</span></div>
+                <div class="iframe-wrapper iframe-desktop">
+                    <iframe src="adventure_game_location_choice_turnsheet.html" width="1024" height="768"
+                        title="Adventure Location Choice - Desktop"></iframe>
+                </div>
+            </div>
+            <div class="divider"></div>
+            <div class="viewport-block">
+                <div class="viewport-label">Mobile <span class="viewport-dims">375&times;812</span></div>
+                <div class="iframe-wrapper iframe-mobile">
+                    <iframe src="adventure_game_location_choice_turnsheet.html" width="375" height="812"
+                        title="Adventure Location Choice - Mobile"></iframe>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ======================================================= -->
+    <!-- Adventure Game: Inventory Management                    -->
+    <!-- ======================================================= -->
+    <section class="sheet-section" id="adventure-inventory">
+        <div class="sheet-section-header">
+            <h2>Adventure Game &mdash; Inventory Management</h2>
+            <div class="sheet-links">
+                <a href="adventure_game_inventory_management_turnsheet.html" target="_blank">Open standalone &rarr;</a>
+            </div>
+        </div>
+        <div class="viewports">
+            <div class="viewport-block">
+                <div class="viewport-label">Desktop <span class="viewport-dims">1024&times;768</span></div>
+                <div class="iframe-wrapper iframe-desktop">
+                    <iframe src="adventure_game_inventory_management_turnsheet.html" width="1024" height="768"
+                        title="Adventure Inventory - Desktop"></iframe>
+                </div>
+            </div>
+            <div class="divider"></div>
+            <div class="viewport-block">
+                <div class="viewport-label">Mobile <span class="viewport-dims">375&times;812</span></div>
+                <div class="iframe-wrapper iframe-mobile">
+                    <iframe src="adventure_game_inventory_management_turnsheet.html" width="375" height="812"
+                        title="Adventure Inventory - Mobile"></iframe>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ======================================================= -->
+    <!-- Adventure Game: Monster Encounter                       -->
+    <!-- ======================================================= -->
+    <section class="sheet-section" id="adventure-monster">
+        <div class="sheet-section-header">
+            <h2>Adventure Game &mdash; Monster Encounter</h2>
+            <div class="sheet-links">
+                <a href="adventure_game_monster_encounter_turnsheet.html" target="_blank">Open standalone &rarr;</a>
+            </div>
+        </div>
+        <div class="viewports">
+            <div class="viewport-block">
+                <div class="viewport-label">Desktop <span class="viewport-dims">1024&times;768</span></div>
+                <div class="iframe-wrapper iframe-desktop">
+                    <iframe src="adventure_game_monster_encounter_turnsheet.html" width="1024" height="768"
+                        title="Adventure Monster Encounter - Desktop"></iframe>
+                </div>
+            </div>
+            <div class="divider"></div>
+            <div class="viewport-block">
+                <div class="viewport-label">Mobile <span class="viewport-dims">375&times;812</span></div>
+                <div class="iframe-wrapper iframe-mobile">
+                    <iframe src="adventure_game_monster_encounter_turnsheet.html" width="375" height="812"
+                        title="Adventure Monster Encounter - Mobile"></iframe>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ======================================================= -->
+    <!-- Mecha: Join Game                                        -->
+    <!-- ======================================================= -->
+    <section class="sheet-section" id="mecha-join-game">
+        <div class="sheet-section-header">
+            <h2>Mecha &mdash; Join Game</h2>
+            <div class="sheet-links">
+                <a href="mecha_join_game_turnsheet.html" target="_blank">Open standalone &rarr;</a>
+            </div>
+        </div>
+        <div class="viewports">
+            <div class="viewport-block">
+                <div class="viewport-label">Desktop <span class="viewport-dims">1024&times;768</span></div>
+                <div class="iframe-wrapper iframe-desktop">
+                    <iframe src="mecha_join_game_turnsheet.html" width="1024" height="768"
+                        title="Mecha Join Game - Desktop"></iframe>
+                </div>
+            </div>
+            <div class="divider"></div>
+            <div class="viewport-block">
+                <div class="viewport-label">Mobile <span class="viewport-dims">375&times;812</span></div>
+                <div class="iframe-wrapper iframe-mobile">
+                    <iframe src="mecha_join_game_turnsheet.html" width="375" height="812"
+                        title="Mecha Join Game - Mobile"></iframe>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ======================================================= -->
+    <!-- Mecha: Lance Management                                 -->
+    <!-- ======================================================= -->
+    <section class="sheet-section" id="mecha-lance-management">
+        <div class="sheet-section-header">
+            <h2>Mecha &mdash; Lance Management</h2>
+            <div class="sheet-links">
+                <a href="mecha_lance_management_turnsheet.html" target="_blank">Open standalone &rarr;</a>
+            </div>
+        </div>
+        <div class="viewports">
+            <div class="viewport-block">
+                <div class="viewport-label">Desktop <span class="viewport-dims">1024&times;768</span></div>
+                <div class="iframe-wrapper iframe-desktop">
+                    <iframe src="mecha_lance_management_turnsheet.html" width="1024" height="768"
+                        title="Mecha Lance Management - Desktop"></iframe>
+                </div>
+            </div>
+            <div class="divider"></div>
+            <div class="viewport-block">
+                <div class="viewport-label">Mobile <span class="viewport-dims">375&times;812</span></div>
+                <div class="iframe-wrapper iframe-mobile">
+                    <iframe src="mecha_lance_management_turnsheet.html" width="375" height="812"
+                        title="Mecha Lance Management - Mobile"></iframe>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ======================================================= -->
+    <!-- Mecha: Orders                                           -->
+    <!-- ======================================================= -->
+    <section class="sheet-section" id="mecha-orders">
+        <div class="sheet-section-header">
+            <h2>Mecha &mdash; Orders</h2>
+            <div class="sheet-links">
+                <a href="mecha_orders_turnsheet.html" target="_blank">Open standalone &rarr;</a>
+            </div>
+        </div>
+        <div class="viewports">
+            <div class="viewport-block">
+                <div class="viewport-label">Desktop <span class="viewport-dims">1024&times;768</span></div>
+                <div class="iframe-wrapper iframe-desktop">
+                    <iframe src="mecha_orders_turnsheet.html" width="1024" height="768"
+                        title="Mecha Orders - Desktop"></iframe>
+                </div>
+            </div>
+            <div class="divider"></div>
+            <div class="viewport-block">
+                <div class="viewport-label">Mobile <span class="viewport-dims">375&times;812</span></div>
+                <div class="iframe-wrapper iframe-mobile">
+                    <iframe src="mecha_orders_turnsheet.html" width="375" height="812"
+                        title="Mecha Orders - Mobile"></iframe>
+                </div>
+            </div>
+        </div>
+    </section>
+
+</div>
+
+</body>
+</html>

@@ -25,6 +25,10 @@ const (
 	AdventureGameParameterCharacterLives = "character_lives"
 )
 
+const (
+	MechaParameterLanceSize = "lance_size"
+)
+
 var gameParameters = []game_record.GameParameter{
 	// Adventure game parameters
 	{
@@ -33,6 +37,14 @@ var gameParameters = []game_record.GameParameter{
 		Description:  "The number of lives a character has.",
 		ValueType:    GameParameterValueTypeInteger,
 		DefaultValue: "3",
+	},
+	// Mecha parameters
+	{
+		GameType:     game_record.GameTypeMecha,
+		ConfigKey:    MechaParameterLanceSize,
+		Description:  "The number of mechs in a player lance.",
+		ValueType:    GameParameterValueTypeInteger,
+		DefaultValue: "4",
 	},
 }
 

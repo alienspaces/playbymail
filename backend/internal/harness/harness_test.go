@@ -39,8 +39,11 @@ func TestHarnessSetupTeardown_DefaultDataConfig(t *testing.T) {
 	require.Len(t, h.Data.AccountUserRecs, 4, "Should have exactly 4 account user records")
 	// AccountUserContacts: 4 (one per account user)
 	require.Len(t, h.Data.AccountUserContactRecs, 4, "Should have exactly 4 account user contact records")
-	// Games: 2 (GameOneRef, GameDraftRef)
-	require.Len(t, h.Data.GameRecs, 2, "Should have exactly 2 game records")
+	// Games: 3 (GameOneRef, GameDraftRef, GameMechaRef)
+	require.Len(t, h.Data.GameRecs, 3, "Should have exactly 3 game records")
+
+	// Adventure game specific resources
+
 	// Locations: 3 (GameLocationOneRef, GameLocationTwoRef, GameLocationThreeRef)
 	require.Len(t, h.Data.AdventureGameLocationRecs, 3, "Should have exactly 3 adventure game location records")
 	// Location links: 2 (GameLocationLinkOneRef, GameLocationLinkTwoRef return path)
@@ -61,6 +64,21 @@ func TestHarnessSetupTeardown_DefaultDataConfig(t *testing.T) {
 	require.Len(t, h.Data.AdventureGameCreatureInstanceRecs, 1, "Should have exactly 1 adventure game creature instance record")
 	// Item instances: 1 (GameItemInstanceOneRef) - only for GameInstanceOneRef
 	require.Len(t, h.Data.AdventureGameItemInstanceRecs, 1, "Should have exactly 1 adventure game item instance record")
+
+	// Mecha game specific resources
+
+	// Chassis: 1 (MechaChassisOneRef)
+	require.Len(t, h.Data.MechaChassisRecs, 1, "Should have exactly 1 mecha chassis record")
+	// Weapons: 1 (MechaWeaponOneRef)
+	require.Len(t, h.Data.MechaWeaponRecs, 1, "Should have exactly 1 mecha weapon record")
+	// Sectors: 2 (MechaSectorOneRef, MechaSectorTwoRef)
+	require.Len(t, h.Data.MechaSectorRecs, 2, "Should have exactly 2 mecha sector records")
+	// Sector links: 1 (MechaSectorLinkOneRef)
+	require.Len(t, h.Data.MechaSectorLinkRecs, 1, "Should have exactly 1 mecha sector link record")
+	// Lances: 1 (MechaLanceOneRef)
+	require.Len(t, h.Data.MechaLanceRecs, 2, "Should have exactly 2 mecha lance records")
+	// Lance mechs: 1 (MechaLanceMechOneRef)
+	require.Len(t, h.Data.MechaLanceMechRecs, 2, "Should have exactly 2 mecha lance mech records")
 
 	// All harness account users should be active by default
 	for _, rec := range h.Data.AccountUserRecs {

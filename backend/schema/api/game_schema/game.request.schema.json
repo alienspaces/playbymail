@@ -5,9 +5,10 @@
     "type": "object",
     "properties": {
         "game_type": {
-            "description": "The type of the game. Only 'adventure' is supported.",
+            "description": "The type of the game.",
             "enum": [
-                "adventure"
+                "adventure",
+                "mecha"
             ],
             "type": "string"
         },

@@ -454,7 +454,7 @@ func TestJoinGameProcessor_GenerateTurnSheet_WithDeliveryMethods(t *testing.T) {
 			require.Equal(t, tt.expectAddressFields, hasAddress,
 				"expected address fields presence to be %v", tt.expectAddressFields)
 
-			hasScript := strings.Contains(htmlStr, `postal-address-fields`) && strings.Contains(htmlStr, `<script>`)
+			hasScript := strings.Contains(htmlStr, `postal-address-fields`) && strings.Contains(htmlStr, `toggle(this.value === 'post')`)
 			require.Equal(t, tt.expectToggleScript, hasScript,
 				"expected toggle script presence to be %v", tt.expectToggleScript)
 		})
@@ -579,88 +579,3 @@ func TestJoinGameScanData_Validate(t *testing.T) {
 	}
 }
 
-func TestGenerateJoinGameFormatsForPrinting(t *testing.T) {
-
-	cfg, l, _, _, _ := testutil.NewDefaultDependencies(t)
-	cfg.TemplatesPath = "../../templates"
-	// SaveTestFiles defaults to false - set SAVE_TEST_FILES=true to generate files
-	cfg.SaveTestFiles = true
-
-	processor, err := turnsheet.NewJoinGameProcessor(l, cfg)
-	require.NoError(t, err)
-
-	// Load test background image
-	backgroundImage := loadTestBackgroundImage(t, "testdata/background-darkforest.png")
-
-	type formatCase struct {
-		name     string
-		format   turnsheet.DocumentFormat
-		ext      string
-		logExtra bool
-		deadline time.Duration
-	}
-
-	cases := []formatCase{
-		{
-			name:     "pdf",
-			format:   turnsheet.DocumentFormatPDF,
-			ext:      "pdf",
-			logExtra: true,
-			deadline: 7 * 24 * time.Hour,
-		},
-		{
-			name:     "html",
-			format:   turnsheet.DocumentFormatHTML,
-			ext:      "html",
-			deadline: 48 * time.Hour,
-		},
-	}
-
-	ctx := context.Background()
-
-	for _, tc := range cases {
-		tc := tc
-		t.Run(tc.name, func(t *testing.T) {
-			// Generate realistic turn sheet code
-			turnSheetCode := generateTestJoinTurnSheetCode(t)
-
-			testData := &turnsheet.JoinGameData{
-				TurnSheetTemplateData: turnsheet.TurnSheetTemplateData{
-					GameName:          convert.Ptr("The Enchanted Forest Adventure"),
-					GameType:          convert.Ptr("adventure"),
-					TurnNumber:        convert.Ptr(0),
-					TurnSheetCode:     convert.Ptr(turnSheetCode),
-					TurnSheetDeadline: convert.Ptr(time.Now().Add(tc.deadline)),
-					BackgroundImage:   &backgroundImage,
-				},
-				GameDescription: "Welcome to the PlayByMail Adventure!",
-			}
-
-			sheetData, err := json.Marshal(testData)
-			require.NoError(t, err, "Should marshal test data")
-
-			output, err := processor.GenerateTurnSheet(ctx, l, tc.format, sheetData)
-			require.NoError(t, err, "Should generate output without error")
-			require.NotEmpty(t, output, "Output should not be empty")
-
-			if cfg.SaveTestFiles {
-				path := fmt.Sprintf("testdata/adventure_game_join_game_turnsheet.%s", tc.ext)
-				err = os.WriteFile(path, output, 0644)
-				require.NoError(t, err, "Should save output to testdata directory")
-
-				t.Logf("%s preview saved to %s", tc.name, path)
-
-				if tc.logExtra {
-					t.Logf("Output size: %d bytes", len(output))
-					t.Logf("")
-					t.Logf("Generated successfully. To test the scanner:")
-					t.Logf("1. Print the PDF: %s", path)
-					t.Logf("2. Fill out the turn sheet with your information")
-					t.Logf("3. Scan the completed turn sheet to a JPEG file")
-					t.Logf("4. Save the JPEG in testdata/ with a descriptive name")
-					t.Logf("5. Write a test that loads the JPEG and tests the scanner")
-				}
-			}
-		})
-	}
-}

@@ -1,0 +1,29 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "http://playbymail.games/schema/mecha_schema/mecha_lance.request.schema.json",
+    "title": "MechaLanceRequest",
+    "type": "object",
+    "properties": {
+        "account_user_id": {
+            "type": "string",
+            "minLength": 1
+        },
+        "mecha_computer_opponent_id": {
+            "type": "string",
+            "minLength": 1
+        },
+        "is_player_starter": {
+            "type": "boolean"
+        },
+        "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+        },
+        "description": {
+            "type": "string"
+        }
+    },
+    "required": ["name", "description"],
+    "additionalProperties": false
+}

@@ -153,7 +153,7 @@ func Test_createUpdateDeleteGameHandler(t *testing.T) {
 	testCases := []testCase{
 		{
 			TestCase: testutil.TestCase{
-				Name: "authenticated designer when create game with valid properties then returns created game",
+				Name: "authenticated designer when create adventure game with valid properties then returns created game",
 				NewRunner: func(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], scanner turnsheet.TurnSheetScanner, d harness.Data) (testutil.TestRunnerer, error) {
 					return testutil.NewTestRunner(cfg, l, s, j, scanner)
 				},
@@ -163,7 +163,7 @@ func Test_createUpdateDeleteGameHandler(t *testing.T) {
 				RequestHeaders: testutil.AuthHeaderProDesigner,
 				RequestBody: func(d harness.Data) any {
 					return game_schema.GameRequest{
-						Name:              "Test Game",
+						Name:              "Test Adventure Game",
 						GameType:          game_record.GameTypeAdventure,
 						TurnDurationHours: 168, // 1 week
 						Description:       "A test adventure game description",
@@ -178,6 +178,58 @@ func Test_createUpdateDeleteGameHandler(t *testing.T) {
 						Name: req.Name,
 					},
 				}
+			},
+		},
+		{
+			TestCase: testutil.TestCase{
+				Name: "authenticated designer when create mecha game with valid properties then returns created game",
+				NewRunner: func(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], scanner turnsheet.TurnSheetScanner, d harness.Data) (testutil.TestRunnerer, error) {
+					return testutil.NewTestRunner(cfg, l, s, j, scanner)
+				},
+				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
+					return rnr.GetHandlerConfig()[game.CreateOneGame]
+				},
+				RequestHeaders: testutil.AuthHeaderProDesigner,
+				RequestBody: func(d harness.Data) any {
+					return game_schema.GameRequest{
+						Name:              "Test Mecha",
+						GameType:          game_record.GameTypeMecha,
+						TurnDurationHours: 168, // 1 week
+						Description:       "A test mecha description",
+					}
+				},
+				ResponseDecoder: testCaseResponseDecoder,
+				ResponseCode:    http.StatusCreated,
+			},
+			expectResponse: func(d harness.Data, req game_schema.GameRequest) game_schema.GameResponse {
+				return game_schema.GameResponse{
+					Data: &game_schema.GameResponseData{
+						Name:     req.Name,
+						GameType: req.GameType,
+					},
+				}
+			},
+		},
+		{
+			TestCase: testutil.TestCase{
+				Name: "authenticated designer when create game with invalid game_type then returns bad request",
+				NewRunner: func(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Client[pgx.Tx], scanner turnsheet.TurnSheetScanner, d harness.Data) (testutil.TestRunnerer, error) {
+					return testutil.NewTestRunner(cfg, l, s, j, scanner)
+				},
+				HandlerConfig: func(rnr testutil.TestRunnerer) server.HandlerConfig {
+					return rnr.GetHandlerConfig()[game.CreateOneGame]
+				},
+				RequestHeaders: testutil.AuthHeaderProDesigner,
+				RequestBody: func(d harness.Data) any {
+					return game_schema.GameRequest{
+						Name:              "Invalid Game Type",
+						GameType:          "invalid_type",
+						TurnDurationHours: 168,
+						Description:       "This should be rejected by schema validation",
+					}
+				},
+				ResponseDecoder: testCaseResponseDecoder,
+				ResponseCode:    http.StatusBadRequest,
 			},
 		},
 		{
@@ -265,6 +317,9 @@ func Test_createUpdateDeleteGameHandler(t *testing.T) {
 				require.NotEmpty(t, aResp.ID, "Game ID is not empty")
 				require.Equal(t, xResp.Name, aResp.Name, "Game Name equals expected")
 				require.False(t, aResp.CreatedAt.IsZero(), "Game CreatedAt is not zero")
+				if xResp.GameType != "" {
+					require.Equal(t, xResp.GameType, aResp.GameType, "Game GameType equals expected")
+				}
 			}
 
 			testutil.RunTestCase(t, th, &testCase, testFunc)

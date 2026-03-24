@@ -6,6 +6,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/record/account_record"
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
+	"gitlab.com/alienspaces/playbymail/internal/record/mecha_record"
 )
 
 // Data -
@@ -40,6 +41,14 @@ type Data struct {
 	AdventureGameLocationObjectStateRecs          []*adventure_game_record.AdventureGameLocationObjectState
 	AdventureGameLocationObjectEffectRecs         []*adventure_game_record.AdventureGameLocationObjectEffect
 	AdventureGameLocationObjectInstanceRecs       []*adventure_game_record.AdventureGameLocationObjectInstance
+	// Mecha specific resources
+	MechaChassisRecs           []*mecha_record.MechaChassis
+	MechaWeaponRecs            []*mecha_record.MechaWeapon
+	MechaSectorRecs            []*mecha_record.MechaSector
+	MechaSectorLinkRecs        []*mecha_record.MechaSectorLink
+	MechaComputerOpponentRecs  []*mecha_record.MechaComputerOpponent
+	MechaLanceRecs             []*mecha_record.MechaLance
+	MechaLanceMechRecs         []*mecha_record.MechaLanceMech
 	// Session tokens by account ID
 	AccountSessionTokens map[string]string
 	// Data references
@@ -59,6 +68,14 @@ type DataRefs struct {
 	GameInstanceRefs          map[string]string // Map of refs to game_instance records
 	GameInstanceParameterRefs map[string]string // Map of refs to game_instance_parameter records
 	GameTurnSheetRefs         map[string]string // Map of refs to game_turn_sheet records
+	// Mecha specific resources
+	MechaChassisRefs           map[string]string
+	MechaWeaponRefs            map[string]string
+	MechaSectorRefs            map[string]string
+	MechaSectorLinkRefs        map[string]string
+	MechaComputerOpponentRefs  map[string]string
+	MechaLanceRefs             map[string]string
+	MechaLanceMechRefs         map[string]string
 	// Adventure game specific resources
 	AdventureGameLocationRefs                map[string]string // Map of adventure game location refs to adventure game location records
 	AdventureGameLocationLinkRefs            map[string]string // Map of adventure game location link refs to adventure game location link records
@@ -94,8 +111,16 @@ func initialiseDataStores() Data {
 			GameInstanceRefs:          map[string]string{},
 			GameInstanceParameterRefs: map[string]string{},
 			GameTurnSheetRefs:         map[string]string{},
-			// Adventure game specific resources
-			AdventureGameLocationRefs:                map[string]string{},
+		// Mecha specific resources
+		MechaChassisRefs:          map[string]string{},
+		MechaWeaponRefs:           map[string]string{},
+		MechaSectorRefs:           map[string]string{},
+		MechaSectorLinkRefs:       map[string]string{},
+		MechaComputerOpponentRefs: map[string]string{},
+		MechaLanceRefs:            map[string]string{},
+		MechaLanceMechRefs:        map[string]string{},
+		// Adventure game specific resources
+		AdventureGameLocationRefs:                map[string]string{},
 			AdventureGameLocationLinkRefs:            map[string]string{},
 			AdventureGameLocationLinkRequirementRefs: map[string]string{},
 			AdventureGameCreaturePlacementRefs:       map[string]string{},
@@ -990,6 +1015,178 @@ func (d *Data) AddAdventureGameLocationObjectInstanceRec(rec *adventure_game_rec
 		}
 	}
 	d.AdventureGameLocationObjectInstanceRecs = append(d.AdventureGameLocationObjectInstanceRecs, rec)
+}
+
+// ------------------------------------------------------------
+// Mecha specific resources
+// ------------------------------------------------------------
+
+// MechaChassis
+func (d *Data) AddMechaChassisRec(rec *mecha_record.MechaChassis) {
+	for idx := range d.MechaChassisRecs {
+		if d.MechaChassisRecs[idx].ID == rec.ID {
+			d.MechaChassisRecs[idx] = rec
+			return
+		}
+	}
+	d.MechaChassisRecs = append(d.MechaChassisRecs, rec)
+}
+
+func (d *Data) GetMechaChassisRecByRef(ref string) (*mecha_record.MechaChassis, error) {
+	id, ok := d.Refs.MechaChassisRefs[ref]
+	if !ok {
+		return nil, fmt.Errorf("failed getting mecha chassis with ref >%s<", ref)
+	}
+	for _, rec := range d.MechaChassisRecs {
+		if rec.ID == id {
+			return rec, nil
+		}
+	}
+	return nil, fmt.Errorf("failed getting mecha chassis with id >%s< for ref >%s<", id, ref)
+}
+
+// MechaWeapon
+func (d *Data) AddMechaWeaponRec(rec *mecha_record.MechaWeapon) {
+	for idx := range d.MechaWeaponRecs {
+		if d.MechaWeaponRecs[idx].ID == rec.ID {
+			d.MechaWeaponRecs[idx] = rec
+			return
+		}
+	}
+	d.MechaWeaponRecs = append(d.MechaWeaponRecs, rec)
+}
+
+func (d *Data) GetMechaWeaponRecByRef(ref string) (*mecha_record.MechaWeapon, error) {
+	id, ok := d.Refs.MechaWeaponRefs[ref]
+	if !ok {
+		return nil, fmt.Errorf("failed getting mecha weapon with ref >%s<", ref)
+	}
+	for _, rec := range d.MechaWeaponRecs {
+		if rec.ID == id {
+			return rec, nil
+		}
+	}
+	return nil, fmt.Errorf("failed getting mecha weapon with id >%s< for ref >%s<", id, ref)
+}
+
+// MechaSector
+func (d *Data) AddMechaSectorRec(rec *mecha_record.MechaSector) {
+	for idx := range d.MechaSectorRecs {
+		if d.MechaSectorRecs[idx].ID == rec.ID {
+			d.MechaSectorRecs[idx] = rec
+			return
+		}
+	}
+	d.MechaSectorRecs = append(d.MechaSectorRecs, rec)
+}
+
+func (d *Data) GetMechaSectorRecByRef(ref string) (*mecha_record.MechaSector, error) {
+	id, ok := d.Refs.MechaSectorRefs[ref]
+	if !ok {
+		return nil, fmt.Errorf("failed getting mecha sector with ref >%s<", ref)
+	}
+	for _, rec := range d.MechaSectorRecs {
+		if rec.ID == id {
+			return rec, nil
+		}
+	}
+	return nil, fmt.Errorf("failed getting mecha sector with id >%s< for ref >%s<", id, ref)
+}
+
+// MechaSectorLink
+func (d *Data) AddMechaSectorLinkRec(rec *mecha_record.MechaSectorLink) {
+	for idx := range d.MechaSectorLinkRecs {
+		if d.MechaSectorLinkRecs[idx].ID == rec.ID {
+			d.MechaSectorLinkRecs[idx] = rec
+			return
+		}
+	}
+	d.MechaSectorLinkRecs = append(d.MechaSectorLinkRecs, rec)
+}
+
+func (d *Data) GetMechaSectorLinkRecByRef(ref string) (*mecha_record.MechaSectorLink, error) {
+	id, ok := d.Refs.MechaSectorLinkRefs[ref]
+	if !ok {
+		return nil, fmt.Errorf("failed getting mecha sector link with ref >%s<", ref)
+	}
+	for _, rec := range d.MechaSectorLinkRecs {
+		if rec.ID == id {
+			return rec, nil
+		}
+	}
+	return nil, fmt.Errorf("failed getting mecha sector link with id >%s< for ref >%s<", id, ref)
+}
+
+// MechaComputerOpponent
+func (d *Data) AddMechaComputerOpponentRec(rec *mecha_record.MechaComputerOpponent) {
+	for idx := range d.MechaComputerOpponentRecs {
+		if d.MechaComputerOpponentRecs[idx].ID == rec.ID {
+			d.MechaComputerOpponentRecs[idx] = rec
+			return
+		}
+	}
+	d.MechaComputerOpponentRecs = append(d.MechaComputerOpponentRecs, rec)
+}
+
+func (d *Data) GetMechaComputerOpponentRecByRef(ref string) (*mecha_record.MechaComputerOpponent, error) {
+	id, ok := d.Refs.MechaComputerOpponentRefs[ref]
+	if !ok {
+		return nil, fmt.Errorf("failed getting mecha computer opponent with ref >%s<", ref)
+	}
+	for _, rec := range d.MechaComputerOpponentRecs {
+		if rec.ID == id {
+			return rec, nil
+		}
+	}
+	return nil, fmt.Errorf("failed getting mecha computer opponent with id >%s< for ref >%s<", id, ref)
+}
+
+// MechaLance
+func (d *Data) AddMechaLanceRec(rec *mecha_record.MechaLance) {
+	for idx := range d.MechaLanceRecs {
+		if d.MechaLanceRecs[idx].ID == rec.ID {
+			d.MechaLanceRecs[idx] = rec
+			return
+		}
+	}
+	d.MechaLanceRecs = append(d.MechaLanceRecs, rec)
+}
+
+func (d *Data) GetMechaLanceRecByRef(ref string) (*mecha_record.MechaLance, error) {
+	id, ok := d.Refs.MechaLanceRefs[ref]
+	if !ok {
+		return nil, fmt.Errorf("failed getting mecha lance with ref >%s<", ref)
+	}
+	for _, rec := range d.MechaLanceRecs {
+		if rec.ID == id {
+			return rec, nil
+		}
+	}
+	return nil, fmt.Errorf("failed getting mecha lance with id >%s< for ref >%s<", id, ref)
+}
+
+// MechaLanceMech
+func (d *Data) AddMechaLanceMechRec(rec *mecha_record.MechaLanceMech) {
+	for idx := range d.MechaLanceMechRecs {
+		if d.MechaLanceMechRecs[idx].ID == rec.ID {
+			d.MechaLanceMechRecs[idx] = rec
+			return
+		}
+	}
+	d.MechaLanceMechRecs = append(d.MechaLanceMechRecs, rec)
+}
+
+func (d *Data) GetMechaLanceMechRecByRef(ref string) (*mecha_record.MechaLanceMech, error) {
+	id, ok := d.Refs.MechaLanceMechRefs[ref]
+	if !ok {
+		return nil, fmt.Errorf("failed getting mecha lance mech with ref >%s<", ref)
+	}
+	for _, rec := range d.MechaLanceMechRecs {
+		if rec.ID == id {
+			return rec, nil
+		}
+	}
+	return nil, fmt.Errorf("failed getting mecha lance mech with id >%s< for ref >%s<", id, ref)
 }
 
 // AdventureGameTurnSheet

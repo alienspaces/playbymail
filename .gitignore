@@ -117,3 +117,14 @@ playwright/.auth/
 playwright/screenshots/
 playwright/*.png
 playwright/*.mp4
+
+# =============================
+# Generated Turn Sheet Test Output
+# =============================
+# Regenerate with ./tools/render-turnsheets
+backend/internal/turnsheet/testdata/*_turnsheet.html
+backend/internal/turnsheet/testdata/*_turnsheet.pdf
+backend/internal/turnsheet/testdata/*_turn_sheet.html
+backend/internal/turnsheet/testdata/*_turn_sheet.pdf
+# Keep gallery.html tracked (hand-authored)
+!backend/internal/turnsheet/testdata/gallery.html

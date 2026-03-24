@@ -24,6 +24,11 @@ var DemoGames = map[string]DemoGameEntry{
 		Name:        demo_scenarios.DemoAdventureGameName,
 		Description: "A solo text adventure set in a mysterious house.",
 	},
+	game_record.GameTypeMecha: {
+		Config:      demo_scenarios.MechaGameConfig,
+		Name:        demo_scenarios.DemoMechaGameName,
+		Description: "A tactical mech combat game across contested industrial sectors.",
+	},
 }
 
 // DemoGameSummary is a read-only view of a registered demo game.

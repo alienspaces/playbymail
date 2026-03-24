@@ -144,6 +144,9 @@ const SHEET_PRESENTATION_ORDER = [
   'adventure_game_location_choice',
   'adventure_game_inventory_management',
   'adventure_game_monster',
+  'mecha_join_game',
+  'mecha_orders',
+  'mecha_lance_management',
 ]
 
 // Derive current turn sheets (latest turn only), sorted by canonical presentation order.
@@ -168,6 +171,9 @@ function formatSheetType(sheetType) {
     adventure_game_location_choice: 'Location Choice',
     adventure_game_inventory_management: 'Inventory Management',
     adventure_game_monster: 'Creature Encounter',
+    mecha_join_game: 'Join Game',
+    mecha_orders: 'Mech Orders',
+    mecha_lance_management: 'Lance Management',
   }
   return labels[sheetType] ?? sheetType.replace(/_/g, ' ')
 }
@@ -343,6 +349,33 @@ function extractFormData() {
     }
   }
 
+  // Convert mecha orders: move_to_<mechId> / attack_target_<mechId> selects
+  // and mech_instance_id_<mechId> hidden inputs → mech_orders array.
+  const mechOrders = []
+  const mechKeys = []
+  for (const key of Object.keys(formData)) {
+    if (key.startsWith('mech_instance_id_')) {
+      mechKeys.push(key)
+      const mechId = formData[key]
+      if (!mechOrders.find(o => o.mech_instance_id === mechId)) {
+        mechOrders.push({
+          mech_instance_id: mechId,
+          move_to_sector_instance_id: formData[`move_to_${mechId}`] || '',
+          attack_target_mech_instance_id: formData[`attack_target_${mechId}`] || '',
+        })
+      }
+    }
+  }
+  if (mechOrders.length > 0) {
+    for (const key of mechKeys) {
+      const mechId = formData[key]
+      delete formData[key]
+      delete formData[`move_to_${mechId}`]
+      delete formData[`attack_target_${mechId}`]
+    }
+    formData.mech_orders = mechOrders
+  }
+
   // Remove empty arrays — an unchecked checkbox group sends [] which can
   // fail oneOf schema validation (e.g. equip field in inventory management).
   for (const key of Object.keys(formData)) {
@@ -400,6 +433,21 @@ function applyFormData(data) {
         `input[type="radio"][name="${namePrefix}${itemId}"][value="${radioValue}"]`
       )
       if (radio) radio.checked = true
+    }
+  }
+
+  // Restore mecha orders: mech_orders array → move_to_<mechId> / attack_target_<mechId> selects.
+  if (Array.isArray(data.mech_orders)) {
+    for (const order of data.mech_orders) {
+      if (!order.mech_instance_id) continue
+      const moveSelect = doc.querySelector(`select[name="move_to_${order.mech_instance_id}"]`)
+      if (moveSelect && order.move_to_sector_instance_id) {
+        moveSelect.value = order.move_to_sector_instance_id
+      }
+      const attackSelect = doc.querySelector(`select[name="attack_target_${order.mech_instance_id}"]`)
+      if (attackSelect && order.attack_target_mech_instance_id) {
+        attackSelect.value = order.attack_target_mech_instance_id
+      }
     }
   }
 

@@ -7,6 +7,7 @@ import (
 	coresql "gitlab.com/alienspaces/playbymail/core/sql"
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
+	"gitlab.com/alienspaces/playbymail/internal/record/mecha_record"
 )
 
 const (
@@ -33,10 +34,17 @@ func (m *Domain) ValidateGameReadyForInstance(gameID string) ([]GameValidationIs
 
 	var issues []GameValidationIssue
 
-	if gameRec.GameType == game_record.GameTypeAdventure {
+	switch gameRec.GameType {
+	case game_record.GameTypeAdventure:
 		issues, err = m.validateAdventureGameReadyForInstance(gameID)
 		if err != nil {
 			l.Warn("failed validating adventure game >%s< >%v<", gameID, err)
+			return nil, err
+		}
+	case game_record.GameTypeMecha:
+		issues, err = m.validateMechaGameReadyForInstance(gameID)
+		if err != nil {
+			l.Warn("failed validating mecha game >%s< >%v<", gameID, err)
 			return nil, err
 		}
 	}
@@ -345,7 +353,7 @@ func validateGameRec(args *validateGameArgs) error {
 		return err
 	}
 
-	if rec.GameType != game_record.GameTypeAdventure {
+	if rec.GameType != game_record.GameTypeAdventure && rec.GameType != game_record.GameTypeMecha {
 		return InvalidField(game_record.FieldGameType, rec.GameType, "game type is not valid")
 	}
 
@@ -372,4 +380,103 @@ func validateGameRecForDelete(args *validateGameArgs) error {
 	}
 
 	return nil
+}
+
+func (m *Domain) validateMechaGameReadyForInstance(gameID string) ([]GameValidationIssue, error) {
+	var issues []GameValidationIssue
+
+	sectorRecs, err := m.GetManyMechaSectorRecs(&coresql.Options{
+		Params: []coresql.Param{
+			{Col: mecha_record.FieldMechaSectorGameID, Val: gameID},
+		},
+		Limit: 1,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if len(sectorRecs) == 0 {
+		issues = append(issues, GameValidationIssue{
+			Field:    "sectors",
+			Message:  "Mecha must have at least one sector before creating an instance",
+			Severity: ValidationSeverityError,
+		})
+		return issues, nil
+	}
+
+	startingSectorRecs, err := m.GetManyMechaSectorRecs(&coresql.Options{
+		Params: []coresql.Param{
+			{Col: mecha_record.FieldMechaSectorGameID, Val: gameID},
+			{Col: mecha_record.FieldMechaSectorIsStartingSector, Val: true},
+		},
+		Limit: 1,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if len(startingSectorRecs) == 0 {
+		issues = append(issues, GameValidationIssue{
+			Field:    "starting_sector",
+			Message:  "Mecha must have at least one starting sector before creating an instance",
+			Severity: ValidationSeverityError,
+		})
+	}
+
+	chassisRecs, err := m.GetManyMechaChassisRecs(&coresql.Options{
+		Params: []coresql.Param{
+			{Col: mecha_record.FieldMechaChassisGameID, Val: gameID},
+		},
+		Limit: 1,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if len(chassisRecs) == 0 {
+		issues = append(issues, GameValidationIssue{
+			Field:    "chassis",
+			Message:  "Mecha must have at least one chassis defined before creating an instance",
+			Severity: ValidationSeverityError,
+		})
+	}
+
+	// Require exactly one player starter lance with at least one mech.
+	starterLanceRecs, err := m.GetManyMechaLanceRecs(&coresql.Options{
+		Params: []coresql.Param{
+			{Col: mecha_record.FieldMechaLanceGameID, Val: gameID},
+			{Col: mecha_record.FieldMechaLanceIsPlayerStarter, Val: true},
+		},
+		Limit: 1,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if len(starterLanceRecs) == 0 {
+		issues = append(issues, GameValidationIssue{
+			Field:    "player_starter_lance",
+			Message:  "Mecha game must have a player starter lance defined",
+			Severity: ValidationSeverityError,
+		})
+	} else {
+		starterMechs, err := m.GetManyMechaLanceMechRecs(&coresql.Options{
+			Params: []coresql.Param{
+				{Col: mecha_record.FieldMechaLanceMechMechaLanceID, Val: starterLanceRecs[0].ID},
+			},
+			Limit: 1,
+		})
+		if err != nil {
+			return nil, err
+		}
+		if len(starterMechs) == 0 {
+			issues = append(issues, GameValidationIssue{
+				Field:    "player_starter_lance",
+				Message:  "Player starter lance must have at least one mech",
+				Severity: ValidationSeverityError,
+			})
+		}
+	}
+
+	return issues, nil
 }

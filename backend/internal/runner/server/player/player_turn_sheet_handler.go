@@ -466,7 +466,7 @@ func saveGameSubscriptionInstanceTurnSheetHandler(w http.ResponseWriter, r *http
 	if schemaName := turnsheet.ScannedDataSchemaName(turnSheetRec.SheetType); schemaName != "" {
 		schema := jsonschema.SchemaWithReferences{
 			Main: jsonschema.Schema{
-				Location: turnsheet.ScannedDataSchemaLocation,
+				Location: turnsheet.ScannedDataSchemaLocationForType(turnSheetRec.SheetType),
 				Name:     schemaName,
 			},
 		}

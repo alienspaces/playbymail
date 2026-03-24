@@ -16,6 +16,7 @@ const (
 	TurnEventCategoryMovement  = "movement"
 	TurnEventCategoryWorld     = "world"
 	TurnEventCategoryFlee      = "flee"
+	TurnEventCategorySystem    = "system"
 	// flee_context is an internal category used to pass flee state between processors
 	TurnEventCategoryFleeContext = "flee_context"
 )
@@ -29,6 +30,7 @@ const (
 	TurnEventIconFlee      = "💨"
 	TurnEventIconDeath     = "💀"
 	TurnEventIconHeal      = "💚"
+	TurnEventIconSystem    = "⚙️"
 )
 
 // TurnEvent represents a narrative event that occurred during turn processing.
@@ -82,6 +84,8 @@ type TurnSheetTemplateData struct {
 	TurnSheetDeadline     *time.Time `json:"turn_sheet_deadline"`
 	TurnSheetCode         *string    `json:"turn_sheet_code"`
 
-	// Narrative events from the previous turn, displayed in the "What Happened" section
-	TurnEvents []TurnEvent `json:"turn_events,omitempty"`
+	// Narrative events from the previous turn, displayed in the "What Happened" section.
+	// The panel is always shown for play turns; set HideNarrative true only on join sheets.
+	TurnEvents    []TurnEvent `json:"turn_events,omitempty"`
+	HideNarrative bool        `json:"hide_narrative,omitempty"`
 }
