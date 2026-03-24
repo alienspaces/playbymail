@@ -14,6 +14,7 @@ package main
 
 import (
 	"context"
+	_ "embed"
 	"encoding/base64"
 	"flag"
 	"fmt"
@@ -31,6 +32,9 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/generator"
 	"gitlab.com/alienspaces/playbymail/internal/turnsheet"
 )
+
+//go:embed gallery.html
+var galleryHTML []byte
 
 func main() {
 	port := flag.String("port", "8090", "HTTP port to listen on")
@@ -243,15 +247,9 @@ func (s *devServer) handleStatic(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, filePath)
 }
 
-// serveGallery reads gallery.html, injects the SSE reload script before </body>, and writes it.
-func (s *devServer) serveGallery(w http.ResponseWriter, filePath string) {
-	data, err := os.ReadFile(filePath)
-	if err != nil {
-		http.Error(w, "gallery.html not found", http.StatusNotFound)
-		return
-	}
-
-	html := string(data)
+// serveGallery injects the SSE reload script into the embedded gallery.html and writes it.
+func (s *devServer) serveGallery(w http.ResponseWriter, _ string) {
+	html := string(galleryHTML)
 	if idx := strings.LastIndex(html, "</body>"); idx >= 0 {
 		html = html[:idx] + sseScript + html[idx:]
 	} else {

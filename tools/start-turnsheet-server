@@ -25,6 +25,8 @@ ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 cd "$ROOT"
 
+"$SCRIPT_DIR/stop-turnsheet-server" "$PORT"
+
 echo
 echo "=> Starting turn sheet dev server at http://localhost:${PORT}/gallery.html"
 echo "=> Edit any .template file to auto-reload the browser"

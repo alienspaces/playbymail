@@ -80,6 +80,7 @@ playbymail-cli
 playbymail-server
 backend/.backend.pid
 frontend/.frontend.pid
+turnsheet-dev
 
 # =============================
 # Node Modules & Package Logs
@@ -126,5 +127,3 @@ backend/internal/turnsheet/testdata/*_turnsheet.html
 backend/internal/turnsheet/testdata/*_turnsheet.pdf
 backend/internal/turnsheet/testdata/*_turn_sheet.html
 backend/internal/turnsheet/testdata/*_turn_sheet.pdf
-# Keep gallery.html tracked (hand-authored)
-!backend/internal/turnsheet/testdata/gallery.html

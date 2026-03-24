@@ -1,0 +1,30 @@
+#!/usr/bin/env sh
+
+# Stop the turn sheet dev server running on a given port.
+#
+# Finds and kills the process bound to the server port (default 8090).
+#
+# Usage (from playbymail/):
+#   ./tools/stop-turnsheet-server [port]
+
+PORT="${1:-8090}"
+
+PIDS="$(lsof -ti tcp:"$PORT" 2>/dev/null)"
+
+if [ -z "$PIDS" ]; then
+    exit 0
+fi
+
+echo "=> Stopping turn sheet server on port $PORT (pids: $(echo "$PIDS" | tr '\n' ' '))"
+echo "$PIDS" | xargs kill 2>/dev/null || true
+
+i=0
+while lsof -ti tcp:"$PORT" >/dev/null 2>&1; do
+    i=$((i + 1))
+    if [ "$i" -ge 20 ]; then
+        echo "=> Port $PORT still in use after 2s, killing forcefully"
+        echo "$PIDS" | xargs kill -9 2>/dev/null || true
+        break
+    fi
+    sleep 0.1
+done
