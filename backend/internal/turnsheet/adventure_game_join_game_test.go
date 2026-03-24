@@ -632,6 +632,7 @@ func TestGenerateJoinGameFormatsForPrinting(t *testing.T) {
 					TurnSheetCode:     convert.Ptr(turnSheetCode),
 					TurnSheetDeadline: convert.Ptr(time.Now().Add(tc.deadline)),
 					BackgroundImage:   &backgroundImage,
+					HideNarrative:     true,
 				},
 				GameDescription: "Welcome to the PlayByMail Adventure!",
 			}

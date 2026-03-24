@@ -385,6 +385,7 @@ func TestGenerateMechaJoinGameFormatsForPrinting(t *testing.T) {
 					TurnSheetCode:     convert.Ptr(turnSheetCode),
 					TurnSheetDeadline: convert.Ptr(time.Now().Add(tc.deadline)),
 					BackgroundImage:   &backgroundImage,
+					HideNarrative:     true,
 				},
 				GameDescription:          "Command a lance of powerful war mechs!",
 				AvailableDeliveryMethods: turnsheet.DeliveryMethods{Email: true},
