@@ -316,6 +316,7 @@ func getJoinSheetHandler(w http.ResponseWriter, r *http.Request, pp httprouter.P
 			TurnSheetInstructions: &instructions,
 			TurnSheetCode:         &turnSheetCode,
 			TurnNumber:            &turnNumber,
+			HideNarrative:         true,
 		},
 		GameDescription: gameRec.Description,
 		AvailableDeliveryMethods: turnsheet.DeliveryMethods{

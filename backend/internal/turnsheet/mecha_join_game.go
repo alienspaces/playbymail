@@ -200,6 +200,7 @@ func defaultMechaJoinGameTemplateData() *JoinGameData {
 		TurnSheetTemplateData: TurnSheetTemplateData{
 			TurnSheetTitle:        &title,
 			TurnSheetInstructions: &instructions,
+			HideNarrative:         true,
 		},
 	}
 }
