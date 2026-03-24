@@ -21,7 +21,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/runner/server/catalog"
 	"gitlab.com/alienspaces/playbymail/internal/runner/server/game"
 	"gitlab.com/alienspaces/playbymail/internal/runner/server/handler_auth"
-	"gitlab.com/alienspaces/playbymail/internal/runner/server/mecha"
+	"gitlab.com/alienspaces/playbymail/internal/runner/server/mecha_game"
 	"gitlab.com/alienspaces/playbymail/internal/runner/server/player"
 	"gitlab.com/alienspaces/playbymail/internal/turnsheet"
 	"gitlab.com/alienspaces/playbymail/internal/utils/config"
@@ -77,7 +77,7 @@ func NewRunner(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Cli
 		// Adventure Game handlers
 		adventure_game.AdventureGameHandlerConfig,
 		// Mecha handlers
-		mecha.MechaHandlerConfig,
+		mecha_game.MechaHandlerConfig,
 		// Catalog handlers (public)
 		catalog.CatalogHandlerConfig,
 		// Player handlers

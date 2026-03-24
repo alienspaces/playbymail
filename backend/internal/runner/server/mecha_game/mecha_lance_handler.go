@@ -1,4 +1,4 @@
-package mecha
+package mecha_game
 
 import (
 	stdsql "database/sql"
