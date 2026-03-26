@@ -208,27 +208,6 @@ func TestMonsterEncounterProcessor_ScanTurnSheet(t *testing.T) {
 			expectErrorMessage: "empty image data",
 			requiresScanner:    false,
 		},
-		// TODO: (agent) Add test case with real scanned monster encounter image when test data exists.
-		// Use a fixture image (e.g. testdata/adventure_game_monster_encounter_turn_sheet_filled.jpg)
-		// with expected MonsterEncounterScanData. Blocked on test asset availability.
-		// {
-		// 	name: "given real scanned image when scanning then combat actions extracted",
-		// 	imageDataFn: func() ([]byte, error) {
-		// 		return os.ReadFile("testdata/adventure_game_monster_encounter_turn_sheet_filled.jpg")
-		// 	},
-		// 	sheetDataFn: func() ([]byte, error) {
-		// 		data := turnsheet.MonsterEncounterData{
-		// 			CharacterName: "Aldric",
-		// 			Creatures: []turnsheet.EncounterCreature{
-		// 				{CreatureInstanceID: "creature-1", Name: "Sand Serpent"},
-		// 			},
-		// 			MaxActions: 3,
-		// 		}
-		// 		return json.Marshal(data)
-		// 	},
-		// 	expectError:     false,
-		// 	requiresScanner: true,
-		// },
 	}
 
 	for _, tt := range tests {

@@ -64,6 +64,13 @@ if ! ./tools/db-setup; then
     exit 1
 fi
 
+# Start mailpit
+print_status "Starting mailpit..."
+if ! ./tools/mailpit-start; then
+    echo "❌ Failed to start mailpit."
+    exit 1
+fi
+
 DB_CONTAINER_NAME="${PROJECT_NAME}-shared"
 if ! docker ps --format '{{.Names}}' | grep -q "^${DB_CONTAINER_NAME}$"; then
     echo "❌ Database container '${DB_CONTAINER_NAME}' is not running after db-setup."

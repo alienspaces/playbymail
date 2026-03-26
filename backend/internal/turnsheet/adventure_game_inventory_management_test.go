@@ -205,30 +205,6 @@ func TestInventoryManagementProcessor_ScanTurnSheet(t *testing.T) {
 			expectErrorMessage: "structured extraction failed",
 			requiresScanner:    true, // Error occurs during image processing
 		},
-		// TODO: (agent) Add test case with real scanned image when test data exists. Use a fixture image (e.g. testdata/adventure_game_inventory_management_turn_sheet_filled.jpg) and expected InventoryManagementData; ensure scanner extraction is asserted. Blocked on test asset availability.
-		// {
-		// 	name: "given real scanned image when scanning then inventory actions extracted",
-		// 	imageDataFn: func() ([]byte, error) {
-		// 		return os.ReadFile("testdata/adventure_game_inventory_management_turn_sheet_filled.jpg")
-		// 	},
-		// 	sheetDataFn: func() ([]byte, error) {
-		// 		data := turnsheet.InventoryManagementData{
-		// 			CharacterName: "Aria the Mage",
-		// 			CurrentInventory: []turnsheet.InventoryItem{
-		// 				{ItemInstanceID: "item-1", ItemName: "Crystal Key"},
-		// 			},
-		// 			LocationItems: []turnsheet.LocationItem{
-		// 				{ItemInstanceID: "item-2", ItemName: "Healing Potion"},
-		// 			},
-		// 		}
-		// 		return json.Marshal(data)
-		// 	},
-		// 	expectError:     false,
-		// 	expectedScanData: &turnsheet.InventoryManagementScanData{
-		// 		PickUp: []string{"item-2"},
-		// 	},
-		// 	requiresScanner: true,
-		// },
 	}
 
 	for _, tt := range tests {

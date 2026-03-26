@@ -56,11 +56,7 @@
               Defaults to the game's setting ({{ formatTurnDuration(selectedGame?.turn_duration_hours) }}).
             </p>
           </div>
-          <!-- TODO: (agent) Add optional instance name/description fields when the create-instance API supports them; include in instanceData in createInstance() and ensure backend/mapper accept and persist them. -->
         </div>
-
-        <!-- Game Type Configuration Section - REMOVED -->
-        <!-- Game parameters are now configured after instance creation, not during creation -->
 
         <div class="form-actions">
           <Button type="submit" :disabled="loading" variant="primary">
@@ -86,21 +82,14 @@ import { useRoute, useRouter } from 'vue-router';
 import { useGamesStore } from '../../stores/games';
 import { useGameInstancesStore } from '../../stores/gameInstances';
 import Button from '../../components/Button.vue';
-// Removed: import { useGameParametersStore } from '../../stores/gameParameters';
-// Removed: import ConfigurationField from '../../components/ConfigurationField.vue';
 
 const route = useRoute();
 const router = useRouter();
 const gamesStore = useGamesStore();
 const gameInstancesStore = useGameInstancesStore();
-// Removed: const gameParametersStore = useGameParametersStore();
 
 const gameId = computed(() => route.params.gameId);
 const selectedGame = computed(() => gamesStore.games.find(g => g.id === gameId.value));
-// Removed: const gameParameters = computed(() => {
-//   if (!selectedGame.value) return [];
-//   return gameParametersStore.getParametersByGameType(selectedGame.value.game_type);
-// });
 
 const loading = ref(false);
 const error = ref('');
@@ -112,15 +101,6 @@ const initTurnDuration = () => {
     turnDurationHours.value = selectedGame.value.turn_duration_hours;
   }
 };
-
-// Removed: const form = ref({
-//   // Basic instance configuration
-//   name: '',
-//   description: '',
-//   // Removed: parameters: {} // Game parameters are now configured after instance creation
-// });
-
-// Removed: const configValidationErrors = ref({});
 
 // Helper function to format turn duration
 const formatTurnDuration = (hours) => {

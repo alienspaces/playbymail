@@ -166,8 +166,6 @@ func (w *GameTurnProcessingWorker) DoWork(ctx context.Context, m *domain.Domain,
 		return nil, err
 	}
 
-	// TODO: (agent) Add further post-run processing jobs if needed (e.g. non-email notifications). Email notifications for new turn sheets are already queued below when DeliveryEmail is set.
-
 	// Complete the turn
 	gameInstanceRec, err = m.CompleteTurn(j.Args.GameInstanceID)
 	if err != nil {
