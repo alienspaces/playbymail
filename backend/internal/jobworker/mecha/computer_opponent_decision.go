@@ -202,13 +202,11 @@ func (e *ComputerOpponentDecisionEngine) buildGameStateContext(
 
 	// Build chassis cache for speed lookups.
 	chassisCache := make(map[string]*mecha_record.MechaChassis)
-	allMechsForChassis := append(ownMechs, func() []*mecha_record.MechaMechInstance {
-		var ms []*mecha_record.MechaMechInstance
-		for _, em := range enemyMechs {
-			ms = append(ms, em.Instance)
-		}
-		return ms
-	}()...)
+	allMechsForChassis := make([]*mecha_record.MechaMechInstance, 0, len(ownMechs)+len(enemyMechs))
+	allMechsForChassis = append(allMechsForChassis, ownMechs...)
+	for _, em := range enemyMechs {
+		allMechsForChassis = append(allMechsForChassis, em.Instance)
+	}
 	for _, m := range allMechsForChassis {
 		if m.MechaChassisID == "" || chassisCache[m.MechaChassisID] != nil {
 			continue
