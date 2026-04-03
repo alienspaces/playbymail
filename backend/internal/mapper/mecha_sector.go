@@ -29,6 +29,7 @@ func MechaSectorRequestToRecord(l logger.Logger, r *http.Request, rec *mecha_rec
 			rec.TerrainType = mecha_record.SectorTerrainTypeOpen
 		}
 		rec.Elevation = req.Elevation
+		rec.CoverModifier = req.CoverModifier
 		rec.IsStartingSector = req.IsStartingSector
 	default:
 		return nil, fmt.Errorf("unsupported HTTP method")
@@ -46,6 +47,7 @@ func MechaSectorRecordToResponseData(l logger.Logger, rec *mecha_record.MechaSec
 		Description:      rec.Description,
 		TerrainType:      rec.TerrainType,
 		Elevation:        rec.Elevation,
+		CoverModifier:    rec.CoverModifier,
 		IsStartingSector: rec.IsStartingSector,
 		CreatedAt:        rec.CreatedAt,
 		UpdatedAt:        nulltime.ToTimePtr(rec.UpdatedAt),

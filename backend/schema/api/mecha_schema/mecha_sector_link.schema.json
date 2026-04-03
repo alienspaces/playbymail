@@ -16,9 +16,6 @@
         "to_mecha_sector_id": {
             "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
         },
-        "cover_modifier": {
-            "type": "integer"
-        },
         "created_at": {
             "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/created_at"
         },
@@ -29,6 +26,12 @@
             "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/updated_at"
         }
     },
-    "required": ["id", "game_id", "from_mecha_sector_id", "to_mecha_sector_id", "cover_modifier", "created_at"],
+    "required": [
+        "id",
+        "game_id",
+        "from_mecha_sector_id",
+        "to_mecha_sector_id",
+        "created_at"
+    ],
     "additionalProperties": false
 }

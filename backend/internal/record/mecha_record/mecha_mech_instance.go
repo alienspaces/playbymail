@@ -24,6 +24,7 @@ const (
 	FieldMechaMechInstanceCurrentStructure      string = "current_structure"
 	FieldMechaMechInstanceCurrentHeat           string = "current_heat"
 	FieldMechaMechInstancePilotSkill            string = "pilot_skill"
+	FieldMechaMechInstanceExperiencePoints      string = "experience_points"
 	FieldMechaMechInstanceStatus                string = "status"
 	FieldMechaMechInstanceWeaponConfig          string = "weapon_config"
 	FieldMechaMechInstanceIsRefitting           string = "is_refitting"
@@ -51,6 +52,7 @@ type MechaMechInstance struct {
 	CurrentStructure      int                 `db:"current_structure"`
 	CurrentHeat           int                 `db:"current_heat"`
 	PilotSkill            int                 `db:"pilot_skill"`
+	ExperiencePoints      int                 `db:"experience_points"`
 	Status                string              `db:"status"`
 	WeaponConfig          []WeaponConfigEntry `db:"-"`
 	WeaponConfigJSON      []byte              `db:"weapon_config"`
@@ -69,6 +71,7 @@ func (r *MechaMechInstance) ToNamedArgs() pgx.NamedArgs {
 	args[FieldMechaMechInstanceCurrentStructure] = r.CurrentStructure
 	args[FieldMechaMechInstanceCurrentHeat] = r.CurrentHeat
 	args[FieldMechaMechInstancePilotSkill] = r.PilotSkill
+	args[FieldMechaMechInstanceExperiencePoints] = r.ExperiencePoints
 	args[FieldMechaMechInstanceStatus] = r.Status
 	weaponJSON, _ := json.Marshal(r.WeaponConfig)
 	args[FieldMechaMechInstanceWeaponConfig] = string(weaponJSON)

@@ -389,104 +389,104 @@ func mechaGameConfigs() []harness.GameConfig {
 					Reference:     DemoMechLinkDropzoneToRidgeNorthRef,
 					FromSectorRef: DemoMechSectorDropzoneRef,
 					ToSectorRef:   DemoMechSectorRidgeNorthRef,
-					Record:        &mecha_record.MechaSectorLink{CoverModifier: 0},
+					Record:        &mecha_record.MechaSectorLink{},
 				},
 				{
 					Reference:     DemoMechLinkRidgeNorthToDropzoneRef,
 					FromSectorRef: DemoMechSectorRidgeNorthRef,
 					ToSectorRef:   DemoMechSectorDropzoneRef,
-					Record:        &mecha_record.MechaSectorLink{CoverModifier: 0},
+					Record:        &mecha_record.MechaSectorLink{},
 				},
 				// Drop Zone <-> Ash Valley
 				{
 					Reference:     DemoMechLinkDropzoneToValleyRef,
 					FromSectorRef: DemoMechSectorDropzoneRef,
 					ToSectorRef:   DemoMechSectorValleyRef,
-					Record:        &mecha_record.MechaSectorLink{CoverModifier: 0},
+					Record:        &mecha_record.MechaSectorLink{},
 				},
 				{
 					Reference:     DemoMechLinkValleyToDropzoneRef,
 					FromSectorRef: DemoMechSectorValleyRef,
 					ToSectorRef:   DemoMechSectorDropzoneRef,
-					Record:        &mecha_record.MechaSectorLink{CoverModifier: 0},
+					Record:        &mecha_record.MechaSectorLink{},
 				},
 				// North Ridge <-> South Ridge
 				{
 					Reference:     DemoMechLinkRidgeNorthToRidgeSouthRef,
 					FromSectorRef: DemoMechSectorRidgeNorthRef,
 					ToSectorRef:   DemoMechSectorRidgeSouthRef,
-					Record:        &mecha_record.MechaSectorLink{CoverModifier: 1},
+					Record:        &mecha_record.MechaSectorLink{},
 				},
 				{
 					Reference:     DemoMechLinkRidgeSouthToRidgeNorthRef,
 					FromSectorRef: DemoMechSectorRidgeSouthRef,
 					ToSectorRef:   DemoMechSectorRidgeNorthRef,
-					Record:        &mecha_record.MechaSectorLink{CoverModifier: 1},
+					Record:        &mecha_record.MechaSectorLink{},
 				},
 				// South Ridge <-> Refinery
 				{
 					Reference:     DemoMechLinkRidgeSouthToRefineryRef,
 					FromSectorRef: DemoMechSectorRidgeSouthRef,
 					ToSectorRef:   DemoMechSectorRefineryRef,
-					Record:        &mecha_record.MechaSectorLink{CoverModifier: 2},
+					Record:        &mecha_record.MechaSectorLink{},
 				},
 				{
 					Reference:     DemoMechLinkRefineryToRidgeSouthRef,
 					FromSectorRef: DemoMechSectorRefineryRef,
 					ToSectorRef:   DemoMechSectorRidgeSouthRef,
-					Record:        &mecha_record.MechaSectorLink{CoverModifier: 0},
+					Record:        &mecha_record.MechaSectorLink{},
 				},
 				// Ash Valley <-> Crossroads
 				{
 					Reference:     DemoMechLinkValleyToCrossroadsRef,
 					FromSectorRef: DemoMechSectorValleyRef,
 					ToSectorRef:   DemoMechSectorCrossroadsRef,
-					Record:        &mecha_record.MechaSectorLink{CoverModifier: 0},
+					Record:        &mecha_record.MechaSectorLink{},
 				},
 				{
 					Reference:     DemoMechLinkCrossroadsToValleyRef,
 					FromSectorRef: DemoMechSectorCrossroadsRef,
 					ToSectorRef:   DemoMechSectorValleyRef,
-					Record:        &mecha_record.MechaSectorLink{CoverModifier: 0},
+					Record:        &mecha_record.MechaSectorLink{},
 				},
 				// Crossroads <-> Scorched Forest
 				{
 					Reference:     DemoMechLinkCrossroadsToForestRef,
 					FromSectorRef: DemoMechSectorCrossroadsRef,
 					ToSectorRef:   DemoMechSectorForestRef,
-					Record:        &mecha_record.MechaSectorLink{CoverModifier: 1},
+					Record:        &mecha_record.MechaSectorLink{},
 				},
 				{
 					Reference:     DemoMechLinkForestToCrossroadsRef,
 					FromSectorRef: DemoMechSectorForestRef,
 					ToSectorRef:   DemoMechSectorCrossroadsRef,
-					Record:        &mecha_record.MechaSectorLink{CoverModifier: 0},
+					Record:        &mecha_record.MechaSectorLink{},
 				},
 				// Refinery <-> Citadel
 				{
 					Reference:     DemoMechLinkRefinerytoCitadelRef,
 					FromSectorRef: DemoMechSectorRefineryRef,
 					ToSectorRef:   DemoMechSectorCitadelRef,
-					Record:        &mecha_record.MechaSectorLink{CoverModifier: 2},
+					Record:        &mecha_record.MechaSectorLink{},
 				},
 				{
 					Reference:     DemoMechLinkCitadelToRefineryRef,
 					FromSectorRef: DemoMechSectorCitadelRef,
 					ToSectorRef:   DemoMechSectorRefineryRef,
-					Record:        &mecha_record.MechaSectorLink{CoverModifier: 2},
+					Record:        &mecha_record.MechaSectorLink{},
 				},
 			// Scorched Forest <-> Citadel
 			{
 				Reference:     DemoMechLinkForestToCitadelRef,
 				FromSectorRef: DemoMechSectorForestRef,
 				ToSectorRef:   DemoMechSectorCitadelRef,
-				Record:        &mecha_record.MechaSectorLink{CoverModifier: 1},
+				Record:        &mecha_record.MechaSectorLink{},
 			},
 			{
 				Reference:     DemoMechLinkCitadelToForestRef,
 				FromSectorRef: DemoMechSectorCitadelRef,
 				ToSectorRef:   DemoMechSectorForestRef,
-				Record:        &mecha_record.MechaSectorLink{CoverModifier: 1},
+				Record:        &mecha_record.MechaSectorLink{},
 			},
 		},
 		MechaComputerOpponentConfigs: []harness.MechaComputerOpponentConfig{
@@ -502,69 +502,69 @@ func mechaGameConfigs() []harness.GameConfig {
 		},
 		MechaLanceConfigs: []harness.MechaLanceConfig{
 			{
-				Reference:       DemoMechaPlayerStarterLanceRef,
-				IsPlayerStarter: true,
+				Reference: DemoMechaPlayerStarterLanceRef,
+				LanceType: mecha_record.LanceTypeStarter,
 				Record: &mecha_record.MechaLance{
 					Name:        "Strike Lance",
 					Description: "Standard assault lance issued to incoming commanders. One light recon mech and one medium fire-support mech.",
 				},
-			LanceMechConfigs: []harness.MechaLanceMechConfig{
-				{
-					Reference:  DemoMechaPlayerStarterMech1Ref,
-					ChassisRef: DemoMechChassisViperRef,
-					WeaponConfigRefs: []harness.MechaLanceMechWeaponRef{
-						{WeaponRef: DemoMechWeaponLightPulseRef, SlotLocation: "left-arm"},
-						{WeaponRef: DemoMechWeaponChaingunRef, SlotLocation: "right-arm"},
+				LanceMechConfigs: []harness.MechaLanceMechConfig{
+					{
+						Reference:  DemoMechaPlayerStarterMech1Ref,
+						ChassisRef: DemoMechChassisViperRef,
+						WeaponConfigRefs: []harness.MechaLanceMechWeaponRef{
+							{WeaponRef: DemoMechWeaponLightPulseRef, SlotLocation: "left-arm"},
+							{WeaponRef: DemoMechWeaponChaingunRef, SlotLocation: "right-arm"},
+						},
+						Record: &mecha_record.MechaLanceMech{
+							Callsign: "Strike-1",
+						},
 					},
-					Record: &mecha_record.MechaLanceMech{
-						Callsign: "Strike-1",
-					},
-				},
-				{
-					Reference:  DemoMechaPlayerStarterMech2Ref,
-					ChassisRef: DemoMechChassisRangerRef,
-					WeaponConfigRefs: []harness.MechaLanceMechWeaponRef{
-						{WeaponRef: DemoMechWeaponPulseRef, SlotLocation: "left-torso"},
-						{WeaponRef: DemoMechWeaponRocketPackRef, SlotLocation: "right-arm"},
-					},
-					Record: &mecha_record.MechaLanceMech{
-						Callsign: "Strike-2",
-					},
-				},
-			},
-		},
-		{
-			Reference:           DemoMechaComputerOpponentLanceRef,
-			ComputerOpponentRef: DemoMechaComputerOpponentRef,
-			Record: &mecha_record.MechaLance{
-				Name:        "Garrison Heavy Lance",
-				Description: "The Citadel's primary defensive lance. Well-armoured heavies backed by lighter recon elements.",
-			},
-			LanceMechConfigs: []harness.MechaLanceMechConfig{
-				{
-					Reference:  DemoMechaComputerOpponentMech1Ref,
-					ChassisRef: DemoMechChassisCrusherRef,
-					WeaponConfigRefs: []harness.MechaLanceMechWeaponRef{
-						{WeaponRef: DemoMechWeaponPlasmaRef, SlotLocation: "left-torso"},
-						{WeaponRef: DemoMechWeaponRotaryCannonRef, SlotLocation: "right-torso"},
-					},
-					Record: &mecha_record.MechaLanceMech{
-						Callsign: "Garrison-1",
-					},
-				},
-				{
-					Reference:  DemoMechaComputerOpponentMech2Ref,
-					ChassisRef: DemoMechChassisRangerRef,
-					WeaponConfigRefs: []harness.MechaLanceMechWeaponRef{
-						{WeaponRef: DemoMechWeaponPulseRef, SlotLocation: "left-torso"},
-						{WeaponRef: DemoMechWeaponRocketPackRef, SlotLocation: "right-arm"},
-					},
-					Record: &mecha_record.MechaLanceMech{
-						Callsign: "Garrison-2",
+					{
+						Reference:  DemoMechaPlayerStarterMech2Ref,
+						ChassisRef: DemoMechChassisRangerRef,
+						WeaponConfigRefs: []harness.MechaLanceMechWeaponRef{
+							{WeaponRef: DemoMechWeaponPulseRef, SlotLocation: "left-torso"},
+							{WeaponRef: DemoMechWeaponRocketPackRef, SlotLocation: "right-arm"},
+						},
+						Record: &mecha_record.MechaLanceMech{
+							Callsign: "Strike-2",
+						},
 					},
 				},
 			},
-		},
+			{
+				Reference: DemoMechaComputerOpponentLanceRef,
+				LanceType: mecha_record.LanceTypeOpponent,
+				Record: &mecha_record.MechaLance{
+					Name:        "Garrison Heavy Lance",
+					Description: "The Citadel's primary defensive lance. Well-armoured heavies backed by lighter recon elements.",
+				},
+				LanceMechConfigs: []harness.MechaLanceMechConfig{
+					{
+						Reference:  DemoMechaComputerOpponentMech1Ref,
+						ChassisRef: DemoMechChassisCrusherRef,
+						WeaponConfigRefs: []harness.MechaLanceMechWeaponRef{
+							{WeaponRef: DemoMechWeaponPlasmaRef, SlotLocation: "left-torso"},
+							{WeaponRef: DemoMechWeaponRotaryCannonRef, SlotLocation: "right-torso"},
+						},
+						Record: &mecha_record.MechaLanceMech{
+							Callsign: "Garrison-1",
+						},
+					},
+					{
+						Reference:  DemoMechaComputerOpponentMech2Ref,
+						ChassisRef: DemoMechChassisRangerRef,
+						WeaponConfigRefs: []harness.MechaLanceMechWeaponRef{
+							{WeaponRef: DemoMechWeaponPulseRef, SlotLocation: "left-torso"},
+							{WeaponRef: DemoMechWeaponRocketPackRef, SlotLocation: "right-arm"},
+						},
+						Record: &mecha_record.MechaLanceMech{
+							Callsign: "Garrison-2",
+						},
+					},
+				},
+			},
 		},
 	},
 }

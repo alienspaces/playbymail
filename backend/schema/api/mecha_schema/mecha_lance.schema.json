@@ -10,17 +10,9 @@
         "game_id": {
             "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
         },
-        "account_id": {
-            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
-        },
-        "account_user_id": {
-            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
-        },
-        "mecha_computer_opponent_id": {
-            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
-        },
-        "is_player_starter": {
-            "type": "boolean"
+        "lance_type": {
+            "type": "string",
+            "enum": ["starter", "opponent"]
         },
         "name": {
             "type": "string",
@@ -40,6 +32,6 @@
             "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/updated_at"
         }
     },
-    "required": ["id", "game_id", "is_player_starter", "name", "description", "created_at"],
+    "required": ["id", "game_id", "lance_type", "name", "description", "created_at"],
     "additionalProperties": false
 }

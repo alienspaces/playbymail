@@ -18,16 +18,24 @@ const (
 	autoRepairPercent    = 25
 )
 
+// pilotSkillThresholds maps pilot skill level (index) to the total XP required.
+// pilotSkillThresholds[skill] = minimum total XP to reach that skill level.
+var pilotSkillThresholds = []int{0, 3, 8, 15, 24, 35, 48, 63, 80, 99}
+
 // runEndOfTurn runs the end-of-turn lifecycle for all lances in a game instance:
 //  1. Heat dissipation per mech
 //  2. Auto-repair armor (field repairs)
-//  3. Complete refits (apply queued changes, clear is_refitting)
-//  4. Supply point accrual for player lances
-//  5. Append lifecycle TurnEvents to each lance instance
+//  3. XP application and pilot skill level-up
+//  4. Complete refits (apply queued changes, clear is_refitting)
+//  5. Supply point accrual for player lances
+//  6. Append lifecycle TurnEvents to each lance instance
+//
+// xpMap is the XP earned by each mech this turn (mech instance ID → XP). May be nil.
 func (p *Mecha) runEndOfTurn(
 	_ context.Context,
 	l logger.Logger,
 	gameInstanceRec *game_record.GameInstance,
+	xpMap map[string]int,
 ) error {
 	l = l.WithFunctionContext("Mecha/runEndOfTurn")
 
@@ -47,12 +55,6 @@ func (p *Mecha) runEndOfTurn(
 	})
 	if err != nil {
 		return fmt.Errorf("failed to load lance instances: %w", err)
-	}
-
-	// Map lance instance ID → record
-	lanceMap := make(map[string]*mecha_record.MechaLanceInstance, len(allLanceInsts))
-	for _, li := range allLanceInsts {
-		lanceMap[li.ID] = li
 	}
 
 	// Events keyed by lance instance ID
@@ -107,7 +109,24 @@ func (p *Mecha) runEndOfTurn(
 			}
 		}
 
-		// 3. Complete refits (clear flag; actual changes are applied by the
+		// 3. Apply XP and check for pilot skill level-up.
+		if xpMap != nil {
+			if earned := xpMap[inst.ID]; earned > 0 {
+				inst.ExperiencePoints += earned
+				// Check if new XP total crosses a skill threshold.
+				for nextSkill := inst.PilotSkill + 1; nextSkill < len(pilotSkillThresholds); nextSkill++ {
+					if inst.ExperiencePoints >= pilotSkillThresholds[nextSkill] {
+						inst.PilotSkill = nextSkill
+						appendLifecycleEvent(eventsByLance, inst.MechaLanceInstanceID,
+							fmt.Sprintf("%s pilot skill increased to %d!", inst.Callsign, inst.PilotSkill))
+					} else {
+						break
+					}
+				}
+			}
+		}
+
+		// 4. Complete refits (clear flag; actual changes are applied by the
 		// management processor before this runs)
 		if inst.IsRefitting {
 			inst.IsRefitting = false
@@ -120,7 +139,7 @@ func (p *Mecha) runEndOfTurn(
 		}
 	}
 
-	// 4. Supply point accrual for player lances + persist events
+	// 5. Supply point accrual for player lances + persist events
 	for _, lanceInst := range allLanceInsts {
 		// Only player-owned lances accrue supply points
 		if lanceInst.GameSubscriptionInstanceID.Valid {

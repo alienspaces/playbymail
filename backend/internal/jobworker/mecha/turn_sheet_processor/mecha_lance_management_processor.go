@@ -248,11 +248,12 @@ func (p *MechaLanceManagementProcessor) CreateNextTurnSheet(
 		return nil, fmt.Errorf("failed to get lance: %w", err)
 	}
 
-	// Only create management sheets for player-owned lances
-	if !lanceRec.AccountUserID.Valid || lanceRec.AccountUserID.String == "" {
-		l.Info("lance >%s< has no account user — skipping management sheet (AI lance)", lanceInstance.ID)
+	// Only create management sheets for player-owned lances (those with a subscription instance)
+	if !lanceInstance.GameSubscriptionInstanceID.Valid {
+		l.Info("lance instance >%s< has no subscription — skipping management sheet (AI lance)", lanceInstance.ID)
 		return nil, nil
 	}
+	_ = lanceRec // only needed for mechInstances below
 
 	mechInstances, err := p.Domain.GetManyMechaMechInstanceRecs(&coresql.Options{
 		Params: []coresql.Param{
@@ -298,9 +299,9 @@ func (p *MechaLanceManagementProcessor) buildManagementSheet(
 		return nil, fmt.Errorf("failed to get game: %w", err)
 	}
 
-	accountUserRec, err := p.Domain.GetAccountUserRec(lanceRec.AccountUserID.String, nil)
+	accountUserRec, err := lanceInstanceAccountUser(p.Domain, lanceInstance)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get account user: %w", err)
+		return nil, fmt.Errorf("failed to get account user for lance instance >%s<: %w", lanceInstance.ID, err)
 	}
 
 	// Load weapon catalog
@@ -413,7 +414,7 @@ func (p *MechaLanceManagementProcessor) buildManagementSheet(
 	gameTurnSheet := &game_record.GameTurnSheet{
 		GameID:           gameRec.ID,
 		AccountID:        accountUserRec.AccountID,
-		AccountUserID:    lanceRec.AccountUserID.String,
+		AccountUserID:    accountUserRec.ID,
 		TurnNumber:       turnNumber,
 		SheetType:        mecha_record.MechaTurnSheetTypeLanceManagement,
 		SheetOrder:       sheetOrder,

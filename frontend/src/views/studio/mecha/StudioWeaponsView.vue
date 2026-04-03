@@ -34,22 +34,30 @@
             </div>
             <div class="form-row">
               <div class="form-group half">
-                <label>Damage</label>
-                <input v-model.number="modalForm.damage" type="number" min="0" />
+                <label>Damage <span class="required">*</span></label>
+                <input v-model.number="modalForm.damage" type="number" min="1" required />
               </div>
               <div class="form-group half">
-                <label>Heat Generated</label>
-                <input v-model.number="modalForm.heat_generated" type="number" min="0" />
+                <label>Heat Cost <span class="required">*</span></label>
+                <input v-model.number="modalForm.heat_cost" type="number" min="0" required />
               </div>
             </div>
             <div class="form-row">
               <div class="form-group half">
-                <label>Range</label>
-                <input v-model.number="modalForm.range" type="number" min="0" />
+                <label>Range Band <span class="required">*</span></label>
+                <select v-model="modalForm.range_band" required>
+                  <option value="short">Short (brawl)</option>
+                  <option value="medium">Medium (versatile)</option>
+                  <option value="long">Long (standoff)</option>
+                </select>
               </div>
               <div class="form-group half">
-                <label>Tonnage</label>
-                <input v-model.number="modalForm.tonnage" type="number" min="0" />
+                <label>Mount Size <span class="required">*</span></label>
+                <select v-model="modalForm.mount_size" required>
+                  <option value="small">Small</option>
+                  <option value="medium">Medium</option>
+                  <option value="large">Large</option>
+                </select>
               </div>
             </div>
             <div class="modal-actions">
@@ -87,14 +95,14 @@ const { selectedGame } = storeToRefs(gamesStore)
 const columns = [
   { key: 'name', label: 'Name' },
   { key: 'damage', label: 'Damage' },
-  { key: 'heat_generated', label: 'Heat' },
-  { key: 'range', label: 'Range' },
-  { key: 'tonnage', label: 'Tonnage' },
+  { key: 'heat_cost', label: 'Heat' },
+  { key: 'range_band', label: 'Range' },
+  { key: 'mount_size', label: 'Mount' },
 ]
 
 const showModal = ref(false)
 const modalMode = ref('create')
-const modalForm = ref({ name: '', description: '', damage: 0, heat_generated: 0, range: 1, tonnage: 0 })
+const modalForm = ref({ name: '', description: '', damage: null, heat_cost: null, range_band: 'medium', mount_size: 'medium' })
 const modalError = ref('')
 const showDeleteModal = ref(false)
 const toDelete = ref(null)
@@ -103,7 +111,7 @@ watch(() => selectedGame.value, (g) => { if (g) store.fetchWeapons(g.id) }, { im
 
 function openCreate() {
   modalMode.value = 'create'
-  modalForm.value = { name: '', description: '', damage: 0, heat_generated: 0, range: 1, tonnage: 0 }
+  modalForm.value = { name: '', description: '', damage: null, heat_cost: null, range_band: 'medium', mount_size: 'medium' }
   modalError.value = ''
   showModal.value = true
 }
@@ -122,7 +130,7 @@ function closeModal() {
 
 async function handleSubmit(formData) {
   modalError.value = ''
-  const allowed = ['name', 'description', 'damage', 'heat_generated', 'range', 'tonnage']
+  const allowed = ['name', 'description', 'damage', 'heat_cost', 'range_band', 'mount_size']
   const data = Object.fromEntries(allowed.map(k => [k, formData[k]]))
   try {
     if (modalMode.value === 'create') {
@@ -160,7 +168,7 @@ function getActions(row) {
 .modal-form { display: flex; flex-direction: column; gap: 0.25rem; }
 .form-group { margin-bottom: var(--space-sm); }
 .form-group label { display: block; margin-bottom: var(--space-xs); font-weight: var(--font-weight-semibold); }
-.form-group input, .form-group textarea { width: 100%; padding: var(--space-sm); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--font-size-base); }
+.form-group input, .form-group textarea, .form-group select { width: 100%; padding: var(--space-sm); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--font-size-base); }
 .form-group textarea { resize: vertical; }
 .form-row { display: flex; gap: var(--space-sm); }
 .form-row .half { flex: 1; }

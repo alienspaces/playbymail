@@ -208,6 +208,20 @@ func (p *MechaOrdersProcessor) processMechOrderWithEvent(
 		return nil
 	}
 
+	// Validate that the destination is within the mech's speed budget.
+	chassisRec, err := p.Domain.GetMechaChassisRec(mechInstanceRec.MechaChassisID, nil)
+	if err != nil {
+		l.Warn("failed to get chassis >%s< for movement validation: %v", mechInstanceRec.MechaChassisID, err)
+		return nil
+	}
+	hops, reachable := p.IsSectorReachableWithinSpeed(l, gameInstanceRec.ID, mechInstanceRec.MechaSectorInstanceID, order.MoveToSectorInstanceID, chassisRec.Speed)
+	if !reachable {
+		l.Warn("mech >%s< cannot reach sector >%s< within speed budget %d (distance > %d hops)",
+			order.MechInstanceID, order.MoveToSectorInstanceID, chassisRec.Speed, chassisRec.Speed)
+		return nil
+	}
+	_ = hops
+
 	sectorRec, err := p.Domain.GetMechaSectorRec(sectorInstanceRec.MechaSectorID, nil)
 	if err != nil {
 		l.Warn("failed to get sector design >%s<: %v", sectorInstanceRec.MechaSectorID, err)
@@ -267,7 +281,6 @@ func (p *MechaOrdersProcessor) ExtractAttackDeclarations(
 	return attacks, nil
 }
 
-
 // CreateNextTurnSheet creates a new orders turn sheet for a lance instance (implements TurnSheetProcessor interface).
 func (p *MechaOrdersProcessor) CreateNextTurnSheet(ctx context.Context, gameInstanceRec *game_record.GameInstance, lanceInstance *mecha_record.MechaLanceInstance) (*game_record.GameTurnSheet, error) {
 	l := p.Logger.WithFunctionContext("MechaOrdersProcessor/CreateNextTurnSheet")
@@ -281,10 +294,10 @@ func (p *MechaOrdersProcessor) CreateNextTurnSheet(ctx context.Context, gameInst
 		return nil, fmt.Errorf("failed to get lance: %w", err)
 	}
 
-	// Step 2: Get the account user for the lance owner
-	accountUserRec, err := p.Domain.GetAccountUserRec(lanceRec.AccountUserID.String, nil)
+	// Step 2: Get the account user for the lance owner via subscription chain
+	accountUserRec, err := lanceInstanceAccountUser(p.Domain, lanceInstance)
 	if err != nil {
-		l.Warn("failed to get account user >%v<", err)
+		l.Warn("failed to get account user for lance instance >%s< >%v<", lanceInstance.ID, err)
 		return nil, fmt.Errorf("failed to get account user: %w", err)
 	}
 
@@ -331,12 +344,36 @@ func (p *MechaOrdersProcessor) CreateNextTurnSheet(ctx context.Context, gameInst
 		}
 	}
 
-	// Step 7: Get adjacent sector options from the sectors occupied by this lance's mechs
-	availableSectors, err := p.getAdjacentSectorOptions(l, gameInstanceRec.ID, sectorInstanceIDs)
-	if err != nil {
-		l.Warn("failed to get adjacent sectors >%v<", err)
-		// Non-fatal: continue with no movement options
+	// Step 7: Compute per-mech reachable sectors within each mech's speed budget.
+	// We also build a union for the legacy AvailableSectors field.
+	availableSectorsSeen := make(map[string]bool)
+	var availableSectors []turnsheet.SectorOption
+	for i := range lanceMechs {
+		mech := &lanceMechs[i]
+		// Find the matching mech instance to get the current sector and chassis speed.
+		var mechInst *mecha_record.MechaMechInstance
+		for _, mi := range mechInstances {
+			if mi.ID == mech.MechInstanceID {
+				mechInst = mi
+				break
+			}
+		}
+		if mechInst == nil {
+			continue
+		}
+		reachable, err := p.getReachableSectorOptions(l, gameInstanceRec.ID, mechInst.MechaSectorInstanceID, mech.Speed)
+		if err != nil {
+			l.Warn("failed to get reachable sectors for mech >%s< >%v<", mech.MechInstanceID, err)
+		}
+		mech.ReachableSectors = reachable
+		for _, opt := range reachable {
+			if !availableSectorsSeen[opt.SectorInstanceID] {
+				availableSectorsSeen[opt.SectorInstanceID] = true
+				availableSectors = append(availableSectors, opt)
+			}
+		}
 	}
+	_ = sectorInstanceIDs
 
 	// Step 8: Get enemy mech instances visible to this lance
 	enemyMechs, err := p.getEnemyMechOptions(l, gameInstanceRec, lanceInstance)
@@ -395,7 +432,7 @@ func (p *MechaOrdersProcessor) CreateNextTurnSheet(ctx context.Context, gameInst
 	gameTurnSheet := &game_record.GameTurnSheet{
 		GameID:           gameInstanceRec.GameID,
 		AccountID:        accountUserRec.AccountID,
-		AccountUserID:    lanceRec.AccountUserID.String,
+		AccountUserID:    accountUserRec.ID,
 		TurnNumber:       gameInstanceRec.CurrentTurn,
 		SheetType:        mecha_record.MechaTurnSheetTypeOrders,
 		SheetOrder:       mecha_record.MechaSheetOrderForType(mecha_record.MechaTurnSheetTypeOrders),
@@ -412,9 +449,9 @@ func (p *MechaOrdersProcessor) CreateNextTurnSheet(ctx context.Context, gameInst
 
 	// Step 11: Link the game_turn_sheet to the lance instance via mecha_turn_sheet
 	mechaTurnSheet := &mecha_record.MechaTurnSheet{
-		GameID:                     gameInstanceRec.GameID,
+		GameID:               gameInstanceRec.GameID,
 		MechaLanceInstanceID: lanceInstance.ID,
-		GameTurnSheetID:            createdTurnSheetRec.ID,
+		GameTurnSheetID:      createdTurnSheetRec.ID,
 	}
 
 	_, err = p.Domain.CreateMechaTurnSheetRec(mechaTurnSheet)
@@ -426,20 +463,37 @@ func (p *MechaOrdersProcessor) CreateNextTurnSheet(ctx context.Context, gameInst
 	return createdTurnSheetRec, nil
 }
 
-// getAdjacentSectorOptions collects the sectors adjacent to the given sector instance IDs.
-func (p *MechaOrdersProcessor) getAdjacentSectorOptions(l logger.Logger, gameInstanceID string, sectorInstanceIDs []string) ([]turnsheet.SectorOption, error) {
-	var options []turnsheet.SectorOption
-	seen := make(map[string]bool)
+// getReachableSectorOptions returns all sector instances reachable from the given
+// starting sector within the given speed (number of hops), using BFS over sector links.
+func (p *MechaOrdersProcessor) getReachableSectorOptions(l logger.Logger, gameInstanceID string, startSectorInstanceID string, speed int) ([]turnsheet.SectorOption, error) {
+	if speed <= 0 {
+		return nil, nil
+	}
 
-	for _, sectorInstID := range sectorInstanceIDs {
-		sectorInstRec, err := p.Domain.GetMechaSectorInstanceRec(sectorInstID, nil)
-		if err != nil {
-			l.Warn("failed to get sector instance >%s< >%v<", sectorInstID, err)
+	type bfsNode struct {
+		sectorInstanceID string
+		depth            int
+	}
+
+	seen := map[string]bool{startSectorInstanceID: true}
+	queue := []bfsNode{{sectorInstanceID: startSectorInstanceID, depth: 0}}
+	var options []turnsheet.SectorOption
+
+	for len(queue) > 0 {
+		cur := queue[0]
+		queue = queue[1:]
+
+		if cur.depth >= speed {
 			continue
 		}
 
-		// Get sector links from this sector
-		sectorLinks, err := p.Domain.GetManyMechaSectorLinkRecs(&coresql.Options{
+		sectorInstRec, err := p.Domain.GetMechaSectorInstanceRec(cur.sectorInstanceID, nil)
+		if err != nil {
+			l.Warn("failed to get sector instance >%s< >%v<", cur.sectorInstanceID, err)
+			continue
+		}
+
+		links, err := p.Domain.GetManyMechaSectorLinkRecs(&coresql.Options{
 			Params: []coresql.Param{
 				{Col: mecha_record.FieldMechaSectorLinkFromMechaSectorID, Val: sectorInstRec.MechaSectorID},
 			},
@@ -449,8 +503,7 @@ func (p *MechaOrdersProcessor) getAdjacentSectorOptions(l logger.Logger, gameIns
 			continue
 		}
 
-		for _, link := range sectorLinks {
-			// Find the sector instance for the linked sector in this game instance
+		for _, link := range links {
 			linkedInstances, err := p.Domain.GetManyMechaSectorInstanceRecs(&coresql.Options{
 				Params: []coresql.Param{
 					{Col: mecha_record.FieldMechaSectorInstanceGameInstanceID, Val: gameInstanceID},
@@ -462,27 +515,91 @@ func (p *MechaOrdersProcessor) getAdjacentSectorOptions(l logger.Logger, gameIns
 				continue
 			}
 
-			linkedInstID := linkedInstances[0].ID
-			if seen[linkedInstID] {
+			destID := linkedInstances[0].ID
+			if seen[destID] {
 				continue
 			}
-			seen[linkedInstID] = true
+			seen[destID] = true
 
-			// Get sector name
 			sectorRec, err := p.Domain.GetMechaSectorRec(link.ToMechaSectorID, nil)
 			if err != nil {
-				l.Warn("failed to get sector >%s< >%v<", link.ToMechaSectorID, err)
+				l.Warn("failed to get sector design >%s< >%v<", link.ToMechaSectorID, err)
 				continue
 			}
 
 			options = append(options, turnsheet.SectorOption{
-				SectorInstanceID: linkedInstID,
+				SectorInstanceID: destID,
 				SectorName:       sectorRec.Name,
 			})
+			queue = append(queue, bfsNode{sectorInstanceID: destID, depth: cur.depth + 1})
 		}
 	}
 
 	return options, nil
+}
+
+// IsSectorReachableWithinSpeed returns (hops, true) if destID is reachable from fromID
+// within the given number of hops using BFS, or (0, false) if not reachable.
+func (p *MechaOrdersProcessor) IsSectorReachableWithinSpeed(l logger.Logger, gameInstanceID, fromSectorInstanceID, destSectorInstanceID string, speed int) (int, bool) {
+	if fromSectorInstanceID == destSectorInstanceID {
+		return 0, true
+	}
+
+	type bfsNode struct {
+		sectorInstanceID string
+		depth            int
+	}
+
+	seen := map[string]bool{fromSectorInstanceID: true}
+	queue := []bfsNode{{sectorInstanceID: fromSectorInstanceID, depth: 0}}
+
+	for len(queue) > 0 {
+		cur := queue[0]
+		queue = queue[1:]
+
+		if cur.depth >= speed {
+			continue
+		}
+
+		sectorInstRec, err := p.Domain.GetMechaSectorInstanceRec(cur.sectorInstanceID, nil)
+		if err != nil {
+			l.Warn("failed to get sector instance >%s< for speed check: %v", cur.sectorInstanceID, err)
+			continue
+		}
+
+		links, err := p.Domain.GetManyMechaSectorLinkRecs(&coresql.Options{
+			Params: []coresql.Param{
+				{Col: mecha_record.FieldMechaSectorLinkFromMechaSectorID, Val: sectorInstRec.MechaSectorID},
+			},
+		})
+		if err != nil {
+			continue
+		}
+
+		for _, link := range links {
+			linkedInstances, err := p.Domain.GetManyMechaSectorInstanceRecs(&coresql.Options{
+				Params: []coresql.Param{
+					{Col: mecha_record.FieldMechaSectorInstanceGameInstanceID, Val: gameInstanceID},
+					{Col: mecha_record.FieldMechaSectorInstanceMechaSectorID, Val: link.ToMechaSectorID},
+				},
+				Limit: 1,
+			})
+			if err != nil || len(linkedInstances) == 0 {
+				continue
+			}
+
+			destID := linkedInstances[0].ID
+			if destID == destSectorInstanceID {
+				return cur.depth + 1, true
+			}
+			if !seen[destID] {
+				seen[destID] = true
+				queue = append(queue, bfsNode{sectorInstanceID: destID, depth: cur.depth + 1})
+			}
+		}
+	}
+
+	return 0, false
 }
 
 // getEnemyMechOptions collects all enemy mech instances visible to the given lance.

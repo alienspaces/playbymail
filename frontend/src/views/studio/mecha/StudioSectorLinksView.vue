@@ -35,10 +35,6 @@
                 <option v-for="s in sectorsStore.sectors" :key="s.id" :value="s.id">{{ s.name }}</option>
               </select>
             </div>
-            <div class="form-group">
-              <label>Cover Modifier</label>
-              <input v-model.number="modalForm.cover_modifier" type="number" min="-10" max="10" />
-            </div>
             <div class="modal-actions">
               <button type="submit">{{ modalMode === 'create' ? 'Create' : 'Save' }}</button>
               <button type="button" @click="closeModal">Cancel</button>
@@ -88,12 +84,11 @@ const formattedLinks = computed(() =>
 const columns = [
   { key: 'from_sector_name', label: 'From Sector' },
   { key: 'to_sector_name', label: 'To Sector' },
-  { key: 'cover_modifier', label: 'Cover Mod.' },
 ]
 
 const showModal = ref(false)
 const modalMode = ref('create')
-const modalForm = ref({ from_mecha_sector_id: '', to_mecha_sector_id: '', cover_modifier: 0 })
+const modalForm = ref({ from_mecha_sector_id: '', to_mecha_sector_id: '' })
 const modalError = ref('')
 const showDeleteModal = ref(false)
 const toDelete = ref(null)
@@ -107,7 +102,7 @@ watch(() => selectedGame.value, (g) => {
 
 function openCreate() {
   modalMode.value = 'create'
-  modalForm.value = { from_mecha_sector_id: '', to_mecha_sector_id: '', cover_modifier: 0 }
+  modalForm.value = { from_mecha_sector_id: '', to_mecha_sector_id: '' }
   modalError.value = ''
   showModal.value = true
 }
@@ -126,7 +121,7 @@ function closeModal() {
 
 async function handleSubmit(formData) {
   modalError.value = ''
-  const allowed = ['from_mecha_sector_id', 'to_mecha_sector_id', 'cover_modifier']
+  const allowed = ['from_mecha_sector_id', 'to_mecha_sector_id']
   const data = Object.fromEntries(allowed.map(k => [k, formData[k]]))
   try {
     if (modalMode.value === 'create') {

@@ -177,6 +177,14 @@
               Lances
             </router-link>
           </li>
+          <li>
+            <router-link :to="`/studio/${selectedGame.id}/computer-opponents`" active-class="active">
+              <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5v2H6v2h12v-2h-2v-2h5c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 14H3V5h18v12z" />
+              </svg>
+              Computer Opponents
+            </router-link>
+          </li>
         </ul>
 
         <GameIssuesPanel />

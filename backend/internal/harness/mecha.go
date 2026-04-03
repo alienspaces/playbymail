@@ -1,7 +1,6 @@
 package harness
 
 import (
-	"database/sql"
 	"fmt"
 
 	"github.com/brianvoe/gofakeit"
@@ -49,48 +48,12 @@ func (t *Testing) processMechaConfig(gameConfig GameConfig, gameRec *game_record
 	}
 
 	for _, cfg := range gameConfig.MechaLanceConfigs {
-		ownerCount := 0
-		if cfg.AccountRef != "" {
-			ownerCount++
+		if cfg.LanceType != mecha_record.LanceTypeStarter && cfg.LanceType != mecha_record.LanceTypeOpponent {
+			return fmt.Errorf("mecha lance config >%s< must have LanceType set to 'starter' or 'opponent'", cfg.Reference)
 		}
-		if cfg.ComputerOpponentRef != "" {
-			ownerCount++
-		}
-		if cfg.IsPlayerStarter {
-			ownerCount++
-		}
-		if ownerCount == 0 {
-			return fmt.Errorf("mecha lance config >%s< must have AccountRef, ComputerOpponentRef, or IsPlayerStarter set", cfg.Reference)
-		}
-		if ownerCount > 1 {
-			return fmt.Errorf("mecha lance config >%s< must have exactly one of AccountRef, ComputerOpponentRef, or IsPlayerStarter set", cfg.Reference)
-		}
-
-		if cfg.ComputerOpponentRef != "" {
-			opponentRec, err := t.Data.GetMechaComputerOpponentRecByRef(cfg.ComputerOpponentRef)
-			if err != nil {
-				l.Warn("failed resolving computer opponent ref >%s<: %v", cfg.ComputerOpponentRef, err)
-				return err
-			}
-			if _, err := t.createMechaComputerOpponentLanceRec(cfg, gameRec, opponentRec); err != nil {
-				l.Warn("failed creating mecha computer opponent lance record >%v<", err)
-				return err
-			}
-		} else if cfg.IsPlayerStarter {
-			if _, err := t.createMechaPlayerStarterLanceRec(cfg, gameRec); err != nil {
-				l.Warn("failed creating mecha player starter lance record >%v<", err)
-				return err
-			}
-		} else {
-			accountUserRec, err := t.Data.GetAccountUserRecByRef(cfg.AccountRef)
-			if err != nil {
-				l.Warn("failed resolving account ref >%s<: %v", cfg.AccountRef, err)
-				return err
-			}
-			if _, err := t.createMechaHumanLanceRec(cfg, gameRec, accountUserRec.ID, accountUserRec.AccountID); err != nil {
-				l.Warn("failed creating mecha lance record >%v<", err)
-				return err
-			}
+		if _, err := t.createMechaLanceRec(cfg, gameRec); err != nil {
+			l.Warn("failed creating mecha lance record >%v<", err)
+			return err
 		}
 	}
 
@@ -443,8 +406,8 @@ func (t *Testing) createMechaComputerOpponentRec(cfg MechaComputerOpponentConfig
 	return rec, nil
 }
 
-func (t *Testing) createMechaHumanLanceRec(cfg MechaLanceConfig, gameRec *game_record.Game, accountUserID, accountID string) (*mecha_record.MechaLance, error) {
-	l := t.Logger("createMechaHumanLanceRec")
+func (t *Testing) createMechaLanceRec(cfg MechaLanceConfig, gameRec *game_record.Game) (*mecha_record.MechaLance, error) {
+	l := t.Logger("createMechaLanceRec")
 
 	if gameRec == nil {
 		return nil, fmt.Errorf("game record is nil for mecha lance config >%#v<", cfg)
@@ -465,114 +428,13 @@ func (t *Testing) createMechaHumanLanceRec(cfg MechaLanceConfig, gameRec *game_r
 		rec.Description = gofakeit.Sentence(8)
 	}
 	rec.GameID = gameRec.ID
-	rec.AccountID = sql.NullString{String: accountID, Valid: true}
-	rec.AccountUserID = sql.NullString{String: accountUserID, Valid: true}
+	rec.LanceType = cfg.LanceType
 
-	l.Debug("creating mecha human lance record >%#v<", rec)
+	l.Debug("creating mecha lance record type >%s< >%#v<", cfg.LanceType, rec)
 
 	rec, err := t.Domain.(*domain.Domain).CreateMechaLanceRec(rec)
 	if err != nil {
 		l.Warn("failed creating mecha lance record >%v<", err)
-		return nil, err
-	}
-
-	t.Data.AddMechaLanceRec(rec)
-	t.teardownData.AddMechaLanceRec(rec)
-
-	if cfg.Reference != "" {
-		t.Data.Refs.MechaLanceRefs[cfg.Reference] = rec.ID
-	}
-
-	for _, mechCfg := range cfg.LanceMechConfigs {
-		if _, err := t.createMechaLanceMechRec(mechCfg, gameRec, rec); err != nil {
-			return nil, err
-		}
-	}
-
-	return rec, nil
-}
-
-func (t *Testing) createMechaPlayerStarterLanceRec(cfg MechaLanceConfig, gameRec *game_record.Game) (*mecha_record.MechaLance, error) {
-	l := t.Logger("createMechaPlayerStarterLanceRec")
-
-	if gameRec == nil {
-		return nil, fmt.Errorf("game record is nil for mecha player starter lance config >%#v<", cfg)
-	}
-
-	var rec *mecha_record.MechaLance
-	if cfg.Record != nil {
-		recCopy := *cfg.Record
-		rec = &recCopy
-	} else {
-		rec = &mecha_record.MechaLance{}
-	}
-
-	if rec.Name == "" {
-		rec.Name = UniqueName("Starter Lance")
-	}
-	if rec.Description == "" {
-		rec.Description = gofakeit.Sentence(8)
-	}
-	rec.GameID = gameRec.ID
-	rec.IsPlayerStarter = true
-
-	l.Debug("creating mecha player starter lance record >%#v<", rec)
-
-	rec, err := t.Domain.(*domain.Domain).CreateMechaLanceRec(rec)
-	if err != nil {
-		l.Warn("failed creating mecha player starter lance record >%v<", err)
-		return nil, err
-	}
-
-	t.Data.AddMechaLanceRec(rec)
-	t.teardownData.AddMechaLanceRec(rec)
-
-	if cfg.Reference != "" {
-		t.Data.Refs.MechaLanceRefs[cfg.Reference] = rec.ID
-	}
-
-	for _, mechCfg := range cfg.LanceMechConfigs {
-		if _, err := t.createMechaLanceMechRec(mechCfg, gameRec, rec); err != nil {
-			return nil, err
-		}
-	}
-
-	return rec, nil
-}
-
-func (t *Testing) createMechaComputerOpponentLanceRec(cfg MechaLanceConfig, gameRec *game_record.Game, opponentRec *mecha_record.MechaComputerOpponent) (*mecha_record.MechaLance, error) {
-	l := t.Logger("createMechaComputerOpponentLanceRec")
-
-	if gameRec == nil {
-		return nil, fmt.Errorf("game record is nil for mecha computer opponent lance config >%#v<", cfg)
-	}
-
-	if opponentRec == nil {
-		return nil, fmt.Errorf("computer opponent record is nil for mecha lance config >%#v<", cfg)
-	}
-
-	var rec *mecha_record.MechaLance
-	if cfg.Record != nil {
-		recCopy := *cfg.Record
-		rec = &recCopy
-	} else {
-		rec = &mecha_record.MechaLance{}
-	}
-
-	if rec.Name == "" {
-		rec.Name = UniqueName(gofakeit.Name())
-	}
-	if rec.Description == "" {
-		rec.Description = gofakeit.Sentence(8)
-	}
-	rec.GameID = gameRec.ID
-	rec.MechaComputerOpponentID = sql.NullString{String: opponentRec.ID, Valid: true}
-
-	l.Debug("creating mecha computer opponent lance record >%#v<", rec)
-
-	rec, err := t.Domain.(*domain.Domain).CreateMechaLanceRec(rec)
-	if err != nil {
-		l.Warn("failed creating mecha computer opponent lance record >%v<", err)
 		return nil, err
 	}
 

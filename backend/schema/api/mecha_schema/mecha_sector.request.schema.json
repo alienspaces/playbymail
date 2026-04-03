@@ -14,15 +14,27 @@
         },
         "terrain_type": {
             "type": "string",
-            "enum": ["open", "rough", "forest", "urban", "water"]
+            "enum": [
+                "open",
+                "rough",
+                "forest",
+                "urban",
+                "water"
+            ]
         },
         "elevation": {
+            "type": "integer"
+        },
+        "cover_modifier": {
             "type": "integer"
         },
         "is_starting_sector": {
             "type": "boolean"
         }
     },
-    "required": ["name", "description"],
+    "required": [
+        "name",
+        "description"
+    ],
     "additionalProperties": false
 }

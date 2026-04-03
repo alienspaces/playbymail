@@ -8,16 +8,23 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="row in rows" :key="row.id" :data-testid="`table-row-${row.id}`">
-          <td v-for="col in columns" :key="col.key">
-            <slot :name="`cell-${col.key}`" :row="row" :column="col">
-              {{ row[col.key] }}
-            </slot>
-          </td>
-          <td v-if="$slots.actions">
-            <slot name="actions" :row="row" />
-          </td>
-        </tr>
+        <template v-for="row in rows" :key="row.id">
+          <tr :data-testid="`table-row-${row.id}`">
+            <td v-for="col in columns" :key="col.key">
+              <slot :name="`cell-${col.key}`" :row="row" :column="col">
+                {{ row[col.key] }}
+              </slot>
+            </td>
+            <td v-if="$slots.actions">
+              <slot name="actions" :row="row" />
+            </td>
+          </tr>
+          <tr v-if="$slots['row-detail']" :key="`${row.id}-detail`" class="row-detail-row">
+            <td :colspan="columns.length + ($slots.actions ? 1 : 0)" class="row-detail-cell">
+              <slot name="row-detail" :row="row" />
+            </td>
+          </tr>
+        </template>
       </tbody>
     </table>
     <div v-else-if="loading" data-testid="table-loading">Loading...</div>
@@ -39,6 +46,8 @@ defineProps({
 .resource-table-section {
   width: 100%;
 }
+
+.row-detail-row > .row-detail-cell { padding: 0; background: transparent; border-bottom: none; }
 
 /* Actions column styling - wider to accommodate inline buttons */
 .resource-table-section th:last-child,

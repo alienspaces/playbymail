@@ -103,11 +103,7 @@ docker-compose.override.yml
 !README.md
 !CONTRIBUTING.md
 !RELEASE_NOTES.md
-
-# =============================
-# Task Files
-# =============================
-TASK.md
+!docs/*.md
 
 # =============================
 # Playwright

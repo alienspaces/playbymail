@@ -60,7 +60,7 @@ func (p *Mecha) createLanceTurnSheets(ctx context.Context, gameInstanceRec *game
 		l.Warn("failed to look up parent lance >%s< for lance instance >%s< error >%v<", lanceInstance.MechaLanceID, lanceInstance.ID, err)
 		return nil, err
 	}
-	if lanceRec.MechaComputerOpponentID.Valid {
+	if lanceRec.LanceType == mecha_record.LanceTypeOpponent {
 		l.Debug("skipping turn sheet creation for computer-opponent lance instance >%s<", lanceInstance.ID)
 		return nil, nil
 	}

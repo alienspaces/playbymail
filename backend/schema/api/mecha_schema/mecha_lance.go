@@ -7,17 +7,14 @@ import (
 )
 
 type MechaLanceResponseData struct {
-	ID                      string     `json:"id"`
-	GameID                  string     `json:"game_id"`
-	AccountID               *string    `json:"account_id,omitempty"`
-	AccountUserID           *string    `json:"account_user_id,omitempty"`
-	MechaComputerOpponentID *string    `json:"mecha_computer_opponent_id,omitempty"`
-	IsPlayerStarter         bool       `json:"is_player_starter"`
-	Name                    string     `json:"name"`
-	Description             string     `json:"description"`
-	CreatedAt               time.Time  `json:"created_at"`
-	UpdatedAt               *time.Time `json:"updated_at,omitempty"`
-	DeletedAt               *time.Time `json:"deleted_at,omitempty"`
+	ID          string     `json:"id"`
+	GameID      string     `json:"game_id"`
+	LanceType   string     `json:"lance_type"`
+	Name        string     `json:"name"`
+	Description string     `json:"description"`
+	CreatedAt   time.Time  `json:"created_at"`
+	UpdatedAt   *time.Time `json:"updated_at,omitempty"`
+	DeletedAt   *time.Time `json:"deleted_at,omitempty"`
 }
 
 type MechaLanceResponse struct {
@@ -34,11 +31,9 @@ type MechaLanceCollectionResponse struct {
 
 type MechaLanceRequest struct {
 	common_schema.Request
-	AccountUserID           *string `json:"account_user_id,omitempty"`
-	MechaComputerOpponentID *string `json:"mecha_computer_opponent_id,omitempty"`
-	IsPlayerStarter         *bool   `json:"is_player_starter,omitempty"`
-	Name                    string  `json:"name"`
-	Description             string  `json:"description"`
+	LanceType   string `json:"lance_type"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
 }
 
 type MechaLanceQueryParams struct {

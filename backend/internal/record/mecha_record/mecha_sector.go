@@ -17,6 +17,7 @@ const (
 	FieldMechaSectorDescription      string = "description"
 	FieldMechaSectorTerrainType      string = "terrain_type"
 	FieldMechaSectorElevation        string = "elevation"
+	FieldMechaSectorCoverModifier    string = "cover_modifier"
 	FieldMechaSectorIsStartingSector string = "is_starting_sector"
 	FieldMechaSectorCreatedAt        string = "created_at"
 	FieldMechaSectorUpdatedAt        string = "updated_at"
@@ -38,6 +39,7 @@ type MechaSector struct {
 	Description      string `db:"description"`
 	TerrainType      string `db:"terrain_type"`
 	Elevation        int    `db:"elevation"`
+	CoverModifier    int    `db:"cover_modifier"`
 	IsStartingSector bool   `db:"is_starting_sector"`
 }
 
@@ -48,6 +50,7 @@ func (r *MechaSector) ToNamedArgs() pgx.NamedArgs {
 	args[FieldMechaSectorDescription] = r.Description
 	args[FieldMechaSectorTerrainType] = r.TerrainType
 	args[FieldMechaSectorElevation] = r.Elevation
+	args[FieldMechaSectorCoverModifier] = r.CoverModifier
 	args[FieldMechaSectorIsStartingSector] = r.IsStartingSector
 	return args
 }

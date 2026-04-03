@@ -20,9 +20,18 @@
         },
         "terrain_type": {
             "type": "string",
-            "enum": ["open", "rough", "forest", "urban", "water"]
+            "enum": [
+                "open",
+                "rough",
+                "forest",
+                "urban",
+                "water"
+            ]
         },
         "elevation": {
+            "type": "integer"
+        },
+        "cover_modifier": {
             "type": "integer"
         },
         "is_starting_sector": {
@@ -38,6 +47,16 @@
             "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/updated_at"
         }
     },
-    "required": ["id", "game_id", "name", "description", "terrain_type", "elevation", "is_starting_sector", "created_at"],
+    "required": [
+        "id",
+        "game_id",
+        "name",
+        "description",
+        "terrain_type",
+        "elevation",
+        "cover_modifier",
+        "is_starting_sector",
+        "created_at"
+    ],
     "additionalProperties": false
 }

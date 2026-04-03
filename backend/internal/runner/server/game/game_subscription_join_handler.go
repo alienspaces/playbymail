@@ -522,16 +522,6 @@ func submitJoinHandler(w http.ResponseWriter, r *http.Request, pp httprouter.Par
 		l.Info("created adventure game character >%s< for player >%s<", characterRec.ID, accountUserRec.ID)
 	}
 
-	if gameRec.GameType == game_record.GameTypeMecha {
-		lanceRec, err := mm.CreateDefaultMechaLanceForPlayer(gameRec.ID, accountRec.ID, accountUserRec.ID, req.CharacterName, req.Name)
-		if err != nil {
-			l.Warn("failed to create default mecha lance for player >%v<", err)
-			return err
-		}
-
-		l.Info("created mecha lance >%s< for player >%s<", lanceRec.ID, accountUserRec.ID)
-	}
-
 	// Reserve the slot by linking the player subscription to the game instance
 	// for both authenticated and non-authenticated users.
 	_, err = mm.AssignPlayerToGameInstance(playerGameSubscriptionRec.ID, gameInstanceRec.ID)

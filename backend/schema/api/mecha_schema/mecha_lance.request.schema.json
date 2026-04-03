@@ -4,16 +4,9 @@
     "title": "MechaLanceRequest",
     "type": "object",
     "properties": {
-        "account_user_id": {
+        "lance_type": {
             "type": "string",
-            "minLength": 1
-        },
-        "mecha_computer_opponent_id": {
-            "type": "string",
-            "minLength": 1
-        },
-        "is_player_starter": {
-            "type": "boolean"
+            "enum": ["starter", "opponent"]
         },
         "name": {
             "type": "string",
@@ -24,6 +17,6 @@
             "type": "string"
         }
     },
-    "required": ["name", "description"],
+    "required": ["lance_type", "name", "description"],
     "additionalProperties": false
 }

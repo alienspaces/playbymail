@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"gitlab.com/alienspaces/playbymail/core/convert"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
@@ -73,6 +74,21 @@ type CatalogWeapon struct {
 // LanceManagementScanData represents scanned management orders submitted by a player.
 type LanceManagementScanData struct {
 	MechManagementOrders []ScannedMechManagementOrder `json:"mech_management_orders,omitempty"`
+}
+
+// Validate ensures the scanned management data is minimally valid.
+func (d *LanceManagementScanData) Validate() error {
+	for i, order := range d.MechManagementOrders {
+		if strings.TrimSpace(order.MechInstanceID) == "" {
+			return fmt.Errorf("mech_management_orders[%d]: mech_instance_id is required", i)
+		}
+		for j, swap := range order.WeaponSwaps {
+			if strings.TrimSpace(swap.SlotLocation) == "" {
+				return fmt.Errorf("mech_management_orders[%d].weapon_swaps[%d]: slot_location is required", i, j)
+			}
+		}
+	}
+	return nil
 }
 
 // ScannedMechManagementOrder is one mech's management orders from a scanned sheet.
@@ -161,12 +177,25 @@ For each mech, identify:
 		},
 	}
 
-	result, err := p.Scanner.ExtractStructuredData(ctx, req)
+	raw, err := p.Scanner.ExtractStructuredData(ctx, req)
 	if err != nil {
 		return nil, fmt.Errorf("scan failed: %w", err)
 	}
 
-	return result, nil
+	var scanData LanceManagementScanData
+	if err := json.Unmarshal(raw, &scanData); err != nil {
+		l.Warn("failed to decode structured response >%v<", err)
+		return nil, fmt.Errorf("failed to decode structured response: %w", err)
+	}
+
+	normalizeLanceManagementScanData(&scanData)
+
+	if err := scanData.Validate(); err != nil {
+		l.Warn("failed to validate scan data >%v<", err)
+		return nil, err
+	}
+
+	return json.Marshal(scanData)
 }
 
 // GeneratePreviewData returns sample management sheet data for previewing.
@@ -252,4 +281,15 @@ func (p *MechaLanceManagementProcessor) GeneratePreviewData(ctx context.Context,
 	}
 
 	return out, nil
+}
+
+// normalizeLanceManagementScanData trims whitespace from scanned management order fields.
+func normalizeLanceManagementScanData(data *LanceManagementScanData) {
+	for i := range data.MechManagementOrders {
+		data.MechManagementOrders[i].MechInstanceID = strings.TrimSpace(data.MechManagementOrders[i].MechInstanceID)
+		for j := range data.MechManagementOrders[i].WeaponSwaps {
+			data.MechManagementOrders[i].WeaponSwaps[j].SlotLocation = strings.TrimSpace(data.MechManagementOrders[i].WeaponSwaps[j].SlotLocation)
+			data.MechManagementOrders[i].WeaponSwaps[j].NewWeaponID = strings.TrimSpace(data.MechManagementOrders[i].WeaponSwaps[j].NewWeaponID)
+		}
+	}
 }

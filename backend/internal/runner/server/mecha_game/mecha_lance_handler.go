@@ -1,7 +1,6 @@
 package mecha_game
 
 import (
-	stdsql "database/sql"
 	"net/http"
 
 	"github.com/jackc/pgx/v5"
@@ -193,25 +192,6 @@ func createOneMechaLanceHandler(w http.ResponseWriter, r *http.Request, pp httpr
 		return err
 	}
 
-	// Starter template lances have no owner; human lances need AccountID resolved.
-	if rec.IsPlayerStarter {
-		// No owner fields needed — validation in the domain enforces the constraint.
-	} else if rec.AccountUserID.Valid && rec.AccountUserID.String != "" {
-		auth := server.GetRequestAuthenData(l, r)
-		if auth != nil && auth.AccountUser.ID == rec.AccountUserID.String {
-			rec.AccountID = stdsql.NullString{String: auth.AccountUser.AccountID, Valid: true}
-		} else {
-			accountUserRec, err := mm.GetAccountUserRec(rec.AccountUserID.String, nil)
-			if err != nil {
-				l.Warn("failed getting account user record >%s< >%v<", rec.AccountUserID.String, err)
-				return err
-			}
-			rec.AccountID = stdsql.NullString{String: accountUserRec.AccountID, Valid: true}
-		}
-	} else if !rec.MechaComputerOpponentID.Valid {
-		return coreerror.NewParamError("account_user_id is required for human-owned lances")
-	}
-
 	rec, err = mm.CreateMechaLanceRec(rec)
 	if err != nil {
 		return err
@@ -247,21 +227,6 @@ func updateOneMechaLanceHandler(w http.ResponseWriter, r *http.Request, pp httpr
 	rec, err = mapper.MechaLanceRequestToRecord(l, r, rec)
 	if err != nil {
 		return err
-	}
-
-	// Resolve AccountID from AccountUserID (only for human-owned lances)
-	if rec.AccountUserID.Valid && rec.AccountUserID.String != "" {
-		auth := server.GetRequestAuthenData(l, r)
-		if auth != nil && auth.AccountUser.ID == rec.AccountUserID.String {
-			rec.AccountID = stdsql.NullString{String: auth.AccountUser.AccountID, Valid: true}
-		} else {
-			accountUserRec, err := mm.GetAccountUserRec(rec.AccountUserID.String, nil)
-			if err != nil {
-				l.Warn("failed getting account user record >%s< >%v<", rec.AccountUserID.String, err)
-				return err
-			}
-			rec.AccountID = stdsql.NullString{String: accountUserRec.AccountID, Valid: true}
-		}
 	}
 
 	rec, err = mm.UpdateMechaLanceRec(rec)

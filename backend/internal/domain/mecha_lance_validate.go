@@ -18,13 +18,11 @@ func (m *Domain) validateMechaLanceRecForCreate(rec *mecha_record.MechaLance) er
 		return err
 	}
 
-	// Enforce at-most-one starter lance per game at the application layer so
-	// callers receive a clear error message instead of a DB unique-constraint violation.
-	if rec.IsPlayerStarter {
+	if rec.LanceType == mecha_record.LanceTypeStarter {
 		existing, err := m.GetManyMechaLanceRecs(&coresql.Options{
 			Params: []coresql.Param{
 				{Col: mecha_record.FieldMechaLanceGameID, Val: rec.GameID},
-				{Col: mecha_record.FieldMechaLanceIsPlayerStarter, Val: true},
+				{Col: mecha_record.FieldMechaLanceLanceType, Val: mecha_record.LanceTypeStarter},
 			},
 			Limit: 1,
 		})
@@ -61,22 +59,8 @@ func validateMechaLanceRec(args *validateMechaLanceArgs, requireID bool) error {
 		return err
 	}
 
-	if rec.IsPlayerStarter {
-		// Starter template: no owner fields required or permitted.
-	} else if rec.MechaComputerOpponentID.Valid {
-		// Computer-opponent-owned lance: validate the opponent ID, skip account fields.
-		if err := domain.ValidateUUIDField(mecha_record.FieldMechaLanceMechaComputerOpponentID, rec.MechaComputerOpponentID.String); err != nil {
-			return err
-		}
-	} else {
-		// Human-owned lance: account fields are required.
-		if err := domain.ValidateUUIDField(mecha_record.FieldMechaLanceAccountID, rec.AccountID.String); err != nil {
-			return err
-		}
-
-		if err := domain.ValidateUUIDField(mecha_record.FieldMechaLanceAccountUserID, rec.AccountUserID.String); err != nil {
-			return err
-		}
+	if rec.LanceType != mecha_record.LanceTypeStarter && rec.LanceType != mecha_record.LanceTypeOpponent {
+		return coreerror.NewInvalidDataError("lance_type must be 'starter' or 'opponent'")
 	}
 
 	if err := domain.ValidateStringField(mecha_record.FieldMechaLanceName, rec.Name); err != nil {

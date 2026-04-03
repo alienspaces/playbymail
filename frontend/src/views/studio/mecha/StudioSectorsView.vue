@@ -32,6 +32,18 @@
               <label>Description</label>
               <textarea v-model="modalForm.description" rows="3" maxlength="4096"></textarea>
             </div>
+            <div class="form-row">
+              <div class="form-group half">
+                <label>Elevation</label>
+                <input v-model.number="modalForm.elevation" type="number" min="-10" max="10" />
+                <p class="field-hint">Higher elevation provides a tactical advantage.</p>
+              </div>
+              <div class="form-group half">
+                <label>Cover Modifier</label>
+                <input v-model.number="modalForm.cover_modifier" type="number" min="-50" max="50" />
+                <p class="field-hint">Applied to hit chance (negative = harder to hit).</p>
+              </div>
+            </div>
             <div class="form-group checkbox-group">
               <label class="checkbox-label">
                 <input type="checkbox" v-model="modalForm.is_starting_sector" />
@@ -77,12 +89,14 @@ const formattedSectors = computed(() =>
 const columns = [
   { key: 'name', label: 'Name' },
   { key: 'description', label: 'Description' },
-  { key: 'is_starting_sector', label: 'Starting Sector' },
+  { key: 'elevation', label: 'Elevation' },
+  { key: 'cover_modifier', label: 'Cover Mod.' },
+  { key: 'is_starting_sector', label: 'Starting' },
 ]
 
 const showModal = ref(false)
 const modalMode = ref('create')
-const modalForm = ref({ name: '', description: '', is_starting_sector: false })
+const modalForm = ref({ name: '', description: '', elevation: 0, cover_modifier: 0, is_starting_sector: false })
 const modalError = ref('')
 const showDeleteModal = ref(false)
 const toDelete = ref(null)
@@ -91,7 +105,7 @@ watch(() => selectedGame.value, (g) => { if (g) store.fetchSectors(g.id) }, { im
 
 function openCreate() {
   modalMode.value = 'create'
-  modalForm.value = { name: '', description: '', is_starting_sector: false }
+  modalForm.value = { name: '', description: '', elevation: 0, cover_modifier: 0, is_starting_sector: false }
   modalError.value = ''
   showModal.value = true
 }
@@ -111,7 +125,7 @@ function closeModal() {
 
 async function handleSubmit(formData) {
   modalError.value = ''
-  const allowed = ['name', 'description', 'is_starting_sector']
+  const allowed = ['name', 'description', 'elevation', 'cover_modifier', 'is_starting_sector']
   const data = Object.fromEntries(allowed.map(k => [k, formData[k]]))
   try {
     if (modalMode.value === 'create') {
@@ -151,6 +165,9 @@ function getActions(row) {
 .form-group label { display: block; margin-bottom: var(--space-xs); font-weight: var(--font-weight-semibold); }
 .form-group input, .form-group textarea { width: 100%; padding: var(--space-sm); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--font-size-base); }
 .form-group textarea { resize: vertical; }
+.form-row { display: flex; gap: var(--space-sm); }
+.form-row .half { flex: 1; }
+.field-hint { font-size: var(--font-size-sm, 0.875rem); color: var(--color-text-muted); margin: var(--space-xs) 0 0; }
 .checkbox-group { margin-top: var(--space-sm); }
 .checkbox-label { display: flex; align-items: center; gap: var(--space-sm); cursor: pointer; font-weight: normal; }
 .checkbox-label input[type="checkbox"] { width: auto; }

@@ -445,7 +445,7 @@ func (m *Domain) validateMechaGameReadyForInstance(gameID string) ([]GameValidat
 	starterLanceRecs, err := m.GetManyMechaLanceRecs(&coresql.Options{
 		Params: []coresql.Param{
 			{Col: mecha_record.FieldMechaLanceGameID, Val: gameID},
-			{Col: mecha_record.FieldMechaLanceIsPlayerStarter, Val: true},
+			{Col: mecha_record.FieldMechaLanceLanceType, Val: mecha_record.LanceTypeStarter},
 		},
 		Limit: 1,
 	})

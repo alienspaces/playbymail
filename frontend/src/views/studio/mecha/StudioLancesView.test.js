@@ -14,7 +14,7 @@ const mockLances = [
     id: 'lance1',
     name: 'Falcon Lance',
     description: 'Fast scouting lance.',
-    account_user_id: 'user-abc',
+    lance_type: 'opponent',
     created_at: '2024-07-10T12:00:00Z'
   }
 ];
@@ -48,14 +48,15 @@ describe('StudioLancesView', () => {
     const ths = wrapper.findAll('th');
     const headerTexts = ths.map(th => th.text());
     expect(headerTexts).toContain('Name');
+    expect(headerTexts).toContain('Type');
     expect(headerTexts).toContain('Description');
-    expect(headerTexts).toContain('Account User ID');
     expect(headerTexts).toContain('Actions');
 
     const tds = wrapper.findAll('td');
     const cellTexts = tds.map(td => td.text());
-    expect(cellTexts).toContain('Falcon Lance');
+    expect(cellTexts.some(t => t.includes('Falcon Lance'))).toBe(true);
     expect(cellTexts).toContain('Fast scouting lance.');
+    expect(cellTexts).toContain('Opponent');
   });
 
   it('shows loading state', async () => {

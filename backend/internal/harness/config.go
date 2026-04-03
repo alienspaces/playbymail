@@ -173,12 +173,12 @@ type GameConfig struct {
 	AdventureGameItemPlacementConfigs     []AdventureGameItemPlacementConfig     // Where items start in the world
 
 	// Mecha specific configurations
-	MechaChassisConfigs            []MechaChassisConfig
-	MechaWeaponConfigs             []MechaWeaponConfig
-	MechaSectorConfigs             []MechaSectorConfig
-	MechaSectorLinkConfigs         []MechaSectorLinkConfig
-	MechaComputerOpponentConfigs   []MechaComputerOpponentConfig
-	MechaLanceConfigs              []MechaLanceConfig
+	MechaChassisConfigs          []MechaChassisConfig
+	MechaWeaponConfigs           []MechaWeaponConfig
+	MechaSectorConfigs           []MechaSectorConfig
+	MechaSectorLinkConfigs       []MechaSectorLinkConfig
+	MechaComputerOpponentConfigs []MechaComputerOpponentConfig
+	MechaLanceConfigs            []MechaLanceConfig
 }
 
 type GameImageConfig struct {
@@ -402,10 +402,10 @@ type MechaSectorConfig struct {
 }
 
 type MechaSectorLinkConfig struct {
-	Reference          string
-	FromSectorRef      string
-	ToSectorRef        string
-	Record             *mecha_record.MechaSectorLink
+	Reference     string
+	FromSectorRef string
+	ToSectorRef   string
+	Record        *mecha_record.MechaSectorLink
 }
 
 // MechaLanceMechWeaponRef maps a weapon ref to a slot location for
@@ -428,12 +428,10 @@ type MechaComputerOpponentConfig struct {
 }
 
 type MechaLanceConfig struct {
-	Reference           string
-	AccountRef          string
-	ComputerOpponentRef string // mutually exclusive with AccountRef and IsPlayerStarter
-	IsPlayerStarter     bool   // mutually exclusive with AccountRef and ComputerOpponentRef
-	Record              *mecha_record.MechaLance
-	LanceMechConfigs    []MechaLanceMechConfig
+	Reference        string
+	LanceType        string // mecha_record.LanceTypeStarter or mecha_record.LanceTypeOpponent
+	Record           *mecha_record.MechaLance
+	LanceMechConfigs []MechaLanceMechConfig
 }
 
 // Helper methods for modifying DataConfig
@@ -689,246 +687,244 @@ func DefaultDataConfig() DataConfig {
 						Record:          &adventure_game_record.AdventureGameCreaturePlacement{},
 					},
 				},
-			AdventureGameItemPlacementConfigs: []AdventureGameItemPlacementConfig{
-				{
-					Reference:       GameItemPlacementOneRef,
-					GameItemRef:     GameItemOneRef,
-					GameLocationRef: GameLocationOneRef,
-					InitialCount:    1,
-					Record:          &adventure_game_record.AdventureGameItemPlacement{},
-				},
-			},
-			AdventureGameLocationObjectConfigs: []AdventureGameLocationObjectConfig{
-				// Object Two is created first so Object One's effects can reference it
-				{
-					Reference:       GameLocationObjectTwoRef,
-					LocationRef:     GameLocationOneRef,
-					InitialStateRef: GameLocationObjectTwoStateSealedRef,
-					Record: &adventure_game_record.AdventureGameLocationObject{
-						Name:        UniqueName("Hidden Passage"),
-						Description: "A concealed passage behind the shrine.",
-						IsHidden:    true,
-					},
-					AdventureGameLocationObjectStateConfigs: []AdventureGameLocationObjectStateConfig{
-						{
-							Reference: GameLocationObjectTwoStateSealedRef,
-							Record: &adventure_game_record.AdventureGameLocationObjectState{
-								Name:        "sealed",
-								Description: "The passage is sealed shut.",
-								SortOrder:   0,
-							},
-						},
-						{
-							Reference: GameLocationObjectTwoStateOpenRef,
-							Record: &adventure_game_record.AdventureGameLocationObjectState{
-								Name:        "open",
-								Description: "The passage is open.",
-								SortOrder:   1,
-							},
-						},
-					},
-					AdventureGameLocationObjectEffectConfigs: []AdventureGameLocationObjectEffectConfig{
-						{
-							Reference:        "game-location-object-two-effect-one",
-							RequiredStateRef: GameLocationObjectTwoStateSealedRef,
-							ResultStateRef:   GameLocationObjectTwoStateOpenRef,
-							Record: &adventure_game_record.AdventureGameLocationObjectEffect{
-								ActionType:        adventure_game_record.AdventureGameLocationObjectEffectActionTypeOpen,
-								ResultDescription: "The passage opens, revealing a dark tunnel.",
-								EffectType:        adventure_game_record.AdventureGameLocationObjectEffectEffectTypeChangeState,
-								IsRepeatable:      false,
-							},
-						},
-					},
-				},
-				{
-					Reference:       GameLocationObjectOneRef,
-					LocationRef:     GameLocationOneRef,
-					InitialStateRef: GameLocationObjectOneStateIntactRef,
-					Record: &adventure_game_record.AdventureGameLocationObject{
-						Name:        UniqueName("Ancient Shrine"),
-						Description: "A weathered stone shrine covered in moss.",
-						IsHidden:    false,
-					},
-					AdventureGameLocationObjectStateConfigs: []AdventureGameLocationObjectStateConfig{
-						{
-							Reference: GameLocationObjectOneStateIntactRef,
-							Record: &adventure_game_record.AdventureGameLocationObjectState{
-								Name:        "intact",
-								Description: "The shrine stands whole and undisturbed.",
-								SortOrder:   0,
-							},
-						},
-						{
-							Reference: GameLocationObjectOneStateActivatedRef,
-							Record: &adventure_game_record.AdventureGameLocationObjectState{
-								Name:        "activated",
-								Description: "The shrine pulses with ancient power.",
-								SortOrder:   1,
-							},
-						},
-					},
-					AdventureGameLocationObjectEffectConfigs: []AdventureGameLocationObjectEffectConfig{
-						{
-							Reference: GameLocationObjectEffectOneRef,
-							Record: &adventure_game_record.AdventureGameLocationObjectEffect{
-								ActionType:        adventure_game_record.AdventureGameLocationObjectEffectActionTypeInspect,
-								ResultDescription: "The shrine glows faintly with ancient power.",
-								EffectType:        adventure_game_record.AdventureGameLocationObjectEffectEffectTypeInfo,
-								IsRepeatable:      true,
-							},
-						},
-						{
-							Reference:        GameLocationObjectEffectTwoRef,
-							RequiredStateRef: GameLocationObjectOneStateIntactRef,
-							ResultStateRef:   GameLocationObjectOneStateActivatedRef,
-							Record: &adventure_game_record.AdventureGameLocationObjectEffect{
-								ActionType:        adventure_game_record.AdventureGameLocationObjectEffectActionTypeTouch,
-								ResultDescription: "The shrine hums with power as you touch it.",
-								EffectType:        adventure_game_record.AdventureGameLocationObjectEffectEffectTypeChangeState,
-								IsRepeatable:      false,
-							},
-						},
-						{
-							Reference:        GameLocationObjectEffectThreeRef,
-							RequiredStateRef: GameLocationObjectOneStateActivatedRef,
-							ResultItemRef:    GameItemTwoRef,
-							Record: &adventure_game_record.AdventureGameLocationObjectEffect{
-								ActionType:        adventure_game_record.AdventureGameLocationObjectEffectActionTypeSearch,
-								ResultDescription: "A hidden item appears from within the shrine.",
-								EffectType:        adventure_game_record.AdventureGameLocationObjectEffectEffectTypeGiveItem,
-								IsRepeatable:      false,
-							},
-						},
-						{
-							Reference: GameLocationObjectEffectFourRef,
-							Record: &adventure_game_record.AdventureGameLocationObjectEffect{
-								ActionType:        adventure_game_record.AdventureGameLocationObjectEffectActionTypeBreak,
-								ResultDescription: "Shards fly out cutting you.",
-								EffectType:        adventure_game_record.AdventureGameLocationObjectEffectEffectTypeDamage,
-								ResultValueMin:    nullint32.FromInt32(5),
-								ResultValueMax:    nullint32.FromInt32(5),
-								IsRepeatable:      true,
-							},
-						},
-						{
-							Reference:       GameLocationObjectEffectFiveRef,
-							ResultObjectRef: GameLocationObjectTwoRef,
-							Record: &adventure_game_record.AdventureGameLocationObjectEffect{
-								ActionType:        adventure_game_record.AdventureGameLocationObjectEffectActionTypeUse,
-								ResultDescription: "A hidden passage is revealed.",
-								EffectType:        adventure_game_record.AdventureGameLocationObjectEffectEffectTypeRevealObject,
-								IsRepeatable:      false,
-							},
-						},
+				AdventureGameItemPlacementConfigs: []AdventureGameItemPlacementConfig{
 					{
-						Reference:        GameLocationObjectEffectSixRef,
-						RequiredStateRef: GameLocationObjectOneStateActivatedRef,
-						Record: &adventure_game_record.AdventureGameLocationObjectEffect{
-							ActionType:        adventure_game_record.AdventureGameLocationObjectEffectActionTypeTouch,
-							ResultDescription: "Warmth flows through you.",
-							EffectType:        adventure_game_record.AdventureGameLocationObjectEffectEffectTypeHeal,
-							ResultValueMin:    nullint32.FromInt32(10),
-							ResultValueMax:    nullint32.FromInt32(10),
-							IsRepeatable:      true,
+						Reference:       GameItemPlacementOneRef,
+						GameItemRef:     GameItemOneRef,
+						GameLocationRef: GameLocationOneRef,
+						InitialCount:    1,
+						Record:          &adventure_game_record.AdventureGameItemPlacement{},
+					},
+				},
+				AdventureGameLocationObjectConfigs: []AdventureGameLocationObjectConfig{
+					// Object Two is created first so Object One's effects can reference it
+					{
+						Reference:       GameLocationObjectTwoRef,
+						LocationRef:     GameLocationOneRef,
+						InitialStateRef: GameLocationObjectTwoStateSealedRef,
+						Record: &adventure_game_record.AdventureGameLocationObject{
+							Name:        UniqueName("Hidden Passage"),
+							Description: "A concealed passage behind the shrine.",
+							IsHidden:    true,
+						},
+						AdventureGameLocationObjectStateConfigs: []AdventureGameLocationObjectStateConfig{
+							{
+								Reference: GameLocationObjectTwoStateSealedRef,
+								Record: &adventure_game_record.AdventureGameLocationObjectState{
+									Name:        "sealed",
+									Description: "The passage is sealed shut.",
+									SortOrder:   0,
+								},
+							},
+							{
+								Reference: GameLocationObjectTwoStateOpenRef,
+								Record: &adventure_game_record.AdventureGameLocationObjectState{
+									Name:        "open",
+									Description: "The passage is open.",
+									SortOrder:   1,
+								},
+							},
+						},
+						AdventureGameLocationObjectEffectConfigs: []AdventureGameLocationObjectEffectConfig{
+							{
+								Reference:        "game-location-object-two-effect-one",
+								RequiredStateRef: GameLocationObjectTwoStateSealedRef,
+								ResultStateRef:   GameLocationObjectTwoStateOpenRef,
+								Record: &adventure_game_record.AdventureGameLocationObjectEffect{
+									ActionType:        adventure_game_record.AdventureGameLocationObjectEffectActionTypeOpen,
+									ResultDescription: "The passage opens, revealing a dark tunnel.",
+									EffectType:        adventure_game_record.AdventureGameLocationObjectEffectEffectTypeChangeState,
+									IsRepeatable:      false,
+								},
+							},
 						},
 					},
 					{
-						Reference:         GameLocationObjectEffectSevenRef,
-						RequiredStateRef:  GameLocationObjectOneStateActivatedRef,
-						ResultItemRef:     GameItemOneRef,
-						ResultLocationRef: GameLocationTwoRef,
-						Record: &adventure_game_record.AdventureGameLocationObjectEffect{
-							ActionType:        adventure_game_record.AdventureGameLocationObjectEffectActionTypePull,
-							ResultDescription: "An item materialises at the far location.",
-							EffectType:        adventure_game_record.AdventureGameLocationObjectEffectEffectTypePlaceItem,
-							IsRepeatable:      false,
+						Reference:       GameLocationObjectOneRef,
+						LocationRef:     GameLocationOneRef,
+						InitialStateRef: GameLocationObjectOneStateIntactRef,
+						Record: &adventure_game_record.AdventureGameLocationObject{
+							Name:        UniqueName("Ancient Shrine"),
+							Description: "A weathered stone shrine covered in moss.",
+							IsHidden:    false,
+						},
+						AdventureGameLocationObjectStateConfigs: []AdventureGameLocationObjectStateConfig{
+							{
+								Reference: GameLocationObjectOneStateIntactRef,
+								Record: &adventure_game_record.AdventureGameLocationObjectState{
+									Name:        "intact",
+									Description: "The shrine stands whole and undisturbed.",
+									SortOrder:   0,
+								},
+							},
+							{
+								Reference: GameLocationObjectOneStateActivatedRef,
+								Record: &adventure_game_record.AdventureGameLocationObjectState{
+									Name:        "activated",
+									Description: "The shrine pulses with ancient power.",
+									SortOrder:   1,
+								},
+							},
+						},
+						AdventureGameLocationObjectEffectConfigs: []AdventureGameLocationObjectEffectConfig{
+							{
+								Reference: GameLocationObjectEffectOneRef,
+								Record: &adventure_game_record.AdventureGameLocationObjectEffect{
+									ActionType:        adventure_game_record.AdventureGameLocationObjectEffectActionTypeInspect,
+									ResultDescription: "The shrine glows faintly with ancient power.",
+									EffectType:        adventure_game_record.AdventureGameLocationObjectEffectEffectTypeInfo,
+									IsRepeatable:      true,
+								},
+							},
+							{
+								Reference:        GameLocationObjectEffectTwoRef,
+								RequiredStateRef: GameLocationObjectOneStateIntactRef,
+								ResultStateRef:   GameLocationObjectOneStateActivatedRef,
+								Record: &adventure_game_record.AdventureGameLocationObjectEffect{
+									ActionType:        adventure_game_record.AdventureGameLocationObjectEffectActionTypeTouch,
+									ResultDescription: "The shrine hums with power as you touch it.",
+									EffectType:        adventure_game_record.AdventureGameLocationObjectEffectEffectTypeChangeState,
+									IsRepeatable:      false,
+								},
+							},
+							{
+								Reference:        GameLocationObjectEffectThreeRef,
+								RequiredStateRef: GameLocationObjectOneStateActivatedRef,
+								ResultItemRef:    GameItemTwoRef,
+								Record: &adventure_game_record.AdventureGameLocationObjectEffect{
+									ActionType:        adventure_game_record.AdventureGameLocationObjectEffectActionTypeSearch,
+									ResultDescription: "A hidden item appears from within the shrine.",
+									EffectType:        adventure_game_record.AdventureGameLocationObjectEffectEffectTypeGiveItem,
+									IsRepeatable:      false,
+								},
+							},
+							{
+								Reference: GameLocationObjectEffectFourRef,
+								Record: &adventure_game_record.AdventureGameLocationObjectEffect{
+									ActionType:        adventure_game_record.AdventureGameLocationObjectEffectActionTypeBreak,
+									ResultDescription: "Shards fly out cutting you.",
+									EffectType:        adventure_game_record.AdventureGameLocationObjectEffectEffectTypeDamage,
+									ResultValueMin:    nullint32.FromInt32(5),
+									ResultValueMax:    nullint32.FromInt32(5),
+									IsRepeatable:      true,
+								},
+							},
+							{
+								Reference:       GameLocationObjectEffectFiveRef,
+								ResultObjectRef: GameLocationObjectTwoRef,
+								Record: &adventure_game_record.AdventureGameLocationObjectEffect{
+									ActionType:        adventure_game_record.AdventureGameLocationObjectEffectActionTypeUse,
+									ResultDescription: "A hidden passage is revealed.",
+									EffectType:        adventure_game_record.AdventureGameLocationObjectEffectEffectTypeRevealObject,
+									IsRepeatable:      false,
+								},
+							},
+							{
+								Reference:        GameLocationObjectEffectSixRef,
+								RequiredStateRef: GameLocationObjectOneStateActivatedRef,
+								Record: &adventure_game_record.AdventureGameLocationObjectEffect{
+									ActionType:        adventure_game_record.AdventureGameLocationObjectEffectActionTypeTouch,
+									ResultDescription: "Warmth flows through you.",
+									EffectType:        adventure_game_record.AdventureGameLocationObjectEffectEffectTypeHeal,
+									ResultValueMin:    nullint32.FromInt32(10),
+									ResultValueMax:    nullint32.FromInt32(10),
+									IsRepeatable:      true,
+								},
+							},
+							{
+								Reference:         GameLocationObjectEffectSevenRef,
+								RequiredStateRef:  GameLocationObjectOneStateActivatedRef,
+								ResultItemRef:     GameItemOneRef,
+								ResultLocationRef: GameLocationTwoRef,
+								Record: &adventure_game_record.AdventureGameLocationObjectEffect{
+									ActionType:        adventure_game_record.AdventureGameLocationObjectEffectActionTypePull,
+									ResultDescription: "An item materialises at the far location.",
+									EffectType:        adventure_game_record.AdventureGameLocationObjectEffectEffectTypePlaceItem,
+									IsRepeatable:      false,
+								},
+							},
 						},
 					},
 				},
 			},
-		},
-	},
-		// Minimal draft game for testing update operations
-		{
-			Reference: GameDraftRef,
-			Record: &game_record.Game{
-				Name:              UniqueName("Default Draft Game"),
-				GameType:          game_record.GameTypeAdventure,
-				TurnDurationHours: 168,
-				Status:            game_record.GameStatusDraft,
-			},
-		},
-		// Mecha game for testing mecha specific resources
-		{
-			Reference: GameMechaRef,
-			Record: &game_record.Game{
-				Name:              UniqueName("Default Mecha"),
-				GameType:          game_record.GameTypeMecha,
-				TurnDurationHours: 168,
-			},
-			MechaChassisConfigs: []MechaChassisConfig{
-				{
-					Reference: MechaChassisOneRef,
-					Record: &mecha_record.MechaChassis{
-						Name:            UniqueName("Timber Wolf"),
-						Description:     "A heavy assault mech.",
-						ChassisClass:    mecha_record.ChassisClassHeavy,
-						ArmorPoints:     200,
-						StructurePoints: 100,
-						HeatCapacity:    40,
-						Speed:           3,
-					},
+			// Minimal draft game for testing update operations
+			{
+				Reference: GameDraftRef,
+				Record: &game_record.Game{
+					Name:              UniqueName("Default Draft Game"),
+					GameType:          game_record.GameTypeAdventure,
+					TurnDurationHours: 168,
+					Status:            game_record.GameStatusDraft,
 				},
 			},
-			MechaWeaponConfigs: []MechaWeaponConfig{
-				{
-					Reference: MechaWeaponOneRef,
-					Record: &mecha_record.MechaWeapon{
-						Name:        UniqueName("Large Laser"),
-						Description: "A powerful energy weapon.",
-						Damage:      8,
-						HeatCost:    8,
-						RangeBand:   mecha_record.WeaponRangeBandMedium,
-						MountSize:   mecha_record.WeaponMountSizeLarge,
+			// Mecha game for testing mecha specific resources
+			{
+				Reference: GameMechaRef,
+				Record: &game_record.Game{
+					Name:              UniqueName("Default Mecha"),
+					GameType:          game_record.GameTypeMecha,
+					TurnDurationHours: 168,
+				},
+				MechaChassisConfigs: []MechaChassisConfig{
+					{
+						Reference: MechaChassisOneRef,
+						Record: &mecha_record.MechaChassis{
+							Name:            UniqueName("Timber Wolf"),
+							Description:     "A heavy assault mech.",
+							ChassisClass:    mecha_record.ChassisClassHeavy,
+							ArmorPoints:     200,
+							StructurePoints: 100,
+							HeatCapacity:    40,
+							Speed:           3,
+						},
 					},
 				},
-			},
-			MechaSectorConfigs: []MechaSectorConfig{
-				{
-					Reference: MechaSectorOneRef,
-					Record: &mecha_record.MechaSector{
-						Name:             UniqueName("Ridge South"),
-						Description:      "A rocky ridge offering good cover.",
-						TerrainType:      mecha_record.SectorTerrainTypeRough,
-						Elevation:        2,
-						IsStartingSector: true,
+				MechaWeaponConfigs: []MechaWeaponConfig{
+					{
+						Reference: MechaWeaponOneRef,
+						Record: &mecha_record.MechaWeapon{
+							Name:        UniqueName("Large Laser"),
+							Description: "A powerful energy weapon.",
+							Damage:      8,
+							HeatCost:    8,
+							RangeBand:   mecha_record.WeaponRangeBandMedium,
+							MountSize:   mecha_record.WeaponMountSizeLarge,
+						},
 					},
 				},
-				{
-					Reference: MechaSectorTwoRef,
-					Record: &mecha_record.MechaSector{
-						Name:        UniqueName("Relay Station"),
-						Description: "An abandoned communications relay station.",
-						TerrainType: mecha_record.SectorTerrainTypeUrban,
-						Elevation:   0,
+				MechaSectorConfigs: []MechaSectorConfig{
+					{
+						Reference: MechaSectorOneRef,
+						Record: &mecha_record.MechaSector{
+							Name:             UniqueName("Ridge South"),
+							Description:      "A rocky ridge offering good cover.",
+							TerrainType:      mecha_record.SectorTerrainTypeRough,
+							Elevation:        2,
+							IsStartingSector: true,
+						},
+					},
+					{
+						Reference: MechaSectorTwoRef,
+						Record: &mecha_record.MechaSector{
+							Name:        UniqueName("Relay Station"),
+							Description: "An abandoned communications relay station.",
+							TerrainType: mecha_record.SectorTerrainTypeUrban,
+							Elevation:   0,
+						},
 					},
 				},
-			},
-			MechaSectorLinkConfigs: []MechaSectorLinkConfig{
-				{
-					Reference:     MechaSectorLinkOneRef,
-					FromSectorRef: MechaSectorOneRef,
-					ToSectorRef:   MechaSectorTwoRef,
-					Record: &mecha_record.MechaSectorLink{
-						CoverModifier: 1,
+				MechaSectorLinkConfigs: []MechaSectorLinkConfig{
+					{
+						Reference:     MechaSectorLinkOneRef,
+						FromSectorRef: MechaSectorOneRef,
+						ToSectorRef:   MechaSectorTwoRef,
+						Record:        &mecha_record.MechaSectorLink{},
 					},
 				},
-			},
 			MechaLanceConfigs: []MechaLanceConfig{
 				{
-					Reference:       MechaLanceStarterRef,
-					IsPlayerStarter: true,
+					Reference: MechaLanceStarterRef,
+					LanceType: mecha_record.LanceTypeStarter,
 					Record: &mecha_record.MechaLance{
 						Name:        UniqueName("Starter Lance"),
 						Description: "Default starter lance for new players.",
@@ -944,11 +940,11 @@ func DefaultDataConfig() DataConfig {
 					},
 				},
 				{
-					Reference:  MechaLanceOneRef,
-					AccountRef: AccountUserStandardRef,
+					Reference: MechaLanceOneRef,
+					LanceType: mecha_record.LanceTypeOpponent,
 					Record: &mecha_record.MechaLance{
 						Name:        UniqueName("Alpha Lance"),
-						Description: "First player lance.",
+						Description: "Opponent lance template.",
 					},
 					LanceMechConfigs: []MechaLanceMechConfig{
 						{
@@ -961,8 +957,8 @@ func DefaultDataConfig() DataConfig {
 					},
 				},
 			},
+			},
 		},
-	},
 		// Account user game subscription configurations may only be be resolved
 		// once both accounts and games have been created.
 		AccountUserGameSubscriptionConfigs: []AccountUserGameSubscriptionConfig{
@@ -996,47 +992,47 @@ func DefaultDataConfig() DataConfig {
 				SubscriptionType: game_record.GameSubscriptionTypeDesigner,
 				Record:           &game_record.GameSubscription{},
 			},
-		{
-			Reference:                             GameSubscriptionPlayerTwoRef,
-			AccountUserRef:                        AccountUserProPlayerRef,
-			GameRef:                               GameOneRef,
-			SubscriptionType:                      game_record.GameSubscriptionTypePlayer,
-			AccountUserManagerGameSubscriptionRef: GameSubscriptionManagerOneRef,
-			Record:                                &game_record.GameSubscription{},
-		},
-		{
-			Reference:        GameSubscriptionManagerOneRef,
-			AccountUserRef:   AccountUserProManagerRef,
-			GameRef:          GameOneRef,
-			SubscriptionType: game_record.GameSubscriptionTypeManager,
-			Record:           &game_record.GameSubscription{},
-			GameInstanceConfigs: []GameInstanceConfig{
-				{
-					Reference:              GameInstanceOneRef,
-					Record:                 &game_record.GameInstance{},
-					PlayerSubscriptionRefs: []string{GameSubscriptionPlayerOneRef, GameSubscriptionPlayerThreeRef},
-					GameInstanceParameterConfigs: []GameInstanceParameterConfig{
-						{
-							Reference: GameInstanceParameterOneRef,
-							Record: &game_record.GameInstanceParameter{
-								ParameterKey:   domain.AdventureGameParameterCharacterLives,
-								ParameterValue: nullstring.FromString("3"),
+			{
+				Reference:                             GameSubscriptionPlayerTwoRef,
+				AccountUserRef:                        AccountUserProPlayerRef,
+				GameRef:                               GameOneRef,
+				SubscriptionType:                      game_record.GameSubscriptionTypePlayer,
+				AccountUserManagerGameSubscriptionRef: GameSubscriptionManagerOneRef,
+				Record:                                &game_record.GameSubscription{},
+			},
+			{
+				Reference:        GameSubscriptionManagerOneRef,
+				AccountUserRef:   AccountUserProManagerRef,
+				GameRef:          GameOneRef,
+				SubscriptionType: game_record.GameSubscriptionTypeManager,
+				Record:           &game_record.GameSubscription{},
+				GameInstanceConfigs: []GameInstanceConfig{
+					{
+						Reference:              GameInstanceOneRef,
+						Record:                 &game_record.GameInstance{},
+						PlayerSubscriptionRefs: []string{GameSubscriptionPlayerOneRef, GameSubscriptionPlayerThreeRef},
+						GameInstanceParameterConfigs: []GameInstanceParameterConfig{
+							{
+								Reference: GameInstanceParameterOneRef,
+								Record: &game_record.GameInstanceParameter{
+									ParameterKey:   domain.AdventureGameParameterCharacterLives,
+									ParameterValue: nullstring.FromString("3"),
+								},
 							},
 						},
+						ShouldStartGameInstance: true,
 					},
-				ShouldStartGameInstance: true,
-				},
-				{
-					Reference:              GameInstanceTwoRef,
-					Record:                 &game_record.GameInstance{},
-					PlayerSubscriptionRefs: []string{GameSubscriptionPlayerTwoRef},
-				},
-				{
-					Reference: GameInstanceCleanRef,
-					Record:    &game_record.GameInstance{},
+					{
+						Reference:              GameInstanceTwoRef,
+						Record:                 &game_record.GameInstance{},
+						PlayerSubscriptionRefs: []string{GameSubscriptionPlayerTwoRef},
+					},
+					{
+						Reference: GameInstanceCleanRef,
+						Record:    &game_record.GameInstance{},
+					},
 				},
 			},
-		},
 		},
 	}
 }

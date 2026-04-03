@@ -2,6 +2,7 @@ package mecha
 
 import (
 	"context"
+	"encoding/json"
 
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
 	"gitlab.com/alienspaces/playbymail/internal/domain"
@@ -10,8 +11,8 @@ import (
 )
 
 // MechaJoinGameProcessor handles subscription processing for mecha games.
-// For the online join flow the lance is created by submitJoinHandler; this
-// processor acts as a safety-net (and handles the physical-mail scan flow).
+// Player lances are created at game start by PopulateMechaGameInstanceData;
+// this processor exists only to handle the physical-mail scan flow (commander name).
 type MechaJoinGameProcessor struct {
 	Logger logger.Logger
 	Domain *domain.Domain
@@ -22,9 +23,10 @@ func NewMechaJoinGameProcessor(l logger.Logger, d *domain.Domain) (*MechaJoinGam
 	return &MechaJoinGameProcessor{Logger: l, Domain: d}, nil
 }
 
-// ProcessGameSubscriptionProcessing creates a default mecha lance for the player if one
-// does not already exist. When a physical join-game turn sheet has been scanned the
-// CommanderName from the scan data is used as the lance base name.
+// ProcessGameSubscriptionProcessing is a no-op for mecha games.
+// Lances are created at game-start time from the starter template, not at join time.
+// The commander name from a physical join-game scan is currently unused but may be
+// stored in a future iteration.
 func (p *MechaJoinGameProcessor) ProcessGameSubscriptionProcessing(
 	ctx context.Context,
 	subscriptionRec *game_record.GameSubscription,
@@ -32,29 +34,16 @@ func (p *MechaJoinGameProcessor) ProcessGameSubscriptionProcessing(
 ) error {
 	l := p.Logger.WithFunctionContext("MechaJoinGameProcessor/ProcessGameSubscriptionProcessing")
 
-	l.Info("processing mecha subscription ID >%s<", subscriptionRec.ID)
+	l.Info("processing mecha subscription ID >%s< (no-op: lances created at game start)", subscriptionRec.ID)
 
-	commanderName := ""
 	if turnSheetRec != nil && len(turnSheetRec.ScannedData) > 0 {
 		var scanData turnsheet.MechaJoinGameScanData
-		if err := scanData.Validate(); err == nil {
-			commanderName = scanData.CommanderName
+		if err := json.Unmarshal(turnSheetRec.ScannedData, &scanData); err == nil {
+			if err := scanData.Validate(); err == nil {
+				l.Info("physical join scan for subscription >%s<: commander name >%s< (stored for future use)", subscriptionRec.ID, scanData.CommanderName)
+			}
 		}
 	}
-
-	lanceRec, err := p.Domain.CreateDefaultMechaLanceForPlayer(
-		subscriptionRec.GameID,
-		subscriptionRec.AccountID,
-		subscriptionRec.AccountUserID,
-		commanderName,
-		"",
-	)
-	if err != nil {
-		l.Warn("failed to create default mecha lance for player >%v<", err)
-		return err
-	}
-
-	l.Info("ensured mecha lance >%s< for player >%s<", lanceRec.ID, subscriptionRec.AccountUserID)
 
 	return nil
 }

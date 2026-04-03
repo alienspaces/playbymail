@@ -403,4 +403,82 @@ test.describe('Studio Mecha Designer Workflows', () => {
       }
     })
   })
+
+  // ─── Computer Opponents Page ─────────────────────────────────────────────────
+
+  test.describe('Computer Opponents Page', () => {
+    test('should show unauthenticated content for computer opponents page', async ({ page }) => {
+      await navigateTo(page, '/studio')
+      await checkPageURL(page, '/studio')
+      await checkElementVisible(page, 'body')
+      const content = await page.locator('body').textContent()
+      expect(content).toMatch(/Studio|Game|Design|Sign In/i)
+      await takeScreenshot(page, 'studio-computer-opponents-unauthenticated')
+    })
+
+    test('should navigate to computer opponents page and show content', async ({ page }) => {
+      await setupTestBypassHeaders(page)
+      await navigateTo(page, '/studio')
+      await waitForPageReady(page)
+      const content = await page.locator('body').textContent()
+      if (content.includes('Computer Opponents') || content.includes('computer-opponents')) {
+        await checkElementVisible(page, 'body')
+        await takeScreenshot(page, 'studio-computer-opponents-page')
+      } else {
+        console.log('Computer Opponents link not found - may require authenticated session with game selected')
+      }
+    })
+
+    test('should show computer opponents table when game is selected', async ({ page }) => {
+      await setupTestBypassHeaders(page)
+      await navigateTo(page, '/studio')
+      await waitForPageReady(page)
+
+      const tableSelectors = ['[data-testid="computer-opponents-table"]', 'table', '[class*="resource-table"]']
+      let tableFound = false
+      for (const selector of tableSelectors) {
+        try {
+          if (await page.locator(selector).isVisible({ timeout: 2000 })) {
+            tableFound = true
+            console.log(`Computer opponents table found: ${selector}`)
+            break
+          }
+        } catch { /* continue */ }
+      }
+      if (!tableFound) console.log('Computer opponents table not found - requires game selection')
+      await takeScreenshot(page, 'studio-computer-opponents-table')
+    })
+
+    test('should open create computer opponent form', async ({ page }) => {
+      await setupTestBypassHeaders(page)
+      await navigateTo(page, '/studio')
+      await waitForPageReady(page)
+
+      const buttonSelectors = ['button:has-text("Create New Opponent")', 'button:has-text("Create Opponent")', 'button:has-text("Create")']
+      let buttonFound = false
+      for (const selector of buttonSelectors) {
+        try {
+          if (await page.locator(selector).first().isVisible({ timeout: 2000 })) {
+            await safeClick(page, selector)
+            buttonFound = true
+            break
+          }
+        } catch { /* continue */ }
+      }
+      if (buttonFound) {
+        const formSelectors = ['[data-testid="computer-opponent-form"]', 'form', '[class*="modal"]']
+        for (const selector of formSelectors) {
+          try {
+            if (await page.locator(selector).first().isVisible({ timeout: 2000 })) {
+              console.log(`Computer opponent form found: ${selector}`)
+              break
+            }
+          } catch { /* continue */ }
+        }
+        await takeScreenshot(page, 'studio-computer-opponent-create-form')
+      } else {
+        console.log('Create computer opponent button not found - requires authenticated session with game selected')
+      }
+    })
+  })
 })

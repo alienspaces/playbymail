@@ -17,8 +17,9 @@ var scannedDataSchemaLocationBySheetType = map[string]string{
 	adventure_game_record.AdventureGameTurnSheetTypeLocationChoice:      ScannedDataSchemaLocation,
 	adventure_game_record.AdventureGameTurnSheetTypeInventoryManagement: ScannedDataSchemaLocation,
 	adventure_game_record.AdventureGameTurnSheetTypeCreatureEncounter:   ScannedDataSchemaLocation,
-	mecha_record.MechaTurnSheetTypeOrders:          MechaScannedDataSchemaLocation,
-	mecha_record.MechaTurnSheetTypeLanceManagement: MechaScannedDataSchemaLocation,
+	mecha_record.MechaTurnSheetTypeJoinGame:                             MechaScannedDataSchemaLocation,
+	mecha_record.MechaTurnSheetTypeOrders:                               MechaScannedDataSchemaLocation,
+	mecha_record.MechaTurnSheetTypeLanceManagement:                      MechaScannedDataSchemaLocation,
 }
 
 // scannedDataSchemaNameBySheetType maps turn sheet types to their scanned_data schema filename.
@@ -27,8 +28,9 @@ var scannedDataSchemaNameBySheetType = map[string]string{
 	adventure_game_record.AdventureGameTurnSheetTypeLocationChoice:      LocationChoiceScannedDataSchemaName,
 	adventure_game_record.AdventureGameTurnSheetTypeInventoryManagement: InventoryManagementScannedDataSchemaName,
 	adventure_game_record.AdventureGameTurnSheetTypeCreatureEncounter:   MonsterEncounterScannedDataSchemaName,
-	mecha_record.MechaTurnSheetTypeOrders:          OrdersScannedDataSchemaName,
-	mecha_record.MechaTurnSheetTypeLanceManagement: LanceManagementScannedDataSchemaName,
+	mecha_record.MechaTurnSheetTypeJoinGame:                             JoinGameScannedDataSchemaName,
+	mecha_record.MechaTurnSheetTypeOrders:                               OrdersScannedDataSchemaName,
+	mecha_record.MechaTurnSheetTypeLanceManagement:                      LanceManagementScannedDataSchemaName,
 }
 
 // ScannedDataSchemaName returns the JSON schema filename for the given sheet type's scanned_data,

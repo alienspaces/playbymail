@@ -15,9 +15,9 @@ const mockWeapons = [
     name: 'Medium Laser',
     description: 'A reliable direct-fire weapon.',
     damage: 5,
-    heat_generated: 3,
-    range: 3,
-    tonnage: 1,
+    heat_cost: 3,
+    range_band: 'medium',
+    mount_size: 'small',
     created_at: '2024-07-10T12:00:00Z'
   }
 ];
@@ -54,7 +54,7 @@ describe('StudioWeaponsView', () => {
     expect(headerTexts).toContain('Damage');
     expect(headerTexts).toContain('Heat');
     expect(headerTexts).toContain('Range');
-    expect(headerTexts).toContain('Tonnage');
+    expect(headerTexts).toContain('Mount');
     expect(headerTexts).toContain('Actions');
 
     const tds = wrapper.findAll('td');

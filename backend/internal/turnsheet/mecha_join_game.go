@@ -15,6 +15,8 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/utils/turnsheetutil"
 )
 
+const JoinGameScannedDataSchemaName = "join_game.schema.json"
+
 const defaultMechaJoinGameInstructions = "Fill out your account information and commander name, then return this form to join the game."
 const mechaJoinGameTemplatePath = "turnsheet/mecha_join_game.template"
 

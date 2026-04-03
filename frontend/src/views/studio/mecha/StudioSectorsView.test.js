@@ -60,7 +60,7 @@ describe('StudioSectorsView', () => {
     const headerTexts = ths.map(th => th.text());
     expect(headerTexts).toContain('Name');
     expect(headerTexts).toContain('Description');
-    expect(headerTexts).toContain('Starting Sector');
+    expect(headerTexts).toContain('Starting');
     expect(headerTexts).toContain('Actions');
 
     const tds = wrapper.findAll('td');

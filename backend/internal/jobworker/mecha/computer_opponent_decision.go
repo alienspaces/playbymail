@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"strings"
 
+	coresql "gitlab.com/alienspaces/playbymail/core/sql"
 	"gitlab.com/alienspaces/playbymail/core/type/logger"
 	"gitlab.com/alienspaces/playbymail/internal/agent"
-	coresql "gitlab.com/alienspaces/playbymail/core/sql"
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/record/mecha_record"
 	"gitlab.com/alienspaces/playbymail/internal/turnsheet"
@@ -23,7 +23,9 @@ type GameStateContext struct {
 	OwnMechs      []*mecha_record.MechaMechInstance
 	EnemyMechs    []*mechState
 	Sectors       []*sectorState
-	TurnNumber    int
+	// ChassisCache maps chassis ID to chassis design record for speed lookups.
+	ChassisCache map[string]*mecha_record.MechaChassis
+	TurnNumber   int
 }
 
 type mechState struct {
@@ -32,8 +34,8 @@ type mechState struct {
 }
 
 type sectorState struct {
-	Instance  *mecha_record.MechaSectorInstance
-	Design    *mecha_record.MechaSector
+	Instance            *mecha_record.MechaSectorInstance
+	Design              *mecha_record.MechaSector
 	LinkDestInstanceIDs []string
 }
 
@@ -45,9 +47,9 @@ type ComputerOpponentStrategy interface {
 // ComputerOpponentDecisionEngine selects a strategy and generates orders for
 // each computer opponent lance during turn processing.
 type ComputerOpponentDecisionEngine struct {
-	logger          logger.Logger
-	domain          *domain.Domain
-	primaryStrategy ComputerOpponentStrategy
+	logger           logger.Logger
+	domain           *domain.Domain
+	primaryStrategy  ComputerOpponentStrategy
 	fallbackStrategy ComputerOpponentStrategy
 }
 
@@ -198,12 +200,31 @@ func (e *ComputerOpponentDecisionEngine) buildGameStateContext(
 		})
 	}
 
+	// Build chassis cache for speed lookups.
+	chassisCache := make(map[string]*mecha_record.MechaChassis)
+	allMechsForChassis := append(ownMechs, func() []*mecha_record.MechaMechInstance {
+		var ms []*mecha_record.MechaMechInstance
+		for _, em := range enemyMechs {
+			ms = append(ms, em.Instance)
+		}
+		return ms
+	}()...)
+	for _, m := range allMechsForChassis {
+		if m.MechaChassisID == "" || chassisCache[m.MechaChassisID] != nil {
+			continue
+		}
+		if cr, err := e.domain.GetMechaChassisRec(m.MechaChassisID, nil); err == nil {
+			chassisCache[m.MechaChassisID] = cr
+		}
+	}
+
 	return &GameStateContext{
 		Opponent:      opponentRec,
 		LanceInstance: lanceInstance,
 		OwnMechs:      ownMechs,
 		EnemyMechs:    enemyMechs,
 		Sectors:       sectors,
+		ChassisCache:  chassisCache,
 		TurnNumber:    turnNumber,
 	}, nil
 }
@@ -267,9 +288,15 @@ func (s *llmStrategy) buildGameStatePrompt(state *GameStateContext) string {
 				break
 			}
 		}
-		fmt.Fprintf(&sb, "  - Mech ID: %s, Callsign: %s, Status: %s, Location: %s (sector_instance_id: %s), Armor: %d, Structure: %d\n",
+		speed := 1
+		if state.ChassisCache != nil {
+			if cr, ok := state.ChassisCache[m.MechaChassisID]; ok {
+				speed = cr.Speed
+			}
+		}
+		fmt.Fprintf(&sb, "  - Mech ID: %s, Callsign: %s, Status: %s, Location: %s (sector_instance_id: %s), Armor: %d, Structure: %d, Speed: %d (max sector hops per turn)\n",
 			m.ID, m.Callsign, m.Status, sectorName, m.MechaSectorInstanceID,
-			m.CurrentArmor, m.CurrentStructure)
+			m.CurrentArmor, m.CurrentStructure, speed)
 	}
 
 	if len(state.EnemyMechs) > 0 {
@@ -316,8 +343,9 @@ Return your orders as JSON with this exact structure:
     }
   ]
 }
-Include one entry per mech. Use exact IDs from above. Only move to directly adjacent sectors.
-Attack targets must be in the same sector or one adjacent sector (after movement).
+Include one entry per mech. Use exact IDs from above.
+Each mech can move up to its Speed number of connected sector hops per turn (follow the movement graph).
+Attack targets must be within weapon range after movement (short-range: same sector, medium-range: same or adjacent, long-range: adjacent or 2 sectors away).
 Respond with JSON only — no markdown, no commentary.`)
 
 	return sb.String()
@@ -369,7 +397,15 @@ func (s *ruleBasedStrategy) GenerateOrders(ctx context.Context, l logger.Logger,
 			continue
 		}
 
-		targetSectorInstanceID := s.pickMovementTarget(l, opp, mech, state)
+		// Look up chassis speed for multi-hop movement.
+		mechSpeed := 1
+		if mech.MechaChassisID != "" {
+			if chassisRec, err := s.lookupChassis(state, mech.MechaChassisID); chassisRec != nil && err == nil {
+				mechSpeed = chassisRec.Speed
+			}
+		}
+
+		targetSectorInstanceID := s.pickMovementTarget(l, opp, mech, mechSpeed, state)
 
 		// After movement (use new sector if moving), pick an attack target
 		postMoveSectorID := targetSectorInstanceID
@@ -391,14 +427,18 @@ func (s *ruleBasedStrategy) GenerateOrders(ctx context.Context, l logger.Logger,
 
 // pickAttackTarget selects an enemy mech to attack from the given sector.
 // Returns empty string if no valid target exists.
+// Uses max range 2 (long-range weapon reach) as the engagement envelope.
+// Combat resolution will only fire weapons that can actually reach the target.
 func (s *ruleBasedStrategy) pickAttackTarget(opp *mecha_record.MechaComputerOpponent, fromSectorID string, state *GameStateContext) string {
+	const maxEngagementRange = 2
+
 	var candidates []*mechState
 	for _, em := range state.EnemyMechs {
 		if em.Instance.Status == mecha_record.MechInstanceStatusDestroyed {
 			continue
 		}
 		dist := s.sectorDistance(fromSectorID, em.Instance.MechaSectorInstanceID, state)
-		if dist <= 1 {
+		if dist <= maxEngagementRange {
 			candidates = append(candidates, em)
 		}
 	}
@@ -462,26 +502,25 @@ func (s *ruleBasedStrategy) sectorDistance(fromID, toID string, state *GameState
 }
 
 // pickMovementTarget returns the sector instance ID the mech should move to, or
-// empty string to stay in place.
-func (s *ruleBasedStrategy) pickMovementTarget(_ logger.Logger, opp *mecha_record.MechaComputerOpponent, mech *mecha_record.MechaMechInstance, state *GameStateContext) string {
-	adjacentIDs := s.getAdjacentSectorIDs(mech.MechaSectorInstanceID, state)
-	if len(adjacentIDs) == 0 {
+// empty string to stay in place. Considers the mech's speed for multi-hop movement.
+func (s *ruleBasedStrategy) pickMovementTarget(_ logger.Logger, opp *mecha_record.MechaComputerOpponent, mech *mecha_record.MechaMechInstance, mechSpeed int, state *GameStateContext) string {
+	reachableIDs := s.getReachableSectorIDs(mech.MechaSectorInstanceID, mechSpeed, state)
+	if len(reachableIDs) == 0 {
 		return ""
 	}
 
 	if opp.Aggression >= 7 && len(state.EnemyMechs) > 0 {
 		// Advance toward nearest enemy
-		target := s.findNearestEnemy(mech.MechaSectorInstanceID, state)
-		if target != "" {
-			// Pick the adjacent sector that gets us closer (simple: first adjacent)
-			best := s.pickBestAdvanceStep(mech.MechaSectorInstanceID, target, adjacentIDs, opp.IQ, state)
+		nearestEnemySectorID := s.findNearestEnemy(mech.MechaSectorInstanceID, state)
+		if nearestEnemySectorID != "" {
+			best := s.pickBestAdvanceStep(mech.MechaSectorInstanceID, nearestEnemySectorID, reachableIDs, opp.IQ, state)
 			if best != "" {
 				return best
 			}
 		}
 	} else if opp.Aggression <= 3 {
 		// Retreat to starting / best-covered sector
-		best := s.pickBestDefensiveStep(adjacentIDs, opp.IQ, state)
+		best := s.pickBestDefensiveStep(reachableIDs, opp.IQ, state)
 		if best != "" {
 			return best
 		}
@@ -491,72 +530,164 @@ func (s *ruleBasedStrategy) pickMovementTarget(_ logger.Logger, opp *mecha_recor
 	return ""
 }
 
-func (s *ruleBasedStrategy) getAdjacentSectorIDs(sectorInstanceID string, state *GameStateContext) []string {
-	for _, sec := range state.Sectors {
-		if sec.Instance.ID == sectorInstanceID {
-			return sec.LinkDestInstanceIDs
-		}
-	}
-	return nil
-}
-
-func (s *ruleBasedStrategy) findNearestEnemy(_ string, state *GameStateContext) string {
-	for _, em := range state.EnemyMechs {
-		if em.Sector != nil {
-			return em.Sector.ID
-		}
-	}
-	return ""
-}
-
-func (s *ruleBasedStrategy) pickBestAdvanceStep(_, targetID string, adjacentIDs []string, iq int, state *GameStateContext) string {
-	// If an adjacent sector IS the target, move there directly.
-	for _, adjID := range adjacentIDs {
-		if adjID == targetID {
-			return adjID
-		}
+// getReachableSectorIDs returns all sector instance IDs reachable within the given
+// number of hops from the given sector, using BFS over the sector graph.
+func (s *ruleBasedStrategy) getReachableSectorIDs(fromSectorID string, speed int, state *GameStateContext) []string {
+	if speed <= 0 {
+		return nil
 	}
 
-	// Otherwise pick the adjacent sector that is also adjacent to the target.
-	for _, adjID := range adjacentIDs {
-		adj := s.getAdjacentSectorIDs(adjID, state)
-		for _, next := range adj {
-			if next == targetID {
-				if iq >= 5 {
-					// Prefer cover when high IQ
-					return s.pickHighCoverSector([]string{adjID}, state)
+	type bfsNode struct {
+		id    string
+		depth int
+	}
+
+	seen := map[string]bool{fromSectorID: true}
+	queue := []bfsNode{{id: fromSectorID, depth: 0}}
+	var reachable []string
+
+	for len(queue) > 0 {
+		cur := queue[0]
+		queue = queue[1:]
+
+		if cur.depth >= speed {
+			continue
+		}
+
+		for _, sec := range state.Sectors {
+			if sec.Instance.ID != cur.id {
+				continue
+			}
+			for _, destID := range sec.LinkDestInstanceIDs {
+				if seen[destID] {
+					continue
 				}
-				return adjID
+				seen[destID] = true
+				reachable = append(reachable, destID)
+				queue = append(queue, bfsNode{id: destID, depth: cur.depth + 1})
 			}
 		}
 	}
 
-	// Fall back to any adjacent sector
-	if iq >= 5 {
-		return s.pickHighCoverSector(adjacentIDs, state)
-	}
-	return adjacentIDs[0]
+	return reachable
 }
 
-func (s *ruleBasedStrategy) pickBestDefensiveStep(adjacentIDs []string, iq int, state *GameStateContext) string {
+// findNearestEnemy returns the sector instance ID of the nearest enemy mech using
+// actual BFS distance through the sector graph. Returns empty string if no enemies.
+func (s *ruleBasedStrategy) findNearestEnemy(fromSectorID string, state *GameStateContext) string {
+	enemySectorIDs := make(map[string]bool)
+	for _, em := range state.EnemyMechs {
+		if em.Sector != nil {
+			enemySectorIDs[em.Sector.ID] = true
+		}
+	}
+	if len(enemySectorIDs) == 0 {
+		return ""
+	}
+
+	type bfsNode struct {
+		id    string
+		depth int
+	}
+
+	seen := map[string]bool{fromSectorID: true}
+	queue := []bfsNode{{id: fromSectorID, depth: 0}}
+
+	for len(queue) > 0 {
+		cur := queue[0]
+		queue = queue[1:]
+
+		if enemySectorIDs[cur.id] {
+			return cur.id
+		}
+
+		if cur.depth >= 20 {
+			continue
+		}
+
+		for _, sec := range state.Sectors {
+			if sec.Instance.ID != cur.id {
+				continue
+			}
+			for _, destID := range sec.LinkDestInstanceIDs {
+				if !seen[destID] {
+					seen[destID] = true
+					queue = append(queue, bfsNode{id: destID, depth: cur.depth + 1})
+				}
+			}
+		}
+	}
+
+	return ""
+}
+
+func (s *ruleBasedStrategy) pickBestAdvanceStep(_ string, targetID string, reachableIDs []string, iq int, state *GameStateContext) string {
+	// Among reachable sectors, pick the one with the shortest distance to the target.
+	bestID := ""
+	bestDist := 999
+
+	for _, candID := range reachableIDs {
+		dist := s.sectorDistance(candID, targetID, state)
+		if dist < bestDist {
+			bestDist = dist
+			bestID = candID
+		}
+	}
+
+	if bestID == "" {
+		return ""
+	}
+
+	// When IQ is high, among the equally best sectors prefer higher cover.
 	if iq >= 5 {
-		return s.pickHighCoverSector(adjacentIDs, state)
+		var equally []string
+		for _, candID := range reachableIDs {
+			if s.sectorDistance(candID, targetID, state) == bestDist {
+				equally = append(equally, candID)
+			}
+		}
+		return s.pickHighCoverSector(equally, state)
+	}
+
+	return bestID
+}
+
+func (s *ruleBasedStrategy) pickBestDefensiveStep(reachableIDs []string, iq int, state *GameStateContext) string {
+	if iq >= 5 {
+		return s.pickHighCoverSector(reachableIDs, state)
 	}
 	return ""
 }
 
-// pickHighCoverSector returns the sector with the highest elevation (proxy for
-// cover) from the given candidates.
+// lookupChassis retrieves a chassis record from the context's cache, or nil if not found.
+func (s *ruleBasedStrategy) lookupChassis(state *GameStateContext, chassisID string) (*mecha_record.MechaChassis, error) {
+	if state.ChassisCache != nil {
+		if cr, ok := state.ChassisCache[chassisID]; ok {
+			return cr, nil
+		}
+	}
+	return nil, fmt.Errorf("chassis >%s< not found in cache", chassisID)
+}
+
+// pickHighCoverSector returns the sector with the highest cover_modifier from
+// the given candidates. Elevation is used as a tiebreaker when cover is equal.
 func (s *ruleBasedStrategy) pickHighCoverSector(candidates []string, state *GameStateContext) string {
 	best := ""
+	bestCover := -999
 	bestElev := -999
 	for _, id := range candidates {
 		for _, sec := range state.Sectors {
-			if sec.Instance.ID == id && sec.Design.Elevation > bestElev {
-				bestElev = sec.Design.Elevation
-				best = id
-				break
+			if sec.Instance.ID != id {
+				continue
 			}
+			cover := sec.Design.CoverModifier
+			elev := sec.Design.Elevation
+			if cover > bestCover || (cover == bestCover && elev > bestElev) {
+				bestCover = cover
+				bestElev = elev
+				best = id
+			}
+			break
 		}
 	}
 	return best

@@ -37,6 +37,7 @@ const routes = [
       { path: ':gameId/sectors', component: () => import('../views/studio/mecha/StudioSectorsView.vue') },
       { path: ':gameId/sector-links', component: () => import('../views/studio/mecha/StudioSectorLinksView.vue') },
       { path: ':gameId/lances', component: () => import('../views/studio/mecha/StudioLancesView.vue') },
+      { path: ':gameId/computer-opponents', component: () => import('../views/studio/mecha/StudioComputerOpponentsView.vue') },
 
     ],
   },

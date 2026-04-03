@@ -37,24 +37,26 @@ type MechWeaponEntry struct {
 
 // MechOrderEntry is a single mech's orders for a turn.
 type MechOrderEntry struct {
-	MechInstanceID             string           `json:"mech_instance_id"`
-	MechCallsign               string           `json:"mech_callsign,omitempty"`
-	MechStatus                 string           `json:"mech_status,omitempty"`
-	CurrentSectorName          string           `json:"current_sector_name,omitempty"`
-	MoveToSectorInstanceID     string           `json:"move_to_sector_instance_id,omitempty"`
-	AttackTargetMechInstanceID string           `json:"attack_target_mech_instance_id,omitempty"`
-	ChassisName                string           `json:"chassis_name,omitempty"`
-	ChassisClass               string           `json:"chassis_class,omitempty"`
-	CurrentArmor               int              `json:"current_armor"`
-	MaxArmor                   int              `json:"max_armor"`
-	CurrentStructure           int              `json:"current_structure"`
-	MaxStructure               int              `json:"max_structure"`
-	CurrentHeat                int              `json:"current_heat"`
-	HeatCapacity               int              `json:"heat_capacity"`
-	Speed                      int              `json:"speed"`
-	PilotSkill                 int              `json:"pilot_skill"`
-	IsRefitting                bool             `json:"is_refitting"`
+	MechInstanceID             string            `json:"mech_instance_id"`
+	MechCallsign               string            `json:"mech_callsign,omitempty"`
+	MechStatus                 string            `json:"mech_status,omitempty"`
+	CurrentSectorName          string            `json:"current_sector_name,omitempty"`
+	MoveToSectorInstanceID     string            `json:"move_to_sector_instance_id,omitempty"`
+	AttackTargetMechInstanceID string            `json:"attack_target_mech_instance_id,omitempty"`
+	ChassisName                string            `json:"chassis_name,omitempty"`
+	ChassisClass               string            `json:"chassis_class,omitempty"`
+	CurrentArmor               int               `json:"current_armor"`
+	MaxArmor                   int               `json:"max_armor"`
+	CurrentStructure           int               `json:"current_structure"`
+	MaxStructure               int               `json:"max_structure"`
+	CurrentHeat                int               `json:"current_heat"`
+	HeatCapacity               int               `json:"heat_capacity"`
+	Speed                      int               `json:"speed"`
+	PilotSkill                 int               `json:"pilot_skill"`
+	IsRefitting                bool              `json:"is_refitting"`
 	Weapons                    []MechWeaponEntry `json:"weapons,omitempty"`
+	// ReachableSectors lists sectors this mech can reach within its speed budget.
+	ReachableSectors []SectorOption `json:"reachable_sectors,omitempty"`
 }
 
 // SectorOption represents a sector available for movement.
@@ -309,8 +311,8 @@ func ordersExpectedSchema() map[string]any {
 	return map[string]any{
 		"mech_orders": []map[string]any{
 			{
-				"mech_instance_id":              "",
-				"move_to_sector_instance_id":    "",
+				"mech_instance_id":               "",
+				"move_to_sector_instance_id":     "",
 				"attack_target_mech_instance_id": "",
 			},
 		},

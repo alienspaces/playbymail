@@ -24,7 +24,6 @@ func MechaSectorLinkRequestToRecord(l logger.Logger, r *http.Request, rec *mecha
 	case server.HttpMethodPost, server.HttpMethodPut, server.HttpMethodPatch:
 		rec.FromMechaSectorID = req.FromMechaSectorID
 		rec.ToMechaSectorID = req.ToMechaSectorID
-		rec.CoverModifier = req.CoverModifier
 	default:
 		return nil, fmt.Errorf("unsupported HTTP method")
 	}
@@ -35,14 +34,13 @@ func MechaSectorLinkRequestToRecord(l logger.Logger, r *http.Request, rec *mecha
 func MechaSectorLinkRecordToResponseData(l logger.Logger, rec *mecha_record.MechaSectorLink) (*mecha_schema.MechaSectorLinkResponseData, error) {
 	l.Debug("mapping mecha_sector_link record to response data")
 	return &mecha_schema.MechaSectorLinkResponseData{
-		ID:                      rec.ID,
-		GameID:                  rec.GameID,
+		ID:                rec.ID,
+		GameID:            rec.GameID,
 		FromMechaSectorID: rec.FromMechaSectorID,
 		ToMechaSectorID:   rec.ToMechaSectorID,
-		CoverModifier:           rec.CoverModifier,
-		CreatedAt:               rec.CreatedAt,
-		UpdatedAt:               nulltime.ToTimePtr(rec.UpdatedAt),
-		DeletedAt:               nulltime.ToTimePtr(rec.DeletedAt),
+		CreatedAt:         rec.CreatedAt,
+		UpdatedAt:         nulltime.ToTimePtr(rec.UpdatedAt),
+		DeletedAt:         nulltime.ToTimePtr(rec.DeletedAt),
 	}, nil
 }
 

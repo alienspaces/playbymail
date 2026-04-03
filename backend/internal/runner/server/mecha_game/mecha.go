@@ -38,6 +38,7 @@ func MechaHandlerConfig(cfg config.Config, l logger.Logger, scnr turnsheet.TurnS
 		mechaSectorLinkHandlerConfig,
 		mechaLanceHandlerConfig,
 		mechaLanceMechHandlerConfig,
+		mechaComputerOpponentHandlerConfig,
 	}
 
 	for _, fn := range handlerConfigFuncs {

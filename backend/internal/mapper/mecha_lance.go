@@ -1,7 +1,6 @@
 package mapper
 
 import (
-	"database/sql"
 	"fmt"
 	"net/http"
 
@@ -23,15 +22,7 @@ func MechaLanceRequestToRecord(l logger.Logger, r *http.Request, rec *mecha_reco
 
 	switch server.HttpMethod(r.Method) {
 	case server.HttpMethodPost, server.HttpMethodPut, server.HttpMethodPatch:
-		if req.AccountUserID != nil {
-			rec.AccountUserID = sql.NullString{String: *req.AccountUserID, Valid: true}
-		}
-		if req.MechaComputerOpponentID != nil {
-			rec.MechaComputerOpponentID = sql.NullString{String: *req.MechaComputerOpponentID, Valid: true}
-		}
-		if req.IsPlayerStarter != nil {
-			rec.IsPlayerStarter = *req.IsPlayerStarter
-		}
+		rec.LanceType = req.LanceType
 		rec.Name = req.Name
 		rec.Description = req.Description
 	default:
@@ -45,24 +36,14 @@ func MechaLanceRecordToResponseData(l logger.Logger, rec *mecha_record.MechaLanc
 	l.Debug("mapping mecha_lance record to response data")
 
 	data := &mecha_schema.MechaLanceResponseData{
-		ID:              rec.ID,
-		GameID:          rec.GameID,
-		IsPlayerStarter: rec.IsPlayerStarter,
-		Name:            rec.Name,
-		Description:     rec.Description,
-		CreatedAt:       rec.CreatedAt,
-		UpdatedAt:       nulltime.ToTimePtr(rec.UpdatedAt),
-		DeletedAt:       nulltime.ToTimePtr(rec.DeletedAt),
-	}
-
-	if rec.AccountID.Valid {
-		data.AccountID = &rec.AccountID.String
-	}
-	if rec.AccountUserID.Valid {
-		data.AccountUserID = &rec.AccountUserID.String
-	}
-	if rec.MechaComputerOpponentID.Valid {
-		data.MechaComputerOpponentID = &rec.MechaComputerOpponentID.String
+		ID:          rec.ID,
+		GameID:      rec.GameID,
+		LanceType:   rec.LanceType,
+		Name:        rec.Name,
+		Description: rec.Description,
+		CreatedAt:   rec.CreatedAt,
+		UpdatedAt:   nulltime.ToTimePtr(rec.UpdatedAt),
+		DeletedAt:   nulltime.ToTimePtr(rec.DeletedAt),
 	}
 
 	return data, nil
