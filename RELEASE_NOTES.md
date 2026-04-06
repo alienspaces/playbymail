@@ -2,15 +2,54 @@
 
 ## Overview
 
-Here's what's been happening with Play by Mail — from the early foundations in September 2025, through turn sheet scanning and AI integration, to a major accounts and subscriptions update in early 2026.
+Here's what's been happening with Play by Mail — from the early foundations in September 2025, through turn sheet scanning and AI integration, accounts and subscriptions in early 2026, and the launch of mecha wargames in April 2026.
 
 ---
 
 ## 🎯 What's Next
 
-- End-game win conditions (defeat a creature, retrieve an item, or reach a location)
+- Adventure game end-game win conditions — defeat a creature, retrieve an item, or reach a location to complete the game
+- Mecha wargame expanded combat — additional weapon types, terrain effects, and lance formations
 - Closed testing tester invite flow
-- Additional demo game content
+
+---
+
+## 🗓️ 7 April 2026
+
+**Theme**: Mecha Wargames & Mobile Turn Sheets
+
+### 🎯 Major Features
+
+**Mecha Wargame — New Game Type**
+- A brand-new game type is now available alongside adventure games: mecha wargames
+- Game designers can create mecha wargame games from the Studio, with dedicated pages for managing sectors, lances, weapons, and mech configurations
+- Players command a lance of mechs with full combat stats — armour, structure, heat, and weapon systems
+- A lance management turn sheet lets players spend supply points to repair damaged mechs and swap weapon loadouts between battles
+
+**Computer Opponents for Mecha Wargames**
+- Mecha games can now include computer-controlled lances that make tactical combat decisions
+- Solo play and mixed human/AI battles are now possible
+- Game designers configure computer opponent lances from the Studio
+
+### 🎨 Improvements
+
+**Mobile-Friendly Turn Sheets**
+- Turn sheets are now responsive on mobile screens with optimised layouts for all sheet types
+- A slide-out drawer provides access to the "What Happened" narrative panel on small screens
+- Combat, inventory, and mecha weapon tables reflow for comfortable mobile viewing
+
+**Turn Sheet Access Reliability**
+- Clicking a turn sheet email link after a period of inactivity now refreshes your session automatically instead of showing an error
+- Turn sheet access tokens last longer, reducing the chance of expired links
+
+**Join Game Turn Sheets**
+- Join game sheets now show a clean layout without the empty narrative panel — since there's nothing to report yet
+
+### 🐛 Bug Fixes
+
+- Fixed turn sheet email links sometimes failing when the session had expired
+- Fixed the lance management tab showing an incorrect label and missing its background image
+- Fixed the game creation form defaulting to adventure instead of letting you choose your game type
 
 ---
 
