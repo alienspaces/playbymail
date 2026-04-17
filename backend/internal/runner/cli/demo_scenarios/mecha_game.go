@@ -51,12 +51,12 @@ const (
 
 	// Computer opponent refs
 	DemoMechaComputerOpponentRef      = "demo-mecha-computer-opponent-garrison"
-	DemoMechaComputerOpponentLanceRef = "demo-mecha-computer-opponent-lance"
+	DemoMechaComputerOpponentSquadRef = "demo-mecha-computer-opponent-squad"
 	DemoMechaComputerOpponentMech1Ref = "demo-mecha-computer-opponent-mech-1"
 	DemoMechaComputerOpponentMech2Ref = "demo-mecha-computer-opponent-mech-2"
 
-	// Player starter lance refs
-	DemoMechaPlayerStarterLanceRef  = "demo-mecha-player-starter-lance"
+	// Player starter squad refs
+	DemoMechaPlayerStarterSquadRef  = "demo-mecha-player-starter-squad"
 	DemoMechaPlayerStarterMech1Ref  = "demo-mecha-player-starter-mech-1"
 	DemoMechaPlayerStarterMech2Ref  = "demo-mecha-player-starter-mech-2"
 
@@ -82,7 +82,7 @@ const (
 
 // MechaGameConfig returns a standalone demo scenario for the mecha type,
 // showcasing all designer-facing content: chassis, weapons, sectors, and sector links.
-// Lances are player-owned and would be created when players subscribe.
+// Squads are player-owned and would be created when players subscribe.
 // Accounts are managed by the CLI: subscription[0] uses demoRecs.AccountUsers[0] (designer),
 // subscription[1] uses [1] (manager).
 func MechaGameConfig() harness.DataConfig {
@@ -122,7 +122,7 @@ func mechaGameConfigs() []harness.GameConfig {
 			Reference: DemoMechaGameRef,
 			Record: &game_record.Game{
 				Name:              DemoMechaGameName,
-				Description:       "Two rival commands clash over the strategic Scorched Ridge industrial complex. Command lances of war mechs across eight contested sectors — from the rugged northern ridges to the fortified citadel at the heart of the complex. Manage heat, exploit terrain cover, and outmanoeuvre your opponent to seize and hold the industrial prize. Every decision shapes the battle. Engage!",
+				Description:       "Two rival commands clash over the strategic Scorched Ridge industrial complex. Command squads of war mechs across eight contested sectors — from the rugged northern ridges to the fortified citadel at the heart of the complex. Manage heat, exploit terrain cover, and outmanoeuvre your opponent to seize and hold the industrial prize. Every decision shapes the battle. Engage!",
 			GameType:          game_record.GameTypeMecha,
 			TurnDurationHours: 168,
 			Status:            game_record.GameStatusDraft,
@@ -141,7 +141,7 @@ func mechaGameConfigs() []harness.GameConfig {
 			{
 				Reference:     DemoMechaImageManagementRef,
 				ImagePath:     ImageMechaOrders,
-				TurnSheetType: mecha_record.MechaTurnSheetTypeLanceManagement,
+				TurnSheetType: mecha_record.MechaTurnSheetTypeSquadManagement,
 			},
 		},
 		MechaChassisConfigs: []harness.MechaChassisConfig{
@@ -500,66 +500,66 @@ func mechaGameConfigs() []harness.GameConfig {
 				},
 			},
 		},
-		MechaLanceConfigs: []harness.MechaLanceConfig{
+		MechaSquadConfigs: []harness.MechaSquadConfig{
 			{
-				Reference: DemoMechaPlayerStarterLanceRef,
-				LanceType: mecha_record.LanceTypeStarter,
-				Record: &mecha_record.MechaLance{
-					Name:        "Strike Lance",
-					Description: "Standard assault lance issued to incoming commanders. One light recon mech and one medium fire-support mech.",
+				Reference: DemoMechaPlayerStarterSquadRef,
+				SquadType: mecha_record.SquadTypeStarter,
+				Record: &mecha_record.MechaSquad{
+					Name:        "Strike Squad",
+					Description: "Standard assault squad issued to incoming commanders. One light recon mech and one medium fire-support mech.",
 				},
-				LanceMechConfigs: []harness.MechaLanceMechConfig{
+				SquadMechConfigs: []harness.MechaSquadMechConfig{
 					{
 						Reference:  DemoMechaPlayerStarterMech1Ref,
 						ChassisRef: DemoMechChassisViperRef,
-						WeaponConfigRefs: []harness.MechaLanceMechWeaponRef{
+						WeaponConfigRefs: []harness.MechaSquadMechWeaponRef{
 							{WeaponRef: DemoMechWeaponLightPulseRef, SlotLocation: "left-arm"},
 							{WeaponRef: DemoMechWeaponChaingunRef, SlotLocation: "right-arm"},
 						},
-						Record: &mecha_record.MechaLanceMech{
+						Record: &mecha_record.MechaSquadMech{
 							Callsign: "Strike-1",
 						},
 					},
 					{
 						Reference:  DemoMechaPlayerStarterMech2Ref,
 						ChassisRef: DemoMechChassisRangerRef,
-						WeaponConfigRefs: []harness.MechaLanceMechWeaponRef{
+						WeaponConfigRefs: []harness.MechaSquadMechWeaponRef{
 							{WeaponRef: DemoMechWeaponPulseRef, SlotLocation: "left-torso"},
 							{WeaponRef: DemoMechWeaponRocketPackRef, SlotLocation: "right-arm"},
 						},
-						Record: &mecha_record.MechaLanceMech{
+						Record: &mecha_record.MechaSquadMech{
 							Callsign: "Strike-2",
 						},
 					},
 				},
 			},
 			{
-				Reference: DemoMechaComputerOpponentLanceRef,
-				LanceType: mecha_record.LanceTypeOpponent,
-				Record: &mecha_record.MechaLance{
-					Name:        "Garrison Heavy Lance",
-					Description: "The Citadel's primary defensive lance. Well-armoured heavies backed by lighter recon elements.",
+				Reference: DemoMechaComputerOpponentSquadRef,
+				SquadType: mecha_record.SquadTypeOpponent,
+				Record: &mecha_record.MechaSquad{
+					Name:        "Garrison Heavy Squad",
+					Description: "The Citadel's primary defensive squad. Well-armoured heavies backed by lighter recon elements.",
 				},
-				LanceMechConfigs: []harness.MechaLanceMechConfig{
+				SquadMechConfigs: []harness.MechaSquadMechConfig{
 					{
 						Reference:  DemoMechaComputerOpponentMech1Ref,
 						ChassisRef: DemoMechChassisCrusherRef,
-						WeaponConfigRefs: []harness.MechaLanceMechWeaponRef{
+						WeaponConfigRefs: []harness.MechaSquadMechWeaponRef{
 							{WeaponRef: DemoMechWeaponPlasmaRef, SlotLocation: "left-torso"},
 							{WeaponRef: DemoMechWeaponRotaryCannonRef, SlotLocation: "right-torso"},
 						},
-						Record: &mecha_record.MechaLanceMech{
+						Record: &mecha_record.MechaSquadMech{
 							Callsign: "Garrison-1",
 						},
 					},
 					{
 						Reference:  DemoMechaComputerOpponentMech2Ref,
 						ChassisRef: DemoMechChassisRangerRef,
-						WeaponConfigRefs: []harness.MechaLanceMechWeaponRef{
+						WeaponConfigRefs: []harness.MechaSquadMechWeaponRef{
 							{WeaponRef: DemoMechWeaponPulseRef, SlotLocation: "left-torso"},
 							{WeaponRef: DemoMechWeaponRocketPackRef, SlotLocation: "right-arm"},
 						},
-						Record: &mecha_record.MechaLanceMech{
+						Record: &mecha_record.MechaSquadMech{
 							Callsign: "Garrison-2",
 						},
 					},

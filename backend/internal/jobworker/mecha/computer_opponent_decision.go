@@ -19,7 +19,7 @@ import (
 // single computer opponent's turn.
 type GameStateContext struct {
 	Opponent      *mecha_record.MechaComputerOpponent
-	LanceInstance *mecha_record.MechaLanceInstance
+	SquadInstance *mecha_record.MechaSquadInstance
 	OwnMechs      []*mecha_record.MechaMechInstance
 	EnemyMechs    []*mechState
 	Sectors       []*sectorState
@@ -45,7 +45,7 @@ type ComputerOpponentStrategy interface {
 }
 
 // ComputerOpponentDecisionEngine selects a strategy and generates orders for
-// each computer opponent lance during turn processing.
+// each computer opponent squad during turn processing.
 type ComputerOpponentDecisionEngine struct {
 	logger           logger.Logger
 	domain           *domain.Domain
@@ -81,18 +81,18 @@ func NewComputerOpponentDecisionEngine(l logger.Logger, d *domain.Domain, cfg co
 	}
 }
 
-// GenerateOrdersForLance builds the GameStateContext for the given lance instance
+// GenerateOrdersForSquad builds the GameStateContext for the given squad instance
 // and generates orders using the configured strategy.
-func (e *ComputerOpponentDecisionEngine) GenerateOrdersForLance(
+func (e *ComputerOpponentDecisionEngine) GenerateOrdersForSquad(
 	ctx context.Context,
 	gameInstanceID string,
-	lanceInstance *mecha_record.MechaLanceInstance,
+	squadInstance *mecha_record.MechaSquadInstance,
 	opponentRec *mecha_record.MechaComputerOpponent,
 	turnNumber int,
 ) ([]turnsheet.ScannedMechOrder, error) {
-	l := e.logger.WithFunctionContext("ComputerOpponentDecisionEngine/GenerateOrdersForLance")
+	l := e.logger.WithFunctionContext("ComputerOpponentDecisionEngine/GenerateOrdersForSquad")
 
-	state, err := e.buildGameStateContext(ctx, gameInstanceID, lanceInstance, opponentRec, turnNumber)
+	state, err := e.buildGameStateContext(ctx, gameInstanceID, squadInstance, opponentRec, turnNumber)
 	if err != nil {
 		return nil, fmt.Errorf("failed to build game state context: %w", err)
 	}
@@ -113,14 +113,14 @@ func (e *ComputerOpponentDecisionEngine) GenerateOrdersForLance(
 func (e *ComputerOpponentDecisionEngine) buildGameStateContext(
 	_ context.Context,
 	gameInstanceID string,
-	lanceInstance *mecha_record.MechaLanceInstance,
+	squadInstance *mecha_record.MechaSquadInstance,
 	opponentRec *mecha_record.MechaComputerOpponent,
 	turnNumber int,
 ) (*GameStateContext, error) {
 	// Own mechs
 	ownMechs, err := e.domain.GetManyMechaMechInstanceRecs(&coresql.Options{
 		Params: []coresql.Param{
-			{Col: mecha_record.FieldMechaMechInstanceMechaLanceInstanceID, Val: lanceInstance.ID},
+			{Col: mecha_record.FieldMechaMechInstanceMechaSquadInstanceID, Val: squadInstance.ID},
 		},
 	})
 	if err != nil {
@@ -218,7 +218,7 @@ func (e *ComputerOpponentDecisionEngine) buildGameStateContext(
 
 	return &GameStateContext{
 		Opponent:      opponentRec,
-		LanceInstance: lanceInstance,
+		SquadInstance: squadInstance,
 		OwnMechs:      ownMechs,
 		EnemyMechs:    enemyMechs,
 		Sectors:       sectors,

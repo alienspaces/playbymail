@@ -29,7 +29,7 @@ func MechaJoinGameFixture() DevFixture {
 					BackgroundImage:       &bg,
 					HideNarrative:         true,
 				},
-				GameDescription:          "Command a lance of powerful war mechs!",
+				GameDescription:          "Command a squad of powerful war mechs!",
 				AvailableDeliveryMethods: DeliveryMethods{Email: true},
 			}
 		},

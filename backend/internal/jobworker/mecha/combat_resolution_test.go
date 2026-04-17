@@ -170,7 +170,7 @@ func TestApplyPendingDamage(t *testing.T) {
 
 	mecha := &Mecha{}
 
-	makeSnap := func(id, callsign, lanceID string, armor, structure int) *mechSnapshot {
+	makeSnap := func(id, callsign, squadID string, armor, structure int) *mechSnapshot {
 		return &mechSnapshot{
 			Instance: &mecha_record.MechaMechInstance{
 				Record:           corerecord.Record{ID: id},
@@ -179,7 +179,7 @@ func TestApplyPendingDamage(t *testing.T) {
 				CurrentStructure: structure,
 				Status:           mecha_record.MechInstanceStatusOperational,
 			},
-			LanceInstanceID: lanceID,
+			SquadInstanceID: squadID,
 		}
 	}
 
@@ -192,12 +192,12 @@ func TestApplyPendingDamage(t *testing.T) {
 			CurrentStructure: 10,
 			Status:           mecha_record.MechInstanceStatusOperational,
 		}
-		snap := &mechSnapshot{Instance: inst, LanceInstanceID: "lance1"}
+		snap := &mechSnapshot{Instance: inst, SquadInstanceID: "squad1"}
 		snapshots := map[string]*mechSnapshot{"m1": snap}
 		dm := map[string]*pendingDamage{"m1": {rawTotal: 5}}
-		eventsByLance := map[string][]turnsheet.TurnEvent{}
+		eventsBySquad := map[string][]turnsheet.TurnEvent{}
 
-		mecha.applyPendingDamage(testLogger, dm, snapshots, nil, eventsByLance)
+		mecha.applyPendingDamage(testLogger, dm, snapshots, nil, eventsBySquad)
 
 		assert.Equal(t, 15, inst.CurrentArmor)
 		assert.Equal(t, 10, inst.CurrentStructure)
@@ -213,12 +213,12 @@ func TestApplyPendingDamage(t *testing.T) {
 			CurrentStructure: 10,
 			Status:           mecha_record.MechInstanceStatusOperational,
 		}
-		snap := &mechSnapshot{Instance: inst, LanceInstanceID: "lance1"}
+		snap := &mechSnapshot{Instance: inst, SquadInstanceID: "squad1"}
 		snapshots := map[string]*mechSnapshot{"m2": snap}
 		dm := map[string]*pendingDamage{"m2": {rawTotal: 8}}
-		eventsByLance := map[string][]turnsheet.TurnEvent{}
+		eventsBySquad := map[string][]turnsheet.TurnEvent{}
 
-		mecha.applyPendingDamage(testLogger, dm, snapshots, nil, eventsByLance)
+		mecha.applyPendingDamage(testLogger, dm, snapshots, nil, eventsBySquad)
 
 		assert.Equal(t, 0, inst.CurrentArmor)
 		assert.Equal(t, 7, inst.CurrentStructure)
@@ -237,14 +237,14 @@ func TestApplyPendingDamage(t *testing.T) {
 			CurrentStructure: 15,
 			Status:           mecha_record.MechInstanceStatusOperational,
 		}
-		snap := &mechSnapshot{Instance: inst, LanceInstanceID: "lance1"}
+		snap := &mechSnapshot{Instance: inst, SquadInstanceID: "squad1"}
 		snapshots := map[string]*mechSnapshot{"m3": snap}
 		dm := map[string]*pendingDamage{}
 		accumulateDamage("m3", 7, snapshots, dm)
 		accumulateDamage("m3", 7, snapshots, dm)
-		eventsByLance := map[string][]turnsheet.TurnEvent{}
+		eventsBySquad := map[string][]turnsheet.TurnEvent{}
 
-		mecha.applyPendingDamage(testLogger, dm, snapshots, nil, eventsByLance)
+		mecha.applyPendingDamage(testLogger, dm, snapshots, nil, eventsBySquad)
 
 		assert.Equal(t, 0, inst.CurrentArmor)
 		assert.Equal(t, 11, inst.CurrentStructure)
@@ -260,14 +260,14 @@ func TestApplyPendingDamage(t *testing.T) {
 			CurrentStructure: 3,
 			Status:           mecha_record.MechInstanceStatusOperational,
 		}
-		snap := &mechSnapshot{Instance: inst, LanceInstanceID: "lance1"}
+		snap := &mechSnapshot{Instance: inst, SquadInstanceID: "squad1"}
 		snapshots := map[string]*mechSnapshot{"m4": snap}
 		attacks := []AttackDeclaration{{AttackerMechInstanceID: "atk", TargetMechInstanceID: "m4"}}
-		snapshots["atk"] = makeSnap("atk", "Hunter", "lance2", 0, 10)
+		snapshots["atk"] = makeSnap("atk", "Hunter", "squad2", 0, 10)
 		dm := map[string]*pendingDamage{"m4": {rawTotal: 20}}
-		eventsByLance := map[string][]turnsheet.TurnEvent{}
+		eventsBySquad := map[string][]turnsheet.TurnEvent{}
 
-		mecha.applyPendingDamage(testLogger, dm, snapshots, attacks, eventsByLance)
+		mecha.applyPendingDamage(testLogger, dm, snapshots, attacks, eventsBySquad)
 
 		assert.Equal(t, 0, inst.CurrentStructure)
 		assert.Equal(t, mecha_record.MechInstanceStatusDestroyed, inst.Status)

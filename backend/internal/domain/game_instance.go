@@ -1140,7 +1140,7 @@ func (m *Domain) DeleteGameInstance(instanceID string) error {
 		return err
 	}
 
-	// Delete mecha instance data (turn sheets, mech instances, lance instances, sector instances)
+	// Delete mecha instance data (turn sheets, mech instances, squad instances, sector instances)
 	if err := m.deleteMechaInstanceData(instanceID); err != nil {
 		l.Warn("failed to delete mecha instance data >%v<", err)
 		return err
@@ -1327,7 +1327,7 @@ func (m *Domain) RemoveGameInstance(instanceID string) error {
 		return err
 	}
 
-	// Remove mecha instance data (turn sheets, mech instances, lance instances, sector instances)
+	// Remove mecha instance data (turn sheets, mech instances, squad instances, sector instances)
 	if err := m.removeMechaInstanceData(instanceID); err != nil {
 		l.Warn("failed to remove mecha instance data >%v<", err)
 		return err

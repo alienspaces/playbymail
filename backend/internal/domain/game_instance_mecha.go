@@ -14,15 +14,15 @@ import (
 // MechaInstanceData holds all instance records created when a mecha instance starts.
 type MechaInstanceData struct {
 	SectorInstances []*mecha_record.MechaSectorInstance
-	LanceInstances  []*mecha_record.MechaLanceInstance
+	SquadInstances  []*mecha_record.MechaSquadInstance
 	MechInstances   []*mecha_record.MechaMechInstance
 }
 
-// PopulateMechaGameInstanceData creates all runtime records (sector instances, lance instances,
+// PopulateMechaGameInstanceData creates all runtime records (sector instances, squad instances,
 // mech instances) for a mecha game instance from its design definitions and player subscriptions.
 //
-// Player lances: each subscribed player gets a lance instance cloned from the starter template.
-// Opponent lances: each computer opponent is randomly assigned an opponent lance template.
+// Player squads: each subscribed player gets a squad instance cloned from the starter template.
+// Opponent squads: each computer opponent is randomly assigned an opponent squad template.
 func (m *Domain) PopulateMechaGameInstanceData(instanceID string) (*MechaInstanceData, error) {
 	l := m.Logger("PopulateMechaGameInstanceData")
 
@@ -69,34 +69,34 @@ func (m *Domain) PopulateMechaGameInstanceData(instanceID string) (*MechaInstanc
 		return nil, fmt.Errorf("no starting sector found for game >%s<: at least one sector must have is_starting_sector = true", gameID)
 	}
 
-	// 2. Locate the starter lance template
-	starterRecs, err := m.GetManyMechaLanceRecs(&coresql.Options{
+	// 2. Locate the starter squad template
+	starterRecs, err := m.GetManyMechaSquadRecs(&coresql.Options{
 		Params: []coresql.Param{
-			{Col: mecha_record.FieldMechaLanceGameID, Val: gameID},
-			{Col: mecha_record.FieldMechaLanceLanceType, Val: mecha_record.LanceTypeStarter},
+			{Col: mecha_record.FieldMechaSquadGameID, Val: gameID},
+			{Col: mecha_record.FieldMechaSquadSquadType, Val: mecha_record.SquadTypeStarter},
 		},
 		Limit: 1,
 	})
 	if err != nil {
-		l.Warn("failed to get starter lance for game >%s< >%v<", gameID, err)
+		l.Warn("failed to get starter squad for game >%s< >%v<", gameID, err)
 		return nil, err
 	}
 	if len(starterRecs) == 0 {
-		return nil, coreerror.NewInvalidDataError("game >%s< has no player starter lance configured", gameID)
+		return nil, coreerror.NewInvalidDataError("game >%s< has no player starter squad configured", gameID)
 	}
-	starterLance := starterRecs[0]
+	starterSquad := starterRecs[0]
 
-	starterMechs, err := m.GetManyMechaLanceMechRecs(&coresql.Options{
+	starterMechs, err := m.GetManyMechaSquadMechRecs(&coresql.Options{
 		Params: []coresql.Param{
-			{Col: mecha_record.FieldMechaLanceMechMechaLanceID, Val: starterLance.ID},
+			{Col: mecha_record.FieldMechaSquadMechMechaSquadID, Val: starterSquad.ID},
 		},
 	})
 	if err != nil {
-		l.Warn("failed to get mechs for starter lance >%s< >%v<", starterLance.ID, err)
+		l.Warn("failed to get mechs for starter squad >%s< >%v<", starterSquad.ID, err)
 		return nil, err
 	}
 
-	// 3. Create a lance instance for each subscribed player, cloning mechs from the starter template
+	// 3. Create a squad instance for each subscribed player, cloning mechs from the starter template
 	subscriptionInstances, err := m.GetManyGameSubscriptionInstanceRecs(&coresql.Options{
 		Params: []coresql.Param{
 			{Col: game_record.FieldGameSubscriptionInstanceGameInstanceID, Val: instanceID},
@@ -127,26 +127,26 @@ func (m *Domain) PopulateMechaGameInstanceData(instanceID string) (*MechaInstanc
 
 		playerNumber++
 
-		lanceInst, err := m.CreateMechaLanceInstanceRec(&mecha_record.MechaLanceInstance{
+		squadInst, err := m.CreateMechaSquadInstanceRec(&mecha_record.MechaSquadInstance{
 			GameID:                     gameID,
 			GameInstanceID:             instanceID,
-			MechaLanceID:               starterLance.ID,
+			MechaSquadID:               starterSquad.ID,
 			GameSubscriptionInstanceID: sql.NullString{String: subInst.ID, Valid: true},
 		})
 		if err != nil {
-			l.Warn("failed to create player lance instance for subscription >%s< >%v<", subInst.ID, err)
+			l.Warn("failed to create player squad instance for subscription >%s< >%v<", subInst.ID, err)
 			return nil, err
 		}
-		out.LanceInstances = append(out.LanceInstances, lanceInst)
+		out.SquadInstances = append(out.SquadInstances, squadInst)
 
 		if startingSectorInstanceID == "" {
 			return nil, fmt.Errorf("no starting sector instance found for game >%s<: cannot create mech instances", gameID)
 		}
 
-		for i, lanceMech := range starterMechs {
-			chassisRec, err := m.GetMechaChassisRec(lanceMech.MechaChassisID, nil)
+		for i, squadMech := range starterMechs {
+			chassisRec, err := m.GetMechaChassisRec(squadMech.MechaChassisID, nil)
 			if err != nil {
-				l.Warn("failed to get chassis >%s< for starter mech >%s< >%v<", lanceMech.MechaChassisID, lanceMech.ID, err)
+				l.Warn("failed to get chassis >%s< for starter mech >%s< >%v<", squadMech.MechaChassisID, squadMech.ID, err)
 				return nil, err
 			}
 
@@ -154,17 +154,17 @@ func (m *Domain) PopulateMechaGameInstanceData(instanceID string) (*MechaInstanc
 			mechInst, err := m.CreateMechaMechInstanceRec(&mecha_record.MechaMechInstance{
 				GameID:                gameID,
 				GameInstanceID:        instanceID,
-				MechaLanceInstanceID:  lanceInst.ID,
+				MechaSquadInstanceID:  squadInst.ID,
 				MechaSectorInstanceID: startingSectorInstanceID,
-				MechaChassisID:        lanceMech.MechaChassisID,
+				MechaChassisID:        squadMech.MechaChassisID,
 				Callsign:              callsign,
 				CurrentArmor:          chassisRec.ArmorPoints,
 				CurrentStructure:      chassisRec.StructurePoints,
 				CurrentHeat:           0,
 				PilotSkill:            0,
 				Status:                mecha_record.MechInstanceStatusOperational,
-				WeaponConfig:          lanceMech.WeaponConfig,
-				WeaponConfigJSON:      lanceMech.WeaponConfigJSON,
+				WeaponConfig:          squadMech.WeaponConfig,
+				WeaponConfigJSON:      squadMech.WeaponConfigJSON,
 			})
 			if err != nil {
 				l.Warn("failed to create mech instance for player >%d< >%v<", playerNumber, err)
@@ -173,18 +173,18 @@ func (m *Domain) PopulateMechaGameInstanceData(instanceID string) (*MechaInstanc
 			out.MechInstances = append(out.MechInstances, mechInst)
 		}
 
-		l.Info("created player lance instance >%s< with >%d< mechs for subscription >%s<", lanceInst.ID, len(starterMechs), subInst.ID)
+		l.Info("created player squad instance >%s< with >%d< mechs for subscription >%s<", squadInst.ID, len(starterMechs), subInst.ID)
 	}
 
-	// 4. Fetch opponent lance templates and computer opponents; randomly assign one template per opponent
-	opponentTemplates, err := m.GetManyMechaLanceRecs(&coresql.Options{
+	// 4. Fetch opponent squad templates and computer opponents; randomly assign one template per opponent
+	opponentTemplates, err := m.GetManyMechaSquadRecs(&coresql.Options{
 		Params: []coresql.Param{
-			{Col: mecha_record.FieldMechaLanceGameID, Val: gameID},
-			{Col: mecha_record.FieldMechaLanceLanceType, Val: mecha_record.LanceTypeOpponent},
+			{Col: mecha_record.FieldMechaSquadGameID, Val: gameID},
+			{Col: mecha_record.FieldMechaSquadSquadType, Val: mecha_record.SquadTypeOpponent},
 		},
 	})
 	if err != nil {
-		l.Warn("failed to get opponent lance templates >%v<", err)
+		l.Warn("failed to get opponent squad templates >%v<", err)
 		return nil, err
 	}
 
@@ -202,9 +202,9 @@ func (m *Domain) PopulateMechaGameInstanceData(instanceID string) (*MechaInstanc
 		for i, opponent := range computerOpponents {
 			template := opponentTemplates[i%len(opponentTemplates)]
 
-			templateMechs, err := m.GetManyMechaLanceMechRecs(&coresql.Options{
+			templateMechs, err := m.GetManyMechaSquadMechRecs(&coresql.Options{
 				Params: []coresql.Param{
-					{Col: mecha_record.FieldMechaLanceMechMechaLanceID, Val: template.ID},
+					{Col: mecha_record.FieldMechaSquadMechMechaSquadID, Val: template.ID},
 				},
 			})
 			if err != nil {
@@ -212,18 +212,18 @@ func (m *Domain) PopulateMechaGameInstanceData(instanceID string) (*MechaInstanc
 				return nil, err
 			}
 
-			lanceInst, err := m.CreateMechaLanceInstanceRec(&mecha_record.MechaLanceInstance{
+			squadInst, err := m.CreateMechaSquadInstanceRec(&mecha_record.MechaSquadInstance{
 				GameID:                     gameID,
 				GameInstanceID:             instanceID,
-				MechaLanceID:               template.ID,
+				MechaSquadID:               template.ID,
 				GameSubscriptionInstanceID: sql.NullString{Valid: false},
 				MechaComputerOpponentID:    sql.NullString{String: opponent.ID, Valid: true},
 			})
 			if err != nil {
-				l.Warn("failed to create opponent lance instance for opponent >%s< >%v<", opponent.ID, err)
+				l.Warn("failed to create opponent squad instance for opponent >%s< >%v<", opponent.ID, err)
 				return nil, err
 			}
-			out.LanceInstances = append(out.LanceInstances, lanceInst)
+			out.SquadInstances = append(out.SquadInstances, squadInst)
 
 			if startingSectorInstanceID == "" {
 				return nil, fmt.Errorf("no starting sector instance found for game >%s<: cannot create mech instances for computer opponent", gameID)
@@ -231,10 +231,10 @@ func (m *Domain) PopulateMechaGameInstanceData(instanceID string) (*MechaInstanc
 
 			// Shuffle callsign suffix to give each clone distinct names
 			offset := rand.Intn(100)
-			for j, lanceMech := range templateMechs {
-				chassisRec, err := m.GetMechaChassisRec(lanceMech.MechaChassisID, nil)
+			for j, squadMech := range templateMechs {
+				chassisRec, err := m.GetMechaChassisRec(squadMech.MechaChassisID, nil)
 				if err != nil {
-					l.Warn("failed to get chassis >%s< for opponent lance mech >%s< >%v<", lanceMech.MechaChassisID, lanceMech.ID, err)
+					l.Warn("failed to get chassis >%s< for opponent squad mech >%s< >%v<", squadMech.MechaChassisID, squadMech.ID, err)
 					return nil, err
 				}
 
@@ -242,17 +242,17 @@ func (m *Domain) PopulateMechaGameInstanceData(instanceID string) (*MechaInstanc
 				mechInst, err := m.CreateMechaMechInstanceRec(&mecha_record.MechaMechInstance{
 					GameID:                gameID,
 					GameInstanceID:        instanceID,
-					MechaLanceInstanceID:  lanceInst.ID,
+					MechaSquadInstanceID:  squadInst.ID,
 					MechaSectorInstanceID: startingSectorInstanceID,
-					MechaChassisID:        lanceMech.MechaChassisID,
+					MechaChassisID:        squadMech.MechaChassisID,
 					Callsign:              callsign,
 					CurrentArmor:          chassisRec.ArmorPoints,
 					CurrentStructure:      chassisRec.StructurePoints,
 					CurrentHeat:           0,
 					PilotSkill:            0,
 					Status:                mecha_record.MechInstanceStatusOperational,
-					WeaponConfig:          lanceMech.WeaponConfig,
-					WeaponConfigJSON:      lanceMech.WeaponConfigJSON,
+					WeaponConfig:          squadMech.WeaponConfig,
+					WeaponConfigJSON:      squadMech.WeaponConfigJSON,
 				})
 				if err != nil {
 					l.Warn("failed to create mech instance for computer opponent >%s< >%v<", opponent.ID, err)
@@ -261,12 +261,12 @@ func (m *Domain) PopulateMechaGameInstanceData(instanceID string) (*MechaInstanc
 				out.MechInstances = append(out.MechInstances, mechInst)
 			}
 
-			l.Info("created opponent lance instance >%s< with >%d< mechs for opponent >%s< using template >%s<", lanceInst.ID, len(templateMechs), opponent.ID, template.ID)
+			l.Info("created opponent squad instance >%s< with >%d< mechs for opponent >%s< using template >%s<", squadInst.ID, len(templateMechs), opponent.ID, template.ID)
 		}
 	}
 
-	l.Info("populated mecha instance data: sectors=%d lances=%d mechs=%d",
-		len(out.SectorInstances), len(out.LanceInstances), len(out.MechInstances))
+	l.Info("populated mecha instance data: sectors=%d squads=%d mechs=%d",
+		len(out.SectorInstances), len(out.SquadInstances), len(out.MechInstances))
 
 	return out, nil
 }
@@ -275,25 +275,25 @@ func (m *Domain) PopulateMechaGameInstanceData(instanceID string) (*MechaInstanc
 func (m *Domain) deleteMechaInstanceData(instanceID string) error {
 	l := m.Logger("deleteMechaInstanceData")
 
-	// Delete mecha_turn_sheet records linked to lance instances for this game instance
-	lanceInstances, err := m.GetManyMechaLanceInstanceRecs(&coresql.Options{
+	// Delete mecha_turn_sheet records linked to squad instances for this game instance
+	squadInstances, err := m.GetManyMechaSquadInstanceRecs(&coresql.Options{
 		Params: []coresql.Param{
-			{Col: mecha_record.FieldMechaLanceInstanceGameInstanceID, Val: instanceID},
+			{Col: mecha_record.FieldMechaSquadInstanceGameInstanceID, Val: instanceID},
 		},
 	})
 	if err != nil {
-		l.Warn("failed to get lance instances >%v<", err)
+		l.Warn("failed to get squad instances >%v<", err)
 		return databaseError(err)
 	}
 
-	for _, lanceInst := range lanceInstances {
+	for _, squadInst := range squadInstances {
 		turnSheets, err := m.GetManyMechaTurnSheetRecs(&coresql.Options{
 			Params: []coresql.Param{
-				{Col: mecha_record.FieldMechaTurnSheetMechaLanceInstanceID, Val: lanceInst.ID},
+				{Col: mecha_record.FieldMechaTurnSheetMechaSquadInstanceID, Val: squadInst.ID},
 			},
 		})
 		if err != nil {
-			l.Warn("failed to get turn sheets for lance instance >%s< >%v<", lanceInst.ID, err)
+			l.Warn("failed to get turn sheets for squad instance >%s< >%v<", squadInst.ID, err)
 			return databaseError(err)
 		}
 		for _, ts := range turnSheets {
@@ -321,10 +321,10 @@ func (m *Domain) deleteMechaInstanceData(instanceID string) error {
 		}
 	}
 
-	// Delete lance instances
-	for _, lanceInst := range lanceInstances {
-		if err := m.MechaLanceInstanceRepository().DeleteOne(lanceInst.ID); err != nil {
-			l.Warn("failed to delete lance instance >%s< >%v<", lanceInst.ID, err)
+	// Delete squad instances
+	for _, squadInst := range squadInstances {
+		if err := m.MechaSquadInstanceRepository().DeleteOne(squadInst.ID); err != nil {
+			l.Warn("failed to delete squad instance >%s< >%v<", squadInst.ID, err)
 			return databaseError(err)
 		}
 	}
@@ -353,25 +353,25 @@ func (m *Domain) deleteMechaInstanceData(instanceID string) error {
 func (m *Domain) removeMechaInstanceData(instanceID string) error {
 	l := m.Logger("removeMechaInstanceData")
 
-	// Remove mecha_turn_sheet records linked to lance instances
-	lanceInstances, err := m.GetManyMechaLanceInstanceRecs(&coresql.Options{
+	// Remove mecha_turn_sheet records linked to squad instances
+	squadInstances, err := m.GetManyMechaSquadInstanceRecs(&coresql.Options{
 		Params: []coresql.Param{
-			{Col: mecha_record.FieldMechaLanceInstanceGameInstanceID, Val: instanceID},
+			{Col: mecha_record.FieldMechaSquadInstanceGameInstanceID, Val: instanceID},
 		},
 	})
 	if err != nil {
-		l.Warn("failed to get lance instances >%v<", err)
+		l.Warn("failed to get squad instances >%v<", err)
 		return databaseError(err)
 	}
 
-	for _, lanceInst := range lanceInstances {
+	for _, squadInst := range squadInstances {
 		turnSheets, err := m.GetManyMechaTurnSheetRecs(&coresql.Options{
 			Params: []coresql.Param{
-				{Col: mecha_record.FieldMechaTurnSheetMechaLanceInstanceID, Val: lanceInst.ID},
+				{Col: mecha_record.FieldMechaTurnSheetMechaSquadInstanceID, Val: squadInst.ID},
 			},
 		})
 		if err != nil {
-			l.Warn("failed to get turn sheets for lance instance >%s< >%v<", lanceInst.ID, err)
+			l.Warn("failed to get turn sheets for squad instance >%s< >%v<", squadInst.ID, err)
 			return databaseError(err)
 		}
 		for _, ts := range turnSheets {
@@ -399,10 +399,10 @@ func (m *Domain) removeMechaInstanceData(instanceID string) error {
 		}
 	}
 
-	// Remove lance instances
-	for _, lanceInst := range lanceInstances {
-		if err := m.RemoveMechaLanceInstanceRec(lanceInst.ID); err != nil {
-			l.Warn("failed to remove lance instance >%s< >%v<", lanceInst.ID, err)
+	// Remove squad instances
+	for _, squadInst := range squadInstances {
+		if err := m.RemoveMechaSquadInstanceRec(squadInst.ID); err != nil {
+			l.Warn("failed to remove squad instance >%s< >%v<", squadInst.ID, err)
 			return err
 		}
 	}

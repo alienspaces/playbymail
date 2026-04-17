@@ -379,7 +379,7 @@ func (rnr *Runner) removeGameAndDependents(dm *domain.Domain, gameID string) err
 		return err
 	}
 
-	// 13. Mecha definition data (lance mechs -> lances -> sector links -> sectors -> weapons -> chassis)
+	// 13. Mecha definition data (squad mechs -> squads -> sector links -> sectors -> weapons -> chassis)
 	if err := rnr.removeMechaDefinitionData(dm, gameID); err != nil {
 		return err
 	}
@@ -589,7 +589,7 @@ func (rnr *Runner) removeGameInstanceDependents(dm *domain.Domain, instanceID st
 		}
 	}
 
-	// Mech instances depend on lance instances and sector instances — remove first.
+	// Mech instances depend on squad instances and sector instances — remove first.
 	mechInsts, err := dm.GetManyMechaMechInstanceRecs(byInstance)
 	if err != nil {
 		return fmt.Errorf("failed getting mech instances: %w", err)
@@ -600,18 +600,18 @@ func (rnr *Runner) removeGameInstanceDependents(dm *domain.Domain, instanceID st
 		}
 	}
 
-	// Mecha turn sheets reference lance instances — remove before lance instances.
-	// The turn sheet table has no game_instance_id column; iterate via lance instance IDs.
-	lanceInsts, err := dm.GetManyMechaLanceInstanceRecs(byInstance)
+	// Mecha turn sheets reference squad instances — remove before squad instances.
+	// The turn sheet table has no game_instance_id column; iterate via squad instance IDs.
+	squadInsts, err := dm.GetManyMechaSquadInstanceRecs(byInstance)
 	if err != nil {
-		return fmt.Errorf("failed getting lance instances: %w", err)
+		return fmt.Errorf("failed getting squad instances: %w", err)
 	}
-	for _, lanceInst := range lanceInsts {
+	for _, squadInst := range squadInsts {
 		mwTurnSheets, err := dm.GetManyMechaTurnSheetRecs(&coresql.Options{
-			Params: []coresql.Param{{Col: mecha_record.FieldMechaTurnSheetMechaLanceInstanceID, Val: lanceInst.ID}},
+			Params: []coresql.Param{{Col: mecha_record.FieldMechaTurnSheetMechaSquadInstanceID, Val: squadInst.ID}},
 		})
 		if err != nil {
-			return fmt.Errorf("failed getting mecha turn sheets for lance instance >%s<: %w", lanceInst.ID, err)
+			return fmt.Errorf("failed getting mecha turn sheets for squad instance >%s<: %w", squadInst.ID, err)
 		}
 		for _, rec := range mwTurnSheets {
 			if err := dm.RemoveMechaTurnSheetRec(rec.ID); err != nil {
@@ -620,9 +620,9 @@ func (rnr *Runner) removeGameInstanceDependents(dm *domain.Domain, instanceID st
 		}
 	}
 
-	for _, rec := range lanceInsts {
-		if err := dm.RemoveMechaLanceInstanceRec(rec.ID); err != nil {
-			return fmt.Errorf("failed removing lance instance >%s<: %w", rec.ID, err)
+	for _, rec := range squadInsts {
+		if err := dm.RemoveMechaSquadInstanceRec(rec.ID); err != nil {
+			return fmt.Errorf("failed removing squad instance >%s<: %w", rec.ID, err)
 		}
 	}
 
@@ -723,31 +723,31 @@ func (rnr *Runner) removeGameInstanceDependents(dm *domain.Domain, instanceID st
 }
 
 // removeMechaDefinitionData removes mecha-specific design records for a game
-// in FK-safe order: lance mechs -> lances -> sector links -> sectors -> weapons -> chassis.
+// in FK-safe order: squad mechs -> squads -> sector links -> sectors -> weapons -> chassis.
 func (rnr *Runner) removeMechaDefinitionData(dm *domain.Domain, gameID string) error {
 	byGame := &coresql.Options{
 		Params: []coresql.Param{{Col: "game_id", Val: gameID}},
 	}
 
-	// Lance mechs must be removed before lances (FK dependency)
-	lanceMechs, err := dm.GetManyMechaLanceMechRecs(byGame)
+	// Squad mechs must be removed before squads (FK dependency)
+	squadMechs, err := dm.GetManyMechaSquadMechRecs(byGame)
 	if err != nil {
-		return fmt.Errorf("failed getting mecha lance mechs: %w", err)
+		return fmt.Errorf("failed getting mecha squad mechs: %w", err)
 	}
-	for _, rec := range lanceMechs {
-		if err := dm.RemoveMechaLanceMechRec(rec.ID); err != nil {
-			return fmt.Errorf("failed removing mecha lance mech >%s<: %w", rec.ID, err)
+	for _, rec := range squadMechs {
+		if err := dm.RemoveMechaSquadMechRec(rec.ID); err != nil {
+			return fmt.Errorf("failed removing mecha squad mech >%s<: %w", rec.ID, err)
 		}
 	}
 
-	// Lances must be removed before chassis (FK on account, chassis via lance_mech already done)
-	lances, err := dm.GetManyMechaLanceRecs(byGame)
+	// Squads must be removed before chassis (FK on account, chassis via squad_mech already done)
+	squads, err := dm.GetManyMechaSquadRecs(byGame)
 	if err != nil {
-		return fmt.Errorf("failed getting mecha lances: %w", err)
+		return fmt.Errorf("failed getting mecha squads: %w", err)
 	}
-	for _, rec := range lances {
-		if err := dm.RemoveMechaLanceRec(rec.ID); err != nil {
-			return fmt.Errorf("failed removing mecha lance >%s<: %w", rec.ID, err)
+	for _, rec := range squads {
+		if err := dm.RemoveMechaSquadRec(rec.ID); err != nil {
+			return fmt.Errorf("failed removing mecha squad >%s<: %w", rec.ID, err)
 		}
 	}
 

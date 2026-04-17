@@ -137,10 +137,10 @@ const (
 	MechaSectorOneRef     = "mecha-sector-one"
 	MechaSectorTwoRef     = "mecha-sector-two"
 	MechaSectorLinkOneRef = "mecha-sector-link-one"
-	MechaLanceStarterRef  = "mecha-lance-starter"
-	MechaLanceOneRef      = "mecha-lance-one"
-	MechaLanceTwoRef      = "mecha-lance-two"
-	MechaLanceMechOneRef  = "mecha-lance-mech-one"
+	MechaSquadStarterRef  = "mecha-squad-starter"
+	MechaSquadOneRef      = "mecha-squad-one"
+	MechaSquadTwoRef      = "mecha-squad-two"
+	MechaSquadMechOneRef  = "mecha-squad-mech-one"
 )
 
 // DataConfig -
@@ -178,7 +178,7 @@ type GameConfig struct {
 	MechaSectorConfigs           []MechaSectorConfig
 	MechaSectorLinkConfigs       []MechaSectorLinkConfig
 	MechaComputerOpponentConfigs []MechaComputerOpponentConfig
-	MechaLanceConfigs            []MechaLanceConfig
+	MechaSquadConfigs            []MechaSquadConfig
 }
 
 type GameImageConfig struct {
@@ -408,18 +408,18 @@ type MechaSectorLinkConfig struct {
 	Record        *mecha_record.MechaSectorLink
 }
 
-// MechaLanceMechWeaponRef maps a weapon ref to a slot location for
-// use in MechaLanceMechConfig.WeaponConfigRefs.
-type MechaLanceMechWeaponRef struct {
+// MechaSquadMechWeaponRef maps a weapon ref to a slot location for
+// use in MechaSquadMechConfig.WeaponConfigRefs.
+type MechaSquadMechWeaponRef struct {
 	WeaponRef    string
 	SlotLocation string
 }
 
-type MechaLanceMechConfig struct {
+type MechaSquadMechConfig struct {
 	Reference        string
 	ChassisRef       string
-	WeaponConfigRefs []MechaLanceMechWeaponRef
-	Record           *mecha_record.MechaLanceMech
+	WeaponConfigRefs []MechaSquadMechWeaponRef
+	Record           *mecha_record.MechaSquadMech
 }
 
 type MechaComputerOpponentConfig struct {
@@ -427,11 +427,11 @@ type MechaComputerOpponentConfig struct {
 	Record    *mecha_record.MechaComputerOpponent
 }
 
-type MechaLanceConfig struct {
+type MechaSquadConfig struct {
 	Reference        string
-	LanceType        string // mecha_record.LanceTypeStarter or mecha_record.LanceTypeOpponent
-	Record           *mecha_record.MechaLance
-	LanceMechConfigs []MechaLanceMechConfig
+	SquadType       string // mecha_record.SquadTypeStarter or mecha_record.SquadTypeOpponent
+	Record           *mecha_record.MechaSquad
+	SquadMechConfigs []MechaSquadMechConfig
 }
 
 // Helper methods for modifying DataConfig
@@ -921,36 +921,36 @@ func DefaultDataConfig() DataConfig {
 						Record:        &mecha_record.MechaSectorLink{},
 					},
 				},
-			MechaLanceConfigs: []MechaLanceConfig{
+			MechaSquadConfigs: []MechaSquadConfig{
 				{
-					Reference: MechaLanceStarterRef,
-					LanceType: mecha_record.LanceTypeStarter,
-					Record: &mecha_record.MechaLance{
-						Name:        UniqueName("Starter Lance"),
-						Description: "Default starter lance for new players.",
+					Reference: MechaSquadStarterRef,
+					SquadType: mecha_record.SquadTypeStarter,
+					Record: &mecha_record.MechaSquad{
+						Name:        UniqueName("Starter Squad"),
+						Description: "Default starter squad for new players.",
 					},
-					LanceMechConfigs: []MechaLanceMechConfig{
+					SquadMechConfigs: []MechaSquadMechConfig{
 						{
-							Reference:  "mecha-lance-starter-mech-1",
+							Reference:  "mecha-squad-starter-mech-1",
 							ChassisRef: MechaChassisOneRef,
-							Record: &mecha_record.MechaLanceMech{
+							Record: &mecha_record.MechaSquadMech{
 								Callsign: "Starter-1",
 							},
 						},
 					},
 				},
 				{
-					Reference: MechaLanceOneRef,
-					LanceType: mecha_record.LanceTypeOpponent,
-					Record: &mecha_record.MechaLance{
-						Name:        UniqueName("Alpha Lance"),
-						Description: "Opponent lance template.",
+					Reference: MechaSquadOneRef,
+					SquadType: mecha_record.SquadTypeOpponent,
+					Record: &mecha_record.MechaSquad{
+						Name:        UniqueName("Alpha Squad"),
+						Description: "Opponent squad template.",
 					},
-					LanceMechConfigs: []MechaLanceMechConfig{
+					SquadMechConfigs: []MechaSquadMechConfig{
 						{
-							Reference:  MechaLanceMechOneRef,
+							Reference:  MechaSquadMechOneRef,
 							ChassisRef: MechaChassisOneRef,
-							Record: &mecha_record.MechaLanceMech{
+							Record: &mecha_record.MechaSquadMech{
 								Callsign: "Wolf-1",
 							},
 						},

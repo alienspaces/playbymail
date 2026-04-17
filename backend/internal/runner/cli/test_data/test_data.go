@@ -250,9 +250,9 @@ func AccountUserGameSubscriptionConfig() []harness.AccountUserGameSubscriptionCo
 					},
 					GameInstanceParameterConfigs: []harness.GameInstanceParameterConfig{
 						{
-							Reference: "mech-instance-param-lance-size",
+							Reference: "mech-instance-param-squad-size",
 							Record: &game_record.GameInstanceParameter{
-								ParameterKey:   domain.MechaParameterLanceSize,
+								ParameterKey:   domain.MechaParameterSquadSize,
 								ParameterValue: nullstring.FromString("2"),
 							},
 						},
@@ -293,9 +293,9 @@ func AccountUserGameSubscriptionConfig() []harness.AccountUserGameSubscriptionCo
 					},
 					GameInstanceParameterConfigs: []harness.GameInstanceParameterConfig{
 						{
-							Reference: "iron-instance-param-lance-size",
+							Reference: "iron-instance-param-squad-size",
 							Record: &game_record.GameInstanceParameter{
-								ParameterKey:   domain.MechaParameterLanceSize,
+								ParameterKey:   domain.MechaParameterSquadSize,
 								ParameterValue: nullstring.FromString("2"),
 							},
 						},
@@ -1084,7 +1084,7 @@ func GameConfig() []harness.GameConfig {
 		Reference: harness.GameThreeRef,
 		Record: &game_record.Game{
 			Name:              "Steel Thunder",
-			Description:       "Welcome to Steel Thunder! Command a lance of powerful war mechs across contested industrial sectors in this hard-hitting tactical wargame. Scout enemy positions, manage heat buildup, and coordinate fire to destroy opposing lances before they reach your stronghold. Whether you pilot a nimble light mech or an armoured assault chassis, every battle decision matters. Gear up and take the field!",
+			Description:       "Welcome to Steel Thunder! Command a squad of powerful war mechs across contested industrial sectors in this hard-hitting tactical wargame. Scout enemy positions, manage heat buildup, and coordinate fire to destroy opposing squads before they reach your stronghold. Whether you pilot a nimble light mech or an armoured assault chassis, every battle decision matters. Gear up and take the field!",
 			GameType:          game_record.GameTypeMecha,
 			TurnDurationHours: 168, // 1 week
 		},
@@ -1097,7 +1097,7 @@ func GameConfig() []harness.GameConfig {
 			{
 				Reference:     "steel-image-management",
 				ImagePath:     ImageSteelOrders,
-				TurnSheetType: mecha_record.MechaTurnSheetTypeLanceManagement,
+				TurnSheetType: mecha_record.MechaTurnSheetTypeSquadManagement,
 			},
 			{
 				Reference:     "steel-image-orders",
@@ -1194,7 +1194,7 @@ func GameConfig() []harness.GameConfig {
 				Reference: "steel-sector-deployment-zone",
 				Record: &mecha_record.MechaSector{
 					Name:             "Deployment Zone",
-					Description:      "An open staging area where lances muster before the battle.",
+					Description:      "An open staging area where squads muster before the battle.",
 					TerrainType:      mecha_record.SectorTerrainTypeOpen,
 					Elevation:        0,
 					IsStartingSector: true,
@@ -1278,28 +1278,28 @@ func GameConfig() []harness.GameConfig {
 				Record:        &mecha_record.MechaSectorLink{},
 			},
 		},
-		MechaLanceConfigs: []harness.MechaLanceConfig{
+		MechaSquadConfigs: []harness.MechaSquadConfig{
 			{
-				Reference: "steel-lance-starter",
-				LanceType: mecha_record.LanceTypeStarter,
-				Record: &mecha_record.MechaLance{
-					Name:        "Thunder Lance",
-					Description: "Standard issue starter lance for incoming Steel Thunder commanders.",
+				Reference: "steel-squad-starter",
+				SquadType: mecha_record.SquadTypeStarter,
+				Record: &mecha_record.MechaSquad{
+					Name:        "Thunder Squad",
+					Description: "Standard issue starter squad for incoming Steel Thunder commanders.",
 				},
-				LanceMechConfigs: []harness.MechaLanceMechConfig{
+				SquadMechConfigs: []harness.MechaSquadMechConfig{
 					{
 						Reference:  "steel-mech-starter-1",
 						ChassisRef: "steel-chassis-viper",
-						Record:     &mecha_record.MechaLanceMech{Callsign: "Thunder-1"},
-						WeaponConfigRefs: []harness.MechaLanceMechWeaponRef{
+						Record:     &mecha_record.MechaSquadMech{Callsign: "Thunder-1"},
+						WeaponConfigRefs: []harness.MechaSquadMechWeaponRef{
 							{WeaponRef: "steel-weapon-light-pulse-cannon", SlotLocation: "right-arm"},
 						},
 					},
 					{
 						Reference:  "steel-mech-starter-2",
 						ChassisRef: "steel-chassis-ranger",
-						Record:     &mecha_record.MechaLanceMech{Callsign: "Thunder-2"},
-						WeaponConfigRefs: []harness.MechaLanceMechWeaponRef{
+						Record:     &mecha_record.MechaSquadMech{Callsign: "Thunder-2"},
+						WeaponConfigRefs: []harness.MechaSquadMechWeaponRef{
 							{WeaponRef: "steel-weapon-pulse-cannon", SlotLocation: "right-torso"},
 							{WeaponRef: "steel-weapon-rocket-pack", SlotLocation: "left-torso"},
 						},
@@ -1307,18 +1307,18 @@ func GameConfig() []harness.GameConfig {
 				},
 			},
 			{
-				Reference: "steel-lance-opponent",
-				LanceType: mecha_record.LanceTypeOpponent,
-				Record: &mecha_record.MechaLance{
-					Name:        "Alpha Lance",
-					Description: "An opponent lance template for Steel Thunder.",
+				Reference: "steel-squad-opponent",
+				SquadType: mecha_record.SquadTypeOpponent,
+				Record: &mecha_record.MechaSquad{
+					Name:        "Alpha Squad",
+					Description: "An opponent squad template for Steel Thunder.",
 				},
-				LanceMechConfigs: []harness.MechaLanceMechConfig{
+				SquadMechConfigs: []harness.MechaSquadMechConfig{
 					{
 						Reference:  "steel-mech-opponent-1",
 						ChassisRef: "steel-chassis-ranger",
-						Record:     &mecha_record.MechaLanceMech{Callsign: "Opponent-1"},
-						WeaponConfigRefs: []harness.MechaLanceMechWeaponRef{
+						Record:     &mecha_record.MechaSquadMech{Callsign: "Opponent-1"},
+						WeaponConfigRefs: []harness.MechaSquadMechWeaponRef{
 							{WeaponRef: "steel-weapon-pulse-cannon", SlotLocation: "right-torso"},
 							{WeaponRef: "steel-weapon-rocket-pack", SlotLocation: "left-torso"},
 						},
@@ -1326,8 +1326,8 @@ func GameConfig() []harness.GameConfig {
 					{
 						Reference:  "steel-mech-opponent-2",
 						ChassisRef: "steel-chassis-viper",
-						Record:     &mecha_record.MechaLanceMech{Callsign: "Opponent-2"},
-						WeaponConfigRefs: []harness.MechaLanceMechWeaponRef{
+						Record:     &mecha_record.MechaSquadMech{Callsign: "Opponent-2"},
+						WeaponConfigRefs: []harness.MechaSquadMechWeaponRef{
 							{WeaponRef: "steel-weapon-light-pulse-cannon", SlotLocation: "right-arm"},
 						},
 					},
@@ -1342,7 +1342,7 @@ func GameConfig() []harness.GameConfig {
 		Reference: harness.GameFourRef,
 		Record: &game_record.Game{
 			Name:              "Iron Vanguard",
-			Description:       "Welcome to Iron Vanguard! Pilot a lance of war mechs through three contested sectors in this focused single-player tactical wargame. Manage heat, exploit cover, and push through enemy lines to seize the forward command post. Fast turns, decisive choices — engage!",
+			Description:       "Welcome to Iron Vanguard! Pilot a squad of war mechs through three contested sectors in this focused single-player tactical wargame. Manage heat, exploit cover, and push through enemy lines to seize the forward command post. Fast turns, decisive choices — engage!",
 			GameType:          game_record.GameTypeMecha,
 			TurnDurationHours: 168, // 1 week
 		},
@@ -1355,7 +1355,7 @@ func GameConfig() []harness.GameConfig {
 			{
 				Reference:     "iron-image-management",
 				ImagePath:     ImageIronOrders,
-				TurnSheetType: mecha_record.MechaTurnSheetTypeLanceManagement,
+				TurnSheetType: mecha_record.MechaTurnSheetTypeSquadManagement,
 			},
 			{
 				Reference:     "iron-image-orders",
@@ -1418,7 +1418,7 @@ func GameConfig() []harness.GameConfig {
 				Reference: "iron-sector-staging-area",
 				Record: &mecha_record.MechaSector{
 					Name:             "Staging Area",
-					Description:      "A flat open zone where the lance assembles before pushing into contested ground.",
+					Description:      "A flat open zone where the squad assembles before pushing into contested ground.",
 					TerrainType:      mecha_record.SectorTerrainTypeOpen,
 					Elevation:        0,
 					IsStartingSector: true,
@@ -1480,28 +1480,28 @@ func GameConfig() []harness.GameConfig {
 				},
 			},
 		},
-		MechaLanceConfigs: []harness.MechaLanceConfig{
+		MechaSquadConfigs: []harness.MechaSquadConfig{
 			{
-				Reference: "iron-lance-starter",
-				LanceType: mecha_record.LanceTypeStarter,
-				Record: &mecha_record.MechaLance{
-					Name:        "Vanguard Lance",
-					Description: "Standard issue starter lance for incoming Iron Vanguard commanders.",
+				Reference: "iron-squad-starter",
+				SquadType: mecha_record.SquadTypeStarter,
+				Record: &mecha_record.MechaSquad{
+					Name:        "Vanguard Squad",
+					Description: "Standard issue starter squad for incoming Iron Vanguard commanders.",
 				},
-				LanceMechConfigs: []harness.MechaLanceMechConfig{
+				SquadMechConfigs: []harness.MechaSquadMechConfig{
 					{
 						Reference:  "iron-mech-starter-1",
 						ChassisRef: "iron-chassis-scout",
-						Record:     &mecha_record.MechaLanceMech{Callsign: "Vanguard-1"},
-						WeaponConfigRefs: []harness.MechaLanceMechWeaponRef{
+						Record:     &mecha_record.MechaSquadMech{Callsign: "Vanguard-1"},
+						WeaponConfigRefs: []harness.MechaSquadMechWeaponRef{
 							{WeaponRef: "iron-weapon-chaingun", SlotLocation: "right-arm"},
 						},
 					},
 					{
 						Reference:  "iron-mech-starter-2",
 						ChassisRef: "iron-chassis-sentinel",
-						Record:     &mecha_record.MechaLanceMech{Callsign: "Vanguard-2"},
-						WeaponConfigRefs: []harness.MechaLanceMechWeaponRef{
+						Record:     &mecha_record.MechaSquadMech{Callsign: "Vanguard-2"},
+						WeaponConfigRefs: []harness.MechaSquadMechWeaponRef{
 							{WeaponRef: "iron-weapon-pulse-cannon", SlotLocation: "right-torso"},
 							{WeaponRef: "iron-weapon-chaingun", SlotLocation: "left-arm"},
 						},
@@ -1509,18 +1509,18 @@ func GameConfig() []harness.GameConfig {
 				},
 			},
 			{
-				Reference: "iron-computer-opponent-lance",
-				LanceType: mecha_record.LanceTypeOpponent,
-				Record: &mecha_record.MechaLance{
-					Name:        "Defender Lance",
+				Reference: "iron-computer-opponent-squad",
+				SquadType: mecha_record.SquadTypeOpponent,
+				Record: &mecha_record.MechaSquad{
+					Name:        "Defender Squad",
 					Description: "The garrison's reaction force, defending the Command Post.",
 				},
-				LanceMechConfigs: []harness.MechaLanceMechConfig{
+				SquadMechConfigs: []harness.MechaSquadMechConfig{
 					{
 						Reference:  "iron-defender-1",
 						ChassisRef: "iron-chassis-sentinel",
-						Record:     &mecha_record.MechaLanceMech{Callsign: "Defender-1"},
-						WeaponConfigRefs: []harness.MechaLanceMechWeaponRef{
+						Record:     &mecha_record.MechaSquadMech{Callsign: "Defender-1"},
+						WeaponConfigRefs: []harness.MechaSquadMechWeaponRef{
 							{WeaponRef: "iron-weapon-pulse-cannon", SlotLocation: "right-torso"},
 							{WeaponRef: "iron-weapon-chaingun", SlotLocation: "left-arm"},
 						},
@@ -1528,8 +1528,8 @@ func GameConfig() []harness.GameConfig {
 					{
 						Reference:  "iron-defender-2",
 						ChassisRef: "iron-chassis-scout",
-						Record:     &mecha_record.MechaLanceMech{Callsign: "Defender-2"},
-						WeaponConfigRefs: []harness.MechaLanceMechWeaponRef{
+						Record:     &mecha_record.MechaSquadMech{Callsign: "Defender-2"},
+						WeaponConfigRefs: []harness.MechaSquadMechWeaponRef{
 							{WeaponRef: "iron-weapon-chaingun", SlotLocation: "right-arm"},
 						},
 					},

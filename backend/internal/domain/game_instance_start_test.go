@@ -47,7 +47,7 @@ func TestDomain_StartGameInstance(t *testing.T) {
 	require.NoError(t, err, "GetGameInstanceRecByRef returns without error")
 
 	// --- Mecha game ---
-	// The default harness creates GameMechaRef with 2 sectors and MechaLanceOneRef (1 mech) for
+	// The default harness creates GameMechaRef with 2 sectors and MechaSquadOneRef (1 mech) for
 	// AccountUserStandardRef, but no game instances or subscriptions. We create them here.
 	mechaGameRec, err := th.Data.GetGameRecByRef(harness.GameMechaRef)
 	require.NoError(t, err, "GetGameRecByRef returns without error")
@@ -112,7 +112,7 @@ func TestDomain_StartGameInstance(t *testing.T) {
 
 		// mecha-game assertions (non-zero when expected)
 		expectMechaSectorCount int
-		expectMechaLanceCount  int
+		expectMechaSquadCount  int
 		expectMechaMechCount   int
 	}{
 		{
@@ -131,9 +131,9 @@ func TestDomain_StartGameInstance(t *testing.T) {
 			name:         "mecha game starts and returns mecha instance data",
 			instanceID:   mechaInstanceRec.ID,
 			expectStatus: game_record.GameInstanceStatusStarted,
-			// GameMechaRef: 2 sectors; AccountUserStandardRef has MechaLanceOneRef with 1 mech.
+			// GameMechaRef: 2 sectors; AccountUserStandardRef has MechaSquadOneRef with 1 mech.
 			expectMechaSectorCount: 2,
-			expectMechaLanceCount:  1,
+			expectMechaSquadCount:  1,
 			expectMechaMechCount:   1,
 		},
 		{
@@ -190,13 +190,13 @@ func TestDomain_StartGameInstance(t *testing.T) {
 			}
 
 			mechaExpected := tc.expectMechaSectorCount > 0 ||
-				tc.expectMechaLanceCount > 0
+				tc.expectMechaSquadCount > 0
 
 			if mechaExpected {
 				require.NotNil(t, instanceData.Mecha, "Mecha data should be non-nil for mecha game")
 				require.Nil(t, instanceData.Adventure, "Adventure data should be nil for mecha game")
 				require.Len(t, instanceData.Mecha.SectorInstances, tc.expectMechaSectorCount, "Sector instance count equals expected")
-				require.Len(t, instanceData.Mecha.LanceInstances, tc.expectMechaLanceCount, "Lance instance count equals expected")
+				require.Len(t, instanceData.Mecha.SquadInstances, tc.expectMechaSquadCount, "Squad instance count equals expected")
 				require.Len(t, instanceData.Mecha.MechInstances, tc.expectMechaMechCount, "Mech instance count equals expected")
 			}
 		})

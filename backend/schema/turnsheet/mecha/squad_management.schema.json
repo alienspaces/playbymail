@@ -1,0 +1,46 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "http://playbymail.games/schema/turnsheet/mecha/squad_management.schema.json",
+    "title": "ScannedDataMechaSquadManagement",
+    "description": "scanned_data shape for turn sheet type mecha_squad_management. Accepts repair and weapon swap orders for mechs at depot sectors.",
+    "type": "object",
+    "properties": {
+        "mech_management_orders": {
+            "type": "array",
+            "description": "Management orders, one entry per mech in the squad.",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "mech_instance_id": {
+                        "type": "string",
+                        "description": "The mech instance ID this order applies to."
+                    },
+                    "repair_structure": {
+                        "type": "boolean",
+                        "description": "True if the player requests structure repairs."
+                    },
+                    "weapon_swaps": {
+                        "type": "array",
+                        "description": "Weapon slot swaps to apply.",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "slot_location": {
+                                    "type": "string",
+                                    "description": "The slot location to swap (e.g. left-arm, right-torso)."
+                                },
+                                "new_weapon_id": {
+                                    "type": "string",
+                                    "description": "Weapon ID to install in this slot."
+                                }
+                            },
+                            "additionalProperties": true
+                        }
+                    }
+                },
+                "additionalProperties": true
+            }
+        }
+    },
+    "additionalProperties": true
+}

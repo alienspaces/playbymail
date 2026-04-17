@@ -47,12 +47,12 @@ func (t *Testing) processMechaConfig(gameConfig GameConfig, gameRec *game_record
 		}
 	}
 
-	for _, cfg := range gameConfig.MechaLanceConfigs {
-		if cfg.LanceType != mecha_record.LanceTypeStarter && cfg.LanceType != mecha_record.LanceTypeOpponent {
-			return fmt.Errorf("mecha lance config >%s< must have LanceType set to 'starter' or 'opponent'", cfg.Reference)
+	for _, cfg := range gameConfig.MechaSquadConfigs {
+		if cfg.SquadType != mecha_record.SquadTypeStarter && cfg.SquadType != mecha_record.SquadTypeOpponent {
+			return fmt.Errorf("mecha squad config >%s< must have SquadType set to 'starter' or 'opponent'", cfg.Reference)
 		}
-		if _, err := t.createMechaLanceRec(cfg, gameRec); err != nil {
-			l.Warn("failed creating mecha lance record >%v<", err)
+		if _, err := t.createMechaSquadRec(cfg, gameRec); err != nil {
+			l.Warn("failed creating mecha squad record >%v<", err)
 			return err
 		}
 	}
@@ -63,31 +63,31 @@ func (t *Testing) processMechaConfig(gameConfig GameConfig, gameRec *game_record
 func (t *Testing) removeMechaRecords() error {
 	l := t.Logger("removeMechaRecords")
 
-	// Lance mechs must be removed before lances
-	l.Debug("removing >%d< mecha lance mech records", len(t.teardownData.MechaLanceMechRecs))
-	for _, rec := range t.teardownData.MechaLanceMechRecs {
+	// Squad mechs must be removed before squads
+	l.Debug("removing >%d< mecha squad mech records", len(t.teardownData.MechaSquadMechRecs))
+	for _, rec := range t.teardownData.MechaSquadMechRecs {
 		if rec.ID == "" {
 			continue
 		}
-		if err := t.Domain.(*domain.Domain).RemoveMechaLanceMechRec(rec.ID); err != nil {
-			l.Warn("failed removing mecha lance mech record >%v<", err)
+		if err := t.Domain.(*domain.Domain).RemoveMechaSquadMechRec(rec.ID); err != nil {
+			l.Warn("failed removing mecha squad mech record >%v<", err)
 			return err
 		}
 	}
 
-	// Lances must be removed before computer opponents (FK dependency)
-	l.Debug("removing >%d< mecha lance records", len(t.teardownData.MechaLanceRecs))
-	for _, rec := range t.teardownData.MechaLanceRecs {
+	// Squads must be removed before computer opponents (FK dependency)
+	l.Debug("removing >%d< mecha squad records", len(t.teardownData.MechaSquadRecs))
+	for _, rec := range t.teardownData.MechaSquadRecs {
 		if rec.ID == "" {
 			continue
 		}
-		if err := t.Domain.(*domain.Domain).RemoveMechaLanceRec(rec.ID); err != nil {
-			l.Warn("failed removing mecha lance record >%v<", err)
+		if err := t.Domain.(*domain.Domain).RemoveMechaSquadRec(rec.ID); err != nil {
+			l.Warn("failed removing mecha squad record >%v<", err)
 			return err
 		}
 	}
 
-	// Computer opponents removed after lances
+	// Computer opponents removed after squads
 	l.Debug("removing >%d< mecha computer opponent records", len(t.teardownData.MechaComputerOpponentRecs))
 	for _, rec := range t.teardownData.MechaComputerOpponentRecs {
 		if rec.ID == "" {
@@ -406,19 +406,19 @@ func (t *Testing) createMechaComputerOpponentRec(cfg MechaComputerOpponentConfig
 	return rec, nil
 }
 
-func (t *Testing) createMechaLanceRec(cfg MechaLanceConfig, gameRec *game_record.Game) (*mecha_record.MechaLance, error) {
-	l := t.Logger("createMechaLanceRec")
+func (t *Testing) createMechaSquadRec(cfg MechaSquadConfig, gameRec *game_record.Game) (*mecha_record.MechaSquad, error) {
+	l := t.Logger("createMechaSquadRec")
 
 	if gameRec == nil {
-		return nil, fmt.Errorf("game record is nil for mecha lance config >%#v<", cfg)
+		return nil, fmt.Errorf("game record is nil for mecha squad config >%#v<", cfg)
 	}
 
-	var rec *mecha_record.MechaLance
+	var rec *mecha_record.MechaSquad
 	if cfg.Record != nil {
 		recCopy := *cfg.Record
 		rec = &recCopy
 	} else {
-		rec = &mecha_record.MechaLance{}
+		rec = &mecha_record.MechaSquad{}
 	}
 
 	if rec.Name == "" {
@@ -428,25 +428,25 @@ func (t *Testing) createMechaLanceRec(cfg MechaLanceConfig, gameRec *game_record
 		rec.Description = gofakeit.Sentence(8)
 	}
 	rec.GameID = gameRec.ID
-	rec.LanceType = cfg.LanceType
+	rec.SquadType = cfg.SquadType
 
-	l.Debug("creating mecha lance record type >%s< >%#v<", cfg.LanceType, rec)
+	l.Debug("creating mecha squad record type >%s< >%#v<", cfg.SquadType, rec)
 
-	rec, err := t.Domain.(*domain.Domain).CreateMechaLanceRec(rec)
+	rec, err := t.Domain.(*domain.Domain).CreateMechaSquadRec(rec)
 	if err != nil {
-		l.Warn("failed creating mecha lance record >%v<", err)
+		l.Warn("failed creating mecha squad record >%v<", err)
 		return nil, err
 	}
 
-	t.Data.AddMechaLanceRec(rec)
-	t.teardownData.AddMechaLanceRec(rec)
+	t.Data.AddMechaSquadRec(rec)
+	t.teardownData.AddMechaSquadRec(rec)
 
 	if cfg.Reference != "" {
-		t.Data.Refs.MechaLanceRefs[cfg.Reference] = rec.ID
+		t.Data.Refs.MechaSquadRefs[cfg.Reference] = rec.ID
 	}
 
-	for _, mechCfg := range cfg.LanceMechConfigs {
-		if _, err := t.createMechaLanceMechRec(mechCfg, gameRec, rec); err != nil {
+	for _, mechCfg := range cfg.SquadMechConfigs {
+		if _, err := t.createMechaSquadMechRec(mechCfg, gameRec, rec); err != nil {
 			return nil, err
 		}
 	}
@@ -454,19 +454,19 @@ func (t *Testing) createMechaLanceRec(cfg MechaLanceConfig, gameRec *game_record
 	return rec, nil
 }
 
-func (t *Testing) createMechaLanceMechRec(cfg MechaLanceMechConfig, gameRec *game_record.Game, lanceRec *mecha_record.MechaLance) (*mecha_record.MechaLanceMech, error) {
-	l := t.Logger("createMechaLanceMechRec")
+func (t *Testing) createMechaSquadMechRec(cfg MechaSquadMechConfig, gameRec *game_record.Game, squadRec *mecha_record.MechaSquad) (*mecha_record.MechaSquadMech, error) {
+	l := t.Logger("createMechaSquadMechRec")
 
-	var rec *mecha_record.MechaLanceMech
+	var rec *mecha_record.MechaSquadMech
 	if cfg.Record != nil {
 		recCopy := *cfg.Record
 		rec = &recCopy
 	} else {
-		rec = &mecha_record.MechaLanceMech{}
+		rec = &mecha_record.MechaSquadMech{}
 	}
 
 	rec.GameID = gameRec.ID
-	rec.MechaLanceID = lanceRec.ID
+	rec.MechaSquadID = squadRec.ID
 
 	if cfg.ChassisRef != "" {
 		chassisID, ok := t.Data.Refs.MechaChassisRefs[cfg.ChassisRef]
@@ -495,19 +495,19 @@ func (t *Testing) createMechaLanceMechRec(cfg MechaLanceMechConfig, gameRec *gam
 		rec.Callsign = UniqueName("Mech")
 	}
 
-	l.Debug("creating mecha lance mech record >%#v<", rec)
+	l.Debug("creating mecha squad mech record >%#v<", rec)
 
-	rec, err := t.Domain.(*domain.Domain).CreateMechaLanceMechRec(rec)
+	rec, err := t.Domain.(*domain.Domain).CreateMechaSquadMechRec(rec)
 	if err != nil {
-		l.Warn("failed creating mecha lance mech record >%v<", err)
+		l.Warn("failed creating mecha squad mech record >%v<", err)
 		return nil, err
 	}
 
-	t.Data.AddMechaLanceMechRec(rec)
-	t.teardownData.AddMechaLanceMechRec(rec)
+	t.Data.AddMechaSquadMechRec(rec)
+	t.teardownData.AddMechaSquadMechRec(rec)
 
 	if cfg.Reference != "" {
-		t.Data.Refs.MechaLanceMechRefs[cfg.Reference] = rec.ID
+		t.Data.Refs.MechaSquadMechRefs[cfg.Reference] = rec.ID
 	}
 
 	return rec, nil

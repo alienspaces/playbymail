@@ -47,8 +47,8 @@ type Data struct {
 	MechaSectorRecs            []*mecha_record.MechaSector
 	MechaSectorLinkRecs        []*mecha_record.MechaSectorLink
 	MechaComputerOpponentRecs  []*mecha_record.MechaComputerOpponent
-	MechaLanceRecs             []*mecha_record.MechaLance
-	MechaLanceMechRecs         []*mecha_record.MechaLanceMech
+	MechaSquadRecs             []*mecha_record.MechaSquad
+	MechaSquadMechRecs         []*mecha_record.MechaSquadMech
 	// Session tokens by account ID
 	AccountSessionTokens map[string]string
 	// Data references
@@ -74,8 +74,8 @@ type DataRefs struct {
 	MechaSectorRefs            map[string]string
 	MechaSectorLinkRefs        map[string]string
 	MechaComputerOpponentRefs  map[string]string
-	MechaLanceRefs             map[string]string
-	MechaLanceMechRefs         map[string]string
+	MechaSquadRefs             map[string]string
+	MechaSquadMechRefs         map[string]string
 	// Adventure game specific resources
 	AdventureGameLocationRefs                map[string]string // Map of adventure game location refs to adventure game location records
 	AdventureGameLocationLinkRefs            map[string]string // Map of adventure game location link refs to adventure game location link records
@@ -117,8 +117,8 @@ func initialiseDataStores() Data {
 		MechaSectorRefs:           map[string]string{},
 		MechaSectorLinkRefs:       map[string]string{},
 		MechaComputerOpponentRefs: map[string]string{},
-		MechaLanceRefs:            map[string]string{},
-		MechaLanceMechRefs:        map[string]string{},
+		MechaSquadRefs:            map[string]string{},
+		MechaSquadMechRefs:        map[string]string{},
 		// Adventure game specific resources
 		AdventureGameLocationRefs:                map[string]string{},
 			AdventureGameLocationLinkRefs:            map[string]string{},
@@ -1141,52 +1141,52 @@ func (d *Data) GetMechaComputerOpponentRecByRef(ref string) (*mecha_record.Mecha
 	return nil, fmt.Errorf("failed getting mecha computer opponent with id >%s< for ref >%s<", id, ref)
 }
 
-// MechaLance
-func (d *Data) AddMechaLanceRec(rec *mecha_record.MechaLance) {
-	for idx := range d.MechaLanceRecs {
-		if d.MechaLanceRecs[idx].ID == rec.ID {
-			d.MechaLanceRecs[idx] = rec
+// MechaSquad
+func (d *Data) AddMechaSquadRec(rec *mecha_record.MechaSquad) {
+	for idx := range d.MechaSquadRecs {
+		if d.MechaSquadRecs[idx].ID == rec.ID {
+			d.MechaSquadRecs[idx] = rec
 			return
 		}
 	}
-	d.MechaLanceRecs = append(d.MechaLanceRecs, rec)
+	d.MechaSquadRecs = append(d.MechaSquadRecs, rec)
 }
 
-func (d *Data) GetMechaLanceRecByRef(ref string) (*mecha_record.MechaLance, error) {
-	id, ok := d.Refs.MechaLanceRefs[ref]
+func (d *Data) GetMechaSquadRecByRef(ref string) (*mecha_record.MechaSquad, error) {
+	id, ok := d.Refs.MechaSquadRefs[ref]
 	if !ok {
-		return nil, fmt.Errorf("failed getting mecha lance with ref >%s<", ref)
+		return nil, fmt.Errorf("failed getting mecha squad with ref >%s<", ref)
 	}
-	for _, rec := range d.MechaLanceRecs {
+	for _, rec := range d.MechaSquadRecs {
 		if rec.ID == id {
 			return rec, nil
 		}
 	}
-	return nil, fmt.Errorf("failed getting mecha lance with id >%s< for ref >%s<", id, ref)
+	return nil, fmt.Errorf("failed getting mecha squad with id >%s< for ref >%s<", id, ref)
 }
 
-// MechaLanceMech
-func (d *Data) AddMechaLanceMechRec(rec *mecha_record.MechaLanceMech) {
-	for idx := range d.MechaLanceMechRecs {
-		if d.MechaLanceMechRecs[idx].ID == rec.ID {
-			d.MechaLanceMechRecs[idx] = rec
+// MechaSquadMech
+func (d *Data) AddMechaSquadMechRec(rec *mecha_record.MechaSquadMech) {
+	for idx := range d.MechaSquadMechRecs {
+		if d.MechaSquadMechRecs[idx].ID == rec.ID {
+			d.MechaSquadMechRecs[idx] = rec
 			return
 		}
 	}
-	d.MechaLanceMechRecs = append(d.MechaLanceMechRecs, rec)
+	d.MechaSquadMechRecs = append(d.MechaSquadMechRecs, rec)
 }
 
-func (d *Data) GetMechaLanceMechRecByRef(ref string) (*mecha_record.MechaLanceMech, error) {
-	id, ok := d.Refs.MechaLanceMechRefs[ref]
+func (d *Data) GetMechaSquadMechRecByRef(ref string) (*mecha_record.MechaSquadMech, error) {
+	id, ok := d.Refs.MechaSquadMechRefs[ref]
 	if !ok {
-		return nil, fmt.Errorf("failed getting mecha lance mech with ref >%s<", ref)
+		return nil, fmt.Errorf("failed getting mecha squad mech with ref >%s<", ref)
 	}
-	for _, rec := range d.MechaLanceMechRecs {
+	for _, rec := range d.MechaSquadMechRecs {
 		if rec.ID == id {
 			return rec, nil
 		}
 	}
-	return nil, fmt.Errorf("failed getting mecha lance mech with id >%s< for ref >%s<", id, ref)
+	return nil, fmt.Errorf("failed getting mecha squad mech with id >%s< for ref >%s<", id, ref)
 }
 
 // AdventureGameTurnSheet

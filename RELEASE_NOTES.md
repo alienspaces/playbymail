@@ -9,7 +9,7 @@ Here's what's been happening with Play by Mail — from the early foundations in
 ## 🎯 What's Next
 
 - Adventure game end-game win conditions — defeat a creature, retrieve an item, or reach a location to complete the game
-- Mecha wargame expanded combat — additional weapon types, terrain effects, and lance formations
+- Mecha wargame expanded combat — additional weapon types, terrain effects, and squad formations
 - Closed testing tester invite flow
 
 ---
@@ -22,14 +22,14 @@ Here's what's been happening with Play by Mail — from the early foundations in
 
 **Mecha Wargame — New Game Type**
 - A brand-new game type is now available alongside adventure games: mecha wargames
-- Game designers can create mecha wargame games from the Studio, with dedicated pages for managing sectors, lances, weapons, and mech configurations
-- Players command a lance of mechs with full combat stats — armour, structure, heat, and weapon systems
-- A lance management turn sheet lets players spend supply points to repair damaged mechs and swap weapon loadouts between battles
+- Game designers can create mecha wargame games from the Studio, with dedicated pages for managing sectors, squads, weapons, and mech configurations
+- Players command a squad of mechs with full combat stats — armour, structure, heat, and weapon systems
+- A squad management turn sheet lets players spend supply points to repair damaged mechs and swap weapon loadouts between battles
 
 **Computer Opponents for Mecha Wargames**
-- Mecha games can now include computer-controlled lances that make tactical combat decisions
+- Mecha games can now include computer-controlled squads that make tactical combat decisions
 - Solo play and mixed human/AI battles are now possible
-- Game designers configure computer opponent lances from the Studio
+- Game designers configure computer opponent squads from the Studio
 
 ### 🎨 Improvements
 
@@ -48,7 +48,7 @@ Here's what's been happening with Play by Mail — from the early foundations in
 ### 🐛 Bug Fixes
 
 - Fixed turn sheet email links sometimes failing when the session had expired
-- Fixed the lance management tab showing an incorrect label and missing its background image
+- Fixed the squad management tab showing an incorrect label and missing its background image
 - Fixed the game creation form defaulting to adventure instead of letting you choose your game type
 
 ---

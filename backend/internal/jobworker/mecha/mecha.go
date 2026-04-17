@@ -1,7 +1,7 @@
 // Package mecha provides turn sheet processing for the mecha game type.
 //
 // File layout:
-//   - mecha.go           — Mecha struct, processor registry, lance instance helpers
+//   - mecha.go           — Mecha struct, processor registry, squad instance helpers
 //   - process_turn_sheets.go    — ProcessTurnSheets entry point (implements GameTurnProcessor)
 //   - create_turn_sheets.go     — CreateTurnSheets entry point (implements GameTurnProcessor)
 //   - turn_sheet_processor/     — per-sheet-type business logic processors
@@ -20,7 +20,7 @@ import (
 )
 
 // Mecha is the turn sheet processor for mecha games.
-//   - Only existing lance instances are processed during turn processing.
+//   - Only existing squad instances are processed during turn processing.
 //
 // Function/method argument order (enforced throughout this package):
 //  1. context.Context  — only on interface method boundaries
@@ -44,10 +44,10 @@ type TurnSheetProcessor interface {
 	GetSheetType() string
 
 	// ProcessTurnSheetResponse processes a single turn sheet response and updates game state
-	ProcessTurnSheetResponse(ctx context.Context, gameInstanceRec *game_record.GameInstance, lanceInstance *mecha_record.MechaLanceInstance, turnSheet *game_record.GameTurnSheet) error
+	ProcessTurnSheetResponse(ctx context.Context, gameInstanceRec *game_record.GameInstance, squadInstance *mecha_record.MechaSquadInstance, turnSheet *game_record.GameTurnSheet) error
 
 	// CreateNextTurnSheet creates a new turn sheet record for the next turn
-	CreateNextTurnSheet(ctx context.Context, gameInstanceRec *game_record.GameInstance, lanceInstance *mecha_record.MechaLanceInstance) (*game_record.GameTurnSheet, error)
+	CreateNextTurnSheet(ctx context.Context, gameInstanceRec *game_record.GameInstance, squadInstance *mecha_record.MechaSquadInstance) (*game_record.GameTurnSheet, error)
 }
 
 // NewMecha creates a new mecha turn processor.
@@ -84,30 +84,30 @@ func (p *Mecha) initializeTurnSheetProcessors(cfg config.Config) (map[string]Tur
 	}
 	processors[mecha_record.MechaTurnSheetTypeOrders] = ordersProcessor
 
-	managementProcessor := turn_sheet_processor.NewMechaLanceManagementProcessor(l, p.Domain, cfg)
-	processors[mecha_record.MechaTurnSheetTypeLanceManagement] = managementProcessor
+	managementProcessor := turn_sheet_processor.NewMechaSquadManagementProcessor(l, p.Domain, cfg)
+	processors[mecha_record.MechaTurnSheetTypeSquadManagement] = managementProcessor
 
 	return processors, nil
 }
 
-// getLanceInstancesForGameInstance retrieves all lance instances for a game instance.
-func (p *Mecha) getLanceInstancesForGameInstance(_ context.Context, gameInstanceRec *game_record.GameInstance) ([]*mecha_record.MechaLanceInstance, error) {
-	l := p.Logger.WithFunctionContext("Mecha/getLanceInstancesForGameInstance")
+// getSquadInstancesForGameInstance retrieves all squad instances for a game instance.
+func (p *Mecha) getSquadInstancesForGameInstance(_ context.Context, gameInstanceRec *game_record.GameInstance) ([]*mecha_record.MechaSquadInstance, error) {
+	l := p.Logger.WithFunctionContext("Mecha/getSquadInstancesForGameInstance")
 
-	lanceInstanceRecs, err := p.Domain.GetManyMechaLanceInstanceRecs(
+	squadInstanceRecs, err := p.Domain.GetManyMechaSquadInstanceRecs(
 		&coresql.Options{
 			Params: []coresql.Param{
 				{
-					Col: mecha_record.FieldMechaLanceInstanceGameInstanceID,
+					Col: mecha_record.FieldMechaSquadInstanceGameInstanceID,
 					Val: gameInstanceRec.ID,
 				},
 			},
 		},
 	)
 	if err != nil {
-		l.Error("failed to get lance instances error >%v<", err)
+		l.Error("failed to get squad instances error >%v<", err)
 		return nil, err
 	}
 
-	return lanceInstanceRecs, nil
+	return squadInstanceRecs, nil
 }

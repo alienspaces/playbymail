@@ -45,7 +45,7 @@
         },
         "commander_name": {
             "type": "string",
-            "description": "Player-chosen commander name for the lance."
+            "description": "Player-chosen commander name for the squad."
         }
     },
     "required": [

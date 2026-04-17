@@ -42,7 +42,7 @@ func validateMechaMechInstanceRec(args *validateMechaMechInstanceArgs, requireID
 		return err
 	}
 
-	if err := domain.ValidateUUIDField(mecha_record.FieldMechaMechInstanceMechaLanceInstanceID, rec.MechaLanceInstanceID); err != nil {
+	if err := domain.ValidateUUIDField(mecha_record.FieldMechaMechInstanceMechaSquadInstanceID, rec.MechaSquadInstanceID); err != nil {
 		return err
 	}
 

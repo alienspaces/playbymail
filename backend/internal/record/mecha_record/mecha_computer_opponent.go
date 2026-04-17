@@ -23,7 +23,7 @@ const (
 )
 
 // MechaComputerOpponent is a computer-controlled opposing command in a mecha game.
-// It owns one or more lances and holds behaviour configuration used by the
+// It owns one or more squads and holds behaviour configuration used by the
 // decision engine during turn processing.
 //
 // Aggression (1-10): 1 = purely defensive, 10 = all-out assault.

@@ -75,10 +75,10 @@ func TestHarnessSetupTeardown_DefaultDataConfig(t *testing.T) {
 	require.Len(t, h.Data.MechaSectorRecs, 2, "Should have exactly 2 mecha sector records")
 	// Sector links: 1 (MechaSectorLinkOneRef)
 	require.Len(t, h.Data.MechaSectorLinkRecs, 1, "Should have exactly 1 mecha sector link record")
-	// Lances: 1 (MechaLanceOneRef)
-	require.Len(t, h.Data.MechaLanceRecs, 2, "Should have exactly 2 mecha lance records")
-	// Lance mechs: 1 (MechaLanceMechOneRef)
-	require.Len(t, h.Data.MechaLanceMechRecs, 2, "Should have exactly 2 mecha lance mech records")
+	// Squads: 2 (MechaSquadStarterRef, MechaSquadOneRef)
+	require.Len(t, h.Data.MechaSquadRecs, 2, "Should have exactly 2 mecha squad records")
+	// Squad mechs: 2
+	require.Len(t, h.Data.MechaSquadMechRecs, 2, "Should have exactly 2 mecha squad mech records")
 
 	// All harness account users should be active by default
 	for _, rec := range h.Data.AccountUserRecs {

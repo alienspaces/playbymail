@@ -61,7 +61,7 @@ Parameters let you tune the rules of a specific game type. Each parameter has a 
 | Game Type | Parameter | Default | Description |
 |---|---|---|---|
 | Adventure | Character lives | 3 | Number of lives a character has before being permanently removed from the run |
-| Mecha | Lance size | 4 | Number of mechs in a player's lance |
+| Mecha | Squad size | 4 | Number of mechs in a player's squad |
 
 ---
 
@@ -113,7 +113,7 @@ Issues are categorised as errors (which block run creation) or warnings (which a
 - At least one sector must exist
 - At least one sector must be marked as the starting sector
 - At least one chassis must exist
-- A player starter lance must exist with at least one mech on it
+- A player starter squad must exist with at least one mech on it
 
 ---
 
@@ -129,4 +129,4 @@ The studio provides different sections depending on the game type.
 Locations → Location Links → Link Requirements → Items → Item Placements → Item Effects → Creatures → Creature Placements → Location Objects → Object Effects
 
 **Mecha only:**
-Chassis → Weapons → Sectors → Sector Links → Lances
+Chassis → Weapons → Sectors → Sector Links → Squads

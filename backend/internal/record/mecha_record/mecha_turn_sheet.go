@@ -14,7 +14,7 @@ const (
 const (
 	FieldMechaTurnSheetID                         string = "id"
 	FieldMechaTurnSheetGameID                     string = "game_id"
-	FieldMechaTurnSheetMechaLanceInstanceID string = "mecha_lance_instance_id"
+	FieldMechaTurnSheetMechaSquadInstanceID string = "mecha_squad_instance_id"
 	FieldMechaTurnSheetGameTurnSheetID            string = "game_turn_sheet_id"
 	FieldMechaTurnSheetCreatedAt                  string = "created_at"
 	FieldMechaTurnSheetUpdatedAt                  string = "updated_at"
@@ -24,7 +24,7 @@ const (
 const (
 	MechaTurnSheetTypeJoinGame        string = "mecha_join_game"
 	MechaTurnSheetTypeOrders          string = "mecha_orders"
-	MechaTurnSheetTypeLanceManagement string = "mecha_lance_management"
+	MechaTurnSheetTypeSquadManagement string = "mecha_squad_management"
 )
 
 // MechaTurnSheetProcessingOrder defines the order in which mecha turn sheets
@@ -32,8 +32,8 @@ const (
 // refitting mechs are flagged before movement is applied.
 // The join game sheet is excluded; it is handled through the subscription workflow.
 var MechaTurnSheetProcessingOrder = []string{
-	MechaTurnSheetTypeLanceManagement, // 1 - apply repair/refit/swap orders
-	MechaTurnSheetTypeOrders,          // 2 - process lance movement orders
+	MechaTurnSheetTypeSquadManagement, // 1 - apply repair/refit/swap orders
+	MechaTurnSheetTypeOrders,          // 2 - process squad movement orders
 }
 
 // MechaSheetOrderForType returns the 1-indexed processing order
@@ -53,7 +53,7 @@ func MechaSheetOrderForType(sheetType string) int {
 // management is secondary.
 var MechaTurnSheetPresentationOrder = []string{
 	MechaTurnSheetTypeOrders,          // 1 - submit orders for all mechs
-	MechaTurnSheetTypeLanceManagement, // 2 - manage repairs and refits
+	MechaTurnSheetTypeSquadManagement, // 2 - manage repairs and refits
 }
 
 // MechaSheetPresentationOrderForType returns the 1-indexed presentation
@@ -71,20 +71,20 @@ func MechaSheetPresentationOrderForType(sheetType string) int {
 var MechaSheetTypes = set.New(
 	MechaTurnSheetTypeJoinGame,
 	MechaTurnSheetTypeOrders,
-	MechaTurnSheetTypeLanceManagement,
+	MechaTurnSheetTypeSquadManagement,
 )
 
 type MechaTurnSheet struct {
 	record.Record
-	GameID                     string `db:"game_id"`
-	MechaLanceInstanceID string `db:"mecha_lance_instance_id"`
-	GameTurnSheetID            string `db:"game_turn_sheet_id"`
+	GameID               string `db:"game_id"`
+	MechaSquadInstanceID string `db:"mecha_squad_instance_id"`
+	GameTurnSheetID      string `db:"game_turn_sheet_id"`
 }
 
 func (r *MechaTurnSheet) ToNamedArgs() pgx.NamedArgs {
 	args := r.Record.ToNamedArgs()
 	args[FieldMechaTurnSheetGameID] = r.GameID
-	args[FieldMechaTurnSheetMechaLanceInstanceID] = r.MechaLanceInstanceID
+	args[FieldMechaTurnSheetMechaSquadInstanceID] = r.MechaSquadInstanceID
 	args[FieldMechaTurnSheetGameTurnSheetID] = r.GameTurnSheetID
 	return args
 }

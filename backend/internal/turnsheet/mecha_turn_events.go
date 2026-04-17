@@ -6,62 +6,62 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/record/mecha_record"
 )
 
-// AppendMechaTurnEvent appends an event to the lance instance's
+// AppendMechaTurnEvent appends an event to the squad instance's
 // last_turn_events JSON field.
 func AppendMechaTurnEvent(
-	lanceInstance *mecha_record.MechaLanceInstance,
+	squadInstance *mecha_record.MechaSquadInstance,
 	event TurnEvent,
 ) error {
-	events, err := readMechaTurnEvents(lanceInstance)
+	events, err := readMechaTurnEvents(squadInstance)
 	if err != nil {
 		return err
 	}
 	events = append(events, event)
-	return writeMechaTurnEvents(lanceInstance, events)
+	return writeMechaTurnEvents(squadInstance, events)
 }
 
 // ReadMechaTurnEvents returns all turn events without clearing them.
 func ReadMechaTurnEvents(
-	lanceInstance *mecha_record.MechaLanceInstance,
+	squadInstance *mecha_record.MechaSquadInstance,
 ) ([]TurnEvent, error) {
-	return readMechaTurnEvents(lanceInstance)
+	return readMechaTurnEvents(squadInstance)
 }
 
 // ReadAndClearMechaTurnEvents reads all turn events and clears the field.
 func ReadAndClearMechaTurnEvents(
-	lanceInstance *mecha_record.MechaLanceInstance,
+	squadInstance *mecha_record.MechaSquadInstance,
 ) ([]TurnEvent, error) {
-	events, err := readMechaTurnEvents(lanceInstance)
+	events, err := readMechaTurnEvents(squadInstance)
 	if err != nil {
 		return nil, err
 	}
-	if err := writeMechaTurnEvents(lanceInstance, []TurnEvent{}); err != nil {
+	if err := writeMechaTurnEvents(squadInstance, []TurnEvent{}); err != nil {
 		return nil, err
 	}
 	return events, nil
 }
 
 func readMechaTurnEvents(
-	lanceInstance *mecha_record.MechaLanceInstance,
+	squadInstance *mecha_record.MechaSquadInstance,
 ) ([]TurnEvent, error) {
-	if len(lanceInstance.LastTurnEvents) == 0 {
+	if len(squadInstance.LastTurnEvents) == 0 {
 		return []TurnEvent{}, nil
 	}
 	var events []TurnEvent
-	if err := json.Unmarshal(lanceInstance.LastTurnEvents, &events); err != nil {
+	if err := json.Unmarshal(squadInstance.LastTurnEvents, &events); err != nil {
 		return nil, err
 	}
 	return events, nil
 }
 
 func writeMechaTurnEvents(
-	lanceInstance *mecha_record.MechaLanceInstance,
+	squadInstance *mecha_record.MechaSquadInstance,
 	events []TurnEvent,
 ) error {
 	data, err := json.Marshal(events)
 	if err != nil {
 		return err
 	}
-	lanceInstance.LastTurnEvents = json.RawMessage(data)
+	squadInstance.LastTurnEvents = json.RawMessage(data)
 	return nil
 }

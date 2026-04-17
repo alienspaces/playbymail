@@ -2,7 +2,7 @@
 
 Reference for the `mecha_tactics` game type — designer configuration and player rules.
 
-Mecha Tactics is an individual mech combat game played on a hex grid. Each player controls one or more mechs directly. There are no lances — mechs are owned and operated individually. Tactical positioning, facing, movement efficiency, and weapon range management are the core of play.
+Mecha Tactics is an individual mech combat game played on a hex grid. Each player controls one or more mechs directly. There are no squads — mechs are owned and operated individually. Tactical positioning, facing, movement efficiency, and weapon range management are the core of play.
 
 For platform-level configuration shared across all game types, see [shared-game-configuration.md](shared-game-configuration.md).
 

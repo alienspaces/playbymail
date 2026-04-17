@@ -26,7 +26,7 @@ func validateMechaTurnSheetRec(args *validateMechaTurnSheetArgs) error {
 		return err
 	}
 
-	if err := domain.ValidateUUIDField(mecha_record.FieldMechaTurnSheetMechaLanceInstanceID, rec.MechaLanceInstanceID); err != nil {
+	if err := domain.ValidateUUIDField(mecha_record.FieldMechaTurnSheetMechaSquadInstanceID, rec.MechaSquadInstanceID); err != nil {
 		return err
 	}
 

@@ -10,18 +10,18 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/record/mecha_record"
 )
 
-// lanceInstanceAccountUser resolves the account_user record for a player-owned
-// lance instance by walking the subscription chain:
+// squadInstanceAccountUser resolves the account_user record for a player-owned
+// squad instance by walking the subscription chain:
 //
-//	mecha_lance_instance.game_subscription_instance_id
+//	mecha_squad_instance.game_subscription_instance_id
 //	  -> game_subscription_instance.game_subscription_id
 //	  -> game_subscription.account_user_id
-func lanceInstanceAccountUser(d *domain.Domain, lanceInstance *mecha_record.MechaLanceInstance) (*account_record.AccountUser, error) {
-	if !lanceInstance.GameSubscriptionInstanceID.Valid {
-		return nil, fmt.Errorf("lance instance >%s< has no game_subscription_instance_id", lanceInstance.ID)
+func squadInstanceAccountUser(d *domain.Domain, squadInstance *mecha_record.MechaSquadInstance) (*account_record.AccountUser, error) {
+	if !squadInstance.GameSubscriptionInstanceID.Valid {
+		return nil, fmt.Errorf("squad instance >%s< has no game_subscription_instance_id", squadInstance.ID)
 	}
 
-	subInstRec, err := d.GetGameSubscriptionInstanceRec(lanceInstance.GameSubscriptionInstanceID.String, nil)
+	subInstRec, err := d.GetGameSubscriptionInstanceRec(squadInstance.GameSubscriptionInstanceID.String, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get game subscription instance: %w", err)
 	}

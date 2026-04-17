@@ -52,7 +52,7 @@ func DevFixtures() []DevFixture {
 		AdventureGameInventoryManagementFixture(),
 		AdventureGameMonsterEncounterFixture(),
 		AdventureGameJoinGameFixture(),
-		MechaLanceManagementFixture(),
+		MechaSquadManagementFixture(),
 		MechaOrdersFixture(),
 		MechaJoinGameFixture(),
 	}

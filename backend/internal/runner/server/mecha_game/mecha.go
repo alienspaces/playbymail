@@ -36,8 +36,8 @@ func MechaHandlerConfig(cfg config.Config, l logger.Logger, scnr turnsheet.TurnS
 		mechaWeaponHandlerConfig,
 		mechaSectorHandlerConfig,
 		mechaSectorLinkHandlerConfig,
-		mechaLanceHandlerConfig,
-		mechaLanceMechHandlerConfig,
+		mechaSquadHandlerConfig,
+		mechaSquadMechHandlerConfig,
 		mechaComputerOpponentHandlerConfig,
 	}
 

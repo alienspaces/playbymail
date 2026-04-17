@@ -21,7 +21,7 @@ type AttackDeclaration = turn_sheet_processor.AttackDeclaration
 // resolve against the same starting state (simultaneous resolution).
 type mechSnapshot struct {
 	Instance         *mecha_record.MechaMechInstance
-	LanceInstanceID  string
+	SquadInstanceID  string
 	SectorInstanceID string
 	Weapons          []mecha_record.WeaponConfigEntry
 }
@@ -150,14 +150,14 @@ func (p *Mecha) resolveCombat(
 	damageMap := make(map[string]*pendingDamage, len(allMechInsts))
 	heatMap := make(map[string]int, len(allMechInsts))
 	xpMap := make(map[string]int, len(allMechInsts))
-	eventsByLance := make(map[string][]turnsheet.TurnEvent)
+	eventsBySquad := make(map[string][]turnsheet.TurnEvent)
 
-	p.resolveAttacks(l, attacks, snapshots, sectors, rng, damageMap, heatMap, xpMap, eventsByLance)
-	p.applyPendingDamage(l, damageMap, snapshots, attacks, eventsByLance)
-	p.applyPendingHeat(l, heatMap, snapshots, eventsByLance)
+	p.resolveAttacks(l, attacks, snapshots, sectors, rng, damageMap, heatMap, xpMap, eventsBySquad)
+	p.applyPendingDamage(l, damageMap, snapshots, attacks, eventsBySquad)
+	p.applyPendingHeat(l, heatMap, snapshots, eventsBySquad)
 	p.persistMechChanges(l, snapshots, damageMap, heatMap)
 
-	if err := p.appendCombatEventsToLances(eventsByLance); err != nil {
+	if err := p.appendCombatEventsToSquads(eventsBySquad); err != nil {
 		l.Warn("failed to persist combat events: %v", err)
 		return nil, err
 	}
@@ -179,7 +179,7 @@ func buildMechSnapshots(l logger.Logger, insts []*mecha_record.MechaMechInstance
 		}
 		snapshots[inst.ID] = &mechSnapshot{
 			Instance:         inst,
-			LanceInstanceID:  inst.MechaLanceInstanceID,
+			SquadInstanceID:  inst.MechaSquadInstanceID,
 			SectorInstanceID: inst.MechaSectorInstanceID,
 			Weapons:          weapons,
 		}
@@ -253,7 +253,7 @@ func (p *Mecha) resolveAttacks(
 	damageMap map[string]*pendingDamage,
 	heatMap map[string]int,
 	xpMap map[string]int,
-	eventsByLance map[string][]turnsheet.TurnEvent,
+	eventsBySquad map[string][]turnsheet.TurnEvent,
 ) {
 	l = l.WithFunctionContext("Mecha/resolveAttacks")
 
@@ -291,7 +291,7 @@ func (p *Mecha) resolveAttacks(
 		if dist > 2 {
 			l.Info("%s fired at %s but target is out of range (distance %d)",
 				attacker.Instance.Callsign, target.Instance.Callsign, dist)
-			appendCombatEvent(eventsByLance, attacker.LanceInstanceID,
+			appendCombatEvent(eventsBySquad, attacker.SquadInstanceID,
 				fmt.Sprintf("%s fired at %s — out of range.",
 					attacker.Instance.Callsign, target.Instance.Callsign))
 			continue
@@ -308,7 +308,7 @@ func (p *Mecha) resolveAttacks(
 			participationAwarded[atk.AttackerMechInstanceID] = true
 		}
 
-		totalDmg := p.fireWeapons(l, atk, attacker, target, dist, sectors, rng, heatMap, eventsByLance)
+		totalDmg := p.fireWeapons(l, atk, attacker, target, dist, sectors, rng, heatMap, eventsBySquad)
 		if totalDmg > 0 {
 			l.Info("total damage: %d", totalDmg)
 			accumulateDamage(atk.TargetMechInstanceID, totalDmg, snapshots, damageMap)
@@ -357,7 +357,7 @@ func (p *Mecha) fireWeapons(
 	sectors []*sectorState,
 	rng *rand.Rand,
 	heatMap map[string]int,
-	eventsByLance map[string][]turnsheet.TurnEvent,
+	eventsBySquad map[string][]turnsheet.TurnEvent,
 ) int {
 	l = l.WithFunctionContext("Mecha/fireWeapons")
 
@@ -400,11 +400,11 @@ func (p *Mecha) fireWeapons(
 				attacker.Instance.Callsign, weaponRec.Name,
 				target.Instance.Callsign, weaponRec.Name,
 				weaponRec.Damage, roll, chance)
-			appendCombatEvent(eventsByLance, attacker.LanceInstanceID,
+			appendCombatEvent(eventsBySquad, attacker.SquadInstanceID,
 				fmt.Sprintf("%s fired %s at %s — HIT for %d damage.",
 					attacker.Instance.Callsign, weaponRec.Name,
 					target.Instance.Callsign, weaponRec.Damage))
-			appendCombatEvent(eventsByLance, target.LanceInstanceID,
+			appendCombatEvent(eventsBySquad, target.SquadInstanceID,
 				fmt.Sprintf("%s hit by %s from %s — %d damage.",
 					target.Instance.Callsign, weaponRec.Name,
 					attacker.Instance.Callsign, weaponRec.Damage))
@@ -412,7 +412,7 @@ func (p *Mecha) fireWeapons(
 			l.Info("%s: %s missed %s (roll %d >= %d%%)",
 				attacker.Instance.Callsign, weaponRec.Name,
 				target.Instance.Callsign, roll, chance)
-			appendCombatEvent(eventsByLance, attacker.LanceInstanceID,
+			appendCombatEvent(eventsBySquad, attacker.SquadInstanceID,
 				fmt.Sprintf("%s fired %s at %s — missed.",
 					attacker.Instance.Callsign, weaponRec.Name,
 					target.Instance.Callsign))
@@ -441,7 +441,7 @@ func (p *Mecha) applyPendingDamage(
 	damageMap map[string]*pendingDamage,
 	snapshots map[string]*mechSnapshot,
 	attacks []AttackDeclaration,
-	eventsByLance map[string][]turnsheet.TurnEvent,
+	eventsBySquad map[string][]turnsheet.TurnEvent,
 ) {
 	for mechID, dm := range damageMap {
 		snap, ok := snapshots[mechID]
@@ -474,12 +474,12 @@ func (p *Mecha) applyPendingDamage(
 		if inst.CurrentStructure <= 0 {
 			inst.Status = mecha_record.MechInstanceStatusDestroyed
 			l.Info("mech >%s< destroyed", inst.Callsign)
-			appendCombatEvent(eventsByLance, snap.LanceInstanceID,
+			appendCombatEvent(eventsBySquad, snap.SquadInstanceID,
 				fmt.Sprintf("%s has been DESTROYED!", inst.Callsign))
 			for _, atk := range attacks {
 				if atk.TargetMechInstanceID == mechID {
 					if attSnap, ok := snapshots[atk.AttackerMechInstanceID]; ok {
-						appendCombatEvent(eventsByLance, attSnap.LanceInstanceID,
+						appendCombatEvent(eventsBySquad, attSnap.SquadInstanceID,
 							fmt.Sprintf("%s has been DESTROYED by your fire!", inst.Callsign))
 					}
 					break
@@ -495,7 +495,7 @@ func (p *Mecha) applyPendingHeat(
 	l logger.Logger,
 	heatMap map[string]int,
 	snapshots map[string]*mechSnapshot,
-	eventsByLance map[string][]turnsheet.TurnEvent,
+	eventsBySquad map[string][]turnsheet.TurnEvent,
 ) {
 	for mechID, heat := range heatMap {
 		snap, ok := snapshots[mechID]
@@ -514,7 +514,7 @@ func (p *Mecha) applyPendingHeat(
 				inst.Status = mecha_record.MechInstanceStatusShutdown
 				inst.CurrentHeat = chassisRec.HeatCapacity
 				l.Info("mech >%s< overheated and shut down", inst.Callsign)
-				appendCombatEvent(eventsByLance, snap.LanceInstanceID,
+				appendCombatEvent(eventsBySquad, snap.SquadInstanceID,
 					fmt.Sprintf("%s has SHUT DOWN from overheating!", inst.Callsign))
 			}
 		}
@@ -541,12 +541,12 @@ func (p *Mecha) persistMechChanges(
 }
 
 func appendCombatEvent(
-	eventsByLance map[string][]turnsheet.TurnEvent,
-	lanceInstanceID string,
+	eventsBySquad map[string][]turnsheet.TurnEvent,
+	squadInstanceID string,
 	message string,
 ) {
-	eventsByLance[lanceInstanceID] = append(
-		eventsByLance[lanceInstanceID],
+	eventsBySquad[squadInstanceID] = append(
+		eventsBySquad[squadInstanceID],
 		turnsheet.TurnEvent{
 			Category: turnsheet.TurnEventCategoryCombat,
 			Icon:     turnsheet.TurnEventIconCombat,
@@ -555,21 +555,21 @@ func appendCombatEvent(
 	)
 }
 
-func (p *Mecha) appendCombatEventsToLances(
-	eventsByLance map[string][]turnsheet.TurnEvent,
+func (p *Mecha) appendCombatEventsToSquads(
+	eventsBySquad map[string][]turnsheet.TurnEvent,
 ) error {
-	for lanceID, events := range eventsByLance {
-		lanceInst, err := p.Domain.GetMechaLanceInstanceRec(lanceID, nil)
+	for squadID, events := range eventsBySquad {
+		squadInst, err := p.Domain.GetMechaSquadInstanceRec(squadID, nil)
 		if err != nil {
-			return fmt.Errorf("failed to get lance instance >%s< for events: %w", lanceID, err)
+			return fmt.Errorf("failed to get squad instance >%s< for events: %w", squadID, err)
 		}
 		for _, evt := range events {
-			if err := turnsheet.AppendMechaTurnEvent(lanceInst, evt); err != nil {
-				return fmt.Errorf("failed to append turn event for lance >%s<: %w", lanceID, err)
+			if err := turnsheet.AppendMechaTurnEvent(squadInst, evt); err != nil {
+				return fmt.Errorf("failed to append turn event for squad >%s<: %w", squadID, err)
 			}
 		}
-		if _, err := p.Domain.UpdateMechaLanceInstanceRec(lanceInst); err != nil {
-			return fmt.Errorf("failed to persist turn events for lance >%s<: %w", lanceID, err)
+		if _, err := p.Domain.UpdateMechaSquadInstanceRec(squadInst); err != nil {
+			return fmt.Errorf("failed to persist turn events for squad >%s<: %w", squadID, err)
 		}
 	}
 	return nil

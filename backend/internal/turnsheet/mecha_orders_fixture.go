@@ -32,8 +32,8 @@ func MechaOrdersFixture() DevFixture {
 						{Category: TurnEventCategorySystem, Icon: TurnEventIconSystem, Message: "Hammer field repairs restored 18 armor (72/72)."},
 					},
 				},
-				LanceName: "Alpha Lance",
-				LanceMechs: []MechOrderEntry{
+				SquadName: "Alpha Squad",
+				SquadMechs: []MechOrderEntry{
 					{
 						MechInstanceID: "mech-1", MechCallsign: "Hammer", MechStatus: "operational",
 						CurrentSectorName: "Central Wastes", ChassisName: "Scout", ChassisClass: "light",

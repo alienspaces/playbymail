@@ -22,29 +22,29 @@ func (p *Mecha) ProcessTurnSheets(ctx context.Context, gameInstanceRec *game_rec
 	// Reset accumulated attacks for this processing run
 	p.pendingAttacks = nil
 
-	lanceInstanceRecs, err := p.getLanceInstancesForGameInstance(ctx, gameInstanceRec)
+	squadInstanceRecs, err := p.getSquadInstancesForGameInstance(ctx, gameInstanceRec)
 	if err != nil {
-		l.Error("failed to get lance instances for game instance >%s< error >%v<", gameInstanceRec.ID, err)
+		l.Error("failed to get squad instances for game instance >%s< error >%v<", gameInstanceRec.ID, err)
 		return err
 	}
 
-	l.Info("found >%d< lance instances for game instance >%s<", len(lanceInstanceRecs), gameInstanceRec.ID)
+	l.Info("found >%d< squad instances for game instance >%s<", len(squadInstanceRecs), gameInstanceRec.ID)
 
-	if len(lanceInstanceRecs) == 0 {
-		l.Info("no lance instances found for game instance >%s<", gameInstanceRec.ID)
+	if len(squadInstanceRecs) == 0 {
+		l.Info("no squad instances found for game instance >%s<", gameInstanceRec.ID)
 		return nil
 	}
 
 	var errs []error
-	for _, lanceInstanceRec := range lanceInstanceRecs {
-		if err := p.processLanceTurnSheets(ctx, gameInstanceRec, lanceInstanceRec); err != nil {
-			l.Warn("failed to process turn sheets for lance >%s< error >%v<", lanceInstanceRec.ID, err)
+	for _, squadInstanceRec := range squadInstanceRecs {
+		if err := p.processSquadTurnSheets(ctx, gameInstanceRec, squadInstanceRec); err != nil {
+			l.Warn("failed to process turn sheets for squad >%s< error >%v<", squadInstanceRec.ID, err)
 			errs = append(errs, err)
 		}
 	}
 
 	if len(errs) > 0 {
-		return fmt.Errorf("failed to process turn sheets for some lances: %v", errs)
+		return fmt.Errorf("failed to process turn sheets for some squads: %v", errs)
 	}
 
 	if err := p.processComputerOpponentOrders(ctx, gameInstanceRec); err != nil {
@@ -68,7 +68,7 @@ func (p *Mecha) ProcessTurnSheets(ctx context.Context, gameInstanceRec *game_rec
 }
 
 // processComputerOpponentOrders generates and applies orders for all computer
-// opponent lances for the current turn. Errors are non-fatal to avoid blocking
+// opponent squads for the current turn. Errors are non-fatal to avoid blocking
 // the human player's turn.
 func (p *Mecha) processComputerOpponentOrders(ctx context.Context, gameInstanceRec *game_record.GameInstance) error {
 	l := p.Logger.WithFunctionContext("Mecha/processComputerOpponentOrders")
@@ -90,30 +90,30 @@ func (p *Mecha) processComputerOpponentOrders(ctx context.Context, gameInstanceR
 		return nil
 	}
 
-	// Get all lance instances for this game instance.
-	allLanceInstances, err := p.getLanceInstancesForGameInstance(ctx, gameInstanceRec)
+	// Get all squad instances for this game instance.
+	allSquadInstances, err := p.getSquadInstancesForGameInstance(ctx, gameInstanceRec)
 	if err != nil {
-		return fmt.Errorf("failed to get lance instances: %w", err)
+		return fmt.Errorf("failed to get squad instances: %w", err)
 	}
 
 	for _, opponentRec := range opponentRecs {
-		// Find lance instances assigned to this opponent.
-		var opponentLanceInstances []*mecha_record.MechaLanceInstance
-		for _, li := range allLanceInstances {
-			if li.MechaComputerOpponentID.Valid && li.MechaComputerOpponentID.String == opponentRec.ID {
-				opponentLanceInstances = append(opponentLanceInstances, li)
+		// Find squad instances assigned to this opponent.
+		var opponentSquadInstances []*mecha_record.MechaSquadInstance
+		for _, si := range allSquadInstances {
+			if si.MechaComputerOpponentID.Valid && si.MechaComputerOpponentID.String == opponentRec.ID {
+				opponentSquadInstances = append(opponentSquadInstances, si)
 			}
 		}
 
-		if len(opponentLanceInstances) == 0 {
-			l.Warn("no lance instances found for computer opponent >%s< — skipping", opponentRec.ID)
+		if len(opponentSquadInstances) == 0 {
+			l.Warn("no squad instances found for computer opponent >%s< — skipping", opponentRec.ID)
 			continue
 		}
 
-		for _, lanceInstance := range opponentLanceInstances {
-			orders, err := p.DecisionEngine.GenerateOrdersForLance(ctx, gameInstanceRec.ID, lanceInstance, opponentRec, gameInstanceRec.CurrentTurn)
+		for _, squadInstance := range opponentSquadInstances {
+			orders, err := p.DecisionEngine.GenerateOrdersForSquad(ctx, gameInstanceRec.ID, squadInstance, opponentRec, gameInstanceRec.CurrentTurn)
 			if err != nil {
-				l.Warn("decision engine failed for opponent >%s< lance instance >%s<: %v", opponentRec.Name, lanceInstance.ID, err)
+				l.Warn("decision engine failed for opponent >%s< squad instance >%s<: %v", opponentRec.Name, squadInstance.ID, err)
 				continue
 			}
 
@@ -131,7 +131,7 @@ func (p *Mecha) processComputerOpponentOrders(ctx context.Context, gameInstanceR
 				}
 			}
 
-			l.Info("applied %d orders for computer opponent >%s< lance instance >%s<", len(orders), opponentRec.Name, lanceInstance.ID)
+			l.Info("applied %d orders for computer opponent >%s< squad instance >%s<", len(orders), opponentRec.Name, squadInstance.ID)
 		}
 	}
 
@@ -203,19 +203,19 @@ func (p *Mecha) applyComputerOpponentOrder(gameInstanceRec *game_record.GameInst
 	return nil
 }
 
-// processLanceTurnSheets processes all turn sheets for a specific lance instance.
-func (p *Mecha) processLanceTurnSheets(ctx context.Context, gameInstanceRec *game_record.GameInstance, lanceInstance *mecha_record.MechaLanceInstance) error {
-	l := p.Logger.WithFunctionContext("Mecha/processLanceTurnSheets")
+// processSquadTurnSheets processes all turn sheets for a specific squad instance.
+func (p *Mecha) processSquadTurnSheets(ctx context.Context, gameInstanceRec *game_record.GameInstance, squadInstance *mecha_record.MechaSquadInstance) error {
+	l := p.Logger.WithFunctionContext("Mecha/processSquadTurnSheets")
 
-	l.Debug("processing turn sheets for lance >%s< turn >%d<", lanceInstance.ID, gameInstanceRec.CurrentTurn)
+	l.Debug("processing turn sheets for squad >%s< turn >%d<", squadInstance.ID, gameInstanceRec.CurrentTurn)
 
-	turnSheetRecs, err := p.getTurnSheetsForLance(lanceInstance, gameInstanceRec.CurrentTurn)
+	turnSheetRecs, err := p.getTurnSheetsForSquad(squadInstance, gameInstanceRec.CurrentTurn)
 	if err != nil {
-		l.Error("failed to get turn sheets for lance >%s< turn >%d< error >%v<", lanceInstance.ID, gameInstanceRec.CurrentTurn, err)
+		l.Error("failed to get turn sheets for squad >%s< turn >%d< error >%v<", squadInstance.ID, gameInstanceRec.CurrentTurn, err)
 		return err
 	}
 
-	l.Info("found >%d< turn sheets for lance >%s< turn >%d<", len(turnSheetRecs), lanceInstance.ID, gameInstanceRec.CurrentTurn)
+	l.Info("found >%d< turn sheets for squad >%s< turn >%d<", len(turnSheetRecs), squadInstance.ID, gameInstanceRec.CurrentTurn)
 
 	if len(turnSheetRecs) == 0 {
 		return nil
@@ -226,8 +226,8 @@ func (p *Mecha) processLanceTurnSheets(ctx context.Context, gameInstanceRec *gam
 	})
 
 	for _, turnSheet := range turnSheetRecs {
-		if err := p.processTurnSheet(ctx, gameInstanceRec, lanceInstance, turnSheet); err != nil {
-			l.Warn("failed to process turn sheet >%s< for lance >%s< error >%v<", turnSheet.ID, lanceInstance.ID, err)
+		if err := p.processTurnSheet(ctx, gameInstanceRec, squadInstance, turnSheet); err != nil {
+			l.Warn("failed to process turn sheet >%s< for squad >%s< error >%v<", turnSheet.ID, squadInstance.ID, err)
 			return err
 		}
 	}
@@ -257,11 +257,11 @@ func (p *Mecha) collectAttacksFromOrdersSheet(l logger.Logger, turnSheet *game_r
 	p.pendingAttacks = append(p.pendingAttacks, attacks...)
 }
 
-// processTurnSheet processes a single turn sheet for a lance instance.
-func (p *Mecha) processTurnSheet(ctx context.Context, gameInstanceRec *game_record.GameInstance, lanceInstance *mecha_record.MechaLanceInstance, turnSheet *game_record.GameTurnSheet) error {
+// processTurnSheet processes a single turn sheet for a squad instance.
+func (p *Mecha) processTurnSheet(ctx context.Context, gameInstanceRec *game_record.GameInstance, squadInstance *mecha_record.MechaSquadInstance, turnSheet *game_record.GameTurnSheet) error {
 	l := p.Logger.WithFunctionContext("Mecha/processTurnSheet")
 
-	l.Debug("processing turn sheet >%s< type >%s< for lance >%s<", turnSheet.ID, turnSheet.SheetType, lanceInstance.ID)
+	l.Debug("processing turn sheet >%s< type >%s< for squad >%s<", turnSheet.ID, turnSheet.SheetType, squadInstance.ID)
 
 	if len(turnSheet.ScannedData) == 0 {
 		l.Info("skipping turn sheet >%s< — no scanned data (not yet submitted)", turnSheet.ID)
@@ -274,7 +274,7 @@ func (p *Mecha) processTurnSheet(ctx context.Context, gameInstanceRec *game_reco
 		return fmt.Errorf("unsupported sheet type: %s", turnSheet.SheetType)
 	}
 
-	if err := processor.ProcessTurnSheetResponse(ctx, gameInstanceRec, lanceInstance, turnSheet); err != nil {
+	if err := processor.ProcessTurnSheetResponse(ctx, gameInstanceRec, squadInstance, turnSheet); err != nil {
 		return err
 	}
 
@@ -284,22 +284,22 @@ func (p *Mecha) processTurnSheet(ctx context.Context, gameInstanceRec *game_reco
 	return nil
 }
 
-// getTurnSheetsForLance retrieves turn sheets for a specific lance instance and turn.
-func (p *Mecha) getTurnSheetsForLance(lanceInstance *mecha_record.MechaLanceInstance, turnNumber int) ([]*game_record.GameTurnSheet, error) {
-	l := p.Logger.WithFunctionContext("Mecha/getTurnSheetsForLance")
+// getTurnSheetsForSquad retrieves turn sheets for a specific squad instance and turn.
+func (p *Mecha) getTurnSheetsForSquad(squadInstance *mecha_record.MechaSquadInstance, turnNumber int) ([]*game_record.GameTurnSheet, error) {
+	l := p.Logger.WithFunctionContext("Mecha/getTurnSheetsForSquad")
 
 	mechaTurnSheetRecs, err := p.Domain.GetManyMechaTurnSheetRecs(
 		&coresql.Options{
 			Params: []coresql.Param{
 				{
-					Col: mecha_record.FieldMechaTurnSheetMechaLanceInstanceID,
-					Val: lanceInstance.ID,
+					Col: mecha_record.FieldMechaTurnSheetMechaSquadInstanceID,
+					Val: squadInstance.ID,
 				},
 			},
 		},
 	)
 	if err != nil {
-		l.Error("failed to get mecha turn sheets for lance >%s< turn >%d< error >%v<", lanceInstance.ID, turnNumber, err)
+		l.Error("failed to get mecha turn sheets for squad >%s< turn >%d< error >%v<", squadInstance.ID, turnNumber, err)
 		return nil, err
 	}
 

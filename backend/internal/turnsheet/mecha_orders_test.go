@@ -46,8 +46,8 @@ func TestMechaOrdersProcessor_GenerateTurnSheet(t *testing.T) {
 					TurnSheetCode: convert.Ptr(generateTestTurnSheetCode(t)),
 					TurnNumber:    convert.Ptr(1),
 				},
-				LanceName: "Alpha Lance",
-				LanceMechs: []turnsheet.MechOrderEntry{
+				SquadName: "Alpha Squad",
+				SquadMechs: []turnsheet.MechOrderEntry{
 					{
 						MechInstanceID:    "mech-1",
 						MechCallsign:      "Hammer",
@@ -111,8 +111,8 @@ func TestMechaOrdersProcessor_GenerateTurnSheet_ContainsMechStats(t *testing.T) 
 				{Category: turnsheet.TurnEventCategoryCombat, Icon: turnsheet.TurnEventIconCombat, Message: "Anvil hit Stalker for 5 damage."},
 			},
 		},
-		LanceName: "Alpha Lance",
-		LanceMechs: []turnsheet.MechOrderEntry{
+		SquadName: "Alpha Squad",
+		SquadMechs: []turnsheet.MechOrderEntry{
 			{
 				MechInstanceID:    "mech-1",
 				MechCallsign:      "Hammer",

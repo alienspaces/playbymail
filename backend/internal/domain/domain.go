@@ -35,9 +35,9 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/repository/catalog_game_instance_view"
 	"gitlab.com/alienspaces/playbymail/internal/repository/mecha_chassis"
 	"gitlab.com/alienspaces/playbymail/internal/repository/mecha_computer_opponent"
-	"gitlab.com/alienspaces/playbymail/internal/repository/mecha_lance"
-	"gitlab.com/alienspaces/playbymail/internal/repository/mecha_lance_instance"
-	"gitlab.com/alienspaces/playbymail/internal/repository/mecha_lance_mech"
+	"gitlab.com/alienspaces/playbymail/internal/repository/mecha_squad"
+	"gitlab.com/alienspaces/playbymail/internal/repository/mecha_squad_instance"
+	"gitlab.com/alienspaces/playbymail/internal/repository/mecha_squad_mech"
 	"gitlab.com/alienspaces/playbymail/internal/repository/mecha_mech_instance"
 	"gitlab.com/alienspaces/playbymail/internal/repository/mecha_sector"
 	"gitlab.com/alienspaces/playbymail/internal/repository/mecha_sector_instance"
@@ -117,10 +117,10 @@ func NewDomain(l logger.Logger, cfg config.Config) (*Domain, error) {
 		mecha_weapon.NewRepository,
 		mecha_sector.NewRepository,
 		mecha_sector_link.NewRepository,
-		mecha_lance.NewRepository,
-		mecha_lance_mech.NewRepository,
+		mecha_squad.NewRepository,
+		mecha_squad_mech.NewRepository,
 		mecha_sector_instance.NewRepository,
-		mecha_lance_instance.NewRepository,
+		mecha_squad_instance.NewRepository,
 		mecha_mech_instance.NewRepository,
 		mecha_turn_sheet.NewRepository,
 	}
@@ -330,14 +330,14 @@ func (m *Domain) MechaSectorLinkRepository() *repository.Generic[mecha_record.Me
 	return m.Repositories[mecha_sector_link.TableName].(*repository.Generic[mecha_record.MechaSectorLink, *mecha_record.MechaSectorLink])
 }
 
-// MechaLanceRepository -
-func (m *Domain) MechaLanceRepository() *repository.Generic[mecha_record.MechaLance, *mecha_record.MechaLance] {
-	return m.Repositories[mecha_lance.TableName].(*repository.Generic[mecha_record.MechaLance, *mecha_record.MechaLance])
+// MechaSquadRepository -
+func (m *Domain) MechaSquadRepository() *repository.Generic[mecha_record.MechaSquad, *mecha_record.MechaSquad] {
+	return m.Repositories[mecha_squad.TableName].(*repository.Generic[mecha_record.MechaSquad, *mecha_record.MechaSquad])
 }
 
-// MechaLanceMechRepository -
-func (m *Domain) MechaLanceMechRepository() *repository.Generic[mecha_record.MechaLanceMech, *mecha_record.MechaLanceMech] {
-	return m.Repositories[mecha_lance_mech.TableName].(*repository.Generic[mecha_record.MechaLanceMech, *mecha_record.MechaLanceMech])
+// MechaSquadMechRepository -
+func (m *Domain) MechaSquadMechRepository() *repository.Generic[mecha_record.MechaSquadMech, *mecha_record.MechaSquadMech] {
+	return m.Repositories[mecha_squad_mech.TableName].(*repository.Generic[mecha_record.MechaSquadMech, *mecha_record.MechaSquadMech])
 }
 
 // MechaSectorInstanceRepository -
@@ -345,9 +345,9 @@ func (m *Domain) MechaSectorInstanceRepository() *repository.Generic[mecha_recor
 	return m.Repositories[mecha_sector_instance.TableName].(*repository.Generic[mecha_record.MechaSectorInstance, *mecha_record.MechaSectorInstance])
 }
 
-// MechaLanceInstanceRepository -
-func (m *Domain) MechaLanceInstanceRepository() *repository.Generic[mecha_record.MechaLanceInstance, *mecha_record.MechaLanceInstance] {
-	return m.Repositories[mecha_lance_instance.TableName].(*repository.Generic[mecha_record.MechaLanceInstance, *mecha_record.MechaLanceInstance])
+// MechaSquadInstanceRepository -
+func (m *Domain) MechaSquadInstanceRepository() *repository.Generic[mecha_record.MechaSquadInstance, *mecha_record.MechaSquadInstance] {
+	return m.Repositories[mecha_squad_instance.TableName].(*repository.Generic[mecha_record.MechaSquadInstance, *mecha_record.MechaSquadInstance])
 }
 
 // MechaMechInstanceRepository -

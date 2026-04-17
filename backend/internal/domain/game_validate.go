@@ -441,11 +441,11 @@ func (m *Domain) validateMechaGameReadyForInstance(gameID string) ([]GameValidat
 		})
 	}
 
-	// Require exactly one player starter lance with at least one mech.
-	starterLanceRecs, err := m.GetManyMechaLanceRecs(&coresql.Options{
+	// Require exactly one player starter squad with at least one mech.
+	starterSquadRecs, err := m.GetManyMechaSquadRecs(&coresql.Options{
 		Params: []coresql.Param{
-			{Col: mecha_record.FieldMechaLanceGameID, Val: gameID},
-			{Col: mecha_record.FieldMechaLanceLanceType, Val: mecha_record.LanceTypeStarter},
+			{Col: mecha_record.FieldMechaSquadGameID, Val: gameID},
+			{Col: mecha_record.FieldMechaSquadSquadType, Val: mecha_record.SquadTypeStarter},
 		},
 		Limit: 1,
 	})
@@ -453,16 +453,16 @@ func (m *Domain) validateMechaGameReadyForInstance(gameID string) ([]GameValidat
 		return nil, err
 	}
 
-	if len(starterLanceRecs) == 0 {
+	if len(starterSquadRecs) == 0 {
 		issues = append(issues, GameValidationIssue{
-			Field:    "player_starter_lance",
-			Message:  "Mecha game must have a player starter lance defined",
+			Field:    "player_starter_squad",
+			Message:  "Mecha game must have a player starter squad defined",
 			Severity: ValidationSeverityError,
 		})
 	} else {
-		starterMechs, err := m.GetManyMechaLanceMechRecs(&coresql.Options{
+		starterMechs, err := m.GetManyMechaSquadMechRecs(&coresql.Options{
 			Params: []coresql.Param{
-				{Col: mecha_record.FieldMechaLanceMechMechaLanceID, Val: starterLanceRecs[0].ID},
+				{Col: mecha_record.FieldMechaSquadMechMechaSquadID, Val: starterSquadRecs[0].ID},
 			},
 			Limit: 1,
 		})
@@ -471,8 +471,8 @@ func (m *Domain) validateMechaGameReadyForInstance(gameID string) ([]GameValidat
 		}
 		if len(starterMechs) == 0 {
 			issues = append(issues, GameValidationIssue{
-				Field:    "player_starter_lance",
-				Message:  "Player starter lance must have at least one mech",
+				Field:    "player_starter_squad",
+				Message:  "Player starter squad must have at least one mech",
 				Severity: ValidationSeverityError,
 			})
 		}

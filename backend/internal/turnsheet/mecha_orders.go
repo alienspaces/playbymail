@@ -17,7 +17,7 @@ import (
 // OrdersScannedDataSchemaName is the filename of the JSON schema for orders scanned_data (under schema/turnsheet/mecha/).
 const OrdersScannedDataSchemaName = "orders.schema.json"
 
-const defaultOrdersInstructions = "For each mech in your lance, choose a sector to move to and/or a target to attack, then return this form."
+const defaultOrdersInstructions = "For each mech in your squad, choose a sector to move to and/or a target to attack, then return this form."
 const ordersTemplatePath = "turnsheet/mecha_orders.template"
 
 // DefaultOrdersInstructions returns the default instruction text for orders turn sheets.
@@ -76,11 +76,11 @@ type EnemyMechOption struct {
 type OrdersData struct {
 	TurnSheetTemplateData
 
-	// Lance information
-	LanceName string `json:"lance_name,omitempty"`
+	// Squad information
+	SquadName string `json:"squad_name,omitempty"`
 
-	// Mechs in this lance with their current state and available orders
-	LanceMechs []MechOrderEntry `json:"lance_mechs,omitempty"`
+	// Mechs in this squad with their current state and available orders
+	SquadMechs []MechOrderEntry `json:"squad_mechs,omitempty"`
 
 	// Available adjacent sectors for movement
 	AvailableSectors []SectorOption `json:"available_sectors,omitempty"`
@@ -152,8 +152,8 @@ func (p *MechaOrdersProcessor) GeneratePreviewData(ctx context.Context, l logger
 				},
 			},
 		},
-		LanceName: "Preview Lance",
-		LanceMechs: []MechOrderEntry{
+		SquadName: "Preview Squad",
+		SquadMechs: []MechOrderEntry{
 			{
 				MechInstanceID:    "preview-mech-1",
 				MechCallsign:      "Hammer",
@@ -339,8 +339,8 @@ func buildOrdersContext(data *OrdersData) []string {
 		if data.GameName != nil {
 			ctx = append(ctx, fmt.Sprintf("Game name: %s", strings.TrimSpace(*data.GameName)))
 		}
-		if data.LanceName != "" {
-			ctx = append(ctx, fmt.Sprintf("Lance name: %s", data.LanceName))
+		if data.SquadName != "" {
+			ctx = append(ctx, fmt.Sprintf("Squad name: %s", data.SquadName))
 		}
 		if data.TurnNumber != nil {
 			ctx = append(ctx, fmt.Sprintf("Turn number: %d", *data.TurnNumber))

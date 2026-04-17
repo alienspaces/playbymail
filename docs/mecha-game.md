@@ -10,7 +10,7 @@ For platform-level configuration shared across all game types, see [shared-game-
 
 | Parameter | Default | Description |
 |---|---|---|
-| Lance size | 4 | Number of mechs in a player's lance |
+| Squad size | 4 | Number of mechs in a player's squad |
 
 ---
 
@@ -25,8 +25,8 @@ Game
   ├── Sectors (battlefield map areas)
   │     └── Sector links (adjacency between sectors)
   ├── Computer opponents (AI behaviour profiles)
-  └── Lances (groups of mechs)
-        └── Lance mechs (specific mechs assigned to a lance)
+  └── Squads (groups of mechs)
+        └── Squad mechs (specific mechs assigned to a squad)
 ```
 
 ---
@@ -102,7 +102,7 @@ Map areas that make up the battlefield. The map is a graph of sectors connected 
 | Terrain type | Terrain classification (see terrain type values below) |
 | Elevation | Relative height; used by the AI for tactical positioning (higher elevation is preferred by defensive opponents) |
 | Cover modifier | Applied to hit chance for attackers targeting mechs in this sector; negative values make mechs harder to hit; default 0 |
-| Starting sector | If enabled, this is a depot sector — lances spawn here and management sheets are issued when mechs are present |
+| Starting sector | If enabled, this is a depot sector — squads spawn here and management sheets are issued when mechs are present |
 
 **Terrain type values:**
 
@@ -131,9 +131,9 @@ Cover is now a property of the destination sector, not the link. See the **Secto
 
 ---
 
-### Lance
+### Squad
 
-A design-time lance template. There are two lance types.
+A design-time squad template. There are two squad types.
 
 | Field | Description |
 |---|---|
@@ -141,33 +141,33 @@ A design-time lance template. There are two lance types.
 | Description | Description |
 | Type | `starter` or `opponent` (see below) |
 
-**Lance types:**
+**Squad types:**
 
-- **Starter** (`starter`) — the loadout cloned for every player who joins a run. Its mechs are copied into player-specific lance instances at game start. At most one starter lance is allowed per game.
-- **Opponent** (`opponent`) — a template randomly assigned to a computer opponent when a run starts. If there are more opponents than templates the templates are reused. No player ever owns an opponent lance directly.
+- **Starter** (`starter`) — the loadout cloned for every player who joins a run. Its mechs are copied into player-specific squad instances at game start. At most one starter squad is allowed per game.
+- **Opponent** (`opponent`) — a template randomly assigned to a computer opponent when a run starts. If there are more opponents than templates the templates are reused. No player ever owns an opponent squad directly.
 
-Player-owned lances only exist as runtime **lance instances** — they are never stored in the design-time lance table.
+Player-owned squads only exist as runtime **squad instances** — they are never stored in the design-time squad table.
 
-**Requirement:** a starter lance with at least one mech must exist before a run can be created.
+**Requirement:** a starter squad with at least one mech must exist before a run can be created.
 
 ---
 
-### Lance Mech
+### Squad Mech
 
-A specific mech assigned to a lance — combining a chassis with a callsign and weapon loadout.
+A specific mech assigned to a squad — combining a chassis with a callsign and weapon loadout.
 
 | Field | Description |
 |---|---|
-| Lance | The lance this mech belongs to |
+| Squad | The squad this mech belongs to |
 | Chassis | The chassis blueprint for this mech |
-| Callsign | Unique name within the lance (e.g. "Alpha-1", "Shadow Fox") |
+| Callsign | Unique name within the squad (e.g. "Alpha-1", "Shadow Fox") |
 | Weapon loadout | The weapons fitted to this mech; each weapon entry specifies the weapon and the slot it occupies (e.g. left arm, right torso, centre torso) |
 
 ---
 
 ### Computer Opponent
 
-AI behaviour profiles for computer-controlled lances. Each profile controls how aggressively the AI plays and how tactically sophisticated its decisions are.
+AI behaviour profiles for computer-controlled squads. Each profile controls how aggressively the AI plays and how tactically sophisticated its decisions are.
 
 Computer opponents are managed through the designer studio under **Computer Opponents**.
 
@@ -182,12 +182,12 @@ Computer opponents are managed through the designer studio under **Computer Oppo
 
 ## Turn Sheets
 
-Each turn a lance receives a set of turn sheets. Sheets are presented to the player in a specific order, and processed by the game engine in a different order.
+Each turn a squad receives a set of turn sheets. Sheets are presented to the player in a specific order, and processed by the game engine in a different order.
 
 | Sheet | Processing order | Presentation order | Notes |
 |---|---|---|---|
 | Join game | — | — | Sent when a player first joins; handled separately from regular turn processing |
-| Lance management | 1st | 2nd | Processed first so repairs and refits are applied before movement |
+| Squad management | 1st | 2nd | Processed first so repairs and refits are applied before movement |
 | Orders | 2nd | 1st | Shown first as the primary strategic action; management is secondary |
 
 ### Turn Sheet Background Images
@@ -198,7 +198,7 @@ When uploading a background image for a mecha game, select the sheet type the im
 |---|---|
 | `mecha_join_game` | Join game sheet — required; sent when a player first joins |
 | `mecha_orders` | Movement and attack orders sheet |
-| `mecha_lance_management` | Repair and refit sheet |
+| `mecha_squad_management` | Repair and refit sheet |
 
 ---
 
@@ -206,7 +206,7 @@ When uploading a background image for a mecha game, select the sheet type the im
 
 ### Orders Sheet
 
-Players submit movement and attack orders for each mech in their lance.
+Players submit movement and attack orders for each mech in their squad.
 
 Players submit one order per mech: an optional destination sector to move to, and an optional target mech to attack.
 
@@ -217,17 +217,17 @@ Players submit one order per mech: an optional destination sector to move to, an
 - The server validates that the chosen destination is reachable within the mech's speed; invalid moves are ignored
 
 **Attack rules:**
-- Attack declarations are collected from all lances and resolved simultaneously after all movement is applied
+- Attack declarations are collected from all squads and resolved simultaneously after all movement is applied
 - Any non-destroyed enemy mech in the run is a valid attack target
 - Targets must be within weapon range after movement (see range bands in the Designer Configuration section)
 
 ---
 
-### Lance Management Sheet
+### Squad Management Sheet
 
-Players submit repair and refit orders for mechs that are at a depot sector (a starting sector). This sheet is only issued to player-controlled lances; AI lances do not receive management sheets.
+Players submit repair and refit orders for mechs that are at a depot sector (a starting sector). This sheet is only issued to player-controlled squads; AI squads do not receive management sheets.
 
-A management sheet is issued when at least one mech in the lance is in a depot sector.
+A management sheet is issued when at least one mech in the squad is in a depot sector.
 
 Players submit per-mech orders to repair structure and/or swap weapons. Each weapon swap specifies the slot and the replacement weapon.
 
@@ -236,14 +236,14 @@ Players submit per-mech orders to repair structure and/or swap weapons. Each wea
 - Mechs that are already refitting from a previous turn cannot receive new management orders
 - **Structure repair** restores the mech to full structure; costs supply points (at least 1); the mech enters a refitting state for the following turn
 - **Weapon swaps** install a new weapon into the specified slot; each swap costs 1 supply point; the mech enters a refitting state for the following turn
-- Supply points are deducted from the lance's total (cannot go below 0)
+- Supply points are deducted from the squad's total (cannot go below 0)
 - **Refitting effect:** a mech that receives any management order is excluded from movement and combat that turn
 
 ---
 
 ### Combat Resolution
 
-Combat is resolved simultaneously — all attack orders from all lances are collected first, then resolved together.
+Combat is resolved simultaneously — all attack orders from all squads are collected first, then resolved together.
 
 All attacks use the positions and hit points from before any combat damage is applied.
 
@@ -294,7 +294,7 @@ After combat is resolved, the engine applies the following in order:
 
 1. **Heat dissipation** — heat accumulated during combat is reduced for all mechs
 2. **Auto armor repair** — operational mechs in depot sectors receive partial armor restoration
-3. **Supply point accrual** — lances receive supply points each turn (used for management orders)
+3. **Supply point accrual** — squads receive supply points each turn (used for management orders)
 4. **Pilot XP and skill advancement** (see below)
 
 ---
@@ -331,7 +331,7 @@ All pilots start at skill level 0.
 
 ### Computer Opponent AI
 
-The AI makes decisions for all computer-controlled lances each turn, after player orders have been submitted.
+The AI makes decisions for all computer-controlled squads each turn, after player orders have been submitted.
 
 **Movement behaviour:**
 - Destroyed or shutdown mechs receive no orders

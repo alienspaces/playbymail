@@ -2,7 +2,7 @@
 
 {{define "styles"}}
 <style>
-    .lance-info {
+    .squad-info {
         margin-bottom: 10px;
         font-size: 14px;
         font-weight: bold;
@@ -299,12 +299,12 @@
 {{end}}
 
 {{define "content"}}
-{{if .LanceName}}
-<div class="lance-info">Lance: {{.LanceName}}</div>
+{{if .SquadName}}
+<div class="squad-info">Squad: {{.SquadName}}</div>
 {{end}}
 
 <div class="mech-orders-section">
-    {{range .LanceMechs}}
+    {{range .SquadMechs}}
     <div class="mech-order-entry">
         {{/* Header: callsign + status */}}
         <div class="mech-order-header">
@@ -421,7 +421,7 @@
         {{end}}{{/* end if not IsRefitting */}}
     </div>
     {{else}}
-    <p style="font-size:13px;color:#666;">No mechs available in this lance.</p>
+    <p style="font-size:13px;color:#666;">No mechs available in this squad.</p>
     {{end}}
 </div>
 

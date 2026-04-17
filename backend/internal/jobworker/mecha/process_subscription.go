@@ -11,7 +11,7 @@ import (
 )
 
 // MechaJoinGameProcessor handles subscription processing for mecha games.
-// Player lances are created at game start by PopulateMechaGameInstanceData;
+// Player squads are created at game start by PopulateMechaGameInstanceData;
 // this processor exists only to handle the physical-mail scan flow (commander name).
 type MechaJoinGameProcessor struct {
 	Logger logger.Logger
@@ -24,7 +24,7 @@ func NewMechaJoinGameProcessor(l logger.Logger, d *domain.Domain) (*MechaJoinGam
 }
 
 // ProcessGameSubscriptionProcessing is a no-op for mecha games.
-// Lances are created at game-start time from the starter template, not at join time.
+// Squads are created at game-start time from the starter template, not at join time.
 // The commander name from a physical join-game scan is currently unused but may be
 // stored in a future iteration.
 func (p *MechaJoinGameProcessor) ProcessGameSubscriptionProcessing(
@@ -34,7 +34,7 @@ func (p *MechaJoinGameProcessor) ProcessGameSubscriptionProcessing(
 ) error {
 	l := p.Logger.WithFunctionContext("MechaJoinGameProcessor/ProcessGameSubscriptionProcessing")
 
-	l.Info("processing mecha subscription ID >%s< (no-op: lances created at game start)", subscriptionRec.ID)
+	l.Info("processing mecha subscription ID >%s< (no-op: squads created at game start)", subscriptionRec.ID)
 
 	if turnSheetRec != nil && len(turnSheetRec.ScannedData) > 0 {
 		var scanData turnsheet.MechaJoinGameScanData

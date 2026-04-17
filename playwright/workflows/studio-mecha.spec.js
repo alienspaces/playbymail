@@ -326,57 +326,57 @@ test.describe('Studio Mecha Designer Workflows', () => {
     })
   })
 
-  // ─── Lances Page ────────────────────────────────────────────────────────────
+  // ─── Squads Page ────────────────────────────────────────────────────────────
 
-  test.describe('Lances Page', () => {
-    test('should show unauthenticated content for lances page', async ({ page }) => {
+  test.describe('Squads Page', () => {
+    test('should show unauthenticated content for squads page', async ({ page }) => {
       await navigateTo(page, '/studio')
       await checkPageURL(page, '/studio')
       await checkElementVisible(page, 'body')
       const content = await page.locator('body').textContent()
       expect(content).toMatch(/Studio|Game|Design|Sign In/i)
-      await takeScreenshot(page, 'studio-lances-unauthenticated')
+      await takeScreenshot(page, 'studio-squads-unauthenticated')
     })
 
-    test('should navigate to lances page and show content', async ({ page }) => {
+    test('should navigate to squads page and show content', async ({ page }) => {
       await setupTestBypassHeaders(page)
       await navigateTo(page, '/studio')
       await waitForPageReady(page)
       const content = await page.locator('body').textContent()
-      if (content.includes('Lances') || content.includes('lances')) {
+      if (content.includes('Squads') || content.includes('squads')) {
         await checkElementVisible(page, 'body')
-        await takeScreenshot(page, 'studio-lances-page')
+        await takeScreenshot(page, 'studio-squads-page')
       } else {
-        console.log('Lances link not found - may require authenticated session with game selected')
+        console.log('Squads link not found - may require authenticated session with game selected')
       }
     })
 
-    test('should show lances table when game is selected', async ({ page }) => {
+    test('should show squads table when game is selected', async ({ page }) => {
       await setupTestBypassHeaders(page)
       await navigateTo(page, '/studio')
       await waitForPageReady(page)
 
-      const tableSelectors = ['[data-testid="lances-table"]', 'table', '[class*="resource-table"]']
+      const tableSelectors = ['[data-testid="squads-table"]', 'table', '[class*="resource-table"]']
       let tableFound = false
       for (const selector of tableSelectors) {
         try {
           if (await page.locator(selector).isVisible({ timeout: 2000 })) {
             tableFound = true
-            console.log(`Lances table found: ${selector}`)
+            console.log(`Squads table found: ${selector}`)
             break
           }
         } catch { /* continue */ }
       }
-      if (!tableFound) console.log('Lances table not found - requires game selection')
-      await takeScreenshot(page, 'studio-lances-table')
+      if (!tableFound) console.log('Squads table not found - requires game selection')
+      await takeScreenshot(page, 'studio-squads-table')
     })
 
-    test('should open create lance form', async ({ page }) => {
+    test('should open create squad form', async ({ page }) => {
       await setupTestBypassHeaders(page)
       await navigateTo(page, '/studio')
       await waitForPageReady(page)
 
-      const buttonSelectors = ['button:has-text("Create New Lance")', 'button:has-text("Create Lance")', 'button:has-text("Create")']
+      const buttonSelectors = ['button:has-text("Create New Squad")', 'button:has-text("Create Squad")', 'button:has-text("Create")']
       let buttonFound = false
       for (const selector of buttonSelectors) {
         try {
@@ -388,18 +388,18 @@ test.describe('Studio Mecha Designer Workflows', () => {
         } catch { /* continue */ }
       }
       if (buttonFound) {
-        const formSelectors = ['[data-testid="lance-form"]', 'form', '[class*="modal"]']
+        const formSelectors = ['[data-testid="squad-form"]', 'form', '[class*="modal"]']
         for (const selector of formSelectors) {
           try {
             if (await page.locator(selector).first().isVisible({ timeout: 2000 })) {
-              console.log(`Lance form found: ${selector}`)
+              console.log(`Squad form found: ${selector}`)
               break
             }
           } catch { /* continue */ }
         }
-        await takeScreenshot(page, 'studio-lance-create-form')
+        await takeScreenshot(page, 'studio-squad-create-form')
       } else {
-        console.log('Create lance button not found - requires authenticated session with game selected')
+        console.log('Create squad button not found - requires authenticated session with game selected')
       }
     })
   })

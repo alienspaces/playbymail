@@ -16,7 +16,7 @@ const (
 	FieldMechaMechInstanceID                    string = "id"
 	FieldMechaMechInstanceGameID                string = "game_id"
 	FieldMechaMechInstanceGameInstanceID        string = "game_instance_id"
-	FieldMechaMechInstanceMechaLanceInstanceID  string = "mecha_lance_instance_id"
+	FieldMechaMechInstanceMechaSquadInstanceID  string = "mecha_squad_instance_id"
 	FieldMechaMechInstanceMechaSectorInstanceID string = "mecha_sector_instance_id"
 	FieldMechaMechInstanceMechaChassisID        string = "mecha_chassis_id"
 	FieldMechaMechInstanceCallsign              string = "callsign"
@@ -44,7 +44,7 @@ type MechaMechInstance struct {
 	record.Record
 	GameID                string              `db:"game_id"`
 	GameInstanceID        string              `db:"game_instance_id"`
-	MechaLanceInstanceID  string              `db:"mecha_lance_instance_id"`
+	MechaSquadInstanceID  string              `db:"mecha_squad_instance_id"`
 	MechaSectorInstanceID string              `db:"mecha_sector_instance_id"`
 	MechaChassisID        string              `db:"mecha_chassis_id"`
 	Callsign              string              `db:"callsign"`
@@ -63,7 +63,7 @@ func (r *MechaMechInstance) ToNamedArgs() pgx.NamedArgs {
 	args := r.Record.ToNamedArgs()
 	args[FieldMechaMechInstanceGameID] = r.GameID
 	args[FieldMechaMechInstanceGameInstanceID] = r.GameInstanceID
-	args[FieldMechaMechInstanceMechaLanceInstanceID] = r.MechaLanceInstanceID
+	args[FieldMechaMechInstanceMechaSquadInstanceID] = r.MechaSquadInstanceID
 	args[FieldMechaMechInstanceMechaSectorInstanceID] = r.MechaSectorInstanceID
 	args[FieldMechaMechInstanceMechaChassisID] = r.MechaChassisID
 	args[FieldMechaMechInstanceCallsign] = r.Callsign

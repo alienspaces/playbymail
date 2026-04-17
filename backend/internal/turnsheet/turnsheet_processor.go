@@ -121,11 +121,11 @@ func getMechaDocumentProcessorMap(l logger.Logger, cfg config.Config) (map[strin
 	}
 	processors[mecha_record.MechaTurnSheetTypeOrders] = ordersProcessor
 
-	managementProcessor, err := NewMechaLanceManagementProcessor(l, cfg)
+	managementProcessor, err := NewMechaSquadManagementProcessor(l, cfg)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create mecha lance management processor: %w", err)
+		return nil, fmt.Errorf("failed to create mecha squad management processor: %w", err)
 	}
-	processors[mecha_record.MechaTurnSheetTypeLanceManagement] = managementProcessor
+	processors[mecha_record.MechaTurnSheetTypeSquadManagement] = managementProcessor
 
 	return processors, nil
 }

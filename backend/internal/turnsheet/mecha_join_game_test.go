@@ -52,7 +52,7 @@ func TestMechaJoinGameProcessor_GenerateTurnSheet(t *testing.T) {
 					TurnSheetCode: convert.Ptr(generateTestJoinTurnSheetCode(t)),
 					TurnNumber:    convert.Ptr(0),
 				},
-				GameDescription: "Command a lance of war mechs!",
+				GameDescription: "Command a squad of war mechs!",
 			},
 			expectError: false,
 		},
@@ -97,7 +97,7 @@ func TestMechaJoinGameProcessor_GenerateTurnSheet_HTMLContainsInputElements(t *t
 			TurnNumber:    convert.Ptr(0),
 			TurnSheetCode: convert.Ptr(generateTestJoinTurnSheetCode(t)),
 		},
-		GameDescription:          "Command a lance of war mechs!",
+		GameDescription:          "Command a squad of war mechs!",
 		AvailableDeliveryMethods: turnsheet.DeliveryMethods{Email: true},
 	})
 	require.NoError(t, err)
@@ -137,7 +137,7 @@ func TestMechaJoinGameProcessor_GenerateTurnSheet_PreFillsAccountEmail(t *testin
 			TurnNumber:    convert.Ptr(0),
 			TurnSheetCode: convert.Ptr(generateTestJoinTurnSheetCode(t)),
 		},
-		GameDescription:          "Command a lance of war mechs!",
+		GameDescription:          "Command a squad of war mechs!",
 		AvailableDeliveryMethods: turnsheet.DeliveryMethods{Email: true},
 		AccountEmail:             "commander@example.com",
 	})
@@ -229,7 +229,7 @@ func TestMechaJoinGameProcessor_GenerateTurnSheet_WithDeliveryMethods(t *testing
 					TurnNumber:    convert.Ptr(0),
 					TurnSheetCode: convert.Ptr(generateTestJoinTurnSheetCode(t)),
 				},
-				GameDescription:          "Command a lance of war mechs!",
+				GameDescription:          "Command a squad of war mechs!",
 				AvailableDeliveryMethods: tt.deliveryMethods,
 			})
 			require.NoError(t, err)

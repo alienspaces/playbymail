@@ -118,10 +118,10 @@ func (p *MechaOrdersProcessor) GetSheetType() string {
 }
 
 // ProcessTurnSheetResponse processes a single orders turn sheet response (implements TurnSheetProcessor interface).
-func (p *MechaOrdersProcessor) ProcessTurnSheetResponse(ctx context.Context, gameInstanceRec *game_record.GameInstance, lanceInstance *mecha_record.MechaLanceInstance, turnSheet *game_record.GameTurnSheet) error {
+func (p *MechaOrdersProcessor) ProcessTurnSheetResponse(ctx context.Context, gameInstanceRec *game_record.GameInstance, squadInstance *mecha_record.MechaSquadInstance, turnSheet *game_record.GameTurnSheet) error {
 	l := p.Logger.WithFunctionContext("MechaOrdersProcessor/ProcessTurnSheetResponse")
 
-	l.Info("processing orders for turn sheet >%s< for lance instance >%s<", turnSheet.ID, lanceInstance.ID)
+	l.Info("processing orders for turn sheet >%s< for squad instance >%s<", turnSheet.ID, squadInstance.ID)
 
 	if turnSheet.SheetType != mecha_record.MechaTurnSheetTypeOrders {
 		return fmt.Errorf("invalid sheet type: expected %s, got %s", mecha_record.MechaTurnSheetTypeOrders, turnSheet.SheetType)
@@ -134,27 +134,27 @@ func (p *MechaOrdersProcessor) ProcessTurnSheetResponse(ctx context.Context, gam
 	}
 
 	if len(scanData.MechOrders) == 0 {
-		l.Info("no mech orders in scanned data — lance stays in place")
+		l.Info("no mech orders in scanned data — squad stays in place")
 		return nil
 	}
 
-	// Reload lanceInstance to get latest state for event appending
-	freshLance, err := p.Domain.GetMechaLanceInstanceRec(lanceInstance.ID, nil)
+	// Reload squadInstance to get latest state for event appending
+	freshSquad, err := p.Domain.GetMechaSquadInstanceRec(squadInstance.ID, nil)
 	if err != nil {
-		l.Warn("failed to reload lance instance for events >%v<", err)
-		freshLance = lanceInstance
+		l.Warn("failed to reload squad instance for events >%v<", err)
+		freshSquad = squadInstance
 	}
 
 	for _, order := range scanData.MechOrders {
 		if moveEvent := p.processMechOrderWithEvent(l, gameInstanceRec, order); moveEvent != nil {
-			if err := turnsheet.AppendMechaTurnEvent(freshLance, *moveEvent); err != nil {
+			if err := turnsheet.AppendMechaTurnEvent(freshSquad, *moveEvent); err != nil {
 				l.Warn("failed to append movement event for mech >%s<: %v", order.MechInstanceID, err)
 			}
 		}
 	}
 
-	if _, err := p.Domain.UpdateMechaLanceInstanceRec(freshLance); err != nil {
-		l.Warn("failed to persist movement events for lance >%s<: %v", lanceInstance.ID, err)
+	if _, err := p.Domain.UpdateMechaSquadInstanceRec(freshSquad); err != nil {
+		l.Warn("failed to persist movement events for squad >%s<: %v", squadInstance.ID, err)
 	}
 
 	return nil
@@ -281,23 +281,23 @@ func (p *MechaOrdersProcessor) ExtractAttackDeclarations(
 	return attacks, nil
 }
 
-// CreateNextTurnSheet creates a new orders turn sheet for a lance instance (implements TurnSheetProcessor interface).
-func (p *MechaOrdersProcessor) CreateNextTurnSheet(ctx context.Context, gameInstanceRec *game_record.GameInstance, lanceInstance *mecha_record.MechaLanceInstance) (*game_record.GameTurnSheet, error) {
+// CreateNextTurnSheet creates a new orders turn sheet for a squad instance (implements TurnSheetProcessor interface).
+func (p *MechaOrdersProcessor) CreateNextTurnSheet(ctx context.Context, gameInstanceRec *game_record.GameInstance, squadInstance *mecha_record.MechaSquadInstance) (*game_record.GameTurnSheet, error) {
 	l := p.Logger.WithFunctionContext("MechaOrdersProcessor/CreateNextTurnSheet")
 
-	l.Info("creating orders turn sheet for lance instance >%s<", lanceInstance.ID)
+	l.Info("creating orders turn sheet for squad instance >%s<", squadInstance.ID)
 
-	// Step 1: Get the lance design record
-	lanceRec, err := p.Domain.GetMechaLanceRec(lanceInstance.MechaLanceID, nil)
+	// Step 1: Get the squad design record
+	squadRec, err := p.Domain.GetMechaSquadRec(squadInstance.MechaSquadID, nil)
 	if err != nil {
-		l.Warn("failed to get lance >%v<", err)
-		return nil, fmt.Errorf("failed to get lance: %w", err)
+		l.Warn("failed to get squad >%v<", err)
+		return nil, fmt.Errorf("failed to get squad: %w", err)
 	}
 
-	// Step 2: Get the account user for the lance owner via subscription chain
-	accountUserRec, err := lanceInstanceAccountUser(p.Domain, lanceInstance)
+	// Step 2: Get the account user for the squad owner via subscription chain
+	accountUserRec, err := squadInstanceAccountUser(p.Domain, squadInstance)
 	if err != nil {
-		l.Warn("failed to get account user for lance instance >%s< >%v<", lanceInstance.ID, err)
+		l.Warn("failed to get account user for squad instance >%s< >%v<", squadInstance.ID, err)
 		return nil, fmt.Errorf("failed to get account user: %w", err)
 	}
 
@@ -318,10 +318,10 @@ func (p *MechaOrdersProcessor) CreateNextTurnSheet(ctx context.Context, gameInst
 		l.Info("loaded background image for mecha orders turn sheet, length >%d<", len(bgImageURL))
 	}
 
-	// Step 5: Get all mech instances for this lance instance
+	// Step 5: Get all mech instances for this squad instance
 	mechInstances, err := p.Domain.GetManyMechaMechInstanceRecs(&coresql.Options{
 		Params: []coresql.Param{
-			{Col: mecha_record.FieldMechaMechInstanceMechaLanceInstanceID, Val: lanceInstance.ID},
+			{Col: mecha_record.FieldMechaMechInstanceMechaSquadInstanceID, Val: squadInstance.ID},
 		},
 	})
 	if err != nil {
@@ -330,13 +330,13 @@ func (p *MechaOrdersProcessor) CreateNextTurnSheet(ctx context.Context, gameInst
 	}
 
 	// Step 6: Build mech order entries with full stats
-	var lanceMechs []turnsheet.MechOrderEntry
+	var squadMechs []turnsheet.MechOrderEntry
 	var sectorInstanceIDs []string
 	sectorInstanceIDSet := make(map[string]bool)
 
 	for _, mechInst := range mechInstances {
 		entry := mechOrderEntryFromInstance(l, p.Domain, mechInst)
-		lanceMechs = append(lanceMechs, entry)
+		squadMechs = append(squadMechs, entry)
 
 		if !sectorInstanceIDSet[mechInst.MechaSectorInstanceID] {
 			sectorInstanceIDSet[mechInst.MechaSectorInstanceID] = true
@@ -348,8 +348,8 @@ func (p *MechaOrdersProcessor) CreateNextTurnSheet(ctx context.Context, gameInst
 	// We also build a union for the legacy AvailableSectors field.
 	availableSectorsSeen := make(map[string]bool)
 	var availableSectors []turnsheet.SectorOption
-	for i := range lanceMechs {
-		mech := &lanceMechs[i]
+	for i := range squadMechs {
+		mech := &squadMechs[i]
 		// Find the matching mech instance to get the current sector and chassis speed.
 		var mechInst *mecha_record.MechaMechInstance
 		for _, mi := range mechInstances {
@@ -375,8 +375,8 @@ func (p *MechaOrdersProcessor) CreateNextTurnSheet(ctx context.Context, gameInst
 	}
 	_ = sectorInstanceIDs
 
-	// Step 8: Get enemy mech instances visible to this lance
-	enemyMechs, err := p.getEnemyMechOptions(l, gameInstanceRec, lanceInstance)
+	// Step 8: Get enemy mech instances visible to this squad
+	enemyMechs, err := p.getEnemyMechOptions(l, gameInstanceRec, squadInstance)
 	if err != nil {
 		l.Warn("failed to get enemy mechs >%v<", err)
 		// Non-fatal: continue with no attack options
@@ -394,13 +394,13 @@ func (p *MechaOrdersProcessor) CreateNextTurnSheet(ctx context.Context, gameInst
 	instructions := turnsheet.DefaultOrdersInstructions()
 
 	// Read and clear turn events accumulated during previous turn processing
-	turnEvents, err := turnsheet.ReadAndClearMechaTurnEvents(lanceInstance)
+	turnEvents, err := turnsheet.ReadAndClearMechaTurnEvents(squadInstance)
 	if err != nil {
-		l.Warn("failed to read turn events for lance >%s< >%v<", lanceInstance.ID, err)
+		l.Warn("failed to read turn events for squad >%s< >%v<", squadInstance.ID, err)
 		turnEvents = nil
 	} else if len(turnEvents) > 0 {
-		if _, err := p.Domain.UpdateMechaLanceInstanceRec(lanceInstance); err != nil {
-			l.Warn("failed to persist cleared turn events for lance >%s< >%v<", lanceInstance.ID, err)
+		if _, err := p.Domain.UpdateMechaSquadInstanceRec(squadInstance); err != nil {
+			l.Warn("failed to persist cleared turn events for squad >%s< >%v<", squadInstance.ID, err)
 		}
 	}
 
@@ -417,8 +417,8 @@ func (p *MechaOrdersProcessor) CreateNextTurnSheet(ctx context.Context, gameInst
 			BackgroundImage:       backgroundImage,
 			TurnEvents:            turnEvents,
 		},
-		LanceName:        lanceRec.Name,
-		LanceMechs:       lanceMechs,
+		SquadName:        squadRec.Name,
+		SquadMechs:       squadMechs,
 		AvailableSectors: availableSectors,
 		EnemyMechs:       enemyMechs,
 	}
@@ -447,10 +447,10 @@ func (p *MechaOrdersProcessor) CreateNextTurnSheet(ctx context.Context, gameInst
 		return nil, fmt.Errorf("failed to create turn sheet record: %w", err)
 	}
 
-	// Step 11: Link the game_turn_sheet to the lance instance via mecha_turn_sheet
+	// Step 11: Link the game_turn_sheet to the squad instance via mecha_turn_sheet
 	mechaTurnSheet := &mecha_record.MechaTurnSheet{
 		GameID:               gameInstanceRec.GameID,
-		MechaLanceInstanceID: lanceInstance.ID,
+		MechaSquadInstanceID: squadInstance.ID,
 		GameTurnSheetID:      createdTurnSheetRec.ID,
 	}
 
@@ -459,7 +459,7 @@ func (p *MechaOrdersProcessor) CreateNextTurnSheet(ctx context.Context, gameInst
 		return nil, fmt.Errorf("failed to create mecha turn sheet record: %w", err)
 	}
 
-	l.Info("created orders turn sheet >%s< for lance instance >%s< turn >%d<", createdTurnSheetRec.ID, lanceInstance.ID, gameInstanceRec.CurrentTurn)
+	l.Info("created orders turn sheet >%s< for squad instance >%s< turn >%d<", createdTurnSheetRec.ID, squadInstance.ID, gameInstanceRec.CurrentTurn)
 	return createdTurnSheetRec, nil
 }
 
@@ -602,8 +602,8 @@ func (p *MechaOrdersProcessor) IsSectorReachableWithinSpeed(l logger.Logger, gam
 	return 0, false
 }
 
-// getEnemyMechOptions collects all enemy mech instances visible to the given lance.
-func (p *MechaOrdersProcessor) getEnemyMechOptions(_ logger.Logger, gameInstanceRec *game_record.GameInstance, lanceInstance *mecha_record.MechaLanceInstance) ([]turnsheet.EnemyMechOption, error) {
+// getEnemyMechOptions collects all enemy mech instances visible to the given squad.
+func (p *MechaOrdersProcessor) getEnemyMechOptions(_ logger.Logger, gameInstanceRec *game_record.GameInstance, squadInstance *mecha_record.MechaSquadInstance) ([]turnsheet.EnemyMechOption, error) {
 	// Get all mech instances for this game instance
 	allMechInstances, err := p.Domain.GetManyMechaMechInstanceRecs(&coresql.Options{
 		Params: []coresql.Param{
@@ -616,7 +616,7 @@ func (p *MechaOrdersProcessor) getEnemyMechOptions(_ logger.Logger, gameInstance
 
 	var enemies []turnsheet.EnemyMechOption
 	for _, mechInst := range allMechInstances {
-		if mechInst.MechaLanceInstanceID == lanceInstance.ID {
+		if mechInst.MechaSquadInstanceID == squadInstance.ID {
 			continue
 		}
 		if mechInst.Status == mecha_record.MechInstanceStatusDestroyed {
