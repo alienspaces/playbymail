@@ -30,11 +30,11 @@ const mockSectors = [
   }
 ];
 
-vi.mock('../../../api/mechaSectors', () => ({
-  fetchSectors: vi.fn(async () => ({ data: mockSectors, hasMore: false })),
-  createSector: vi.fn(),
-  updateSector: vi.fn(),
-  deleteSector: vi.fn()
+vi.mock('../../../api/mechaGameSectors', () => ({
+  fetchMechaGameSectors: vi.fn(async () => ({ data: mockSectors, hasMore: false })),
+  createMechaGameSector: vi.fn(),
+  updateMechaGameSector: vi.fn(),
+  deleteMechaGameSector: vi.fn()
 }));
 
 describe('StudioSectorsView', () => {
@@ -82,7 +82,7 @@ describe('StudioSectorsView', () => {
 
   it('shows loading state', async () => {
     await setupGamesStore();
-    await setupStore('mechaSectors', { loading: true, error: null });
+    await setupStore('mechaGameSectors', { loading: true, error: null });
     const wrapper = mountWithRealComponents();
     expect(wrapper.html()).toContain('Loading...');
   });

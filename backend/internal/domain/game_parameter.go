@@ -26,7 +26,7 @@ const (
 )
 
 const (
-	MechaParameterSquadSize = "squad_size"
+	MechaGameParameterSquadSize = "squad_size"
 )
 
 var gameParameters = []game_record.GameParameter{
@@ -38,10 +38,10 @@ var gameParameters = []game_record.GameParameter{
 		ValueType:    GameParameterValueTypeInteger,
 		DefaultValue: "3",
 	},
-	// Mecha parameters
+	// MechaGame parameters
 	{
 		GameType:     game_record.GameTypeMecha,
-		ConfigKey:    MechaParameterSquadSize,
+		ConfigKey:    MechaGameParameterSquadSize,
 		Description:  "The number of mechs in a player squad.",
 		ValueType:    GameParameterValueTypeInteger,
 		DefaultValue: "4",

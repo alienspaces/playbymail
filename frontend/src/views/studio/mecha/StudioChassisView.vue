@@ -16,7 +16,7 @@
         </template>
       </ResourceTable>
       <TablePagination :pageNumber="store.pageNumber" :hasMore="store.hasMore"
-        @page-change="(p) => store.fetchChassis(selectedGame.id, p)" />
+        @page-change="(p) => store.fetchMechaGameChassis(selectedGame.id, p)" />
     </div>
 
     <Teleport to="body">
@@ -80,7 +80,7 @@
 <script setup>
 import { ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
-import { useMechaChassisStore } from '../../../stores/mechaChassis'
+import { useMechaGameChassisStore } from '../../../stores/mechaGameChassis'
 import { useGamesStore } from '../../../stores/games'
 import ResourceTable from '../../../components/ResourceTable.vue'
 import ConfirmationModal from '../../../components/ConfirmationModal.vue'
@@ -89,7 +89,7 @@ import GameContext from '../../../components/GameContext.vue'
 import TableActions from '../../../components/TableActions.vue'
 import TablePagination from '../../../components/TablePagination.vue'
 
-const store = useMechaChassisStore()
+const store = useMechaGameChassisStore()
 const gamesStore = useGamesStore()
 const { selectedGame } = storeToRefs(gamesStore)
 
@@ -109,7 +109,7 @@ const modalError = ref('')
 const showDeleteModal = ref(false)
 const toDelete = ref(null)
 
-watch(() => selectedGame.value, (g) => { if (g) store.fetchChassis(g.id) }, { immediate: true })
+watch(() => selectedGame.value, (g) => { if (g) store.fetchMechaGameChassis(g.id) }, { immediate: true })
 
 function openCreate() {
   modalMode.value = 'create'
@@ -136,9 +136,9 @@ async function handleSubmit(formData) {
   const data = Object.fromEntries(allowed.map(k => [k, formData[k]]))
   try {
     if (modalMode.value === 'create') {
-      await store.createChassis(data)
+      await store.createMechaGameChassis(data)
     } else {
-      await store.updateChassis(modalForm.value.id, data)
+      await store.updateMechaGameChassis(modalForm.value.id, data)
     }
     closeModal()
   } catch (e) {
@@ -148,7 +148,7 @@ async function handleSubmit(formData) {
 
 async function handleDelete() {
   try {
-    await store.deleteChassis(toDelete.value.id)
+    await store.deleteMechaGameChassis(toDelete.value.id)
     showDeleteModal.value = false
     toDelete.value = null
   } catch (e) {

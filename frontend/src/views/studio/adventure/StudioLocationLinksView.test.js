@@ -6,26 +6,26 @@ import StudioLocationLinksView from './StudioLocationLinksView.vue'
 import { findInBody, setupModalTestCleanup } from '../../../test-utils/studio-resource-helpers'
 
 // Mock the stores
-vi.mock('../../../stores/locations', () => ({
-  useLocationsStore: vi.fn(() => ({
+vi.mock('../../../stores/adventureGameLocations', () => ({
+  useAdventureGameLocationsStore: vi.fn(() => ({
     locations: [],
     loading: false,
     error: null,
-    fetchLocations: vi.fn()
+    fetchAdventureGameLocations: vi.fn()
   }))
 }))
 
-vi.mock('../../../stores/locationLinks', () => ({
-  useLocationLinksStore: vi.fn(() => ({
+vi.mock('../../../stores/adventureGameLocationLinks', () => ({
+  useAdventureGameLocationLinksStore: vi.fn(() => ({
     locationLinks: [],
     loading: false,
     error: null,
     pageNumber: 1,
     hasMore: false,
-    createLocationLink: vi.fn(),
-    updateLocationLink: vi.fn(),
-    deleteLocationLink: vi.fn(),
-    fetchLocationLinks: vi.fn()
+    createAdventureGameLocationLink: vi.fn(),
+    updateAdventureGameLocationLink: vi.fn(),
+    deleteAdventureGameLocationLink: vi.fn(),
+    fetchAdventureGameLocationLinks: vi.fn()
   }))
 }))
 
@@ -41,26 +41,26 @@ describe('StudioLocationLinksView', () => {
 
   const setupStoreMocks = async (selectedGame = null) => {
     const { useGamesStore } = await import('../../../stores/games')
-    const { useLocationsStore } = await import('../../../stores/locations')
-    const { useLocationLinksStore } = await import('../../../stores/locationLinks')
+    const { useAdventureGameLocationsStore } = await import('../../../stores/adventureGameLocations')
+    const { useAdventureGameLocationLinksStore } = await import('../../../stores/adventureGameLocationLinks')
 
     useGamesStore.mockReturnValue({
       selectedGame: ref(selectedGame)
     })
-    useLocationsStore.mockReturnValue({
+    useAdventureGameLocationsStore.mockReturnValue({
       locations: [],
       loading: false,
       error: null,
-      fetchLocations: vi.fn()
+      fetchAdventureGameLocations: vi.fn()
     })
-    useLocationLinksStore.mockReturnValue({
+    useAdventureGameLocationLinksStore.mockReturnValue({
       locationLinks: [],
       loading: false,
       error: null,
-      createLocationLink: vi.fn(),
-      updateLocationLink: vi.fn(),
-      deleteLocationLink: vi.fn(),
-      fetchLocationLinks: vi.fn()
+      createAdventureGameLocationLink: vi.fn(),
+      updateAdventureGameLocationLink: vi.fn(),
+      deleteAdventureGameLocationLink: vi.fn(),
+      fetchAdventureGameLocationLinks: vi.fn()
     })
   }
 
@@ -162,16 +162,16 @@ describe('StudioLocationLinksView', () => {
     await setupStoreMocks({ id: 1, name: 'Test Game' })
 
     // Override the locations for this specific test
-    const { useLocationsStore } = await import('../../../stores/locations')
+    const { useAdventureGameLocationsStore } = await import('../../../stores/adventureGameLocations')
 
-    useLocationsStore.mockReturnValue({
+    useAdventureGameLocationsStore.mockReturnValue({
       locations: [
         { id: 1, name: 'Cave' },
         { id: 2, name: 'Forest' }
       ],
       loading: false,
       error: null,
-      fetchLocations: vi.fn()
+      fetchAdventureGameLocations: vi.fn()
     })
 
     const wrapper = mount(StudioLocationLinksView)
@@ -253,28 +253,28 @@ describe('StudioLocationLinksView', () => {
   it('watches for selectedGame changes', async () => {
     const selectedGameRef = ref(null)
     const { useGamesStore } = await import('../../../stores/games')
-    const { useLocationsStore } = await import('../../../stores/locations')
-    const { useLocationLinksStore } = await import('../../../stores/locationLinks')
+    const { useAdventureGameLocationsStore } = await import('../../../stores/adventureGameLocations')
+    const { useAdventureGameLocationLinksStore } = await import('../../../stores/adventureGameLocationLinks')
 
     useGamesStore.mockReturnValue({
       selectedGame: selectedGameRef
     })
-    useLocationsStore.mockReturnValue({
+    useAdventureGameLocationsStore.mockReturnValue({
       locations: [],
       loading: false,
       error: null,
-      fetchLocations: vi.fn()
+      fetchAdventureGameLocations: vi.fn()
     })
-    useLocationLinksStore.mockReturnValue({
+    useAdventureGameLocationLinksStore.mockReturnValue({
       locationLinks: [],
       loading: false,
       error: null,
       pageNumber: 1,
       hasMore: false,
-      createLocationLink: vi.fn(),
-      updateLocationLink: vi.fn(),
-      deleteLocationLink: vi.fn(),
-      fetchLocationLinks: vi.fn()
+      createAdventureGameLocationLink: vi.fn(),
+      updateAdventureGameLocationLink: vi.fn(),
+      deleteAdventureGameLocationLink: vi.fn(),
+      fetchAdventureGameLocationLinks: vi.fn()
     })
 
     const wrapper = mount(StudioLocationLinksView)

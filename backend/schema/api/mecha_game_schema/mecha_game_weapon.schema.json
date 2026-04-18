@@ -1,0 +1,47 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "http://playbymail.games/schema/mecha_game_schema/mecha_game_weapon.schema.json",
+    "title": "MechaGameWeapon",
+    "type": "object",
+    "properties": {
+        "id": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
+        },
+        "game_id": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/id"
+        },
+        "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+        },
+        "description": {
+            "type": "string"
+        },
+        "damage": {
+            "type": "integer"
+        },
+        "heat_cost": {
+            "type": "integer"
+        },
+        "range_band": {
+            "type": "string",
+            "enum": ["short", "medium", "long"]
+        },
+        "mount_size": {
+            "type": "string",
+            "enum": ["small", "medium", "large"]
+        },
+        "created_at": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/created_at"
+        },
+        "updated_at": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/updated_at"
+        },
+        "deleted_at": {
+            "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/updated_at"
+        }
+    },
+    "required": ["id", "game_id", "name", "description", "damage", "heat_cost", "range_band", "mount_size", "created_at"],
+    "additionalProperties": false
+}

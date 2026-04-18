@@ -6,26 +6,26 @@ import StudioSectorLinksView from './StudioSectorLinksView.vue';
 import { findInBody, setupModalTestCleanup } from '../../../test-utils/studio-resource-helpers';
 
 // Mock all three stores the view depends on.
-vi.mock('../../../stores/mechaSectors', () => ({
-  useMechaSectorsStore: vi.fn(() => ({
+vi.mock('../../../stores/mechaGameSectors', () => ({
+  useMechaGameSectorsStore: vi.fn(() => ({
     sectors: [],
     loading: false,
     error: null,
-    fetchSectors: vi.fn()
+    fetchMechaGameSectors: vi.fn()
   }))
 }));
 
-vi.mock('../../../stores/mechaSectorLinks', () => ({
-  useMechaSectorLinksStore: vi.fn(() => ({
+vi.mock('../../../stores/mechaGameSectorLinks', () => ({
+  useMechaGameSectorLinksStore: vi.fn(() => ({
     sectorLinks: [],
     loading: false,
     error: null,
     pageNumber: 1,
     hasMore: false,
-    fetchSectorLinks: vi.fn(),
-    createSectorLink: vi.fn(),
-    updateSectorLink: vi.fn(),
-    deleteSectorLink: vi.fn()
+    fetchMechaGameSectorLinks: vi.fn(),
+    createMechaGameSectorLink: vi.fn(),
+    updateMechaGameSectorLink: vi.fn(),
+    deleteMechaGameSectorLink: vi.fn()
   }))
 }));
 
@@ -40,28 +40,28 @@ describe('StudioSectorLinksView', () => {
 
   const setupStoreMocks = async (selectedGame = null, sectors = [], sectorLinks = []) => {
     const { useGamesStore } = await import('../../../stores/games');
-    const { useMechaSectorsStore } = await import('../../../stores/mechaSectors');
-    const { useMechaSectorLinksStore } = await import('../../../stores/mechaSectorLinks');
+    const { useMechaGameSectorsStore } = await import('../../../stores/mechaGameSectors');
+    const { useMechaGameSectorLinksStore } = await import('../../../stores/mechaGameSectorLinks');
 
     useGamesStore.mockReturnValue({
       selectedGame: ref(selectedGame)
     });
-    useMechaSectorsStore.mockReturnValue({
+    useMechaGameSectorsStore.mockReturnValue({
       sectors,
       loading: false,
       error: null,
-      fetchSectors: vi.fn()
+      fetchMechaGameSectors: vi.fn()
     });
-    useMechaSectorLinksStore.mockReturnValue({
+    useMechaGameSectorLinksStore.mockReturnValue({
       sectorLinks,
       loading: false,
       error: null,
       pageNumber: 1,
       hasMore: false,
-      fetchSectorLinks: vi.fn(),
-      createSectorLink: vi.fn(),
-      updateSectorLink: vi.fn(),
-      deleteSectorLink: vi.fn()
+      fetchMechaGameSectorLinks: vi.fn(),
+      createMechaGameSectorLink: vi.fn(),
+      updateMechaGameSectorLink: vi.fn(),
+      deleteMechaGameSectorLink: vi.fn()
     });
   };
 
@@ -97,8 +97,8 @@ describe('StudioSectorLinksView', () => {
     const sectorLinks = [
       {
         id: 'link1',
-        from_mecha_sector_id: 'sec1',
-        to_mecha_sector_id: 'sec2',
+        from_mecha_game_sector_id: 'sec1',
+        to_mecha_game_sector_id: 'sec2',
         cover_modifier: 2
       }
     ];

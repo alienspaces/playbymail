@@ -2,24 +2,24 @@ package turnsheet
 
 import (
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
-	"gitlab.com/alienspaces/playbymail/internal/record/mecha_record"
+	"gitlab.com/alienspaces/playbymail/internal/record/mecha_game_record"
 )
 
 // ScannedDataSchemaLocation is the subdirectory (relative to SchemaPath) where scanned_data
 // JSON schemas for turn sheet types live, e.g. turnsheet/adventure_game.
 const ScannedDataSchemaLocation = "turnsheet/adventure_game"
 
-// MechaScannedDataSchemaLocation is the subdirectory for mecha scanned_data schemas.
-const MechaScannedDataSchemaLocation = "turnsheet/mecha"
+// MechaGameScannedDataSchemaLocation is the subdirectory for mecha scanned_data schemas.
+const MechaGameScannedDataSchemaLocation = "turnsheet/mecha_game"
 
 // scannedDataSchemaLocationBySheetType maps turn sheet types to their schema subdirectory.
 var scannedDataSchemaLocationBySheetType = map[string]string{
 	adventure_game_record.AdventureGameTurnSheetTypeLocationChoice:      ScannedDataSchemaLocation,
 	adventure_game_record.AdventureGameTurnSheetTypeInventoryManagement: ScannedDataSchemaLocation,
 	adventure_game_record.AdventureGameTurnSheetTypeCreatureEncounter:   ScannedDataSchemaLocation,
-	mecha_record.MechaTurnSheetTypeJoinGame:                             MechaScannedDataSchemaLocation,
-	mecha_record.MechaTurnSheetTypeOrders:                               MechaScannedDataSchemaLocation,
-	mecha_record.MechaTurnSheetTypeSquadManagement:                      MechaScannedDataSchemaLocation,
+	mecha_game_record.MechaGameTurnSheetTypeJoinGame:                             MechaGameScannedDataSchemaLocation,
+	mecha_game_record.MechaGameTurnSheetTypeOrders:                               MechaGameScannedDataSchemaLocation,
+	mecha_game_record.MechaGameTurnSheetTypeSquadManagement:                      MechaGameScannedDataSchemaLocation,
 }
 
 // scannedDataSchemaNameBySheetType maps turn sheet types to their scanned_data schema filename.
@@ -28,9 +28,9 @@ var scannedDataSchemaNameBySheetType = map[string]string{
 	adventure_game_record.AdventureGameTurnSheetTypeLocationChoice:      LocationChoiceScannedDataSchemaName,
 	adventure_game_record.AdventureGameTurnSheetTypeInventoryManagement: InventoryManagementScannedDataSchemaName,
 	adventure_game_record.AdventureGameTurnSheetTypeCreatureEncounter:   MonsterEncounterScannedDataSchemaName,
-	mecha_record.MechaTurnSheetTypeJoinGame:                             JoinGameScannedDataSchemaName,
-	mecha_record.MechaTurnSheetTypeOrders:                               OrdersScannedDataSchemaName,
-	mecha_record.MechaTurnSheetTypeSquadManagement:                      SquadManagementScannedDataSchemaName,
+	mecha_game_record.MechaGameTurnSheetTypeJoinGame:                             JoinGameScannedDataSchemaName,
+	mecha_game_record.MechaGameTurnSheetTypeOrders:                               OrdersScannedDataSchemaName,
+	mecha_game_record.MechaGameTurnSheetTypeSquadManagement:                      SquadManagementScannedDataSchemaName,
 }
 
 // ScannedDataSchemaName returns the JSON schema filename for the given sheet type's scanned_data,

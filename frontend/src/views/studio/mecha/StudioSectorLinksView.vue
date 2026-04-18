@@ -13,7 +13,7 @@
         </template>
       </ResourceTable>
       <TablePagination :pageNumber="store.pageNumber" :hasMore="store.hasMore"
-        @page-change="(p) => store.fetchSectorLinks(selectedGame.id, p)" />
+        @page-change="(p) => store.fetchMechaGameSectorLinks(selectedGame.id, p)" />
     </div>
 
     <Teleport to="body">
@@ -23,14 +23,14 @@
           <form @submit.prevent="handleSubmit(modalForm)" class="modal-form">
             <div class="form-group">
               <label>From Sector <span class="required">*</span></label>
-              <select v-model="modalForm.from_mecha_sector_id" required>
+              <select v-model="modalForm.from_mecha_game_sector_id" required>
                 <option value="">-- Select sector --</option>
                 <option v-for="s in sectorsStore.sectors" :key="s.id" :value="s.id">{{ s.name }}</option>
               </select>
             </div>
             <div class="form-group">
               <label>To Sector <span class="required">*</span></label>
-              <select v-model="modalForm.to_mecha_sector_id" required>
+              <select v-model="modalForm.to_mecha_game_sector_id" required>
                 <option value="">-- Select sector --</option>
                 <option v-for="s in sectorsStore.sectors" :key="s.id" :value="s.id">{{ s.name }}</option>
               </select>
@@ -54,8 +54,8 @@
 <script setup>
 import { ref, watch, computed } from 'vue'
 import { storeToRefs } from 'pinia'
-import { useMechaSectorLinksStore } from '../../../stores/mechaSectorLinks'
-import { useMechaSectorsStore } from '../../../stores/mechaSectors'
+import { useMechaGameSectorLinksStore } from '../../../stores/mechaGameSectorLinks'
+import { useMechaGameSectorsStore } from '../../../stores/mechaGameSectors'
 import { useGamesStore } from '../../../stores/games'
 import ResourceTable from '../../../components/ResourceTable.vue'
 import ConfirmationModal from '../../../components/ConfirmationModal.vue'
@@ -64,8 +64,8 @@ import GameContext from '../../../components/GameContext.vue'
 import TableActions from '../../../components/TableActions.vue'
 import TablePagination from '../../../components/TablePagination.vue'
 
-const store = useMechaSectorLinksStore()
-const sectorsStore = useMechaSectorsStore()
+const store = useMechaGameSectorLinksStore()
+const sectorsStore = useMechaGameSectorsStore()
 const gamesStore = useGamesStore()
 const { selectedGame } = storeToRefs(gamesStore)
 
@@ -76,8 +76,8 @@ function sectorName(id) {
 const formattedLinks = computed(() =>
   store.sectorLinks.map(sl => ({
     ...sl,
-    from_sector_name: sectorName(sl.from_mecha_sector_id),
-    to_sector_name: sectorName(sl.to_mecha_sector_id),
+    from_sector_name: sectorName(sl.from_mecha_game_sector_id),
+    to_sector_name: sectorName(sl.to_mecha_game_sector_id),
   }))
 )
 
@@ -88,21 +88,21 @@ const columns = [
 
 const showModal = ref(false)
 const modalMode = ref('create')
-const modalForm = ref({ from_mecha_sector_id: '', to_mecha_sector_id: '' })
+const modalForm = ref({ from_mecha_game_sector_id: '', to_mecha_game_sector_id: '' })
 const modalError = ref('')
 const showDeleteModal = ref(false)
 const toDelete = ref(null)
 
 watch(() => selectedGame.value, (g) => {
   if (g) {
-    store.fetchSectorLinks(g.id)
-    sectorsStore.fetchSectors(g.id)
+    store.fetchMechaGameSectorLinks(g.id)
+    sectorsStore.fetchMechaGameSectors(g.id)
   }
 }, { immediate: true })
 
 function openCreate() {
   modalMode.value = 'create'
-  modalForm.value = { from_mecha_sector_id: '', to_mecha_sector_id: '' }
+  modalForm.value = { from_mecha_game_sector_id: '', to_mecha_game_sector_id: '' }
   modalError.value = ''
   showModal.value = true
 }
@@ -121,13 +121,13 @@ function closeModal() {
 
 async function handleSubmit(formData) {
   modalError.value = ''
-  const allowed = ['from_mecha_sector_id', 'to_mecha_sector_id']
+  const allowed = ['from_mecha_game_sector_id', 'to_mecha_game_sector_id']
   const data = Object.fromEntries(allowed.map(k => [k, formData[k]]))
   try {
     if (modalMode.value === 'create') {
-      await store.createSectorLink(data)
+      await store.createMechaGameSectorLink(data)
     } else {
-      await store.updateSectorLink(modalForm.value.id, data)
+      await store.updateMechaGameSectorLink(modalForm.value.id, data)
     }
     closeModal()
   } catch (e) {
@@ -137,7 +137,7 @@ async function handleSubmit(formData) {
 
 async function handleDelete() {
   try {
-    await store.deleteSectorLink(toDelete.value.id)
+    await store.deleteMechaGameSectorLink(toDelete.value.id)
     showDeleteModal.value = false
     toDelete.value = null
   } catch (e) {

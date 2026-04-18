@@ -28,7 +28,7 @@ test.describe('Game Catalog', () => {
     await expect(firstCard.locator('.game-name')).toBeVisible()
     await expect(firstCard.locator('.game-name')).not.toBeEmpty()
     const badgeText = await firstCard.locator('.badge').textContent()
-    expect(['Adventure', 'Mecha']).toContain(badgeText?.trim())
+    expect(['Adventure', 'MechaGame']).toContain(badgeText?.trim())
     await expect(firstCard.locator('.turn-duration')).toBeVisible()
     await expect(firstCard.locator('.join-button')).toBeVisible()
     await expect(firstCard.locator('.join-button')).toHaveAttribute('href', /^\/player\/join-game\//)

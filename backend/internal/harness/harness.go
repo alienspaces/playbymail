@@ -171,7 +171,7 @@ func (t *Testing) createGames() error {
 		l.Debug("created >%d< adventure game character records", len(adventureGameRecs.Characters))
 
 		// Process mecha config
-		if err := t.processMechaConfig(t.DataConfig.GameConfigs[i], gameRec); err != nil {
+		if err := t.processMechaGameConfig(t.DataConfig.GameConfigs[i], gameRec); err != nil {
 			l.Warn("failed processing mecha config >%v<", err)
 			return err
 		}
@@ -321,10 +321,10 @@ func (t *Testing) RemoveData() error {
 	l.Debug("removed adventure game records")
 
 	// ------------------------------------------------------------
-	// Mecha specific records
+	// MechaGame specific records
 	// ------------------------------------------------------------
 
-	if err := t.removeMechaRecords(); err != nil {
+	if err := t.removeMechaGameRecords(); err != nil {
 		l.Warn("failed removing mecha records >%v<", err)
 		return err
 	}

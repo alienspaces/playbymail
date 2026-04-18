@@ -31,7 +31,7 @@ const routes = [
       { path: ':gameId/location-object-effects', component: () => import('../views/studio/adventure/StudioLocationObjectEffectsView.vue') },
       { path: ':gameId/turn-sheet-backgrounds', component: () => import('../views/studio/adventure/StudioTurnSheetBackgroundsView.vue') },
 
-      // Mecha type studio views
+      // MechaGame type studio views
       { path: ':gameId/chassis', component: () => import('../views/studio/mecha/StudioChassisView.vue') },
       { path: ':gameId/weapons', component: () => import('../views/studio/mecha/StudioWeaponsView.vue') },
       { path: ':gameId/sectors', component: () => import('../views/studio/mecha/StudioSectorsView.vue') },

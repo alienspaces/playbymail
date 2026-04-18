@@ -21,7 +21,7 @@
         </template>
       </ResourceTable>
       <TablePagination :pageNumber="requirementsStore.pageNumber" :hasMore="requirementsStore.hasMore"
-        @page-change="(p) => requirementsStore.fetchLocationLinkRequirements(selectedGame.id, p)" />
+        @page-change="(p) => requirementsStore.fetchAdventureGameLocationLinkRequirements(selectedGame.id, p)" />
 
       <!-- Create/Edit Requirement Modal (custom — needs conditional fields) -->
       <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
@@ -115,11 +115,11 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue';
-import { useLocationLinkRequirementsStore } from '../../../stores/locationLinkRequirements';
-import { useLocationLinksStore } from '../../../stores/locationLinks';
-import { useItemsStore } from '../../../stores/items';
-import { useCreaturesStore } from '../../../stores/creatures';
-import { useLocationsStore } from '../../../stores/locations';
+import { useAdventureGameLocationLinkRequirementsStore } from '../../../stores/adventureGameLocationLinkRequirements';
+import { useAdventureGameLocationLinksStore } from '../../../stores/adventureGameLocationLinks';
+import { useAdventureGameItemsStore } from '../../../stores/adventureGameItems';
+import { useAdventureGameCreaturesStore } from '../../../stores/adventureGameCreatures';
+import { useAdventureGameLocationsStore } from '../../../stores/adventureGameLocations';
 import { useGamesStore } from '../../../stores/games';
 import { storeToRefs } from 'pinia';
 import ResourceTable from '../../../components/ResourceTable.vue';
@@ -129,11 +129,11 @@ import GameContext from '../../../components/GameContext.vue';
 import TableActions from '../../../components/TableActions.vue';
 import TablePagination from '../../../components/TablePagination.vue';
 
-const requirementsStore = useLocationLinkRequirementsStore();
-const locationLinksStore = useLocationLinksStore();
-const itemsStore = useItemsStore();
-const creaturesStore = useCreaturesStore();
-const locationsStore = useLocationsStore();
+const requirementsStore = useAdventureGameLocationLinkRequirementsStore();
+const locationLinksStore = useAdventureGameLocationLinksStore();
+const itemsStore = useAdventureGameItemsStore();
+const creaturesStore = useAdventureGameCreaturesStore();
+const locationsStore = useAdventureGameLocationsStore();
 const gamesStore = useGamesStore();
 const { selectedGame } = storeToRefs(gamesStore);
 
@@ -169,11 +169,11 @@ watch(
   () => selectedGame.value,
   (newGame) => {
     if (newGame) {
-      requirementsStore.fetchLocationLinkRequirements(newGame.id);
-      locationLinksStore.fetchLocationLinks(newGame.id);
-      itemsStore.fetchItems(newGame.id);
-      creaturesStore.fetchCreatures(newGame.id);
-      locationsStore.fetchLocations(newGame.id);
+      requirementsStore.fetchAdventureGameLocationLinkRequirements(newGame.id);
+      locationLinksStore.fetchAdventureGameLocationLinks(newGame.id);
+      itemsStore.fetchAdventureGameItems(newGame.id);
+      creaturesStore.fetchAdventureGameCreatures(newGame.id);
+      locationsStore.fetchAdventureGameLocations(newGame.id);
     }
   },
   { immediate: true }
@@ -251,9 +251,9 @@ async function handleSubmit() {
 
   try {
     if (modalMode.value === 'create') {
-      await requirementsStore.createLocationLinkRequirement(payload);
+      await requirementsStore.createAdventureGameLocationLinkRequirement(payload);
     } else {
-      await requirementsStore.updateLocationLinkRequirement(form.value.id, payload);
+      await requirementsStore.updateAdventureGameLocationLinkRequirement(form.value.id, payload);
     }
     closeModal();
   } catch (err) {
@@ -274,7 +274,7 @@ function closeDelete() {
 async function deleteRequirement() {
   if (!deleteTarget.value) return;
   try {
-    await requirementsStore.deleteLocationLinkRequirement(deleteTarget.value.id);
+    await requirementsStore.deleteAdventureGameLocationLinkRequirement(deleteTarget.value.id);
     closeDelete();
   } catch (err) {
     console.error('Failed to delete location link requirement:', err);

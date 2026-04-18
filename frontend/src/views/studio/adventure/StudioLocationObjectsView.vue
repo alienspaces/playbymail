@@ -30,7 +30,7 @@
         </template>
       </ResourceTable>
       <TablePagination :pageNumber="locationObjectsStore.pageNumber" :hasMore="locationObjectsStore.hasMore"
-        @page-change="(p) => locationObjectsStore.fetchLocationObjects(selectedGame.id, p)" />
+        @page-change="(p) => locationObjectsStore.fetchAdventureGameLocationObjects(selectedGame.id, p)" />
 
       <!-- Object create / edit modal -->
       <ResourceModalForm
@@ -132,10 +132,10 @@
 
 <script setup>
 import { ref, watch, computed } from 'vue';
-import { useLocationsStore } from '../../../stores/locations';
-import { useLocationObjectsStore } from '../../../stores/locationObjects';
-import { useLocationObjectStatesStore } from '../../../stores/locationObjectStates';
-import { useLocationObjectEffectsStore } from '../../../stores/locationObjectEffects';
+import { useAdventureGameLocationsStore } from '../../../stores/adventureGameLocations';
+import { useAdventureGameLocationObjectsStore } from '../../../stores/adventureGameLocationObjects';
+import { useAdventureGameLocationObjectStatesStore } from '../../../stores/adventureGameLocationObjectStates';
+import { useAdventureGameLocationObjectEffectsStore } from '../../../stores/adventureGameLocationObjectEffects';
 import { useGamesStore } from '../../../stores/games';
 import { storeToRefs } from 'pinia';
 import ResourceTable from '../../../components/ResourceTable.vue';
@@ -147,10 +147,10 @@ import GameContext from '../../../components/GameContext.vue';
 import TableActions from '../../../components/TableActions.vue';
 import TablePagination from '../../../components/TablePagination.vue';
 
-const locationsStore = useLocationsStore();
-const locationObjectsStore = useLocationObjectsStore();
-const locationObjectStatesStore = useLocationObjectStatesStore();
-const locationObjectEffectsStore = useLocationObjectEffectsStore();
+const locationsStore = useAdventureGameLocationsStore();
+const locationObjectsStore = useAdventureGameLocationObjectsStore();
+const locationObjectStatesStore = useAdventureGameLocationObjectStatesStore();
+const locationObjectEffectsStore = useAdventureGameLocationObjectEffectsStore();
 const gamesStore = useGamesStore();
 const { selectedGame } = storeToRefs(gamesStore);
 
@@ -339,9 +339,9 @@ watch(
   () => selectedGame.value,
   (newGame) => {
     if (newGame) {
-      locationsStore.fetchLocations(newGame.id);
-      locationObjectsStore.fetchLocationObjects(newGame.id);
-      locationObjectEffectsStore.fetchLocationObjectEffects(newGame.id);
+      locationsStore.fetchAdventureGameLocations(newGame.id);
+      locationObjectsStore.fetchAdventureGameLocationObjects(newGame.id);
+      locationObjectEffectsStore.fetchAdventureGameLocationObjectEffects(newGame.id);
     }
   },
   { immediate: true }
@@ -394,9 +394,9 @@ async function handleSubmit(form) {
   }
   try {
     if (modalMode.value === 'create') {
-      await locationObjectsStore.createLocationObject(payload);
+      await locationObjectsStore.createAdventureGameLocationObject(payload);
     } else {
-      await locationObjectsStore.updateLocationObject(modalForm.value.id, payload);
+      await locationObjectsStore.updateAdventureGameLocationObject(modalForm.value.id, payload);
     }
     closeModal();
   } catch (err) {
@@ -417,7 +417,7 @@ function closeDeleteConfirm() {
 async function confirmDelete() {
   if (!deleteTarget.value) return;
   try {
-    await locationObjectsStore.deleteLocationObject(deleteTarget.value.id);
+    await locationObjectsStore.deleteAdventureGameLocationObject(deleteTarget.value.id);
     closeDeleteConfirm();
   } catch (err) {
     console.error('Failed to delete location object:', err);

@@ -14,11 +14,11 @@ const mockLocations = [
   { id: 'loc1', name: 'Cave', description: 'Dark cave', created_at: '2024-07-10T12:00:00Z' }
 ];
 
-vi.mock('../../../api/locations', () => ({
-  fetchLocations: vi.fn(async () => ({ data: mockLocations, hasMore: false })),
-  createLocation: vi.fn(),
-  updateLocation: vi.fn(),
-  deleteLocation: vi.fn()
+vi.mock('../../../api/adventureGameLocations', () => ({
+  fetchAdventureGameLocations: vi.fn(async () => ({ data: mockLocations, hasMore: false })),
+  createAdventureGameLocation: vi.fn(),
+  updateAdventureGameLocation: vi.fn(),
+  deleteAdventureGameLocation: vi.fn()
 }));
 
 describe('StudioLocationsView', () => {
@@ -54,7 +54,7 @@ describe('StudioLocationsView', () => {
 
   it('shows loading state', async () => {
     await setupGamesStore();
-    await setupStore('locations', { loading: true, error: null });
+    await setupStore('adventureGameLocations', { loading: true, error: null });
     const wrapper = mountWithRealComponents();
     expect(wrapper.html()).toContain('Loading...');
   });

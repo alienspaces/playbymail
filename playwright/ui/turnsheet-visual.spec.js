@@ -25,9 +25,9 @@ const SHEETS = [
   { name: 'adventure_game_location_choice',      file: 'adventure_game_location_choice_turnsheet.html' },
   { name: 'adventure_game_inventory_management', file: 'adventure_game_inventory_management_turnsheet.html' },
   { name: 'adventure_game_monster_encounter',    file: 'adventure_game_monster_encounter_turnsheet.html' },
-  { name: 'mecha_join_game',                     file: 'mecha_join_game_turnsheet.html' },
-  { name: 'mecha_squad_management',              file: 'mecha_squad_management_turnsheet.html' },
-  { name: 'mecha_orders',                        file: 'mecha_orders_turnsheet.html' },
+  { name: 'mecha_game_join_game',                     file: 'mecha_game_join_game_turnsheet.html' },
+  { name: 'mecha_game_squad_management',              file: 'mecha_game_squad_management_turnsheet.html' },
+  { name: 'mecha_game_orders',                        file: 'mecha_game_orders_turnsheet.html' },
 ]
 
 const VIEWPORTS = [

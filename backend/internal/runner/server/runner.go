@@ -76,8 +76,8 @@ func NewRunner(cfg config.Config, l logger.Logger, s storer.Storer, j *river.Cli
 		account.AccountHandlerConfig,
 		// Adventure Game handlers
 		adventure_game.AdventureGameHandlerConfig,
-		// Mecha handlers
-		mecha_game.MechaHandlerConfig,
+		// MechaGame handlers
+		mecha_game.MechaGameHandlerConfig,
 		// Catalog handlers (public)
 		catalog.CatalogHandlerConfig,
 		// Player handlers

@@ -1,0 +1,31 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "http://playbymail.games/schema/mecha_game_schema/mecha_game_squad_mech.request.schema.json",
+    "title": "MechaGameSquadMechRequest",
+    "type": "object",
+    "properties": {
+        "mecha_game_chassis_id": {
+            "type": "string",
+            "minLength": 1
+        },
+        "callsign": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 50
+        },
+        "weapon_config": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "weapon_id": { "type": "string", "minLength": 1 },
+                    "slot_location": { "type": "string", "minLength": 1 }
+                },
+                "required": ["weapon_id", "slot_location"],
+                "additionalProperties": false
+            }
+        }
+    },
+    "required": ["mecha_game_chassis_id", "callsign"],
+    "additionalProperties": false
+}

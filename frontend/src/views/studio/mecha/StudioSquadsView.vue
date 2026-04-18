@@ -44,7 +44,7 @@
               <tbody>
                 <tr v-for="mech in mechsStore.getMechsForSquad(row.id)" :key="mech.id">
                   <td>{{ mech.callsign }}</td>
-                  <td>{{ chassisName(mech.mecha_chassis_id) }}</td>
+                  <td>{{ chassisName(mech.mecha_game_chassis_id) }}</td>
                   <td>
                     <button class="btn-link" @click="openMechEdit(row, mech)">Edit</button>
                     <button class="btn-link btn-danger" @click="confirmMechDelete(row, mech)">Delete</button>
@@ -56,7 +56,7 @@
         </template>
       </ResourceTable>
       <TablePagination :pageNumber="store.pageNumber" :hasMore="store.hasMore"
-        @page-change="(p) => store.fetchSquads(selectedGame.id, p)" />
+        @page-change="(p) => store.fetchMechaGameSquads(selectedGame.id, p)" />
     </div>
 
     <Teleport to="body">
@@ -108,7 +108,7 @@
           </div>
           <div class="form-group">
             <label>Chassis <span class="required">*</span></label>
-            <select v-model="mechModalForm.mecha_chassis_id" required>
+            <select v-model="mechModalForm.mecha_game_chassis_id" required>
               <option value="" disabled>Select chassis...</option>
               <option v-for="chassis in (chassisStore.chassis || [])" :key="chassis.id" :value="chassis.id">
                 {{ chassis.name }}
@@ -133,9 +133,9 @@
 <script setup>
 import { ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
-import { useMechaSquadsStore } from '../../../stores/mechaSquads'
-import { useMechaSquadMechsStore } from '../../../stores/mechaSquadMechs'
-import { useMechaChassisStore } from '../../../stores/mechaChassis'
+import { useMechaGameSquadsStore } from '../../../stores/mechaGameSquads'
+import { useMechaGameSquadMechsStore } from '../../../stores/mechaGameSquadMechs'
+import { useMechaGameChassisStore } from '../../../stores/mechaGameChassis'
 import { useGamesStore } from '../../../stores/games'
 import ResourceTable from '../../../components/ResourceTable.vue'
 import ConfirmationModal from '../../../components/ConfirmationModal.vue'
@@ -144,9 +144,9 @@ import GameContext from '../../../components/GameContext.vue'
 import TableActions from '../../../components/TableActions.vue'
 import TablePagination from '../../../components/TablePagination.vue'
 
-const store = useMechaSquadsStore()
-const mechsStore = useMechaSquadMechsStore()
-const chassisStore = useMechaChassisStore()
+const store = useMechaGameSquadsStore()
+const mechsStore = useMechaGameSquadMechsStore()
+const chassisStore = useMechaGameChassisStore()
 const gamesStore = useGamesStore()
 const { selectedGame } = storeToRefs(gamesStore)
 
@@ -167,7 +167,7 @@ const toDelete = ref(null)
 const expandedSquadId = ref(null)
 const showMechModal = ref(false)
 const mechModalMode = ref('create')
-const mechModalForm = ref({ callsign: '', mecha_chassis_id: '', squad_id: '' })
+const mechModalForm = ref({ callsign: '', mecha_game_chassis_id: '', squad_id: '' })
 const mechModalError = ref('')
 const showMechDeleteModal = ref(false)
 const mechToDelete = ref(null)
@@ -175,8 +175,8 @@ const activeSquadForMech = ref(null)
 
 watch(() => selectedGame.value, (g) => {
   if (g) {
-    store.fetchSquads(g.id)
-    chassisStore.fetchChassis(g.id)
+    store.fetchMechaGameSquads(g.id)
+    chassisStore.fetchMechaGameChassis(g.id)
   }
 }, { immediate: true })
 
@@ -213,9 +213,9 @@ async function handleSubmit(formData) {
   }
   try {
     if (modalMode.value === 'create') {
-      await store.createSquad(data)
+      await store.createMechaGameSquad(data)
     } else {
-      await store.updateSquad(modalForm.value.id, data)
+      await store.updateMechaGameSquad(modalForm.value.id, data)
     }
     closeModal()
   } catch (e) {
@@ -225,7 +225,7 @@ async function handleSubmit(formData) {
 
 async function handleDelete() {
   try {
-    await store.deleteSquad(toDelete.value.id)
+    await store.deleteMechaGameSquad(toDelete.value.id)
     showDeleteModal.value = false
     toDelete.value = null
   } catch (e) {
@@ -247,14 +247,14 @@ async function toggleMechs(row) {
   } else {
     expandedSquadId.value = row.id
     mechsStore.gameId = selectedGame.value.id
-    await mechsStore.fetchSquadMechs(selectedGame.value.id, row.id)
+    await mechsStore.fetchMechaGameSquadMechs(selectedGame.value.id, row.id)
   }
 }
 
 function openMechCreate(squad) {
   activeSquadForMech.value = squad
   mechModalMode.value = 'create'
-  mechModalForm.value = { callsign: '', mecha_chassis_id: '', squad_id: squad.id }
+  mechModalForm.value = { callsign: '', mecha_game_chassis_id: '', squad_id: squad.id }
   mechModalError.value = ''
   showMechModal.value = true
 }
@@ -277,13 +277,13 @@ async function handleMechSubmit(formData) {
   const squadId = activeSquadForMech.value.id
   const data = {
     callsign: formData.callsign,
-    mecha_chassis_id: formData.mecha_chassis_id,
+    mecha_game_chassis_id: formData.mecha_game_chassis_id,
   }
   try {
     if (mechModalMode.value === 'create') {
-      await mechsStore.createSquadMech(squadId, data)
+      await mechsStore.createMechaGameSquadMech(squadId, data)
     } else {
-      await mechsStore.updateSquadMech(squadId, formData.id, data)
+      await mechsStore.updateMechaGameSquadMech(squadId, formData.id, data)
     }
     closeMechModal()
   } catch (e) {
@@ -299,7 +299,7 @@ function confirmMechDelete(squad, mech) {
 
 async function handleMechDelete() {
   try {
-    await mechsStore.deleteSquadMech(activeSquadForMech.value.id, mechToDelete.value.id)
+    await mechsStore.deleteMechaGameSquadMech(activeSquadForMech.value.id, mechToDelete.value.id)
     showMechDeleteModal.value = false
     mechToDelete.value = null
   } catch (e) {

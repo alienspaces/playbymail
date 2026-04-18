@@ -10,7 +10,7 @@
         <ResourceTable :columns="itemColumns" :rows="itemsStore.items" :loading="itemsStore.loading"
           :error="itemsStore.error" />
         <TablePagination :pageNumber="itemsStore.pageNumber" :hasMore="itemsStore.hasMore"
-          @page-change="(p) => itemsStore.fetchItems(gameId, p)" />
+          @page-change="(p) => itemsStore.fetchAdventureGameItems(gameId, p)" />
       </section>
       <section class="studio-section">
         <h3>Item Placements</h3>
@@ -24,7 +24,7 @@
           </template>
         </ResourceTable>
         <TablePagination :pageNumber="itemPlacementsStore.pageNumber" :hasMore="itemPlacementsStore.hasMore"
-          @page-change="(p) => itemPlacementsStore.fetchItemPlacements(gameId, p)" />
+          @page-change="(p) => itemPlacementsStore.fetchAdventureGameItemPlacements(gameId, p)" />
 
         <!-- Create/Edit Modal using ResourceModalForm -->
         <ResourceModalForm :visible="showItemPlacementModal" :mode="itemPlacementModalMode" title="Item Placement"
@@ -46,7 +46,7 @@
 
         <ConfirmationModal :visible="showItemPlacementDeleteConfirm" title="Delete Item Placement"
           message="Are you sure you want to delete this item placement?" confirmText="Delete"
-          :error="itemPlacementDeleteError" @confirm="deleteItemPlacement" @cancel="closeItemPlacementDelete" />
+          :error="itemPlacementDeleteError" @confirm="deleteAdventureGameItemPlacement" @cancel="closeItemPlacementDelete" />
       </section>
 
       <!-- Creatures Section -->
@@ -55,7 +55,7 @@
         <ResourceTable :columns="creatureColumns" :rows="creaturesStore.creatures" :loading="creaturesStore.loading"
           :error="creaturesStore.error" />
         <TablePagination :pageNumber="creaturesStore.pageNumber" :hasMore="creaturesStore.hasMore"
-          @page-change="(p) => creaturesStore.fetchCreatures(gameId, p)" />
+          @page-change="(p) => creaturesStore.fetchAdventureGameCreatures(gameId, p)" />
       </section>
       <section class="studio-section">
         <h3>Creature Placements</h3>
@@ -69,7 +69,7 @@
           </template>
         </ResourceTable>
         <TablePagination :pageNumber="creaturePlacementsStore.pageNumber" :hasMore="creaturePlacementsStore.hasMore"
-          @page-change="(p) => creaturePlacementsStore.fetchCreaturePlacements(gameId, p)" />
+          @page-change="(p) => creaturePlacementsStore.fetchAdventureGameCreaturePlacements(gameId, p)" />
         <ResourceModalForm :visible="showCreaturePlacementModal" :mode="creaturePlacementModalMode"
           title="Creature Placement" :fields="creaturePlacementFields" :modelValue="creaturePlacementModalForm"
           :error="creaturePlacementModalError" @submit="handleCreaturePlacementSubmit"
@@ -90,7 +90,7 @@
         </ResourceModalForm>
         <ConfirmationModal :visible="showCreaturePlacementDeleteConfirm" title="Delete Creature Placement"
           message="Are you sure you want to delete this creature placement?" confirmText="Delete"
-          :error="creaturePlacementDeleteError" @confirm="deleteCreaturePlacement"
+          :error="creaturePlacementDeleteError" @confirm="deleteAdventureGameCreaturePlacement"
           @cancel="closeCreaturePlacementDelete" />
       </section>
     </div>
@@ -99,11 +99,11 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue';
-import { useItemsStore } from '../../../stores/items';
-import { useCreaturesStore } from '../../../stores/creatures';
-import { useLocationsStore } from '../../../stores/locations';
-import { useItemPlacementsStore } from '../../../stores/itemPlacements';
-import { useCreaturePlacementsStore } from '../../../stores/creaturePlacements';
+import { useAdventureGameItemsStore } from '../../../stores/adventureGameItems';
+import { useAdventureGameCreaturesStore } from '../../../stores/adventureGameCreatures';
+import { useAdventureGameLocationsStore } from '../../../stores/adventureGameLocations';
+import { useAdventureGameItemPlacementsStore } from '../../../stores/adventureGameItemPlacements';
+import { useAdventureGameCreaturePlacementsStore } from '../../../stores/adventureGameCreaturePlacements';
 import { useGamesStore } from '../../../stores/games';
 import { storeToRefs } from 'pinia';
 import ResourceTable from '../../../components/ResourceTable.vue';
@@ -112,11 +112,11 @@ import TableActions from '../../../components/TableActions.vue';
 import TablePagination from '../../../components/TablePagination.vue';
 import ConfirmationModal from '../../../components/ConfirmationModal.vue';
 
-const itemsStore = useItemsStore();
-const creaturesStore = useCreaturesStore();
-const locationsStore = useLocationsStore();
-const itemPlacementsStore = useItemPlacementsStore();
-const creaturePlacementsStore = useCreaturePlacementsStore();
+const itemsStore = useAdventureGameItemsStore();
+const creaturesStore = useAdventureGameCreaturesStore();
+const locationsStore = useAdventureGameLocationsStore();
+const itemPlacementsStore = useAdventureGameItemPlacementsStore();
+const creaturePlacementsStore = useAdventureGameCreaturePlacementsStore();
 const gamesStore = useGamesStore();
 const { selectedGame } = storeToRefs(gamesStore);
 
@@ -126,11 +126,11 @@ watch(
   () => gameId.value,
   (newGameId) => {
     if (newGameId) {
-      itemsStore.fetchItems(newGameId);
-      creaturesStore.fetchCreatures(newGameId);
-      locationsStore.fetchLocations(newGameId);
-      itemPlacementsStore.fetchItemPlacements(newGameId);
-      creaturePlacementsStore.fetchCreaturePlacements(newGameId);
+      itemsStore.fetchAdventureGameItems(newGameId);
+      creaturesStore.fetchAdventureGameCreatures(newGameId);
+      locationsStore.fetchAdventureGameLocations(newGameId);
+      itemPlacementsStore.fetchAdventureGameItemPlacements(newGameId);
+      creaturePlacementsStore.fetchAdventureGameCreaturePlacements(newGameId);
     }
   },
   { immediate: true }
@@ -203,9 +203,9 @@ async function handleItemPlacementSubmit(form) {
   itemPlacementModalError.value = '';
   try {
     if (itemPlacementModalMode.value === 'create') {
-      await itemPlacementsStore.createItemPlacement(form);
+      await itemPlacementsStore.createAdventureGameItemPlacement(form);
     } else {
-      await itemPlacementsStore.updateItemPlacement(itemPlacementModalForm.value.id, form);
+      await itemPlacementsStore.updateAdventureGameItemPlacement(itemPlacementModalForm.value.id, form);
     }
     closeItemPlacementModal();
   } catch (err) {
@@ -222,11 +222,11 @@ function closeItemPlacementDelete() {
   itemPlacementDeleteTarget.value = null;
   itemPlacementDeleteError.value = '';
 }
-async function deleteItemPlacement() {
+async function deleteAdventureGameItemPlacement() {
   if (!itemPlacementDeleteTarget.value) return;
   itemPlacementDeleteError.value = '';
   try {
-    await itemPlacementsStore.deleteItemPlacement(itemPlacementDeleteTarget.value.id);
+    await itemPlacementsStore.deleteAdventureGameItemPlacement(itemPlacementDeleteTarget.value.id);
     closeItemPlacementDelete();
   } catch (err) {
     itemPlacementDeleteError.value = err.message || 'Failed to delete.';
@@ -262,9 +262,9 @@ async function handleCreaturePlacementSubmit(form) {
   creaturePlacementModalError.value = '';
   try {
     if (creaturePlacementModalMode.value === 'create') {
-      await creaturePlacementsStore.createCreaturePlacement(form);
+      await creaturePlacementsStore.createAdventureGameCreaturePlacement(form);
     } else {
-      await creaturePlacementsStore.updateCreaturePlacement(creaturePlacementModalForm.value.id, form);
+      await creaturePlacementsStore.updateAdventureGameCreaturePlacement(creaturePlacementModalForm.value.id, form);
     }
     closeCreaturePlacementModal();
   } catch (err) {
@@ -281,11 +281,11 @@ function closeCreaturePlacementDelete() {
   creaturePlacementDeleteTarget.value = null;
   creaturePlacementDeleteError.value = '';
 }
-async function deleteCreaturePlacement() {
+async function deleteAdventureGameCreaturePlacement() {
   if (!creaturePlacementDeleteTarget.value) return;
   creaturePlacementDeleteError.value = '';
   try {
-    await creaturePlacementsStore.deleteCreaturePlacement(creaturePlacementDeleteTarget.value.id);
+    await creaturePlacementsStore.deleteAdventureGameCreaturePlacement(creaturePlacementDeleteTarget.value.id);
     closeCreaturePlacementDelete();
   } catch (err) {
     creaturePlacementDeleteError.value = err.message || 'Failed to delete.';

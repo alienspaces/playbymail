@@ -5,26 +5,26 @@ import { ref } from 'vue'
 import StudioLocationObjectsView from './StudioLocationObjectsView.vue'
 import { findInBody, setupModalTestCleanup } from '../../../test-utils/studio-resource-helpers'
 
-vi.mock('../../../stores/locations', () => ({
-  useLocationsStore: vi.fn(() => ({
+vi.mock('../../../stores/adventureGameLocations', () => ({
+  useAdventureGameLocationsStore: vi.fn(() => ({
     locations: [],
     loading: false,
     error: null,
-    fetchLocations: vi.fn(),
+    fetchAdventureGameLocations: vi.fn(),
   })),
 }))
 
-vi.mock('../../../stores/locationObjects', () => ({
-  useLocationObjectsStore: vi.fn(() => ({
+vi.mock('../../../stores/adventureGameLocationObjects', () => ({
+  useAdventureGameLocationObjectsStore: vi.fn(() => ({
     locationObjects: [],
     loading: false,
     error: null,
     pageNumber: 1,
     hasMore: false,
-    fetchLocationObjects: vi.fn(),
-    createLocationObject: vi.fn(),
-    updateLocationObject: vi.fn(),
-    deleteLocationObject: vi.fn(),
+    fetchAdventureGameLocationObjects: vi.fn(),
+    createAdventureGameLocationObject: vi.fn(),
+    updateAdventureGameLocationObject: vi.fn(),
+    deleteAdventureGameLocationObject: vi.fn(),
   })),
 }))
 
@@ -40,26 +40,26 @@ describe('StudioLocationObjectsView', () => {
 
   const setupStoreMocks = async (selectedGame = null) => {
     const { useGamesStore } = await import('../../../stores/games')
-    const { useLocationsStore } = await import('../../../stores/locations')
-    const { useLocationObjectsStore } = await import('../../../stores/locationObjects')
+    const { useAdventureGameLocationsStore } = await import('../../../stores/adventureGameLocations')
+    const { useAdventureGameLocationObjectsStore } = await import('../../../stores/adventureGameLocationObjects')
 
     useGamesStore.mockReturnValue({ selectedGame: ref(selectedGame) })
-    useLocationsStore.mockReturnValue({
+    useAdventureGameLocationsStore.mockReturnValue({
       locations: [],
       loading: false,
       error: null,
-      fetchLocations: vi.fn(),
+      fetchAdventureGameLocations: vi.fn(),
     })
-    useLocationObjectsStore.mockReturnValue({
+    useAdventureGameLocationObjectsStore.mockReturnValue({
       locationObjects: [],
       loading: false,
       error: null,
       pageNumber: 1,
       hasMore: false,
-      fetchLocationObjects: vi.fn(),
-      createLocationObject: vi.fn(),
-      updateLocationObject: vi.fn(),
-      deleteLocationObject: vi.fn(),
+      fetchAdventureGameLocationObjects: vi.fn(),
+      createAdventureGameLocationObject: vi.fn(),
+      updateAdventureGameLocationObject: vi.fn(),
+      deleteAdventureGameLocationObject: vi.fn(),
     })
   }
 
@@ -196,24 +196,24 @@ describe('StudioLocationObjectsView', () => {
   it('watches for selectedGame changes', async () => {
     const selectedGameRef = ref(null)
     const { useGamesStore } = await import('../../../stores/games')
-    const { useLocationsStore } = await import('../../../stores/locations')
-    const { useLocationObjectsStore } = await import('../../../stores/locationObjects')
+    const { useAdventureGameLocationsStore } = await import('../../../stores/adventureGameLocations')
+    const { useAdventureGameLocationObjectsStore } = await import('../../../stores/adventureGameLocationObjects')
 
     useGamesStore.mockReturnValue({ selectedGame: selectedGameRef })
-    useLocationsStore.mockReturnValue({
+    useAdventureGameLocationsStore.mockReturnValue({
       locations: [],
       loading: false,
       error: null,
-      fetchLocations: vi.fn(),
+      fetchAdventureGameLocations: vi.fn(),
     })
-    useLocationObjectsStore.mockReturnValue({
+    useAdventureGameLocationObjectsStore.mockReturnValue({
       locationObjects: [],
       loading: false,
       error: null,
-      fetchLocationObjects: vi.fn(),
-      createLocationObject: vi.fn(),
-      updateLocationObject: vi.fn(),
-      deleteLocationObject: vi.fn(),
+      fetchAdventureGameLocationObjects: vi.fn(),
+      createAdventureGameLocationObject: vi.fn(),
+      updateAdventureGameLocationObject: vi.fn(),
+      deleteAdventureGameLocationObject: vi.fn(),
     })
 
     const wrapper = mount(StudioLocationObjectsView)

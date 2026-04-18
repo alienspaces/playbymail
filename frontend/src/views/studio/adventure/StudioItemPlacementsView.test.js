@@ -6,35 +6,35 @@ import StudioItemPlacementsView from './StudioItemPlacementsView.vue'
 import { findInBody, setupModalTestCleanup } from '../../../test-utils/studio-resource-helpers'
 
 // Mock the stores
-vi.mock('../../../stores/items', () => ({
-  useItemsStore: vi.fn(() => ({
+vi.mock('../../../stores/adventureGameItems', () => ({
+  useAdventureGameItemsStore: vi.fn(() => ({
     items: [],
     loading: false,
     error: null,
-    fetchItems: vi.fn()
+    fetchAdventureGameItems: vi.fn()
   }))
 }))
 
-vi.mock('../../../stores/locations', () => ({
-  useLocationsStore: vi.fn(() => ({
+vi.mock('../../../stores/adventureGameLocations', () => ({
+  useAdventureGameLocationsStore: vi.fn(() => ({
     locations: [],
     loading: false,
     error: null,
-    fetchLocations: vi.fn()
+    fetchAdventureGameLocations: vi.fn()
   }))
 }))
 
-vi.mock('../../../stores/itemPlacements', () => ({
-  useItemPlacementsStore: vi.fn(() => ({
+vi.mock('../../../stores/adventureGameItemPlacements', () => ({
+  useAdventureGameItemPlacementsStore: vi.fn(() => ({
     itemPlacements: [],
     loading: false,
     error: null,
     pageNumber: 1,
     hasMore: false,
-    createItemPlacement: vi.fn(),
-    updateItemPlacement: vi.fn(),
-    deleteItemPlacement: vi.fn(),
-    fetchItemPlacements: vi.fn()
+    createAdventureGameItemPlacement: vi.fn(),
+    updateAdventureGameItemPlacement: vi.fn(),
+    deleteAdventureGameItemPlacement: vi.fn(),
+    fetchAdventureGameItemPlacements: vi.fn()
   }))
 }))
 
@@ -50,35 +50,35 @@ describe('StudioItemPlacementsView', () => {
 
   const setupStoreMocks = async (selectedGame = null) => {
     const { useGamesStore } = await import('../../../stores/games')
-    const { useItemsStore } = await import('../../../stores/items')
-    const { useLocationsStore } = await import('../../../stores/locations')
-    const { useItemPlacementsStore } = await import('../../../stores/itemPlacements')
+    const { useAdventureGameItemsStore } = await import('../../../stores/adventureGameItems')
+    const { useAdventureGameLocationsStore } = await import('../../../stores/adventureGameLocations')
+    const { useAdventureGameItemPlacementsStore } = await import('../../../stores/adventureGameItemPlacements')
 
     useGamesStore.mockReturnValue({
       selectedGame: ref(selectedGame)
     })
-    useItemsStore.mockReturnValue({
+    useAdventureGameItemsStore.mockReturnValue({
       items: [],
       loading: false,
       error: null,
-      fetchItems: vi.fn()
+      fetchAdventureGameItems: vi.fn()
     })
-    useLocationsStore.mockReturnValue({
+    useAdventureGameLocationsStore.mockReturnValue({
       locations: [],
       loading: false,
       error: null,
-      fetchLocations: vi.fn()
+      fetchAdventureGameLocations: vi.fn()
     })
-    useItemPlacementsStore.mockReturnValue({
+    useAdventureGameItemPlacementsStore.mockReturnValue({
       itemPlacements: [],
       loading: false,
       error: null,
       pageNumber: 1,
       hasMore: false,
-      createItemPlacement: vi.fn(),
-      updateItemPlacement: vi.fn(),
-      deleteItemPlacement: vi.fn(),
-      fetchItemPlacements: vi.fn()
+      createAdventureGameItemPlacement: vi.fn(),
+      updateAdventureGameItemPlacement: vi.fn(),
+      deleteAdventureGameItemPlacement: vi.fn(),
+      fetchAdventureGameItemPlacements: vi.fn()
     })
   }
 
@@ -179,26 +179,26 @@ describe('StudioItemPlacementsView', () => {
     await setupStoreMocks({ id: 1, name: 'Test Game' })
 
     // Override the items and locations for this specific test
-    const { useItemsStore } = await import('../../../stores/items')
-    const { useLocationsStore } = await import('../../../stores/locations')
+    const { useAdventureGameItemsStore } = await import('../../../stores/adventureGameItems')
+    const { useAdventureGameLocationsStore } = await import('../../../stores/adventureGameLocations')
 
-    useItemsStore.mockReturnValue({
+    useAdventureGameItemsStore.mockReturnValue({
       items: [
         { id: 1, name: 'Sword' },
         { id: 2, name: 'Shield' }
       ],
       loading: false,
       error: null,
-      fetchItems: vi.fn()
+      fetchAdventureGameItems: vi.fn()
     })
-    useLocationsStore.mockReturnValue({
+    useAdventureGameLocationsStore.mockReturnValue({
       locations: [
         { id: 1, name: 'Cave' },
         { id: 2, name: 'Forest' }
       ],
       loading: false,
       error: null,
-      fetchLocations: vi.fn()
+      fetchAdventureGameLocations: vi.fn()
     })
 
     const wrapper = mount(StudioItemPlacementsView)
@@ -279,35 +279,35 @@ describe('StudioItemPlacementsView', () => {
   it('watches for selectedGame changes', async () => {
     const selectedGameRef = ref(null)
     const { useGamesStore } = await import('../../../stores/games')
-    const { useItemsStore } = await import('../../../stores/items')
-    const { useLocationsStore } = await import('../../../stores/locations')
-    const { useItemPlacementsStore } = await import('../../../stores/itemPlacements')
+    const { useAdventureGameItemsStore } = await import('../../../stores/adventureGameItems')
+    const { useAdventureGameLocationsStore } = await import('../../../stores/adventureGameLocations')
+    const { useAdventureGameItemPlacementsStore } = await import('../../../stores/adventureGameItemPlacements')
 
     useGamesStore.mockReturnValue({
       selectedGame: selectedGameRef
     })
-    useItemsStore.mockReturnValue({
+    useAdventureGameItemsStore.mockReturnValue({
       items: [],
       loading: false,
       error: null,
-      fetchItems: vi.fn()
+      fetchAdventureGameItems: vi.fn()
     })
-    useLocationsStore.mockReturnValue({
+    useAdventureGameLocationsStore.mockReturnValue({
       locations: [],
       loading: false,
       error: null,
-      fetchLocations: vi.fn()
+      fetchAdventureGameLocations: vi.fn()
     })
-    useItemPlacementsStore.mockReturnValue({
+    useAdventureGameItemPlacementsStore.mockReturnValue({
       itemPlacements: [],
       loading: false,
       error: null,
       pageNumber: 1,
       hasMore: false,
-      createItemPlacement: vi.fn(),
-      updateItemPlacement: vi.fn(),
-      deleteItemPlacement: vi.fn(),
-      fetchItemPlacements: vi.fn()
+      createAdventureGameItemPlacement: vi.fn(),
+      updateAdventureGameItemPlacement: vi.fn(),
+      deleteAdventureGameItemPlacement: vi.fn(),
+      fetchAdventureGameItemPlacements: vi.fn()
     })
 
     const wrapper = mount(StudioItemPlacementsView)

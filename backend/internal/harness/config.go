@@ -10,7 +10,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/record/account_record"
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
-	"gitlab.com/alienspaces/playbymail/internal/record/mecha_record"
+	"gitlab.com/alienspaces/playbymail/internal/record/mecha_game_record"
 )
 
 const (
@@ -19,7 +19,7 @@ const (
 	GameThreeRef = "game-three"
 	GameFourRef  = "game-four"
 	GameDraftRef = "game-draft"
-	GameMechaRef = "game-mecha"
+	GameMechaGameRef = "game-mecha"
 
 	AccountStandardRef    = "account-standard"
 	AccountProPlayerRef   = "account-pro-player"
@@ -131,16 +131,16 @@ const (
 	GameImageJoinGameRef  = "game-image-join-game"
 	GameImageInventoryRef = "game-image-inventory"
 
-	// Mecha specific references
-	MechaChassisOneRef    = "mecha-chassis-one"
-	MechaWeaponOneRef     = "mecha-weapon-one"
-	MechaSectorOneRef     = "mecha-sector-one"
-	MechaSectorTwoRef     = "mecha-sector-two"
-	MechaSectorLinkOneRef = "mecha-sector-link-one"
-	MechaSquadStarterRef  = "mecha-squad-starter"
-	MechaSquadOneRef      = "mecha-squad-one"
-	MechaSquadTwoRef      = "mecha-squad-two"
-	MechaSquadMechOneRef  = "mecha-squad-mech-one"
+	// MechaGame specific references
+	MechaGameChassisOneRef    = "mecha-chassis-one"
+	MechaGameWeaponOneRef     = "mecha-weapon-one"
+	MechaGameSectorOneRef     = "mecha-sector-one"
+	MechaGameSectorTwoRef     = "mecha-sector-two"
+	MechaGameSectorLinkOneRef = "mecha-sector-link-one"
+	MechaGameSquadStarterRef  = "mecha-squad-starter"
+	MechaGameSquadOneRef      = "mecha-squad-one"
+	MechaGameSquadTwoRef      = "mecha-squad-two"
+	MechaGameSquadMechOneRef  = "mecha-squad-mech-one"
 )
 
 // DataConfig -
@@ -172,13 +172,13 @@ type GameConfig struct {
 	AdventureGameCreaturePlacementConfigs []AdventureGameCreaturePlacementConfig // Where creatures start in the world
 	AdventureGameItemPlacementConfigs     []AdventureGameItemPlacementConfig     // Where items start in the world
 
-	// Mecha specific configurations
-	MechaChassisConfigs          []MechaChassisConfig
-	MechaWeaponConfigs           []MechaWeaponConfig
-	MechaSectorConfigs           []MechaSectorConfig
-	MechaSectorLinkConfigs       []MechaSectorLinkConfig
-	MechaComputerOpponentConfigs []MechaComputerOpponentConfig
-	MechaSquadConfigs            []MechaSquadConfig
+	// MechaGame specific configurations
+	MechaGameChassisConfigs          []MechaGameChassisConfig
+	MechaGameWeaponConfigs           []MechaGameWeaponConfig
+	MechaGameSectorConfigs           []MechaGameSectorConfig
+	MechaGameSectorLinkConfigs       []MechaGameSectorLinkConfig
+	MechaGameComputerOpponentConfigs []MechaGameComputerOpponentConfig
+	MechaGameSquadConfigs            []MechaGameSquadConfig
 }
 
 type GameImageConfig struct {
@@ -383,55 +383,55 @@ type AdventureGameLocationObjectConfig struct {
 }
 
 // ------------------------------------------------------------
-// Mecha specific configuration
+// MechaGame specific configuration
 // ------------------------------------------------------------
 
-type MechaChassisConfig struct {
+type MechaGameChassisConfig struct {
 	Reference string
-	Record    *mecha_record.MechaChassis
+	Record    *mecha_game_record.MechaGameChassis
 }
 
-type MechaWeaponConfig struct {
+type MechaGameWeaponConfig struct {
 	Reference string
-	Record    *mecha_record.MechaWeapon
+	Record    *mecha_game_record.MechaGameWeapon
 }
 
-type MechaSectorConfig struct {
+type MechaGameSectorConfig struct {
 	Reference string
-	Record    *mecha_record.MechaSector
+	Record    *mecha_game_record.MechaGameSector
 }
 
-type MechaSectorLinkConfig struct {
+type MechaGameSectorLinkConfig struct {
 	Reference     string
 	FromSectorRef string
 	ToSectorRef   string
-	Record        *mecha_record.MechaSectorLink
+	Record        *mecha_game_record.MechaGameSectorLink
 }
 
-// MechaSquadMechWeaponRef maps a weapon ref to a slot location for
-// use in MechaSquadMechConfig.WeaponConfigRefs.
-type MechaSquadMechWeaponRef struct {
+// MechaGameSquadMechWeaponRef maps a weapon ref to a slot location for
+// use in MechaGameSquadMechConfig.WeaponConfigRefs.
+type MechaGameSquadMechWeaponRef struct {
 	WeaponRef    string
 	SlotLocation string
 }
 
-type MechaSquadMechConfig struct {
+type MechaGameSquadMechConfig struct {
 	Reference        string
 	ChassisRef       string
-	WeaponConfigRefs []MechaSquadMechWeaponRef
-	Record           *mecha_record.MechaSquadMech
+	WeaponConfigRefs []MechaGameSquadMechWeaponRef
+	Record           *mecha_game_record.MechaGameSquadMech
 }
 
-type MechaComputerOpponentConfig struct {
+type MechaGameComputerOpponentConfig struct {
 	Reference string
-	Record    *mecha_record.MechaComputerOpponent
+	Record    *mecha_game_record.MechaGameComputerOpponent
 }
 
-type MechaSquadConfig struct {
+type MechaGameSquadConfig struct {
 	Reference        string
-	SquadType       string // mecha_record.SquadTypeStarter or mecha_record.SquadTypeOpponent
-	Record           *mecha_record.MechaSquad
-	SquadMechConfigs []MechaSquadMechConfig
+	SquadType       string // mecha_game_record.SquadTypeStarter or mecha_game_record.SquadTypeOpponent
+	Record           *mecha_game_record.MechaGameSquad
+	SquadMechConfigs []MechaGameSquadMechConfig
 }
 
 // Helper methods for modifying DataConfig
@@ -857,21 +857,21 @@ func DefaultDataConfig() DataConfig {
 					Status:            game_record.GameStatusDraft,
 				},
 			},
-			// Mecha game for testing mecha specific resources
+			// MechaGame game for testing mecha specific resources
 			{
-				Reference: GameMechaRef,
+				Reference: GameMechaGameRef,
 				Record: &game_record.Game{
-					Name:              UniqueName("Default Mecha"),
+					Name:              UniqueName("Default MechaGame"),
 					GameType:          game_record.GameTypeMecha,
 					TurnDurationHours: 168,
 				},
-				MechaChassisConfigs: []MechaChassisConfig{
+				MechaGameChassisConfigs: []MechaGameChassisConfig{
 					{
-						Reference: MechaChassisOneRef,
-						Record: &mecha_record.MechaChassis{
+						Reference: MechaGameChassisOneRef,
+						Record: &mecha_game_record.MechaGameChassis{
 							Name:            UniqueName("Timber Wolf"),
 							Description:     "A heavy assault mech.",
-							ChassisClass:    mecha_record.ChassisClassHeavy,
+							ChassisClass:    mecha_game_record.ChassisClassHeavy,
 							ArmorPoints:     200,
 							StructurePoints: 100,
 							HeatCapacity:    40,
@@ -879,78 +879,78 @@ func DefaultDataConfig() DataConfig {
 						},
 					},
 				},
-				MechaWeaponConfigs: []MechaWeaponConfig{
+				MechaGameWeaponConfigs: []MechaGameWeaponConfig{
 					{
-						Reference: MechaWeaponOneRef,
-						Record: &mecha_record.MechaWeapon{
+						Reference: MechaGameWeaponOneRef,
+						Record: &mecha_game_record.MechaGameWeapon{
 							Name:        UniqueName("Large Laser"),
 							Description: "A powerful energy weapon.",
 							Damage:      8,
 							HeatCost:    8,
-							RangeBand:   mecha_record.WeaponRangeBandMedium,
-							MountSize:   mecha_record.WeaponMountSizeLarge,
+							RangeBand:   mecha_game_record.WeaponRangeBandMedium,
+							MountSize:   mecha_game_record.WeaponMountSizeLarge,
 						},
 					},
 				},
-				MechaSectorConfigs: []MechaSectorConfig{
+				MechaGameSectorConfigs: []MechaGameSectorConfig{
 					{
-						Reference: MechaSectorOneRef,
-						Record: &mecha_record.MechaSector{
+						Reference: MechaGameSectorOneRef,
+						Record: &mecha_game_record.MechaGameSector{
 							Name:             UniqueName("Ridge South"),
 							Description:      "A rocky ridge offering good cover.",
-							TerrainType:      mecha_record.SectorTerrainTypeRough,
+							TerrainType:      mecha_game_record.SectorTerrainTypeRough,
 							Elevation:        2,
 							IsStartingSector: true,
 						},
 					},
 					{
-						Reference: MechaSectorTwoRef,
-						Record: &mecha_record.MechaSector{
+						Reference: MechaGameSectorTwoRef,
+						Record: &mecha_game_record.MechaGameSector{
 							Name:        UniqueName("Relay Station"),
 							Description: "An abandoned communications relay station.",
-							TerrainType: mecha_record.SectorTerrainTypeUrban,
+							TerrainType: mecha_game_record.SectorTerrainTypeUrban,
 							Elevation:   0,
 						},
 					},
 				},
-				MechaSectorLinkConfigs: []MechaSectorLinkConfig{
+				MechaGameSectorLinkConfigs: []MechaGameSectorLinkConfig{
 					{
-						Reference:     MechaSectorLinkOneRef,
-						FromSectorRef: MechaSectorOneRef,
-						ToSectorRef:   MechaSectorTwoRef,
-						Record:        &mecha_record.MechaSectorLink{},
+						Reference:     MechaGameSectorLinkOneRef,
+						FromSectorRef: MechaGameSectorOneRef,
+						ToSectorRef:   MechaGameSectorTwoRef,
+						Record:        &mecha_game_record.MechaGameSectorLink{},
 					},
 				},
-			MechaSquadConfigs: []MechaSquadConfig{
+			MechaGameSquadConfigs: []MechaGameSquadConfig{
 				{
-					Reference: MechaSquadStarterRef,
-					SquadType: mecha_record.SquadTypeStarter,
-					Record: &mecha_record.MechaSquad{
+					Reference: MechaGameSquadStarterRef,
+					SquadType: mecha_game_record.SquadTypeStarter,
+					Record: &mecha_game_record.MechaGameSquad{
 						Name:        UniqueName("Starter Squad"),
 						Description: "Default starter squad for new players.",
 					},
-					SquadMechConfigs: []MechaSquadMechConfig{
+					SquadMechConfigs: []MechaGameSquadMechConfig{
 						{
 							Reference:  "mecha-squad-starter-mech-1",
-							ChassisRef: MechaChassisOneRef,
-							Record: &mecha_record.MechaSquadMech{
+							ChassisRef: MechaGameChassisOneRef,
+							Record: &mecha_game_record.MechaGameSquadMech{
 								Callsign: "Starter-1",
 							},
 						},
 					},
 				},
 				{
-					Reference: MechaSquadOneRef,
-					SquadType: mecha_record.SquadTypeOpponent,
-					Record: &mecha_record.MechaSquad{
+					Reference: MechaGameSquadOneRef,
+					SquadType: mecha_game_record.SquadTypeOpponent,
+					Record: &mecha_game_record.MechaGameSquad{
 						Name:        UniqueName("Alpha Squad"),
 						Description: "Opponent squad template.",
 					},
-					SquadMechConfigs: []MechaSquadMechConfig{
+					SquadMechConfigs: []MechaGameSquadMechConfig{
 						{
-							Reference:  MechaSquadMechOneRef,
-							ChassisRef: MechaChassisOneRef,
-							Record: &mecha_record.MechaSquadMech{
+							Reference:  MechaGameSquadMechOneRef,
+							ChassisRef: MechaGameChassisOneRef,
+							Record: &mecha_game_record.MechaGameSquadMech{
 								Callsign: "Wolf-1",
 							},
 						},

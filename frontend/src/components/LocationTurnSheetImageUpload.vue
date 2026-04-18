@@ -47,10 +47,10 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue';
 import {
-    uploadLocationTurnSheetImage,
-    getLocationTurnSheetImage,
-    deleteLocationTurnSheetImage
-} from '../api/locationImages';
+    uploadAdventureGameLocationTurnSheetImage,
+    getAdventureGameLocationTurnSheetImage,
+    deleteAdventureGameLocationTurnSheetImage
+} from '../api/adventureGameLocationImages';
 
 defineOptions({
     name: 'LocationTurnSheetImageUpload'
@@ -94,7 +94,7 @@ async function loadImage() {
     if (!props.gameId || !props.locationId) return;
 
     try {
-        const response = await getLocationTurnSheetImage(props.gameId, props.locationId);
+        const response = await getAdventureGameLocationTurnSheetImage(props.gameId, props.locationId);
         if (response.data && response.data.background) {
             image.value = response.data.background;
         } else {
@@ -134,7 +134,7 @@ async function handleFileSelect(event) {
     console.log(`[LocationTurnSheetImageUpload] Starting upload for locationId: ${props.locationId}`);
 
     try {
-        const response = await uploadLocationTurnSheetImage(props.gameId, props.locationId, file);
+        const response = await uploadAdventureGameLocationTurnSheetImage(props.gameId, props.locationId, file);
         console.log(`[LocationTurnSheetImageUpload] Upload response:`, response);
         if (response.data) {
             image.value = response.data;
@@ -163,7 +163,7 @@ async function removeImage() {
     emit('loadingChanged', true);
 
     try {
-        await deleteLocationTurnSheetImage(props.gameId, props.locationId);
+        await deleteAdventureGameLocationTurnSheetImage(props.gameId, props.locationId);
         image.value = null;
         emit('imagesUpdated');
     } catch (err) {

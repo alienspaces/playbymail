@@ -19,7 +19,7 @@
         </template>
       </ResourceTable>
       <TablePagination :pageNumber="itemsStore.pageNumber" :hasMore="itemsStore.hasMore"
-        @page-change="(p) => itemsStore.fetchItems(selectedGame.id, p)" />
+        @page-change="(p) => itemsStore.fetchAdventureGameItems(selectedGame.id, p)" />
     </div>
 
     <ResourceModalForm :visible="showModal" :mode="modalMode" title="Item" :fields="fields" :modelValue="modalForm"
@@ -34,7 +34,7 @@
 <script setup>
 import { ref, watch, computed } from 'vue';
 import { storeToRefs } from 'pinia';
-import { useItemsStore } from '../../../stores/items';
+import { useAdventureGameItemsStore } from '../../../stores/adventureGameItems';
 import { useGamesStore } from '../../../stores/games';
 import ResourceTable from '../../../components/ResourceTable.vue';
 import ResourceModalForm from '../../../components/ResourceModalForm.vue';
@@ -44,7 +44,7 @@ import GameContext from '../../../components/GameContext.vue';
 import TableActions from '../../../components/TableActions.vue';
 import TablePagination from '../../../components/TablePagination.vue';
 
-const itemsStore = useItemsStore();
+const itemsStore = useAdventureGameItemsStore();
 const gamesStore = useGamesStore();
 const { selectedGame } = storeToRefs(gamesStore);
 
@@ -108,7 +108,7 @@ watch(
   () => selectedGame.value,
   (newGame) => {
     if (newGame) {
-      itemsStore.fetchItems(newGame.id);
+      itemsStore.fetchAdventureGameItems(newGame.id);
     }
   },
   { immediate: true }
@@ -164,9 +164,9 @@ async function handleSubmit(formData) {
   modalError.value = '';
   try {
     if (modalMode.value === 'create') {
-      await itemsStore.createItem(formData);
+      await itemsStore.createAdventureGameItem(formData);
     } else {
-      await itemsStore.updateItem(modalForm.value.id, formData);
+      await itemsStore.updateAdventureGameItem(modalForm.value.id, formData);
     }
     closeModal();
   } catch (error) {
@@ -176,7 +176,7 @@ async function handleSubmit(formData) {
 
 async function handleDelete() {
   try {
-    await itemsStore.deleteItem(itemToDelete.value.id);
+    await itemsStore.deleteAdventureGameItem(itemToDelete.value.id);
     closeDeleteModal();
   } catch (error) {
     console.error('Failed to delete item:', error);

@@ -22,7 +22,7 @@
         </template>
       </ResourceTable>
       <TablePagination :pageNumber="creaturesStore.pageNumber" :hasMore="creaturesStore.hasMore"
-        @page-change="(p) => creaturesStore.fetchCreatures(selectedGame.id, p)" />
+        @page-change="(p) => creaturesStore.fetchAdventureGameCreatures(selectedGame.id, p)" />
     </div>
 
     <!-- Custom modal for create/edit with portrait upload support -->
@@ -128,7 +128,7 @@
 
     <!-- Confirm Delete Dialog -->
     <ConfirmationModal :visible="showDeleteConfirm" title="Delete Creature"
-      :message="`Are you sure you want to delete '${deleteTarget?.name}'?`" @confirm="deleteCreature"
+      :message="`Are you sure you want to delete '${deleteTarget?.name}'?`" @confirm="deleteAdventureGameCreature"
       @cancel="closeDelete" />
   </div>
 </template>
@@ -136,7 +136,7 @@
 <script setup>
 import { ref, watch } from 'vue';
 import { storeToRefs } from 'pinia';
-import { useCreaturesStore } from '../../../stores/creatures';
+import { useAdventureGameCreaturesStore } from '../../../stores/adventureGameCreatures';
 import { useGamesStore } from '../../../stores/games';
 import ResourceTable from '../../../components/ResourceTable.vue';
 import ConfirmationModal from '../../../components/ConfirmationModal.vue';
@@ -146,7 +146,7 @@ import TableActions from '../../../components/TableActions.vue';
 import TablePagination from '../../../components/TablePagination.vue';
 import CreaturePortraitUpload from '../../../components/CreaturePortraitUpload.vue';
 
-const creaturesStore = useCreaturesStore();
+const creaturesStore = useAdventureGameCreaturesStore();
 const gamesStore = useGamesStore();
 const { selectedGame } = storeToRefs(gamesStore);
 
@@ -184,7 +184,7 @@ watch(
   () => selectedGame.value,
   (newGame) => {
     if (newGame) {
-      creaturesStore.fetchCreatures(newGame.id);
+      creaturesStore.fetchAdventureGameCreatures(newGame.id);
     }
   },
   { immediate: true }
@@ -215,9 +215,9 @@ async function handleSubmit(form) {
   modalError.value = '';
   try {
     if (modalMode.value === 'create') {
-      await creaturesStore.createCreature(form);
+      await creaturesStore.createAdventureGameCreature(form);
     } else {
-      await creaturesStore.updateCreature(modalForm.value.id, form);
+      await creaturesStore.updateAdventureGameCreature(modalForm.value.id, form);
     }
     closeModal();
   } catch (err) {
@@ -235,10 +235,10 @@ function closeDelete() {
   deleteTarget.value = null;
 }
 
-async function deleteCreature() {
+async function deleteAdventureGameCreature() {
   if (!deleteTarget.value) return;
   try {
-    await creaturesStore.deleteCreature(deleteTarget.value.id);
+    await creaturesStore.deleteAdventureGameCreature(deleteTarget.value.id);
     closeDelete();
   } catch (err) {
     console.error('Failed to delete creature:', err);

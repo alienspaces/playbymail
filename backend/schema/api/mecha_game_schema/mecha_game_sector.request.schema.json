@@ -1,0 +1,40 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "http://playbymail.games/schema/mecha_game_schema/mecha_game_sector.request.schema.json",
+    "title": "MechaGameSectorRequest",
+    "type": "object",
+    "properties": {
+        "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+        },
+        "description": {
+            "type": "string"
+        },
+        "terrain_type": {
+            "type": "string",
+            "enum": [
+                "open",
+                "rough",
+                "forest",
+                "urban",
+                "water"
+            ]
+        },
+        "elevation": {
+            "type": "integer"
+        },
+        "cover_modifier": {
+            "type": "integer"
+        },
+        "is_starting_sector": {
+            "type": "boolean"
+        }
+    },
+    "required": [
+        "name",
+        "description"
+    ],
+    "additionalProperties": false
+}

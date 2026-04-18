@@ -13,10 +13,10 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/domain"
 	"gitlab.com/alienspaces/playbymail/internal/jobqueue"
 	"gitlab.com/alienspaces/playbymail/internal/jobworker/adventure_game"
-	"gitlab.com/alienspaces/playbymail/internal/jobworker/mecha"
+	"gitlab.com/alienspaces/playbymail/internal/jobworker/mecha_game"
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
-	"gitlab.com/alienspaces/playbymail/internal/record/mecha_record"
+	"gitlab.com/alienspaces/playbymail/internal/record/mecha_game_record"
 	"gitlab.com/alienspaces/playbymail/internal/utils/config"
 )
 
@@ -160,7 +160,7 @@ func (w *GameSubscriptionProcessingWorker) DoWork(ctx context.Context, m *domain
 func joinGameTurnSheetTypeByGameType(gameType string) string {
 	switch gameType {
 	case game_record.GameTypeMecha:
-		return mecha_record.MechaTurnSheetTypeJoinGame
+		return mecha_game_record.MechaGameTurnSheetTypeJoinGame
 	default:
 		return adventure_game_record.AdventureGameTurnSheetTypeJoinGame
 	}
@@ -195,11 +195,11 @@ func (w *GameSubscriptionProcessingWorker) initializeProcessors(l logger.Logger,
 	}
 	processors[game_record.GameTypeAdventure] = adventureProcessor
 
-	mechaProcessor, err := mecha.NewMechaJoinGameProcessor(l, d)
+	mechaGameProcessor, err := mecha_game.NewMechaGameJoinGameProcessor(l, d)
 	if err != nil {
 		return nil, err
 	}
-	processors[game_record.GameTypeMecha] = mechaProcessor
+	processors[game_record.GameTypeMecha] = mechaGameProcessor
 
 	return processors, nil
 }

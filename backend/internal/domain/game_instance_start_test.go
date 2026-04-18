@@ -46,10 +46,10 @@ func TestDomain_StartGameInstance(t *testing.T) {
 	noPlayersInstanceRec, err := th.Data.GetGameInstanceRecByRef(harness.GameInstanceCleanRef)
 	require.NoError(t, err, "GetGameInstanceRecByRef returns without error")
 
-	// --- Mecha game ---
-	// The default harness creates GameMechaRef with 2 sectors and MechaSquadOneRef (1 mech) for
+	// --- MechaGame game ---
+	// The default harness creates GameMechaGameRef with 2 sectors and MechaGameSquadOneRef (1 mech) for
 	// AccountUserStandardRef, but no game instances or subscriptions. We create them here.
-	mechaGameRec, err := th.Data.GetGameRecByRef(harness.GameMechaRef)
+	mechaGameRec, err := th.Data.GetGameRecByRef(harness.GameMechaGameRef)
 	require.NoError(t, err, "GetGameRecByRef returns without error")
 
 	accountUserStdRec, err := th.Data.GetAccountUserRecByRef(harness.AccountUserStandardRef)
@@ -68,7 +68,7 @@ func TestDomain_StartGameInstance(t *testing.T) {
 	})
 	require.NoError(t, err, "CreateGameSubscriptionRec (mecha manager) returns without error")
 
-	mechaPlayerSubRec, err := m.CreateGameSubscriptionRec(&game_record.GameSubscription{
+	mechaGamePlayerSubRec, err := m.CreateGameSubscriptionRec(&game_record.GameSubscription{
 		GameID:               mechaGameRec.ID,
 		AccountID:            accountUserStdRec.AccountID,
 		AccountUserID:        accountUserStdRec.ID,
@@ -79,7 +79,7 @@ func TestDomain_StartGameInstance(t *testing.T) {
 	})
 	require.NoError(t, err, "CreateGameSubscriptionRec (mecha player) returns without error")
 
-	mechaInstanceRec, err := m.CreateGameInstanceRec(&game_record.GameInstance{
+	mechaGameInstanceRec, err := m.CreateGameInstanceRec(&game_record.GameInstance{
 		GameID:              mechaGameRec.ID,
 		Status:              game_record.GameInstanceStatusCreated,
 		RequiredPlayerCount: 1,
@@ -90,8 +90,8 @@ func TestDomain_StartGameInstance(t *testing.T) {
 	_, err = m.CreateGameSubscriptionInstanceRec(&game_record.GameSubscriptionInstance{
 		AccountID:          accountUserStdRec.AccountID,
 		AccountUserID:      accountUserStdRec.ID,
-		GameSubscriptionID: mechaPlayerSubRec.ID,
-		GameInstanceID:     mechaInstanceRec.ID,
+		GameSubscriptionID: mechaGamePlayerSubRec.ID,
+		GameInstanceID:     mechaGameInstanceRec.ID,
 	})
 	require.NoError(t, err, "CreateGameSubscriptionInstanceRec (mecha player) returns without error")
 
@@ -111,9 +111,9 @@ func TestDomain_StartGameInstance(t *testing.T) {
 		expectAdventureObjectCount   int
 
 		// mecha-game assertions (non-zero when expected)
-		expectMechaSectorCount int
-		expectMechaSquadCount  int
-		expectMechaMechCount   int
+		expectMechaGameSectorCount int
+		expectMechaGameSquadCount  int
+		expectMechaGameMechCount   int
 	}{
 		{
 			name:         "adventure game starts and returns adventure instance data",
@@ -129,12 +129,12 @@ func TestDomain_StartGameInstance(t *testing.T) {
 		},
 		{
 			name:         "mecha game starts and returns mecha instance data",
-			instanceID:   mechaInstanceRec.ID,
+			instanceID:   mechaGameInstanceRec.ID,
 			expectStatus: game_record.GameInstanceStatusStarted,
-			// GameMechaRef: 2 sectors; AccountUserStandardRef has MechaSquadOneRef with 1 mech.
-			expectMechaSectorCount: 2,
-			expectMechaSquadCount:  1,
-			expectMechaMechCount:   1,
+			// GameMechaGameRef: 2 sectors; AccountUserStandardRef has MechaGameSquadOneRef with 1 mech.
+			expectMechaGameSectorCount: 2,
+			expectMechaGameSquadCount:  1,
+			expectMechaGameMechCount:   1,
 		},
 		{
 			// The adventure instance was already started by the first test case.
@@ -181,7 +181,7 @@ func TestDomain_StartGameInstance(t *testing.T) {
 
 			if adventureExpected {
 				require.NotNil(t, instanceData.Adventure, "Adventure data should be non-nil for adventure game")
-				require.Nil(t, instanceData.Mecha, "Mecha data should be nil for adventure game")
+				require.Nil(t, instanceData.MechaGame, "MechaGame data should be nil for adventure game")
 				require.Len(t, instanceData.Adventure.LocationInstances, tc.expectAdventureLocationCount, "Location instance count equals expected")
 				require.Len(t, instanceData.Adventure.CharacterInstances, tc.expectAdventureCharCount, "Character instance count equals expected")
 				require.Len(t, instanceData.Adventure.CreatureInstances, tc.expectAdventureCreatureCount, "Creature instance count equals expected")
@@ -189,15 +189,15 @@ func TestDomain_StartGameInstance(t *testing.T) {
 				require.Len(t, instanceData.Adventure.LocationObjectInstances, tc.expectAdventureObjectCount, "Location object instance count equals expected")
 			}
 
-			mechaExpected := tc.expectMechaSectorCount > 0 ||
-				tc.expectMechaSquadCount > 0
+			mechaGameExpected := tc.expectMechaGameSectorCount > 0 ||
+				tc.expectMechaGameSquadCount > 0
 
-			if mechaExpected {
-				require.NotNil(t, instanceData.Mecha, "Mecha data should be non-nil for mecha game")
+			if mechaGameExpected {
+				require.NotNil(t, instanceData.MechaGame, "MechaGame data should be non-nil for mecha game")
 				require.Nil(t, instanceData.Adventure, "Adventure data should be nil for mecha game")
-				require.Len(t, instanceData.Mecha.SectorInstances, tc.expectMechaSectorCount, "Sector instance count equals expected")
-				require.Len(t, instanceData.Mecha.SquadInstances, tc.expectMechaSquadCount, "Squad instance count equals expected")
-				require.Len(t, instanceData.Mecha.MechInstances, tc.expectMechaMechCount, "Mech instance count equals expected")
+				require.Len(t, instanceData.MechaGame.SectorInstances, tc.expectMechaGameSectorCount, "Sector instance count equals expected")
+				require.Len(t, instanceData.MechaGame.SquadInstances, tc.expectMechaGameSquadCount, "Squad instance count equals expected")
+				require.Len(t, instanceData.MechaGame.MechInstances, tc.expectMechaGameMechCount, "Mech instance count equals expected")
 			}
 		})
 	}

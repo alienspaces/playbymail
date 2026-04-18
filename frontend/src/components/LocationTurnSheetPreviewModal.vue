@@ -36,7 +36,7 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue';
-import { getLocationChoiceTurnSheetPreviewUrl } from '../api/locationImages';
+import { getAdventureGameLocationChoiceTurnSheetPreviewUrl } from '../api/adventureGameLocationImages';
 import { useAuthStore } from '../stores/auth';
 
 defineOptions({
@@ -76,7 +76,7 @@ const authStore = useAuthStore();
 
 const previewUrl = computed(() => {
     if (!props.gameId || !props.locationId || !props.visible) return '';
-    const baseUrl = getLocationChoiceTurnSheetPreviewUrl(props.gameId, props.locationId);
+    const baseUrl = getAdventureGameLocationChoiceTurnSheetPreviewUrl(props.gameId, props.locationId);
     const token = authStore.sessionToken;
     // Append token as query param for iframe authentication
     const url = token ? `${baseUrl}?token=${encodeURIComponent(token)}` : baseUrl;

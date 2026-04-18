@@ -26,7 +26,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/record/account_record"
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
-	"gitlab.com/alienspaces/playbymail/internal/record/mecha_record"
+	"gitlab.com/alienspaces/playbymail/internal/record/mecha_game_record"
 	"gitlab.com/alienspaces/playbymail/internal/turnsheet"
 	"gitlab.com/alienspaces/playbymail/internal/utils/logging"
 	"gitlab.com/alienspaces/playbymail/internal/utils/turnsheetutil"
@@ -286,7 +286,7 @@ func getJoinSheetHandler(w http.ResponseWriter, r *http.Request, pp httprouter.P
 	var joinGameSheetType string
 	switch gameRec.GameType {
 	case game_record.GameTypeMecha:
-		joinGameSheetType = mecha_record.MechaTurnSheetTypeJoinGame
+		joinGameSheetType = mecha_game_record.MechaGameTurnSheetTypeJoinGame
 	default:
 		joinGameSheetType = adventure_game_record.AdventureGameTurnSheetTypeJoinGame
 	}

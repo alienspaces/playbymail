@@ -23,11 +23,11 @@ const mockChassis = [
   }
 ];
 
-vi.mock('../../../api/mechaChassis', () => ({
-  fetchChassis: vi.fn(async () => ({ data: mockChassis, hasMore: false })),
-  createChassis: vi.fn(),
-  updateChassis: vi.fn(),
-  deleteChassis: vi.fn()
+vi.mock('../../../api/mechaGameChassis', () => ({
+  fetchMechaGameChassis: vi.fn(async () => ({ data: mockChassis, hasMore: false })),
+  createMechaGameChassis: vi.fn(),
+  updateMechaGameChassis: vi.fn(),
+  deleteMechaGameChassis: vi.fn()
 }));
 
 describe('StudioChassisView', () => {
@@ -67,7 +67,7 @@ describe('StudioChassisView', () => {
 
   it('shows loading state', async () => {
     await setupGamesStore();
-    await setupStore('mechaChassis', { loading: true, error: null });
+    await setupStore('mechaGameChassis', { loading: true, error: null });
     const wrapper = mountWithRealComponents();
     expect(wrapper.html()).toContain('Loading...');
   });

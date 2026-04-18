@@ -27,7 +27,7 @@
         </template>
       </ResourceTable>
       <TablePagination :pageNumber="itemEffectsStore.pageNumber" :hasMore="itemEffectsStore.hasMore"
-        @page-change="(p) => itemEffectsStore.fetchItemEffects(selectedGame.id, p)" />
+        @page-change="(p) => itemEffectsStore.fetchAdventureGameItemEffects(selectedGame.id, p)" />
 
       <ResourceModalForm
         :visible="showModal"
@@ -55,11 +55,11 @@
 
 <script setup>
 import { ref, watch, computed } from 'vue';
-import { useItemEffectsStore } from '../../../stores/itemEffects';
-import { useItemsStore } from '../../../stores/items';
-import { useLocationsStore } from '../../../stores/locations';
-import { useLocationLinksStore } from '../../../stores/locationLinks';
-import { useCreaturesStore } from '../../../stores/creatures';
+import { useAdventureGameItemEffectsStore } from '../../../stores/adventureGameItemEffects';
+import { useAdventureGameItemsStore } from '../../../stores/adventureGameItems';
+import { useAdventureGameLocationsStore } from '../../../stores/adventureGameLocations';
+import { useAdventureGameLocationLinksStore } from '../../../stores/adventureGameLocationLinks';
+import { useAdventureGameCreaturesStore } from '../../../stores/adventureGameCreatures';
 import { useGamesStore } from '../../../stores/games';
 import { storeToRefs } from 'pinia';
 import ResourceTable from '../../../components/ResourceTable.vue';
@@ -70,11 +70,11 @@ import GameContext from '../../../components/GameContext.vue';
 import TableActions from '../../../components/TableActions.vue';
 import TablePagination from '../../../components/TablePagination.vue';
 
-const itemEffectsStore = useItemEffectsStore();
-const itemsStore = useItemsStore();
-const locationsStore = useLocationsStore();
-const locationLinksStore = useLocationLinksStore();
-const creaturesStore = useCreaturesStore();
+const itemEffectsStore = useAdventureGameItemEffectsStore();
+const itemsStore = useAdventureGameItemsStore();
+const locationsStore = useAdventureGameLocationsStore();
+const locationLinksStore = useAdventureGameLocationLinksStore();
+const creaturesStore = useAdventureGameCreaturesStore();
 const gamesStore = useGamesStore();
 const { selectedGame } = storeToRefs(gamesStore);
 
@@ -239,11 +239,11 @@ watch(
   () => selectedGame.value,
   (newGame) => {
     if (newGame) {
-      itemEffectsStore.fetchItemEffects(newGame.id);
-      itemsStore.fetchItems(newGame.id);
-      locationsStore.fetchLocations(newGame.id);
-      locationLinksStore.fetchLocationLinks(newGame.id);
-      creaturesStore.fetchCreatures(newGame.id);
+      itemEffectsStore.fetchAdventureGameItemEffects(newGame.id);
+      itemsStore.fetchAdventureGameItems(newGame.id);
+      locationsStore.fetchAdventureGameLocations(newGame.id);
+      locationLinksStore.fetchAdventureGameLocationLinks(newGame.id);
+      creaturesStore.fetchAdventureGameCreatures(newGame.id);
     }
   },
   { immediate: true }
@@ -298,9 +298,9 @@ async function handleSubmit(form) {
 
   try {
     if (modalMode.value === 'create') {
-      await itemEffectsStore.createItemEffect(payload);
+      await itemEffectsStore.createAdventureGameItemEffect(payload);
     } else {
-      await itemEffectsStore.updateItemEffect(modalForm.value.id, payload);
+      await itemEffectsStore.updateAdventureGameItemEffect(modalForm.value.id, payload);
     }
     closeModal();
   } catch (err) {
@@ -321,7 +321,7 @@ function closeDeleteConfirm() {
 async function confirmDelete() {
   if (!deleteTarget.value) return;
   try {
-    await itemEffectsStore.deleteItemEffect(deleteTarget.value.id);
+    await itemEffectsStore.deleteAdventureGameItemEffect(deleteTarget.value.id);
     closeDeleteConfirm();
   } catch (err) {
     console.error('Failed to delete item effect:', err);

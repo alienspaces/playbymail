@@ -7,7 +7,7 @@ import (
 	coresql "gitlab.com/alienspaces/playbymail/core/sql"
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
-	"gitlab.com/alienspaces/playbymail/internal/record/mecha_record"
+	"gitlab.com/alienspaces/playbymail/internal/record/mecha_game_record"
 )
 
 const (
@@ -385,9 +385,9 @@ func validateGameRecForDelete(args *validateGameArgs) error {
 func (m *Domain) validateMechaGameReadyForInstance(gameID string) ([]GameValidationIssue, error) {
 	var issues []GameValidationIssue
 
-	sectorRecs, err := m.GetManyMechaSectorRecs(&coresql.Options{
+	sectorRecs, err := m.GetManyMechaGameSectorRecs(&coresql.Options{
 		Params: []coresql.Param{
-			{Col: mecha_record.FieldMechaSectorGameID, Val: gameID},
+			{Col: mecha_game_record.FieldMechaGameSectorGameID, Val: gameID},
 		},
 		Limit: 1,
 	})
@@ -398,16 +398,16 @@ func (m *Domain) validateMechaGameReadyForInstance(gameID string) ([]GameValidat
 	if len(sectorRecs) == 0 {
 		issues = append(issues, GameValidationIssue{
 			Field:    "sectors",
-			Message:  "Mecha must have at least one sector before creating an instance",
+			Message:  "MechaGame must have at least one sector before creating an instance",
 			Severity: ValidationSeverityError,
 		})
 		return issues, nil
 	}
 
-	startingSectorRecs, err := m.GetManyMechaSectorRecs(&coresql.Options{
+	startingSectorRecs, err := m.GetManyMechaGameSectorRecs(&coresql.Options{
 		Params: []coresql.Param{
-			{Col: mecha_record.FieldMechaSectorGameID, Val: gameID},
-			{Col: mecha_record.FieldMechaSectorIsStartingSector, Val: true},
+			{Col: mecha_game_record.FieldMechaGameSectorGameID, Val: gameID},
+			{Col: mecha_game_record.FieldMechaGameSectorIsStartingSector, Val: true},
 		},
 		Limit: 1,
 	})
@@ -418,14 +418,14 @@ func (m *Domain) validateMechaGameReadyForInstance(gameID string) ([]GameValidat
 	if len(startingSectorRecs) == 0 {
 		issues = append(issues, GameValidationIssue{
 			Field:    "starting_sector",
-			Message:  "Mecha must have at least one starting sector before creating an instance",
+			Message:  "MechaGame must have at least one starting sector before creating an instance",
 			Severity: ValidationSeverityError,
 		})
 	}
 
-	chassisRecs, err := m.GetManyMechaChassisRecs(&coresql.Options{
+	chassisRecs, err := m.GetManyMechaGameChassisRecs(&coresql.Options{
 		Params: []coresql.Param{
-			{Col: mecha_record.FieldMechaChassisGameID, Val: gameID},
+			{Col: mecha_game_record.FieldMechaGameChassisGameID, Val: gameID},
 		},
 		Limit: 1,
 	})
@@ -436,16 +436,16 @@ func (m *Domain) validateMechaGameReadyForInstance(gameID string) ([]GameValidat
 	if len(chassisRecs) == 0 {
 		issues = append(issues, GameValidationIssue{
 			Field:    "chassis",
-			Message:  "Mecha must have at least one chassis defined before creating an instance",
+			Message:  "MechaGame must have at least one chassis defined before creating an instance",
 			Severity: ValidationSeverityError,
 		})
 	}
 
 	// Require exactly one player starter squad with at least one mech.
-	starterSquadRecs, err := m.GetManyMechaSquadRecs(&coresql.Options{
+	starterSquadRecs, err := m.GetManyMechaGameSquadRecs(&coresql.Options{
 		Params: []coresql.Param{
-			{Col: mecha_record.FieldMechaSquadGameID, Val: gameID},
-			{Col: mecha_record.FieldMechaSquadSquadType, Val: mecha_record.SquadTypeStarter},
+			{Col: mecha_game_record.FieldMechaGameSquadGameID, Val: gameID},
+			{Col: mecha_game_record.FieldMechaGameSquadSquadType, Val: mecha_game_record.SquadTypeStarter},
 		},
 		Limit: 1,
 	})
@@ -456,13 +456,13 @@ func (m *Domain) validateMechaGameReadyForInstance(gameID string) ([]GameValidat
 	if len(starterSquadRecs) == 0 {
 		issues = append(issues, GameValidationIssue{
 			Field:    "player_starter_squad",
-			Message:  "Mecha game must have a player starter squad defined",
+			Message:  "MechaGame game must have a player starter squad defined",
 			Severity: ValidationSeverityError,
 		})
 	} else {
-		starterMechs, err := m.GetManyMechaSquadMechRecs(&coresql.Options{
+		starterMechs, err := m.GetManyMechaGameSquadMechRecs(&coresql.Options{
 			Params: []coresql.Param{
-				{Col: mecha_record.FieldMechaSquadMechMechaSquadID, Val: starterSquadRecs[0].ID},
+				{Col: mecha_game_record.FieldMechaGameSquadMechMechaGameSquadID, Val: starterSquadRecs[0].ID},
 			},
 			Limit: 1,
 		})

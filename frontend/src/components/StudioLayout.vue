@@ -135,7 +135,7 @@
           </li>
         </ul>
 
-        <!-- Mecha specific links -->
+        <!-- MechaGame specific links -->
         <ul v-if="isMechaGame">
           <li>
             <router-link :to="`/studio/${selectedGame.id}/chassis`" active-class="active">

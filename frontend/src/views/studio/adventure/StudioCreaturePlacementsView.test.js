@@ -6,35 +6,35 @@ import StudioCreaturePlacementsView from './StudioCreaturePlacementsView.vue'
 import { findInBody, setupModalTestCleanup } from '../../../test-utils/studio-resource-helpers'
 
 // Mock the stores
-vi.mock('../../../stores/creatures', () => ({
-  useCreaturesStore: vi.fn(() => ({
+vi.mock('../../../stores/adventureGameCreatures', () => ({
+  useAdventureGameCreaturesStore: vi.fn(() => ({
     creatures: [],
     loading: false,
     error: null,
-    fetchCreatures: vi.fn()
+    fetchAdventureGameCreatures: vi.fn()
   }))
 }))
 
-vi.mock('../../../stores/locations', () => ({
-  useLocationsStore: vi.fn(() => ({
+vi.mock('../../../stores/adventureGameLocations', () => ({
+  useAdventureGameLocationsStore: vi.fn(() => ({
     locations: [],
     loading: false,
     error: null,
-    fetchLocations: vi.fn()
+    fetchAdventureGameLocations: vi.fn()
   }))
 }))
 
-vi.mock('../../../stores/creaturePlacements', () => ({
-  useCreaturePlacementsStore: vi.fn(() => ({
+vi.mock('../../../stores/adventureGameCreaturePlacements', () => ({
+  useAdventureGameCreaturePlacementsStore: vi.fn(() => ({
     creaturePlacements: [],
     loading: false,
     error: null,
     pageNumber: 1,
     hasMore: false,
-    createCreaturePlacement: vi.fn(),
-    updateCreaturePlacement: vi.fn(),
-    deleteCreaturePlacement: vi.fn(),
-    fetchCreaturePlacements: vi.fn()
+    createAdventureGameCreaturePlacement: vi.fn(),
+    updateAdventureGameCreaturePlacement: vi.fn(),
+    deleteAdventureGameCreaturePlacement: vi.fn(),
+    fetchAdventureGameCreaturePlacements: vi.fn()
   }))
 }))
 
@@ -50,35 +50,35 @@ describe('StudioCreaturePlacementsView', () => {
 
   const setupStoreMocks = async (selectedGame = null) => {
     const { useGamesStore } = await import('../../../stores/games')
-    const { useCreaturesStore } = await import('../../../stores/creatures')
-    const { useLocationsStore } = await import('../../../stores/locations')
-    const { useCreaturePlacementsStore } = await import('../../../stores/creaturePlacements')
+    const { useAdventureGameCreaturesStore } = await import('../../../stores/adventureGameCreatures')
+    const { useAdventureGameLocationsStore } = await import('../../../stores/adventureGameLocations')
+    const { useAdventureGameCreaturePlacementsStore } = await import('../../../stores/adventureGameCreaturePlacements')
 
     useGamesStore.mockReturnValue({
       selectedGame: ref(selectedGame)
     })
-    useCreaturesStore.mockReturnValue({
+    useAdventureGameCreaturesStore.mockReturnValue({
       creatures: [],
       loading: false,
       error: null,
-      fetchCreatures: vi.fn()
+      fetchAdventureGameCreatures: vi.fn()
     })
-    useLocationsStore.mockReturnValue({
+    useAdventureGameLocationsStore.mockReturnValue({
       locations: [],
       loading: false,
       error: null,
-      fetchLocations: vi.fn()
+      fetchAdventureGameLocations: vi.fn()
     })
-    useCreaturePlacementsStore.mockReturnValue({
+    useAdventureGameCreaturePlacementsStore.mockReturnValue({
       creaturePlacements: [],
       loading: false,
       error: null,
       pageNumber: 1,
       hasMore: false,
-      createCreaturePlacement: vi.fn(),
-      updateCreaturePlacement: vi.fn(),
-      deleteCreaturePlacement: vi.fn(),
-      fetchCreaturePlacements: vi.fn()
+      createAdventureGameCreaturePlacement: vi.fn(),
+      updateAdventureGameCreaturePlacement: vi.fn(),
+      deleteAdventureGameCreaturePlacement: vi.fn(),
+      fetchAdventureGameCreaturePlacements: vi.fn()
     })
   }
 
@@ -179,26 +179,26 @@ describe('StudioCreaturePlacementsView', () => {
     await setupStoreMocks({ id: 1, name: 'Test Game' })
 
     // Override the creatures and locations for this specific test
-    const { useCreaturesStore } = await import('../../../stores/creatures')
-    const { useLocationsStore } = await import('../../../stores/locations')
+    const { useAdventureGameCreaturesStore } = await import('../../../stores/adventureGameCreatures')
+    const { useAdventureGameLocationsStore } = await import('../../../stores/adventureGameLocations')
 
-    useCreaturesStore.mockReturnValue({
+    useAdventureGameCreaturesStore.mockReturnValue({
       creatures: [
         { id: 1, name: 'Dragon' },
         { id: 2, name: 'Goblin' }
       ],
       loading: false,
       error: null,
-      fetchCreatures: vi.fn()
+      fetchAdventureGameCreatures: vi.fn()
     })
-    useLocationsStore.mockReturnValue({
+    useAdventureGameLocationsStore.mockReturnValue({
       locations: [
         { id: 1, name: 'Cave' },
         { id: 2, name: 'Forest' }
       ],
       loading: false,
       error: null,
-      fetchLocations: vi.fn()
+      fetchAdventureGameLocations: vi.fn()
     })
 
     const wrapper = mount(StudioCreaturePlacementsView)
@@ -279,35 +279,35 @@ describe('StudioCreaturePlacementsView', () => {
   it('watches for selectedGame changes', async () => {
     const selectedGameRef = ref(null)
     const { useGamesStore } = await import('../../../stores/games')
-    const { useCreaturesStore } = await import('../../../stores/creatures')
-    const { useLocationsStore } = await import('../../../stores/locations')
-    const { useCreaturePlacementsStore } = await import('../../../stores/creaturePlacements')
+    const { useAdventureGameCreaturesStore } = await import('../../../stores/adventureGameCreatures')
+    const { useAdventureGameLocationsStore } = await import('../../../stores/adventureGameLocations')
+    const { useAdventureGameCreaturePlacementsStore } = await import('../../../stores/adventureGameCreaturePlacements')
 
     useGamesStore.mockReturnValue({
       selectedGame: selectedGameRef
     })
-    useCreaturesStore.mockReturnValue({
+    useAdventureGameCreaturesStore.mockReturnValue({
       creatures: [],
       loading: false,
       error: null,
-      fetchCreatures: vi.fn()
+      fetchAdventureGameCreatures: vi.fn()
     })
-    useLocationsStore.mockReturnValue({
+    useAdventureGameLocationsStore.mockReturnValue({
       locations: [],
       loading: false,
       error: null,
-      fetchLocations: vi.fn()
+      fetchAdventureGameLocations: vi.fn()
     })
-    useCreaturePlacementsStore.mockReturnValue({
+    useAdventureGameCreaturePlacementsStore.mockReturnValue({
       creaturePlacements: [],
       loading: false,
       error: null,
       pageNumber: 1,
       hasMore: false,
-      createCreaturePlacement: vi.fn(),
-      updateCreaturePlacement: vi.fn(),
-      deleteCreaturePlacement: vi.fn(),
-      fetchCreaturePlacements: vi.fn()
+      createAdventureGameCreaturePlacement: vi.fn(),
+      updateAdventureGameCreaturePlacement: vi.fn(),
+      deleteAdventureGameCreaturePlacement: vi.fn(),
+      fetchAdventureGameCreaturePlacements: vi.fn()
     })
 
     const wrapper = mount(StudioCreaturePlacementsView)

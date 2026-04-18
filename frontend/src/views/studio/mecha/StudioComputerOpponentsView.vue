@@ -16,7 +16,7 @@
         </template>
       </ResourceTable>
       <TablePagination :pageNumber="store.pageNumber" :hasMore="store.hasMore"
-        @page-change="(p) => store.fetchComputerOpponents(selectedGame.id, p)" />
+        @page-change="(p) => store.fetchMechaGameComputerOpponents(selectedGame.id, p)" />
     </div>
 
     <Teleport to="body">
@@ -63,7 +63,7 @@
 <script setup>
 import { ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
-import { useMechaComputerOpponentsStore } from '../../../stores/mechaComputerOpponents'
+import { useMechaGameComputerOpponentsStore } from '../../../stores/mechaGameComputerOpponents'
 import { useGamesStore } from '../../../stores/games'
 import ResourceTable from '../../../components/ResourceTable.vue'
 import ConfirmationModal from '../../../components/ConfirmationModal.vue'
@@ -72,7 +72,7 @@ import GameContext from '../../../components/GameContext.vue'
 import TableActions from '../../../components/TableActions.vue'
 import TablePagination from '../../../components/TablePagination.vue'
 
-const store = useMechaComputerOpponentsStore()
+const store = useMechaGameComputerOpponentsStore()
 const gamesStore = useGamesStore()
 const { selectedGame } = storeToRefs(gamesStore)
 
@@ -90,7 +90,7 @@ const modalError = ref('')
 const showDeleteModal = ref(false)
 const toDelete = ref(null)
 
-watch(() => selectedGame.value, (g) => { if (g) store.fetchComputerOpponents(g.id) }, { immediate: true })
+watch(() => selectedGame.value, (g) => { if (g) store.fetchMechaGameComputerOpponents(g.id) }, { immediate: true })
 
 function openCreate() {
   modalMode.value = 'create'
@@ -117,9 +117,9 @@ async function handleSubmit(formData) {
   const data = Object.fromEntries(allowed.map(k => [k, formData[k]]))
   try {
     if (modalMode.value === 'create') {
-      await store.createComputerOpponent(data)
+      await store.createMechaGameComputerOpponent(data)
     } else {
-      await store.updateComputerOpponent(modalForm.value.id, data)
+      await store.updateMechaGameComputerOpponent(modalForm.value.id, data)
     }
     closeModal()
   } catch (e) {
@@ -129,7 +129,7 @@ async function handleSubmit(formData) {
 
 async function handleDelete() {
   try {
-    await store.deleteComputerOpponent(toDelete.value.id)
+    await store.deleteMechaGameComputerOpponent(toDelete.value.id)
     showDeleteModal.value = false
     toDelete.value = null
   } catch (e) {

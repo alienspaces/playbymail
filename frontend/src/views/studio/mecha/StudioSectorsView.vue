@@ -16,7 +16,7 @@
         </template>
       </ResourceTable>
       <TablePagination :pageNumber="store.pageNumber" :hasMore="store.hasMore"
-        @page-change="(p) => store.fetchSectors(selectedGame.id, p)" />
+        @page-change="(p) => store.fetchMechaGameSectors(selectedGame.id, p)" />
     </div>
 
     <Teleport to="body">
@@ -69,7 +69,7 @@
 <script setup>
 import { ref, watch, computed } from 'vue'
 import { storeToRefs } from 'pinia'
-import { useMechaSectorsStore } from '../../../stores/mechaSectors'
+import { useMechaGameSectorsStore } from '../../../stores/mechaGameSectors'
 import { useGamesStore } from '../../../stores/games'
 import ResourceTable from '../../../components/ResourceTable.vue'
 import ConfirmationModal from '../../../components/ConfirmationModal.vue'
@@ -78,7 +78,7 @@ import GameContext from '../../../components/GameContext.vue'
 import TableActions from '../../../components/TableActions.vue'
 import TablePagination from '../../../components/TablePagination.vue'
 
-const store = useMechaSectorsStore()
+const store = useMechaGameSectorsStore()
 const gamesStore = useGamesStore()
 const { selectedGame } = storeToRefs(gamesStore)
 
@@ -101,7 +101,7 @@ const modalError = ref('')
 const showDeleteModal = ref(false)
 const toDelete = ref(null)
 
-watch(() => selectedGame.value, (g) => { if (g) store.fetchSectors(g.id) }, { immediate: true })
+watch(() => selectedGame.value, (g) => { if (g) store.fetchMechaGameSectors(g.id) }, { immediate: true })
 
 function openCreate() {
   modalMode.value = 'create'
@@ -129,9 +129,9 @@ async function handleSubmit(formData) {
   const data = Object.fromEntries(allowed.map(k => [k, formData[k]]))
   try {
     if (modalMode.value === 'create') {
-      await store.createSector(data)
+      await store.createMechaGameSector(data)
     } else {
-      await store.updateSector(modalForm.value.id, data)
+      await store.updateMechaGameSector(modalForm.value.id, data)
     }
     closeModal()
   } catch (e) {
@@ -141,7 +141,7 @@ async function handleSubmit(formData) {
 
 async function handleDelete() {
   try {
-    await store.deleteSector(toDelete.value.id)
+    await store.deleteMechaGameSector(toDelete.value.id)
     showDeleteModal.value = false
     toDelete.value = null
   } catch (e) {

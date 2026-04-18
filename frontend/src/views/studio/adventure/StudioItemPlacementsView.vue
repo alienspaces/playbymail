@@ -17,7 +17,7 @@
         </template>
       </ResourceTable>
       <TablePagination :pageNumber="itemPlacementsStore.pageNumber" :hasMore="itemPlacementsStore.hasMore"
-        @page-change="(p) => itemPlacementsStore.fetchItemPlacements(selectedGame.id, p)" />
+        @page-change="(p) => itemPlacementsStore.fetchAdventureGameItemPlacements(selectedGame.id, p)" />
 
       <!-- Create/Edit Item Placement Modal -->
       <ResourceModalForm :visible="showItemPlacementModal" :mode="itemPlacementModalMode" title="Item Placement"
@@ -26,7 +26,7 @@
 
       <!-- Confirm Delete Dialog -->
       <ConfirmationModal :visible="showItemPlacementDeleteConfirm" title="Delete Item Placement"
-        message="Are you sure you want to delete this item placement?" @confirm="deleteItemPlacement"
+        message="Are you sure you want to delete this item placement?" @confirm="deleteAdventureGameItemPlacement"
         @cancel="closeItemPlacementDelete" />
     </div>
   </div>
@@ -34,9 +34,9 @@
 
 <script setup>
 import { ref, watch, computed } from 'vue';
-import { useItemsStore } from '../../../stores/items';
-import { useLocationsStore } from '../../../stores/locations';
-import { useItemPlacementsStore } from '../../../stores/itemPlacements';
+import { useAdventureGameItemsStore } from '../../../stores/adventureGameItems';
+import { useAdventureGameLocationsStore } from '../../../stores/adventureGameLocations';
+import { useAdventureGameItemPlacementsStore } from '../../../stores/adventureGameItemPlacements';
 import { useGamesStore } from '../../../stores/games';
 import { storeToRefs } from 'pinia';
 import ResourceTable from '../../../components/ResourceTable.vue';
@@ -47,9 +47,9 @@ import GameContext from '../../../components/GameContext.vue';
 import TableActions from '../../../components/TableActions.vue';
 import TablePagination from '../../../components/TablePagination.vue';
 
-const itemsStore = useItemsStore();
-const locationsStore = useLocationsStore();
-const itemPlacementsStore = useItemPlacementsStore();
+const itemsStore = useAdventureGameItemsStore();
+const locationsStore = useAdventureGameLocationsStore();
+const itemPlacementsStore = useAdventureGameItemPlacementsStore();
 const gamesStore = useGamesStore();
 const { selectedGame } = storeToRefs(gamesStore);
 
@@ -104,9 +104,9 @@ watch(
   () => selectedGame.value,
   (newGame) => {
     if (newGame) {
-      itemsStore.fetchItems(newGame.id);
-      locationsStore.fetchLocations(newGame.id);
-      itemPlacementsStore.fetchItemPlacements(newGame.id);
+      itemsStore.fetchAdventureGameItems(newGame.id);
+      locationsStore.fetchAdventureGameLocations(newGame.id);
+      itemPlacementsStore.fetchAdventureGameItemPlacements(newGame.id);
     }
   },
   { immediate: true }
@@ -135,9 +135,9 @@ async function handleItemPlacementSubmit(form) {
   itemPlacementModalError.value = '';
   try {
     if (itemPlacementModalMode.value === 'create') {
-      await itemPlacementsStore.createItemPlacement(form);
+      await itemPlacementsStore.createAdventureGameItemPlacement(form);
     } else {
-      await itemPlacementsStore.updateItemPlacement(itemPlacementModalForm.value.id, form);
+      await itemPlacementsStore.updateAdventureGameItemPlacement(itemPlacementModalForm.value.id, form);
     }
     closeItemPlacementModal();
   } catch (err) {
@@ -155,10 +155,10 @@ function closeItemPlacementDelete() {
   itemPlacementDeleteTarget.value = null;
 }
 
-async function deleteItemPlacement() {
+async function deleteAdventureGameItemPlacement() {
   if (!itemPlacementDeleteTarget.value) return;
   try {
-    await itemPlacementsStore.deleteItemPlacement(itemPlacementDeleteTarget.value.id);
+    await itemPlacementsStore.deleteAdventureGameItemPlacement(itemPlacementDeleteTarget.value.id);
     closeItemPlacementDelete();
   } catch (err) {
     console.error('Failed to delete item placement:', err);

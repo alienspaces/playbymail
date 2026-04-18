@@ -22,7 +22,7 @@
         </template>
       </ResourceTable>
       <TablePagination :pageNumber="locationsStore.pageNumber" :hasMore="locationsStore.hasMore"
-        @page-change="(p) => locationsStore.fetchLocations(selectedGame.id, p)" />
+        @page-change="(p) => locationsStore.fetchAdventureGameLocations(selectedGame.id, p)" />
     </div>
 
     <!-- Custom modal for create/edit with image upload support -->
@@ -83,7 +83,7 @@
 <script setup>
 import { ref, watch, computed } from 'vue';
 import { storeToRefs } from 'pinia';
-import { useLocationsStore } from '../../../stores/locations';
+import { useAdventureGameLocationsStore } from '../../../stores/adventureGameLocations';
 import { useGamesStore } from '../../../stores/games';
 import ResourceTable from '../../../components/ResourceTable.vue';
 import ConfirmationModal from '../../../components/ConfirmationModal.vue';
@@ -94,7 +94,7 @@ import TablePagination from '../../../components/TablePagination.vue';
 import LocationTurnSheetImageUpload from '../../../components/LocationTurnSheetImageUpload.vue';
 import LocationTurnSheetPreviewModal from '../../../components/LocationTurnSheetPreviewModal.vue';
 
-const locationsStore = useLocationsStore();
+const locationsStore = useAdventureGameLocationsStore();
 const gamesStore = useGamesStore();
 const { selectedGame } = storeToRefs(gamesStore);
 
@@ -132,7 +132,7 @@ watch(
   () => selectedGame.value,
   (newGame) => {
     if (newGame) {
-      locationsStore.fetchLocations(newGame.id);
+      locationsStore.fetchAdventureGameLocations(newGame.id);
     }
   },
   { immediate: true }
@@ -200,9 +200,9 @@ async function handleSubmit(formData) {
     }
 
     if (modalMode.value === 'create') {
-      await locationsStore.createLocation(requestData);
+      await locationsStore.createAdventureGameLocation(requestData);
     } else {
-      await locationsStore.updateLocation(modalForm.value.id, requestData);
+      await locationsStore.updateAdventureGameLocation(modalForm.value.id, requestData);
     }
     closeModal();
   } catch (error) {
@@ -212,7 +212,7 @@ async function handleSubmit(formData) {
 
 async function handleDelete() {
   try {
-    await locationsStore.deleteLocation(locationToDelete.value.id);
+    await locationsStore.deleteAdventureGameLocation(locationToDelete.value.id);
     closeDeleteModal();
   } catch (error) {
     console.error('Failed to delete location:', error);

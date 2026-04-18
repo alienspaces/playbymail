@@ -21,7 +21,7 @@
         </template>
       </ResourceTable>
       <TablePagination :pageNumber="locationLinksStore.pageNumber" :hasMore="locationLinksStore.hasMore"
-        @page-change="(p) => locationLinksStore.fetchLocationLinks(selectedGame.id, p)" />
+        @page-change="(p) => locationLinksStore.fetchAdventureGameLocationLinks(selectedGame.id, p)" />
 
       <!-- Create/Edit Location Link Modal -->
       <ResourceModalForm :visible="showModal" :mode="modalMode" title="Location Link" :fields="locationLinkFields"
@@ -30,7 +30,7 @@
 
       <!-- Confirm Delete Dialog -->
       <ConfirmationModal :visible="showDeleteConfirm" title="Delete Location Link"
-        :message="`Are you sure you want to delete the link '${deleteTarget?.name}'?`" @confirm="deleteLocationLink"
+        :message="`Are you sure you want to delete the link '${deleteTarget?.name}'?`" @confirm="deleteAdventureGameLocationLink"
         @cancel="closeDelete" />
     </div>
   </div>
@@ -38,8 +38,8 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue';
-import { useLocationLinksStore } from '../../../stores/locationLinks';
-import { useLocationsStore } from '../../../stores/locations';
+import { useAdventureGameLocationLinksStore } from '../../../stores/adventureGameLocationLinks';
+import { useAdventureGameLocationsStore } from '../../../stores/adventureGameLocations';
 import { useGamesStore } from '../../../stores/games';
 import { storeToRefs } from 'pinia';
 import ResourceTable from '../../../components/ResourceTable.vue';
@@ -50,8 +50,8 @@ import GameContext from '../../../components/GameContext.vue';
 import TableActions from '../../../components/TableActions.vue';
 import TablePagination from '../../../components/TablePagination.vue';
 
-const locationLinksStore = useLocationLinksStore();
-const locationsStore = useLocationsStore();
+const locationLinksStore = useAdventureGameLocationLinksStore();
+const locationsStore = useAdventureGameLocationsStore();
 const gamesStore = useGamesStore();
 const { selectedGame } = storeToRefs(gamesStore);
 
@@ -109,8 +109,8 @@ watch(
   () => selectedGame.value,
   (newGame) => {
     if (newGame) {
-      locationLinksStore.fetchLocationLinks(newGame.id);
-      locationsStore.fetchLocations(newGame.id);
+      locationLinksStore.fetchAdventureGameLocationLinks(newGame.id);
+      locationsStore.fetchAdventureGameLocations(newGame.id);
     }
   },
   { immediate: true }
@@ -167,9 +167,9 @@ async function handleSubmit(formData) {
   modalError.value = '';
   try {
     if (modalMode.value === 'create') {
-      await locationLinksStore.createLocationLink(formData);
+      await locationLinksStore.createAdventureGameLocationLink(formData);
     } else {
-      await locationLinksStore.updateLocationLink(modalForm.value.id, formData);
+      await locationLinksStore.updateAdventureGameLocationLink(modalForm.value.id, formData);
     }
     closeModal();
   } catch (err) {
@@ -187,10 +187,10 @@ function closeDelete() {
   deleteTarget.value = null;
 }
 
-async function deleteLocationLink() {
+async function deleteAdventureGameLocationLink() {
   if (!deleteTarget.value) return;
   try {
-    await locationLinksStore.deleteLocationLink(deleteTarget.value.id);
+    await locationLinksStore.deleteAdventureGameLocationLink(deleteTarget.value.id);
     closeDelete();
   } catch (err) {
     console.error('Failed to delete location link:', err);

@@ -83,12 +83,12 @@ const SHEET_TYPES_BY_GAME_TYPE = {
     ],
     mecha: [
         {
-            value: 'mecha_join_game',
+            value: 'mecha_game_join_game',
             label: 'Join Game',
             description: 'Background image for the join game turn sheet that new commanders receive when joining.'
         },
         {
-            value: 'mecha_orders',
+            value: 'mecha_game_orders',
             label: 'Mech Orders',
             description: 'Background image for the mech orders turn sheet used by players to submit movement and attack orders.'
         }

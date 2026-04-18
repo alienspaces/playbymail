@@ -192,7 +192,7 @@ func Test_createUpdateDeleteGameHandler(t *testing.T) {
 				RequestHeaders: testutil.AuthHeaderProDesigner,
 				RequestBody: func(d harness.Data) any {
 					return game_schema.GameRequest{
-						Name:              "Test Mecha",
+						Name:              "Test MechaGame",
 						GameType:          game_record.GameTypeMecha,
 						TurnDurationHours: 168, // 1 week
 						Description:       "A test mecha description",

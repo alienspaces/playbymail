@@ -194,7 +194,7 @@ func (m *Domain) RemoveGameInstanceRec(recID string) error {
 // Exactly one of the game-type-specific fields will be non-nil, matching the game type of the instance.
 type GameInstanceData struct {
 	Adventure *AdventureGameInstanceData
-	Mecha     *MechaInstanceData
+	MechaGame     *MechaGameInstanceData
 }
 
 // StartGameInstance starts a game instance: populates all world and player data then transitions status to started.
@@ -235,7 +235,7 @@ func (m *Domain) StartGameInstance(instanceID string) (*game_record.GameInstance
 			return nil, nil, err
 		}
 	case game_record.GameTypeMecha:
-		instanceData.Mecha, err = m.PopulateMechaGameInstanceData(instanceID)
+		instanceData.MechaGame, err = m.PopulateMechaGameInstanceData(instanceID)
 		if err != nil {
 			l.Warn("failed to populate mecha game instance data >%v<", err)
 			return nil, nil, err
@@ -1141,7 +1141,7 @@ func (m *Domain) DeleteGameInstance(instanceID string) error {
 	}
 
 	// Delete mecha instance data (turn sheets, mech instances, squad instances, sector instances)
-	if err := m.deleteMechaInstanceData(instanceID); err != nil {
+	if err := m.deleteMechaGameInstanceData(instanceID); err != nil {
 		l.Warn("failed to delete mecha instance data >%v<", err)
 		return err
 	}
@@ -1328,7 +1328,7 @@ func (m *Domain) RemoveGameInstance(instanceID string) error {
 	}
 
 	// Remove mecha instance data (turn sheets, mech instances, squad instances, sector instances)
-	if err := m.removeMechaInstanceData(instanceID); err != nil {
+	if err := m.removeMechaGameInstanceData(instanceID); err != nil {
 		l.Warn("failed to remove mecha instance data >%v<", err)
 		return err
 	}

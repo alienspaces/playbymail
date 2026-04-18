@@ -5,53 +5,53 @@ import { ref } from 'vue'
 import StudioItemEffectsView from './StudioItemEffectsView.vue'
 import { setupModalTestCleanup } from '../../../test-utils/studio-resource-helpers'
 
-vi.mock('../../../stores/itemEffects', () => ({
-  useItemEffectsStore: vi.fn(() => ({
+vi.mock('../../../stores/adventureGameItemEffects', () => ({
+  useAdventureGameItemEffectsStore: vi.fn(() => ({
     itemEffects: [],
     loading: false,
     error: null,
     pageNumber: 1,
     hasMore: false,
-    fetchItemEffects: vi.fn(),
-    createItemEffect: vi.fn(),
-    updateItemEffect: vi.fn(),
-    deleteItemEffect: vi.fn(),
+    fetchAdventureGameItemEffects: vi.fn(),
+    createAdventureGameItemEffect: vi.fn(),
+    updateAdventureGameItemEffect: vi.fn(),
+    deleteAdventureGameItemEffect: vi.fn(),
   })),
 }))
 
-vi.mock('../../../stores/items', () => ({
-  useItemsStore: vi.fn(() => ({
+vi.mock('../../../stores/adventureGameItems', () => ({
+  useAdventureGameItemsStore: vi.fn(() => ({
     items: [],
     loading: false,
     error: null,
-    fetchItems: vi.fn(),
+    fetchAdventureGameItems: vi.fn(),
   })),
 }))
 
-vi.mock('../../../stores/locations', () => ({
-  useLocationsStore: vi.fn(() => ({
+vi.mock('../../../stores/adventureGameLocations', () => ({
+  useAdventureGameLocationsStore: vi.fn(() => ({
     locations: [],
     loading: false,
     error: null,
-    fetchLocations: vi.fn(),
+    fetchAdventureGameLocations: vi.fn(),
   })),
 }))
 
-vi.mock('../../../stores/locationLinks', () => ({
-  useLocationLinksStore: vi.fn(() => ({
+vi.mock('../../../stores/adventureGameLocationLinks', () => ({
+  useAdventureGameLocationLinksStore: vi.fn(() => ({
     locationLinks: [],
     loading: false,
     error: null,
-    fetchLocationLinks: vi.fn(),
+    fetchAdventureGameLocationLinks: vi.fn(),
   })),
 }))
 
-vi.mock('../../../stores/creatures', () => ({
-  useCreaturesStore: vi.fn(() => ({
+vi.mock('../../../stores/adventureGameCreatures', () => ({
+  useAdventureGameCreaturesStore: vi.fn(() => ({
     creatures: [],
     loading: false,
     error: null,
-    fetchCreatures: vi.fn(),
+    fetchAdventureGameCreatures: vi.fn(),
   })),
 }))
 
@@ -67,26 +67,26 @@ describe('StudioItemEffectsView', () => {
 
   const setupStoreMocks = async (selectedGame = null) => {
     const { useGamesStore } = await import('../../../stores/games')
-    const { useItemEffectsStore } = await import('../../../stores/itemEffects')
-    const { useItemsStore } = await import('../../../stores/items')
-    const { useLocationsStore } = await import('../../../stores/locations')
-    const { useLocationLinksStore } = await import('../../../stores/locationLinks')
-    const { useCreaturesStore } = await import('../../../stores/creatures')
+    const { useAdventureGameItemEffectsStore } = await import('../../../stores/adventureGameItemEffects')
+    const { useAdventureGameItemsStore } = await import('../../../stores/adventureGameItems')
+    const { useAdventureGameLocationsStore } = await import('../../../stores/adventureGameLocations')
+    const { useAdventureGameLocationLinksStore } = await import('../../../stores/adventureGameLocationLinks')
+    const { useAdventureGameCreaturesStore } = await import('../../../stores/adventureGameCreatures')
 
     useGamesStore.mockReturnValue({ selectedGame: ref(selectedGame) })
-    useItemEffectsStore.mockReturnValue({
+    useAdventureGameItemEffectsStore.mockReturnValue({
       itemEffects: [],
       loading: false,
       error: null,
-      fetchItemEffects: vi.fn(),
-      createItemEffect: vi.fn(),
-      updateItemEffect: vi.fn(),
-      deleteItemEffect: vi.fn(),
+      fetchAdventureGameItemEffects: vi.fn(),
+      createAdventureGameItemEffect: vi.fn(),
+      updateAdventureGameItemEffect: vi.fn(),
+      deleteAdventureGameItemEffect: vi.fn(),
     })
-    useItemsStore.mockReturnValue({ items: [], loading: false, error: null, fetchItems: vi.fn() })
-    useLocationsStore.mockReturnValue({ locations: [], loading: false, error: null, fetchLocations: vi.fn() })
-    useLocationLinksStore.mockReturnValue({ locationLinks: [], loading: false, error: null, fetchLocationLinks: vi.fn() })
-    useCreaturesStore.mockReturnValue({ creatures: [], loading: false, error: null, fetchCreatures: vi.fn() })
+    useAdventureGameItemsStore.mockReturnValue({ items: [], loading: false, error: null, fetchAdventureGameItems: vi.fn() })
+    useAdventureGameLocationsStore.mockReturnValue({ locations: [], loading: false, error: null, fetchAdventureGameLocations: vi.fn() })
+    useAdventureGameLocationLinksStore.mockReturnValue({ locationLinks: [], loading: false, error: null, fetchAdventureGameLocationLinks: vi.fn() })
+    useAdventureGameCreaturesStore.mockReturnValue({ creatures: [], loading: false, error: null, fetchAdventureGameCreatures: vi.fn() })
   }
 
   beforeEach(() => {

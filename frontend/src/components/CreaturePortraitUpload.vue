@@ -44,10 +44,10 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue';
 import {
-    uploadCreatureImage,
-    getCreatureImage,
-    deleteCreatureImage
-} from '../api/creatureImages';
+    uploadAdventureGameCreatureImage,
+    getAdventureGameCreatureImage,
+    deleteAdventureGameCreatureImage
+} from '../api/adventureGameCreatureImages';
 
 defineOptions({
     name: 'CreaturePortraitUpload'
@@ -84,7 +84,7 @@ async function loadImage() {
     if (!props.gameId || !props.creatureId) return;
 
     try {
-        const response = await getCreatureImage(props.gameId, props.creatureId);
+        const response = await getAdventureGameCreatureImage(props.gameId, props.creatureId);
         if (response.data && response.data.portrait) {
             image.value = response.data.portrait;
         } else {
@@ -119,7 +119,7 @@ async function handleFileSelect(event) {
     emit('loadingChanged', true);
 
     try {
-        const response = await uploadCreatureImage(props.gameId, props.creatureId, file);
+        const response = await uploadAdventureGameCreatureImage(props.gameId, props.creatureId, file);
         if (response.data) {
             image.value = response.data;
             emit('imageUpdated');
@@ -142,7 +142,7 @@ async function removeImage() {
     emit('loadingChanged', true);
 
     try {
-        await deleteCreatureImage(props.gameId, props.creatureId);
+        await deleteAdventureGameCreatureImage(props.gameId, props.creatureId);
         image.value = null;
         emit('imageUpdated');
     } catch (err) {

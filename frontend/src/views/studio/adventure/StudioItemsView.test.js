@@ -15,11 +15,11 @@ const mockItems = [
   { id: 2, name: 'Shield', description: 'Protective', is_starting_item: false, created_at: '2024-07-10T12:00:00Z' }
 ];
 
-vi.mock('../../../api/items', () => ({
-  fetchItems: vi.fn(async () => ({ data: mockItems, hasMore: false })),
-  createItem: vi.fn(),
-  updateItem: vi.fn(),
-  deleteItem: vi.fn()
+vi.mock('../../../api/adventureGameItems', () => ({
+  fetchAdventureGameItems: vi.fn(async () => ({ data: mockItems, hasMore: false })),
+  createAdventureGameItem: vi.fn(),
+  updateAdventureGameItem: vi.fn(),
+  deleteAdventureGameItem: vi.fn()
 }));
 
 describe('StudioItemsView', () => {
@@ -58,7 +58,7 @@ describe('StudioItemsView', () => {
 
   it('shows loading state', async () => {
     await setupGamesStore();
-    await setupStore('items', { loading: true, error: null });
+    await setupStore('adventureGameItems', { loading: true, error: null });
     const wrapper = mountWithRealComponents();
     expect(wrapper.html()).toContain('Loading...');
   });
@@ -78,7 +78,7 @@ describe('StudioItemsView', () => {
 
   it('formats is_starting_item boolean values correctly', async () => {
     await setupGamesStore();
-    await setupStore('items', {
+    await setupStore('adventureGameItems', {
       items: [
         { id: 1, name: 'Sword', description: 'Sharp', is_starting_item: true },
         { id: 2, name: 'Shield', description: 'Protective', is_starting_item: false }

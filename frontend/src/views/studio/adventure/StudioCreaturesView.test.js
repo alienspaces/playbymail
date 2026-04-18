@@ -14,11 +14,11 @@ const mockCreatures = [
   { id: 1, name: 'Goblin', description: 'Small and green', max_health: 30, attack_damage: 5, defense: 2, created_at: '2024-07-10T12:00:00Z' }
 ];
 
-vi.mock('../../../api/creatures', () => ({
-  fetchCreatures: vi.fn(async () => ({ data: mockCreatures, hasMore: false })),
-  createCreature: vi.fn(),
-  updateCreature: vi.fn(),
-  deleteCreature: vi.fn()
+vi.mock('../../../api/adventureGameCreatures', () => ({
+  fetchAdventureGameCreatures: vi.fn(async () => ({ data: mockCreatures, hasMore: false })),
+  createAdventureGameCreature: vi.fn(),
+  updateAdventureGameCreature: vi.fn(),
+  deleteAdventureGameCreature: vi.fn()
 }));
 
 describe('StudioCreaturesView', () => {
@@ -60,7 +60,7 @@ describe('StudioCreaturesView', () => {
 
   it('shows loading state', async () => {
     await setupGamesStore();
-    await setupStore('creatures', { loading: true, error: null });
+    await setupStore('adventureGameCreatures', { loading: true, error: null });
     const wrapper = mountWithRealComponents();
     expect(wrapper.html()).toContain('Loading...');
   });

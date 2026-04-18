@@ -1,0 +1,52 @@
+package mecha_game_record
+
+import (
+	"encoding/json"
+
+	"github.com/jackc/pgx/v5"
+
+	"gitlab.com/alienspaces/playbymail/core/record"
+)
+
+// WeaponConfigEntry represents a weapon assigned to a mech at a specific slot.
+type WeaponConfigEntry struct {
+	WeaponID     string `json:"weapon_id"`
+	SlotLocation string `json:"slot_location"`
+}
+
+const (
+	TableMechaGameSquadMech string = "mecha_game_squad_mech"
+)
+
+const (
+	FieldMechaGameSquadMechID             string = "id"
+	FieldMechaGameSquadMechGameID         string = "game_id"
+	FieldMechaGameSquadMechMechaGameSquadID   string = "mecha_game_squad_id"
+	FieldMechaGameSquadMechMechaGameChassisID string = "mecha_game_chassis_id"
+	FieldMechaGameSquadMechCallsign       string = "callsign"
+	FieldMechaGameSquadMechWeaponConfig   string = "weapon_config"
+	FieldMechaGameSquadMechCreatedAt      string = "created_at"
+	FieldMechaGameSquadMechUpdatedAt      string = "updated_at"
+	FieldMechaGameSquadMechDeletedAt      string = "deleted_at"
+)
+
+type MechaGameSquadMech struct {
+	record.Record
+	GameID           string              `db:"game_id"`
+	MechaGameSquadID     string              `db:"mecha_game_squad_id"`
+	MechaGameChassisID   string              `db:"mecha_game_chassis_id"`
+	Callsign         string              `db:"callsign"`
+	WeaponConfig     []WeaponConfigEntry `db:"-"`
+	WeaponConfigJSON []byte              `db:"weapon_config"`
+}
+
+func (r *MechaGameSquadMech) ToNamedArgs() pgx.NamedArgs {
+	args := r.Record.ToNamedArgs()
+	args[FieldMechaGameSquadMechGameID] = r.GameID
+	args[FieldMechaGameSquadMechMechaGameSquadID] = r.MechaGameSquadID
+	args[FieldMechaGameSquadMechMechaGameChassisID] = r.MechaGameChassisID
+	args[FieldMechaGameSquadMechCallsign] = r.Callsign
+	weaponJSON, _ := json.Marshal(r.WeaponConfig)
+	args[FieldMechaGameSquadMechWeaponConfig] = string(weaponJSON)
+	return args
+}

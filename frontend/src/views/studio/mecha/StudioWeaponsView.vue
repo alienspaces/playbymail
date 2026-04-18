@@ -16,7 +16,7 @@
         </template>
       </ResourceTable>
       <TablePagination :pageNumber="store.pageNumber" :hasMore="store.hasMore"
-        @page-change="(p) => store.fetchWeapons(selectedGame.id, p)" />
+        @page-change="(p) => store.fetchMechaGameWeapons(selectedGame.id, p)" />
     </div>
 
     <Teleport to="body">
@@ -79,7 +79,7 @@
 <script setup>
 import { ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
-import { useMechaWeaponsStore } from '../../../stores/mechaWeapons'
+import { useMechaGameWeaponsStore } from '../../../stores/mechaGameWeapons'
 import { useGamesStore } from '../../../stores/games'
 import ResourceTable from '../../../components/ResourceTable.vue'
 import ConfirmationModal from '../../../components/ConfirmationModal.vue'
@@ -88,7 +88,7 @@ import GameContext from '../../../components/GameContext.vue'
 import TableActions from '../../../components/TableActions.vue'
 import TablePagination from '../../../components/TablePagination.vue'
 
-const store = useMechaWeaponsStore()
+const store = useMechaGameWeaponsStore()
 const gamesStore = useGamesStore()
 const { selectedGame } = storeToRefs(gamesStore)
 
@@ -107,7 +107,7 @@ const modalError = ref('')
 const showDeleteModal = ref(false)
 const toDelete = ref(null)
 
-watch(() => selectedGame.value, (g) => { if (g) store.fetchWeapons(g.id) }, { immediate: true })
+watch(() => selectedGame.value, (g) => { if (g) store.fetchMechaGameWeapons(g.id) }, { immediate: true })
 
 function openCreate() {
   modalMode.value = 'create'
@@ -134,9 +134,9 @@ async function handleSubmit(formData) {
   const data = Object.fromEntries(allowed.map(k => [k, formData[k]]))
   try {
     if (modalMode.value === 'create') {
-      await store.createWeapon(data)
+      await store.createMechaGameWeapon(data)
     } else {
-      await store.updateWeapon(modalForm.value.id, data)
+      await store.updateMechaGameWeapon(modalForm.value.id, data)
     }
     closeModal()
   } catch (e) {
@@ -146,7 +146,7 @@ async function handleSubmit(formData) {
 
 async function handleDelete() {
   try {
-    await store.deleteWeapon(toDelete.value.id)
+    await store.deleteMechaGameWeapon(toDelete.value.id)
     showDeleteModal.value = false
     toDelete.value = null
   } catch (e) {

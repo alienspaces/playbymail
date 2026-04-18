@@ -22,11 +22,11 @@ const mockWeapons = [
   }
 ];
 
-vi.mock('../../../api/mechaWeapons', () => ({
-  fetchWeapons: vi.fn(async () => ({ data: mockWeapons, hasMore: false })),
-  createWeapon: vi.fn(),
-  updateWeapon: vi.fn(),
-  deleteWeapon: vi.fn()
+vi.mock('../../../api/mechaGameWeapons', () => ({
+  fetchMechaGameWeapons: vi.fn(async () => ({ data: mockWeapons, hasMore: false })),
+  createMechaGameWeapon: vi.fn(),
+  updateMechaGameWeapon: vi.fn(),
+  deleteMechaGameWeapon: vi.fn()
 }));
 
 describe('StudioWeaponsView', () => {
@@ -64,7 +64,7 @@ describe('StudioWeaponsView', () => {
 
   it('shows loading state', async () => {
     await setupGamesStore();
-    await setupStore('mechaWeapons', { loading: true, error: null });
+    await setupStore('mechaGameWeapons', { loading: true, error: null });
     const wrapper = mountWithRealComponents();
     expect(wrapper.html()).toContain('Loading...');
   });

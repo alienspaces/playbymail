@@ -17,7 +17,7 @@
         </template>
       </ResourceTable>
       <TablePagination :pageNumber="creaturePlacementsStore.pageNumber" :hasMore="creaturePlacementsStore.hasMore"
-        @page-change="(p) => creaturePlacementsStore.fetchCreaturePlacements(selectedGame.id, p)" />
+        @page-change="(p) => creaturePlacementsStore.fetchAdventureGameCreaturePlacements(selectedGame.id, p)" />
 
       <!-- Create/Edit Creature Placement Modal -->
       <ResourceModalForm :visible="showCreaturePlacementModal" :mode="creaturePlacementModalMode"
@@ -27,7 +27,7 @@
 
       <!-- Confirm Delete Dialog -->
       <ConfirmationModal :visible="showCreaturePlacementDeleteConfirm" title="Delete Creature Placement"
-        message="Are you sure you want to delete this creature placement?" @confirm="deleteCreaturePlacement"
+        message="Are you sure you want to delete this creature placement?" @confirm="deleteAdventureGameCreaturePlacement"
         @cancel="closeCreaturePlacementDelete" />
     </div>
   </div>
@@ -35,9 +35,9 @@
 
 <script setup>
 import { ref, watch, computed } from 'vue';
-import { useCreaturesStore } from '../../../stores/creatures';
-import { useLocationsStore } from '../../../stores/locations';
-import { useCreaturePlacementsStore } from '../../../stores/creaturePlacements';
+import { useAdventureGameCreaturesStore } from '../../../stores/adventureGameCreatures';
+import { useAdventureGameLocationsStore } from '../../../stores/adventureGameLocations';
+import { useAdventureGameCreaturePlacementsStore } from '../../../stores/adventureGameCreaturePlacements';
 import { useGamesStore } from '../../../stores/games';
 import { storeToRefs } from 'pinia';
 import ResourceTable from '../../../components/ResourceTable.vue';
@@ -48,9 +48,9 @@ import GameContext from '../../../components/GameContext.vue';
 import TableActions from '../../../components/TableActions.vue';
 import TablePagination from '../../../components/TablePagination.vue';
 
-const creaturesStore = useCreaturesStore();
-const locationsStore = useLocationsStore();
-const creaturePlacementsStore = useCreaturePlacementsStore();
+const creaturesStore = useAdventureGameCreaturesStore();
+const locationsStore = useAdventureGameLocationsStore();
+const creaturePlacementsStore = useAdventureGameCreaturePlacementsStore();
 const gamesStore = useGamesStore();
 const { selectedGame } = storeToRefs(gamesStore);
 
@@ -105,9 +105,9 @@ watch(
   () => selectedGame.value,
   (newGame) => {
     if (newGame) {
-      creaturesStore.fetchCreatures(newGame.id);
-      locationsStore.fetchLocations(newGame.id);
-      creaturePlacementsStore.fetchCreaturePlacements(newGame.id);
+      creaturesStore.fetchAdventureGameCreatures(newGame.id);
+      locationsStore.fetchAdventureGameLocations(newGame.id);
+      creaturePlacementsStore.fetchAdventureGameCreaturePlacements(newGame.id);
     }
   },
   { immediate: true }
@@ -136,9 +136,9 @@ async function handleCreaturePlacementSubmit(form) {
   creaturePlacementModalError.value = '';
   try {
     if (creaturePlacementModalMode.value === 'create') {
-      await creaturePlacementsStore.createCreaturePlacement(form);
+      await creaturePlacementsStore.createAdventureGameCreaturePlacement(form);
     } else {
-      await creaturePlacementsStore.updateCreaturePlacement(creaturePlacementModalForm.value.id, form);
+      await creaturePlacementsStore.updateAdventureGameCreaturePlacement(creaturePlacementModalForm.value.id, form);
     }
     closeCreaturePlacementModal();
   } catch (err) {
@@ -156,10 +156,10 @@ function closeCreaturePlacementDelete() {
   creaturePlacementDeleteTarget.value = null;
 }
 
-async function deleteCreaturePlacement() {
+async function deleteAdventureGameCreaturePlacement() {
   if (!creaturePlacementDeleteTarget.value) return;
   try {
-    await creaturePlacementsStore.deleteCreaturePlacement(creaturePlacementDeleteTarget.value.id);
+    await creaturePlacementsStore.deleteAdventureGameCreaturePlacement(creaturePlacementDeleteTarget.value.id);
     closeCreaturePlacementDelete();
   } catch (err) {
     console.error('Failed to delete creature placement:', err);

@@ -27,7 +27,7 @@
         </template>
       </ResourceTable>
       <TablePagination :pageNumber="locationObjectEffectsStore.pageNumber" :hasMore="locationObjectEffectsStore.hasMore"
-        @page-change="(p) => locationObjectEffectsStore.fetchLocationObjectEffects(selectedGame.id, p)" />
+        @page-change="(p) => locationObjectEffectsStore.fetchAdventureGameLocationObjectEffects(selectedGame.id, p)" />
 
       <ResourceModalForm
         :visible="showModal"
@@ -55,15 +55,15 @@
 
 <script setup>
 import { ref, watch, computed } from 'vue';
-import { useLocationsStore } from '../../../stores/locations';
-import { useLocationObjectsStore } from '../../../stores/locationObjects';
-import { useLocationObjectEffectsStore } from '../../../stores/locationObjectEffects';
-import { useLocationObjectStatesStore } from '../../../stores/locationObjectStates';
-import { useItemsStore } from '../../../stores/items';
-import { useCreaturesStore } from '../../../stores/creatures';
-import { useLocationLinksStore } from '../../../stores/locationLinks';
+import { useAdventureGameLocationsStore } from '../../../stores/adventureGameLocations';
+import { useAdventureGameLocationObjectsStore } from '../../../stores/adventureGameLocationObjects';
+import { useAdventureGameLocationObjectEffectsStore } from '../../../stores/adventureGameLocationObjectEffects';
+import { useAdventureGameLocationObjectStatesStore } from '../../../stores/adventureGameLocationObjectStates';
+import { useAdventureGameItemsStore } from '../../../stores/adventureGameItems';
+import { useAdventureGameCreaturesStore } from '../../../stores/adventureGameCreatures';
+import { useAdventureGameLocationLinksStore } from '../../../stores/adventureGameLocationLinks';
 import { useGamesStore } from '../../../stores/games';
-import { fetchLocationObjectStates } from '../../../api/locationObjectStates';
+import { fetchAdventureGameLocationObjectStates } from '../../../api/adventureGameLocationObjectStates';
 import { storeToRefs } from 'pinia';
 import ResourceTable from '../../../components/ResourceTable.vue';
 import ResourceModalForm from '../../../components/ResourceModalForm.vue';
@@ -73,13 +73,13 @@ import GameContext from '../../../components/GameContext.vue';
 import TableActions from '../../../components/TableActions.vue';
 import TablePagination from '../../../components/TablePagination.vue';
 
-const locationsStore = useLocationsStore();
-const locationObjectsStore = useLocationObjectsStore();
-const locationObjectEffectsStore = useLocationObjectEffectsStore();
-const locationObjectStatesStore = useLocationObjectStatesStore();
-const itemsStore = useItemsStore();
-const creaturesStore = useCreaturesStore();
-const locationLinksStore = useLocationLinksStore();
+const locationsStore = useAdventureGameLocationsStore();
+const locationObjectsStore = useAdventureGameLocationObjectsStore();
+const locationObjectEffectsStore = useAdventureGameLocationObjectEffectsStore();
+const locationObjectStatesStore = useAdventureGameLocationObjectStatesStore();
+const itemsStore = useAdventureGameItemsStore();
+const creaturesStore = useAdventureGameCreaturesStore();
+const locationLinksStore = useAdventureGameLocationLinksStore();
 const gamesStore = useGamesStore();
 const { selectedGame } = storeToRefs(gamesStore);
 
@@ -91,7 +91,7 @@ const statesByObjectId = ref({});
 async function loadStatesForObject(objectId) {
   if (!selectedGame.value || !objectId || statesByObjectId.value[objectId]) return;
   try {
-    const states = await fetchLocationObjectStates(selectedGame.value.id, objectId);
+    const states = await fetchAdventureGameLocationObjectStates(selectedGame.value.id, objectId);
     statesByObjectId.value = { ...statesByObjectId.value, [objectId]: states };
   } catch {
     // ignore fetch errors silently
@@ -282,12 +282,12 @@ watch(
   () => selectedGame.value,
   (newGame) => {
     if (newGame) {
-      locationsStore.fetchLocations(newGame.id);
-      locationObjectsStore.fetchLocationObjects(newGame.id);
-      locationObjectEffectsStore.fetchLocationObjectEffects(newGame.id);
-      itemsStore.fetchItems(newGame.id);
-      creaturesStore.fetchCreatures(newGame.id);
-      locationLinksStore.fetchLocationLinks(newGame.id);
+      locationsStore.fetchAdventureGameLocations(newGame.id);
+      locationObjectsStore.fetchAdventureGameLocationObjects(newGame.id);
+      locationObjectEffectsStore.fetchAdventureGameLocationObjectEffects(newGame.id);
+      itemsStore.fetchAdventureGameItems(newGame.id);
+      creaturesStore.fetchAdventureGameCreatures(newGame.id);
+      locationLinksStore.fetchAdventureGameLocationLinks(newGame.id);
     }
   },
   { immediate: true }
@@ -374,9 +374,9 @@ async function handleSubmit(form) {
 
   try {
     if (modalMode.value === 'create') {
-      await locationObjectEffectsStore.createLocationObjectEffect(payload);
+      await locationObjectEffectsStore.createAdventureGameLocationObjectEffect(payload);
     } else {
-      await locationObjectEffectsStore.updateLocationObjectEffect(modalForm.value.id, payload);
+      await locationObjectEffectsStore.updateAdventureGameLocationObjectEffect(modalForm.value.id, payload);
     }
     closeModal();
   } catch (err) {
@@ -397,7 +397,7 @@ function closeDeleteConfirm() {
 async function confirmDelete() {
   if (!deleteTarget.value) return;
   try {
-    await locationObjectEffectsStore.deleteLocationObjectEffect(deleteTarget.value.id);
+    await locationObjectEffectsStore.deleteAdventureGameLocationObjectEffect(deleteTarget.value.id);
     closeDeleteConfirm();
   } catch (err) {
     console.error('Failed to delete object effect:', err);

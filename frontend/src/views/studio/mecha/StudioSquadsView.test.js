@@ -19,11 +19,11 @@ const mockSquads = [
   }
 ];
 
-vi.mock('../../../api/mechaSquads', () => ({
-  fetchSquads: vi.fn(async () => ({ data: mockSquads, hasMore: false })),
-  createSquad: vi.fn(),
-  updateSquad: vi.fn(),
-  deleteSquad: vi.fn()
+vi.mock('../../../api/mechaGameSquads', () => ({
+  fetchMechaGameSquads: vi.fn(async () => ({ data: mockSquads, hasMore: false })),
+  createMechaGameSquad: vi.fn(),
+  updateMechaGameSquad: vi.fn(),
+  deleteMechaGameSquad: vi.fn()
 }));
 
 describe('StudioSquadsView', () => {
@@ -61,7 +61,7 @@ describe('StudioSquadsView', () => {
 
   it('shows loading state', async () => {
     await setupGamesStore();
-    await setupStore('mechaSquads', { loading: true, error: null });
+    await setupStore('mechaGameSquads', { loading: true, error: null });
     const wrapper = mountWithRealComponents();
     expect(wrapper.html()).toContain('Loading...');
   });

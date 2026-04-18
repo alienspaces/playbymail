@@ -9,7 +9,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/record/account_record"
 	"gitlab.com/alienspaces/playbymail/internal/record/adventure_game_record"
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
-	"gitlab.com/alienspaces/playbymail/internal/record/mecha_record"
+	"gitlab.com/alienspaces/playbymail/internal/record/mecha_game_record"
 )
 
 // Image file names in test_data_images directory
@@ -211,7 +211,7 @@ func AccountUserGameSubscriptionConfig() []harness.AccountUserGameSubscriptionCo
 			SubscriptionType: game_record.GameSubscriptionTypeDesigner,
 			Record:           &game_record.GameSubscription{},
 		},
-		// Steel Thunder (Mecha)
+		// Steel Thunder (MechaGame)
 		{
 			Reference:        harness.GameSubscriptionDesignerThreeRef,
 			GameRef:          harness.GameThreeRef,
@@ -252,7 +252,7 @@ func AccountUserGameSubscriptionConfig() []harness.AccountUserGameSubscriptionCo
 						{
 							Reference: "mech-instance-param-squad-size",
 							Record: &game_record.GameInstanceParameter{
-								ParameterKey:   domain.MechaParameterSquadSize,
+								ParameterKey:   domain.MechaGameParameterSquadSize,
 								ParameterValue: nullstring.FromString("2"),
 							},
 						},
@@ -260,7 +260,7 @@ func AccountUserGameSubscriptionConfig() []harness.AccountUserGameSubscriptionCo
 				},
 			},
 		},
-		// Iron Vanguard (Mecha, email only) — single-player scenario with explicit email delivery,
+		// Iron Vanguard (MechaGame, email only) — single-player scenario with explicit email delivery,
 		// mirroring the adventure email-only pattern alongside Steel Thunder's two-player default.
 		{
 			Reference:        harness.GameSubscriptionDesignerFourRef,
@@ -295,7 +295,7 @@ func AccountUserGameSubscriptionConfig() []harness.AccountUserGameSubscriptionCo
 						{
 							Reference: "iron-instance-param-squad-size",
 							Record: &game_record.GameInstanceParameter{
-								ParameterKey:   domain.MechaParameterSquadSize,
+								ParameterKey:   domain.MechaGameParameterSquadSize,
 								ParameterValue: nullstring.FromString("2"),
 							},
 						},
@@ -1092,26 +1092,26 @@ func GameConfig() []harness.GameConfig {
 			{
 				Reference:     "steel-image-join-game",
 				ImagePath:     ImageSteelJoinGame,
-				TurnSheetType: mecha_record.MechaTurnSheetTypeJoinGame,
+				TurnSheetType: mecha_game_record.MechaGameTurnSheetTypeJoinGame,
 			},
 			{
 				Reference:     "steel-image-management",
 				ImagePath:     ImageSteelOrders,
-				TurnSheetType: mecha_record.MechaTurnSheetTypeSquadManagement,
+				TurnSheetType: mecha_game_record.MechaGameTurnSheetTypeSquadManagement,
 			},
 			{
 				Reference:     "steel-image-orders",
 				ImagePath:     ImageSteelOrders,
-				TurnSheetType: mecha_record.MechaTurnSheetTypeOrders,
+				TurnSheetType: mecha_game_record.MechaGameTurnSheetTypeOrders,
 			},
 		},
-		MechaChassisConfigs: []harness.MechaChassisConfig{
+		MechaGameChassisConfigs: []harness.MechaGameChassisConfig{
 			{
 				Reference: "steel-chassis-viper",
-				Record: &mecha_record.MechaChassis{
+				Record: &mecha_game_record.MechaGameChassis{
 					Name:            "Viper",
 					Description:     "A fast light recon mech favoured for scouting and harassment.",
-					ChassisClass:    mecha_record.ChassisClassLight,
+					ChassisClass:    mecha_game_record.ChassisClassLight,
 					ArmorPoints:     80,
 					StructurePoints: 40,
 					HeatCapacity:    20,
@@ -1120,10 +1120,10 @@ func GameConfig() []harness.GameConfig {
 			},
 			{
 				Reference: "steel-chassis-ranger",
-				Record: &mecha_record.MechaChassis{
+				Record: &mecha_game_record.MechaGameChassis{
 					Name:            "Ranger",
 					Description:     "A versatile medium mech with solid armour and good mobility.",
-					ChassisClass:    mecha_record.ChassisClassMedium,
+					ChassisClass:    mecha_game_record.ChassisClassMedium,
 					ArmorPoints:     140,
 					StructurePoints: 70,
 					HeatCapacity:    30,
@@ -1132,10 +1132,10 @@ func GameConfig() []harness.GameConfig {
 			},
 			{
 				Reference: "steel-chassis-crusher",
-				Record: &mecha_record.MechaChassis{
+				Record: &mecha_game_record.MechaGameChassis{
 					Name:            "Crusher",
 					Description:     "A feared heavy mech with devastating long-range firepower.",
-					ChassisClass:    mecha_record.ChassisClassHeavy,
+					ChassisClass:    mecha_game_record.ChassisClassHeavy,
 					ArmorPoints:     200,
 					StructurePoints: 100,
 					HeatCapacity:    40,
@@ -1143,163 +1143,163 @@ func GameConfig() []harness.GameConfig {
 				},
 			},
 		},
-		MechaWeaponConfigs: []harness.MechaWeaponConfig{
+		MechaGameWeaponConfigs: []harness.MechaGameWeaponConfig{
 			{
 				Reference: "steel-weapon-pulse-cannon",
-				Record: &mecha_record.MechaWeapon{
+				Record: &mecha_game_record.MechaGameWeapon{
 					Name:        "Pulse Cannon",
 					Description: "A reliable direct-fire energy weapon with moderate range.",
 					Damage:      5,
 					HeatCost:    3,
-					RangeBand:   mecha_record.WeaponRangeBandMedium,
-					MountSize:   mecha_record.WeaponMountSizeMedium,
+					RangeBand:   mecha_game_record.WeaponRangeBandMedium,
+					MountSize:   mecha_game_record.WeaponMountSizeMedium,
 				},
 			},
 			{
 				Reference: "steel-weapon-heavy-pulse-cannon",
-				Record: &mecha_record.MechaWeapon{
+				Record: &mecha_game_record.MechaGameWeapon{
 					Name:        "Heavy Pulse Cannon",
 					Description: "A powerful energy weapon that generates significant heat.",
 					Damage:      8,
 					HeatCost:    8,
-					RangeBand:   mecha_record.WeaponRangeBandLong,
-					MountSize:   mecha_record.WeaponMountSizeLarge,
+					RangeBand:   mecha_game_record.WeaponRangeBandLong,
+					MountSize:   mecha_game_record.WeaponMountSizeLarge,
 				},
 			},
 			{
 				Reference: "steel-weapon-rocket-pack",
-				Record: &mecha_record.MechaWeapon{
+				Record: &mecha_game_record.MechaGameWeapon{
 					Name:        "Rocket Pack",
 					Description: "A short-range missile rack ideal for close-in brawling.",
 					Damage:      8,
 					HeatCost:    3,
-					RangeBand:   mecha_record.WeaponRangeBandShort,
-					MountSize:   mecha_record.WeaponMountSizeMedium,
+					RangeBand:   mecha_game_record.WeaponRangeBandShort,
+					MountSize:   mecha_game_record.WeaponMountSizeMedium,
 				},
 			},
 			{
 				Reference: "steel-weapon-light-pulse-cannon",
-				Record: &mecha_record.MechaWeapon{
+				Record: &mecha_game_record.MechaGameWeapon{
 					Name:        "Light Pulse Cannon",
 					Description: "A light back-up weapon for point-blank defence.",
 					Damage:      3,
 					HeatCost:    1,
-					RangeBand:   mecha_record.WeaponRangeBandShort,
-					MountSize:   mecha_record.WeaponMountSizeSmall,
+					RangeBand:   mecha_game_record.WeaponRangeBandShort,
+					MountSize:   mecha_game_record.WeaponMountSizeSmall,
 				},
 			},
 		},
-		MechaSectorConfigs: []harness.MechaSectorConfig{
+		MechaGameSectorConfigs: []harness.MechaGameSectorConfig{
 			{
 				Reference: "steel-sector-deployment-zone",
-				Record: &mecha_record.MechaSector{
+				Record: &mecha_game_record.MechaGameSector{
 					Name:             "Deployment Zone",
 					Description:      "An open staging area where squads muster before the battle.",
-					TerrainType:      mecha_record.SectorTerrainTypeOpen,
+					TerrainType:      mecha_game_record.SectorTerrainTypeOpen,
 					Elevation:        0,
 					IsStartingSector: true,
 				},
 			},
 			{
 				Reference: "steel-sector-refinery",
-				Record: &mecha_record.MechaSector{
+				Record: &mecha_game_record.MechaGameSector{
 					Name:        "Refinery Complex",
 					Description: "A dense industrial site offering plentiful cover but restricted movement.",
-					TerrainType: mecha_record.SectorTerrainTypeUrban,
+					TerrainType: mecha_game_record.SectorTerrainTypeUrban,
 					Elevation:   0,
 				},
 			},
 			{
 				Reference: "steel-sector-ridge",
-				Record: &mecha_record.MechaSector{
+				Record: &mecha_game_record.MechaGameSector{
 					Name:        "Crater Ridge",
 					Description: "A rocky elevated ridge commanding views of the surrounding lowlands.",
-					TerrainType: mecha_record.SectorTerrainTypeRough,
+					TerrainType: mecha_game_record.SectorTerrainTypeRough,
 					Elevation:   3,
 				},
 			},
 			{
 				Reference: "steel-sector-river-crossing",
-				Record: &mecha_record.MechaSector{
+				Record: &mecha_game_record.MechaGameSector{
 					Name:        "River Crossing",
 					Description: "A shallow ford crossing that slows heavy mechs significantly.",
-					TerrainType: mecha_record.SectorTerrainTypeWater,
+					TerrainType: mecha_game_record.SectorTerrainTypeWater,
 					Elevation:   -1,
 				},
 			},
 		},
-		MechaSectorLinkConfigs: []harness.MechaSectorLinkConfig{
+		MechaGameSectorLinkConfigs: []harness.MechaGameSectorLinkConfig{
 			{
 				Reference:     "steel-link-deploy-to-refinery",
 				FromSectorRef: "steel-sector-deployment-zone",
 				ToSectorRef:   "steel-sector-refinery",
-				Record:        &mecha_record.MechaSectorLink{},
+				Record:        &mecha_game_record.MechaGameSectorLink{},
 			},
 			{
 				Reference:     "steel-link-refinery-to-deploy",
 				FromSectorRef: "steel-sector-refinery",
 				ToSectorRef:   "steel-sector-deployment-zone",
-				Record:        &mecha_record.MechaSectorLink{},
+				Record:        &mecha_game_record.MechaGameSectorLink{},
 			},
 			{
 				Reference:     "steel-link-deploy-to-ridge",
 				FromSectorRef: "steel-sector-deployment-zone",
 				ToSectorRef:   "steel-sector-ridge",
-				Record:        &mecha_record.MechaSectorLink{},
+				Record:        &mecha_game_record.MechaGameSectorLink{},
 			},
 			{
 				Reference:     "steel-link-ridge-to-deploy",
 				FromSectorRef: "steel-sector-ridge",
 				ToSectorRef:   "steel-sector-deployment-zone",
-				Record:        &mecha_record.MechaSectorLink{},
+				Record:        &mecha_game_record.MechaGameSectorLink{},
 			},
 			{
 				Reference:     "steel-link-refinery-to-river",
 				FromSectorRef: "steel-sector-refinery",
 				ToSectorRef:   "steel-sector-river-crossing",
-				Record:        &mecha_record.MechaSectorLink{},
+				Record:        &mecha_game_record.MechaGameSectorLink{},
 			},
 			{
 				Reference:     "steel-link-river-to-refinery",
 				FromSectorRef: "steel-sector-river-crossing",
 				ToSectorRef:   "steel-sector-refinery",
-				Record:        &mecha_record.MechaSectorLink{},
+				Record:        &mecha_game_record.MechaGameSectorLink{},
 			},
 			{
 				Reference:     "steel-link-ridge-to-river",
 				FromSectorRef: "steel-sector-ridge",
 				ToSectorRef:   "steel-sector-river-crossing",
-				Record:        &mecha_record.MechaSectorLink{},
+				Record:        &mecha_game_record.MechaGameSectorLink{},
 			},
 			{
 				Reference:     "steel-link-river-to-ridge",
 				FromSectorRef: "steel-sector-river-crossing",
 				ToSectorRef:   "steel-sector-ridge",
-				Record:        &mecha_record.MechaSectorLink{},
+				Record:        &mecha_game_record.MechaGameSectorLink{},
 			},
 		},
-		MechaSquadConfigs: []harness.MechaSquadConfig{
+		MechaGameSquadConfigs: []harness.MechaGameSquadConfig{
 			{
 				Reference: "steel-squad-starter",
-				SquadType: mecha_record.SquadTypeStarter,
-				Record: &mecha_record.MechaSquad{
+				SquadType: mecha_game_record.SquadTypeStarter,
+				Record: &mecha_game_record.MechaGameSquad{
 					Name:        "Thunder Squad",
 					Description: "Standard issue starter squad for incoming Steel Thunder commanders.",
 				},
-				SquadMechConfigs: []harness.MechaSquadMechConfig{
+				SquadMechConfigs: []harness.MechaGameSquadMechConfig{
 					{
 						Reference:  "steel-mech-starter-1",
 						ChassisRef: "steel-chassis-viper",
-						Record:     &mecha_record.MechaSquadMech{Callsign: "Thunder-1"},
-						WeaponConfigRefs: []harness.MechaSquadMechWeaponRef{
+						Record:     &mecha_game_record.MechaGameSquadMech{Callsign: "Thunder-1"},
+						WeaponConfigRefs: []harness.MechaGameSquadMechWeaponRef{
 							{WeaponRef: "steel-weapon-light-pulse-cannon", SlotLocation: "right-arm"},
 						},
 					},
 					{
 						Reference:  "steel-mech-starter-2",
 						ChassisRef: "steel-chassis-ranger",
-						Record:     &mecha_record.MechaSquadMech{Callsign: "Thunder-2"},
-						WeaponConfigRefs: []harness.MechaSquadMechWeaponRef{
+						Record:     &mecha_game_record.MechaGameSquadMech{Callsign: "Thunder-2"},
+						WeaponConfigRefs: []harness.MechaGameSquadMechWeaponRef{
 							{WeaponRef: "steel-weapon-pulse-cannon", SlotLocation: "right-torso"},
 							{WeaponRef: "steel-weapon-rocket-pack", SlotLocation: "left-torso"},
 						},
@@ -1308,17 +1308,17 @@ func GameConfig() []harness.GameConfig {
 			},
 			{
 				Reference: "steel-squad-opponent",
-				SquadType: mecha_record.SquadTypeOpponent,
-				Record: &mecha_record.MechaSquad{
+				SquadType: mecha_game_record.SquadTypeOpponent,
+				Record: &mecha_game_record.MechaGameSquad{
 					Name:        "Alpha Squad",
 					Description: "An opponent squad template for Steel Thunder.",
 				},
-				SquadMechConfigs: []harness.MechaSquadMechConfig{
+				SquadMechConfigs: []harness.MechaGameSquadMechConfig{
 					{
 						Reference:  "steel-mech-opponent-1",
 						ChassisRef: "steel-chassis-ranger",
-						Record:     &mecha_record.MechaSquadMech{Callsign: "Opponent-1"},
-						WeaponConfigRefs: []harness.MechaSquadMechWeaponRef{
+						Record:     &mecha_game_record.MechaGameSquadMech{Callsign: "Opponent-1"},
+						WeaponConfigRefs: []harness.MechaGameSquadMechWeaponRef{
 							{WeaponRef: "steel-weapon-pulse-cannon", SlotLocation: "right-torso"},
 							{WeaponRef: "steel-weapon-rocket-pack", SlotLocation: "left-torso"},
 						},
@@ -1326,8 +1326,8 @@ func GameConfig() []harness.GameConfig {
 					{
 						Reference:  "steel-mech-opponent-2",
 						ChassisRef: "steel-chassis-viper",
-						Record:     &mecha_record.MechaSquadMech{Callsign: "Opponent-2"},
-						WeaponConfigRefs: []harness.MechaSquadMechWeaponRef{
+						Record:     &mecha_game_record.MechaGameSquadMech{Callsign: "Opponent-2"},
+						WeaponConfigRefs: []harness.MechaGameSquadMechWeaponRef{
 							{WeaponRef: "steel-weapon-light-pulse-cannon", SlotLocation: "right-arm"},
 						},
 					},
@@ -1335,7 +1335,7 @@ func GameConfig() []harness.GameConfig {
 			},
 		},
 	},
-	// Mecha email-only scenario — mirrors the adventure email-only pattern with a single
+	// MechaGame email-only scenario — mirrors the adventure email-only pattern with a single
 	// player and explicit DeliveryEmail delivery. Distinct from Steel Thunder (GameThree)
 	// which uses two players and no explicit delivery setting.
 	{
@@ -1350,26 +1350,26 @@ func GameConfig() []harness.GameConfig {
 			{
 				Reference:     "iron-image-join-game",
 				ImagePath:     ImageIronJoinGame,
-				TurnSheetType: mecha_record.MechaTurnSheetTypeJoinGame,
+				TurnSheetType: mecha_game_record.MechaGameTurnSheetTypeJoinGame,
 			},
 			{
 				Reference:     "iron-image-management",
 				ImagePath:     ImageIronOrders,
-				TurnSheetType: mecha_record.MechaTurnSheetTypeSquadManagement,
+				TurnSheetType: mecha_game_record.MechaGameTurnSheetTypeSquadManagement,
 			},
 			{
 				Reference:     "iron-image-orders",
 				ImagePath:     ImageIronOrders,
-				TurnSheetType: mecha_record.MechaTurnSheetTypeOrders,
+				TurnSheetType: mecha_game_record.MechaGameTurnSheetTypeOrders,
 			},
 		},
-		MechaChassisConfigs: []harness.MechaChassisConfig{
+		MechaGameChassisConfigs: []harness.MechaGameChassisConfig{
 			{
 				Reference: "iron-chassis-scout",
-				Record: &mecha_record.MechaChassis{
+				Record: &mecha_game_record.MechaGameChassis{
 					Name:            "Scout",
 					Description:     "A nimble light mech optimised for rapid advances and flanking manoeuvres.",
-					ChassisClass:    mecha_record.ChassisClassLight,
+					ChassisClass:    mecha_game_record.ChassisClassLight,
 					ArmorPoints:     72,
 					StructurePoints: 32,
 					HeatCapacity:    18,
@@ -1378,10 +1378,10 @@ func GameConfig() []harness.GameConfig {
 			},
 			{
 				Reference: "iron-chassis-sentinel",
-				Record: &mecha_record.MechaChassis{
+				Record: &mecha_game_record.MechaGameChassis{
 					Name:            "Sentinel",
 					Description:     "A dependable medium mech that holds ground while laying down sustained fire.",
-					ChassisClass:    mecha_record.ChassisClassMedium,
+					ChassisClass:    mecha_game_record.ChassisClassMedium,
 					ArmorPoints:     130,
 					StructurePoints: 65,
 					HeatCapacity:    28,
@@ -1389,90 +1389,90 @@ func GameConfig() []harness.GameConfig {
 				},
 			},
 		},
-		MechaWeaponConfigs: []harness.MechaWeaponConfig{
+		MechaGameWeaponConfigs: []harness.MechaGameWeaponConfig{
 			{
 				Reference: "iron-weapon-pulse-cannon",
-				Record: &mecha_record.MechaWeapon{
+				Record: &mecha_game_record.MechaGameWeapon{
 					Name:        "Pulse Cannon",
 					Description: "A reliable medium-range direct-fire energy weapon.",
 					Damage:      5,
 					HeatCost:    3,
-					RangeBand:   mecha_record.WeaponRangeBandMedium,
-					MountSize:   mecha_record.WeaponMountSizeMedium,
+					RangeBand:   mecha_game_record.WeaponRangeBandMedium,
+					MountSize:   mecha_game_record.WeaponMountSizeMedium,
 				},
 			},
 			{
 				Reference: "iron-weapon-chaingun",
-				Record: &mecha_record.MechaWeapon{
+				Record: &mecha_game_record.MechaGameWeapon{
 					Name:        "Chaingun",
 					Description: "A rapid-fire ballistic weapon effective against light armour at close range.",
 					Damage:      2,
 					HeatCost:    0,
-					RangeBand:   mecha_record.WeaponRangeBandShort,
-					MountSize:   mecha_record.WeaponMountSizeSmall,
+					RangeBand:   mecha_game_record.WeaponRangeBandShort,
+					MountSize:   mecha_game_record.WeaponMountSizeSmall,
 				},
 			},
 		},
-		MechaSectorConfigs: []harness.MechaSectorConfig{
+		MechaGameSectorConfigs: []harness.MechaGameSectorConfig{
 			{
 				Reference: "iron-sector-staging-area",
-				Record: &mecha_record.MechaSector{
+				Record: &mecha_game_record.MechaGameSector{
 					Name:             "Staging Area",
 					Description:      "A flat open zone where the squad assembles before pushing into contested ground.",
-					TerrainType:      mecha_record.SectorTerrainTypeOpen,
+					TerrainType:      mecha_game_record.SectorTerrainTypeOpen,
 					Elevation:        0,
 					IsStartingSector: true,
 				},
 			},
 			{
 				Reference: "iron-sector-industrial-district",
-				Record: &mecha_record.MechaSector{
+				Record: &mecha_game_record.MechaGameSector{
 					Name:        "Industrial District",
 					Description: "A sprawling complex of warehouses and storage tanks offering excellent cover.",
-					TerrainType: mecha_record.SectorTerrainTypeUrban,
+					TerrainType: mecha_game_record.SectorTerrainTypeUrban,
 					Elevation:   0,
 				},
 			},
 			{
 				Reference: "iron-sector-command-post",
-				Record: &mecha_record.MechaSector{
+				Record: &mecha_game_record.MechaGameSector{
 					Name:        "Forward Command Post",
 					Description: "A fortified command bunker on elevated ground — the primary objective.",
-					TerrainType: mecha_record.SectorTerrainTypeUrban,
+					TerrainType: mecha_game_record.SectorTerrainTypeUrban,
 					Elevation:   2,
 				},
 			},
 		},
-		MechaSectorLinkConfigs: []harness.MechaSectorLinkConfig{
+		MechaGameSectorLinkConfigs: []harness.MechaGameSectorLinkConfig{
 			{
 				Reference:     "iron-link-staging-to-industrial",
 				FromSectorRef: "iron-sector-staging-area",
 				ToSectorRef:   "iron-sector-industrial-district",
-				Record:        &mecha_record.MechaSectorLink{},
+				Record:        &mecha_game_record.MechaGameSectorLink{},
 			},
 			{
 				Reference:     "iron-link-industrial-to-staging",
 				FromSectorRef: "iron-sector-industrial-district",
 				ToSectorRef:   "iron-sector-staging-area",
-				Record:        &mecha_record.MechaSectorLink{},
+				Record:        &mecha_game_record.MechaGameSectorLink{},
 			},
 			{
 				Reference:     "iron-link-industrial-to-command",
 				FromSectorRef: "iron-sector-industrial-district",
 				ToSectorRef:   "iron-sector-command-post",
-				Record:        &mecha_record.MechaSectorLink{},
+				Record:        &mecha_game_record.MechaGameSectorLink{},
 			},
 			{
 				Reference:     "iron-link-command-to-industrial",
 				FromSectorRef: "iron-sector-command-post",
 				ToSectorRef:   "iron-sector-industrial-district",
-				Record:        &mecha_record.MechaSectorLink{},
+				Record:        &mecha_game_record.MechaGameSectorLink{},
 			},
 		},
-		MechaComputerOpponentConfigs: []harness.MechaComputerOpponentConfig{
+		MechaGameComputerOpponentConfigs: []harness.MechaGameComputerOpponentConfig{
 			{
 				Reference: "iron-computer-opponent",
-				Record: &mecha_record.MechaComputerOpponent{
+				Record: &mecha_game_record.MechaGameComputerOpponent{
 					Name:        "Iron Vanguard Defenders",
 					Description: "The entrenched garrison holding the Forward Command Post. Aggressive defenders with solid tactical IQ.",
 					Aggression:  7,
@@ -1480,28 +1480,28 @@ func GameConfig() []harness.GameConfig {
 				},
 			},
 		},
-		MechaSquadConfigs: []harness.MechaSquadConfig{
+		MechaGameSquadConfigs: []harness.MechaGameSquadConfig{
 			{
 				Reference: "iron-squad-starter",
-				SquadType: mecha_record.SquadTypeStarter,
-				Record: &mecha_record.MechaSquad{
+				SquadType: mecha_game_record.SquadTypeStarter,
+				Record: &mecha_game_record.MechaGameSquad{
 					Name:        "Vanguard Squad",
 					Description: "Standard issue starter squad for incoming Iron Vanguard commanders.",
 				},
-				SquadMechConfigs: []harness.MechaSquadMechConfig{
+				SquadMechConfigs: []harness.MechaGameSquadMechConfig{
 					{
 						Reference:  "iron-mech-starter-1",
 						ChassisRef: "iron-chassis-scout",
-						Record:     &mecha_record.MechaSquadMech{Callsign: "Vanguard-1"},
-						WeaponConfigRefs: []harness.MechaSquadMechWeaponRef{
+						Record:     &mecha_game_record.MechaGameSquadMech{Callsign: "Vanguard-1"},
+						WeaponConfigRefs: []harness.MechaGameSquadMechWeaponRef{
 							{WeaponRef: "iron-weapon-chaingun", SlotLocation: "right-arm"},
 						},
 					},
 					{
 						Reference:  "iron-mech-starter-2",
 						ChassisRef: "iron-chassis-sentinel",
-						Record:     &mecha_record.MechaSquadMech{Callsign: "Vanguard-2"},
-						WeaponConfigRefs: []harness.MechaSquadMechWeaponRef{
+						Record:     &mecha_game_record.MechaGameSquadMech{Callsign: "Vanguard-2"},
+						WeaponConfigRefs: []harness.MechaGameSquadMechWeaponRef{
 							{WeaponRef: "iron-weapon-pulse-cannon", SlotLocation: "right-torso"},
 							{WeaponRef: "iron-weapon-chaingun", SlotLocation: "left-arm"},
 						},
@@ -1510,17 +1510,17 @@ func GameConfig() []harness.GameConfig {
 			},
 			{
 				Reference: "iron-computer-opponent-squad",
-				SquadType: mecha_record.SquadTypeOpponent,
-				Record: &mecha_record.MechaSquad{
+				SquadType: mecha_game_record.SquadTypeOpponent,
+				Record: &mecha_game_record.MechaGameSquad{
 					Name:        "Defender Squad",
 					Description: "The garrison's reaction force, defending the Command Post.",
 				},
-				SquadMechConfigs: []harness.MechaSquadMechConfig{
+				SquadMechConfigs: []harness.MechaGameSquadMechConfig{
 					{
 						Reference:  "iron-defender-1",
 						ChassisRef: "iron-chassis-sentinel",
-						Record:     &mecha_record.MechaSquadMech{Callsign: "Defender-1"},
-						WeaponConfigRefs: []harness.MechaSquadMechWeaponRef{
+						Record:     &mecha_game_record.MechaGameSquadMech{Callsign: "Defender-1"},
+						WeaponConfigRefs: []harness.MechaGameSquadMechWeaponRef{
 							{WeaponRef: "iron-weapon-pulse-cannon", SlotLocation: "right-torso"},
 							{WeaponRef: "iron-weapon-chaingun", SlotLocation: "left-arm"},
 						},
@@ -1528,8 +1528,8 @@ func GameConfig() []harness.GameConfig {
 					{
 						Reference:  "iron-defender-2",
 						ChassisRef: "iron-chassis-scout",
-						Record:     &mecha_record.MechaSquadMech{Callsign: "Defender-2"},
-						WeaponConfigRefs: []harness.MechaSquadMechWeaponRef{
+						Record:     &mecha_game_record.MechaGameSquadMech{Callsign: "Defender-2"},
+						WeaponConfigRefs: []harness.MechaGameSquadMechWeaponRef{
 							{WeaponRef: "iron-weapon-chaingun", SlotLocation: "right-arm"},
 						},
 					},
