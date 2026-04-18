@@ -117,7 +117,7 @@ func TestMechaGameJoinGameProcessor_GenerateTurnSheet_HTMLContainsInputElements(
 		"should contain commander_name input element")
 	require.True(t, strings.Contains(htmlStr, `type="email"`),
 		"email field should use type=email")
-	require.True(t, strings.Contains(htmlStr, "Your MechaGame Commander"),
+	require.True(t, strings.Contains(htmlStr, "Your Mecha Commander"),
 		"should contain mecha commander section title")
 	require.False(t, strings.Contains(htmlStr, "form-input-line"),
 		"should not contain non-interactive form-input-line divs")
