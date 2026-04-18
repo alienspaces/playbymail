@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { mount, shallowMount } from '@vue/test-utils';
-import { createPinia, setActivePinia, storeToRefs } from 'pinia';
+import { createPinia, setActivePinia } from 'pinia';
 import StudioChassisView from './StudioChassisView.vue';
 import {
   createStudioResourceMountHelper,
