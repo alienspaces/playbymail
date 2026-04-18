@@ -92,7 +92,7 @@
             <div class="form-field">
               <label>Quantity</label>
               <input type="number" v-model.number="form.quantity" min="1" required />
-              <span class="form-field-hint">Minimum number required (used for in_inventory and dead_at_location conditions)</span>
+              <FieldHint>Minimum number required (used for in_inventory and dead_at_location conditions)</FieldHint>
             </div>
 
             <div v-if="modalError" class="modal-error">{{ modalError }}</div>
@@ -128,6 +128,7 @@ import PageHeader from '../../../components/PageHeader.vue';
 import GameContext from '../../../components/GameContext.vue';
 import TableActions from '../../../components/TableActions.vue';
 import TablePagination from '../../../components/TablePagination.vue';
+import FieldHint from '../../../components/FieldHint.vue';
 
 const requirementsStore = useAdventureGameLocationLinkRequirementsStore();
 const locationLinksStore = useAdventureGameLocationLinksStore();
@@ -343,11 +344,6 @@ function getActions(row) {
   background: var(--color-bg);
   color: var(--color-text);
   font-size: var(--font-size-base);
-}
-
-.form-field-hint {
-  font-size: var(--font-size-xs);
-  color: var(--color-text-muted);
 }
 
 .modal-error {

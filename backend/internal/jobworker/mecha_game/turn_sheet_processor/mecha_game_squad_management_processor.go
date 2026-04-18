@@ -135,6 +135,26 @@ func (p *MechaGameSquadManagementProcessor) ProcessTurnSheetResponse(
 				}
 			}
 
+			// Load the chassis once so we can validate proposed configs
+			// against the slot budget before applying each swap.
+			swapChassis, err := p.Domain.GetMechaGameChassisRec(mechInst.MechaGameChassisID, nil)
+			if err != nil {
+				l.Warn("failed to load chassis for mech >%s< weapon swaps: %v", mechInst.Callsign, err)
+				swapChassis = nil
+			}
+
+			// Cache the weapons we already have mounted so the loadout
+			// validator does not have to re-fetch them for every swap.
+			weaponCache := make(map[string]*mecha_game_record.MechaGameWeapon, len(weaponConfig)+len(order.WeaponSwaps))
+			for _, entry := range weaponConfig {
+				if _, ok := weaponCache[entry.WeaponID]; ok {
+					continue
+				}
+				if w, err := p.Domain.GetMechaGameWeaponRec(entry.WeaponID, nil); err == nil {
+					weaponCache[entry.WeaponID] = w
+				}
+			}
+
 			for _, swap := range order.WeaponSwaps {
 				if swap.SlotLocation == "" || swap.NewWeaponID == "" {
 					continue
@@ -145,22 +165,42 @@ func (p *MechaGameSquadManagementProcessor) ProcessTurnSheetResponse(
 						swap.NewWeaponID, mechInst.Callsign, err)
 					continue
 				}
+				weaponCache[swap.NewWeaponID] = newWeapon
 
+				// Compute the proposed config for this swap without mutating
+				// the committed one yet — if it overflows the chassis slots
+				// we skip the swap and warn the player.
+				proposed := make([]mecha_game_record.WeaponConfigEntry, len(weaponConfig))
+				copy(proposed, weaponConfig)
 				slotFound := false
-				for i, entry := range weaponConfig {
+				for i, entry := range proposed {
 					if entry.SlotLocation == swap.SlotLocation {
-						weaponConfig[i].WeaponID = swap.NewWeaponID
+						proposed[i].WeaponID = swap.NewWeaponID
 						slotFound = true
 						break
 					}
 				}
 				if !slotFound {
-					weaponConfig = append(weaponConfig, mecha_game_record.WeaponConfigEntry{
+					proposed = append(proposed, mecha_game_record.WeaponConfigEntry{
 						WeaponID:     swap.NewWeaponID,
 						SlotLocation: swap.SlotLocation,
 					})
 				}
 
+				if swapChassis != nil {
+					if err := domain.ValidateWeaponLoadoutFits(swapChassis, proposed, weaponCache); err != nil {
+						l.Info("rejecting weapon swap on mech >%s<: %v", mechInst.Callsign, err)
+						events = append(events, turnsheet.TurnEvent{
+							Category: turnsheet.TurnEventCategorySystem,
+							Icon:     turnsheet.TurnEventIconSystem,
+							Message: fmt.Sprintf("%s: cannot install %s in %s slot — %v.",
+								mechInst.Callsign, newWeapon.Name, swap.SlotLocation, err),
+						})
+						continue
+					}
+				}
+
+				weaponConfig = proposed
 				spCost++
 				mechInst.IsRefitting = true
 				mechChanged = true

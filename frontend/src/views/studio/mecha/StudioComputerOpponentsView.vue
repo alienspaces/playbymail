@@ -36,12 +36,12 @@
               <div class="form-group half">
                 <label>Aggression (1–10)</label>
                 <input v-model.number="modalForm.aggression" type="number" min="1" max="10" />
-                <p class="field-hint">1 = defensive, 10 = all-out assault</p>
+                <FieldHint>1 = defensive, 10 = all-out assault</FieldHint>
               </div>
               <div class="form-group half">
                 <label>IQ (1–10)</label>
                 <input v-model.number="modalForm.iq" type="number" min="1" max="10" />
-                <p class="field-hint">1 = predictable, 10 = expert tactics</p>
+                <FieldHint>1 = predictable, 10 = expert tactics</FieldHint>
               </div>
             </div>
             <div class="modal-actions">
@@ -71,6 +71,7 @@ import PageHeader from '../../../components/PageHeader.vue'
 import GameContext from '../../../components/GameContext.vue'
 import TableActions from '../../../components/TableActions.vue'
 import TablePagination from '../../../components/TablePagination.vue'
+import FieldHint from '../../../components/FieldHint.vue'
 
 const store = useMechaGameComputerOpponentsStore()
 const gamesStore = useGamesStore()
@@ -155,7 +156,6 @@ function getActions(row) {
 .form-group textarea { resize: vertical; }
 .form-row { display: flex; gap: var(--space-sm); }
 .form-row .half { flex: 1; }
-.field-hint { font-size: var(--font-size-sm, 0.875rem); color: var(--color-text-muted); margin: var(--space-xs) 0 0; }
 .required { color: var(--color-danger); }
 .error { color: var(--color-warning-dark); background: var(--color-warning-light); padding: var(--space-sm) var(--space-md); border-radius: var(--radius-sm); border: 1px solid var(--color-warning); margin-top: var(--space-md); }
 .error p { margin: 0; }

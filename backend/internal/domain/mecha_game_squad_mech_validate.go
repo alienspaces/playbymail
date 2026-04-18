@@ -13,12 +13,18 @@ type validateMechaGameSquadMechArgs struct {
 
 func (m *Domain) validateMechaGameSquadMechRecForCreate(rec *mecha_game_record.MechaGameSquadMech) error {
 	args := &validateMechaGameSquadMechArgs{nextRec: rec}
-	return validateMechaGameSquadMechRec(args, false)
+	if err := validateMechaGameSquadMechRec(args, false); err != nil {
+		return err
+	}
+	return m.validateMechaGameSquadMechLoadout(rec)
 }
 
 func (m *Domain) validateMechaGameSquadMechRecForUpdate(currRec, nextRec *mecha_game_record.MechaGameSquadMech) error {
 	args := &validateMechaGameSquadMechArgs{currRec: currRec, nextRec: nextRec}
-	return validateMechaGameSquadMechRec(args, true)
+	if err := validateMechaGameSquadMechRec(args, true); err != nil {
+		return err
+	}
+	return m.validateMechaGameSquadMechLoadout(nextRec)
 }
 
 func validateMechaGameSquadMechRec(args *validateMechaGameSquadMechArgs, requireID bool) error {
@@ -50,5 +56,37 @@ func validateMechaGameSquadMechRec(args *validateMechaGameSquadMechArgs, require
 		return err
 	}
 
+	return nil
+}
+
+// validateMechaGameSquadMechLoadout ensures the mech's weapon config fits the
+// chassis slot budget. An empty config is always allowed (a freshly created
+// mech may be set up before any weapons are assigned).
+func (m *Domain) validateMechaGameSquadMechLoadout(rec *mecha_game_record.MechaGameSquadMech) error {
+	if rec == nil || len(rec.WeaponConfig) == 0 {
+		return nil
+	}
+
+	chassisRec, err := m.GetMechaGameChassisRec(rec.MechaGameChassisID, nil)
+	if err != nil {
+		return err
+	}
+
+	weaponsByID := make(map[string]*mecha_game_record.MechaGameWeapon, len(rec.WeaponConfig))
+	for _, entry := range rec.WeaponConfig {
+		if _, ok := weaponsByID[entry.WeaponID]; ok {
+			continue
+		}
+		w, err := m.GetMechaGameWeaponRec(entry.WeaponID, nil)
+		if err != nil {
+			return err
+		}
+		weaponsByID[entry.WeaponID] = w
+	}
+
+	items := MountablesFromWeaponConfig(rec.WeaponConfig, weaponsByID)
+	if err := fitsLoadout(LoadoutCapacityFromChassis(chassisRec), items); err != nil {
+		return InvalidField(mecha_game_record.FieldMechaGameSquadMechWeaponConfig, "", err.Error())
+	}
 	return nil
 }

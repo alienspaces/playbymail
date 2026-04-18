@@ -16,6 +16,9 @@ type MechaGameChassisResponseData struct {
 	StructurePoints int        `json:"structure_points"`
 	HeatCapacity    int        `json:"heat_capacity"`
 	Speed           int        `json:"speed"`
+	SmallSlots      int        `json:"small_slots"`
+	MediumSlots     int        `json:"medium_slots"`
+	LargeSlots      int        `json:"large_slots"`
 	CreatedAt       time.Time  `json:"created_at"`
 	UpdatedAt       *time.Time `json:"updated_at,omitempty"`
 	DeletedAt       *time.Time `json:"deleted_at,omitempty"`
@@ -42,6 +45,9 @@ type MechaGameChassisRequest struct {
 	StructurePoints int    `json:"structure_points,omitempty"`
 	HeatCapacity    int    `json:"heat_capacity,omitempty"`
 	Speed           int    `json:"speed,omitempty"`
+	SmallSlots      int    `json:"small_slots,omitempty"`
+	MediumSlots     int    `json:"medium_slots,omitempty"`
+	LargeSlots      int    `json:"large_slots,omitempty"`
 }
 
 type MechaGameChassisQueryParams struct {

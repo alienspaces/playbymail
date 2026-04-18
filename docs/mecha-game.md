@@ -35,24 +35,41 @@ Game
 
 Blueprint stats for a mech body type. All mechs in the game are based on a chassis definition.
 
-| Field | Description |
-|---|---|
-| Name | Display name (e.g. "Raven Light", "Enforcer") |
-| Description | Narrative description |
-| Chassis class | Weight class — determines general role and capability |
-| Armor points | Maximum armor; absorbed before structure takes damage; must be greater than 0 |
-| Structure points | Maximum structure; the mech is destroyed when this reaches 0; must be greater than 0 |
-| Heat capacity | Maximum heat the mech can accumulate before shutting down; must be greater than 0 |
-| Speed | Movement capability; must be greater than 0 |
+| Field | Required | Description |
+|---|---|---|
+| Name | yes | Display name (e.g. "Raven Light", "Enforcer") |
+| Description | no | Narrative description |
+| Chassis class | yes | Weight class — determines general role and capability |
+| Armor points | yes | Maximum armor; absorbed before structure takes damage; 1–1000 |
+| Structure points | yes | Maximum structure; the mech is destroyed when this reaches 0; 1–1000 |
+| Heat capacity | yes | Maximum heat the mech can accumulate before shutting down; 1–200 |
+| Speed | yes | Sector hops allowed per turn; 1–10 (long-range weapons reach 2 hops, so values above ~5 are only useful for rapid repositioning) |
+| Small slots | yes | Number of small hardpoints on the chassis; 0–10 |
+| Medium slots | yes | Number of medium hardpoints on the chassis; 0–10 |
+| Large slots | yes | Number of large hardpoints on the chassis; 0–10 |
+
+A chassis must have at least one slot in total. See **Loadout slots** below for how slots are consumed.
 
 **Chassis class values:**
 
-| Class | Description |
-|---|---|
-| `light` | Fast, lightly armoured |
-| `medium` | Balanced performance |
-| `heavy` | Slower, heavily armoured |
-| `assault` | Maximum armour and firepower, minimal speed |
+| Class | Description | Default slots (small / medium / large) |
+|---|---|---|
+| `light` | Fast, lightly armoured | 2 / 1 / 0 |
+| `medium` | Balanced performance | 2 / 2 / 1 |
+| `heavy` | Slower, heavily armoured | 2 / 2 / 2 |
+| `assault` | Maximum armour and firepower, minimal speed | 2 / 3 / 3 |
+
+The class defaults are applied whenever a new chassis is created without explicit slot values (designer UI, API, and test harness all share the same defaults). Designers are free to override them.
+
+**Loadout slots:**
+
+Every mounted item (today: weapons; future: equipment) consumes one slot on the chassis. Items are placed with **upward spillover**:
+
+- A **large** item can only use a large slot.
+- A **medium** item prefers a medium slot, spilling into a large slot if mediums are full.
+- A **small** item prefers a small slot, spilling into medium, then large.
+
+This keeps the slot model forgiving (generous medium/large counts accommodate small items naturally) while still preventing a light chassis from carrying a large weapon. The fit check runs when a squad mech is created or updated, and again on every in-game weapon swap — swaps that would overflow the chassis are refused and reported back to the player.
 
 **Requirement:** at least one chassis must exist before a run can be created.
 
@@ -62,14 +79,14 @@ Blueprint stats for a mech body type. All mechs in the game are based on a chass
 
 Weapon definitions used in mech loadouts and refit orders.
 
-| Field | Description |
-|---|---|
-| Name | Display name (e.g. "AC/10", "Medium Laser", "LRM-20") |
-| Description | Narrative description |
-| Damage | Damage dealt per hit; must be greater than 0 |
-| Heat cost | Heat added to the mech each time the weapon fires; can be 0 |
-| Range band | Effective engagement distance (see range band values below) |
-| Mount size | Physical size of the weapon mount required |
+| Field | Required | Description |
+|---|---|---|
+| Name | yes | Display name (e.g. "AC/10", "Medium Laser", "LRM-20") |
+| Description | no | Narrative description |
+| Damage | yes | Damage dealt per hit; 1–20 |
+| Heat cost | yes | Heat added to the mech each time the weapon fires, even on a miss; 0–20 |
+| Range band | yes | Effective engagement distance (see range band values below) |
+| Mount size | yes | Mount size category (`small`, `medium`, `large`). Must fit an available slot on the chassis — see the **Loadout slots** subsection under **Chassis** for the upward-spillover rule |
 
 **Range band values** — determines whether a weapon can fire at a given distance:
 
@@ -95,14 +112,14 @@ Long-range weapons are standoff weapons — they cannot fire into the same secto
 
 Map areas that make up the battlefield. The map is a graph of sectors connected by sector links. Mechs occupy one sector at a time and move across connected sectors each turn.
 
-| Field | Description |
-|---|---|
-| Name | Display name (e.g. "Alpha Depot", "Urban Centre", "Ridge Line") |
-| Description | Narrative description |
-| Terrain type | Terrain classification (see terrain type values below) |
-| Elevation | Relative height; used by the AI for tactical positioning (higher elevation is preferred by defensive opponents) |
-| Cover modifier | Applied to hit chance for attackers targeting mechs in this sector; negative values make mechs harder to hit; default 0 |
-| Starting sector | If enabled, this is a depot sector — squads spawn here and management sheets are issued when mechs are present |
+| Field | Required | Description |
+|---|---|---|
+| Name | yes | Display name (e.g. "Alpha Depot", "Urban Centre", "Ridge Line") |
+| Description | no | Narrative description |
+| Terrain type | yes | Terrain classification (see terrain type values below); defaults to `open` |
+| Elevation | no | Relative height; −10 to 10; used by the AI for tactical positioning (higher elevation is preferred by defensive opponents); default 0 |
+| Cover modifier | no | Added directly to attacker hit chance for mechs in this sector; −50 to 50 (step 5 in the designer UI); negative values make mechs harder to hit; default 0 |
+| Starting sector | no | If enabled, this is a depot sector — squads spawn here and management sheets are issued when mechs are present |
 
 **Terrain type values:**
 

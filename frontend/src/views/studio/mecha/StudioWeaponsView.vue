@@ -27,19 +27,27 @@
             <div class="form-group">
               <label>Name <span class="required">*</span></label>
               <input v-model="modalForm.name" required maxlength="100" autocomplete="off" />
+              <FieldHint>Display name for this weapon (e.g. "AC/10", "Medium Laser", "LRM-20").</FieldHint>
             </div>
             <div class="form-group">
               <label>Description</label>
               <textarea v-model="modalForm.description" rows="3" maxlength="4096"></textarea>
+              <FieldHint>Narrative description shown to designers and players.</FieldHint>
             </div>
             <div class="form-row">
               <div class="form-group half">
                 <label>Damage <span class="required">*</span></label>
-                <input v-model.number="modalForm.damage" type="number" min="1" required />
+                <select v-model.number="modalForm.damage" required>
+                  <option v-for="v in damageOptions" :key="v" :value="v">{{ v }}</option>
+                </select>
+                <FieldHint>Damage dealt per hit (1–20). Armour absorbs damage first; anything left over eats into structure.</FieldHint>
               </div>
               <div class="form-group half">
                 <label>Heat Cost <span class="required">*</span></label>
-                <input v-model.number="modalForm.heat_cost" type="number" min="0" required />
+                <select v-model.number="modalForm.heat_cost" required>
+                  <option v-for="v in heatCostOptions" :key="v" :value="v">{{ v }}</option>
+                </select>
+                <FieldHint>Heat added to the firing mech each time this weapon fires (0–20), even on a miss. Overheating shuts the mech down.</FieldHint>
               </div>
             </div>
             <div class="form-row">
@@ -50,6 +58,7 @@
                   <option value="medium">Medium (versatile)</option>
                   <option value="long">Long (standoff)</option>
                 </select>
+                <FieldHint>Engagement distance. Short fires in the same sector only; medium fires same sector or 1 hop; long fires 1–2 hops but cannot fire in the same sector.</FieldHint>
               </div>
               <div class="form-group half">
                 <label>Mount Size <span class="required">*</span></label>
@@ -58,6 +67,7 @@
                   <option value="medium">Medium</option>
                   <option value="large">Large</option>
                 </select>
+                <FieldHint>Mount size category (small / medium / large). Must fit an available slot on the chassis — small weapons can spill into medium or large slots, medium weapons into large, but large weapons only fit large slots.</FieldHint>
               </div>
             </div>
             <div class="modal-actions">
@@ -77,7 +87,7 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useMechaGameWeaponsStore } from '../../../stores/mechaGameWeapons'
 import { useGamesStore } from '../../../stores/games'
@@ -87,6 +97,7 @@ import PageHeader from '../../../components/PageHeader.vue'
 import GameContext from '../../../components/GameContext.vue'
 import TableActions from '../../../components/TableActions.vue'
 import TablePagination from '../../../components/TablePagination.vue'
+import FieldHint from '../../../components/FieldHint.vue'
 
 const store = useMechaGameWeaponsStore()
 const gamesStore = useGamesStore()
@@ -102,16 +113,33 @@ const columns = [
 
 const showModal = ref(false)
 const modalMode = ref('create')
-const modalForm = ref({ name: '', description: '', damage: null, heat_cost: null, range_band: 'medium', mount_size: 'medium' })
+const modalForm = ref({ name: '', description: '', damage: 5, heat_cost: 3, range_band: 'medium', mount_size: 'medium' })
 const modalError = ref('')
 const showDeleteModal = ref(false)
 const toDelete = ref(null)
+
+// Build a list of numeric options from `min` to `max` stepping by `step`. If
+// `current` is a value within the range but not on the step grid (e.g. a
+// legacy record that predates the dropdown), it is inserted so the <select>
+// can display it in edit mode without silently changing the data.
+function buildOptions(min, max, step, current) {
+  const opts = []
+  for (let v = min; v <= max; v += step) opts.push(v)
+  if (typeof current === 'number' && current >= min && current <= max && !opts.includes(current)) {
+    opts.push(current)
+    opts.sort((a, b) => a - b)
+  }
+  return opts
+}
+
+const damageOptions = computed(() => buildOptions(1, 20, 1, modalForm.value.damage))
+const heatCostOptions = computed(() => buildOptions(0, 20, 1, modalForm.value.heat_cost))
 
 watch(() => selectedGame.value, (g) => { if (g) store.fetchMechaGameWeapons(g.id) }, { immediate: true })
 
 function openCreate() {
   modalMode.value = 'create'
-  modalForm.value = { name: '', description: '', damage: null, heat_cost: null, range_band: 'medium', mount_size: 'medium' }
+  modalForm.value = { name: '', description: '', damage: 5, heat_cost: 3, range_band: 'medium', mount_size: 'medium' }
   modalError.value = ''
   showModal.value = true
 }

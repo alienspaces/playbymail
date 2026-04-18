@@ -35,13 +35,17 @@
             <div class="form-row">
               <div class="form-group half">
                 <label>Elevation</label>
-                <input v-model.number="modalForm.elevation" type="number" min="-10" max="10" />
-                <p class="field-hint">Higher elevation provides a tactical advantage.</p>
+                <select v-model.number="modalForm.elevation">
+                  <option v-for="v in elevationOptions" :key="v" :value="v">{{ v }}</option>
+                </select>
+                <FieldHint>Relative height (-10 to 10). Higher elevation is preferred by defensive AI opponents and used as a tie-breaker when picking cover.</FieldHint>
               </div>
               <div class="form-group half">
                 <label>Cover Modifier</label>
-                <input v-model.number="modalForm.cover_modifier" type="number" min="-50" max="50" />
-                <p class="field-hint">Applied to hit chance (negative = harder to hit).</p>
+                <select v-model.number="modalForm.cover_modifier">
+                  <option v-for="v in coverModifierOptions" :key="v" :value="v">{{ formatSigned(v) }}</option>
+                </select>
+                <FieldHint>Added directly to attacker hit chance (-50 to +50, step 5). Negative = harder to hit; 0 = no effect; positive = easier to hit.</FieldHint>
               </div>
             </div>
             <div class="form-group checkbox-group">
@@ -77,6 +81,7 @@ import PageHeader from '../../../components/PageHeader.vue'
 import GameContext from '../../../components/GameContext.vue'
 import TableActions from '../../../components/TableActions.vue'
 import TablePagination from '../../../components/TablePagination.vue'
+import FieldHint from '../../../components/FieldHint.vue'
 
 const store = useMechaGameSectorsStore()
 const gamesStore = useGamesStore()
@@ -100,6 +105,29 @@ const modalForm = ref({ name: '', description: '', elevation: 0, cover_modifier:
 const modalError = ref('')
 const showDeleteModal = ref(false)
 const toDelete = ref(null)
+
+// Build a list of numeric options from `min` to `max` stepping by `step`. If
+// `current` is a value within the range but not on the step grid (e.g. a
+// legacy record that predates the dropdown), it is inserted so the <select>
+// can display it in edit mode without silently changing the data.
+function buildOptions(min, max, step, current) {
+  const opts = []
+  for (let v = min; v <= max; v += step) opts.push(v)
+  if (typeof current === 'number' && current >= min && current <= max && !opts.includes(current)) {
+    opts.push(current)
+    opts.sort((a, b) => a - b)
+  }
+  return opts
+}
+
+// Render signed numeric labels so cover-modifier polarity is unambiguous
+// (e.g. "+5" for easier-to-hit, "-5" for harder-to-hit).
+function formatSigned(v) {
+  return v > 0 ? `+${v}` : String(v)
+}
+
+const elevationOptions = computed(() => buildOptions(-10, 10, 1, modalForm.value.elevation))
+const coverModifierOptions = computed(() => buildOptions(-50, 50, 5, modalForm.value.cover_modifier))
 
 watch(() => selectedGame.value, (g) => { if (g) store.fetchMechaGameSectors(g.id) }, { immediate: true })
 
@@ -167,7 +195,6 @@ function getActions(row) {
 .form-group textarea { resize: vertical; }
 .form-row { display: flex; gap: var(--space-sm); }
 .form-row .half { flex: 1; }
-.field-hint { font-size: var(--font-size-sm, 0.875rem); color: var(--color-text-muted); margin: var(--space-xs) 0 0; }
 .checkbox-group { margin-top: var(--space-sm); }
 .checkbox-label { display: flex; align-items: center; gap: var(--space-sm); cursor: pointer; font-weight: normal; }
 .checkbox-label input[type="checkbox"] { width: auto; }

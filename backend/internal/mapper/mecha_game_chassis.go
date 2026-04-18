@@ -44,6 +44,15 @@ func MechaGameChassisRequestToRecord(l logger.Logger, r *http.Request, rec *mech
 		if rec.Speed == 0 {
 			rec.Speed = 3
 		}
+		rec.SmallSlots = req.SmallSlots
+		rec.MediumSlots = req.MediumSlots
+		rec.LargeSlots = req.LargeSlots
+		// Apply per-class defaults only when the client sent no slot values at
+		// all. A client that intentionally sets (say) large_slots=0 on a light
+		// mech still gets that respected.
+		if rec.SmallSlots == 0 && rec.MediumSlots == 0 && rec.LargeSlots == 0 {
+			rec.SmallSlots, rec.MediumSlots, rec.LargeSlots = mecha_game_record.DefaultSlotsForChassisClass(rec.ChassisClass)
+		}
 	default:
 		return nil, fmt.Errorf("unsupported HTTP method")
 	}
@@ -63,6 +72,9 @@ func MechaGameChassisRecordToResponseData(l logger.Logger, rec *mecha_game_recor
 		StructurePoints: rec.StructurePoints,
 		HeatCapacity:    rec.HeatCapacity,
 		Speed:           rec.Speed,
+		SmallSlots:      rec.SmallSlots,
+		MediumSlots:     rec.MediumSlots,
+		LargeSlots:      rec.LargeSlots,
 		CreatedAt:       rec.CreatedAt,
 		UpdatedAt:       nulltime.ToTimePtr(rec.UpdatedAt),
 		DeletedAt:       nulltime.ToTimePtr(rec.DeletedAt),

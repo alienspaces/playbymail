@@ -208,6 +208,9 @@ func applyMechaGameChassisDefaults(rec *mecha_game_record.MechaGameChassis) *mec
 	if rec.Speed == 0 {
 		rec.Speed = 3
 	}
+	if rec.SmallSlots == 0 && rec.MediumSlots == 0 && rec.LargeSlots == 0 {
+		rec.SmallSlots, rec.MediumSlots, rec.LargeSlots = mecha_game_record.DefaultSlotsForChassisClass(rec.ChassisClass)
+	}
 	return rec
 }
 

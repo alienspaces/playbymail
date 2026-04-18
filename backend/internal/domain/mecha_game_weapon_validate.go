@@ -66,13 +66,21 @@ func validateMechaGameWeaponRec(args *validateMechaGameWeaponArgs, requireID boo
 		return InvalidField(mecha_game_record.FieldMechaGameWeaponMountSize, rec.MountSize, "must be one of: small, medium, large")
 	}
 
-	if rec.Damage <= 0 {
-		return InvalidField(mecha_game_record.FieldMechaGameWeaponDamage, "", "damage must be greater than 0")
+	if rec.Damage <= 0 || rec.Damage > maxWeaponDamage {
+		return InvalidField(mecha_game_record.FieldMechaGameWeaponDamage, "", "damage must be between 1 and 20")
 	}
 
-	if rec.HeatCost < 0 {
-		return InvalidField(mecha_game_record.FieldMechaGameWeaponHeatCost, "", "heat_cost must be >= 0")
+	if rec.HeatCost < 0 || rec.HeatCost > maxWeaponHeatCost {
+		return InvalidField(mecha_game_record.FieldMechaGameWeaponHeatCost, "", "heat_cost must be between 0 and 20")
 	}
 
 	return nil
 }
+
+// Upper bounds on weapon stats. These keep designer input within playable
+// ranges relative to chassis armour, structure, and heat capacity (see
+// mecha_game_chassis_validate.go).
+const (
+	maxWeaponDamage   = 20
+	maxWeaponHeatCost = 20
+)

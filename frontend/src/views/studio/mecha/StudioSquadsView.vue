@@ -78,10 +78,10 @@
                 <option value="opponent">Opponent</option>
                 <option value="starter">Starter</option>
               </select>
-              <p class="field-hint">
+              <FieldHint>
                 <span v-if="modalForm.squad_type === 'starter'">This squad is cloned for every player who joins the game. Only one starter squad is allowed per game.</span>
                 <span v-else>This squad template is randomly assigned to a computer opponent when the game starts.</span>
-              </p>
+              </FieldHint>
             </div>
             <div class="modal-actions">
               <button type="submit">{{ modalMode === 'create' ? 'Create' : 'Save' }}</button>
@@ -143,6 +143,7 @@ import PageHeader from '../../../components/PageHeader.vue'
 import GameContext from '../../../components/GameContext.vue'
 import TableActions from '../../../components/TableActions.vue'
 import TablePagination from '../../../components/TablePagination.vue'
+import FieldHint from '../../../components/FieldHint.vue'
 
 const store = useMechaGameSquadsStore()
 const mechsStore = useMechaGameSquadMechsStore()
@@ -328,7 +329,6 @@ async function handleMechDelete() {
 .form-group label { display: block; margin-bottom: var(--space-xs); font-weight: var(--font-weight-semibold); }
 .form-group input, .form-group textarea, .form-group select { width: 100%; padding: var(--space-sm); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--font-size-base); }
 .form-group textarea { resize: vertical; }
-.field-hint { font-size: var(--font-size-sm, 0.875rem); color: var(--color-text-muted); margin: var(--space-xs) 0 0; }
 .required { color: var(--color-danger); }
 .error { color: var(--color-warning-dark); background: var(--color-warning-light); padding: var(--space-sm) var(--space-md); border-radius: var(--radius-sm); border: 1px solid var(--color-warning); margin-top: var(--space-md); }
 .error p { margin: 0; }
