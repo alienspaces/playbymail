@@ -3,7 +3,6 @@ package turnsheet_test
 import (
 	"context"
 	"encoding/json"
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -117,9 +116,16 @@ func TestMechaGameSquadManagementProcessor_GenerateTurnSheet_ContainsDepotInfo(t
 				CurrentStructure: 28,
 				MaxStructure:     32,
 				StructureDamage:  4,
+				CurrentHeat:      3,
+				HeatCapacity:     18,
 				Weapons: []turnsheet.MechWeaponSlot{
 					{SlotLocation: "left-arm", CurrentWeaponID: "wpn-1", CurrentWeaponName: "Light Pulse Cannon"},
 				},
+				Equipment: []turnsheet.MechEquipmentEntry{
+					{Name: "Heat Sink", EffectKind: "heat_sink", Magnitude: 3, HeatCost: 0, MountSize: "small", SlotLocation: "right-torso"},
+				},
+				AmmoRemaining: 4,
+				AmmoCapacity:  8,
 			},
 			{
 				MechInstanceID:   "mech-2",
@@ -133,6 +139,7 @@ func TestMechaGameSquadManagementProcessor_GenerateTurnSheet_ContainsDepotInfo(t
 		},
 		WeaponCatalog: []turnsheet.CatalogWeapon{
 			{WeaponID: "cat-1", Name: "Light Pulse Cannon", Damage: 3, HeatCost: 1, RangeBand: "short"},
+			{WeaponID: "cat-2", Name: "Rocket Pack", Damage: 8, HeatCost: 3, RangeBand: "short", AmmoCapacity: 2},
 		},
 	}
 
@@ -145,9 +152,17 @@ func TestMechaGameSquadManagementProcessor_GenerateTurnSheet_ContainsDepotInfo(t
 	require.NotEmpty(t, html)
 
 	htmlStr := string(html)
-	require.True(t, strings.Contains(htmlStr, "Hammer"), "should contain mech callsign")
-	require.True(t, strings.Contains(htmlStr, "Anvil"), "should contain mech callsign")
-	require.True(t, strings.Contains(htmlStr, "Light Pulse Cannon"), "should contain catalog weapon name")
+	require.Contains(t, htmlStr, "Hammer", "should contain mech callsign")
+	require.Contains(t, htmlStr, "Anvil", "should contain mech callsign")
+	require.Contains(t, htmlStr, "Light Pulse Cannon", "should contain catalog weapon name")
+	// Heat + ammo readouts on the stat-summary row.
+	require.Contains(t, htmlStr, "3/18", "should render heat current/capacity in stat summary")
+	require.Contains(t, htmlStr, "4/8", "should render ammo current/capacity in stat summary")
+	// Read-only equipment table beside the weapons section.
+	require.Contains(t, htmlStr, "Heat Sink", "should render equipment name")
+	require.Contains(t, htmlStr, "heat_sink", "should render equipment effect kind")
+	// Catalog AMMO column: dash for non-ammo weapons, value for ammo weapons.
+	require.Contains(t, htmlStr, "Rocket Pack", "should render ammo-consuming catalog weapon")
 }
 
 func TestMechaGameSquadManagementProcessor_ScanTurnSheet_EmptyImageReturnsError(t *testing.T) {

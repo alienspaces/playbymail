@@ -37,8 +37,59 @@
         background-color: rgba(255, 255, 255, 0.80);
     }
 
-    .mech-management-entry.not-at-depot {
-        opacity: 0.65;
+    /* Compact single-row summary for mechs that are not at a depot.
+       These mechs can never receive repair or refit orders on this
+       sheet, so rendering a full card duplicates status already shown
+       on the Orders turn sheet. The compact row keeps roster-wide
+       awareness (armor / structure / heat / ammo) but collapses to a
+       single wrapping flex row instead of a stacked card. */
+    .mech-compact {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        gap: 4px 12px;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        padding: 6px 10px;
+        margin-bottom: 6px;
+        background-color: rgba(255, 255, 255, 0.70);
+    }
+
+    .mech-compact .mech-callsign {
+        font-weight: 700;
+        font-size: 13px;
+        color: #1a1a2e;
+    }
+
+    .mech-compact-stats {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 2px 10px;
+        font-size: 11px;
+        color: #555;
+    }
+
+    .mech-compact-stats strong {
+        color: #333;
+    }
+
+    .mech-compact-stats .stat-damage {
+        color: #c0392b;
+        font-weight: 600;
+    }
+
+    .mech-compact-stats .stat-heat {
+        color: #b36a00;
+        font-weight: 600;
+    }
+
+    .mech-compact-stats .stat-ammo {
+        color: #7a5600;
+        font-weight: 600;
+    }
+
+    .mech-compact .depot-notice {
+        margin-left: auto;
     }
 
     .mech-header {
@@ -172,6 +223,59 @@
         }
     }
 
+    /* Equipment section — read-only mirror of the weapons section.
+       Equipment is fixed at design time and cannot be swapped on the
+       management sheet, so there is no select column here. */
+    .equipment-section {
+        margin-bottom: 6px;
+    }
+
+    .equipment-section h4 {
+        font-size: 11px;
+        font-weight: 600;
+        color: #555;
+        margin: 0 0 3px 0;
+    }
+
+    .equipment-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 10px;
+    }
+
+    .equipment-table th {
+        text-align: left;
+        color: #666;
+        font-weight: 600;
+        padding: 1px 4px;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    .equipment-table td {
+        padding: 2px 4px;
+        vertical-align: middle;
+    }
+
+    .equipment-table tr:nth-child(even) td {
+        background: rgba(0,0,0,0.02);
+    }
+
+    .equipment-kind {
+        text-transform: capitalize;
+        color: #555;
+    }
+
+    /* Stat summary colour accents for heat and ammo */
+    .stat-heat {
+        color: #b36a00;
+        font-weight: 600;
+    }
+
+    .stat-ammo {
+        color: #7a5600;
+        font-weight: 600;
+    }
+
     /* Repair section */
     .repair-section {
         margin-bottom: 6px;
@@ -219,13 +323,6 @@
         }
     }
 
-    .no-depot-overlay {
-        font-size: 11px;
-        color: #666;
-        font-style: italic;
-        padding: 4px 0;
-    }
-
     /* Weapon catalog reference */
     .catalog-section {
         border: 1px solid #ccc;
@@ -266,8 +363,16 @@
     }
 
     /*
-     * Narrow-screen: wrap stat summary and allow weapons/catalog tables
-     * to scroll horizontally rather than overflowing invisibly.
+     * Narrow-screen adjustments. On phones the three data tables
+     * (equipment loadout, weapon loadout, and the bottom weapon
+     * catalog) become a vertical stack of cards so the MOUNT / SLOT /
+     * Swap-To columns are never hidden behind horizontal scroll. Each
+     * <tr> becomes a card and each <td> renders as a label/value row
+     * using the data-label attribute. The Swap-To cell is special —
+     * its <select> needs to stay full width — so its first-child-reset
+     * rules do not apply and the label stacks above the select.
+     * Print/PDF is unaffected: A4 content width (~794px) is larger
+     * than the 600px breakpoint so this block never matches.
      */
     @media (max-width: 600px) {
         .stat-summary {
@@ -278,13 +383,116 @@
             flex-wrap: wrap;
             gap: 4px;
         }
+
+        /* On mobile, keep the "Not at Depot" pill next to the
+           callsign on the first line and drop the stats onto their
+           own wrapping row below. Without this, the pill lands after
+           the stats which pushes it far from the callsign. */
+        .mech-compact-stats {
+            flex: 1 1 100%;
+            order: 2;
+        }
+
+        /* Structure repair row: on desktop the cost note sits inline
+           next to the label; on mobile the label often wraps and the
+           cost note ends up floating oddly beside the second line, so
+           bump it onto its own row indented under the checkbox. */
+        .repair-checkbox-row {
+            flex-wrap: wrap;
+        }
+        .repair-cost-note {
+            flex: 0 0 100%;
+            margin-left: 0;
+            padding-left: 22px;
+        }
+
         .weapons-section,
+        .equipment-section,
         .catalog-section {
-            overflow-x: auto;
+            overflow-x: visible;
         }
         .weapons-table,
+        .equipment-table,
         .catalog-table {
-            min-width: 380px;
+            display: block;
+            width: 100%;
+        }
+        .weapons-table thead,
+        .equipment-table thead,
+        .catalog-table thead {
+            display: none;
+        }
+        .weapons-table tbody,
+        .equipment-table tbody,
+        .catalog-table tbody {
+            display: block;
+        }
+        .weapons-table tbody tr,
+        .equipment-table tbody tr,
+        .catalog-table tbody tr {
+            display: block;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 4px 8px;
+            margin-bottom: 4px;
+            background: rgba(255, 255, 255, 0.85);
+        }
+        /* Undo zebra striping — each row is now its own card. */
+        .weapons-table tbody tr:nth-child(even) td,
+        .equipment-table tbody tr:nth-child(even) td,
+        .catalog-table tbody tr:nth-child(even) td {
+            background: transparent;
+        }
+        .weapons-table tbody td,
+        .equipment-table tbody td,
+        .catalog-table tbody td {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            padding: 1px 0;
+            font-size: 11px;
+        }
+        .weapons-table tbody td::before,
+        .equipment-table tbody td::before,
+        .catalog-table tbody td::before {
+            content: attr(data-label);
+            font-weight: 600;
+            color: #666;
+            margin-right: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            font-size: 10px;
+        }
+        /* First cell becomes the card title. */
+        .weapons-table tbody td:first-child,
+        .equipment-table tbody td:first-child,
+        .catalog-table tbody td:first-child {
+            display: block;
+            font-weight: 700;
+            font-size: 12px;
+            color: #1a1a2e;
+            border-bottom: 1px solid #e9ecef;
+            padding-bottom: 2px;
+            margin-bottom: 3px;
+        }
+        .weapons-table tbody td:first-child::before,
+        .equipment-table tbody td:first-child::before,
+        .catalog-table tbody td:first-child::before {
+            content: none;
+        }
+        /* Swap-To cell: stack the "SWAP TO" label above a full-width
+           select so the dropdown is easy to tap. */
+        .weapons-table tbody td:last-child {
+            display: block;
+            padding-top: 4px;
+        }
+        .weapons-table tbody td:last-child::before {
+            display: block;
+            margin: 0 0 3px 0;
+        }
+        .weapons-table tbody td:last-child .weapon-select {
+            font-size: 11px;
+            padding: 4px 6px;
         }
     }
 </style>
@@ -297,7 +505,35 @@
 </div>
 
 {{range .Mechs}}
-<div class="mech-management-entry{{if not .IsAtDepot}} not-at-depot{{end}}">
+{{if not .IsAtDepot}}
+{{/* Compact roster row: mechs in the field cannot be repaired or
+     refitted on this sheet, so rendering the full stat + equipment
+     card just duplicates content already on the Orders turn sheet.
+     Showing a one-line summary keeps the squad roster visible for
+     planning without the mobile scroll burden of a full card. */}}
+<div class="mech-compact">
+    <span class="mech-callsign">{{.Callsign}}</span>
+    {{if .ChassisName}}
+    <span class="mech-chassis-badge mech-chassis-badge-{{.ChassisClass}}">{{.ChassisName}} / {{.ChassisClass}}</span>
+    {{end}}
+    <span class="mech-compact-stats">
+        <span><strong>Armor</strong> {{.CurrentArmor}}/{{.MaxArmor}}</span>
+        <span>
+            <strong>Structure</strong> {{.CurrentStructure}}/{{.MaxStructure}}
+            {{if gt .StructureDamage 0}}<span class="stat-damage">({{.StructureDamage}} dmg)</span>{{end}}
+        </span>
+        {{if gt .HeatCapacity 0}}
+        <span class="stat-heat"><strong>Heat</strong> {{.CurrentHeat}}/{{.HeatCapacity}}</span>
+        {{end}}
+        {{if gt .AmmoCapacity 0}}
+        <span class="stat-ammo"><strong>Ammo</strong> {{.AmmoRemaining}}/{{.AmmoCapacity}}</span>
+        {{end}}
+    </span>
+    <span class="depot-notice depot-unavailable">&#9940; Not at Depot</span>
+    <input type="hidden" name="mech_instance_id_{{.MechInstanceID}}" value="{{.MechInstanceID}}">
+</div>
+{{else}}
+<div class="mech-management-entry">
     <div class="mech-header">
         <span>
             <span class="mech-callsign">{{.Callsign}}</span>
@@ -305,11 +541,7 @@
             <span class="mech-chassis-badge mech-chassis-badge-{{.ChassisClass}}">{{.ChassisName}} / {{.ChassisClass}}</span>
             {{end}}
         </span>
-        {{if .IsAtDepot}}
         <span class="depot-notice depot-available">&#9989; At Depot</span>
-        {{else}}
-        <span class="depot-notice depot-unavailable">&#9940; Not at Depot</span>
-        {{end}}
     </div>
 
     {{/* Refit-in-progress notice */}}
@@ -317,17 +549,58 @@
     <div class="refit-active-notice">&#9881; REFIT IN PROGRESS — orders submitted last turn are being applied</div>
     {{end}}
 
-    {{/* Current stats summary */}}
+    {{/* Current stats summary. Heat is shown whenever the producer
+         reports a positive HeatCapacity; Ammo is shown only for mechs
+         with an ammo-consuming weapon (AmmoCapacity > 0). */}}
     <div class="stat-summary">
         <span><strong>Armor</strong> {{.CurrentArmor}}/{{.MaxArmor}}</span>
         <span>
             <strong>Structure</strong> {{.CurrentStructure}}/{{.MaxStructure}}
             {{if gt .StructureDamage 0}}<span class="stat-damage">({{.StructureDamage}} dmg)</span>{{end}}
         </span>
+        {{if gt .HeatCapacity 0}}
+        <span class="stat-heat"><strong>Heat</strong> {{.CurrentHeat}}/{{.HeatCapacity}}</span>
+        {{end}}
+        {{if gt .AmmoCapacity 0}}
+        <span class="stat-ammo"><strong>Ammo</strong> {{.AmmoRemaining}}/{{.AmmoCapacity}}</span>
+        {{end}}
         <span><strong>Status</strong> {{.Status}}</span>
     </div>
 
-    {{if .IsAtDepot}}
+    {{/* Equipment loadout — read-only; equipment is fixed at design
+         time and cannot be swapped on the management sheet. Rendered
+         regardless of depot status so players can always audit their
+         mount usage alongside the weapon slots. */}}
+    {{if .Equipment}}
+    <div class="equipment-section">
+        <h4>Equipment Loadout</h4>
+        <table class="equipment-table">
+            <thead>
+                <tr>
+                    <th>Equipment</th>
+                    <th>EFFECT</th>
+                    <th>MAG</th>
+                    <th>HEAT</th>
+                    <th>MOUNT</th>
+                    <th>SLOT</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range .Equipment}}
+                <tr>
+                    <td data-label="Equipment">{{.Name}}</td>
+                    <td data-label="Effect" class="equipment-kind">{{.EffectKind}}</td>
+                    <td data-label="MAG">{{.Magnitude}}</td>
+                    <td data-label="HEAT">{{.HeatCost}}</td>
+                    <td data-label="MOUNT">{{.MountSize}}</td>
+                    <td data-label="SLOT">{{.SlotLocation}}</td>
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+    {{end}}
+
     {{if not .IsRefitting}}
 
     {{/* Structure repair section */}}
@@ -350,26 +623,30 @@
     <div class="weapons-section">
         <h4>Weapon Loadout (1 SP per swap)</h4>
         <table class="weapons-table">
-            <tr>
-                <th>Slot</th>
-                <th>Current Weapon</th>
-                <th>Swap To</th>
-            </tr>
-            {{range .Weapons}}
-            <tr>
-                <td>{{.SlotLocation}}</td>
-                <td>{{if .CurrentWeaponName}}{{.CurrentWeaponName}}{{else}}<em>empty</em>{{end}}</td>
-                <td>
-                    <select name="weapon_swap_{{$mechID}}_{{.SlotLocation}}" class="weapon-select">
-                        <option value="">-- keep current --</option>
-                        {{range $catalog}}
-                        <option value="{{.WeaponID}}">{{.Name}} (DMG {{.Damage}}, HEAT {{.HeatCost}}, {{.RangeBand}})</option>
-                        {{end}}
-                    </select>
-                    <div class="weapon-input-line"></div>
-                </td>
-            </tr>
-            {{end}}
+            <thead>
+                <tr>
+                    <th>Slot</th>
+                    <th>Current Weapon</th>
+                    <th>Swap To</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range .Weapons}}
+                <tr>
+                    <td data-label="Slot">{{.SlotLocation}}</td>
+                    <td data-label="Current">{{if .CurrentWeaponName}}{{.CurrentWeaponName}}{{else}}<em>empty</em>{{end}}</td>
+                    <td data-label="Swap To">
+                        <select name="weapon_swap_{{$mechID}}_{{.SlotLocation}}" class="weapon-select">
+                            <option value="">-- keep current --</option>
+                            {{range $catalog}}
+                            <option value="{{.WeaponID}}">{{.Name}} (DMG {{.Damage}}, HEAT {{.HeatCost}}, {{.RangeBand}})</option>
+                            {{end}}
+                        </select>
+                        <div class="weapon-input-line"></div>
+                    </td>
+                </tr>
+                {{end}}
+            </tbody>
         </table>
     </div>
     {{end}}
@@ -378,37 +655,41 @@
     <div class="refit-active-notice">Awaiting refit completion — no new orders this turn.</div>
     {{end}}{{/* end if not IsRefitting */}}
 
-    {{else}}
-    <div class="no-depot-overlay">This mech must be at a depot sector (Dropzone or starting sector) to order repairs or refits.</div>
-    {{end}}{{/* end if IsAtDepot */}}
-
     <input type="hidden" name="mech_instance_id_{{.MechInstanceID}}" value="{{.MechInstanceID}}">
 </div>
+{{end}}{{/* end if not IsAtDepot / else full card */}}
 {{else}}
 <p style="font-size:13px;color:#666;">No mechs in this squad.</p>
 {{end}}
 
-{{/* Weapon catalog reference */}}
+{{/* Weapon catalog reference — AMMO column shows per-shot ammo
+     draw; em-dash for energy/beam weapons that never draw ammo. */}}
 {{if .WeaponCatalog}}
 <div class="catalog-section">
     <h4>Weapon Catalog</h4>
     <table class="catalog-table">
-        <tr>
-            <th>Weapon</th>
-            <th>DMG</th>
-            <th>HEAT</th>
-            <th>RANGE</th>
-            <th>MOUNT</th>
-        </tr>
-        {{range .WeaponCatalog}}
-        <tr>
-            <td>{{.Name}}</td>
-            <td>{{.Damage}}</td>
-            <td>{{.HeatCost}}</td>
-            <td>{{.RangeBand}}</td>
-            <td>{{.MountSize}}</td>
-        </tr>
-        {{end}}
+        <thead>
+            <tr>
+                <th>Weapon</th>
+                <th>DMG</th>
+                <th>HEAT</th>
+                <th>AMMO</th>
+                <th>RANGE</th>
+                <th>MOUNT</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{range .WeaponCatalog}}
+            <tr>
+                <td data-label="Weapon">{{.Name}}</td>
+                <td data-label="DMG">{{.Damage}}</td>
+                <td data-label="HEAT">{{.HeatCost}}</td>
+                <td data-label="AMMO">{{if gt .AmmoCapacity 0}}{{.AmmoCapacity}}{{else}}&mdash;{{end}}</td>
+                <td data-label="RANGE">{{.RangeBand}}</td>
+                <td data-label="MOUNT">{{.MountSize}}</td>
+            </tr>
+            {{end}}
+        </tbody>
     </table>
 </div>
 {{end}}

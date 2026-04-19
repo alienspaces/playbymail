@@ -17,7 +17,7 @@ import (
 
 const JoinGameScannedDataSchemaName = "join_game.schema.json"
 
-const defaultMechaGameJoinGameInstructions = "Fill out your account information and commander name, then return this form to join the game."
+const defaultMechaGameJoinGameInstructions = "Fill out your account information and commander name to join the game."
 const mechaGameJoinGameTemplatePath = "turnsheet/mecha_game_join_game.template"
 
 // DefaultMechaGameJoinGameInstructions returns the default instruction text for mecha join game turn sheets.

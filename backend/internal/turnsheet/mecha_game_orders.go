@@ -17,7 +17,7 @@ import (
 // OrdersScannedDataSchemaName is the filename of the JSON schema for orders scanned_data (under schema/turnsheet/mecha/).
 const OrdersScannedDataSchemaName = "orders.schema.json"
 
-const defaultOrdersInstructions = "For each mech in your squad, choose a sector to move to and/or a target to attack, then return this form."
+const defaultOrdersInstructions = "For each mech in your squad, choose a sector to move to and/or a target to attack."
 const ordersTemplatePath = "turnsheet/mecha_game_orders.template"
 
 // DefaultOrdersInstructions returns the default instruction text for orders turn sheets.
@@ -70,6 +70,12 @@ type MechOrderEntry struct {
 	CurrentHeat                int               `json:"current_heat"`
 	HeatCapacity               int               `json:"heat_capacity"`
 	Speed                      int               `json:"speed"`
+	// EffectiveSpeed is the mech's base chassis speed plus any
+	// jump-jet speed bonuses (zeroed while refitting). It is equal to
+	// Speed when no jump jets are fitted; the template shows a "+N JJ"
+	// badge whenever it exceeds Speed so players can tell at a glance
+	// how far the mech can actually move this turn.
+	EffectiveSpeed             int               `json:"effective_speed,omitempty"`
 	PilotSkill                 int               `json:"pilot_skill"`
 	IsRefitting                bool              `json:"is_refitting"`
 	Weapons                    []MechWeaponEntry `json:"weapons,omitempty"`
@@ -196,10 +202,15 @@ func (p *MechaGameOrdersProcessor) GeneratePreviewData(ctx context.Context, l lo
 				CurrentHeat:       4,
 				HeatCapacity:      18,
 				Speed:             7,
+				EffectiveSpeed:    7,
 				PilotSkill:        4,
 				Weapons: []MechWeaponEntry{
 					{Name: "Light Pulse Cannon", Damage: 3, HeatCost: 1, RangeBand: "short", SlotLocation: "left-arm"},
 					{Name: "Chaingun", Damage: 2, HeatCost: 0, RangeBand: "short", SlotLocation: "right-arm"},
+				},
+				ReachableSectors: []SectorOption{
+					{SectorInstanceID: "preview-sector-1", SectorName: "Northern Ridge"},
+					{SectorInstanceID: "preview-sector-2", SectorName: "Southern Flats"},
 				},
 			},
 			{
@@ -216,10 +227,21 @@ func (p *MechaGameOrdersProcessor) GeneratePreviewData(ctx context.Context, l lo
 				CurrentHeat:       0,
 				HeatCapacity:      28,
 				Speed:             4,
+				EffectiveSpeed:    6,
 				PilotSkill:        4,
 				Weapons: []MechWeaponEntry{
 					{Name: "Pulse Cannon", Damage: 5, HeatCost: 3, RangeBand: "medium", SlotLocation: "left-torso"},
-					{Name: "Rocket Pack", Damage: 8, HeatCost: 3, RangeBand: "short", SlotLocation: "right-arm"},
+					{Name: "Rocket Pack", Damage: 8, HeatCost: 3, RangeBand: "short", SlotLocation: "right-arm", AmmoCapacity: 2},
+				},
+				Equipment: []MechEquipmentEntry{
+					{Name: "Jump Jets", EffectKind: "jump_jets", Magnitude: 2, HeatCost: 2, MountSize: "medium", SlotLocation: "left-leg"},
+					{Name: "Ammo Bin (Standard)", EffectKind: "ammo_bin", Magnitude: 8, HeatCost: 0, MountSize: "small", SlotLocation: "right-torso"},
+				},
+				AmmoRemaining: 6,
+				AmmoCapacity:  10,
+				ReachableSectors: []SectorOption{
+					{SectorInstanceID: "preview-sector-1", SectorName: "Northern Ridge"},
+					{SectorInstanceID: "preview-sector-2", SectorName: "Southern Flats"},
 				},
 			},
 		},

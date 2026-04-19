@@ -3,7 +3,6 @@ package turnsheet_test
 import (
 	"context"
 	"encoding/json"
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -127,9 +126,20 @@ func TestMechaGameOrdersProcessor_GenerateTurnSheet_ContainsMechStats(t *testing
 				CurrentHeat:       4,
 				HeatCapacity:      18,
 				Speed:             7,
+				EffectiveSpeed:    9,
 				PilotSkill:        4,
 				Weapons: []turnsheet.MechWeaponEntry{
 					{Name: "Light Pulse Cannon", Damage: 3, HeatCost: 1, RangeBand: "short", SlotLocation: "left-arm"},
+					{Name: "Rocket Pack", Damage: 8, HeatCost: 3, RangeBand: "short", SlotLocation: "right-arm", AmmoCapacity: 2},
+				},
+				Equipment: []turnsheet.MechEquipmentEntry{
+					{Name: "Jump Jets", EffectKind: "jump_jets", Magnitude: 2, HeatCost: 2, MountSize: "medium", SlotLocation: "left-leg"},
+					{Name: "Ammo Bin (Standard)", EffectKind: "ammo_bin", Magnitude: 8, HeatCost: 0, MountSize: "small", SlotLocation: "right-torso"},
+				},
+				AmmoRemaining: 6,
+				AmmoCapacity:  10,
+				ReachableSectors: []turnsheet.SectorOption{
+					{SectorInstanceID: "sector-ridge", SectorName: "Ridge Overlook"},
 				},
 			},
 		},
@@ -144,9 +154,19 @@ func TestMechaGameOrdersProcessor_GenerateTurnSheet_ContainsMechStats(t *testing
 	require.NotEmpty(t, html)
 
 	htmlStr := string(html)
-	require.True(t, strings.Contains(htmlStr, "Hammer"), "should contain mech callsign")
-	require.True(t, strings.Contains(htmlStr, "Scout"), "should contain chassis name")
-	require.True(t, strings.Contains(htmlStr, "Light Pulse Cannon"), "should contain weapon name")
+	require.Contains(t, htmlStr, "Hammer", "should contain mech callsign")
+	require.Contains(t, htmlStr, "Scout", "should contain chassis name")
+	require.Contains(t, htmlStr, "Light Pulse Cannon", "should contain weapon name")
+	// Equipment rendered inline with the weapons table.
+	require.Contains(t, htmlStr, "Jump Jets", "should render equipment name")
+	require.Contains(t, htmlStr, "jump_jets", "should render equipment effect kind")
+	require.Contains(t, htmlStr, "Ammo Bin (Standard)", "should render ammo bin equipment")
+	// Ammo readout for mechs with ammo-consuming weapons.
+	require.Contains(t, htmlStr, "6 / 10", "should render ammo remaining/capacity")
+	// Effective-speed shows base + jump-jet bonus.
+	require.Contains(t, htmlStr, "+2 JJ", "should render jump-jet speed bonus")
+	// Per-mech reachable sectors feed the Move-To dropdown.
+	require.Contains(t, htmlStr, "Ridge Overlook", "should render reachable sector option")
 }
 
 func TestMechaGameOrdersProcessor_ScanTurnSheet_EmptyImageReturnsError(t *testing.T) {

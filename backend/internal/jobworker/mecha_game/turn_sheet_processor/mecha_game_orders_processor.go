@@ -63,7 +63,11 @@ func mechOrderEntryFromInstance(
 		entry.MaxArmor = domain.EffectiveMechaGameMaxArmor(chassisRec, effects)
 		entry.MaxStructure = chassisRec.StructurePoints
 		entry.HeatCapacity = chassisRec.HeatCapacity
-		entry.Speed = domain.EffectiveMechaGameSpeed(chassisRec, effects)
+		// Speed is the chassis base speed; EffectiveSpeed is the
+		// jump-jet-augmented value the engine uses for movement.
+		// Rendering both lets the turn sheet show "SPD 4 (+2 JJ)".
+		entry.Speed = chassisRec.Speed
+		entry.EffectiveSpeed = domain.EffectiveMechaGameSpeed(chassisRec, effects)
 	}
 
 	// Resolve sector name
@@ -446,7 +450,7 @@ func (p *MechaGameOrdersProcessor) CreateNextTurnSheet(ctx context.Context, game
 		if mechInst == nil {
 			continue
 		}
-		reachable, err := p.getReachableSectorOptions(l, gameInstanceRec.ID, mechInst.MechaGameSectorInstanceID, mech.Speed)
+		reachable, err := p.getReachableSectorOptions(l, gameInstanceRec.ID, mechInst.MechaGameSectorInstanceID, mech.EffectiveSpeed)
 		if err != nil {
 			l.Warn("failed to get reachable sectors for mech >%s< >%v<", mech.MechInstanceID, err)
 		}

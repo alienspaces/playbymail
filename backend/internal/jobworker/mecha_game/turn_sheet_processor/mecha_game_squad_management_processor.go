@@ -351,12 +351,13 @@ func (p *MechaGameSquadManagementProcessor) buildManagementSheet(
 	var catalog []turnsheet.CatalogWeapon
 	for _, w := range allWeapons {
 		catalog = append(catalog, turnsheet.CatalogWeapon{
-			WeaponID:  w.ID,
-			Name:      w.Name,
-			Damage:    w.Damage,
-			HeatCost:  w.HeatCost,
-			RangeBand: w.RangeBand,
-			MountSize: w.MountSize,
+			WeaponID:     w.ID,
+			Name:         w.Name,
+			Damage:       w.Damage,
+			HeatCost:     w.HeatCost,
+			RangeBand:    w.RangeBand,
+			MountSize:    w.MountSize,
+			AmmoCapacity: w.AmmoCapacity,
 		})
 	}
 
@@ -369,6 +370,7 @@ func (p *MechaGameSquadManagementProcessor) buildManagementSheet(
 			IsRefitting:      mech.IsRefitting,
 			CurrentArmor:     mech.CurrentArmor,
 			CurrentStructure: mech.CurrentStructure,
+			CurrentHeat:      mech.CurrentHeat,
 		}
 
 		chassisRec, err := p.Domain.GetMechaGameChassisRec(mech.MechaGameChassisID, nil)
@@ -378,6 +380,7 @@ func (p *MechaGameSquadManagementProcessor) buildManagementSheet(
 			entry.MaxArmor = chassisRec.ArmorPoints
 			entry.MaxStructure = chassisRec.StructurePoints
 			entry.StructureDamage = chassisRec.StructurePoints - mech.CurrentStructure
+			entry.HeatCapacity = chassisRec.HeatCapacity
 		}
 
 		isAtDepot, _ := p.mechIsAtDepot(mech)

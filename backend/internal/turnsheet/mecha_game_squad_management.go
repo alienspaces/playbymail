@@ -50,6 +50,12 @@ type ManagementMechEntry struct {
 	CurrentStructure int              `json:"current_structure"`
 	MaxStructure     int              `json:"max_structure"`
 	StructureDamage  int              `json:"structure_damage"`
+	// CurrentHeat / HeatCapacity let the management sheet show a
+	// quick heat readout next to armour and structure. Zero capacity
+	// hides the heat summary entirely (e.g. when the producer did not
+	// populate it).
+	CurrentHeat      int              `json:"current_heat,omitempty"`
+	HeatCapacity     int              `json:"heat_capacity,omitempty"`
 	Weapons          []MechWeaponSlot `json:"weapons,omitempty"`
 	// Equipment lists all equipment items currently installed on the
 	// mech, rendered on the management sheet so players can see both
@@ -78,6 +84,10 @@ type CatalogWeapon struct {
 	HeatCost  int    `json:"heat_cost"`
 	RangeBand string `json:"range_band,omitempty"`
 	MountSize string `json:"mount_size,omitempty"`
+	// AmmoCapacity mirrors the weapon record field so the management
+	// sheet can display an AMMO column in the catalog. Zero means the
+	// weapon does not consume ammo and never draws from the shared pool.
+	AmmoCapacity int `json:"ammo_capacity,omitempty"`
 }
 
 // SquadManagementScanData represents scanned management orders submitted by a player.
@@ -253,9 +263,14 @@ func (p *MechaGameSquadManagementProcessor) GeneratePreviewData(ctx context.Cont
 				CurrentStructure: 28,
 				MaxStructure:     32,
 				StructureDamage:  4,
+				CurrentHeat:      2,
+				HeatCapacity:     18,
 				Weapons: []MechWeaponSlot{
 					{SlotLocation: "left-arm", CurrentWeaponID: "prev-wpn-1", CurrentWeaponName: "Light Pulse Cannon"},
 					{SlotLocation: "right-arm", CurrentWeaponID: "prev-wpn-2", CurrentWeaponName: "Chaingun"},
+				},
+				Equipment: []MechEquipmentEntry{
+					{Name: "Heat Sink", EffectKind: "heat_sink", Magnitude: 3, HeatCost: 0, MountSize: "small", SlotLocation: "right-torso"},
 				},
 			},
 			{
@@ -270,17 +285,25 @@ func (p *MechaGameSquadManagementProcessor) GeneratePreviewData(ctx context.Cont
 				CurrentStructure: 65,
 				MaxStructure:     65,
 				StructureDamage:  0,
+				CurrentHeat:      6,
+				HeatCapacity:     28,
 				Weapons: []MechWeaponSlot{
 					{SlotLocation: "left-torso", CurrentWeaponID: "prev-wpn-3", CurrentWeaponName: "Pulse Cannon"},
 					{SlotLocation: "right-arm", CurrentWeaponID: "prev-wpn-4", CurrentWeaponName: "Rocket Pack"},
 				},
+				Equipment: []MechEquipmentEntry{
+					{Name: "Targeting Computer Mk II", EffectKind: "targeting_computer", Magnitude: 10, HeatCost: 1, MountSize: "medium", SlotLocation: "head"},
+					{Name: "Ammo Bin (Standard)", EffectKind: "ammo_bin", Magnitude: 8, HeatCost: 0, MountSize: "small", SlotLocation: "right-torso"},
+				},
+				AmmoRemaining: 6,
+				AmmoCapacity:  10,
 			},
 		},
 		WeaponCatalog: []CatalogWeapon{
 			{WeaponID: "cat-1", Name: "Light Pulse Cannon", Damage: 3, HeatCost: 1, RangeBand: "short"},
 			{WeaponID: "cat-2", Name: "Chaingun", Damage: 2, HeatCost: 0, RangeBand: "short"},
 			{WeaponID: "cat-3", Name: "Pulse Cannon", Damage: 5, HeatCost: 3, RangeBand: "medium"},
-			{WeaponID: "cat-4", Name: "Rocket Pack", Damage: 8, HeatCost: 3, RangeBand: "short"},
+			{WeaponID: "cat-4", Name: "Rocket Pack", Damage: 8, HeatCost: 3, RangeBand: "short", AmmoCapacity: 2},
 		},
 	}
 

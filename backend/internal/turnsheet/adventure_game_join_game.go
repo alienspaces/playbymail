@@ -15,7 +15,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/utils/turnsheetutil"
 )
 
-const defaultJoinGameInstructions = "Fill out your account information and character name, then return this form to join the game."
+const defaultJoinGameInstructions = "Fill out your account information and character name to join the game."
 const joinGameTemplatePath = "turnsheet/adventure_game_join_game.template"
 
 // DefaultJoinGameInstructions returns the default instruction text for join game turn sheets.

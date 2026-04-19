@@ -123,6 +123,9 @@
     .stat-bar-inner-heat   { background: #17a2b8; }
     .stat-bar-inner-heat-warn   { background: #fd7e14; }
     .stat-bar-inner-heat-danger { background: #dc3545; }
+    .stat-bar-inner-ammo        { background: #d39e00; }
+    .stat-bar-inner-ammo-warn   { background: #e67e22; }
+    .stat-bar-inner-ammo-danger { background: #c0392b; }
 
     .stat-bar-text {
         font-size: 10px;
@@ -141,6 +144,12 @@
 
     .mech-meta-item strong {
         color: #333;
+    }
+
+    .mech-meta-jj {
+        color: #856404;
+        font-weight: 600;
+        margin-left: 2px;
     }
 
     /* Weapon table */
@@ -169,6 +178,41 @@
 
     .mech-weapons tr:nth-child(even) td {
         background: rgba(0,0,0,0.03);
+    }
+
+    /* Equipment table — mirrors weapons so both mount types render
+       consistently on the orders sheet. Read-only; equipment is
+       design-time and never swapped by turn sheet orders. */
+    .mech-equipment {
+        margin-bottom: 6px;
+    }
+
+    .mech-equipment table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 10px;
+    }
+
+    .mech-equipment th {
+        text-align: left;
+        color: #666;
+        font-weight: 600;
+        padding: 1px 4px;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    .mech-equipment td {
+        padding: 1px 4px;
+        color: #333;
+    }
+
+    .mech-equipment tr:nth-child(even) td {
+        background: rgba(0,0,0,0.03);
+    }
+
+    .equipment-kind {
+        text-transform: capitalize;
+        color: #555;
     }
 
     /* Refit overlay */
@@ -273,17 +317,15 @@
     }
 
     /*
-     * Narrow-screen: allow the weapons table to scroll horizontally and
-     * ensure order fields stack vertically (min-width already ensures
-     * flex-wrap kicks in, but make it explicit for very narrow screens).
+     * Narrow-screen adjustments. Weapons and equipment tables are the
+     * widest content on a mech row; on phones we convert them into a
+     * vertical list of cards so players never have to horizontally
+     * scroll to see the SLOT / MOUNT column. Each <tr> becomes a card
+     * and each <td> becomes a label/value row using the data-label
+     * attribute set on the cell. The desktop and print (A4 ≈ 794px)
+     * layouts are unaffected because they fall outside this query.
      */
     @media (max-width: 600px) {
-        .mech-weapons {
-            overflow-x: auto;
-        }
-        .mech-weapons table {
-            min-width: 320px;
-        }
         .order-fields {
             flex-direction: column;
         }
@@ -293,6 +335,72 @@
         }
         .mech-stat-bars {
             overflow-x: auto;
+        }
+
+        .mech-weapons,
+        .mech-equipment {
+            overflow-x: visible;
+        }
+        .mech-weapons table,
+        .mech-equipment table {
+            display: block;
+            width: 100%;
+        }
+        .mech-weapons thead,
+        .mech-equipment thead {
+            display: none;
+        }
+        .mech-weapons tbody,
+        .mech-equipment tbody {
+            display: block;
+        }
+        .mech-weapons tbody tr,
+        .mech-equipment tbody tr {
+            display: block;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 4px 8px;
+            margin-bottom: 4px;
+            background: rgba(255, 255, 255, 0.85);
+        }
+        /* Undo zebra striping since each row is now its own card. */
+        .mech-weapons tbody tr:nth-child(even) td,
+        .mech-equipment tbody tr:nth-child(even) td {
+            background: transparent;
+        }
+        .mech-weapons tbody td,
+        .mech-equipment tbody td {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            padding: 1px 0;
+            font-size: 11px;
+        }
+        .mech-weapons tbody td::before,
+        .mech-equipment tbody td::before {
+            content: attr(data-label);
+            font-weight: 600;
+            color: #666;
+            margin-right: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            font-size: 10px;
+        }
+        /* First cell (weapon/equipment name) is the card title; hide
+           its label and give it a small rule under it. */
+        .mech-weapons tbody td:first-child,
+        .mech-equipment tbody td:first-child {
+            display: block;
+            font-weight: 700;
+            font-size: 12px;
+            color: #1a1a2e;
+            border-bottom: 1px solid #e9ecef;
+            padding-bottom: 2px;
+            margin-bottom: 3px;
+        }
+        .mech-weapons tbody td:first-child::before,
+        .mech-equipment tbody td:first-child::before {
+            content: none;
         }
     }
 </style>
@@ -355,35 +463,91 @@
                 </div>
                 <span class="stat-bar-text">{{.CurrentHeat}} / {{.HeatCapacity}}</span>
             </div>
+            {{/* Ammo gauge — shown only when this mech has at least one
+                 ammo-consuming weapon (AmmoCapacity > 0). Thresholds
+                 mirror heat/structure so the visual language is
+                 consistent: warn below 50%, danger below 25%. */}}
+            {{if gt .AmmoCapacity 0}}
+            <div class="stat-bar-row">
+                <span class="stat-bar-label">Ammo</span>
+                <div class="stat-bar-outer">
+                    <div class="stat-bar-inner stat-bar-inner-ammo{{if le (div (mul .AmmoRemaining 100) .AmmoCapacity) 25}} stat-bar-inner-ammo-danger{{else if le (div (mul .AmmoRemaining 100) .AmmoCapacity) 50}} stat-bar-inner-ammo-warn{{end}}"
+                        style="width: {{div (mul .AmmoRemaining 100) .AmmoCapacity}}%;"></div>
+                </div>
+                <span class="stat-bar-text">{{.AmmoRemaining}} / {{.AmmoCapacity}}</span>
+            </div>
+            {{end}}
         </div>
         {{end}}
 
-        {{/* Speed and pilot skill */}}
+        {{/* Speed and pilot skill. EffectiveSpeed equals Speed when no
+             jump jets are fitted; when it is higher we show the +N JJ
+             bonus so players see the actual movement budget the engine
+             will enforce. */}}
         <div class="mech-meta">
-            {{if gt .Speed 0}}<span class="mech-meta-item"><strong>SPD</strong> {{.Speed}}</span>{{end}}
+            {{if gt .Speed 0}}<span class="mech-meta-item"><strong>SPD</strong> {{.Speed}}{{if gt .EffectiveSpeed .Speed}}<span class="mech-meta-jj"> (+{{sub .EffectiveSpeed .Speed}} JJ)</span>{{end}}</span>{{end}}
             {{if gt .PilotSkill 0}}<span class="mech-meta-item"><strong>PILOT</strong> {{.PilotSkill}}</span>{{end}}
         </div>
 
-        {{/* Weapon loadout */}}
+        {{/* Weapon loadout — AMMO column shows the per-shot ammo draw
+             from the mech's shared pool; em-dash for energy/beam
+             weapons that never draw ammo. */}}
         {{if .Weapons}}
         <div class="mech-weapons">
             <table>
-                <tr>
-                    <th>Weapon</th>
-                    <th>DMG</th>
-                    <th>HEAT</th>
-                    <th>RANGE</th>
-                    <th>SLOT</th>
-                </tr>
-                {{range .Weapons}}
-                <tr>
-                    <td>{{.Name}}</td>
-                    <td>{{.Damage}}</td>
-                    <td>{{.HeatCost}}</td>
-                    <td>{{.RangeBand}}</td>
-                    <td>{{.SlotLocation}}</td>
-                </tr>
-                {{end}}
+                <thead>
+                    <tr>
+                        <th>Weapon</th>
+                        <th>DMG</th>
+                        <th>HEAT</th>
+                        <th>AMMO</th>
+                        <th>RANGE</th>
+                        <th>SLOT</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{range .Weapons}}
+                    <tr>
+                        <td data-label="Weapon">{{.Name}}</td>
+                        <td data-label="DMG">{{.Damage}}</td>
+                        <td data-label="HEAT">{{.HeatCost}}</td>
+                        <td data-label="AMMO">{{if gt .AmmoCapacity 0}}{{.AmmoCapacity}}{{else}}&mdash;{{end}}</td>
+                        <td data-label="RANGE">{{.RangeBand}}</td>
+                        <td data-label="SLOT">{{.SlotLocation}}</td>
+                    </tr>
+                    {{end}}
+                </tbody>
+            </table>
+        </div>
+        {{end}}
+
+        {{/* Equipment loadout — read-only; equipment is fixed at
+             design time and cannot be swapped on the orders sheet. */}}
+        {{if .Equipment}}
+        <div class="mech-equipment">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Equipment</th>
+                        <th>EFFECT</th>
+                        <th>MAG</th>
+                        <th>HEAT</th>
+                        <th>MOUNT</th>
+                        <th>SLOT</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{range .Equipment}}
+                    <tr>
+                        <td data-label="Equipment">{{.Name}}</td>
+                        <td data-label="Effect" class="equipment-kind">{{.EffectKind}}</td>
+                        <td data-label="MAG">{{.Magnitude}}</td>
+                        <td data-label="HEAT">{{.HeatCost}}</td>
+                        <td data-label="MOUNT">{{.MountSize}}</td>
+                        <td data-label="SLOT">{{.SlotLocation}}</td>
+                    </tr>
+                    {{end}}
+                </tbody>
             </table>
         </div>
         {{end}}
@@ -393,14 +557,24 @@
         <div class="mech-location">Sector: {{.CurrentSectorName}}</div>
         {{end}}
 
-        {{/* Order fields */}}
+        {{/* Order fields — Move-To uses the per-mech ReachableSectors
+             list so only sectors within this mech's effective speed
+             (chassis speed + jump jets) appear. When the producer did
+             not supply ReachableSectors we fall back to the squad-wide
+             AvailableSectors list to preserve legacy behaviour. */}}
         <div class="order-fields">
             <div class="order-field">
                 <label>Move To (Sector)</label>
                 <select name="move_to_{{.MechInstanceID}}" class="order-select-html">
                     <option value="">-- stay in place --</option>
-                    {{range $.AvailableSectors}}
-                    <option value="{{.SectorInstanceID}}">{{.SectorName}}</option>
+                    {{if .ReachableSectors}}
+                        {{range .ReachableSectors}}
+                        <option value="{{.SectorInstanceID}}">{{.SectorName}}</option>
+                        {{end}}
+                    {{else}}
+                        {{range $.AvailableSectors}}
+                        <option value="{{.SectorInstanceID}}">{{.SectorName}}</option>
+                        {{end}}
                     {{end}}
                 </select>
                 <div class="order-input-line-pdf"></div>
