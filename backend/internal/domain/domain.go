@@ -35,6 +35,7 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/repository/catalog_game_instance_view"
 	"gitlab.com/alienspaces/playbymail/internal/repository/mecha_game_chassis"
 	"gitlab.com/alienspaces/playbymail/internal/repository/mecha_game_computer_opponent"
+	"gitlab.com/alienspaces/playbymail/internal/repository/mecha_game_equipment"
 	"gitlab.com/alienspaces/playbymail/internal/repository/mecha_game_squad"
 	"gitlab.com/alienspaces/playbymail/internal/repository/mecha_game_squad_instance"
 	"gitlab.com/alienspaces/playbymail/internal/repository/mecha_game_squad_mech"
@@ -114,6 +115,7 @@ func NewDomain(l logger.Logger, cfg config.Config) (*Domain, error) {
 		// MechaGame repositories
 		mecha_game_chassis.NewRepository,
 		mecha_game_computer_opponent.NewRepository,
+		mecha_game_equipment.NewRepository,
 		mecha_game_weapon.NewRepository,
 		mecha_game_sector.NewRepository,
 		mecha_game_sector_link.NewRepository,
@@ -318,6 +320,11 @@ func (m *Domain) MechaGameComputerOpponentRepository() *repository.Generic[mecha
 // MechaGameWeaponRepository -
 func (m *Domain) MechaGameWeaponRepository() *repository.Generic[mecha_game_record.MechaGameWeapon, *mecha_game_record.MechaGameWeapon] {
 	return m.Repositories[mecha_game_weapon.TableName].(*repository.Generic[mecha_game_record.MechaGameWeapon, *mecha_game_record.MechaGameWeapon])
+}
+
+// MechaGameEquipmentRepository -
+func (m *Domain) MechaGameEquipmentRepository() *repository.Generic[mecha_game_record.MechaGameEquipment, *mecha_game_record.MechaGameEquipment] {
+	return m.Repositories[mecha_game_equipment.TableName].(*repository.Generic[mecha_game_record.MechaGameEquipment, *mecha_game_record.MechaGameEquipment])
 }
 
 // MechaGameSectorRepository -

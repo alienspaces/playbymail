@@ -34,6 +34,7 @@ func MechaGameHandlerConfig(cfg config.Config, l logger.Logger, scnr turnsheet.T
 	handlerConfigFuncs := []func(logger.Logger) (map[string]server.HandlerConfig, error){
 		mechaGameChassisHandlerConfig,
 		mechaGameWeaponHandlerConfig,
+		mechaGameEquipmentHandlerConfig,
 		mechaGameSectorHandlerConfig,
 		mechaGameSectorLinkHandlerConfig,
 		mechaGameSquadHandlerConfig,

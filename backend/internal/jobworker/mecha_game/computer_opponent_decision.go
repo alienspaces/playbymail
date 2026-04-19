@@ -2,6 +2,7 @@ package mecha_game
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	coresql "gitlab.com/alienspaces/playbymail/core/sql"
@@ -23,7 +24,12 @@ type GameStateContext struct {
 	Sectors       []*sectorState
 	// ChassisCache maps chassis ID to chassis design record for speed lookups.
 	ChassisCache map[string]*mecha_game_record.MechaGameChassis
-	TurnNumber   int
+	// EffectsByMechID caches pre-aggregated equipment effects per mech
+	// (own + enemy) so the strategy can read effective speed, cover bonus,
+	// and hit-chance bonus without re-resolving equipment records each
+	// decision step. Refitting mechs resolve to a zero value here already.
+	EffectsByMechID map[string]domain.MechaGameEquipmentEffects
+	TurnNumber      int
 }
 
 type mechState struct {
@@ -218,13 +224,47 @@ func (e *ComputerOpponentDecisionEngine) buildGameStateContext(
 		}
 	}
 
+	// Pre-aggregate equipment effects for every own + enemy mech. This
+	// avoids resolving equipment records for every call to lookupChassis /
+	// pickAttackTarget during decision making. Refitting mechs map to the
+	// zero value automatically via AggregateMechaGameEquipmentEffects.
+	effectsByMechID := make(map[string]domain.MechaGameEquipmentEffects, len(allMechsForChassis))
+	for _, m := range allMechsForChassis {
+		var equipmentEntries []mecha_game_record.EquipmentConfigEntry
+		if len(m.EquipmentConfigJSON) > 0 {
+			if err := decodeEquipmentConfig(m.EquipmentConfigJSON, &equipmentEntries); err != nil {
+				l.Warn("failed to decode equipment config for mech >%s< >%v<", m.ID, err)
+				equipmentEntries = nil
+			}
+		}
+		equipmentByID, err := e.domain.LoadMechaGameEquipmentByID(equipmentEntries)
+		if err != nil {
+			l.Warn("failed to load equipment for mech >%s< >%v<", m.ID, err)
+		}
+		effectsByMechID[m.ID] = domain.AggregateMechaGameEquipmentEffects(
+			equipmentEntries, equipmentByID, m.IsRefitting,
+		)
+	}
+
 	return &GameStateContext{
-		Opponent:      opponentRec,
-		SquadInstance: squadInstance,
-		OwnMechs:      ownMechs,
-		EnemyMechs:    enemyMechs,
-		Sectors:       sectors,
-		ChassisCache:  chassisCache,
-		TurnNumber:    turnNumber,
+		Opponent:        opponentRec,
+		SquadInstance:   squadInstance,
+		OwnMechs:        ownMechs,
+		EnemyMechs:      enemyMechs,
+		Sectors:         sectors,
+		ChassisCache:    chassisCache,
+		EffectsByMechID: effectsByMechID,
+		TurnNumber:      turnNumber,
 	}, nil
+}
+
+// decodeEquipmentConfig centralises the JSON unmarshal for equipment
+// config entries so both rule-based and future AI strategies share the
+// exact same tolerance rules (empty input = zero-length slice, not error).
+func decodeEquipmentConfig(raw []byte, out *[]mecha_game_record.EquipmentConfigEntry) error {
+	if len(raw) == 0 {
+		*out = nil
+		return nil
+	}
+	return json.Unmarshal(raw, out)
 }

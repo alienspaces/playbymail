@@ -78,7 +78,7 @@ func (s *llmStrategy) buildGameStatePrompt(state *GameStateContext) string {
 		speed := 1
 		if state.ChassisCache != nil {
 			if cr, ok := state.ChassisCache[m.MechaGameChassisID]; ok {
-				speed = cr.Speed
+				speed = cr.Speed + state.EffectsByMechID[m.ID].SpeedBonus
 			}
 		}
 		fmt.Fprintf(&sb, "  - Mech ID: %s, Callsign: %s, Status: %s, Location: %s (sector_instance_id: %s), Armor: %d, Structure: %d, Speed: %d (max sector hops per turn)\n",

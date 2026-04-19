@@ -2,6 +2,7 @@ package domain
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"math/rand"
 
@@ -10,6 +11,70 @@ import (
 	"gitlab.com/alienspaces/playbymail/internal/record/game_record"
 	"gitlab.com/alienspaces/playbymail/internal/record/mecha_game_record"
 )
+
+// mechInitialLoadoutState captures the runtime loadout data derived at clone
+// time from a squad mech and its referenced weapons + equipment. It is used
+// exclusively by the clone site in PopulateMechaGameInstanceData so the
+// player and computer-opponent paths stay in lock-step.
+type mechInitialLoadoutState struct {
+	WeaponConfig     []mecha_game_record.WeaponConfigEntry
+	WeaponConfigJSON []byte
+	EquipmentConfig  []mecha_game_record.EquipmentConfigEntry
+	EquipmentJSON    []byte
+	ArmorBonus       int
+	AmmoRemaining    int
+}
+
+// resolveMechInitialLoadout hydrates a squad mech's persisted JSON loadouts,
+// looks up the referenced weapon / equipment records, and returns the initial
+// armor bonus (from armor_upgrade magnitudes) and ammo pool (Σ weapon.ammo_capacity
+// + Σ ammo_bin magnitudes) to seed the new mech instance with.
+func (m *Domain) resolveMechInitialLoadout(squadMech *mecha_game_record.MechaGameSquadMech) (*mechInitialLoadoutState, error) {
+	state := &mechInitialLoadoutState{
+		WeaponConfigJSON: squadMech.WeaponConfigJSON,
+		EquipmentJSON:    squadMech.EquipmentConfigJSON,
+	}
+
+	if len(squadMech.WeaponConfigJSON) > 0 {
+		if err := json.Unmarshal(squadMech.WeaponConfigJSON, &state.WeaponConfig); err != nil {
+			return nil, fmt.Errorf("resolveMechInitialLoadout: unmarshal weapon_config for squad mech >%s<: %w", squadMech.ID, err)
+		}
+	}
+	if len(squadMech.EquipmentConfigJSON) > 0 {
+		if err := json.Unmarshal(squadMech.EquipmentConfigJSON, &state.EquipmentConfig); err != nil {
+			return nil, fmt.Errorf("resolveMechInitialLoadout: unmarshal equipment_config for squad mech >%s<: %w", squadMech.ID, err)
+		}
+	}
+
+	for _, entry := range state.WeaponConfig {
+		if entry.WeaponID == "" {
+			continue
+		}
+		w, err := m.GetMechaGameWeaponRec(entry.WeaponID, nil)
+		if err != nil {
+			return nil, err
+		}
+		state.AmmoRemaining += w.AmmoCapacity
+	}
+
+	for _, entry := range state.EquipmentConfig {
+		if entry.EquipmentID == "" {
+			continue
+		}
+		eq, err := m.GetMechaGameEquipmentRec(entry.EquipmentID, nil)
+		if err != nil {
+			return nil, err
+		}
+		switch eq.EffectKind {
+		case mecha_game_record.EquipmentEffectKindArmorUpgrade:
+			state.ArmorBonus += eq.Magnitude
+		case mecha_game_record.EquipmentEffectKindAmmoBin:
+			state.AmmoRemaining += eq.Magnitude
+		}
+	}
+
+	return state, nil
+}
 
 // MechaGameInstanceData holds all instance records created when a mecha instance starts.
 type MechaGameInstanceData struct {
@@ -150,21 +215,30 @@ func (m *Domain) PopulateMechaGameInstanceData(instanceID string) (*MechaGameIns
 				return nil, err
 			}
 
+			loadout, err := m.resolveMechInitialLoadout(squadMech)
+			if err != nil {
+				l.Warn("failed to resolve initial loadout for starter mech >%s< >%v<", squadMech.ID, err)
+				return nil, err
+			}
+
 			callsign := fmt.Sprintf("P%d-%d", playerNumber, i+1)
 			mechInst, err := m.CreateMechaGameMechInstanceRec(&mecha_game_record.MechaGameMechInstance{
-				GameID:                gameID,
-				GameInstanceID:        instanceID,
+				GameID:                    gameID,
+				GameInstanceID:            instanceID,
 				MechaGameSquadInstanceID:  squadInst.ID,
 				MechaGameSectorInstanceID: startingSectorInstanceID,
 				MechaGameChassisID:        squadMech.MechaGameChassisID,
-				Callsign:              callsign,
-				CurrentArmor:          chassisRec.ArmorPoints,
-				CurrentStructure:      chassisRec.StructurePoints,
-				CurrentHeat:           0,
-				PilotSkill:            0,
-				Status:                mecha_game_record.MechInstanceStatusOperational,
-				WeaponConfig:          squadMech.WeaponConfig,
-				WeaponConfigJSON:      squadMech.WeaponConfigJSON,
+				Callsign:                  callsign,
+				CurrentArmor:              chassisRec.ArmorPoints + loadout.ArmorBonus,
+				CurrentStructure:          chassisRec.StructurePoints,
+				CurrentHeat:               0,
+				PilotSkill:                0,
+				Status:                    mecha_game_record.MechInstanceStatusOperational,
+				WeaponConfig:              loadout.WeaponConfig,
+				WeaponConfigJSON:          loadout.WeaponConfigJSON,
+				EquipmentConfig:           loadout.EquipmentConfig,
+				EquipmentConfigJSON:       loadout.EquipmentJSON,
+				AmmoRemaining:             loadout.AmmoRemaining,
 			})
 			if err != nil {
 				l.Warn("failed to create mech instance for player >%d< >%v<", playerNumber, err)
@@ -238,21 +312,30 @@ func (m *Domain) PopulateMechaGameInstanceData(instanceID string) (*MechaGameIns
 					return nil, err
 				}
 
+				loadout, err := m.resolveMechInitialLoadout(squadMech)
+				if err != nil {
+					l.Warn("failed to resolve initial loadout for opponent mech >%s< >%v<", squadMech.ID, err)
+					return nil, err
+				}
+
 				callsign := fmt.Sprintf("AI%d-%d", offset+j+1, i+1)
 				mechInst, err := m.CreateMechaGameMechInstanceRec(&mecha_game_record.MechaGameMechInstance{
-					GameID:                gameID,
-					GameInstanceID:        instanceID,
+					GameID:                    gameID,
+					GameInstanceID:            instanceID,
 					MechaGameSquadInstanceID:  squadInst.ID,
 					MechaGameSectorInstanceID: startingSectorInstanceID,
 					MechaGameChassisID:        squadMech.MechaGameChassisID,
-					Callsign:              callsign,
-					CurrentArmor:          chassisRec.ArmorPoints,
-					CurrentStructure:      chassisRec.StructurePoints,
-					CurrentHeat:           0,
-					PilotSkill:            0,
-					Status:                mecha_game_record.MechInstanceStatusOperational,
-					WeaponConfig:          squadMech.WeaponConfig,
-					WeaponConfigJSON:      squadMech.WeaponConfigJSON,
+					Callsign:                  callsign,
+					CurrentArmor:              chassisRec.ArmorPoints + loadout.ArmorBonus,
+					CurrentStructure:          chassisRec.StructurePoints,
+					CurrentHeat:               0,
+					PilotSkill:                0,
+					Status:                    mecha_game_record.MechInstanceStatusOperational,
+					WeaponConfig:              loadout.WeaponConfig,
+					WeaponConfigJSON:          loadout.WeaponConfigJSON,
+					EquipmentConfig:           loadout.EquipmentConfig,
+					EquipmentConfigJSON:       loadout.EquipmentJSON,
+					AmmoRemaining:             loadout.AmmoRemaining,
 				})
 				if err != nil {
 					l.Warn("failed to create mech instance for computer opponent >%s< >%v<", opponent.ID, err)

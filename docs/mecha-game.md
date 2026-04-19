@@ -22,6 +22,7 @@ For platform-level configuration shared across all game types, see [shared-game-
 Game
   ├── Chassis (mech body blueprints)
   ├── Weapons (weapon definitions)
+  ├── Equipment (mountable equipment definitions)
   ├── Sectors (battlefield map areas)
   │     └── Sector links (adjacency between sectors)
   ├── Computer opponents (AI behaviour profiles)
@@ -63,13 +64,13 @@ The class defaults are applied whenever a new chassis is created without explici
 
 **Loadout slots:**
 
-Every mounted item (today: weapons; future: equipment) consumes one slot on the chassis. Items are placed with **upward spillover**:
+Every mounted item — both **weapons** and **equipment** — consumes one slot on the chassis. The two are placed against the same shared slot budget and are packed with **upward spillover**:
 
 - A **large** item can only use a large slot.
 - A **medium** item prefers a medium slot, spilling into a large slot if mediums are full.
 - A **small** item prefers a small slot, spilling into medium, then large.
 
-This keeps the slot model forgiving (generous medium/large counts accommodate small items naturally) while still preventing a light chassis from carrying a large weapon. The fit check runs when a squad mech is created or updated, and again on every in-game weapon swap — swaps that would overflow the chassis are refused and reported back to the player.
+This keeps the slot model forgiving (generous medium/large counts accommodate small items naturally) while still preventing a light chassis from carrying a large weapon or a bulky piece of equipment. The fit check runs when a squad mech is created or updated, and again on every in-game weapon swap — swaps that would overflow the chassis are refused and reported back to the player.
 
 **Requirement:** at least one chassis must exist before a run can be created.
 
@@ -87,6 +88,7 @@ Weapon definitions used in mech loadouts and refit orders.
 | Heat cost | yes | Heat added to the mech each time the weapon fires, even on a miss; 0–20 |
 | Range band | yes | Effective engagement distance (see range band values below) |
 | Mount size | yes | Mount size category (`small`, `medium`, `large`). Must fit an available slot on the chassis — see the **Loadout slots** subsection under **Chassis** for the upward-spillover rule |
+| Ammo capacity | no | Rounds drawn from the mech's shared ammo pool each time this weapon fires; 0–200. `0` means the weapon is energy/beam and never consumes ammo. Weapons with a positive value will refuse to fire when the mech's pool is empty until it is refilled at a depot |
 
 **Range band values** — determines whether a weapon can fire at a given distance:
 
@@ -105,6 +107,34 @@ Long-range weapons are standoff weapons — they cannot fire into the same secto
 | `small` | Small mount |
 | `medium` | Medium mount |
 | `large` | Large mount |
+
+---
+
+### Equipment
+
+Mountable equipment that augments a mech. Equipment consumes chassis slots on the same budget as weapons (see the **Loadout slots** subsection under **Chassis**) and applies **strictly additive** enhancements — it never gates existing capabilities. When a mech enters a refit state at the end of a turn, all equipment effects go offline for the next turn (the mech is considered powered down for refitting); only ammo refill at a depot still runs, because refilling is a crew action rather than an equipment effect.
+
+| Field | Required | Description |
+|---|---|---|
+| Name | yes | Display name (e.g. "Double Heat Sink", "Targeting Computer Mk II", "Jump Jets", "Ammo Bin (Standard)") |
+| Description | no | Narrative description |
+| Mount size | yes | Mount size category (`small`, `medium`, `large`). Follows the same upward-spillover rule as weapons |
+| Effect kind | yes | What the equipment does — one of the six kinds listed below |
+| Magnitude | yes | Size of the effect. Each kind has its own scale and per-row cap (see the table below). Stacking is unbounded: designers can fit multiple pieces of the same kind to raise the overall bonus |
+| Heat cost | no | Heat added each time the equipment's "applied this turn" predicate fires; 0–20. Typically 0. Refitting mechs apply no heat cost at all |
+
+**Effect kinds:**
+
+| Kind | Magnitude meaning | Max magnitude per row | Heat cost applies when |
+|---|---|---|---|
+| `heat_sink` | Extra points of heat dissipation added at end-of-turn on top of the chassis baseline | 20 | Each turn while the mech is not refitting (always-on) |
+| `targeting_computer` | Percentage points added to the attacker's hit chance; the final chance is still capped at 95% | 30 | Any turn the mech declares at least one attack |
+| `armor_upgrade` | Extra max-armour points, used for starting armour, the auto-repair ceiling, and the 25%-of-max repair base | 200 | Each turn while the mech is not refitting (always-on) |
+| `jump_jets` | Extra movement hops added on top of the chassis base **Speed** (used by both player orders and AI movement) | 5 | Any turn the mech moves more hops than the chassis base speed; normal-speed moves are free |
+| `ecm` | Percentage points of **cover** added against incoming attacks on this mech; stacks with sector cover | 50 | Each turn while the mech is not refitting (always-on) |
+| `ammo_bin` | Extra rounds added to the mech's shared ammo pool at game start and on each depot refill | 200 | Any turn the mech fires a weapon with a positive **Ammo capacity** |
+
+**Additive principle:** equipment never prevents a weapon from firing or a mech from moving. Ammo bins are purely additive — a mech with no ammo bins can still fire ammo-consuming weapons as long as the weapons themselves contribute to the shared ammo pool. Targeting computers add to hit chance but do not cap an already-high pilot. Jump jets raise the movement ceiling but do not force longer moves.
 
 ---
 
@@ -171,14 +201,15 @@ Player-owned squads only exist as runtime **squad instances** — they are never
 
 ### Squad Mech
 
-A specific mech assigned to a squad — combining a chassis with a callsign and weapon loadout.
+A specific mech assigned to a squad — combining a chassis with a callsign and combined weapon + equipment loadout.
 
 | Field | Description |
 |---|---|
 | Squad | The squad this mech belongs to |
 | Chassis | The chassis blueprint for this mech |
 | Callsign | Unique name within the squad (e.g. "Alpha-1", "Shadow Fox") |
-| Weapon loadout | The weapons fitted to this mech; each weapon entry specifies the weapon and the slot it occupies (e.g. left arm, right torso, centre torso) |
+| Weapon loadout | The weapons fitted to this mech; each entry specifies the weapon and the slot it occupies (e.g. left arm, right torso, centre torso) |
+| Equipment loadout | The equipment fitted to this mech; each entry specifies the equipment and the slot it occupies. Weapons and equipment are validated together against the chassis's shared slot budget — see **Loadout slots** under **Chassis** |
 
 ---
 
@@ -279,11 +310,19 @@ All attacks use the positions and hit points from before any combat damage is ap
 **Heat:**
 - Each weapon fired adds heat to the mech — even on a miss
 - All weapons in the mech's loadout fire together in a single attack
+- Equipment whose heat cost is tied to a combat action — `targeting_computer` when the mech declares an attack, `ammo_bin` when an ammo-consuming weapon fires — adds its heat cost in this step (see **Equipment** in the Designer Configuration section)
+
+**Ammo:**
+- Each fired weapon with a positive **Ammo capacity** draws that many rounds from the mech's shared ammo pool before firing
+- When the pool cannot cover the draw the weapon simply does not fire — it will fire again once the pool is refilled at a depot
+- The pool is sized by summing every equipped weapon's ammo capacity plus the magnitude of every `ammo_bin` piece of equipment; both contributions are strictly additive
 
 **Hit chance:**
-- Base hit chance is 50%, plus 5% per point of pilot skill, modified by the target sector's cover modifier, capped between 0% and 95%
-- Formula: `hit_chance = clamp(50 + pilot_skill × 5 + cover_modifier, 0, 95)`
-- A negative cover modifier (heavy cover in the target sector) reduces hit chance; a positive modifier makes targets easier to hit
+- Base hit chance is 50%, plus 5% per point of pilot skill, modified by the attacker's targeting bonus and the effective cover on the target, capped between 0% and 95%
+- Formula: `hit_chance = clamp(50 + pilot_skill × 5 + attacker_hit_bonus + effective_cover, 0, 95)`
+- `attacker_hit_bonus` is the sum of the attacker's `targeting_computer` magnitudes
+- `effective_cover` is the target sector's cover modifier plus the defender's `ecm` magnitude — sector cover and ECM stack
+- A negative effective cover (heavy cover, ECM) reduces hit chance; a positive modifier makes targets easier to hit
 
 **Damage:**
 - Armour absorbs damage first
@@ -309,10 +348,14 @@ All attacks use the positions and hit points from before any combat damage is ap
 
 After combat is resolved, the engine applies the following in order:
 
-1. **Heat dissipation** — heat accumulated during combat is reduced for all mechs
-2. **Auto armor repair** — operational mechs in depot sectors receive partial armor restoration
-3. **Supply point accrual** — squads receive supply points each turn (used for management orders)
-4. **Pilot XP and skill advancement** (see below)
+1. **Always-on equipment heat** — mechs that are not refitting add the heat cost of any always-on equipment (`heat_sink`, `armor_upgrade`, `ecm`) for the turn. This is applied once per turn regardless of whether the mech entered combat or moved.
+2. **Heat dissipation** — heat accumulated during combat (and from always-on equipment) is reduced for all mechs. A mech's dissipation is the chassis baseline plus the sum of any equipped `heat_sink` magnitudes.
+3. **Auto armor repair** — operational mechs in depot sectors receive partial armor restoration. The auto-repair ceiling and 25%-of-max base both use the **effective max armour** (chassis base plus the sum of `armor_upgrade` magnitudes).
+4. **Ammo refill at depot** — mechs sitting in a depot sector have their ammo pool refilled to full capacity (chassis weapon capacities plus `ammo_bin` magnitudes). Refilling runs for refitting mechs too, because it is treated as a crew action rather than an equipment effect.
+5. **Supply point accrual** — squads receive supply points each turn (used for management orders)
+6. **Pilot XP and skill advancement** (see below)
+
+Jump-jet heat is a movement cost and is applied during order processing rather than here: any mech moving more hops than its chassis base speed pays the sum of its `jump_jets` heat costs on top of its end-of-turn heat total.
 
 ---
 
@@ -352,7 +395,7 @@ The AI makes decisions for all computer-controlled squads each turn, after playe
 
 **Movement behaviour:**
 - Destroyed or shutdown mechs receive no orders
-- The AI uses BFS pathfinding and moves up to the mech's chassis **Speed** each turn
+- The AI uses BFS pathfinding and moves up to the mech's **effective speed** each turn (chassis base speed plus any `jump_jets` magnitude)
 - High-aggression opponents (7 or above) advance toward the nearest enemy; tactically skilled (high IQ) opponents prefer routes through high-elevation or high-cover sectors
 - Low-aggression opponents (3 or below) fall back toward high-elevation, high-cover positions
 - Mid-aggression opponents hold position or move to the best available defensive sector
@@ -360,6 +403,7 @@ The AI makes decisions for all computer-controlled squads each turn, after playe
 **Targeting behaviour:**
 - High-aggression opponents prefer to finish off weakened mechs (lowest structure)
 - Low-aggression opponents prefer to deter the strongest threats (highest structure)
+- When two candidates are tied on structure, the AI breaks the tie using effective cover: it prefers attacking targets where the attacker's `targeting_computer` bonus outweighs the defender's `ecm` cover
 - The AI can engage targets up to 2 hops away (matching long-range weapon capability)
 - If no enemies are in range, no attack is issued
 

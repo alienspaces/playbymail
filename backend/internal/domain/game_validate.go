@@ -398,7 +398,7 @@ func (m *Domain) validateMechaGameReadyForInstance(gameID string) ([]GameValidat
 	if len(sectorRecs) == 0 {
 		issues = append(issues, GameValidationIssue{
 			Field:    "sectors",
-			Message:  "MechaGame must have at least one sector before creating an instance",
+			Message:  "Mecha game must have at least one sector before creating an instance",
 			Severity: ValidationSeverityError,
 		})
 		return issues, nil
@@ -418,7 +418,7 @@ func (m *Domain) validateMechaGameReadyForInstance(gameID string) ([]GameValidat
 	if len(startingSectorRecs) == 0 {
 		issues = append(issues, GameValidationIssue{
 			Field:    "starting_sector",
-			Message:  "MechaGame must have at least one starting sector before creating an instance",
+			Message:  "Mecha game must have at least one starting sector before creating an instance",
 			Severity: ValidationSeverityError,
 		})
 	}
@@ -436,7 +436,7 @@ func (m *Domain) validateMechaGameReadyForInstance(gameID string) ([]GameValidat
 	if len(chassisRecs) == 0 {
 		issues = append(issues, GameValidationIssue{
 			Field:    "chassis",
-			Message:  "MechaGame must have at least one chassis defined before creating an instance",
+			Message:  "Mecha game must have at least one chassis defined before creating an instance",
 			Severity: ValidationSeverityError,
 		})
 	}
@@ -456,7 +456,7 @@ func (m *Domain) validateMechaGameReadyForInstance(gameID string) ([]GameValidat
 	if len(starterSquadRecs) == 0 {
 		issues = append(issues, GameValidationIssue{
 			Field:    "player_starter_squad",
-			Message:  "MechaGame game must have a player starter squad defined",
+			Message:  "Mecha game must have a player starter squad defined",
 			Severity: ValidationSeverityError,
 		})
 	} else {

@@ -34,6 +34,7 @@ const routes = [
       // MechaGame type studio views
       { path: ':gameId/chassis', component: () => import('../views/studio/mecha/StudioChassisView.vue') },
       { path: ':gameId/weapons', component: () => import('../views/studio/mecha/StudioWeaponsView.vue') },
+      { path: ':gameId/equipment', component: () => import('../views/studio/mecha/StudioEquipmentView.vue') },
       { path: ':gameId/sectors', component: () => import('../views/studio/mecha/StudioSectorsView.vue') },
       { path: ':gameId/sector-links', component: () => import('../views/studio/mecha/StudioSectorLinksView.vue') },
       { path: ':gameId/squads', component: () => import('../views/studio/mecha/StudioSquadsView.vue') },

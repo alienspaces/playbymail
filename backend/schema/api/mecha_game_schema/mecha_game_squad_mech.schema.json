@@ -33,6 +33,18 @@
                 "additionalProperties": false
             }
         },
+        "equipment_config": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "equipment_id": { "type": "string", "minLength": 1 },
+                    "slot_location": { "type": "string", "minLength": 1 }
+                },
+                "required": ["equipment_id", "slot_location"],
+                "additionalProperties": false
+            }
+        },
         "created_at": {
             "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/created_at"
         },
@@ -43,6 +55,6 @@
             "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/updated_at"
         }
     },
-    "required": ["id", "game_id", "mecha_game_squad_id", "mecha_game_chassis_id", "callsign", "weapon_config", "created_at"],
+    "required": ["id", "game_id", "mecha_game_squad_id", "mecha_game_chassis_id", "callsign", "weapon_config", "equipment_config", "created_at"],
     "additionalProperties": false
 }

@@ -59,11 +59,12 @@ func validateMechaGameSquadMechRec(args *validateMechaGameSquadMechArgs, require
 	return nil
 }
 
-// validateMechaGameSquadMechLoadout ensures the mech's weapon config fits the
-// chassis slot budget. An empty config is always allowed (a freshly created
-// mech may be set up before any weapons are assigned).
+// validateMechaGameSquadMechLoadout ensures the mech's combined weapon +
+// equipment config fits the chassis slot budget. An empty config on both
+// sides is always allowed (a freshly created mech may be set up before any
+// items are assigned).
 func (m *Domain) validateMechaGameSquadMechLoadout(rec *mecha_game_record.MechaGameSquadMech) error {
-	if rec == nil || len(rec.WeaponConfig) == 0 {
+	if rec == nil || (len(rec.WeaponConfig) == 0 && len(rec.EquipmentConfig) == 0) {
 		return nil
 	}
 
@@ -84,9 +85,43 @@ func (m *Domain) validateMechaGameSquadMechLoadout(rec *mecha_game_record.MechaG
 		weaponsByID[entry.WeaponID] = w
 	}
 
-	items := MountablesFromWeaponConfig(rec.WeaponConfig, weaponsByID)
-	if err := fitsLoadout(LoadoutCapacityFromChassis(chassisRec), items); err != nil {
-		return InvalidField(mecha_game_record.FieldMechaGameSquadMechWeaponConfig, "", err.Error())
+	equipmentByID := make(map[string]*mecha_game_record.MechaGameEquipment, len(rec.EquipmentConfig))
+	for _, entry := range rec.EquipmentConfig {
+		if _, ok := equipmentByID[entry.EquipmentID]; ok {
+			continue
+		}
+		eq, err := m.GetMechaGameEquipmentRec(entry.EquipmentID, nil)
+		if err != nil {
+			return err
+		}
+		equipmentByID[entry.EquipmentID] = eq
+	}
+
+	return squadMechLoadoutFitResult(chassisRec, rec.WeaponConfig, weaponsByID, rec.EquipmentConfig, equipmentByID)
+}
+
+// squadMechLoadoutFitResult is the pure, record-driven part of the squad-mech
+// loadout validator. It is kept separate from validateMechaGameSquadMechLoadout
+// so it can be unit-tested without spinning up the domain's DB-backed record
+// loaders. Returns nil when the loadout fits, or an InvalidField error
+// pointing at weapon_config or equipment_config (whichever the user most
+// likely needs to edit) when it does not.
+func squadMechLoadoutFitResult(
+	chassis *mecha_game_record.MechaGameChassis,
+	weaponCfg []mecha_game_record.WeaponConfigEntry,
+	weaponsByID map[string]*mecha_game_record.MechaGameWeapon,
+	equipmentCfg []mecha_game_record.EquipmentConfigEntry,
+	equipmentByID map[string]*mecha_game_record.MechaGameEquipment,
+) error {
+	if err := ValidateCombinedLoadoutFits(chassis, weaponCfg, weaponsByID, equipmentCfg, equipmentByID); err != nil {
+		// Prefer pointing at the equipment field when there is equipment,
+		// otherwise the weapon field. The returned message includes the
+		// offending item's label so the user can find it either way.
+		field := mecha_game_record.FieldMechaGameSquadMechWeaponConfig
+		if len(equipmentCfg) > 0 {
+			field = mecha_game_record.FieldMechaGameSquadMechEquipmentConfig
+		}
+		return InvalidField(field, "", err.Error())
 	}
 	return nil
 }

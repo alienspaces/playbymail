@@ -1,0 +1,32 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "http://playbymail.games/schema/mecha_game_schema/mecha_game_equipment.request.schema.json",
+    "title": "MechaGameEquipmentRequest",
+    "type": "object",
+    "properties": {
+        "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+        },
+        "description": {
+            "type": "string"
+        },
+        "mount_size": {
+            "type": "string",
+            "enum": ["small", "medium", "large"]
+        },
+        "effect_kind": {
+            "type": "string",
+            "enum": ["heat_sink", "targeting_computer", "armor_upgrade", "jump_jets", "ecm", "ammo_bin"]
+        },
+        "magnitude": {
+            "type": "integer"
+        },
+        "heat_cost": {
+            "type": "integer"
+        }
+    },
+    "required": ["name", "description", "mount_size", "effect_kind", "magnitude"],
+    "additionalProperties": false
+}

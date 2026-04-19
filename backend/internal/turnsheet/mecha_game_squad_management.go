@@ -51,6 +51,15 @@ type ManagementMechEntry struct {
 	MaxStructure     int              `json:"max_structure"`
 	StructureDamage  int              `json:"structure_damage"`
 	Weapons          []MechWeaponSlot `json:"weapons,omitempty"`
+	// Equipment lists all equipment items currently installed on the
+	// mech, rendered on the management sheet so players can see both
+	// weapon + equipment mounts and their combined effects at a glance.
+	Equipment []MechEquipmentEntry `json:"equipment,omitempty"`
+	// AmmoRemaining / AmmoCapacity describe the mech's shared ammo pool
+	// and are only populated when at least one weapon has
+	// ammo_capacity > 0. See MechOrderEntry for the same contract.
+	AmmoRemaining int `json:"ammo_remaining,omitempty"`
+	AmmoCapacity  int `json:"ammo_capacity,omitempty"`
 }
 
 // MechWeaponSlot describes one weapon slot on a mech.

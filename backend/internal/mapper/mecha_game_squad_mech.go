@@ -31,6 +31,13 @@ func MechaGameSquadMechRequestToRecord(l logger.Logger, r *http.Request, rec *me
 				SlotLocation: wc.SlotLocation,
 			})
 		}
+		rec.EquipmentConfig = make([]mecha_game_record.EquipmentConfigEntry, 0, len(req.EquipmentConfig))
+		for _, ec := range req.EquipmentConfig {
+			rec.EquipmentConfig = append(rec.EquipmentConfig, mecha_game_record.EquipmentConfigEntry{
+				EquipmentID:  ec.EquipmentID,
+				SlotLocation: ec.SlotLocation,
+			})
+		}
 	default:
 		return nil, fmt.Errorf("unsupported HTTP method")
 	}
@@ -48,15 +55,23 @@ func MechaGameSquadMechRecordToResponseData(l logger.Logger, rec *mecha_game_rec
 			SlotLocation: wc.SlotLocation,
 		})
 	}
+	equipmentConfig := make([]mecha_game_schema.EquipmentConfigEntry, 0, len(rec.EquipmentConfig))
+	for _, ec := range rec.EquipmentConfig {
+		equipmentConfig = append(equipmentConfig, mecha_game_schema.EquipmentConfigEntry{
+			EquipmentID:  ec.EquipmentID,
+			SlotLocation: ec.SlotLocation,
+		})
+	}
 
 	return &mecha_game_schema.MechaGameSquadMechResponseData{
 		ID:             rec.ID,
 		GameID:         rec.GameID,
 		MechaGameSquadID:   rec.MechaGameSquadID,
 		MechaGameChassisID: rec.MechaGameChassisID,
-		Callsign:       rec.Callsign,
-		WeaponConfig:   weaponConfig,
-		CreatedAt:      rec.CreatedAt,
+		Callsign:        rec.Callsign,
+		WeaponConfig:    weaponConfig,
+		EquipmentConfig: equipmentConfig,
+		CreatedAt:       rec.CreatedAt,
 		UpdatedAt:      nulltime.ToTimePtr(rec.UpdatedAt),
 		DeletedAt:      nulltime.ToTimePtr(rec.DeletedAt),
 	}, nil

@@ -388,15 +388,55 @@ func (p *MechaGameSquadManagementProcessor) buildManagementSheet(
 			_ = json.Unmarshal(mech.WeaponConfigJSON, &weaponConfig)
 		}
 		weaponNames := make(map[string]string, len(allWeapons))
+		weaponByID := make(map[string]*mecha_game_record.MechaGameWeapon, len(allWeapons))
 		for _, w := range allWeapons {
 			weaponNames[w.ID] = w.Name
+			weaponByID[w.ID] = w
 		}
+		hasAmmoWeapon := false
 		for _, slot := range weaponConfig {
+			if w := weaponByID[slot.WeaponID]; w != nil && w.AmmoCapacity > 0 {
+				hasAmmoWeapon = true
+			}
 			entry.Weapons = append(entry.Weapons, turnsheet.MechWeaponSlot{
 				SlotLocation:      slot.SlotLocation,
 				CurrentWeaponID:   slot.WeaponID,
 				CurrentWeaponName: weaponNames[slot.WeaponID],
 			})
+		}
+
+		// Equipment summary — load and render the same way as weapons so
+		// players can see both mount types on the management sheet.
+		var equipmentEntries []mecha_game_record.EquipmentConfigEntry
+		if len(mech.EquipmentConfigJSON) > 0 {
+			if err := json.Unmarshal(mech.EquipmentConfigJSON, &equipmentEntries); err != nil {
+				l.Warn("failed to unmarshal equipment config for mech >%s<: %v", mech.Callsign, err)
+			}
+		}
+		equipmentByID, err := p.Domain.LoadMechaGameEquipmentByID(equipmentEntries)
+		if err != nil {
+			l.Warn("failed to load equipment for mech >%s<: %v", mech.Callsign, err)
+		}
+		for _, entryCfg := range equipmentEntries {
+			eq := equipmentByID[entryCfg.EquipmentID]
+			if eq == nil {
+				continue
+			}
+			entry.Equipment = append(entry.Equipment, turnsheet.MechEquipmentEntry{
+				EquipmentID:  eq.ID,
+				Name:         eq.Name,
+				EffectKind:   eq.EffectKind,
+				Magnitude:    eq.Magnitude,
+				HeatCost:     eq.HeatCost,
+				MountSize:    eq.MountSize,
+				SlotLocation: entryCfg.SlotLocation,
+			})
+		}
+		if hasAmmoWeapon {
+			entry.AmmoRemaining = mech.AmmoRemaining
+			entry.AmmoCapacity = domain.MaxMechaGameAmmoCapacity(
+				weaponConfig, weaponByID, equipmentEntries, equipmentByID,
+			)
 		}
 
 		mechEntries = append(mechEntries, entry)

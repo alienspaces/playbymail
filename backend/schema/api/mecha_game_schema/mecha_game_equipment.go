@@ -6,45 +6,43 @@ import (
 	"gitlab.com/alienspaces/playbymail/schema/api/common_schema"
 )
 
-type MechaGameWeaponResponseData struct {
+type MechaGameEquipmentResponseData struct {
 	ID          string     `json:"id"`
 	GameID      string     `json:"game_id"`
 	Name        string     `json:"name"`
 	Description string     `json:"description"`
-	Damage      int        `json:"damage"`
+	MountSize   string     `json:"mount_size"`
+	EffectKind  string     `json:"effect_kind"`
+	Magnitude   int        `json:"magnitude"`
 	HeatCost    int        `json:"heat_cost"`
-	RangeBand   string     `json:"range_band"`
-	MountSize    string     `json:"mount_size"`
-	AmmoCapacity int        `json:"ammo_capacity"`
-	CreatedAt    time.Time  `json:"created_at"`
+	CreatedAt   time.Time  `json:"created_at"`
 	UpdatedAt   *time.Time `json:"updated_at,omitempty"`
 	DeletedAt   *time.Time `json:"deleted_at,omitempty"`
 }
 
-type MechaGameWeaponResponse struct {
-	Data       *MechaGameWeaponResponseData   `json:"data"`
+type MechaGameEquipmentResponse struct {
+	Data       *MechaGameEquipmentResponseData   `json:"data"`
 	Error      *common_schema.ResponseError      `json:"error,omitempty"`
 	Pagination *common_schema.ResponsePagination `json:"pagination,omitempty"`
 }
 
-type MechaGameWeaponCollectionResponse struct {
-	Data       []*MechaGameWeaponResponseData `json:"data"`
+type MechaGameEquipmentCollectionResponse struct {
+	Data       []*MechaGameEquipmentResponseData `json:"data"`
 	Error      *common_schema.ResponseError      `json:"error,omitempty"`
 	Pagination *common_schema.ResponsePagination `json:"pagination,omitempty"`
 }
 
-type MechaGameWeaponRequest struct {
+type MechaGameEquipmentRequest struct {
 	common_schema.Request
 	Name        string `json:"name"`
 	Description string `json:"description"`
-	Damage      int    `json:"damage,omitempty"`
+	MountSize   string `json:"mount_size,omitempty"`
+	EffectKind  string `json:"effect_kind,omitempty"`
+	Magnitude   int    `json:"magnitude,omitempty"`
 	HeatCost    int    `json:"heat_cost,omitempty"`
-	RangeBand    string `json:"range_band,omitempty"`
-	MountSize    string `json:"mount_size,omitempty"`
-	AmmoCapacity int    `json:"ammo_capacity,omitempty"`
 }
 
-type MechaGameWeaponQueryParams struct {
+type MechaGameEquipmentQueryParams struct {
 	common_schema.QueryParamsPagination
-	MechaGameWeaponResponseData
+	MechaGameEquipmentResponseData
 }

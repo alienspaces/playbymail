@@ -70,6 +70,14 @@
                 <FieldHint>Mount size category (small / medium / large). Must fit an available slot on the chassis — small weapons can spill into medium or large slots, medium weapons into large, but large weapons only fit large slots.</FieldHint>
               </div>
             </div>
+            <div class="form-row">
+              <div class="form-group half">
+                <label>Ammo Capacity</label>
+                <input type="number" min="0" max="200" step="1" v-model.number="modalForm.ammo_capacity" />
+                <FieldHint>Rounds each trigger-pull draws from the mech's shared ammo pool. Set to 0 for energy/beam weapons that never consume ammo. Mechs can carry ammo bins to add to the pool; when the pool hits 0, the weapon simply cannot fire until rearmed at a depot.</FieldHint>
+              </div>
+              <div class="form-group half"></div>
+            </div>
             <div class="modal-actions">
               <button type="submit">{{ modalMode === 'create' ? 'Create' : 'Save' }}</button>
               <button type="button" @click="closeModal">Cancel</button>
@@ -109,11 +117,12 @@ const columns = [
   { key: 'heat_cost', label: 'Heat' },
   { key: 'range_band', label: 'Range' },
   { key: 'mount_size', label: 'Mount' },
+  { key: 'ammo_capacity', label: 'Ammo' },
 ]
 
 const showModal = ref(false)
 const modalMode = ref('create')
-const modalForm = ref({ name: '', description: '', damage: 5, heat_cost: 3, range_band: 'medium', mount_size: 'medium' })
+const modalForm = ref({ name: '', description: '', damage: 5, heat_cost: 3, range_band: 'medium', mount_size: 'medium', ammo_capacity: 0 })
 const modalError = ref('')
 const showDeleteModal = ref(false)
 const toDelete = ref(null)
@@ -139,14 +148,14 @@ watch(() => selectedGame.value, (g) => { if (g) store.fetchMechaGameWeapons(g.id
 
 function openCreate() {
   modalMode.value = 'create'
-  modalForm.value = { name: '', description: '', damage: 5, heat_cost: 3, range_band: 'medium', mount_size: 'medium' }
+  modalForm.value = { name: '', description: '', damage: 5, heat_cost: 3, range_band: 'medium', mount_size: 'medium', ammo_capacity: 0 }
   modalError.value = ''
   showModal.value = true
 }
 
 function openEdit(row) {
   modalMode.value = 'edit'
-  modalForm.value = { ...row }
+  modalForm.value = { ammo_capacity: 0, ...row }
   modalError.value = ''
   showModal.value = true
 }
@@ -158,7 +167,7 @@ function closeModal() {
 
 async function handleSubmit(formData) {
   modalError.value = ''
-  const allowed = ['name', 'description', 'damage', 'heat_cost', 'range_band', 'mount_size']
+  const allowed = ['name', 'description', 'damage', 'heat_cost', 'range_band', 'mount_size', 'ammo_capacity']
   const data = Object.fromEntries(allowed.map(k => [k, formData[k]]))
   try {
     if (modalMode.value === 'create') {

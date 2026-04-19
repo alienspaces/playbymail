@@ -9,18 +9,18 @@ import (
 // Loadout capacity and fit-checking.
 //
 // A chassis exposes three aggregate slot bands: small, medium, and large. Any
-// item that needs a slot (today: weapons) declares a mount size in the same
-// vocabulary. fitsLoadout greedily places items into the chassis's slot budget
-// with "upward spillover": smaller items can occupy larger slots when their
-// native band is full, but never the reverse. Concretely:
+// item that needs a slot (weapons and equipment) declares a mount size in the
+// same vocabulary. fitsLoadout greedily places items into the chassis's slot
+// budget with "upward spillover": smaller items can occupy larger slots when
+// their native band is full, but never the reverse. Concretely:
 //
 //   - large items can only use large slots
 //   - medium items prefer medium slots, spill into large
 //   - small items prefer small slots, spill into medium, then large
 //
-// The helper is deliberately decoupled from any specific record type so future
-// equipment types (ammunition, heat sinks, etc.) can feed into the same budget
-// without touching this file — they just need a mount size and a label.
+// The helper is deliberately decoupled from any specific record type so both
+// weapons and equipment can feed into the same budget through the shared
+// Mountable abstraction — they just need a mount size and a label.
 
 // LoadoutCapacity is the aggregate slot budget exposed by a chassis.
 type LoadoutCapacity struct {
@@ -83,6 +83,49 @@ func ValidateWeaponLoadoutFits(chassis *mecha_game_record.MechaGameChassis, entr
 		return nil
 	}
 	items := MountablesFromWeaponConfig(entries, weaponsByID)
+	return fitsLoadout(LoadoutCapacityFromChassis(chassis), items)
+}
+
+// MountablesFromEquipmentConfig converts a persisted equipment loadout into
+// the mountable shape used by fitsLoadout. Equipment and weapons share the
+// chassis slot budget, so the same Mountable vocabulary applies.
+func MountablesFromEquipmentConfig(entries []mecha_game_record.EquipmentConfigEntry, eqByID map[string]*mecha_game_record.MechaGameEquipment) []Mountable {
+	if len(entries) == 0 {
+		return nil
+	}
+	out := make([]Mountable, 0, len(entries))
+	for _, e := range entries {
+		eq := eqByID[e.EquipmentID]
+		size := ""
+		name := e.EquipmentID
+		if eq != nil {
+			size = eq.MountSize
+			if eq.Name != "" {
+				name = eq.Name
+			}
+		}
+		out = append(out, Mountable{MountSize: size, Label: name})
+	}
+	return out
+}
+
+// ValidateCombinedLoadoutFits checks whether a chassis can accommodate the
+// given weapons and equipment together. It is the Phase 1 squad-mech validator
+// entry point and (when Phase 2 lands) will also back the management
+// turn-sheet swap path, reusing the same rules for install/swap operations.
+func ValidateCombinedLoadoutFits(
+	chassis *mecha_game_record.MechaGameChassis,
+	weaponEntries []mecha_game_record.WeaponConfigEntry, weaponsByID map[string]*mecha_game_record.MechaGameWeapon,
+	equipmentEntries []mecha_game_record.EquipmentConfigEntry, equipmentByID map[string]*mecha_game_record.MechaGameEquipment,
+) error {
+	if chassis == nil {
+		return nil
+	}
+	if len(weaponEntries) == 0 && len(equipmentEntries) == 0 {
+		return nil
+	}
+	items := MountablesFromWeaponConfig(weaponEntries, weaponsByID)
+	items = append(items, MountablesFromEquipmentConfig(equipmentEntries, equipmentByID)...)
 	return fitsLoadout(LoadoutCapacityFromChassis(chassis), items)
 }
 

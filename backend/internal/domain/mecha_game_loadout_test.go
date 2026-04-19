@@ -156,3 +156,63 @@ func TestValidateWeaponLoadoutFits_ReturnsFitError(t *testing.T) {
 func TestLoadoutCapacityFromChassis_HandlesNil(t *testing.T) {
 	require.Equal(t, LoadoutCapacity{}, LoadoutCapacityFromChassis(nil))
 }
+
+func TestMountablesFromEquipmentConfig_ResolvesNamesAndSizes(t *testing.T) {
+	equipment := map[string]*mecha_game_record.MechaGameEquipment{
+		"eid-1": {Name: "Double Heat Sink", MountSize: mecha_game_record.EquipmentMountSizeSmall},
+	}
+	entries := []mecha_game_record.EquipmentConfigEntry{
+		{EquipmentID: "eid-1", SlotLocation: "center-torso"},
+	}
+	out := MountablesFromEquipmentConfig(entries, equipment)
+	require.Len(t, out, 1)
+	require.Equal(t, mecha_game_record.EquipmentMountSizeSmall, out[0].MountSize)
+	require.Equal(t, "Double Heat Sink", out[0].Label)
+}
+
+func TestMountablesFromEquipmentConfig_UnknownEquipmentFallsBackToID(t *testing.T) {
+	entries := []mecha_game_record.EquipmentConfigEntry{
+		{EquipmentID: "missing-id", SlotLocation: "left-arm"},
+	}
+	out := MountablesFromEquipmentConfig(entries, nil)
+	require.Len(t, out, 1)
+	require.Equal(t, "missing-id", out[0].Label)
+}
+
+func TestValidateCombinedLoadoutFits_EmptyInputsAreNoop(t *testing.T) {
+	chassis := &mecha_game_record.MechaGameChassis{SmallSlots: 1}
+	require.NoError(t, ValidateCombinedLoadoutFits(chassis, nil, nil, nil, nil))
+}
+
+func TestValidateCombinedLoadoutFits_NilChassisIsNoop(t *testing.T) {
+	weaponEntries := []mecha_game_record.WeaponConfigEntry{{WeaponID: "w1"}}
+	require.NoError(t, ValidateCombinedLoadoutFits(nil, weaponEntries, nil, nil, nil))
+}
+
+func TestValidateCombinedLoadoutFits_SharesSlotBudget(t *testing.T) {
+	chassis := &mecha_game_record.MechaGameChassis{SmallSlots: 1, MediumSlots: 0, LargeSlots: 0}
+	weapons := map[string]*mecha_game_record.MechaGameWeapon{
+		"w1": {Name: "Small Laser", MountSize: mecha_game_record.WeaponMountSizeSmall},
+	}
+	equipment := map[string]*mecha_game_record.MechaGameEquipment{
+		"e1": {Name: "Heat Sink", MountSize: mecha_game_record.EquipmentMountSizeSmall},
+	}
+	weaponEntries := []mecha_game_record.WeaponConfigEntry{{WeaponID: "w1"}}
+	equipmentEntries := []mecha_game_record.EquipmentConfigEntry{{EquipmentID: "e1"}}
+	err := ValidateCombinedLoadoutFits(chassis, weaponEntries, weapons, equipmentEntries, equipment)
+	require.Error(t, err, "single small slot must not accommodate both a weapon and equipment")
+}
+
+func TestValidateCombinedLoadoutFits_SpilloverWorksAcrossMix(t *testing.T) {
+	chassis := &mecha_game_record.MechaGameChassis{SmallSlots: 0, MediumSlots: 0, LargeSlots: 2}
+	weapons := map[string]*mecha_game_record.MechaGameWeapon{
+		"w1": {Name: "Small Laser", MountSize: mecha_game_record.WeaponMountSizeSmall},
+	}
+	equipment := map[string]*mecha_game_record.MechaGameEquipment{
+		"e1": {Name: "Heat Sink", MountSize: mecha_game_record.EquipmentMountSizeSmall},
+	}
+	weaponEntries := []mecha_game_record.WeaponConfigEntry{{WeaponID: "w1"}}
+	equipmentEntries := []mecha_game_record.EquipmentConfigEntry{{EquipmentID: "e1"}}
+	err := ValidateCombinedLoadoutFits(chassis, weaponEntries, weapons, equipmentEntries, equipment)
+	require.NoError(t, err, "both small items should spill up into the two large slots")
+}

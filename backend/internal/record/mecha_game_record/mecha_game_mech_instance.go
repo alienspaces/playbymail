@@ -27,6 +27,8 @@ const (
 	FieldMechaGameMechInstanceExperiencePoints      string = "experience_points"
 	FieldMechaGameMechInstanceStatus                string = "status"
 	FieldMechaGameMechInstanceWeaponConfig          string = "weapon_config"
+	FieldMechaGameMechInstanceEquipmentConfig       string = "equipment_config"
+	FieldMechaGameMechInstanceAmmoRemaining         string = "ammo_remaining"
 	FieldMechaGameMechInstanceIsRefitting           string = "is_refitting"
 	FieldMechaGameMechInstanceCreatedAt             string = "created_at"
 	FieldMechaGameMechInstanceUpdatedAt             string = "updated_at"
@@ -53,10 +55,13 @@ type MechaGameMechInstance struct {
 	CurrentHeat           int                 `db:"current_heat"`
 	PilotSkill            int                 `db:"pilot_skill"`
 	ExperiencePoints      int                 `db:"experience_points"`
-	Status                string              `db:"status"`
-	WeaponConfig          []WeaponConfigEntry `db:"-"`
-	WeaponConfigJSON      []byte              `db:"weapon_config"`
-	IsRefitting           bool                `db:"is_refitting"`
+	Status                string                 `db:"status"`
+	WeaponConfig          []WeaponConfigEntry    `db:"-"`
+	WeaponConfigJSON      []byte                 `db:"weapon_config"`
+	EquipmentConfig       []EquipmentConfigEntry `db:"-"`
+	EquipmentConfigJSON   []byte                 `db:"equipment_config"`
+	AmmoRemaining         int                    `db:"ammo_remaining"`
+	IsRefitting           bool                   `db:"is_refitting"`
 }
 
 func (r *MechaGameMechInstance) ToNamedArgs() pgx.NamedArgs {
@@ -75,6 +80,9 @@ func (r *MechaGameMechInstance) ToNamedArgs() pgx.NamedArgs {
 	args[FieldMechaGameMechInstanceStatus] = r.Status
 	weaponJSON, _ := json.Marshal(r.WeaponConfig)
 	args[FieldMechaGameMechInstanceWeaponConfig] = string(weaponJSON)
+	equipmentJSON, _ := json.Marshal(r.EquipmentConfig)
+	args[FieldMechaGameMechInstanceEquipmentConfig] = string(equipmentJSON)
+	args[FieldMechaGameMechInstanceAmmoRemaining] = r.AmmoRemaining
 	args[FieldMechaGameMechInstanceIsRefitting] = r.IsRefitting
 	return args
 }

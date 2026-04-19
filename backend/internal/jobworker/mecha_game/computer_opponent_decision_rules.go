@@ -26,11 +26,14 @@ func (s *ruleBasedStrategy) GenerateOrders(ctx context.Context, l logger.Logger,
 			continue
 		}
 
-		// Look up chassis speed for multi-hop movement.
+		// Look up chassis speed for multi-hop movement. Layer on any
+		// jump-jets bonus (zeroed while refitting) so the AI budgets match
+		// what the orders processor will actually accept.
 		mechSpeed := 1
 		if mech.MechaGameChassisID != "" {
 			if chassisRec, err := s.lookupChassis(state, mech.MechaGameChassisID); chassisRec != nil && err == nil {
-				mechSpeed = chassisRec.Speed
+				effects := state.EffectsByMechID[mech.ID]
+				mechSpeed = chassisRec.Speed + effects.SpeedBonus
 			}
 		}
 
@@ -41,8 +44,7 @@ func (s *ruleBasedStrategy) GenerateOrders(ctx context.Context, l logger.Logger,
 		if postMoveSectorID == "" {
 			postMoveSectorID = mech.MechaGameSectorInstanceID
 		}
-		attackTargetID := s.pickAttackTarget(opp, postMoveSectorID, state)
-
+		attackTargetID := s.pickAttackTarget(opp, postMoveSectorID, mech, state)
 		orders = append(orders, turnsheet.ScannedMechOrder{
 			MechInstanceID:             mech.ID,
 			MoveToSectorInstanceID:     targetSectorInstanceID,
@@ -59,7 +61,18 @@ func (s *ruleBasedStrategy) GenerateOrders(ctx context.Context, l logger.Logger,
 // Returns empty string if no valid target exists.
 // Uses max range 2 (long-range weapon reach) as the engagement envelope.
 // Combat resolution will only fire weapons that can actually reach the target.
-func (s *ruleBasedStrategy) pickAttackTarget(opp *mecha_game_record.MechaGameComputerOpponent, fromSectorID string, state *GameStateContext) string {
+//
+// The attacker's targeting-computer HitChanceBonus and the defender's ECM
+// CoverBonus are used purely as tie-breakers between otherwise equally
+// attractive targets (same CurrentStructure bucket). This keeps the AI
+// honest about the same modifiers the combat resolver applies, without
+// overhauling the aggression-driven primary ranking.
+func (s *ruleBasedStrategy) pickAttackTarget(
+	opp *mecha_game_record.MechaGameComputerOpponent,
+	fromSectorID string,
+	attacker *mecha_game_record.MechaGameMechInstance,
+	state *GameStateContext,
+) string {
 	const maxEngagementRange = 2
 
 	var candidates []*mechState
@@ -77,22 +90,55 @@ func (s *ruleBasedStrategy) pickAttackTarget(opp *mecha_game_record.MechaGameCom
 		return ""
 	}
 
-	// High aggression: target weakest (lowest structure) to maximise kills
-	// Low aggression: target strongest (highest structure) as deterrent
+	attackerHitBonus := 0
+	if attacker != nil {
+		attackerHitBonus = state.EffectsByMechID[attacker.ID].HitChanceBonus
+	}
+
+	// Primary ranking: aggression-driven structure bucket
+	// (high aggression → weakest; low aggression → strongest).
+	// Tie-break: prefer targets with the smaller *effective* cover
+	// (chassis-level cover is not tracked per mech; we use ECM CoverBonus
+	// as the per-mech cover signal, adjusted by the attacker's hit bonus).
 	best := candidates[0]
+	bestScore := targetScore(opp, best, attackerHitBonus, state)
 	for _, em := range candidates[1:] {
-		if opp.Aggression >= 6 {
-			if em.Instance.CurrentStructure < best.Instance.CurrentStructure {
-				best = em
-			}
-		} else {
-			if em.Instance.CurrentStructure > best.Instance.CurrentStructure {
-				best = em
-			}
+		score := targetScore(opp, em, attackerHitBonus, state)
+		if score > bestScore {
+			best = em
+			bestScore = score
 		}
 	}
 
 	return best.Instance.ID
+}
+
+// targetScore produces a single comparable score that orders candidates by
+// the primary aggression criterion (structure) and breaks ties using the
+// defender's ECM cover bonus net of the attacker's targeting-computer hit
+// bonus. Higher score == more attractive target.
+func targetScore(
+	opp *mecha_game_record.MechaGameComputerOpponent,
+	em *mechState,
+	attackerHitBonus int,
+	state *GameStateContext,
+) int {
+	defenderCover := state.EffectsByMechID[em.Instance.ID].CoverBonus
+	// netCover is how hard the defender is to hit after accounting for
+	// the attacker's targeting advantage. Larger positive values mean a
+	// harder-to-hit target (less attractive); larger negative values mean
+	// an easier target (more attractive). We flip the sign so the score
+	// increases as the target becomes easier.
+	netCover := attackerHitBonus - defenderCover
+	structure := em.Instance.CurrentStructure
+	// High aggression: prefer low structure (bigger primary term = more
+	// attractive when structure is low). Encode as -structure * 1000 so
+	// the primary signal dominates the tie-breaker.
+	// Low aggression: prefer high structure (opposite sign).
+	if opp.Aggression >= 6 {
+		return -structure*1000 + netCover
+	}
+	return structure*1000 + netCover
 }
 
 // sectorDistance returns the BFS distance between two sector instance IDs

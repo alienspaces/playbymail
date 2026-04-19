@@ -18,7 +18,10 @@ import (
 )
 
 // mechOrderEntryFromInstance builds a MechOrderEntry from a mech instance,
-// resolving chassis stats, sector name, and weapon loadout.
+// resolving chassis stats, sector name, and weapon loadout. When the mech
+// has equipment installed and is not refitting, Speed and MaxArmor use the
+// effective (bonus-applied) values so the turn sheet shows the actual
+// reachable distance and armor ceiling the engine will enforce.
 func mechOrderEntryFromInstance(
 	l logger.Logger,
 	d *domain.Domain,
@@ -35,6 +38,20 @@ func mechOrderEntryFromInstance(
 		IsRefitting:      mechInst.IsRefitting,
 	}
 
+	// Resolve equipment effects so Speed / MaxArmor below reflect the
+	// chassis *plus* applicable bonuses (zeroed out for refitting mechs).
+	var equipmentEntries []mecha_game_record.EquipmentConfigEntry
+	if len(mechInst.EquipmentConfigJSON) > 0 {
+		if err := json.Unmarshal(mechInst.EquipmentConfigJSON, &equipmentEntries); err != nil {
+			l.Warn("failed to unmarshal equipment config for mech >%s< >%v<", mechInst.ID, err)
+		}
+	}
+	equipmentByID, err := d.LoadMechaGameEquipmentByID(equipmentEntries)
+	if err != nil {
+		l.Warn("failed to load equipment for mech >%s< >%v<", mechInst.ID, err)
+	}
+	effects := domain.AggregateMechaGameEquipmentEffects(equipmentEntries, equipmentByID, mechInst.IsRefitting)
+
 	// Resolve chassis stats
 	chassisRec, err := d.GetMechaGameChassisRec(mechInst.MechaGameChassisID, nil)
 	if err != nil {
@@ -43,10 +60,10 @@ func mechOrderEntryFromInstance(
 	} else {
 		entry.ChassisName = chassisRec.Name
 		entry.ChassisClass = chassisRec.ChassisClass
-		entry.MaxArmor = chassisRec.ArmorPoints
+		entry.MaxArmor = domain.EffectiveMechaGameMaxArmor(chassisRec, effects)
 		entry.MaxStructure = chassisRec.StructurePoints
 		entry.HeatCapacity = chassisRec.HeatCapacity
-		entry.Speed = chassisRec.Speed
+		entry.Speed = domain.EffectiveMechaGameSpeed(chassisRec, effects)
 	}
 
 	// Resolve sector name
@@ -63,13 +80,17 @@ func mechOrderEntryFromInstance(
 		}
 	}
 
-	// Resolve weapon entries from instance weapon config
+	// Resolve weapon entries from instance weapon config. We also build a
+	// lookup map so ammo capacity can be summed alongside ammo_bin
+	// magnitudes further down.
 	var weaponConfig []mecha_game_record.WeaponConfigEntry
 	if len(mechInst.WeaponConfigJSON) > 0 {
 		if err := json.Unmarshal(mechInst.WeaponConfigJSON, &weaponConfig); err != nil {
 			l.Warn("failed to unmarshal weapon config for mech >%s< >%v<", mechInst.ID, err)
 		}
 	}
+	weaponByID := make(map[string]*mecha_game_record.MechaGameWeapon, len(weaponConfig))
+	hasAmmoWeapon := false
 	for _, slot := range weaponConfig {
 		if slot.WeaponID == "" {
 			continue
@@ -79,6 +100,10 @@ func mechOrderEntryFromInstance(
 			l.Warn("failed to get weapon >%s< >%v<", slot.WeaponID, err)
 			continue
 		}
+		weaponByID[weaponRec.ID] = weaponRec
+		if weaponRec.AmmoCapacity > 0 {
+			hasAmmoWeapon = true
+		}
 		entry.Weapons = append(entry.Weapons, turnsheet.MechWeaponEntry{
 			WeaponID:     weaponRec.ID,
 			Name:         weaponRec.Name,
@@ -86,7 +111,40 @@ func mechOrderEntryFromInstance(
 			HeatCost:     weaponRec.HeatCost,
 			RangeBand:    weaponRec.RangeBand,
 			SlotLocation: slot.SlotLocation,
+			AmmoCapacity: weaponRec.AmmoCapacity,
 		})
+	}
+
+	// Equipment entries — mirror the weapon rendering so players can see
+	// both mounts on the same chassis diagram. We already resolved
+	// equipmentEntries / equipmentByID above when computing effects.
+	for _, entryCfg := range equipmentEntries {
+		if entryCfg.EquipmentID == "" {
+			continue
+		}
+		eq := equipmentByID[entryCfg.EquipmentID]
+		if eq == nil {
+			continue
+		}
+		entry.Equipment = append(entry.Equipment, turnsheet.MechEquipmentEntry{
+			EquipmentID:  eq.ID,
+			Name:         eq.Name,
+			EffectKind:   eq.EffectKind,
+			Magnitude:    eq.Magnitude,
+			HeatCost:     eq.HeatCost,
+			MountSize:    eq.MountSize,
+			SlotLocation: entryCfg.SlotLocation,
+		})
+	}
+
+	// Ammo summary: populated only for mechs carrying at least one
+	// ammo-consuming weapon, otherwise the "x/y" display just clutters
+	// the sheet.
+	if hasAmmoWeapon {
+		entry.AmmoRemaining = mechInst.AmmoRemaining
+		entry.AmmoCapacity = domain.MaxMechaGameAmmoCapacity(
+			weaponConfig, weaponByID, equipmentEntries, equipmentByID,
+		)
 	}
 
 	return entry
@@ -208,23 +266,50 @@ func (p *MechaGameOrdersProcessor) processMechOrderWithEvent(
 		return nil
 	}
 
-	// Validate that the destination is within the mech's speed budget.
+	// Validate that the destination is within the mech's *effective* speed
+	// budget (chassis.Speed + jump-jets SpeedBonus, zeroed while refitting).
 	chassisRec, err := p.Domain.GetMechaGameChassisRec(mechInstanceRec.MechaGameChassisID, nil)
 	if err != nil {
 		l.Warn("failed to get chassis >%s< for movement validation: %v", mechInstanceRec.MechaGameChassisID, err)
 		return nil
 	}
-	hops, reachable := p.IsSectorReachableWithinSpeed(l, gameInstanceRec.ID, mechInstanceRec.MechaGameSectorInstanceID, order.MoveToSectorInstanceID, chassisRec.Speed)
+
+	var equipmentEntries []mecha_game_record.EquipmentConfigEntry
+	if len(mechInstanceRec.EquipmentConfigJSON) > 0 {
+		if err := json.Unmarshal(mechInstanceRec.EquipmentConfigJSON, &equipmentEntries); err != nil {
+			l.Warn("failed to unmarshal equipment config for mech >%s< >%v<", mechInstanceRec.ID, err)
+		}
+	}
+	equipmentByID, err := p.Domain.LoadMechaGameEquipmentByID(equipmentEntries)
+	if err != nil {
+		l.Warn("failed to load equipment for mech >%s< >%v<", mechInstanceRec.ID, err)
+	}
+	effects := domain.AggregateMechaGameEquipmentEffects(equipmentEntries, equipmentByID, mechInstanceRec.IsRefitting)
+	effectiveSpeed := domain.EffectiveMechaGameSpeed(chassisRec, effects)
+
+	hops, reachable := p.IsSectorReachableWithinSpeed(l, gameInstanceRec.ID, mechInstanceRec.MechaGameSectorInstanceID, order.MoveToSectorInstanceID, effectiveSpeed)
 	if !reachable {
 		l.Warn("mech >%s< cannot reach sector >%s< within speed budget %d (distance > %d hops)",
-			order.MechInstanceID, order.MoveToSectorInstanceID, chassisRec.Speed, chassisRec.Speed)
+			order.MechInstanceID, order.MoveToSectorInstanceID, effectiveSpeed, effectiveSpeed)
 		return nil
 	}
-	_ = hops
 
 	sectorRec, err := p.Domain.GetMechaGameSectorRec(sectorInstanceRec.MechaGameSectorID, nil)
 	if err != nil {
 		l.Warn("failed to get sector design >%s<: %v", sectorInstanceRec.MechaGameSectorID, err)
+	}
+
+	// Jump-jets heat predicate: if the mech traveled more hops than its
+	// base chassis speed, any jump_jets equipment with heat_cost > 0 fires
+	// this turn. Apply the heat immediately to the mech's running heat so
+	// combat resolution and end-of-turn both see the updated value.
+	if hops > chassisRec.Speed {
+		jumpHeat := domain.MechaGameEquipmentJumpJetHeatCost(
+			equipmentEntries, equipmentByID, mechInstanceRec.IsRefitting,
+		)
+		if jumpHeat > 0 {
+			mechInstanceRec.CurrentHeat += jumpHeat
+		}
 	}
 
 	mechInstanceRec.MechaGameSectorInstanceID = order.MoveToSectorInstanceID

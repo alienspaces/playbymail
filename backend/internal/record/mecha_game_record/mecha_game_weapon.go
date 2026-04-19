@@ -19,6 +19,7 @@ const (
 	FieldMechaGameWeaponHeatCost    string = "heat_cost"
 	FieldMechaGameWeaponRangeBand   string = "range_band"
 	FieldMechaGameWeaponMountSize   string = "mount_size"
+	FieldMechaGameWeaponAmmoCapacity string = "ammo_capacity"
 	FieldMechaGameWeaponCreatedAt   string = "created_at"
 	FieldMechaGameWeaponUpdatedAt   string = "updated_at"
 	FieldMechaGameWeaponDeletedAt   string = "deleted_at"
@@ -43,6 +44,12 @@ type MechaGameWeapon struct {
 	HeatCost    int    `db:"heat_cost"`
 	RangeBand   string `db:"range_band"`
 	MountSize   string `db:"mount_size"`
+	// AmmoCapacity is the weapon's built-in magazine size. 0 means the weapon
+	// does not consume from the mech's shared ammo pool (e.g. an energy
+	// weapon). A value > 0 contributes that many shots to the pool at game
+	// start and on each depot refill, and each trigger-pull decrements the
+	// pool by 1 regardless of hit/miss.
+	AmmoCapacity int `db:"ammo_capacity"`
 }
 
 func (r *MechaGameWeapon) ToNamedArgs() pgx.NamedArgs {
@@ -54,5 +61,6 @@ func (r *MechaGameWeapon) ToNamedArgs() pgx.NamedArgs {
 	args[FieldMechaGameWeaponHeatCost] = r.HeatCost
 	args[FieldMechaGameWeaponRangeBand] = r.RangeBand
 	args[FieldMechaGameWeaponMountSize] = r.MountSize
+	args[FieldMechaGameWeaponAmmoCapacity] = r.AmmoCapacity
 	return args
 }

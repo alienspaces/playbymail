@@ -1,7 +1,7 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
-    "$id": "http://playbymail.games/schema/mecha_game_schema/mecha_game_weapon.schema.json",
-    "title": "MechaGameWeapon",
+    "$id": "http://playbymail.games/schema/mecha_game_schema/mecha_game_equipment.schema.json",
+    "title": "MechaGameEquipment",
     "type": "object",
     "properties": {
         "id": {
@@ -18,21 +18,18 @@
         "description": {
             "type": "string"
         },
-        "damage": {
-            "type": "integer"
-        },
-        "heat_cost": {
-            "type": "integer"
-        },
-        "range_band": {
-            "type": "string",
-            "enum": ["short", "medium", "long"]
-        },
         "mount_size": {
             "type": "string",
             "enum": ["small", "medium", "large"]
         },
-        "ammo_capacity": {
+        "effect_kind": {
+            "type": "string",
+            "enum": ["heat_sink", "targeting_computer", "armor_upgrade", "jump_jets", "ecm", "ammo_bin"]
+        },
+        "magnitude": {
+            "type": "integer"
+        },
+        "heat_cost": {
             "type": "integer"
         },
         "created_at": {
@@ -45,6 +42,6 @@
             "$ref": "http://playbymail.games/schema/common_schema/common.schema.json#/$defs/updated_at"
         }
     },
-    "required": ["id", "game_id", "name", "description", "damage", "heat_cost", "range_band", "mount_size", "ammo_capacity", "created_at"],
+    "required": ["id", "game_id", "name", "description", "mount_size", "effect_kind", "magnitude", "heat_cost", "created_at"],
     "additionalProperties": false
 }

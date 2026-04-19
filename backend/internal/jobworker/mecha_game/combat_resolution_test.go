@@ -109,25 +109,29 @@ func TestHitChance(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name          string
-		pilotSkill    int
-		coverModifier int
-		expected      int
+		name             string
+		pilotSkill       int
+		attackerHitBonus int
+		coverModifier    int
+		expected         int
 	}{
-		{name: "pilot skill 0 gives 50%", pilotSkill: 0, coverModifier: 0, expected: 50},
-		{name: "pilot skill 1 gives 55%", pilotSkill: 1, coverModifier: 0, expected: 55},
-		{name: "pilot skill 5 gives 75%", pilotSkill: 5, coverModifier: 0, expected: 75},
-		{name: "pilot skill 9 gives 95%", pilotSkill: 9, coverModifier: 0, expected: 95},
-		{name: "pilot skill 10 caps at 95%", pilotSkill: 10, coverModifier: 0, expected: 95},
-		{name: "pilot skill 20 caps at 95%", pilotSkill: 20, coverModifier: 0, expected: 95},
+		{name: "pilot skill 0 gives 50%", pilotSkill: 0, expected: 50},
+		{name: "pilot skill 1 gives 55%", pilotSkill: 1, expected: 55},
+		{name: "pilot skill 5 gives 75%", pilotSkill: 5, expected: 75},
+		{name: "pilot skill 9 gives 95%", pilotSkill: 9, expected: 95},
+		{name: "pilot skill 10 caps at 95%", pilotSkill: 10, expected: 95},
+		{name: "pilot skill 20 caps at 95%", pilotSkill: 20, expected: 95},
 		{name: "cover -10 reduces hit chance", pilotSkill: 5, coverModifier: -10, expected: 65},
 		{name: "cover floors at 0%", pilotSkill: 0, coverModifier: -100, expected: 0},
+		{name: "targeting computer +10 adds to base", pilotSkill: 0, attackerHitBonus: 10, expected: 60},
+		{name: "targeting computer caps at 95", pilotSkill: 9, attackerHitBonus: 20, expected: 95},
+		{name: "targeting computer offsets ecm cover", pilotSkill: 5, attackerHitBonus: 15, coverModifier: -20, expected: 70},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			chance := hitChance(tt.pilotSkill, tt.coverModifier)
+			chance := hitChance(tt.pilotSkill, tt.attackerHitBonus, tt.coverModifier)
 			require.Equal(t, tt.expected, chance)
 		})
 	}

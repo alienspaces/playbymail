@@ -74,6 +74,10 @@ func validateMechaGameWeaponRec(args *validateMechaGameWeaponArgs, requireID boo
 		return InvalidField(mecha_game_record.FieldMechaGameWeaponHeatCost, "", "heat_cost must be between 0 and 20")
 	}
 
+	if rec.AmmoCapacity < 0 || rec.AmmoCapacity > maxWeaponAmmoCapacity {
+		return InvalidField(mecha_game_record.FieldMechaGameWeaponAmmoCapacity, "", "ammo_capacity must be between 0 and 200 (0 = no ammo tracking)")
+	}
+
 	return nil
 }
 
@@ -81,6 +85,7 @@ func validateMechaGameWeaponRec(args *validateMechaGameWeaponArgs, requireID boo
 // ranges relative to chassis armour, structure, and heat capacity (see
 // mecha_game_chassis_validate.go).
 const (
-	maxWeaponDamage   = 20
-	maxWeaponHeatCost = 20
+	maxWeaponDamage       = 20
+	maxWeaponHeatCost     = 20
+	maxWeaponAmmoCapacity = 200
 )

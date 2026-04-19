@@ -33,6 +33,24 @@ type MechWeaponEntry struct {
 	HeatCost     int    `json:"heat_cost"`
 	RangeBand    string `json:"range_band,omitempty"`
 	SlotLocation string `json:"slot_location,omitempty"`
+	// AmmoCapacity is the weapon's designer-configured ammo cost per
+	// trigger-pull pool allocation. Zero means the weapon does not
+	// consume ammo and the mech's shared ammo pool is not decremented
+	// when this weapon fires.
+	AmmoCapacity int `json:"ammo_capacity"`
+}
+
+// MechEquipmentEntry is a single equipment item fitted to a mech, shown on
+// the orders / management sheets so the player can see which mounts are
+// accounted for by equipment vs weapons.
+type MechEquipmentEntry struct {
+	EquipmentID  string `json:"equipment_id,omitempty"`
+	Name         string `json:"name,omitempty"`
+	EffectKind   string `json:"effect_kind,omitempty"`
+	Magnitude    int    `json:"magnitude"`
+	HeatCost     int    `json:"heat_cost"`
+	MountSize    string `json:"mount_size,omitempty"`
+	SlotLocation string `json:"slot_location,omitempty"`
 }
 
 // MechOrderEntry is a single mech's orders for a turn.
@@ -55,6 +73,16 @@ type MechOrderEntry struct {
 	PilotSkill                 int               `json:"pilot_skill"`
 	IsRefitting                bool              `json:"is_refitting"`
 	Weapons                    []MechWeaponEntry `json:"weapons,omitempty"`
+	// Equipment lists non-weapon items mounted on this mech's chassis,
+	// rendered alongside Weapons so players can see combined slot usage.
+	Equipment []MechEquipmentEntry `json:"equipment,omitempty"`
+	// AmmoRemaining is the mech's current shared ammo pool, shown only
+	// for mechs carrying at least one weapon with ammo_capacity > 0.
+	AmmoRemaining int `json:"ammo_remaining,omitempty"`
+	// AmmoCapacity is the mech's maximum ammo pool derived from weapon
+	// ammo_capacity totals + ammo_bin magnitudes, used alongside
+	// AmmoRemaining to render "x/y" ammo indicators on the turn sheet.
+	AmmoCapacity int `json:"ammo_capacity,omitempty"`
 	// ReachableSectors lists sectors this mech can reach within its speed budget.
 	ReachableSectors []SectorOption `json:"reachable_sectors,omitempty"`
 }

@@ -40,6 +40,7 @@ func MechaGameWeaponRequestToRecord(l logger.Logger, r *http.Request, rec *mecha
 		if rec.MountSize == "" {
 			rec.MountSize = mecha_game_record.WeaponMountSizeMedium
 		}
+		rec.AmmoCapacity = req.AmmoCapacity
 	default:
 		return nil, fmt.Errorf("unsupported HTTP method")
 	}
@@ -57,8 +58,9 @@ func MechaGameWeaponRecordToResponseData(l logger.Logger, rec *mecha_game_record
 		Damage:      rec.Damage,
 		HeatCost:    rec.HeatCost,
 		RangeBand:   rec.RangeBand,
-		MountSize:   rec.MountSize,
-		CreatedAt:   rec.CreatedAt,
+		MountSize:    rec.MountSize,
+		AmmoCapacity: rec.AmmoCapacity,
+		CreatedAt:    rec.CreatedAt,
 		UpdatedAt:   nulltime.ToTimePtr(rec.UpdatedAt),
 		DeletedAt:   nulltime.ToTimePtr(rec.DeletedAt),
 	}, nil

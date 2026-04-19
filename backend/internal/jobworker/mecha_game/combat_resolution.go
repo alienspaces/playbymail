@@ -24,6 +24,16 @@ type mechSnapshot struct {
 	SquadInstanceID  string
 	SectorInstanceID string
 	Weapons          []mecha_game_record.WeaponConfigEntry
+	Equipment        []mecha_game_record.EquipmentConfigEntry
+	EquipmentByID    map[string]*mecha_game_record.MechaGameEquipment
+	Effects          Effects
+	// DidFireAmmoWeapon records whether this mech actually fired at least one
+	// weapon with ammo_capacity > 0 this turn, so the equipment heat predicate
+	// for ammo_bin can fire correctly at EoT accounting.
+	DidFireAmmoWeapon bool
+	// DidAttack records whether this mech actually attempted any attack this
+	// turn, so the targeting-computer heat predicate can fire correctly.
+	DidAttack bool
 }
 
 // rangeDistance returns the number of sector hops between two sector instances
@@ -84,10 +94,16 @@ func weaponCanFire(rangeBand string, distance int) bool {
 }
 
 // hitChance returns the probability of a single weapon hit (0–100).
-// Formula: 50 + pilotSkill*5 + coverModifier, capped to [0, 95].
-// coverModifier is the target sector's cover_modifier (negative values reduce hit chance).
-func hitChance(pilotSkill int, coverModifier int) int {
-	chance := 50 + pilotSkill*5 + coverModifier
+// Formula: 50 + pilotSkill*5 + attackerHitBonus + coverModifier, capped to [0, 95].
+//
+// attackerHitBonus comes from the attacker's targeting-computer equipment
+// (zero when absent or the attacker is refitting). coverModifier is the sum
+// of the target sector's cover modifier and the target's ECM cover bonus
+// (zero when absent or the target is refitting). Negative final values are
+// clamped at 0; extreme positive values cap at 95 so there is always some
+// miss chance.
+func hitChance(pilotSkill int, attackerHitBonus int, coverModifier int) int {
+	chance := 50 + pilotSkill*5 + attackerHitBonus + coverModifier
 	if chance > 95 {
 		chance = 95
 	}
@@ -129,7 +145,7 @@ func (p *MechaGame) resolveCombat(
 		return nil, err
 	}
 
-	snapshots, err := buildMechSnapshots(l, allMechInsts)
+	snapshots, err := p.buildMechSnapshots(l, allMechInsts)
 	if err != nil {
 		l.Warn("failed to build mech snapshots: %v", err)
 		return nil, err
@@ -165,7 +181,7 @@ func (p *MechaGame) resolveCombat(
 	return xpMap, nil
 }
 
-func buildMechSnapshots(l logger.Logger, insts []*mecha_game_record.MechaGameMechInstance) (map[string]*mechSnapshot, error) {
+func (p *MechaGame) buildMechSnapshots(l logger.Logger, insts []*mecha_game_record.MechaGameMechInstance) (map[string]*mechSnapshot, error) {
 
 	snapshots := make(map[string]*mechSnapshot, len(insts))
 
@@ -177,11 +193,36 @@ func buildMechSnapshots(l logger.Logger, insts []*mecha_game_record.MechaGameMec
 				return nil, err
 			}
 		}
+
+		var equipment []mecha_game_record.EquipmentConfigEntry
+		if len(inst.EquipmentConfigJSON) > 0 {
+			if err := json.Unmarshal(inst.EquipmentConfigJSON, &equipment); err != nil {
+				l.Warn("failed to unmarshal equipment config for mech >%s<: %v", inst.ID, err)
+				return nil, err
+			}
+		}
+
+		equipmentByID := make(map[string]*mecha_game_record.MechaGameEquipment, len(equipment))
+		for _, entry := range equipment {
+			if _, ok := equipmentByID[entry.EquipmentID]; ok {
+				continue
+			}
+			eq, err := p.Domain.GetMechaGameEquipmentRec(entry.EquipmentID, nil)
+			if err != nil {
+				l.Warn("failed to load equipment >%s< for mech >%s<: %v", entry.EquipmentID, inst.ID, err)
+				return nil, err
+			}
+			equipmentByID[entry.EquipmentID] = eq
+		}
+
 		snapshots[inst.ID] = &mechSnapshot{
 			Instance:         inst,
 			SquadInstanceID:  inst.MechaGameSquadInstanceID,
 			SectorInstanceID: inst.MechaGameSectorInstanceID,
 			Weapons:          weapons,
+			Equipment:        equipment,
+			EquipmentByID:    equipmentByID,
+			Effects:          AggregateEffects(equipment, equipmentByID, inst.IsRefitting),
 		}
 	}
 
@@ -308,10 +349,37 @@ func (p *MechaGame) resolveAttacks(
 			participationAwarded[atk.AttackerMechInstanceID] = true
 		}
 
+		attacker.DidAttack = true
+
 		totalDmg := p.fireWeapons(l, atk, attacker, target, dist, sectors, rng, heatMap, eventsBySquad)
 		if totalDmg > 0 {
 			l.Info("total damage: %d", totalDmg)
 			accumulateDamage(atk.TargetMechInstanceID, totalDmg, snapshots, damageMap)
+		}
+	}
+
+	// Combat-predicated equipment heat cost accounting. Targeting-computer
+	// heat fires when the attacker declared any attack; ammo-bin heat fires
+	// when they actually pulled the trigger on a weapon with
+	// ammo_capacity > 0. Always-on equipment heat (heat sink, armor
+	// upgrade, ECM) is applied in end_of_turn so it runs even on turns
+	// with no combat. Jump-jets heat is applied in the orders processor
+	// when movement exceeds chassis base speed.
+	for mechID, snap := range snapshots {
+		inst := snap.Instance
+		if inst.Status == mecha_game_record.MechInstanceStatusDestroyed ||
+			inst.Status == mecha_game_record.MechInstanceStatusShutdown {
+			continue
+		}
+		if len(snap.Equipment) == 0 {
+			continue
+		}
+		heat := CombatHeatCost(
+			snap.Equipment, snap.EquipmentByID, inst.IsRefitting,
+			snap.DidAttack, snap.DidFireAmmoWeapon,
+		)
+		if heat > 0 {
+			heatMap[mechID] += heat
 		}
 	}
 
@@ -372,7 +440,13 @@ func (p *MechaGame) fireWeapons(
 		}
 	}
 
-	chance := hitChance(attacker.Instance.PilotSkill, coverModifier)
+	// Layer on attacker targeting-computer bonus and defender ECM cover
+	// bonus. Effects are already zeroed out for refitting mechs via
+	// AggregateEffects, so no extra branching needed here.
+	attackerHitBonus := attacker.Effects.HitChanceBonus
+	effectiveCover := coverModifier + target.Effects.CoverBonus
+
+	chance := hitChance(attacker.Instance.PilotSkill, attackerHitBonus, effectiveCover)
 
 	totalDmg := 0
 	for _, slot := range attacker.Weapons {
@@ -390,6 +464,25 @@ func (p *MechaGame) fireWeapons(
 			l.Debug("%s weapon %s cannot reach target at distance %d",
 				attacker.Instance.Callsign, weaponRec.Name, dist)
 			continue
+		}
+
+		// Ammo gate: weapons with ammo_capacity > 0 draw from the mech's
+		// shared ammo pool. When the pool is empty, skip the weapon and emit
+		// a visible event so the player knows why nothing happened. No heat,
+		// no trigger pull.
+		usesAmmo := weaponRec.AmmoCapacity > 0
+		if usesAmmo && attacker.Instance.AmmoRemaining <= 0 {
+			appendCombatEvent(eventsBySquad, attacker.SquadInstanceID,
+				fmt.Sprintf("%s tried to fire %s at %s — OUT OF AMMO.",
+					attacker.Instance.Callsign, weaponRec.Name, target.Instance.Callsign))
+			continue
+		}
+
+		// Decrement ammo pool on trigger-pull regardless of hit/miss. Done
+		// before the roll so a miss still consumes one round.
+		if usesAmmo {
+			attacker.Instance.AmmoRemaining--
+			attacker.DidFireAmmoWeapon = true
 		}
 
 		heatMap[atk.AttackerMechInstanceID] += weaponRec.HeatCost
@@ -528,6 +621,10 @@ func (p *MechaGame) persistMechChanges(
 	heatMap map[string]int,
 ) {
 	for _, snap := range snapshots {
+		// Ammo consumption is also a reason to persist, independent of damage
+		// and heat, so a mech that fired but dealt no damage still has its
+		// pool decrement saved.
+		ammoChanged := snap.DidFireAmmoWeapon
 		if _, changed := damageMap[snap.Instance.ID]; changed {
 			if _, err := p.Domain.UpdateMechaGameMechInstanceRec(snap.Instance); err != nil {
 				l.Warn("failed to update mech instance >%s< after combat: %v", snap.Instance.ID, err)
@@ -535,6 +632,10 @@ func (p *MechaGame) persistMechChanges(
 		} else if _, changed := heatMap[snap.Instance.ID]; changed {
 			if _, err := p.Domain.UpdateMechaGameMechInstanceRec(snap.Instance); err != nil {
 				l.Warn("failed to update mech instance >%s< heat after combat: %v", snap.Instance.ID, err)
+			}
+		} else if ammoChanged {
+			if _, err := p.Domain.UpdateMechaGameMechInstanceRec(snap.Instance); err != nil {
+				l.Warn("failed to update mech instance >%s< ammo after combat: %v", snap.Instance.ID, err)
 			}
 		}
 	}

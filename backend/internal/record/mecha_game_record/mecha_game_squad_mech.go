@@ -14,6 +14,14 @@ type WeaponConfigEntry struct {
 	SlotLocation string `json:"slot_location"`
 }
 
+// EquipmentConfigEntry represents an equipment item assigned to a mech at a
+// specific slot. Equipment and weapons share the same chassis slot budget via
+// the Mountable abstraction.
+type EquipmentConfigEntry struct {
+	EquipmentID  string `json:"equipment_id"`
+	SlotLocation string `json:"slot_location"`
+}
+
 const (
 	TableMechaGameSquadMech string = "mecha_game_squad_mech"
 )
@@ -25,6 +33,7 @@ const (
 	FieldMechaGameSquadMechMechaGameChassisID string = "mecha_game_chassis_id"
 	FieldMechaGameSquadMechCallsign       string = "callsign"
 	FieldMechaGameSquadMechWeaponConfig   string = "weapon_config"
+	FieldMechaGameSquadMechEquipmentConfig string = "equipment_config"
 	FieldMechaGameSquadMechCreatedAt      string = "created_at"
 	FieldMechaGameSquadMechUpdatedAt      string = "updated_at"
 	FieldMechaGameSquadMechDeletedAt      string = "deleted_at"
@@ -35,9 +44,11 @@ type MechaGameSquadMech struct {
 	GameID           string              `db:"game_id"`
 	MechaGameSquadID     string              `db:"mecha_game_squad_id"`
 	MechaGameChassisID   string              `db:"mecha_game_chassis_id"`
-	Callsign         string              `db:"callsign"`
-	WeaponConfig     []WeaponConfigEntry `db:"-"`
-	WeaponConfigJSON []byte              `db:"weapon_config"`
+	Callsign            string                 `db:"callsign"`
+	WeaponConfig        []WeaponConfigEntry    `db:"-"`
+	WeaponConfigJSON    []byte                 `db:"weapon_config"`
+	EquipmentConfig     []EquipmentConfigEntry `db:"-"`
+	EquipmentConfigJSON []byte                 `db:"equipment_config"`
 }
 
 func (r *MechaGameSquadMech) ToNamedArgs() pgx.NamedArgs {
@@ -48,5 +59,7 @@ func (r *MechaGameSquadMech) ToNamedArgs() pgx.NamedArgs {
 	args[FieldMechaGameSquadMechCallsign] = r.Callsign
 	weaponJSON, _ := json.Marshal(r.WeaponConfig)
 	args[FieldMechaGameSquadMechWeaponConfig] = string(weaponJSON)
+	equipmentJSON, _ := json.Marshal(r.EquipmentConfig)
+	args[FieldMechaGameSquadMechEquipmentConfig] = string(equipmentJSON)
 	return args
 }

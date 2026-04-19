@@ -24,6 +24,18 @@
                 "required": ["weapon_id", "slot_location"],
                 "additionalProperties": false
             }
+        },
+        "equipment_config": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "equipment_id": { "type": "string", "minLength": 1 },
+                    "slot_location": { "type": "string", "minLength": 1 }
+                },
+                "required": ["equipment_id", "slot_location"],
+                "additionalProperties": false
+            }
         }
     },
     "required": ["mecha_game_chassis_id", "callsign"],

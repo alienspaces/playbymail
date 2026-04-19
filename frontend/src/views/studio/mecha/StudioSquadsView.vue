@@ -38,6 +38,7 @@
                 <tr>
                   <th>Callsign</th>
                   <th>Chassis</th>
+                  <th>Loadout</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -45,6 +46,7 @@
                 <tr v-for="mech in mechsStore.getMechsForSquad(row.id)" :key="mech.id">
                   <td>{{ mech.callsign }}</td>
                   <td>{{ chassisName(mech.mecha_game_chassis_id) }}</td>
+                  <td class="loadout-summary">{{ loadoutSummary(mech) }}</td>
                   <td>
                     <button class="btn-link" @click="openMechEdit(row, mech)">Edit</button>
                     <button class="btn-link btn-danger" @click="confirmMechDelete(row, mech)">Delete</button>
@@ -98,7 +100,7 @@
       @confirm="handleDelete" @cancel="showDeleteModal = false" />
 
     <div v-if="showMechModal" class="modal-overlay" @click.self="closeMechModal">
-      <div class="modal">
+      <div class="modal modal-wide">
         <h2>{{ mechModalMode === 'create' ? 'Add Mech' : 'Edit Mech' }}</h2>
         <form @submit.prevent="handleMechSubmit(mechModalForm)" class="modal-form">
           <div class="form-group">
@@ -111,10 +113,80 @@
             <select v-model="mechModalForm.mecha_game_chassis_id" required>
               <option value="" disabled>Select chassis...</option>
               <option v-for="chassis in (chassisStore.chassis || [])" :key="chassis.id" :value="chassis.id">
-                {{ chassis.name }}
+                {{ chassis.name }} (S:{{ chassis.small_slots || 0 }} M:{{ chassis.medium_slots || 0 }} L:{{ chassis.large_slots || 0 }})
               </option>
             </select>
           </div>
+
+          <div class="loadout-section">
+            <h3>Loadout</h3>
+            <FieldHint>Weapons and equipment share the mech's chassis slot budget. Small items can spill into medium or large slots, medium into large, but large items only fit large slots. The summary below shows remaining capacity after each addition.</FieldHint>
+
+            <div class="slot-preview" v-if="selectedChassis">
+              <span class="slot-chip" :class="{ 'slot-over': slotUsage.overflow }">
+                Small: {{ slotUsage.small }} / {{ selectedChassis.small_slots || 0 }}
+              </span>
+              <span class="slot-chip" :class="{ 'slot-over': slotUsage.overflow }">
+                Medium: {{ slotUsage.medium }} / {{ selectedChassis.medium_slots || 0 }}
+              </span>
+              <span class="slot-chip" :class="{ 'slot-over': slotUsage.overflow }">
+                Large: {{ slotUsage.large }} / {{ selectedChassis.large_slots || 0 }}
+              </span>
+              <span v-if="slotUsage.overflow" class="slot-warning">Exceeds chassis slot budget.</span>
+            </div>
+            <div v-else class="slot-preview-empty">Select a chassis to see slot capacity.</div>
+
+            <div class="loadout-lists">
+              <div class="loadout-col">
+                <div class="loadout-col-header">
+                  <strong>Weapons</strong>
+                  <span class="muted">({{ (mechModalForm.weapon_config || []).length }})</span>
+                </div>
+                <ul class="loadout-items">
+                  <li v-for="(entry, idx) in (mechModalForm.weapon_config || [])" :key="`w-${idx}`">
+                    <span class="loadout-item-name">{{ weaponName(entry.weapon_id) }}</span>
+                    <span class="loadout-item-mount">{{ weaponMount(entry.weapon_id) }}</span>
+                    <button type="button" class="btn-link btn-danger" @click="removeWeapon(idx)">Remove</button>
+                  </li>
+                  <li v-if="!mechModalForm.weapon_config || mechModalForm.weapon_config.length === 0" class="muted">No weapons assigned.</li>
+                </ul>
+                <div class="loadout-add">
+                  <select v-model="weaponToAdd">
+                    <option value="">Add weapon...</option>
+                    <option v-for="w in (weaponsStore.weapons || [])" :key="w.id" :value="w.id">
+                      {{ w.name }} ({{ w.mount_size }})
+                    </option>
+                  </select>
+                  <button type="button" class="btn-small" :disabled="!weaponToAdd" @click="addWeapon">Add</button>
+                </div>
+              </div>
+
+              <div class="loadout-col">
+                <div class="loadout-col-header">
+                  <strong>Equipment</strong>
+                  <span class="muted">({{ (mechModalForm.equipment_config || []).length }})</span>
+                </div>
+                <ul class="loadout-items">
+                  <li v-for="(entry, idx) in (mechModalForm.equipment_config || [])" :key="`e-${idx}`">
+                    <span class="loadout-item-name">{{ equipmentName(entry.equipment_id) }}</span>
+                    <span class="loadout-item-mount">{{ equipmentMount(entry.equipment_id) }}</span>
+                    <button type="button" class="btn-link btn-danger" @click="removeEquipment(idx)">Remove</button>
+                  </li>
+                  <li v-if="!mechModalForm.equipment_config || mechModalForm.equipment_config.length === 0" class="muted">No equipment assigned.</li>
+                </ul>
+                <div class="loadout-add">
+                  <select v-model="equipmentToAdd">
+                    <option value="">Add equipment...</option>
+                    <option v-for="e in (equipmentStore.equipment || [])" :key="e.id" :value="e.id">
+                      {{ e.name }} ({{ e.mount_size }})
+                    </option>
+                  </select>
+                  <button type="button" class="btn-small" :disabled="!equipmentToAdd" @click="addEquipment">Add</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div class="modal-actions">
             <button type="submit">{{ mechModalMode === 'create' ? 'Add' : 'Save' }}</button>
             <button type="button" @click="closeMechModal">Cancel</button>
@@ -131,11 +203,13 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useMechaGameSquadsStore } from '../../../stores/mechaGameSquads'
 import { useMechaGameSquadMechsStore } from '../../../stores/mechaGameSquadMechs'
 import { useMechaGameChassisStore } from '../../../stores/mechaGameChassis'
+import { useMechaGameWeaponsStore } from '../../../stores/mechaGameWeapons'
+import { useMechaGameEquipmentStore } from '../../../stores/mechaGameEquipment'
 import { useGamesStore } from '../../../stores/games'
 import ResourceTable from '../../../components/ResourceTable.vue'
 import ConfirmationModal from '../../../components/ConfirmationModal.vue'
@@ -148,6 +222,8 @@ import FieldHint from '../../../components/FieldHint.vue'
 const store = useMechaGameSquadsStore()
 const mechsStore = useMechaGameSquadMechsStore()
 const chassisStore = useMechaGameChassisStore()
+const weaponsStore = useMechaGameWeaponsStore()
+const equipmentStore = useMechaGameEquipmentStore()
 const gamesStore = useGamesStore()
 const { selectedGame } = storeToRefs(gamesStore)
 
@@ -168,18 +244,106 @@ const toDelete = ref(null)
 const expandedSquadId = ref(null)
 const showMechModal = ref(false)
 const mechModalMode = ref('create')
-const mechModalForm = ref({ callsign: '', mecha_game_chassis_id: '', squad_id: '' })
+const mechModalForm = ref({ callsign: '', mecha_game_chassis_id: '', squad_id: '', weapon_config: [], equipment_config: [] })
 const mechModalError = ref('')
 const showMechDeleteModal = ref(false)
 const mechToDelete = ref(null)
 const activeSquadForMech = ref(null)
+const weaponToAdd = ref('')
+const equipmentToAdd = ref('')
 
 watch(() => selectedGame.value, (g) => {
   if (g) {
     store.fetchMechaGameSquads(g.id)
     chassisStore.fetchMechaGameChassis(g.id)
+    weaponsStore.fetchMechaGameWeapons(g.id)
+    equipmentStore.fetchMechaGameEquipment(g.id)
   }
 }, { immediate: true })
+
+function weaponById(id) { return (weaponsStore.weapons || []).find(w => w.id === id) }
+function equipmentById(id) { return (equipmentStore.equipment || []).find(e => e.id === id) }
+
+function weaponName(id) { return weaponById(id)?.name || id }
+function weaponMount(id) { return weaponById(id)?.mount_size || '' }
+function equipmentName(id) { return equipmentById(id)?.name || id }
+function equipmentMount(id) { return equipmentById(id)?.mount_size || '' }
+
+const selectedChassis = computed(() => {
+  if (!mechModalForm.value.mecha_game_chassis_id) return null
+  return (chassisStore.chassis || []).find(c => c.id === mechModalForm.value.mecha_game_chassis_id) || null
+})
+
+// fitsLoadout mirrors the backend slot-packing semantics: large items must
+// fit large slots, medium items spill large to medium, small items spill
+// large then medium. overflow is set if any band runs short.
+const slotUsage = computed(() => {
+  const usage = { small: 0, medium: 0, large: 0, overflow: false }
+  const chassis = selectedChassis.value
+  if (!chassis) return usage
+  const entries = []
+  for (const entry of (mechModalForm.value.weapon_config || [])) {
+    const w = weaponById(entry.weapon_id)
+    if (w) entries.push({ size: w.mount_size })
+  }
+  for (const entry of (mechModalForm.value.equipment_config || [])) {
+    const e = equipmentById(entry.equipment_id)
+    if (e) entries.push({ size: e.mount_size })
+  }
+  let small = chassis.small_slots || 0
+  let medium = chassis.medium_slots || 0
+  let large = chassis.large_slots || 0
+  const order = { large: 0, medium: 1, small: 2 }
+  entries.sort((a, b) => order[a.size] - order[b.size])
+  for (const item of entries) {
+    if (item.size === 'large') {
+      if (large > 0) { large--; usage.large++ } else { usage.overflow = true }
+    } else if (item.size === 'medium') {
+      if (medium > 0) { medium--; usage.medium++ }
+      else if (large > 0) { large--; usage.large++ }
+      else { usage.overflow = true }
+    } else {
+      if (small > 0) { small--; usage.small++ }
+      else if (medium > 0) { medium--; usage.medium++ }
+      else if (large > 0) { large--; usage.large++ }
+      else { usage.overflow = true }
+    }
+  }
+  return usage
+})
+
+function loadoutSummary(mech) {
+  const weapons = (mech.weapon_config || []).length
+  const equipment = (mech.equipment_config || []).length
+  if (!weapons && !equipment) return '—'
+  return `${weapons} weapon${weapons === 1 ? '' : 's'}, ${equipment} equipment`
+}
+
+function addWeapon() {
+  if (!weaponToAdd.value) return
+  const cfg = mechModalForm.value.weapon_config || []
+  mechModalForm.value.weapon_config = [...cfg, { weapon_id: weaponToAdd.value, slot_location: '' }]
+  weaponToAdd.value = ''
+}
+
+function removeWeapon(idx) {
+  const cfg = [...(mechModalForm.value.weapon_config || [])]
+  cfg.splice(idx, 1)
+  mechModalForm.value.weapon_config = cfg
+}
+
+function addEquipment() {
+  if (!equipmentToAdd.value) return
+  const cfg = mechModalForm.value.equipment_config || []
+  mechModalForm.value.equipment_config = [...cfg, { equipment_id: equipmentToAdd.value, slot_location: '' }]
+  equipmentToAdd.value = ''
+}
+
+function removeEquipment(idx) {
+  const cfg = [...(mechModalForm.value.equipment_config || [])]
+  cfg.splice(idx, 1)
+  mechModalForm.value.equipment_config = cfg
+}
 
 function chassisName(chassisId) {
   const found = (chassisStore.chassis || []).find(c => c.id === chassisId)
@@ -255,7 +419,9 @@ async function toggleMechs(row) {
 function openMechCreate(squad) {
   activeSquadForMech.value = squad
   mechModalMode.value = 'create'
-  mechModalForm.value = { callsign: '', mecha_game_chassis_id: '', squad_id: squad.id }
+  mechModalForm.value = { callsign: '', mecha_game_chassis_id: '', squad_id: squad.id, weapon_config: [], equipment_config: [] }
+  weaponToAdd.value = ''
+  equipmentToAdd.value = ''
   mechModalError.value = ''
   showMechModal.value = true
 }
@@ -263,7 +429,14 @@ function openMechCreate(squad) {
 function openMechEdit(squad, mech) {
   activeSquadForMech.value = squad
   mechModalMode.value = 'edit'
-  mechModalForm.value = { ...mech, squad_id: squad.id }
+  mechModalForm.value = {
+    ...mech,
+    squad_id: squad.id,
+    weapon_config: Array.isArray(mech.weapon_config) ? mech.weapon_config.map(e => ({ ...e })) : [],
+    equipment_config: Array.isArray(mech.equipment_config) ? mech.equipment_config.map(e => ({ ...e })) : [],
+  }
+  weaponToAdd.value = ''
+  equipmentToAdd.value = ''
   mechModalError.value = ''
   showMechModal.value = true
 }
@@ -279,6 +452,8 @@ async function handleMechSubmit(formData) {
   const data = {
     callsign: formData.callsign,
     mecha_game_chassis_id: formData.mecha_game_chassis_id,
+    weapon_config: formData.weapon_config || [],
+    equipment_config: formData.equipment_config || [],
   }
   try {
     if (mechModalMode.value === 'create') {
@@ -347,4 +522,25 @@ async function handleMechDelete() {
 .btn-link:hover { text-decoration: underline; }
 .btn-danger { color: var(--color-danger); }
 select { width: 100%; padding: var(--space-sm); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--font-size-base); }
+
+.modal-wide { max-width: 720px; }
+.loadout-summary { color: var(--color-text-muted); font-size: var(--font-size-sm, 0.875rem); }
+.loadout-section { margin-top: var(--space-md); padding-top: var(--space-md); border-top: 1px solid var(--color-border); }
+.loadout-section h3 { margin: 0 0 var(--space-xs); font-size: var(--font-size-base); }
+.slot-preview { display: flex; flex-wrap: wrap; gap: var(--space-xs); align-items: center; margin: var(--space-sm) 0; }
+.slot-preview-empty { color: var(--color-text-muted); font-size: var(--font-size-sm, 0.875rem); margin: var(--space-sm) 0; }
+.slot-chip { display: inline-block; padding: 2px 8px; background: var(--color-bg-subtle, #f3f3f3); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--font-size-sm, 0.875rem); }
+.slot-chip.slot-over { background: var(--color-warning-light); border-color: var(--color-warning); color: var(--color-warning-dark); }
+.slot-warning { color: var(--color-warning-dark); font-size: var(--font-size-sm, 0.875rem); }
+.loadout-lists { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-md); }
+.loadout-col { display: flex; flex-direction: column; gap: var(--space-xs); }
+.loadout-col-header { display: flex; align-items: center; gap: var(--space-xs); }
+.loadout-items { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 2px; }
+.loadout-items li { display: flex; align-items: center; gap: var(--space-xs); padding: 2px var(--space-xs); background: var(--color-bg-subtle, #f9f9f9); border-radius: var(--radius-sm); font-size: var(--font-size-sm, 0.875rem); }
+.loadout-items li.muted { color: var(--color-text-muted); background: transparent; padding: var(--space-xs); }
+.loadout-item-name { flex: 1; }
+.loadout-item-mount { color: var(--color-text-muted); font-size: var(--font-size-xs, 0.75rem); text-transform: uppercase; letter-spacing: 0.05em; }
+.loadout-add { display: flex; gap: var(--space-xs); align-items: center; }
+.loadout-add select { flex: 1; }
+.muted { color: var(--color-text-muted); font-size: var(--font-size-sm, 0.875rem); }
 </style>

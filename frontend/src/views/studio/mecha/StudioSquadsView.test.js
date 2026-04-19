@@ -26,6 +26,27 @@ vi.mock('../../../api/mechaGameSquads', () => ({
   deleteMechaGameSquad: vi.fn()
 }));
 
+vi.mock('../../../api/mechaGameChassis', () => ({
+  fetchMechaGameChassis: vi.fn(async () => ({ data: [], hasMore: false })),
+  createMechaGameChassis: vi.fn(),
+  updateMechaGameChassis: vi.fn(),
+  deleteMechaGameChassis: vi.fn()
+}));
+
+vi.mock('../../../api/mechaGameWeapons', () => ({
+  fetchMechaGameWeapons: vi.fn(async () => ({ data: [], hasMore: false })),
+  createMechaGameWeapon: vi.fn(),
+  updateMechaGameWeapon: vi.fn(),
+  deleteMechaGameWeapon: vi.fn()
+}));
+
+vi.mock('../../../api/mechaGameEquipment', () => ({
+  fetchMechaGameEquipment: vi.fn(async () => ({ data: [], hasMore: false })),
+  createMechaGameEquipment: vi.fn(),
+  updateMechaGameEquipment: vi.fn(),
+  deleteMechaGameEquipment: vi.fn()
+}));
+
 describe('StudioSquadsView', () => {
   beforeEach(() => {
     setActivePinia(createPinia());
@@ -64,5 +85,17 @@ describe('StudioSquadsView', () => {
     await setupStore('mechaGameSquads', { loading: true, error: null });
     const wrapper = mountWithRealComponents();
     expect(wrapper.html()).toContain('Loading...');
+  });
+
+  it('fetches weapons and equipment when a game is selected', async () => {
+    const { fetchMechaGameWeapons } = await import('../../../api/mechaGameWeapons');
+    const { fetchMechaGameEquipment } = await import('../../../api/mechaGameEquipment');
+    fetchMechaGameWeapons.mockClear();
+    fetchMechaGameEquipment.mockClear();
+    await setupGamesStore();
+    mountWithRealComponents();
+    await waitForVueUpdate();
+    expect(fetchMechaGameWeapons).toHaveBeenCalled();
+    expect(fetchMechaGameEquipment).toHaveBeenCalled();
   });
 });

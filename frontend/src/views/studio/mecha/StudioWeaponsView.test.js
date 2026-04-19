@@ -18,6 +18,18 @@ const mockWeapons = [
     heat_cost: 3,
     range_band: 'medium',
     mount_size: 'small',
+    ammo_capacity: 0,
+    created_at: '2024-07-10T12:00:00Z'
+  },
+  {
+    id: 'weapon2',
+    name: 'AC/10',
+    description: 'Autocannon — consumes ammo.',
+    damage: 10,
+    heat_cost: 3,
+    range_band: 'medium',
+    mount_size: 'medium',
+    ammo_capacity: 20,
     created_at: '2024-07-10T12:00:00Z'
   }
 ];
@@ -55,11 +67,15 @@ describe('StudioWeaponsView', () => {
     expect(headerTexts).toContain('Heat');
     expect(headerTexts).toContain('Range');
     expect(headerTexts).toContain('Mount');
+    expect(headerTexts).toContain('Ammo');
     expect(headerTexts).toContain('Actions');
 
     const tds = wrapper.findAll('td');
     const cellTexts = tds.map(td => td.text());
     expect(cellTexts).toContain('Medium Laser');
+    expect(cellTexts).toContain('AC/10');
+    // ammo_capacity 20 for the AC/10 and 0 for the Medium Laser should render
+    expect(cellTexts.some(t => t === '20')).toBe(true);
   });
 
   it('shows loading state', async () => {

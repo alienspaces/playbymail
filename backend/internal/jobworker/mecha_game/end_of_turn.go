@@ -2,6 +2,7 @@ package mecha_game
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"math"
 
@@ -71,8 +72,44 @@ func (p *MechaGame) runEndOfTurn(
 			continue
 		}
 
-		// 1. Heat dissipation
-		dissipate := chassisRec.HeatCapacity / heatDissipationDenom
+		// Load equipment for this mech so heat dissipation, armor ceilings,
+		// and depot ammo refill can all use the effective values.
+		var equipmentEntries []mecha_game_record.EquipmentConfigEntry
+		if len(inst.EquipmentConfigJSON) > 0 {
+			if err := json.Unmarshal(inst.EquipmentConfigJSON, &equipmentEntries); err != nil {
+				l.Warn("failed to unmarshal equipment config for mech >%s<: %v", inst.ID, err)
+				equipmentEntries = nil
+			}
+		}
+		equipmentByID := make(map[string]*mecha_game_record.MechaGameEquipment, len(equipmentEntries))
+		for _, entry := range equipmentEntries {
+			if _, ok := equipmentByID[entry.EquipmentID]; ok {
+				continue
+			}
+			eq, err := p.Domain.GetMechaGameEquipmentRec(entry.EquipmentID, nil)
+			if err != nil {
+				l.Warn("failed to load equipment >%s< for mech >%s<: %v", entry.EquipmentID, inst.ID, err)
+				continue
+			}
+			equipmentByID[entry.EquipmentID] = eq
+		}
+
+		effects := AggregateEffects(equipmentEntries, equipmentByID, inst.IsRefitting)
+		effectiveMaxArmor := EffectiveMaxArmor(chassisRec, effects)
+
+		// 1a. Always-on equipment heat (heat_sink / armor_upgrade / ecm).
+		// Applied every turn regardless of whether the mech entered combat
+		// or moved. Refitting mechs accrue zero (AggregateEffects route).
+		alwaysOnHeat := AlwaysOnHeatCost(equipmentEntries, equipmentByID, inst.IsRefitting)
+		if alwaysOnHeat > 0 {
+			inst.CurrentHeat += alwaysOnHeat
+		}
+
+		// 1. Heat dissipation — chassis baseline plus heat-sink bonus
+		// (zeroed for refitting mechs by AggregateEffects). Applied after
+		// the always-on heat accumulation above so the same turn's upkeep
+		// and dissipation net out as a single movement.
+		dissipate := chassisRec.HeatCapacity/heatDissipationDenom + effects.HeatDissipationBonus
 		if inst.Status == mecha_game_record.MechInstanceStatusShutdown {
 			// Shutdown resets heat and brings mech back online
 			inst.CurrentHeat = 0
@@ -91,22 +128,31 @@ func (p *MechaGame) runEndOfTurn(
 			}
 		}
 
-		// 2. Field auto-repair (armor only, no structure)
-		if !inst.IsRefitting && inst.CurrentArmor < chassisRec.ArmorPoints {
-			repairAmt := int(math.Ceil(float64(chassisRec.ArmorPoints) * autoRepairPercent / 100))
+		// 2. Field auto-repair (armor only, no structure). Ceiling and the
+		// 25% repair base both use effectiveMaxArmor so armor-upgrade
+		// magnitude is honored consistently.
+		if !inst.IsRefitting && inst.CurrentArmor < effectiveMaxArmor {
+			repairAmt := int(math.Ceil(float64(effectiveMaxArmor) * autoRepairPercent / 100))
 			prevArmor := inst.CurrentArmor
 			inst.CurrentArmor += repairAmt
-			if inst.CurrentArmor > chassisRec.ArmorPoints {
-				inst.CurrentArmor = chassisRec.ArmorPoints
+			if inst.CurrentArmor > effectiveMaxArmor {
+				inst.CurrentArmor = effectiveMaxArmor
 			}
 			if inst.CurrentArmor > prevArmor {
-				if inst.CurrentArmor == chassisRec.ArmorPoints {
+				if inst.CurrentArmor == effectiveMaxArmor {
 					inst.Status = mecha_game_record.MechInstanceStatusOperational
 				}
 				appendLifecycleEvent(eventsBySquad, inst.MechaGameSquadInstanceID,
 					fmt.Sprintf("%s field repairs restored %d armor (%d/%d).",
-						inst.Callsign, inst.CurrentArmor-prevArmor, inst.CurrentArmor, chassisRec.ArmorPoints))
+						inst.Callsign, inst.CurrentArmor-prevArmor, inst.CurrentArmor, effectiveMaxArmor))
 			}
+		}
+
+		// 2b. Depot ammo refill. Mechs parked on a depot (starting sector)
+		// top up their shared ammo pool to MaxAmmoCapacity. This is treated
+		// as a crew action, so it runs even for refitting mechs.
+		if err := p.refillAmmoAtDepot(l, inst, equipmentEntries, equipmentByID, eventsBySquad); err != nil {
+			l.Warn("failed to refill ammo for mech >%s<: %v", inst.ID, err)
 		}
 
 		// 3. Apply XP and check for pilot skill level-up.
@@ -159,6 +205,65 @@ func (p *MechaGame) runEndOfTurn(
 		}
 	}
 
+	return nil
+}
+
+// refillAmmoAtDepot tops a mech's AmmoRemaining back up to its configured
+// MaxAmmoCapacity when the mech is parked on a starting (depot) sector.
+// The refill is a crew action, so it applies even when the mech is
+// refitting. Mechs with no ammo-consuming loadout are no-ops.
+func (p *MechaGame) refillAmmoAtDepot(
+	l logger.Logger,
+	inst *mecha_game_record.MechaGameMechInstance,
+	equipmentEntries []mecha_game_record.EquipmentConfigEntry,
+	equipmentByID map[string]*mecha_game_record.MechaGameEquipment,
+	eventsBySquad map[string][]turnsheet.TurnEvent,
+) error {
+	sectorInst, err := p.Domain.GetMechaGameSectorInstanceRec(inst.MechaGameSectorInstanceID, nil)
+	if err != nil {
+		return fmt.Errorf("failed to get sector instance: %w", err)
+	}
+	sectorDesign, err := p.Domain.GetMechaGameSectorRec(sectorInst.MechaGameSectorID, nil)
+	if err != nil {
+		return fmt.Errorf("failed to get sector design: %w", err)
+	}
+	if !sectorDesign.IsStartingSector {
+		return nil
+	}
+
+	var weaponEntries []mecha_game_record.WeaponConfigEntry
+	if len(inst.WeaponConfigJSON) > 0 {
+		if err := json.Unmarshal(inst.WeaponConfigJSON, &weaponEntries); err != nil {
+			return fmt.Errorf("failed to unmarshal weapon config: %w", err)
+		}
+	}
+
+	weaponByID := make(map[string]*mecha_game_record.MechaGameWeapon, len(weaponEntries))
+	for _, entry := range weaponEntries {
+		if entry.WeaponID == "" {
+			continue
+		}
+		if _, ok := weaponByID[entry.WeaponID]; ok {
+			continue
+		}
+		w, err := p.Domain.GetMechaGameWeaponRec(entry.WeaponID, nil)
+		if err != nil {
+			l.Warn("failed to load weapon >%s< for ammo refill: %v", entry.WeaponID, err)
+			continue
+		}
+		weaponByID[entry.WeaponID] = w
+	}
+
+	maxAmmo := MaxAmmoCapacity(weaponEntries, weaponByID, equipmentEntries, equipmentByID)
+	if maxAmmo <= 0 || inst.AmmoRemaining >= maxAmmo {
+		return nil
+	}
+
+	delta := maxAmmo - inst.AmmoRemaining
+	inst.AmmoRemaining = maxAmmo
+	appendLifecycleEvent(eventsBySquad, inst.MechaGameSquadInstanceID,
+		fmt.Sprintf("%s rearmed at depot (+%d ammo, %d total).",
+			inst.Callsign, delta, inst.AmmoRemaining))
 	return nil
 }
 
