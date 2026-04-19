@@ -16,7 +16,7 @@ func (p *MechaGame) CreateTurnSheets(ctx context.Context, gameInstanceRec *game_
 
 	squadInstanceRecs, err := p.getSquadInstancesForGameInstance(ctx, gameInstanceRec)
 	if err != nil {
-		l.Error("failed to get squad instances for game instance >%s< error >%v<", gameInstanceRec.ID, err)
+		l.Warn("failed to get squad instances for game instance >%s< error >%v<", gameInstanceRec.ID, err)
 		return nil, err
 	}
 
@@ -52,7 +52,7 @@ func (p *MechaGame) CreateTurnSheets(ctx context.Context, gameInstanceRec *game_
 func (p *MechaGame) createSquadTurnSheets(ctx context.Context, gameInstanceRec *game_record.GameInstance, squadInstance *mecha_game_record.MechaGameSquadInstance) ([]*game_record.GameTurnSheet, error) {
 	l := p.Logger.WithFunctionContext("MechaGame/createSquadTurnSheets")
 
-	l.Debug("creating turn sheets for squad instance >%s< turn number >%d<", squadInstance.ID, gameInstanceRec.CurrentTurn)
+	l.Info("creating turn sheets for squad instance >%s< turn number >%d<", squadInstance.ID, gameInstanceRec.CurrentTurn)
 
 	// Look up the parent squad to determine ownership type.
 	squadRec, err := p.Domain.GetMechaGameSquadRec(squadInstance.MechaGameSquadID, nil)
@@ -61,7 +61,7 @@ func (p *MechaGame) createSquadTurnSheets(ctx context.Context, gameInstanceRec *
 		return nil, err
 	}
 	if squadRec.SquadType == mecha_game_record.SquadTypeOpponent {
-		l.Debug("skipping turn sheet creation for computer-opponent squad instance >%s<", squadInstance.ID)
+		l.Info("skipping turn sheet creation for computer-opponent squad instance >%s<", squadInstance.ID)
 		return nil, nil
 	}
 
@@ -80,11 +80,11 @@ func (p *MechaGame) createSquadTurnSheets(ctx context.Context, gameInstanceRec *
 		}
 
 		if turnSheetRec == nil {
-			l.Debug("no turn sheet generated for type >%s< squad instance ID >%s< — skipping", turnSheetType, squadInstance.ID)
+			l.Info("no turn sheet generated for type >%s< squad instance ID >%s< — skipping", turnSheetType, squadInstance.ID)
 			continue
 		}
 
-		l.Debug("created turn sheet >%s< for squad instance ID >%s< turn sheet type >%s< turn number >%d<", turnSheetRec.ID, squadInstance.ID, turnSheetType, gameInstanceRec.CurrentTurn)
+		l.Info("created turn sheet >%s< for squad instance ID >%s< turn sheet type >%s< turn number >%d<", turnSheetRec.ID, squadInstance.ID, turnSheetType, gameInstanceRec.CurrentTurn)
 		createdTurnSheets = append(createdTurnSheets, turnSheetRec)
 	}
 
@@ -95,7 +95,7 @@ func (p *MechaGame) createSquadTurnSheets(ctx context.Context, gameInstanceRec *
 func (p *MechaGame) createTurnSheet(ctx context.Context, gameInstanceRec *game_record.GameInstance, squadInstance *mecha_game_record.MechaGameSquadInstance, turnSheetType string) (*game_record.GameTurnSheet, error) {
 	l := p.Logger.WithFunctionContext("MechaGame/createTurnSheet")
 
-	l.Debug("creating turn sheet type >%s< for game instance ID >%s< squad instance ID >%s<", turnSheetType, gameInstanceRec.ID, squadInstance.ID)
+	l.Info("creating turn sheet type >%s< for game instance ID >%s< squad instance ID >%s<", turnSheetType, gameInstanceRec.ID, squadInstance.ID)
 
 	processor, exists := p.Processors[turnSheetType]
 	if !exists {

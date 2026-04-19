@@ -105,7 +105,7 @@ func (p *MechaGame) getSquadInstancesForGameInstance(_ context.Context, gameInst
 		},
 	)
 	if err != nil {
-		l.Error("failed to get squad instances error >%v<", err)
+		l.Warn("failed to get squad instances error >%v<", err)
 		return nil, err
 	}
 

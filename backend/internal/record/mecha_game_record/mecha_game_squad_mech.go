@@ -1,8 +1,6 @@
 package mecha_game_record
 
 import (
-	"encoding/json"
-
 	"github.com/jackc/pgx/v5"
 
 	"gitlab.com/alienspaces/playbymail/core/record"
@@ -57,9 +55,10 @@ func (r *MechaGameSquadMech) ToNamedArgs() pgx.NamedArgs {
 	args[FieldMechaGameSquadMechMechaGameSquadID] = r.MechaGameSquadID
 	args[FieldMechaGameSquadMechMechaGameChassisID] = r.MechaGameChassisID
 	args[FieldMechaGameSquadMechCallsign] = r.Callsign
-	weaponJSON, _ := json.Marshal(r.WeaponConfig)
-	args[FieldMechaGameSquadMechWeaponConfig] = string(weaponJSON)
-	equipmentJSON, _ := json.Marshal(r.EquipmentConfig)
-	args[FieldMechaGameSquadMechEquipmentConfig] = string(equipmentJSON)
+	// See MechaGameMechInstance.ToNamedArgs: falling back to the raw JSON
+	// bytes when the decoded struct is empty prevents read-modify-write
+	// cycles from nulling out the persisted loadout.
+	args[FieldMechaGameSquadMechWeaponConfig] = marshalConfigForWrite(r.WeaponConfig, r.WeaponConfigJSON)
+	args[FieldMechaGameSquadMechEquipmentConfig] = marshalConfigForWrite(r.EquipmentConfig, r.EquipmentConfigJSON)
 	return args
 }

@@ -1,8 +1,6 @@
 package mecha_game_record
 
 import (
-	"encoding/json"
-
 	"github.com/jackc/pgx/v5"
 
 	"gitlab.com/alienspaces/playbymail/core/record"
@@ -78,10 +76,14 @@ func (r *MechaGameMechInstance) ToNamedArgs() pgx.NamedArgs {
 	args[FieldMechaGameMechInstancePilotSkill] = r.PilotSkill
 	args[FieldMechaGameMechInstanceExperiencePoints] = r.ExperiencePoints
 	args[FieldMechaGameMechInstanceStatus] = r.Status
-	weaponJSON, _ := json.Marshal(r.WeaponConfig)
-	args[FieldMechaGameMechInstanceWeaponConfig] = string(weaponJSON)
-	equipmentJSON, _ := json.Marshal(r.EquipmentConfig)
-	args[FieldMechaGameMechInstanceEquipmentConfig] = string(equipmentJSON)
+	// Prefer the decoded struct field when populated; fall back to the raw
+	// JSON bytes loaded from the DB so that a read-modify-write cycle (e.g.
+	// moving a mech) does not wipe the persisted loadout. The struct field
+	// has `db:"-"` and is only populated when code explicitly decodes it,
+	// so without this fallback any UpdateOne would overwrite weapon_config
+	// with "null".
+	args[FieldMechaGameMechInstanceWeaponConfig] = marshalConfigForWrite(r.WeaponConfig, r.WeaponConfigJSON)
+	args[FieldMechaGameMechInstanceEquipmentConfig] = marshalConfigForWrite(r.EquipmentConfig, r.EquipmentConfigJSON)
 	args[FieldMechaGameMechInstanceAmmoRemaining] = r.AmmoRemaining
 	args[FieldMechaGameMechInstanceIsRefitting] = r.IsRefitting
 	return args

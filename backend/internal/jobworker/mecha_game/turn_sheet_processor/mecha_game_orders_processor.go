@@ -234,7 +234,7 @@ func (p *MechaGameOrdersProcessor) processMechOrderWithEvent(
 	}
 
 	if order.MoveToSectorInstanceID == "" {
-		l.Debug("no movement order for mech >%s< — staying in place", order.MechInstanceID)
+		l.Info("no movement order for mech >%s< — staying in place", order.MechInstanceID)
 		return nil
 	}
 

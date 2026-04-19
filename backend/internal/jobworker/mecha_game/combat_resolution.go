@@ -318,12 +318,18 @@ func (p *MechaGame) resolveAttacks(
 
 		if attacker.Instance.Status == mecha_game_record.MechInstanceStatusDestroyed ||
 			attacker.Instance.Status == mecha_game_record.MechInstanceStatusShutdown {
-			l.Info("attacker >%s< is %s — skipping attack", attacker.Instance.Callsign, attacker.Instance.Status)
+			l.Info("attacker >%s< is %s — skipping attack on >%s<", attacker.Instance.Callsign, attacker.Instance.Status, target.Instance.Callsign)
+			appendCombatEvent(eventsBySquad, attacker.SquadInstanceID,
+				fmt.Sprintf("%s was unable to attack %s — %s.",
+					attacker.Instance.Callsign, target.Instance.Callsign, attacker.Instance.Status))
 			continue
 		}
 
 		if target.Instance.Status == mecha_game_record.MechInstanceStatusDestroyed {
-			l.Info("target >%s< is already destroyed — skipping attack", target.Instance.Callsign)
+			l.Info("target >%s< is already destroyed — skipping attack by >%s<", target.Instance.Callsign, attacker.Instance.Callsign)
+			appendCombatEvent(eventsBySquad, attacker.SquadInstanceID,
+				fmt.Sprintf("%s targeted %s but the target was already destroyed.",
+					attacker.Instance.Callsign, target.Instance.Callsign))
 			continue
 		}
 
@@ -333,13 +339,21 @@ func (p *MechaGame) resolveAttacks(
 			l.Info("%s fired at %s but target is out of range (distance %d)",
 				attacker.Instance.Callsign, target.Instance.Callsign, dist)
 			appendCombatEvent(eventsBySquad, attacker.SquadInstanceID,
-				fmt.Sprintf("%s fired at %s — out of range.",
-					attacker.Instance.Callsign, target.Instance.Callsign))
+				fmt.Sprintf("%s fired at %s — out of range (distance %d).",
+					attacker.Instance.Callsign, target.Instance.Callsign, dist))
+			// Mirror to target squad so the defender knows they were
+			// targeted even though nothing landed.
+			appendCombatEvent(eventsBySquad, target.SquadInstanceID,
+				fmt.Sprintf("%s was targeted by %s — shot fell short (distance %d).",
+					target.Instance.Callsign, attacker.Instance.Callsign, dist))
 			continue
 		}
 
 		if len(attacker.Weapons) == 0 {
-			l.Info("attacker >%s< has no weapons — skipping attack", attacker.Instance.Callsign)
+			l.Info("attacker >%s< has no weapons — skipping attack on >%s<", attacker.Instance.Callsign, target.Instance.Callsign)
+			appendCombatEvent(eventsBySquad, attacker.SquadInstanceID,
+				fmt.Sprintf("%s attempted to attack %s but has no weapons fitted.",
+					attacker.Instance.Callsign, target.Instance.Callsign))
 			continue
 		}
 
@@ -461,8 +475,21 @@ func (p *MechaGame) fireWeapons(
 		}
 
 		if !weaponCanFire(weaponRec.RangeBand, dist) {
-			l.Debug("%s weapon %s cannot reach target at distance %d",
-				attacker.Instance.Callsign, weaponRec.Name, dist)
+			// Emit a player-visible event so the turn sheet explains why
+			// the trigger pull produced no hit and no miss. Without this
+			// the mech looks like it ignored its attack order. Mirror to
+			// the target squad so the defender also sees the attempt.
+			l.Info("%s cannot fire %s at %s — %s range, distance %d",
+				attacker.Instance.Callsign, weaponRec.Name,
+				target.Instance.Callsign, weaponRec.RangeBand, dist)
+			appendCombatEvent(eventsBySquad, attacker.SquadInstanceID,
+				fmt.Sprintf("%s tried to fire %s at %s — OUT OF RANGE (%s range, distance %d).",
+					attacker.Instance.Callsign, weaponRec.Name,
+					target.Instance.Callsign, weaponRec.RangeBand, dist))
+			appendCombatEvent(eventsBySquad, target.SquadInstanceID,
+				fmt.Sprintf("%s was targeted by %s's %s but it was out of range (%s range, distance %d).",
+					target.Instance.Callsign, attacker.Instance.Callsign, weaponRec.Name,
+					weaponRec.RangeBand, dist))
 			continue
 		}
 
@@ -472,9 +499,14 @@ func (p *MechaGame) fireWeapons(
 		// no trigger pull.
 		usesAmmo := weaponRec.AmmoCapacity > 0
 		if usesAmmo && attacker.Instance.AmmoRemaining <= 0 {
+			l.Info("%s: %s could not fire at %s — out of ammo",
+				attacker.Instance.Callsign, weaponRec.Name, target.Instance.Callsign)
 			appendCombatEvent(eventsBySquad, attacker.SquadInstanceID,
 				fmt.Sprintf("%s tried to fire %s at %s — OUT OF AMMO.",
 					attacker.Instance.Callsign, weaponRec.Name, target.Instance.Callsign))
+			appendCombatEvent(eventsBySquad, target.SquadInstanceID,
+				fmt.Sprintf("%s was targeted by %s's %s — attacker was out of ammo.",
+					target.Instance.Callsign, attacker.Instance.Callsign, weaponRec.Name))
 			continue
 		}
 
@@ -509,6 +541,12 @@ func (p *MechaGame) fireWeapons(
 				fmt.Sprintf("%s fired %s at %s — missed.",
 					attacker.Instance.Callsign, weaponRec.Name,
 					target.Instance.Callsign))
+			// Mirror the miss to the target squad so defenders can see
+			// incoming fire that missed, not just fire that landed.
+			appendCombatEvent(eventsBySquad, target.SquadInstanceID,
+				fmt.Sprintf("%s was fired on by %s's %s — missed.",
+					target.Instance.Callsign, attacker.Instance.Callsign,
+					weaponRec.Name))
 		}
 	}
 
