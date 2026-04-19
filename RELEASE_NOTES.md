@@ -9,8 +9,55 @@ Here's what's been happening with Play by Mail — from the early foundations in
 ## 🎯 What's Next
 
 - Adventure game end-game win conditions — defeat a creature, retrieve an item, or reach a location to complete the game
-- Mecha wargame expanded combat — additional weapon types, terrain effects, and squad formations
+- Mecha wargame terrain effects and victory conditions
 - Closed testing tester invite flow
+
+---
+
+## 🗓️ 19 April 2026
+
+**Theme**: Mecha Equipment, Chassis Slots & Codebase Consistency
+
+### 🎯 Major Features
+
+**Mecha Equipment System**
+- A new equipment catalog lets game designers create mountable equipment for mechs — heat sinks, targeting computers, armor upgrades, jump jets, ECM suites, and ammo bins
+- Each piece of equipment has an effect kind, magnitude, mount size, and optional heat cost
+- Equipment effects are applied throughout the game lifecycle: targeting computers and ECM in combat, heat sinks and armor upgrades at end of turn, jump jets during movement, and ammo bins on depot refill
+- A dedicated Equipment designer view in the Studio with full create/edit/delete support
+
+**Shared Loadout Slots**
+- Chassis blueprints now define small, medium, and large hardpoint slots with per-class defaults (light 2/1/0, medium 2/2/1, heavy 2/2/2, assault 2/3/3)
+- Weapons and equipment share the same slot budget, packed with upward spillover — a small item fills a small slot first, then medium, then large
+- The slot fit check runs on squad mech creation, updates, and in-game weapon swaps — overflows are refused and reported to the player
+- The Studio chassis form shows slot selects that auto-populate from class defaults
+
+**Ammo Rework**
+- Weapons now declare an ammo capacity instead of a simple uses-ammo flag — each firing draws that many rounds from the mech's shared ammo pool
+- Ammo bins add to the pool at game start and on depot refill; the pool is shared across all equipped weapons
+- When the pool runs dry, ammo-consuming weapons stop firing until the mech reaches a depot
+
+### 🎨 Improvements
+
+**Studio Designer UX**
+- Bounded selection lists replace free-text inputs across chassis, weapons, sectors, squads, and computer opponent forms — keeping values within game-rule limits
+- A new FieldHint component provides consistent help-text styling throughout the Studio
+- Equipment loadout section added to the squad mech modal with a live slot preview showing remaining capacity
+
+**Codebase Rename: Lance → Squad**
+- All references to "lance" have been renamed to "squad" across the database, backend, API, frontend, docs, and tests — reflecting the terminology used in the game
+
+**Codebase Rename: Mecha → Mecha Game**
+- Backend packages, frontend API clients, Pinia stores, Vue views, router paths, and Playwright specs renamed from `mecha` to `mecha_game` for consistency with the adventure game naming pattern
+
+**Computer Opponent Code Split**
+- The computer opponent decision engine has been split into per-strategy files — one for the rule-based strategy and one for the LLM strategy — making the two approaches easier to maintain and compare
+
+### 🐛 Bug Fixes
+
+- Fixed the mecha join game test assertion to match updated template text after the rename
+- Fixed an unused import lint failure in the chassis view test
+- Fixed sector and weapon validators not enforcing elevation, cover modifier, damage, and heat cost bounds
 
 ---
 
