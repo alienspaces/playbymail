@@ -1,21 +1,27 @@
-"""Generate a single turn sheet background image via the OpenAI DALL-E 3 API.
+"""Generate a single turn sheet background image via the OpenAI image API.
 
 Called by the generate-turn-sheet-background shell wrapper.
 
 Turn sheet backgrounds are portrait-orientation images sized to match A4 at
-~150 DPI (1240x1754 by default). DALL-E 3 generates at 1024x1792, and we
+~150 DPI (1240x1754 by default). The OpenAI image endpoint generates at its
+supported portrait size (1024x1536 for the gpt-image-* family), and we
 resize to the exact target dimensions before saving.
+
+Model selection is configurable via --model or the OPENAI_IMAGE_MODEL env
+var (default: gpt-image-1.5). The older dall-e-3 model uses a different
+request/response shape; this tool handles both transparently.
 
 Specifications:
     Orientation : portrait
-    DALL-E size : 1024x1792
+    API size    : 1024x1536 (gpt-image-*) or 1024x1792 (dall-e-3)
     Target size : 1240x1754 px (A4 @ ~150 DPI)
-    DPI         : ~150 (210mm = 8.27in → 1240/8.27 ≈ 150)
+    DPI         : ~150 (210mm = 8.27in -> 1240/8.27 ~= 150)
     Format      : JPEG (default) or PNG
     Max file    : 1 MB (JPEG only; PNG is not size-capped)
 """
 
 import argparse
+import base64
 import io
 import os
 import sys
@@ -28,6 +34,7 @@ DEFAULT_WIDTH = 1240
 DEFAULT_HEIGHT = 1754
 DEFAULT_MAX_SIZE = 1_048_576  # 1 MB
 DEFAULT_QUALITY = 92
+DEFAULT_MODEL = "gpt-image-1.5"
 
 DEFAULT_STYLE_PREFIX = (
     "Oil painting style, atmospheric fantasy illustration, portrait orientation, "
@@ -38,8 +45,58 @@ MAX_RETRIES = 3
 RETRY_DELAY = 10
 
 
-def generate_image(api_key: str, prompt: str) -> bytes:
-    """Call the DALL-E 3 API and return the raw image bytes."""
+def build_request_payload(model: str, prompt: str) -> dict:
+    """Build the request body appropriate for the target model family.
+
+    gpt-image-* returns base64 by default and takes a different `size`/`quality`
+    enum than dall-e-3. We branch so the tool can still drive the older model
+    if somebody overrides --model.
+    """
+    if model.startswith("gpt-image"):
+        return {
+            "model": model,
+            "prompt": prompt,
+            "n": 1,
+            "size": "1024x1536",
+            "quality": "high",
+        }
+    return {
+        "model": model,
+        "prompt": prompt,
+        "n": 1,
+        "size": "1024x1792",
+        "quality": "hd",
+        "response_format": "url",
+    }
+
+
+def extract_image_bytes(payload: dict) -> bytes:
+    """Pull the raw image bytes out of an OpenAI images response.
+
+    gpt-image-* always returns base64 in data[0].b64_json.
+    dall-e-3 returns either a URL or b64_json depending on response_format.
+    """
+    data = payload.get("data") or []
+    if not data:
+        raise RuntimeError("OpenAI response contained no image data")
+
+    entry = data[0]
+    if entry.get("b64_json"):
+        return base64.b64decode(entry["b64_json"])
+
+    url = entry.get("url")
+    if not url:
+        raise RuntimeError("OpenAI response missing both b64_json and url")
+
+    img_resp = requests.get(url, timeout=120)
+    img_resp.raise_for_status()
+    return img_resp.content
+
+
+def generate_image(api_key: str, model: str, prompt: str) -> bytes:
+    """Call the OpenAI image API and return the raw image bytes."""
+    payload = build_request_payload(model, prompt)
+
     for attempt in range(1, MAX_RETRIES + 1):
         try:
             resp = requests.post(
@@ -48,22 +105,11 @@ def generate_image(api_key: str, prompt: str) -> bytes:
                     "Authorization": f"Bearer {api_key}",
                     "Content-Type": "application/json",
                 },
-                json={
-                    "model": "dall-e-3",
-                    "prompt": prompt,
-                    "n": 1,
-                    "size": "1024x1792",
-                    "quality": "hd",
-                    "response_format": "url",
-                },
+                json=payload,
                 timeout=120,
             )
             resp.raise_for_status()
-            image_url = resp.json()["data"][0]["url"]
-
-            img_resp = requests.get(image_url, timeout=120)
-            img_resp.raise_for_status()
-            return img_resp.content
+            return extract_image_bytes(resp.json())
 
         except requests.exceptions.HTTPError as e:
             status = e.response.status_code if e.response is not None else 0
@@ -109,7 +155,7 @@ def resize_and_save_png(raw_bytes: bytes, width: int, height: int,
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Generate a turn sheet background image via DALL-E 3",
+        description="Generate a turn sheet background image via the OpenAI image API",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""\
 examples:
@@ -134,6 +180,9 @@ examples:
                         help="Target directory (default: test_data_images)")
     parser.add_argument("--style-prefix", default=DEFAULT_STYLE_PREFIX,
                         help="Text prepended to the prompt")
+    parser.add_argument("--model",
+                        default=os.environ.get("OPENAI_IMAGE_MODEL", DEFAULT_MODEL),
+                        help=f"OpenAI image model (default: {DEFAULT_MODEL}, env OPENAI_IMAGE_MODEL)")
     parser.add_argument("--width", type=int, default=DEFAULT_WIDTH,
                         help=f"Target width in pixels (default: {DEFAULT_WIDTH})")
     parser.add_argument("--height", type=int, default=DEFAULT_HEIGHT,
@@ -161,11 +210,12 @@ examples:
 
     full_prompt = args.style_prefix + args.prompt
     print(f"GEN   {args.name}.{ext} ...")
+    print(f"      model:  {args.model}")
     print(f"      prompt: {full_prompt[:120]}...")
     print(f"      target: {args.width}x{args.height} {ext.upper()}")
 
     try:
-        raw = generate_image(args.api_key, full_prompt)
+        raw = generate_image(args.api_key, args.model, full_prompt)
 
         if ext == "png":
             file_size = resize_and_save_png(raw, args.width, args.height, output_path)

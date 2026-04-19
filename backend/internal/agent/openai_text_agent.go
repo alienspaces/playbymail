@@ -44,6 +44,9 @@ func (a *openAITextAgent) GenerateContent(ctx context.Context, req ContentGenera
 	if a.cfg.OpenAIAPIKey == "" {
 		return "", fmt.Errorf("OpenAI API key not configured")
 	}
+	if a.modelName() == "" {
+		return "", fmt.Errorf("OPENAI_TEXT_MODEL is not configured")
+	}
 
 	if req.UserPrompt == "" {
 		return "", fmt.Errorf("user prompt is required")
@@ -184,11 +187,10 @@ func (a *openAITextAgent) AnalyzeText(ctx context.Context, req TextAnalysisReque
 	return TextAnalysisResult{}, fmt.Errorf("text analysis not yet implemented")
 }
 
+// modelName returns the configured text model, or empty string if unset.
+// Public methods guard against empty up-front and return a clear error.
 func (a *openAITextAgent) modelName() string {
-	if trimmed := strings.TrimSpace(a.cfg.OpenAIImageModel); trimmed != "" {
-		return trimmed
-	}
-	return openAIImageTranscriptionModel
+	return strings.TrimSpace(a.cfg.OpenAITextModel)
 }
 
 // openAITextRequest is like openAIRequest but supports temperature and max_output_tokens.

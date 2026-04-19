@@ -34,9 +34,21 @@ type Config struct {
 	// Agent configuration
 	AgentProvider string `env:"AGENT_PROVIDER" envDefault:"openai"` // "openai", "anthropic", "local"
 
-	// OpenAI settings
-	OpenAIAPIKey     string `env:"OPENAI_API_KEY" envDefault:""`
-	OpenAIImageModel string `env:"OPENAI_IMAGE_MODEL" envDefault:"gpt-4o-mini"`
+	// OpenAI settings.
+	//
+	// Note: image-generation tooling lives entirely in playbymail/tools/ and
+	// reads its own OPENAI_IMAGE_MODEL env var directly; it is intentionally
+	// not mirrored here because the backend never generates images at runtime.
+	OpenAIAPIKey string `env:"OPENAI_API_KEY" envDefault:""`
+	// OpenAIVisionModel is used by the vision agent for OCR / structured
+	// extraction from images (e.g. turn sheet scanning). No code default:
+	// the deployment environment is the source of truth for model selection,
+	// so the agent fails loudly if this is unset.
+	OpenAIVisionModel string `env:"OPENAI_VISION_MODEL"`
+	// OpenAITextModel is used by the text agent for text-only generation
+	// (e.g. mecha computer-opponent decision making). No code default; see
+	// OpenAIVisionModel above for reasoning.
+	OpenAITextModel string `env:"OPENAI_TEXT_MODEL"`
 
 	// Anthropic settings (future)
 	AnthropicAPIKey string `env:"ANTHROPIC_API_KEY" envDefault:""`

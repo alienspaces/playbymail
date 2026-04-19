@@ -1,0 +1,237 @@
+#!/usr/bin/env sh
+# Check Heroku config parity against env-tagged fields in backend config.go.
+#
+# Parses `env:"NAME"` / `env:"NAME,required"` / `envDefault:"VALUE"` struct
+# tags out of:
+#   - backend/core/config/config.go
+#   - backend/internal/utils/config/config.go
+#
+# Then compares against `heroku config --app <APP> --json` and reports:
+#   - required vars missing on Heroku           (errors)
+#   - optional vars that will fall back to code defaults (info)
+#   - optional vars with no default and no value (warnings)
+#   - vars set on Heroku that aren't declared in code (orphans / possible drift)
+#
+# Values for secret-looking vars (KEY/SECRET/PASSWORD/TOKEN/DATABASE_URL)
+# are masked before printing. This script only reads config; it never writes.
+#
+# Usage:
+#   ./tools/heroku-config-check               # defaults to app "playbymail"
+#   HEROKU_APP_NAME=some-app ./tools/heroku-config-check
+#
+# Known limitation: this is a text parser. It handles the current single-line
+# struct-tag style. If config.go ever adopts multi-line struct tags or we add
+# another config file, either update CONFIG_FILES below or migrate to a
+# reflection-based Go tool (see heroku-config-check's sister TODO).
+
+set -eu
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+DIM='\033[2m'
+NC='\033[0m'
+
+ok()    { printf '%b\n' "${GREEN}OK${NC}      $1"; }
+warn()  { printf '%b\n' "${YELLOW}WARN${NC}    $1"; }
+err()   { printf '%b\n' "${RED}MISSING${NC} $1"; }
+info()  { printf '%b\n' "${BLUE}INFO${NC}    $1"; }
+dim()   { printf '%b\n' "${DIM}$1${NC}"; }
+
+if [ ! -f "backend/go.mod" ]; then
+    printf '%b\n' "${RED}ERROR${NC} must be run from playbymail root directory"
+    exit 1
+fi
+
+if ! command -v heroku >/dev/null 2>&1; then
+    printf '%b\n' "${RED}ERROR${NC} heroku CLI not found"
+    exit 1
+fi
+if ! command -v jq >/dev/null 2>&1; then
+    printf '%b\n' "${RED}ERROR${NC} jq not found (required for JSON parsing)"
+    exit 1
+fi
+
+APP_NAME="${HEROKU_APP_NAME:-playbymail}"
+
+CONFIG_FILES="backend/core/config/config.go backend/internal/utils/config/config.go"
+
+# Secret-ish name patterns -> values get masked when printed.
+is_secret() {
+    case "$1" in
+        *KEY*|*SECRET*|*PASSWORD*|*TOKEN*|DATABASE_URL) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+mask_value() {
+    name="$1"
+    value="$2"
+    if is_secret "$name"; then
+        # Keep a short prefix for sanity-checking, redact the rest.
+        prefix=$(printf '%s' "$value" | cut -c1-4)
+        printf '%s...<redacted>' "$prefix"
+    else
+        printf '%s' "$value"
+    fi
+}
+
+printf '\n'
+printf '%b\n' "=== Heroku config parity check ==="
+printf '\n'
+info "app:     $APP_NAME"
+info "sources: $CONFIG_FILES"
+printf '\n'
+
+# --- Parse struct tags out of the Go config files -----------------------------
+#
+# Output format (one line per var):
+#   NAME|REQUIRED|HAS_DEFAULT|DEFAULT_VALUE|SOURCE_FILE
+#
+# REQUIRED   is 1 if the tag is `env:"NAME,required"`, else 0.
+# HAS_DEFAULT is 1 if an `envDefault:"..."` is present, else 0.
+parse_config_file() {
+    file="$1"
+    # Pull out every full struct tag block that contains an env: key.
+    # Struct tags look like:  `env:"FOO" envDefault:"bar"`  or  `env:"FOO,required"`
+    grep -oE '`env:"[^"]+"( envDefault:"[^"]*")?`' "$file" | while IFS= read -r tag; do
+        # Strip surrounding backticks for easier substringing.
+        tag_inner=$(printf '%s' "$tag" | sed 's/^`//; s/`$//')
+
+        # env:"NAME[,required]"
+        env_part=$(printf '%s' "$tag_inner" | grep -oE 'env:"[^"]+"' | sed 's/^env:"//; s/"$//')
+        required=0
+        case "$env_part" in
+            *,required)
+                required=1
+                name=$(printf '%s' "$env_part" | sed 's/,required$//')
+                ;;
+            *)
+                name="$env_part"
+                ;;
+        esac
+
+        # envDefault:"VALUE" (optional)
+        has_default=0
+        default_value=""
+        if printf '%s' "$tag_inner" | grep -q 'envDefault:"'; then
+            has_default=1
+            default_value=$(printf '%s' "$tag_inner" | sed -n 's/.*envDefault:"\([^"]*\)".*/\1/p')
+        fi
+
+        printf '%s|%s|%s|%s|%s\n' "$name" "$required" "$has_default" "$default_value" "$file"
+    done
+}
+
+ALL_VARS_FILE=$(mktemp)
+trap 'rm -f "$ALL_VARS_FILE"' EXIT
+
+for f in $CONFIG_FILES; do
+    if [ ! -f "$f" ]; then
+        warn "config file not found: $f"
+        continue
+    fi
+    parse_config_file "$f" >> "$ALL_VARS_FILE"
+done
+
+TOTAL=$(wc -l < "$ALL_VARS_FILE" | tr -d ' ')
+info "parsed $TOTAL env-tagged fields from code"
+printf '\n'
+
+# --- Fetch Heroku config as JSON ---------------------------------------------
+HEROKU_JSON=$(heroku config --app "$APP_NAME" --json 2>/dev/null) || {
+    err "failed to fetch heroku config for app '$APP_NAME'"
+    exit 1
+}
+
+heroku_has() {
+    printf '%s' "$HEROKU_JSON" | jq -e --arg k "$1" 'has($k)' >/dev/null 2>&1
+}
+heroku_get() {
+    printf '%s' "$HEROKU_JSON" | jq -r --arg k "$1" '.[$k] // ""'
+}
+
+# --- Classify each code var ---------------------------------------------------
+REQUIRED_MISSING=0
+OPTIONAL_MISSING=0
+
+printf '%b\n' "--- Required vars ---"
+while IFS='|' read -r name required has_default default_value source; do
+    [ "$required" = "1" ] || continue
+    if heroku_has "$name"; then
+        masked=$(mask_value "$name" "$(heroku_get "$name")")
+        ok "$name = $masked"
+    else
+        err "$name is required but not set on Heroku"
+        REQUIRED_MISSING=$((REQUIRED_MISSING + 1))
+    fi
+done < "$ALL_VARS_FILE"
+
+printf '\n'
+printf '%b\n' "--- Optional vars WITH code default ---"
+while IFS='|' read -r name required has_default default_value source; do
+    [ "$required" = "0" ] || continue
+    [ "$has_default" = "1" ] || continue
+    if heroku_has "$name"; then
+        masked=$(mask_value "$name" "$(heroku_get "$name")")
+        ok "$name = $masked"
+    else
+        dim "        $name = <unset, will default to \"$default_value\">"
+    fi
+done < "$ALL_VARS_FILE"
+
+printf '\n'
+printf '%b\n' "--- Optional vars WITHOUT code default ---"
+while IFS='|' read -r name required has_default default_value source; do
+    [ "$required" = "0" ] || continue
+    [ "$has_default" = "0" ] || continue
+    if heroku_has "$name"; then
+        masked=$(mask_value "$name" "$(heroku_get "$name")")
+        ok "$name = $masked"
+    else
+        warn "$name is unset and has no code default"
+        OPTIONAL_MISSING=$((OPTIONAL_MISSING + 1))
+    fi
+done < "$ALL_VARS_FILE"
+
+# --- Orphans: set on Heroku but not declared in code --------------------------
+printf '\n'
+printf '%b\n' "--- Orphans on Heroku (not declared in code) ---"
+
+CODE_NAMES=$(awk -F'|' '{print $1}' "$ALL_VARS_FILE" | sort -u)
+HEROKU_NAMES=$(printf '%s' "$HEROKU_JSON" | jq -r 'keys[]' | sort -u)
+
+ORPHAN_COUNT=0
+# shellcheck disable=SC2066
+for hname in $HEROKU_NAMES; do
+    # Heroku-managed/platform defaults we don't care about.
+    case "$hname" in
+        GO_INSTALL_PACKAGE_SPEC|TZ|LANG) continue ;;
+    esac
+    if ! printf '%s\n' "$CODE_NAMES" | grep -qx "$hname"; then
+        warn "$hname set on Heroku but not in config.go (possible drift)"
+        ORPHAN_COUNT=$((ORPHAN_COUNT + 1))
+    fi
+done
+
+if [ "$ORPHAN_COUNT" = "0" ]; then
+    ok "no drift detected"
+fi
+
+# --- Summary ------------------------------------------------------------------
+printf '\n'
+printf '%b\n' "=== Summary ==="
+info "app:                      $APP_NAME"
+info "vars declared in code:    $TOTAL"
+info "required missing:         $REQUIRED_MISSING"
+info "optional-no-default miss: $OPTIONAL_MISSING"
+info "heroku orphans:           $ORPHAN_COUNT"
+
+if [ "$REQUIRED_MISSING" -gt 0 ]; then
+    printf '\n'
+    err "required vars are missing — the app will fail to start"
+    exit 2
+fi
+
+exit 0

@@ -17,10 +17,9 @@ import (
 )
 
 const (
-	openAIResponsesEndpoint       = "https://api.openai.com/v1/responses"
-	openAIImageTranscriptionModel = "gpt-4o-mini"
-	openAIImagePrompt             = "Transcribe ALL text visible in this turn sheet image exactly as it appears. Include every character, especially any long alphanumeric codes or strings at the bottom of the page. Do not summarize or describe the code - output the actual characters."
-	defaultImageMimeType          = "image/png"
+	openAIResponsesEndpoint = "https://api.openai.com/v1/responses"
+	openAIImagePrompt       = "Transcribe ALL text visible in this turn sheet image exactly as it appears. Include every character, especially any long alphanumeric codes or strings at the bottom of the page. Do not summarize or describe the code - output the actual characters."
+	defaultImageMimeType    = "image/png"
 )
 
 type openAIVisionAgent struct {
@@ -48,6 +47,9 @@ func (a *openAIVisionAgent) ExtractText(ctx context.Context, req TextExtractionR
 
 	if a.cfg.OpenAIAPIKey == "" {
 		return "", fmt.Errorf("OpenAI API key not configured")
+	}
+	if a.modelName() == "" {
+		return "", fmt.Errorf("OPENAI_VISION_MODEL is not configured")
 	}
 
 	if len(req.ImageData) == 0 {
@@ -202,6 +204,9 @@ func (a *openAIVisionAgent) ExtractStructuredData(ctx context.Context, req Struc
 
 	if a.cfg.OpenAIAPIKey == "" {
 		return nil, fmt.Errorf("OpenAI API key not configured")
+	}
+	if a.modelName() == "" {
+		return nil, fmt.Errorf("OPENAI_VISION_MODEL is not configured")
 	}
 
 	if len(req.FilledImage.Data) == 0 {
@@ -534,9 +539,8 @@ func encodeImageDataURI(data []byte, mime string) string {
 	return fmt.Sprintf("data:%s;base64,%s", mime, base64.StdEncoding.EncodeToString(data))
 }
 
+// modelName returns the configured vision model, or empty string if unset.
+// Public methods guard against empty up-front and return a clear error.
 func (a *openAIVisionAgent) modelName() string {
-	if trimmed := strings.TrimSpace(a.cfg.OpenAIImageModel); trimmed != "" {
-		return trimmed
-	}
-	return openAIImageTranscriptionModel
+	return strings.TrimSpace(a.cfg.OpenAIVisionModel)
 }

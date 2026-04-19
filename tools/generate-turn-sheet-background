@@ -1,12 +1,14 @@
 #!/bin/sh
-# Generate a single turn sheet background image using the OpenAI DALL-E 3 API.
+# Generate a single turn sheet background image using the OpenAI image API.
 #
-# The image is generated in portrait orientation at 1024x1792, then resized to
-# 1240x1754 (A4 at ~150 DPI) and saved as a JPEG under 1 MB.
+# The image is generated in portrait orientation at the model's native
+# portrait size (1024x1536 for gpt-image-*), then resized to 1240x1754
+# (A4 at ~150 DPI) and saved as a JPEG under 1 MB.
 #
 # Prerequisites:
-#   export OPENAI_API_KEY="sk-..."   (or add to .env.private)
-#   pip install requests Pillow      (Python dependencies)
+#   export OPENAI_API_KEY="sk-..."           (or add to .env.private)
+#   export OPENAI_IMAGE_MODEL="gpt-image-1.5" (optional, this is the default)
+#   pip install requests Pillow              (Python dependencies)
 #
 # Usage:
 #   ./tools/generate-turn-sheet-background --name desert-oasis \
@@ -16,6 +18,7 @@
 # Options:
 #   --name NAME          Output filename without extension (required)
 #   --prompt PROMPT      Image generation prompt (required)
+#   --model MODEL        OpenAI image model (default: gpt-image-1.5, env OPENAI_IMAGE_MODEL)
 #   --output-dir DIR     Target directory (default: backend/internal/runner/cli/test_data_images)
 #   --style-prefix STR   Prepended to the prompt (default: see below)
 #   --width PX           Target width in pixels (default: 1240)
